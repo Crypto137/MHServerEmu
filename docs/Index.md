@@ -18,11 +18,12 @@ MHServerEmu-specific topics.
 
 - [Server Commands](./ServerEmu/ServerCommands.md) - a list of available server commands.
 
-## General
+## Game
 
 Topics concerning the game in general.
 
-- [Glossary](./Glossary.md) - a list of terms used by the game internally.
+- [Glossary](./Game/Glossary.md) - a list of terms used by the game internally.
+- [Properties](./Game/Properties.md) - information about game properties (entity stats).
 
 ## Networking
 

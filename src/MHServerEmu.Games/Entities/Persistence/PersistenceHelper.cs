@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Common;
@@ -139,6 +140,8 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         private static bool RestoreContainer(Entity container, DBEntityCollection entities)
         {
+            Game game = container.Game;
+
             long containerDbGuid = (long)container.DatabaseUniqueId;
             ulong containerEntityId = container.Id;
 
@@ -170,14 +173,14 @@ namespace MHServerEmu.Games.Entities.Persistence
                     continue;
                 }
 
-                EntitySettings settings = new();
+                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
                 settings.DbGuid = (ulong)dbEntity.DbGuid;
                 settings.InventoryLocation = new(containerEntityId, inventoryProtoRef, dbEntity.Slot);
                 settings.EntityRef = entityProtoRef;
                 settings.ArchiveSerializeType = ArchiveSerializeType.Database;
                 settings.ArchiveData = dbEntity.ArchiveData;
 
-                container.Game.EntityManager.CreateEntity(settings);
+                game.EntityManager.CreateEntity(settings);
             }
 
             return true;

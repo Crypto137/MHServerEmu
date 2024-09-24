@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -18,6 +18,9 @@ namespace MHServerEmu.Games.GameData
         private readonly Dictionary<string, Type> _prototypeNameToClassTypeDict = new();
         private readonly Dictionary<Type, Func<Prototype>> _prototypeConstructorDict;
         private readonly Dictionary<System.Reflection.PropertyInfo, PrototypeFieldType> _prototypeFieldTypeDict = new();
+
+        private readonly Dictionary<Type, CachedPrototypeField[]> _copyableFieldDict = new();
+        private readonly Dictionary<Type, CachedPrototypeField[]> _postProcessableFieldDict = new();
 
         private static readonly Dictionary<Type, PrototypeFieldType> TypeToPrototypeFieldTypeEnumDict = new()
         {
@@ -79,10 +82,13 @@ namespace MHServerEmu.Games.GameData
             if (_prototypeConstructorDict.TryGetValue(type, out var constructorDelegate) == false)
             {
                 // Cache constructor delegate for future use
-                var constructor = type.GetConstructor(Type.EmptyTypes);
-                var newExpression = Expression.New(constructor);
-                var lambdaExpression = Expression.Lambda<Func<Prototype>>(newExpression);
-                constructorDelegate = lambdaExpression.Compile();
+                DynamicMethod dm = new("ConstructPrototype", typeof(Prototype), null);
+                ILGenerator il = dm.GetILGenerator();
+
+                il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
+                il.Emit(OpCodes.Ret);
+
+                constructorDelegate = dm.CreateDelegate<Func<Prototype>>();
                 _prototypeConstructorDict.Add(type, constructorDelegate);
             }
 
@@ -233,40 +239,112 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
+        /// Returns copyable fields for a given prototype type.
+        /// </summary>
+        public CachedPrototypeField[] GetCopyablePrototypeFields(Type type)
+        {
+            // Cache copyable fields for reuse
+            if (_copyableFieldDict.TryGetValue(type, out CachedPrototypeField[] copyableFields) == false)
+            {
+                List<CachedPrototypeField> copyableFieldList = new();
+
+                // Populate the the new list
+                foreach (var fieldInfo in type.GetProperties())
+                {
+                    // Skip base prototype properties
+                    if (fieldInfo.DeclaringType == typeof(Prototype))
+                        continue;
+
+                    // Skip uncopyable fields (e.g. DoNotCopy)
+                    PrototypeFieldType fieldType = GetPrototypeFieldTypeEnumValue(fieldInfo);
+                    if (fieldType == PrototypeFieldType.Invalid)
+                        continue;
+
+                    copyableFieldList.Add(new(fieldInfo, fieldType));
+                }
+
+                // Convert to array to avoid boxing while iterating
+                copyableFields = copyableFieldList.ToArray();
+                _copyableFieldDict.Add(type, copyableFields);
+            }
+
+            return copyableFields;
+        }
+
+        /// <summary>
         /// Calls PostProcess() on all prototypes embedded in the provided one.
         /// </summary>
         public void PostProcessContainedPrototypes(Prototype prototype)
         {
-            foreach (var property in prototype.GetType().GetProperties())
+            foreach (CachedPrototypeField cachedField in GetPostProcessablePrototypeFields(prototype.GetType()))
             {
-                if (property.DeclaringType == typeof(Prototype)) continue;
+                System.Reflection.PropertyInfo fieldInfo = cachedField.FieldInfo;
 
-                switch (GetPrototypeFieldTypeEnumValue(property))
+                switch (cachedField.FieldType)
                 {
                     case PrototypeFieldType.PrototypePtr:
                     case PrototypeFieldType.Mixin:
                         // Simple embedded prototypes
-                        var embeddedPrototype = (Prototype)property.GetValue(prototype);
+                        var embeddedPrototype = (Prototype)fieldInfo.GetValue(prototype);
                         embeddedPrototype?.PostProcess();
                         break;
 
-
                     case PrototypeFieldType.ListPrototypePtr:
                         // List / vector collections of embedded prototypes (that we implemented as arrays)
-                        var prototypeCollection = (IEnumerable<Prototype>)property.GetValue(prototype);
+                        var prototypeCollection = (IEnumerable<Prototype>)fieldInfo.GetValue(prototype);
                         if (prototypeCollection == null) continue;
-                        foreach (var element in prototypeCollection)
+                        
+                        foreach (Prototype element in prototypeCollection)
                             element.PostProcess();
+                        
                         break;
 
                     case PrototypeFieldType.ListMixin:
-                        var mixinList = (PrototypeMixinList)property.GetValue(prototype);
+                        var mixinList = (PrototypeMixinList)fieldInfo.GetValue(prototype);
                         if (mixinList == null) continue;
-                        foreach (var mixin in mixinList)
+
+                        foreach (PrototypeMixinListItem mixin in mixinList)
                             mixin.Prototype.PostProcess();
+                        
                         break;
                 }
             }
+        }
+
+        private CachedPrototypeField[] GetPostProcessablePrototypeFields(Type type)
+        {
+            // Cache post-processable fields for reuse
+            if (_postProcessableFieldDict.TryGetValue(type, out CachedPrototypeField[] postProcessableFields) == false)
+            {
+                List<CachedPrototypeField> postProcessableFieldList = new();
+
+                // Populate the the new list
+                foreach (var fieldInfo in type.GetProperties())
+                {
+                    // Skip base prototype properties
+                    if (fieldInfo.DeclaringType == typeof(Prototype))
+                        continue;
+
+                    // Add approrite fields
+                    PrototypeFieldType fieldType = GetPrototypeFieldTypeEnumValue(fieldInfo);
+
+                    switch (fieldType)
+                    {
+                        case PrototypeFieldType.PrototypePtr:
+                        case PrototypeFieldType.Mixin:
+                        case PrototypeFieldType.ListPrototypePtr:
+                        case PrototypeFieldType.ListMixin:
+                            postProcessableFieldList.Add(new(fieldInfo, fieldType));
+                            break;
+                    }
+                }
+
+                // Convert to array to avoid boxing while iterating
+                postProcessableFields = postProcessableFieldList.ToArray();
+                _postProcessableFieldDict.Add(type, postProcessableFields);
+            }
+
+            return postProcessableFields;
         }
 
         /// <summary>
@@ -318,6 +396,18 @@ namespace MHServerEmu.Games.GameData
                 return PrototypeFieldType.Invalid;
 
             return prototypeFieldTypeEnumValue;
+        }
+
+        public readonly struct CachedPrototypeField
+        {
+            public readonly System.Reflection.PropertyInfo FieldInfo;
+            public readonly PrototypeFieldType FieldType;
+
+            public CachedPrototypeField(System.Reflection.PropertyInfo fieldInfo, PrototypeFieldType fieldType)
+            {
+                FieldInfo = fieldInfo;
+                FieldType = fieldType;
+            }
         }
     }
 }

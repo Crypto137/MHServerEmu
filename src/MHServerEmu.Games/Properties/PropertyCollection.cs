@@ -2,12 +2,14 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Properties
@@ -15,10 +17,8 @@ namespace MHServerEmu.Games.Properties
     /// <summary>
     /// An aggregatable collection of key/value pairs of <see cref="PropertyId"/> and <see cref="PropertyValue"/>.
     /// </summary>
-    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize
+    public class PropertyCollection : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>, ISerialize, IPoolable, IDisposable
     {
-        // TODO: Consider implementing IDisposable for optimization
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly PropertyList _baseList = new();
@@ -84,6 +84,12 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum, param0));
         }
 
+        public PropertyValue this[PropertyEnum propertyEnum, DamageType param0]
+        {
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
+        }
+
         // 2 params
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1]
@@ -128,6 +134,8 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
+        public PropertyCollection() { }
+
         // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
         // but we take care of that with implicit casting defined in PropertyValue.cs, so these methods are
         // largely redundant and are kept to avoid deviating from the client API.
@@ -169,6 +177,30 @@ namespace MHServerEmu.Games.Properties
 
             if (updateValue)
                 UpdateCurvePropertyValue(curveProp, flags, info);
+        }
+
+        public CurveId GetCurveIdForCurveProperty(PropertyId curvePropertyId)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
+            if (propertyInfo.IsCurveProperty == false)
+                return Logger.WarnReturn(CurveId.Invalid, $"GetCurveForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+
+            if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
+                return propertyInfo.DefaultValue;
+
+            return curveProperty.CurveId;
+        }
+
+        public PropertyId GetIndexPropertyIdForCurveProperty(PropertyId curvePropertyId)
+        {
+            PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(curvePropertyId.Enum);
+            if (propertyInfo.IsCurveProperty == false)
+                return Logger.WarnReturn(PropertyId.Invalid, $"GetIndexPropertyIdForCurveProperty(): {propertyInfo.PropertyName} is not a curve property");
+
+            if (_curveList.TryGetValue(curvePropertyId, out CurveProperty curveProperty) == false)
+                return PropertyId.Invalid;
+
+            return curveProperty.IndexPropertyId;
         }
 
         /// <summary>
@@ -313,7 +345,7 @@ namespace MHServerEmu.Games.Properties
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
             // Update curve properties that rely on this property as an index property
-            foreach (var kvp in IterateCurveProperties())
+            foreach (var kvp in _curveList)
             {
                 if (kvp.Value.IndexPropertyId == id)
                     UpdateCurvePropertyValue(kvp.Value, flags, null);
@@ -323,14 +355,15 @@ namespace MHServerEmu.Games.Properties
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(id.Enum);
             if (info.HasDependentEvals)
             {
-                EvalContextData contextData = new(Game.Current);
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game.Current;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
 
                 foreach (PropertyId dependentEvalId in info.DependentEvals)
                 {
                     PropertyInfo dependentEvalInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(dependentEvalId.Enum);
                     PropertyValue oldDependentValue = GetPropertyValue(dependentEvalId);
-                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, contextData);
+                    PropertyValue newDependentValue = EvalPropertyValue(dependentEvalInfo, evalContext);
 
                     if (newDependentValue.RawLong != oldDependentValue.RawLong)
                     {
@@ -363,7 +396,7 @@ namespace MHServerEmu.Games.Properties
                 SetPropertyValue(kvp.Key, kvp.Value, SetPropertyFlags.None);
 
             // Transfer curve properties
-            foreach (var kvp in other.IterateCurveProperties())
+            foreach (var kvp in other._curveList)
             {
                 PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
                 SetCurveProperty(kvp.Value.PropertyId, kvp.Value.CurveId, kvp.Value.IndexPropertyId, info, SetPropertyFlags.None, cleanCopy);
@@ -372,7 +405,7 @@ namespace MHServerEmu.Games.Properties
             // Update curve property values if this is a combination of two different collections rather than a clean copy
             if (cleanCopy == false)
             {
-                foreach (var kvp in IterateCurveProperties())
+                foreach (var kvp in _curveList)
                 {
                     PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(kvp.Key.Enum);
                     UpdateCurvePropertyValue(kvp.Value, SetPropertyFlags.None, info);
@@ -608,6 +641,16 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
+        public virtual void ResetForPool()
+        {
+            Clear();
+        }
+
+        public virtual void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
+        }
+
         public virtual bool Serialize(Archive archive)
         {
             return SerializeWithDefault(archive, null);
@@ -745,10 +788,10 @@ namespace MHServerEmu.Games.Properties
             // First try running eval
             if (info.IsEvalProperty && info.IsEvalAlwaysCalculated)
             {
-                EvalContextData contextData = new();
-                contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
-                contextData.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
-                return EvalPropertyValue(info, contextData);
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, this);
+                evalContext.SetReadOnlyVar_PropertyId(EvalContext.Var1, id);
+                return EvalPropertyValue(info, evalContext);
             }
 
             // Fall back to the default value if no value is specified in the aggregate list
@@ -862,15 +905,6 @@ namespace MHServerEmu.Games.Properties
                 return null;
 
             return curveProp;
-        }
-
-        /// <summary>
-        /// Returns an <see cref="IEnumerable"/> of curve property key/value pairs contained in this <see cref="PropertyCollection"/>.
-        /// </summary>
-        protected IEnumerable<KeyValuePair<PropertyId, CurveProperty>> IterateCurveProperties()
-        {
-            foreach (var kvp in _curveList)
-                yield return kvp;
         }
 
         /// <summary>

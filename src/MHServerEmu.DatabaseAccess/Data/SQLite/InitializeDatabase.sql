@@ -1,6 +1,6 @@
 -- Initialize a new database file using the current schema version
 
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;
 
 CREATE TABLE "Account" (
 	"Id"	INTEGER NOT NULL UNIQUE,
@@ -9,9 +9,7 @@ CREATE TABLE "Account" (
 	"PasswordHash"	BLOB NOT NULL,
 	"Salt"	BLOB NOT NULL,
 	"UserLevel"	INTEGER NOT NULL,
-	"IsBanned"	INTEGER NOT NULL,
-	"IsArchived"	INTEGER NOT NULL,
-	"IsPasswordExpired"	INTEGER NOT NULL,
+	"Flags"	INTEGER NOT NULL,
 	PRIMARY KEY("Id")
 );
 

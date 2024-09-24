@@ -530,7 +530,7 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public PrototypeIterator IterateAllPrototypes(PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
-            return new(_prototypeRecordDict.Values, flags);
+            return IteratePrototypesInHierarchy(typeof(Prototype), flags);
         }
 
         /// <summary>
@@ -538,7 +538,7 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public PrototypeIterator IteratePrototypesInHierarchy(Type prototypeClassType, PrototypeIterateFlags flags = PrototypeIterateFlags.None)
         {
-            if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out var node) == false)
+            if (_prototypeClassLookupDict.TryGetValue(prototypeClassType, out PrototypeEnumValueNode node) == false)
                 return Logger.WarnReturn(new PrototypeIterator(), $"IteratePrototypesInHierarchy(): Failed to get iterated prototype list for class {prototypeClassType.Name}");
 
             return new(node.PrototypeRecordList, flags);

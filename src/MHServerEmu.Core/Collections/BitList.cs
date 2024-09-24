@@ -70,6 +70,9 @@
 
         public void Reserve(int newSize)
         {
+            if (newSize > _bits.Capacity)
+                _bits.Capacity = newSize;
+
             while (_bits.Count < newSize)
                 _bits.Add(false);
         }

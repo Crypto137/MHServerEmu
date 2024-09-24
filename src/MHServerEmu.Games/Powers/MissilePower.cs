@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -55,11 +56,11 @@ namespace MHServerEmu.Games.Powers
             return base.Activate(ref settings);
         }
 
-        protected override PowerUseResult ActivateInternal(in PowerActivationSettings settings)
+        protected override PowerUseResult ActivateInternal(ref PowerActivationSettings settings)
         {
             if (settings.PowerRandomSeed != 0)
                 _random.Seed((int)settings.PowerRandomSeed);
-            return base.ActivateInternal(settings);
+            return base.ActivateInternal(ref settings);
         }
 
         protected override bool ApplyInternal(PowerApplication powerApplication)
@@ -157,13 +158,14 @@ namespace MHServerEmu.Games.Powers
                     var owner = entityManager.GetEntity<WorldEntity>(powerApplication.UserEntityId);
                     var target = entityManager.GetEntity<WorldEntity>(powerApplication.TargetEntityId);
 
-                    EvalContextData contextData = new(Game);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
-                    contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
-                    contextData.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.Game = Game;
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, prototype.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target?.Properties);
+                    evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
 
-                    contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, contextData);
+                    contextIndex = Eval.RunInt(prototype.EvalSelectMissileContextIndex, evalContext);
                     if (contextIndex < 0 || contextIndex >= contextsLength)
                         return Logger.WarnReturn(MissileCreateResult.Failure, $"Eval returned an out-of-range missile context index (max {contextsLength - 1}, index {contextIndex}). POWER={this}");
 
@@ -196,12 +198,10 @@ namespace MHServerEmu.Games.Powers
             var missileProto = missileContext.Entity.As<MissilePrototype>();
             if (missileProto == null) return false;
 
-            var creationSettings = new EntitySettings
-            {
-                EntityRef = missileContext.Entity,
-                RegionId = region.Id,
-                IgnoreNavi = missileContext.Ghost
-            };
+            using EntitySettings creationSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            creationSettings.EntityRef = missileContext.Entity;
+            creationSettings.RegionId = region.Id;
+            creationSettings.IgnoreNavi = missileContext.Ghost;
 
             var ownerPosition = Owner.RegionLocation.Position;
             var targetPosition = powerApplication.TargetPosition;
@@ -298,7 +298,7 @@ namespace MHServerEmu.Games.Powers
             creationSettings.VariationSeed = powerApplication.FXRandomSeed;
             creationSettings.LocomotorHeightOverride = Math.Max(missileContext.Radius, creationSettings.Position.Z - RegionLocation.ProjectToFloor(region, creationSettings.Position).Z);
 
-            var extraProperties = new PropertyCollection();
+            using var extraProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             SetExtraProperties(extraProperties, creationSettings, powerApplication, missileContext, contextIndex, missileProto);
 
             creationSettings.Properties = extraProperties;
@@ -419,8 +419,8 @@ namespace MHServerEmu.Games.Powers
             extraProperties.CopyProperty(Properties, PropertyEnum.DamageRating);
             extraProperties.CopyProperty(Properties, PropertyEnum.DamageMult);
             extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultForPower);
-            
-            // TODO Power.SerializePropertiesForPowerPayload
+
+            SerializeEntityPropertiesForPowerPayload(GetPayloadPropertySourceEntity(), Properties);    // todo: team-up away powers
         }
 
         private void TransferMissilePierceChance(PropertyCollection extraProperties)

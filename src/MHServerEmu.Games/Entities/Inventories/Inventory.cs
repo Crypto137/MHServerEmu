@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -130,11 +131,18 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (Game == null) return Logger.WarnReturn(false, "DestroyContained(): Game == null");
 
-            // NOTE: We convert entry collection to list to be able to remove entries while we iterate.
+            // NOTE: We store contained entity ids in a span to be able to remove entries while we iterate.
+            // Using a span instead of ToArray() or ToList() allows us to avoid extra heap allocations.
             // The original implementation uses a custom iterator here that restarts after every removed item.
-            foreach (var kvp in _entities.ToList())
+            Span<ulong> containedIds = stackalloc ulong[_entities.Count];
+            int i = 0;
+
+            foreach (InvEntry entry in _entities.Values)
+                containedIds[i++] = entry.EntityId;
+
+            foreach (ulong containedId in containedIds)
             {
-                Entity contained = Game.EntityManager.GetEntity<Entity>(kvp.Value.EntityId);
+                Entity contained = Game.EntityManager.GetEntity<Entity>(containedId);
                 if (contained == null)
                 {
                     Logger.Warn("DestroyContained(): contained == null");
@@ -621,7 +629,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             entity.OnSelfAddedToOtherInventory();
 
-            EntitySettings settings = new() { InventoryLocationPrevious = prevInvLoc };
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.InventoryLocationPrevious = prevInvLoc;
 
             /*
             settings.PreviousInventoryLocation = prevInvLoc;

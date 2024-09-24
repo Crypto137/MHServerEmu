@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -49,9 +50,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (globalsProto?.ItemPriceMultiplierSellToVendor == null)
                 return Logger.WarnReturn(price, "GetNoStackSellPrice(): globalsProto?.ItemPriceMultiplierSellToVendor == null");
 
-            EvalContextData contextData = new();
-            contextData.SetVar_Int(EvalContext.Var1, itemLevel);
-            float globalItemSellPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierSellToVendor, contextData);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetVar_Int(EvalContext.Var1, itemLevel);
+            float globalItemSellPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierSellToVendor, evalContext);
 
             if (globalItemSellPriceMultiplier > 0f)
             {
@@ -74,13 +75,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int numAffixes = itemSpec.AffixSpecs.Count();
             int itemLevel = item != null ? item.Properties[PropertyEnum.ItemLevel] : itemSpec.ItemLevel;
 
-            EvalContextData contextData = new();
-            contextData.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
-            contextData.SetVar_Int(EvalContext.Var1, rarityTier);
-            contextData.SetVar_Int(EvalContext.Var2, numAffixes);
-            contextData.SetVar_Int(EvalContext.Var3, itemLevel);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
+            evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
+            evalContext.SetVar_Int(EvalContext.Var2, numAffixes);
+            evalContext.SetVar_Int(EvalContext.Var3, itemLevel);
 
-            return Eval.RunInt(Number, contextData);
+            return Eval.RunInt(Number, evalContext);
         }
     }
 

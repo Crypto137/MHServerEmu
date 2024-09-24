@@ -77,6 +77,7 @@ namespace MHServerEmu.Frontend
         protected override void OnClientDisconnected(TcpClientConnection connection)
         {
             var client = (FrontendClient)connection.Client;
+            Logger.Info($"Client [{client}] disconnected");
 
             if (client.Session != null)
             {
@@ -86,8 +87,6 @@ namespace MHServerEmu.Frontend
                 var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
                 groupingManager?.RemoveFrontendClient(client);
             }
-
-            Logger.Info($"Client [{client}] disconnected");
         }
 
         protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)

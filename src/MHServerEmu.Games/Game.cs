@@ -6,6 +6,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
@@ -334,6 +335,7 @@ namespace MHServerEmu.Games
                 timesUpdated++;
 
                 _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - stepStartTime;
+                MetricsManager.Instance.RecordFixedUpdateTime(Id, _lastFixedTimeUpdateProcessTime);
 
                 if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
                     Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");

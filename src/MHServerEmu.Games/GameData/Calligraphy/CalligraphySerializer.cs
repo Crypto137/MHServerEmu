@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -144,7 +145,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         fieldOwnerPrototype = (Prototype)mixinFieldInfo.GetValue(prototype);
                         if (fieldOwnerPrototype == null)
                         {
-                            fieldOwnerPrototype = (Prototype)Activator.CreateInstance(mixinType);
+                            fieldOwnerPrototype = GameDatabase.PrototypeClassManager.AllocatePrototype(mixinType);
                             mixinFieldInfo.SetValue(prototype, fieldOwnerPrototype);
                         }
 
@@ -176,10 +177,10 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 }
 
                 // Parse
-                var parser = GetParser(classManager.GetPrototypeFieldTypeEnumValue(fieldInfo));
+                ParseDelegate parse = GetParser(classManager.GetPrototypeFieldTypeEnumValue(fieldInfo));
                 FieldParserParams @params = new(reader, fieldInfo, fieldOwnerPrototype, fieldOwnerBlueprint, prototypeName, blueprintMemberInfo);
                 
-                if (parser(@params) == false)
+                if (parse(@params) == false)
                 {
                     return Logger.ErrorReturn(false, string.Format("DeserializeFieldGroup(): Failed to parse field {0} of field group {1}, file name {2}",
                         blueprintMemberInfo.Member.FieldName,
@@ -571,11 +572,11 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (sourceType != destType)
                 return Logger.ErrorReturn(false, $"CopyPrototypeFields(): source type ({sourceType.Name}) does not match destination type ({destType.Name})");
 
-            foreach (var fieldInfo in destType.GetProperties())
+            foreach (PrototypeClassManager.CachedPrototypeField copyableField in GameDatabase.PrototypeClassManager.GetCopyablePrototypeFields(destType))
             {
-                if (fieldInfo.DeclaringType == typeof(Prototype)) continue;      // Skip base prototype properties
+                System.Reflection.PropertyInfo fieldInfo = copyableField.FieldInfo;
 
-                switch (GameDatabase.PrototypeClassManager.GetPrototypeFieldTypeEnumValue(fieldInfo))
+                switch (copyableField.FieldType)
                 {
                     case PrototypeFieldType.Bool:
                     case PrototypeFieldType.Int8:
@@ -623,7 +624,6 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                         CopyPrototypePropertyCollection(destPrototype, sourcePrototype, fieldInfo);
                         break;
 
-                    case PrototypeFieldType.Invalid: continue;
                     default:
                         Logger.Warn($"CopyPrototypeFields(): Trying to copy unhandled prototype field type {fieldInfo.PropertyType.Name}");
                         continue;
@@ -638,7 +638,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         private static void AssignPointedAtValues(Prototype destPrototype, Prototype sourcePrototype, System.Reflection.PropertyInfo fieldInfo)
         {
-            fieldInfo.SetValue(destPrototype, fieldInfo.GetValue(sourcePrototype));
+            //fieldInfo.SetValue(destPrototype, fieldInfo.GetValue(sourcePrototype));
+            fieldInfo.CopyValue(sourcePrototype, destPrototype);
         }
 
         /// <summary>
@@ -664,7 +665,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (sourceMixin == null) return;
 
             // Create the mixin instance on the destination prototype if there is something to copy and copy data to it
-            var destMixin = (Prototype)Activator.CreateInstance(fieldInfo.PropertyType);
+            var destMixin = GameDatabase.PrototypeClassManager.AllocatePrototype(fieldInfo.PropertyType);
             fieldInfo.SetValue(destPrototype, destMixin);
 
             CopyPrototypeFields(destMixin, sourceMixin);
@@ -731,7 +732,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
                 var element = (Prototype)mixinFieldInfo.GetValue(ownerPrototype);
                 if (element == null)
                 {
-                    element = (Prototype)Activator.CreateInstance(mixinFieldInfo.PropertyType);
+                    element = GameDatabase.PrototypeClassManager.AllocatePrototype(mixinFieldInfo.PropertyType);
                     mixinFieldInfo.SetValue(ownerPrototype, element);
                 }
 

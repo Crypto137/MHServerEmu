@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -52,9 +53,11 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Initialize(EntitySettings settings)
         {
-            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
-            if (agentProto == null) return false;
-            if (agentProto.Locomotion.Immobile == false) Locomotor = new();
+            AgentPrototype agentProto = GameDatabase.GetPrototype<AgentPrototype>(settings.EntityRef);
+            if (agentProto == null) return Logger.WarnReturn(false, "Initialize(): agentProto == null");
+            
+            if (agentProto.Locomotion.Immobile == false)
+                Locomotor = new();
 
             // GetPowerCollectionAllocateIfNull()
             base.Initialize(settings);
@@ -62,6 +65,22 @@ namespace MHServerEmu.Games.Entities
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
 
+            // When Gazillion implemented DCL, it looks like they made it switchable at first (based on Eval::runIsDynamicCombatLevelEnabled),
+            // so all agents need to have their default non-DCL health base curves overriden with new DCL ones.
+            if (CanBePlayerOwned() == false)
+            {
+                CurveId healthBaseCurveDcl = agentProto.MobHealthBaseCurveDCL;
+                if (healthBaseCurveDcl == CurveId.Invalid) return Logger.WarnReturn(false, "Initialize(): healthBaseCurveDcl == CurveId.Invalid");
+
+                PropertyId indexPropertyId = Properties.GetIndexPropertyIdForCurveProperty(PropertyEnum.HealthBase);
+                if (indexPropertyId == PropertyId.Invalid) return Logger.WarnReturn(false, "Initialize(): curveIndexPropertyId == PropertyId.Invalid");
+
+                PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);
+
+                Properties.SetCurveProperty(PropertyEnum.HealthBase, healthBaseCurveDcl, indexPropertyId,
+                    healthBasePropertyInfo, SetPropertyFlags.None, true);
+            }
+ 
             return true;
         }
 
@@ -598,6 +617,24 @@ namespace MHServerEmu.Games.Entities
             Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
         }
 
+        protected override void SetCharacterLevel(int characterLevel)
+        {
+            int oldCharacterLevel = CharacterLevel;
+            base.SetCharacterLevel(characterLevel);
+
+            if (characterLevel != oldCharacterLevel && CanBePlayerOwned())
+                PowerCollection?.OnOwnerLevelChange();
+        }
+
+        protected override void SetCombatLevel(int combatLevel)
+        {
+            int oldCombatLevel = CombatLevel;
+            base.SetCombatLevel(combatLevel);
+
+            if (combatLevel != oldCombatLevel && CanBePlayerOwned())
+                PowerCollection?.OnOwnerLevelChange();
+        }
+
         public void RemoveMissionActionReferencedPowers(PrototypeId missionRef)
         {
             if (missionRef == PrototypeId.Invalid) return;
@@ -846,7 +883,7 @@ namespace MHServerEmu.Games.Entities
             if (behaviorProfile != null && behaviorProfile.Brain != PrototypeId.Invalid)
             {
                 AIController = new(Game, this);
-                PropertyCollection collection = new();
+                using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 collection[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile];
                 SpawnSpec spec = settings?.SpawnSpec ?? new SpawnSpec(Game);
                 return AIController.Initialize(behaviorProfile, spec, collection);
@@ -1210,7 +1247,8 @@ namespace MHServerEmu.Games.Entities
                 {
                     var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
                     if (brain is not ProceduralAIProfilePrototype profile) return false;
-                    InitAIOverride(profile, new());
+                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    InitAIOverride(profile, properties);
                     if (AIController == null) return false;
                     AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
                 }

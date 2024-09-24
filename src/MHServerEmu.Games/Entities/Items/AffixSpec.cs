@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
@@ -180,11 +181,11 @@ namespace MHServerEmu.Games.Entities.Items
                 return Logger.WarnReturn(MutationResults.Error, "SetAffixScopePower(): avatarProto == null");
 
             // Run evals
-            EvalContextData contextData = new();
-            contextData.SetVar_Int(EvalContext.Var1, itemSpec.ItemLevel);
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetVar_Int(EvalContext.Var1, itemSpec.ItemLevel);
 
-            int powerUnlockLevelMin = Eval.RunInt(powerAffixProto.PowerUnlockLevelMin, contextData);
-            int powerUnlockLevelMax = Eval.RunInt(powerAffixProto.PowerUnlockLevelMax, contextData);
+            int powerUnlockLevelMin = Eval.RunInt(powerAffixProto.PowerUnlockLevelMin, evalContext);
+            int powerUnlockLevelMax = Eval.RunInt(powerAffixProto.PowerUnlockLevelMax, evalContext);
             powerUnlockLevelMax = Math.Max(powerUnlockLevelMin, powerUnlockLevelMax);
 
             var powerProgEntries = avatarProto.GetPowersUnlockedAtLevel(powerUnlockLevelMax, true);

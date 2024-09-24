@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -102,16 +103,18 @@ namespace MHServerEmu.Games.Network
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
 
             // Create player entity
-            EntitySettings playerSettings = new();
-            playerSettings.DbGuid = (ulong)_dbAccount.Id;
-            playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
-            playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
-            playerSettings.PlayerConnection = this;
-            playerSettings.PlayerName = _dbAccount.PlayerName;
-            playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
-            playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
+            using (EntitySettings playerSettings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            {
+                playerSettings.DbGuid = (ulong)_dbAccount.Id;
+                playerSettings.EntityRef = GameDatabase.GlobalsPrototype.DefaultPlayer;
+                playerSettings.OptionFlags = EntitySettingsOptionFlags.PopulateInventories;
+                playerSettings.PlayerConnection = this;
+                playerSettings.PlayerName = _dbAccount.PlayerName;
+                playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
+                playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
 
-            Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+                Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+            }
 
             // Crash the instance if we fail to create a player entity. This happens when there is collision
             // in dbid caused by the game instance lagging and being unable to process players leaving before
@@ -151,7 +154,7 @@ namespace MHServerEmu.Games.Network
                 {
                     if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
-                    EntitySettings avatarSettings = new();
+                    using EntitySettings avatarSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                     avatarSettings.EntityRef = avatarRef;
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
@@ -171,7 +174,7 @@ namespace MHServerEmu.Games.Network
                 {
                     foreach (PrototypeId teamUpRef in dataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                     {
-                        EntitySettings teamUpSettings = new();
+                        using EntitySettings teamUpSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                         teamUpSettings.EntityRef = teamUpRef;
                         teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
@@ -191,17 +194,22 @@ namespace MHServerEmu.Games.Network
         {
             if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
 
-            using (Archive archive = new(ArchiveSerializeType.Database))
+            // NOTE: We are locking on the account instance to prevent account data from being modified while
+            // it is being written to the database. This could potentially cause deadlocks if not used correctly.
+            lock (_dbAccount)
             {
-                Player.Serialize(archive);
-                _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+                using (Archive archive = new(ArchiveSerializeType.Database))
+                {
+                    Player.Serialize(archive);
+                    _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
+                }
+
+                _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
+                _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+                _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
+
+                PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
             }
-
-            _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
-            _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
-            _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
-
-            PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");
             return true;
@@ -866,8 +874,8 @@ namespace MHServerEmu.Games.Network
             var switchAvatar = message.As<NetMessageSwitchAvatar>();
             if (switchAvatar == null) return Logger.WarnReturn(false, $"OnSwitchAvatar(): Failed to retrieve message");
 
-            Logger.Info($"Received NetMessageSwitchAvatar");
-            Logger.Trace(switchAvatar.ToString());
+            PrototypeId avatarProtoRef = (PrototypeId)switchAvatar.AvatarPrototypeId;
+            Logger.Info($"OnSwitchAvatar(): player=[{this}], avatarProtoRef=[{avatarProtoRef.GetName()}]");
 
             // Start the avatar switching process
             if (Player.BeginSwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId) == false)

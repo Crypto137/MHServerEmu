@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,7 +18,9 @@ namespace MHServerEmu.Games.Loot
             ref ItemPrototype pickedItemProto, RestrictionTestFlags restrictionFlags, ref PrototypeId? rarityProtoRef)
         {
             pickedItemProto = null;
-            DropFilterArguments currentArgs = new(filterArgs);     // Copy arguments to compare to what we started
+
+            using DropFilterArguments currentArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            DropFilterArguments.Initialize(currentArgs, filterArgs);    // Copy arguments to compare to what we started with
 
             while (pickedItemProto == null && (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false || currentArgs.Rarity != PrototypeId.Invalid))
             {

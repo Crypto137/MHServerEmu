@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -9,53 +10,75 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly List<AffixRecord> _affixRecordList;
+        private readonly List<AffixRecord> _affixRecordList = new();
 
         public IEnumerable<AffixRecord> AffixRecords { get => _affixRecordList != null ? _affixRecordList : Array.Empty<AffixRecord>(); }
 
-        public LootCloneRecord(LootContext lootContext, ItemSpec itemSpec, PrototypeId rollFor)
-            : base(itemSpec.ItemProtoRef.As<Prototype>(), rollFor, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, lootContext)
+        public LootCloneRecord() { }    // Use pooling instead of calling this directly
+
+        public static void Initialize(LootCloneRecord args, LootContext lootContext, ItemSpec itemSpec, PrototypeId rollFor)
         {
+            // NOTE: This is a replacement for a constructor to work with pooling
+
+            Prototype proto = itemSpec.ItemProtoRef.As<Prototype>();
+
+            DropFilterArguments.Initialize(args, proto, rollFor, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, lootContext);
+
+            args._affixRecordList.Clear();
             if (itemSpec.AffixSpecs.Any())
             {
-                // Allocate affix record list on demand
-                _affixRecordList = new();
-
                 foreach (AffixSpec affixSpec in itemSpec.AffixSpecs)
-                    _affixRecordList.Add(new(affixSpec));
+                    args._affixRecordList.Add(new(affixSpec));
             }
 
-            ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (itemProto == null) { Logger.Warn("LootCloneRecord(): itemProto == null"); return; }
+            ItemPrototype itemProto = proto as ItemPrototype;
+            if (itemProto == null) { Logger.Warn("Initialize(): itemProto == null"); return; }
 
-            Rank = itemProto.GetRank(lootContext);
+            args.Rank = itemProto.GetRank(lootContext);
 
-            if (RollFor == PrototypeId.Invalid)
+            if (args.RollFor == PrototypeId.Invalid)
             {
                 // Determine RollFor dynamically if it's not provided
                 if (itemProto is CostumePrototype costumeProto)
                 {
-                    RollFor = costumeProto.UsableBy;
+                    args.RollFor = costumeProto.UsableBy;
                 }
                 else if (itemSpec.EquippableBy != PrototypeId.Invalid)
                 {
-                    RollFor = itemSpec.EquippableBy;
+                    args.RollFor = itemSpec.EquippableBy;
                 }
                 else
                 {
                     // Fall back to the binding
                     itemSpec.GetBindingState(out PrototypeId agentProtoRef);
-                    RollFor = agentProtoRef;
+                    args.RollFor = agentProtoRef;
                 }
             }
 
-            Slot = itemProto.GetInventorySlotForAgent(RollFor.As<AgentPrototype>());
+            args.Slot = itemProto.GetInventorySlotForAgent(args.RollFor.As<AgentPrototype>());
         }
 
-        public LootCloneRecord(LootCloneRecord other) : base(other)
+        public static void Initialize(LootCloneRecord args, LootCloneRecord other)
         {
-            if (other._affixRecordList != null)
-                _affixRecordList = new(_affixRecordList);
+            // NOTE: This is a replacement for a constructor to work with pooling
+
+            DropFilterArguments.Initialize(args, other);
+
+            args._affixRecordList.Clear();
+            if (other._affixRecordList.Count > 0)
+                args._affixRecordList.AddRange(other._affixRecordList);
+        }
+
+        public override void ResetForPool()
+        {
+            base.ResetForPool();
+            _affixRecordList.Clear();
+        }
+
+        public override void Dispose()
+        {
+            // Need to override Dispose so that loot clone records don't get pulled with regular drop filter args
+            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

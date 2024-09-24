@@ -83,9 +83,9 @@ namespace MHServerEmu.Games.Navi
 
         private static double InternalOrient2D(Vector3 a, Vector3 b, Vector3 c)
         {
-            double[] pa = { a.X, a.Y };
-            double[] pb = { b.X, b.Y };
-            double[] pc = { c.X, c.Y };
+            ReadOnlySpan<double> pa = stackalloc double[] { a.X, a.Y };
+            ReadOnlySpan<double> pb = stackalloc double[] { b.X, b.Y };
+            ReadOnlySpan<double> pc = stackalloc double[] { c.X, c.Y };
             return Orient2D.Robust(pa, pb, pc);
         }
 
@@ -125,11 +125,11 @@ namespace MHServerEmu.Games.Navi
 
         private static double InternalIncircle(Vector3 a, Vector3 b, Vector3 c, Vector3 d)
         {
-            double[] pa = { a.X, a.Y };
-            double[] pb = { b.X, b.Y };
-            double[] pc = { c.X, c.Y };
-            double[] pd = { d.X, d.Y };
-            return InCirlce.Robust(pa, pb, pc, pd);
+            ReadOnlySpan<double> pa = stackalloc double[] { a.X, a.Y };
+            ReadOnlySpan<double> pb = stackalloc double[] { b.X, b.Y };
+            ReadOnlySpan<double> pc = stackalloc double[] { c.X, c.Y };
+            ReadOnlySpan<double> pd = stackalloc double[] { d.X, d.Y };
+            return InCircle.Robust(pa, pb, pc, pd);
         }
 
         public static float CalcEarPower(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 point)

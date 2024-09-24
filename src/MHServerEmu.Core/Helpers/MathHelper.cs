@@ -110,7 +110,8 @@
 
         public static float Ratio(long value, long maxValue)
         {
-            return value / (float)maxValue;
+            // NOTE: We need to divide using double because ratio is often used for health, which can reach very high values
+            return (float)((double)value / maxValue);
         }
 
         public static long Modulus(long v1, long v2)
@@ -122,6 +123,20 @@
         public static float FloatModulus(float v1, float v2)
         {
             return MathF.IEEERemainder(v1, v2);
+        }
+
+        /// <summary>
+        /// Performs clamp without throwing when min > max.
+        /// </summary>
+        public static float ClampNoThrow(float value, float min, float max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
         }
     }
 }

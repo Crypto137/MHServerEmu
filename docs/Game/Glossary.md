@@ -30,7 +30,11 @@ This page provides definitions for terms used by the game internally.
 
 - **Cell** - the basic building block of the game world.
 
+- **Character Level** - the level of an entity used for unlocks.
+
 - **Circle** - a collection of players displayed in the social tab (friends, ignored, etc.).
+
+- **Combat Level** - the level of an entity used for combat calculations. In most cases is equal to character level.
 
 - **Community** - a collection of circles.
 
@@ -41,6 +45,8 @@ This page provides definitions for terms used by the game internally.
 - **Date Time** - a number of milliseconds or microseconds elapsed since `Jan 01 1970 00:00:00 GMT+0000`. Also referred to as calendar time.
 
 - **District** - a static arrangement of cells.
+
+- **Dynamic Combat Level (DCL)** - a level scaling system that adjusts combat calculations based on the difference in combat level between the power user and its target.
 
 - **Dynamic Random Area Generator (DRAG)** - a system that handles procedural generation of the game world.
 
@@ -134,7 +140,7 @@ This page provides definitions for terms used by the game internally.
 
 - **Replication** - a process that handles synchronization of the game state between a game instance server and all clients connected ot it.
 
-- **RHStruct** - a prototype embedded as a field of another prototype.
+- **RHStruct** - a prototype embedded as a field of another prototype. Stands for *right-hand struct*.
 
 - **Super Cell** - a block of cells (such as 2x2) representing a single place.
 

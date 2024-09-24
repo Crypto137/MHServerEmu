@@ -1,10 +1,11 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class LootRollSettings
+    public class LootRollSettings : IPoolable, IDisposable
     {
         public int Depth { get; set; }
         public LootDropChanceModifiers DropChanceModifiers { get; set; }
@@ -17,14 +18,14 @@ namespace MHServerEmu.Games.Loot
         public float UsablePercent { get; set; }                // LootRollSetUsablePrototype
 
         public int Level { get; set; } = 1;                     // LootRollOffsetLevelPrototype
-        public bool UseLevelVerbatim { get; set; } = false;     // LootRollUseLevelVerbatimPrototype
-        public int LevelForRequirementCheck { get; set; } = 0;  // LootRollRequireLevelPrototype
+        public bool UseLevelVerbatim { get; set; }              // LootRollUseLevelVerbatimPrototype
+        public int LevelForRequirementCheck { get; set; }       // LootRollRequireLevelPrototype
 
         public PrototypeId DifficultyTier { get; set; }
         public PrototypeId RegionScenarioRarity { get; set; }   // LootRollRequireRegionScenarioRarityPrototype
         public PrototypeId RegionAffixTable { get; set; }       // LootRollSetRegionAffixTablePrototype
 
-        public int KillCount { get; set; } = 0;                 // LootRollRequireKillCountPrototype
+        public int KillCount { get; set; }                      // LootRollRequireKillCountPrototype
         public Weekday UsableWeekday { get; set; } = Weekday.All;   // LootRollRequireWeekdayPrototype
 
         public HashSet<PrototypeId> Rarities { get; } = new();  // LootRollSetRarityPrototype
@@ -37,9 +38,9 @@ namespace MHServerEmu.Games.Loot
         public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
         public PrototypeId MissionRef { get; set; }
 
-        public LootRollSettings() { }
+        public LootRollSettings() { }   // Use pooling instead of calling this directly
 
-        public LootRollSettings(LootRollSettings other)
+        public void Set(LootRollSettings other)
         {
             Depth = other.Depth;
             DropChanceModifiers = other.DropChanceModifiers;
@@ -63,13 +64,72 @@ namespace MHServerEmu.Games.Loot
             KillCount = other.KillCount;
             UsableWeekday = other.UsableWeekday;
 
-            Rarities = new(other.Rarities);
+            Rarities.Clear();
+            if (other.Rarities.Count > 0)
+            {
+                foreach (PrototypeId rarityProtoRef in other.Rarities)
+                    Rarities.Add(rarityProtoRef);
+            }
 
             DropDistanceThresholdSq = other.DropDistanceThresholdSq;
 
-            AffixLimitMinByPositionModifierDict = new(other.AffixLimitMinByPositionModifierDict);
-            AffixLimitMaxByPositionModifierDict = new(other.AffixLimitMaxByPositionModifierDict);
-            AffixLimitByCategoryModifierDict = new(other.AffixLimitByCategoryModifierDict);
+            AffixLimitMinByPositionModifierDict.Clear();
+            if (other.AffixLimitMinByPositionModifierDict.Count > 0)
+            {
+                foreach (var kvp in other.AffixLimitMinByPositionModifierDict)
+                    AffixLimitMinByPositionModifierDict.Add(kvp.Key, kvp.Value);
+            }
+
+            AffixLimitMaxByPositionModifierDict.Clear();
+            if (other.AffixLimitMaxByPositionModifierDict.Count > 0)
+            {
+                foreach (var kvp in other.AffixLimitMaxByPositionModifierDict)
+                    AffixLimitMaxByPositionModifierDict.Add(kvp.Key, kvp.Value);
+            }
+
+            AffixLimitByCategoryModifierDict.Clear();
+            if (other.AffixLimitByCategoryModifierDict.Count > 0)
+            {
+                foreach (var kvp in other.AffixLimitByCategoryModifierDict)
+                    AffixLimitByCategoryModifierDict.Add(kvp.Key, kvp.Value);
+            }
+        }
+
+        public void ResetForPool()
+        {
+            Depth = default;
+            DropChanceModifiers = default;
+            NoDropModifier = 1f;
+
+            UsableAvatar = default;
+            UsableTeamUp = default;
+            UseSecondaryAvatar = default;
+            ForceUsable = default;
+            UsablePercent = default;
+
+            Level = 1;
+            UseLevelVerbatim = default;
+            LevelForRequirementCheck = default;
+
+            DifficultyTier = default;
+            RegionScenarioRarity = default;
+            RegionAffixTable = default;
+
+            KillCount = default;
+            UsableWeekday = Weekday.All;
+
+            Rarities.Clear();
+
+            DropDistanceThresholdSq = default;
+
+            AffixLimitMinByPositionModifierDict.Clear();
+            AffixLimitMaxByPositionModifierDict.Clear();
+            AffixLimitByCategoryModifierDict.Clear();
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
 
         /// <summary>

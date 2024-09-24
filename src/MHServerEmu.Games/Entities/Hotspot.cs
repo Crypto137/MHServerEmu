@@ -10,6 +10,9 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Behavior;
+using static MHServerEmu.Games.Missions.MissionManager;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -82,7 +85,8 @@ namespace MHServerEmu.Games.Entities
                 _directApplyToMissileProperties = new();
                 if (missilesData.EvalPropertiesToApply != null)
                 {
-                    EvalContextData evalContext = new(Game);
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.Game = Game;
                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, _directApplyToMissileProperties);
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
                     if (Eval.RunBool(missilesData.EvalPropertiesToApply, evalContext) == false) 

@@ -199,9 +199,9 @@ namespace MHServerEmu
         /// </summary>
         private bool InitSystems()
         {
-            // Use JSON-based simplified DBManager implementaion when BypassAuth is enabled
+            // JsonDBManager saves a single account in a JSON file
             var config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
-            IDBManager dbManager = config.BypassAuth ? JsonDBManager.Instance : SQLiteDBManager.Instance;
+            IDBManager dbManager = config.UseJsonDBManager ? JsonDBManager.Instance : SQLiteDBManager.Instance;
 
             return PakFileSystem.Instance.Initialize()
                 && ProtocolDispatchTable.Instance.Initialize()

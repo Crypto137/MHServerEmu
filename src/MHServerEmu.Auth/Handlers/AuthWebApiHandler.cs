@@ -7,6 +7,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement;
 
@@ -65,6 +66,7 @@ namespace MHServerEmu.Auth.Handlers
             {
                 case "/AccountManagement/Create":   await OnAccountCreate(bodyQueryString, httpResponse, outputFormat); break;
                 case "/ServerStatus":               await OnServerStatus(httpResponse, outputFormat); break;
+                case "/Metrics/Performance":        await OnMetricsPerformance(httpResponse, outputFormat); break;
 
                 default:
                     Logger.Warn($"HandleRequestAsync(): Unhandled web API request\nRequest: {httpRequest.Url.LocalPath}\nRemoteEndPoint: {endPointName}\nUserAgent: {httpRequest.UserAgent}");
@@ -147,6 +149,22 @@ namespace MHServerEmu.Auth.Handlers
                 status = status.Replace("\n", "<br/>");
 
             await SendResponseAsync(new(true, "Server Status", status), httpResponse, outputFormat);
+            return true;
+        }
+
+        private async Task<bool> OnMetricsPerformance(HttpListenerResponse httpResponse, AuthWebApiOutputFormat outputFormat)
+        {
+            if (outputFormat == AuthWebApiOutputFormat.Html)
+            {
+                string report = MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText);
+                await SendResponseAsync(new(true, "Performance Report", report), httpResponse, outputFormat);
+            }
+            else if (outputFormat == AuthWebApiOutputFormat.Json)
+            {
+                string report = MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.Json);
+                await HttpHelper.SendPlainTextAsync(httpResponse, report);
+            }
+
             return true;
         }
 

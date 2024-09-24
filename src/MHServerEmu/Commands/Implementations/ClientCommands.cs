@@ -30,7 +30,7 @@ namespace MHServerEmu.Commands.Implementations
             if (playerManager.TryGetSession(sessionId, out ClientSession session) == false)
                 return $"SessionId 0x{sessionId:X} not found.";
 
-            return session.ToString();
+            return session.GetClientInfo();
         }
 
         [Command("kick", "Usage: client kick [playerName]", AccountUserLevel.Moderator)]

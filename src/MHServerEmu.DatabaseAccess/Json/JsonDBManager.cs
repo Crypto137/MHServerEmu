@@ -24,7 +24,7 @@ namespace MHServerEmu.DatabaseAccess.Json
 
         public static JsonDBManager Instance { get; } = new();
 
-        public bool ValidateAccounts { get => false; }
+        public bool VerifyAccounts { get => false; }
 
         private JsonDBManager() { }
 
@@ -92,7 +92,13 @@ namespace MHServerEmu.DatabaseAccess.Json
             return Logger.WarnReturn(false, "UpdateAccount(): Operation not supported");
         }
 
-        public bool UpdateAccountData(DBAccount account)
+        public bool LoadPlayerData(DBAccount account)
+        {
+            // All JSON data is loaded at once (FIXME)
+            return true;
+        }
+
+        public bool SavePlayerData(DBAccount account)
         {
             if (account != _account)
                 return Logger.WarnReturn(false, "UpdateAccountData(): Attempting to update non-default account when bypass auth is enabled");

@@ -13,8 +13,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 1;     // Increment this when making changes to the database schema
-        private const int NumTestAccounts = 5;          // Number of test accounts to create for new database files
+        private const int CurrentSchemaVersion = 2;         // Increment this when making changes to the database schema
+        private const int NumTestAccounts = 5;              // Number of test accounts to create for new database files
+        private const int NumPlayerDataWriteAttempts = 3;   // Number of write attempts to do when saving player data
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -61,18 +62,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public bool TryQueryAccountByEmail(string email, out DBAccount account)
         {
-            using SQLiteConnection connection = new(_connectionString);
+            using SQLiteConnection connection = GetConnection();
             var accounts = connection.Query<DBAccount>("SELECT * FROM Account WHERE Email = @Email", new { Email = email });
 
-            if (accounts.Any() == false)
-            {
-                account = null;
-                return false;
-            }
-
-            account = accounts.First();
-            LoadAccountData(connection, account);
-            return true;
+            // Associated player data is loaded separately
+            account = accounts.FirstOrDefault();
+            return account != null;
         }
 
         public bool QueryIsPlayerNameTaken(string playerName)
@@ -92,8 +87,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
                 try
                 {
-                    connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, IsBanned, IsArchived, IsPasswordExpired)
-                        VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @IsBanned, @IsArchived, @IsPasswordExpired)", account);
+                    connection.Execute(@"INSERT INTO Account (Id, Email, PlayerName, PasswordHash, Salt, UserLevel, Flags)
+                        VALUES (@Id, @Email, @PlayerName, @PasswordHash, @Salt, @UserLevel, @Flags)", account);
                     return true;
                 }
                 catch (Exception e)
@@ -112,8 +107,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
                 try
                 {
-                    connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt, UserLevel=@UserLevel,
-                        IsBanned=@IsBanned, IsArchived=@IsArchived, IsPasswordExpired=@IsPasswordExpired WHERE Id=@Id", account);
+                    connection.Execute(@"UPDATE Account SET Email=@Email, PlayerName=@PlayerName, PasswordHash=@PasswordHash, Salt=@Salt,
+                        UserLevel=@UserLevel, Flags=@Flags WHERE Id=@Id", account);
                     return true;
                 }
                 catch (Exception e)
@@ -124,53 +119,56 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
         }
 
-        public bool UpdateAccountData(DBAccount account)
+        public bool LoadPlayerData(DBAccount account)
         {
-            // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
-            lock (_writeLock)
+            // Clear existing data
+            account.Player = null;
+            account.ClearEntities();
+
+            // Load fresh data
+            using SQLiteConnection connection = GetConnection();
+
+            var @params = new { DbGuid = account.Id };
+
+            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
+            account.Player = players.FirstOrDefault();
+
+            if (account.Player == null)
             {
-                using SQLiteConnection connection = GetConnection();
-
-                // Use a transaction to make sure all data is saved
-                using SQLiteTransaction transaction = connection.BeginTransaction();
-
-                try
-                {
-                    // Update player entity
-                    connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
-                    connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
-                                        StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
-                                        account.Player, transaction);
-
-                    // Update inventory entities
-                    UpdateEntityTable(connection, transaction, "Avatar", account.Id, account.Avatars);
-                    UpdateEntityTable(connection, transaction, "TeamUp", account.Id, account.TeamUps);
-                    UpdateEntityTable(connection, transaction, "Item", account.Id, account.Items);
-
-                    foreach (DBEntity avatar in account.Avatars)
-                    {
-                        UpdateEntityTable(connection, transaction, "Item", avatar.DbGuid, account.Items);
-                        UpdateEntityTable(connection, transaction, "ControlledEntity", avatar.DbGuid, account.ControlledEntities);
-                    }
-
-                    foreach (DBEntity teamUp in account.TeamUps)
-                    {
-                        UpdateEntityTable(connection, transaction, "Item", teamUp.DbGuid, account.Items);
-                    }
-
-                    transaction.Commit();
-
-                    TryCreateBackup();
-
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorException(e, nameof(UpdateAccountData));
-                    transaction.Rollback();
-                    return false;
-                }
+                account.Player = new(account.Id);
+                Logger.Info($"Initialized player data for account 0x{account.Id:X}");
             }
+
+            // Load inventory entities
+            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", account.Id));
+            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", account.Id));
+            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", account.Id));
+
+            foreach (DBEntity avatar in account.Avatars)
+            {
+                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", avatar.DbGuid));
+                account.ControlledEntities.AddRange(LoadEntitiesFromTable(connection, "ControlledEntity", avatar.DbGuid));
+            }
+
+            foreach (DBEntity teamUp in account.TeamUps)
+            {
+                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", teamUp.DbGuid));
+            }
+
+            return true;
+        }
+
+        public bool SavePlayerData(DBAccount account)
+        {
+            for (int i = 0; i < NumPlayerDataWriteAttempts; i++)
+            {
+                if (DoSavePlayerData(account))
+                    return Logger.InfoReturn(true, $"Successfully written player data for account [{account}]");
+
+                // Maybe we should add a delay here
+            }
+
+            return Logger.WarnReturn(false, $"SavePlayerData(): Failed to write player data for account [{account}]");
         }
 
         /// <summary>
@@ -277,11 +275,68 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return true;
         }
 
+        private bool DoSavePlayerData(DBAccount account)
+        {
+            // Lock to prevent corruption if we are doing a backup (TODO: Make this better)
+            lock (_writeLock)
+            {
+                using SQLiteConnection connection = GetConnection();
+
+                // Use a transaction to make sure all data is saved
+                using SQLiteTransaction transaction = connection.BeginTransaction();
+
+                try
+                {
+                    // Update player entity
+                    if (account.Player != null)
+                    {
+                        connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
+                        connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
+                                            StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
+                                            account.Player, transaction);
+                    }
+                    else
+                    {
+                        Logger.Warn($"DoSavePlayerData(): Attempted to save null player entity data for account {account}");
+                    }
+
+                    // Update inventory entities
+                    UpdateEntityTable(connection, transaction, "Avatar", account.Id, account.Avatars);
+                    UpdateEntityTable(connection, transaction, "TeamUp", account.Id, account.TeamUps);
+                    UpdateEntityTable(connection, transaction, "Item", account.Id, account.Items);
+
+                    foreach (DBEntity avatar in account.Avatars)
+                    {
+                        UpdateEntityTable(connection, transaction, "Item", avatar.DbGuid, account.Items);
+                        UpdateEntityTable(connection, transaction, "ControlledEntity", avatar.DbGuid, account.ControlledEntities);
+                    }
+
+                    foreach (DBEntity teamUp in account.TeamUps)
+                    {
+                        UpdateEntityTable(connection, transaction, "Item", teamUp.DbGuid, account.Items);
+                    }
+
+                    transaction.Commit();
+
+                    TryCreateBackup();
+
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn($"DoSavePlayerData(): SQLite error for account [{account}]: {e.Message}");
+                    transaction.Rollback();
+                    return false;
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a backup of the database file if enough time has passed since the last one.
         /// </summary>
         private void TryCreateBackup()
         {
+            // TODO: Use SQLite backup functionality for this
             TimeSpan now = Clock.GameTime;
 
             if ((now - _lastBackupTime) < _backupInterval)
@@ -311,40 +366,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private static void SetSchemaVersion(SQLiteConnection connection, int version)
         {
             connection.Execute($"PRAGMA user_version = {version}");
-        }
-
-        /// <summary>
-        /// Loads account data for the specified <see cref="DBAccount"/> and maps relations.
-        /// </summary>
-        private static void LoadAccountData(SQLiteConnection connection, DBAccount account)
-        {
-            var @params = new { DbGuid = account.Id };
-
-            // Load player data
-            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
-            account.Player = players.FirstOrDefault();
-
-            if (account.Player == null)
-            {
-                account.Player = new(account.Id);
-                Logger.Info($"Initialized player data for account 0x{account.Id:X}");
-            }
-
-            // Load inventory entities
-            account.Avatars.AddRange(LoadEntitiesFromTable(connection, "Avatar", account.Id));
-            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, "TeamUp", account.Id));
-            account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", account.Id));
-
-            foreach (DBEntity avatar in account.Avatars)
-            {
-                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", avatar.DbGuid));
-                account.ControlledEntities.AddRange(LoadEntitiesFromTable(connection, "ControlledEntity", avatar.DbGuid));
-            }
-
-            foreach (DBEntity teamUp in account.TeamUps)
-            {
-                account.Items.AddRange(LoadEntitiesFromTable(connection, "Item", teamUp.DbGuid));
-            }
         }
 
         /// <summary>

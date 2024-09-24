@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -95,14 +96,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
-            Properties[PropertyEnum.CombatLevel] = 60;
-
-            // Add base stats to compensate for the lack of equipment
-            Properties[PropertyEnum.DamageRating] = 2500f;
-            Properties[PropertyEnum.DamagePctBonusVsBosses] = 100f; // 4f
-            Properties[PropertyEnum.CritChancePctAdd] = 0.25f;
-            Properties[PropertyEnum.SuperCritChancePctAdd] = 0.35f;
-            Properties[PropertyEnum.HealthMaxMagnitudeDCL] = 1f + MathF.Max(Game.CustomGameOptions.AvatarHealthMaxMagnitudeBonus, 0f);
+            Properties[PropertyEnum.CombatLevel] = CharacterLevel;
+            Properties[PropertyEnum.DamagePctBonusVsBosses] = 100f;
 
             // HACK: Set health to max for new avatars
             if (Properties[PropertyEnum.Health] == 0)
@@ -925,6 +920,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
         }
 
+        public override int TryLevelUp(Player owner)
+        {
+            int levelDelta = base.TryLevelUp(owner);
+
+            if (levelDelta != 0)
+                CombatLevel = Math.Clamp(CombatLevel + levelDelta, 1, GetAvatarLevelCap());
+
+            return levelDelta;
+        }
+
         protected override bool OnLevelUp(int oldLevel, int newLevel)
         {
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
@@ -955,6 +960,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             Player owner = GetOwnerOfType<Player>();
             owner?.OnAvatarCharacterLevelChanged(this);
+        }
+
+        protected override void SetCombatLevel(int combatLevel)
+        {
+            base.SetCombatLevel(combatLevel);
+
+            Agent teamUpAgent = CurrentTeamUpAgent;
+            if (teamUpAgent != null)
+                teamUpAgent.CombatLevel = combatLevel;
         }
 
         #endregion
@@ -1294,16 +1308,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             Agent teamUp = CurrentTeamUpAgent;
             if (teamUp == null) return;
 
+            teamUp.CombatLevel = CombatLevel;
+
             if (teamUp.IsDead)
                 teamUp.Resurrect();
 
-            EntitySettings settings = null;
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             if (playIntro)
-            {
-                settings = new();
                 settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden;
-            }
-            
+
             teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, settings);
             teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
         }

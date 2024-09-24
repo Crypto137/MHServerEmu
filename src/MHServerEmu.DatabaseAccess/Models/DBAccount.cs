@@ -5,11 +5,23 @@ using MHServerEmu.Core.System;
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
+    // NOTE: These enums are saved to the database, do not remove existing values
+
     public enum AccountUserLevel : byte
     {
-        User,
-        Moderator,
-        Admin
+        User = 0,
+        Moderator = 1,
+        Admin = 2
+    }
+
+    [Flags]
+    public enum AccountFlags
+    {
+        None                    = 0,
+        IsBanned                = 1 << 0,
+        IsArchived              = 1 << 1,
+        IsPasswordExpired       = 1 << 2,
+        LinuxCompatibilityMode  = 1 << 3,   // Disables session token verification
     }
 
     /// <summary>
@@ -26,9 +38,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         public byte[] PasswordHash { get; set; }
         public byte[] Salt { get; set; }
         public AccountUserLevel UserLevel { get; set; }
-        public bool IsBanned { get; set; }
-        public bool IsArchived { get; set; }
-        public bool IsPasswordExpired { get; set; }
+        public AccountFlags Flags { get; set; }
 
         public DBPlayer Player { get; set; }
 

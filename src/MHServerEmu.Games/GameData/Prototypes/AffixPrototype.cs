@@ -1,9 +1,13 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Properties;
 
@@ -334,6 +338,66 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TooltipTemplateNextRank { get; protected set; }
         public PropertySetEntryPrototype[] PropertiesForTooltips { get; protected set; }
         public AssetId UIIconHiRes { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public void RunEvalOnCreate(Entity entity, PropertyCollection indexProperties, PropertyCollection modProperties)
+        {
+            if (EvalOnCreate.HasValue())
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, modProperties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, entity.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, indexProperties);
+
+                foreach (EvalPrototype evalProto in EvalOnCreate)
+                {
+                    bool curEvalSucceeded = Eval.RunBool(evalProto, evalContext);
+                    if (curEvalSucceeded == false)
+                        Logger.Warn($"RunEvalOnCreate(): The following EvalOnCreate Eval in a mod failed:\nEval: [{evalProto.ExpressionString}]\n Mod: [{this}]");
+                }
+            }
+
+            if (PropertiesForTooltips.HasValue())
+            {
+                foreach (PropertySetEntryPrototype propEntryProto in PropertiesForTooltips)
+                {
+                    if (propEntryProto.Value == null)
+                    {
+                        Logger.Warn("RunEvalOnCreate(): propEntryProto.Value == null");
+                        continue;
+                    }
+
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, entity.Properties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, indexProperties);
+
+                    PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propEntryProto.Prop.Enum);
+                    
+                    switch (propertyInfo.DataType)
+                    {
+                        case PropertyDataType.Boolean:
+                            Properties[propEntryProto.Prop] = Eval.RunBool(propEntryProto.Value, evalContext);
+                            break;
+
+                        case PropertyDataType.Real:
+                            Properties[propEntryProto.Prop] = Eval.RunFloat(propEntryProto.Value, evalContext);
+                            break;
+
+                        case PropertyDataType.Integer:
+                            Properties[propEntryProto.Prop] = Eval.RunInt(propEntryProto.Value, evalContext);
+                            break;
+
+                        default:
+                            Logger.Warn("The following Mod has a built-in PropertySetEntry with a property that is not an int/float/bool prop, which doesn't work!\n" +
+                                $"Mod: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     public class ModTypePrototype : Prototype
@@ -418,25 +482,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Keywords { get; protected set; }
         public int BonusItemFindPoints { get; protected set; }
 
-        public static PrototypeId DoOverride(PrototypeId rankRef, PrototypeId rankOverride)
-        {
-            var rankProto = rankRef.As<RankPrototype>();
-            var rankOverrideProto = rankOverride.As<RankPrototype>();
-            return DoOverride(rankProto, rankOverrideProto).DataRef;
-        }
+        //--
 
-        private static RankPrototype DoOverride(RankPrototype rankProto, RankPrototype rankOverrideProto)
-        {
-            if (rankProto == null) return rankOverrideProto;
-            if (rankOverrideProto == null) return rankProto;
-            if (rankProto.Rank < rankOverrideProto.Rank) return rankOverrideProto;
-            return rankProto;
-        }
+        [DoNotCopy]
+        public bool IsRankBoss { get => Rank == Rank.Boss || Rank == Rank.GroupBoss; }
 
-        public bool IsRankBoss()
-        {
-            return Rank == Rank.Boss || Rank == Rank.GroupBoss;
-        }
+        [DoNotCopy]
+        public bool IsRankBossOrMiniBoss { get => IsRankBoss || Rank == Rank.MiniBoss; }
     }
 
     public class EnemyBoostSetPrototype : Prototype

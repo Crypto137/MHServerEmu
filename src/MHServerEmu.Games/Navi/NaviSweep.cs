@@ -197,12 +197,12 @@ namespace MHServerEmu.Games.Navi
 
         private SweepResult CheckHeightMapPair(int posX, int posY, bool swap, int sign, HeightMapPrototype heightMap, ref int height, Cell cell, in Segment line, ref Vector3? resultPosition, ref Vector3? resultNormal, ref float resultDist)
         {
-            int[] x = new int[2];
-            int[] y = new int[2];
-            SweepResult[] pairResult = new SweepResult[2];
-            float[] pairDistance = new float[2];
-            Vector3?[] pairPosition = new Vector3?[2];
-            Vector3?[] pairNormal = new Vector3?[2];
+            Span<int> x = stackalloc int[2];
+            Span<int> y = stackalloc int[2];
+            Span<SweepResult> pairResult = stackalloc SweepResult[2];
+            Span<float> pairDistance = stackalloc float[2];
+            Span<Vector3?> pairPosition = stackalloc Vector3?[2];
+            Span<Vector3?> pairNormal = stackalloc Vector3?[2];
 
             x[0] = posX;
             y[0] = posY;
@@ -584,11 +584,12 @@ namespace MHServerEmu.Games.Navi
 
             float distanceToIntersect = 0.0f;
             float minDistance = float.MaxValue;
+            Span<bool> testIndex = stackalloc bool[3];
 
             while (triStack.Count > 0)
             {
                 NaviTriangle triangle = triStack.Pop();
-                bool[] testIndex = new bool[3];
+                testIndex.Clear();
 
                 for (int i = 0; i < 3; i++)
                 {

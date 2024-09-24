@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
@@ -88,7 +89,7 @@ namespace MHServerEmu.Games.Entities
             var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
             if (brain is not ProceduralAIProfilePrototype profile) return;
 
-            PropertyCollection collection = new ();
+            using PropertyCollection collection = ObjectPoolManager.Instance.Get<PropertyCollection>();
             collection[PropertyEnum.AICustomThinkRateMS] = 1000;
             if (selectorProto != null) {
                 collection[PropertyEnum.AIAggroRangeAlly] = selectorProto.DefaultAggroRangeAlly;

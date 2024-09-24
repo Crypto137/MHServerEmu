@@ -4,6 +4,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -156,33 +157,21 @@ namespace MHServerEmu.Games.Entities
         {
             if (base.Initialize(settings) == false) return Logger.WarnReturn(false, "Initialize(): base.Initialize(settings) == false");
 
-            var proto = WorldEntityPrototype;
+            WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
 
             if (settings.IgnoreNavi)
                 SetFlag(EntityFlags.IgnoreNavi, true);
 
             ShouldSnapToFloorOnSpawn = settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.HasOverrideSnapToFloor)
                 ? settings.OptionFlags.HasFlag(EntitySettingsOptionFlags.OverrideSnapToFloorValue)
-                : proto.SnapToFloorOnSpawn;
+                : worldEntityProto.SnapToFloorOnSpawn;
 
             OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
             RegionLocation.Initialize(this);
             SpawnSpec = settings.SpawnSpec;
 
-            // Old
-            Properties[PropertyEnum.VariationSeed] = Game.Random.Next(1, 10000);
-
-            if (this is not Avatar) // REMOVEME
-            {
-                Properties[PropertyEnum.CharacterLevel] = 60;
-                Properties[PropertyEnum.CombatLevel] = 60;
-                long maxHealth = Properties[PropertyEnum.HealthMaxOther];
-                if (maxHealth > 500000) Properties[PropertyEnum.HealthMaxOther] = 500000; // healthMax limit
-                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            }
-
-            if (proto.Bounds != null)
-                Bounds.InitializeFromPrototype(proto.Bounds);
+            if (worldEntityProto.Bounds != null)
+                Bounds.InitializeFromPrototype(worldEntityProto.Bounds);
 
             Physics.Initialize(this);
 
@@ -191,9 +180,26 @@ namespace MHServerEmu.Games.Entities
             _powerCollection = new(this);
             _unkEvent = 0;
 
+            if (Properties.HasProperty(PropertyEnum.Rank) == false && worldEntityProto.Rank != PrototypeId.Invalid)
+                Properties[PropertyEnum.Rank] = worldEntityProto.Rank;
+
+            Properties[PropertyEnum.VariationSeed] = settings.VariationSeed != 0 ? settings.VariationSeed : Game.Random.Next(1, 10000);
+
             TagPlayers = new(this);
 
             return true;
+        }
+
+        public override void OnPostInit(EntitySettings settings)
+        {
+            base.OnPostInit(settings);
+
+            if (CanBePlayerOwned() == false && this is not Missile) // REMOVEME
+            {
+                Properties[PropertyEnum.CharacterLevel] = 60;
+                Properties[PropertyEnum.CombatLevel] = 60;
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            }
         }
 
         public void ClearSpawnSpec()
@@ -1308,7 +1314,7 @@ namespace MHServerEmu.Games.Entities
             throw new NotImplementedException();
         }
 
-        public float GetDamageRating(DamageType damageType)
+        public float GetDamageRating(DamageType damageType = DamageType.Any)
         {
             CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
             if (combatGlobals == null) return Logger.WarnReturn(0f, "GetDamageRating(): combatGlobal == null");
@@ -1325,7 +1331,7 @@ namespace MHServerEmu.Games.Entities
 
         public float GetCastSpeedPct(PowerPrototype powerProto)
         {
-            float castSpeedPct = Properties[PropertyEnum.CastSpeedIncrPct] - Properties[PropertyEnum.CastSpeedDecrPct];
+            float castSpeedPct = (float)Properties[PropertyEnum.CastSpeedIncrPct] - (float)Properties[PropertyEnum.CastSpeedDecrPct];
             float castSpeedMult = Properties[PropertyEnum.CastSpeedMult];
 
             if (powerProto != null)
@@ -1374,6 +1380,46 @@ namespace MHServerEmu.Games.Entities
             castSpeedPct = MathF.Max(castSpeedPct, 0.5f);
 
             return castSpeedPct;
+        }
+
+        #endregion
+
+        #region Mods
+
+        protected bool ModChangeModEffects(PrototypeId modRef, int rank)
+        {
+            if (IsInWorld == false) return Logger.WarnReturn(false, "ModChangeModEffects(): IsInWorld == false");
+            if (modRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ModChangeModEffects(): modRef == PrototypeId.Invalid");
+
+            ModPrototype modProto = GameDatabase.GetPrototype<ModPrototype>(modRef);
+            if (modProto == null) return Logger.WarnReturn(false, "ModChangeModEffects(): modProto == null");
+
+            if (modProto.Type == PrototypeId.Invalid) return Logger.WarnReturn(false, "modProto.Type == PrototypeId.Invalid");
+
+            // No properties to add from this mod
+            if ((modProto.Properties == null || modProto.Properties.Any() == false) && modProto.EvalOnCreate.IsNullOrEmpty())
+                return true;
+
+            if (rank > 0)
+            {
+                using PropertyCollection indexProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                indexProperties[PropertyEnum.CharacterLevel] = CharacterLevel;
+                indexProperties[PropertyEnum.CombatLevel] = CombatLevel;
+                indexProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
+
+                if (modProto is OmegaBonusPrototype omegaModProto)
+                    indexProperties.CopyPropertyRange(Properties, PropertyEnum.OmegaRank);
+                else if (modProto is InfinityGemBonusPrototype)
+                    indexProperties.CopyPropertyRange(Properties, PropertyEnum.InfinityGemBonusRank);
+
+                AttachProperties(modProto.Type, modRef, 0, modProto.Properties, indexProperties, rank, true);                
+            }
+            else
+            {
+                DetachProperties(modProto.Type, modRef, 0);
+            }
+
+            return true;
         }
 
         #endregion
@@ -1689,8 +1735,36 @@ namespace MHServerEmu.Games.Entities
 
                     break;
 
+                case PropertyEnum.EnemyBoost:
+                    if (IsSimulated)
+                    {
+                        // If this entity is not currently being simulated, this will be done in SetSimulated
+                        Property.FromParam(id, 0, out PrototypeId modProtoRef);
+                        if (modProtoRef == PrototypeId.Invalid)
+                        {
+                            Logger.Warn("OnPropertyChange(): modProtoRef == PrototypeId.Invalid");
+                            return;
+                        }
+
+                        ModChangeModEffects(modProtoRef, newValue);
+                    }
+
+                    break;
+
                 case PropertyEnum.HealthMax:
                     Properties[PropertyEnum.HealthMaxOther] = newValue;
+
+                    // Scale current health
+                    long health = Properties[PropertyEnum.Health];
+                    if (health > 0 && flags.HasFlag(SetPropertyFlags.Deserialized) == false)
+                    {
+                        long oldHealthMax = oldValue;
+                        float ratio = Math.Min(MathHelper.Ratio(health, oldHealthMax), 1f);
+                        long newHealth = (long)Math.Round((long)newValue * ratio);
+
+                        Properties[PropertyEnum.Health] = newHealth;
+                    }
+
                     break;
 
                 case PropertyEnum.MissileBlockingHotspot:
@@ -1734,6 +1808,24 @@ namespace MHServerEmu.Games.Entities
                         else
                             DisableNavigationInfluence();
                     }
+                    break;
+
+                case PropertyEnum.Rank:
+                    if (IsSimulated)
+                    {
+                        // If this entity is not currently being simulated, this will be done in SetSimulated
+                        PrototypeId modTypeRef = GameDatabase.GlobalsPrototype.ModGlobals.RankModType;
+                        ClearAttachedPropertiesOfType(modTypeRef);
+
+                        PrototypeId newRankProtoRef = newValue;
+                        PrototypeId oldRankProtoRef = oldValue;
+
+                        if (newRankProtoRef != PrototypeId.Invalid)
+                            ModChangeModEffects(newRankProtoRef, 1);
+                        else
+                            ModChangeModEffects(oldRankProtoRef, 0);
+                    }
+
                     break;
 
                 case PropertyEnum.SkillshotReflectChancePct:
@@ -1958,7 +2050,8 @@ namespace MHServerEmu.Games.Entities
 
         public override SimulateResult SetSimulated(bool simulated)
         {
-            var result = base.SetSimulated(simulated);
+            SimulateResult result = base.SetSimulated(simulated);
+            
             if (result != SimulateResult.None && Locomotor != null)
             {
                 ModifyCollectionMembership(EntityCollection.Locomotion, IsSimulated);
@@ -1973,8 +2066,31 @@ namespace MHServerEmu.Games.Entities
             }
             if (result == SimulateResult.Set)
             {
-                // TODO EnemyBoost Rank
+                // Apply mods from boosts and rank
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId modProtoRef);
+                    if (modProtoRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("SetSimulated(): modProtoRef == PrototypeId.Invalid");
+                        continue;
+                    }
+
+                    ModChangeModEffects(modProtoRef, kvp.Value);
+                }
+
+                if (Properties.HasProperty(PropertyEnum.Rank))
+                {
+                    PrototypeId modTypeRef = GameDatabase.GlobalsPrototype.ModGlobals.RankModType;
+                    ClearAttachedPropertiesOfType(modTypeRef);
+
+                    // NOTE: The client iterates over a range of Rank properties, which is pointless because Rank does not have params.
+                    // Also the rank proto ref is never going to be invalid here because we do a HasProperty check above.
+                    ModChangeModEffects(Properties[PropertyEnum.Rank], 1);
+                }
             }
+
             return result;
         }
 
