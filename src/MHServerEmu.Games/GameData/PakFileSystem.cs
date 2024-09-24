@@ -49,9 +49,9 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Returns a stream of decompressed pak data from the specified pak file.
+        /// Returns a <see cref="Stream"/> of decompressed pak data from the specified pak file.
         /// </summary>
-        public MemoryStream LoadFromPak(string filePath, PakFileId pakId)
+        public Stream LoadFromPak(string filePath, PakFileId pakId)
         {
             return _paks[(int)pakId].LoadFileDataInPak(filePath);
         }
