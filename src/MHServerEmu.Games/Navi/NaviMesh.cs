@@ -411,7 +411,11 @@ namespace MHServerEmu.Games.Navi
 
         public Vector3 ProjectToMesh(Vector3 regionPos)
         {
-            var triangle = NaviCdt.FindTriangleAtPoint(regionPos);
+            if (IsMeshValid == false) return Logger.WarnReturn(Vector3.Zero, $"ProjectToMesh(): Invalid mesh in region {_region}");
+
+            NaviTriangle triangle = NaviCdt.FindTriangleAtPoint(regionPos);
+            if (triangle == null) return Logger.WarnReturn(regionPos, $"ProjectToMesh(): Failed to find triangle at point {regionPos}");
+
             return NaviUtil.ProjectToPlane(triangle, regionPos);
         }
 
