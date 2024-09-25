@@ -302,6 +302,22 @@ namespace MHServerEmu.Games.Entities
             if (waypointRef != PrototypeId.Invalid)
                 player.UnlockWaypoint(waypointRef);
 
+            var manager = Game.EntityManager;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.HotspotTriggerEntity))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerEnum);
+                ulong spawnerId = kvp.Value;
+                if (spawnerId != 0)
+                {
+                    var spawner = manager.GetEntity<Spawner>(spawnerId);
+                    if (spawner != null)
+                    {
+                        spawner.Trigger((EntityTriggerEnum)triggerEnum);
+                        ScheduleDestroyEvent(TimeSpan.Zero);
+                    }
+                }
+            }
+
             // TODO Spawner Respawn
 
             var hotspotProto = HotspotPrototype;
