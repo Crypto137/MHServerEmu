@@ -50,10 +50,12 @@ namespace MHServerEmu.Games.GameData
                 }
 
                 // Read all entries
-                uint numEntries = reader.ReadUInt32();
+                int numEntries = reader.ReadInt32();
 
                 if (numEntries > 0)
                 {
+                    _entryDict.EnsureCapacity(numEntries);
+
                     // We make use of the fact that entries are in the same order as their compressed data that follows,
                     // so we can get the full size of the compressed data section from the last entry.
                     PakEntry newEntry = default;
