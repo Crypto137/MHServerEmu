@@ -47,6 +47,11 @@ namespace MHServerEmu.Core.Network
         public bool IsDataPacket { get => Command == MuxCommand.Data || Command == MuxCommand.ConnectWithData; }
 
         /// <summary>
+        /// Returns the full serialized size of this <see cref="MuxPacket"/>.
+        /// </summary>
+        public int SerializedSize { get => HeaderSize + CalculateSerializedBodySize(); }
+
+        /// <summary>
         /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream"/>.
         /// </summary>
         public MuxPacket(Stream stream)
@@ -128,15 +133,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public int Serialize(Stream stream)
         {
-            int bodySize = 0;
-            if (IsDataPacket)
-            {
-                foreach (MessagePackage messagePackage in _messageList)
-                    bodySize += messagePackage.GetSize();
-
-                if ((HeaderSize + bodySize) >= TcpClientConnection.MaxPacketSize)
-                    return Logger.ErrorReturn(0, "Serialize(): Protobuf buffer overflow");
-            }
+            int bodySize = CalculateSerializedBodySize();
 
             using (BinaryWriter writer = new(stream))
             {
@@ -155,18 +152,27 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public byte[] ToArray()
         {
+            using (MemoryStream ms = new(SerializedSize))
+            {
+                Serialize(ms);
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Returns the combined serialized size of all messages in this <see cref="MuxPacket"/>.
+        /// </summary>
+        private int CalculateSerializedBodySize()
+        {
             int bodySize = 0;
+
             if (IsDataPacket)
             {
                 foreach (MessagePackage messagePackage in _messageList)
                     bodySize += messagePackage.GetSize();
             }
 
-            using (MemoryStream ms = new(HeaderSize + bodySize))
-            {
-                Serialize(ms);
-                return ms.ToArray();
-            }
+            return bodySize;
         }
 
         /// <summary>

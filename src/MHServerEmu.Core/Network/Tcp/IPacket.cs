@@ -5,6 +5,8 @@
     /// </summary>
     public interface IPacket
     {
+        public int SerializedSize { get; }
+
         public int Serialize(byte[] buffer);
         public int Serialize(Stream stream);
     }
