@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Extensions
@@ -25,9 +26,7 @@ namespace MHServerEmu.Core.Extensions
         public static string ReadFixedString16(this BinaryReader reader)
         {
             int size = reader.ReadUInt16();
-            Span<byte> buffer = stackalloc byte[size];
-            reader.Read(buffer);
-            return Encoding.UTF8.GetString(buffer);
+            return reader.ReadBytesAsUtf8String(size);
         }
 
         /// <summary>
@@ -36,9 +35,7 @@ namespace MHServerEmu.Core.Extensions
         public static string ReadFixedString32(this BinaryReader reader)
         {
             int size = reader.ReadInt32();
-            Span<byte> buffer = stackalloc byte[size];
-            reader.Read(buffer);
-            return Encoding.UTF8.GetString(buffer);
+            return reader.ReadBytesAsUtf8String(size);
         }
 
         /// <summary>
@@ -78,6 +75,17 @@ namespace MHServerEmu.Core.Extensions
             string result = reader.ReadNullTerminatedString();  // Read the string
             reader.BaseStream.Seek(pos, 0);                     // Return to the original position
             return result;
+        }
+
+        /// <summary>
+        /// Reads the specified number of bytes as a UTF-8 encoded <see cref="string"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReadBytesAsUtf8String(this BinaryReader reader, int numBytes)
+        {
+            Span<byte> bytes = stackalloc byte[numBytes];
+            reader.Read(bytes);
+            return Encoding.UTF8.GetString(bytes);
         }
 
         public static Vector2 ReadVector2(this BinaryReader reader)
