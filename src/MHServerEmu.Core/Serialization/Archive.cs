@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
@@ -642,10 +641,7 @@ namespace MHServerEmu.Core.Serialization
         public bool WriteUnencodedStream(uint value)
         {
             Span<byte> bytes = stackalloc byte[sizeof(uint)];
-
-            // We do the same thing as BitConverter.TryWriteBytes(), but without the length check.
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(bytes), value);
-
+            value.UnsafeWriteBytesTo(bytes);
             return WriteBytes(bytes);
         }
 
@@ -666,10 +662,7 @@ namespace MHServerEmu.Core.Serialization
         public bool WriteUnencodedStream(ulong value)
         {
             Span<byte> bytes = stackalloc byte[sizeof(ulong)];
-
-            // We do the same thing as BitConverter.TryWriteBytes(), but without the length check.
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(bytes), value);
-            
+            value.UnsafeWriteBytesTo(bytes);
             return WriteBytes(bytes);
         }
 
@@ -682,9 +675,7 @@ namespace MHServerEmu.Core.Serialization
             {
                 Span<byte> bytes = stackalloc byte[sizeof(uint)];
                 ReadBytes(bytes);
-
-                // We do the same thing as BitConverter.ToUInt32(), but without the length check.
-                value = Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetReference(bytes));
+                value = bytes.UnsafeToUInt32();
                 return true;
             }
             catch (Exception e)
@@ -703,9 +694,7 @@ namespace MHServerEmu.Core.Serialization
             {
                 Span<byte> bytes = stackalloc byte[sizeof(ulong)];
                 ReadBytes(bytes);
-
-                // We do the same thing as BitConverter.ToUInt64(), but without the length check.
-                value = Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(bytes));
+                value = bytes.UnsafeToUInt64();
                 return true;
             }
             catch (Exception e)
