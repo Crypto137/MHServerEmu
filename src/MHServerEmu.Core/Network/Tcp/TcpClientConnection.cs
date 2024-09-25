@@ -12,11 +12,13 @@ namespace MHServerEmu.Core.Network.Tcp
     /// </summary>
     public class TcpClientConnection
     {
+        public const int ReceiveBufferSize = 1024 * 8;
+
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         private readonly TcpServer _server;
 
-        public byte[] ReceiveBuffer { get; } = new byte[1024 * 8];
+        public byte[] ReceiveBuffer { get; } = new byte[ReceiveBufferSize];
 
         public Socket Socket { get; }
         public bool Connected { get => Socket.Connected; }

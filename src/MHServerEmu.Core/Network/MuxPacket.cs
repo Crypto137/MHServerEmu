@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Buffers;
+using System.Collections;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
@@ -65,13 +66,21 @@ namespace MHServerEmu.Core.Network
                     int bodyLength = reader.ReadUInt24();
                     Command = (MuxCommand)reader.ReadByte();
 
+                    if (bodyLength > TcpClientConnection.ReceiveBufferSize)
+                        throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
+
                     if (IsDataPacket)
                     {
                         _messageList = new();
 
-                        CodedInputStream cis = CodedInputStream.CreateInstance(reader.ReadBytes(bodyLength));
+                        byte[] buffer = ArrayPool<byte>.Shared.Rent(bodyLength);
+                        reader.Read(buffer, 0, bodyLength);
+
+                        CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
                         while (cis.IsAtEnd == false)
                             _messageList.Add(new(cis, MuxId));
+
+                        ArrayPool<byte>.Shared.Return(buffer);
                     }
                 }
                 catch (Exception e)
