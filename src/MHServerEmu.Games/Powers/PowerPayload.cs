@@ -552,8 +552,14 @@ namespace MHServerEmu.Games.Powers
                 return true;
 
             float mult = 1f - damageMetaGameBossResistance;
-            mult += Properties[PropertyEnum.DamageMetaGameBossPenetration];
-            mult = Math.Clamp(mult, 0f, 1f);
+
+            // NOTE: damageMetaGameBossResistance > 0f = damage reduction
+            //       damageMetaGameBossResistance < 0f = damage increase
+            if (damageMetaGameBossResistance > 0f)
+            {
+                mult += Properties[PropertyEnum.DamageMetaGameBossPenetration];
+                mult = Math.Clamp(mult, 0f, 1f);
+            }
 
             if (mult == 1f)
                 return true;
