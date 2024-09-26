@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Core.Extensions
@@ -24,7 +25,8 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static string ReadFixedString16(this BinaryReader reader)
         {
-            return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadUInt16()));
+            int size = reader.ReadUInt16();
+            return reader.ReadBytesAsUtf8String(size);
         }
 
         /// <summary>
@@ -32,7 +34,8 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static string ReadFixedString32(this BinaryReader reader)
         {
-            return Encoding.UTF8.GetString(reader.ReadBytes(reader.ReadInt32()));
+            int size = reader.ReadInt32();
+            return reader.ReadBytesAsUtf8String(size);
         }
 
         /// <summary>
@@ -40,16 +43,26 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static string ReadNullTerminatedString(this BinaryReader reader)
         {
-            List<byte> byteList = new();
+            const int BufferSize = 65535;   // This should be enough to hold the largest locale string + more
 
-            while (true)
+            Span<byte> buffer = stackalloc byte[BufferSize];   
+
+            for (int i = 0; i < BufferSize; i++)
             {
                 byte b = reader.ReadByte();
-                if (b == 0x00) break;
-                byteList.Add(b);
+
+                // Slice off the extra bytes and break the loop once we encounter a null.
+                // If there is no null in the input for some reason, we will stop when we our buffer is filled.
+                if (b == 0x00)
+                {
+                    buffer = buffer[..i];
+                    break;
+                }
+
+                buffer[i] = b;
             }
 
-            return Encoding.UTF8.GetString(byteList.ToArray());
+            return Encoding.UTF8.GetString(buffer);
         }
 
         /// <summary>
@@ -62,6 +75,17 @@ namespace MHServerEmu.Core.Extensions
             string result = reader.ReadNullTerminatedString();  // Read the string
             reader.BaseStream.Seek(pos, 0);                     // Return to the original position
             return result;
+        }
+
+        /// <summary>
+        /// Reads the specified number of bytes as a UTF-8 encoded <see cref="string"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReadBytesAsUtf8String(this BinaryReader reader, int numBytes)
+        {
+            Span<byte> bytes = stackalloc byte[numBytes];
+            reader.Read(bytes);
+            return Encoding.UTF8.GetString(bytes);
         }
 
         public static Vector2 ReadVector2(this BinaryReader reader)

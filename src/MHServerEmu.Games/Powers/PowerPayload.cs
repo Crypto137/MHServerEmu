@@ -513,6 +513,8 @@ namespace MHServerEmu.Games.Powers
 
             CalculateResultDamageCriticalModifier(results, target);
 
+            CalculateResultDamageMetaGameModifier(results, target);
+
             CalculateResultDamageLevelScaling(results, target);
 
             return true;
@@ -539,6 +541,25 @@ namespace MHServerEmu.Games.Powers
 
             for (int i = 0; i < (int)DamageType.NumDamageTypes; i++)
                 results.Properties[PropertyEnum.Damage, i] = damage[i] * critDamageMult;
+
+            return true;
+        }
+
+        private bool CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)
+        {
+            float damageMetaGameBossResistance = target.Properties[PropertyEnum.DamageMetaGameBossResistance];
+            if (damageMetaGameBossResistance == 0f)
+                return true;
+
+            float mult = 1f - damageMetaGameBossResistance;
+            mult += Properties[PropertyEnum.DamageMetaGameBossPenetration];
+            mult = Math.Clamp(mult, 0f, 1f);
+
+            if (mult == 1f)
+                return true;
+
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+                results.Properties[PropertyEnum.Damage, damageType] *= mult;
 
             return true;
         }

@@ -8,7 +8,7 @@ namespace MHServerEmu.Core.Helpers
         /// <summary>
         /// Decompresses the provided LZ4 buffer.
         /// </summary>
-        public static void LZ4Decode(byte[] source, byte[] target)
+        public static void LZ4Decode(ReadOnlySpan<byte> source, Span<byte> target)
         {
             LZ4Codec.Decode(source, target);
         }

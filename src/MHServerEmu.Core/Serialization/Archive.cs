@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
@@ -526,20 +527,21 @@ namespace MHServerEmu.Core.Serialization
             {
                 if (ioData == null) return false;
 
-                byte[] bytes = Encoding.UTF8.GetBytes(ioData);
-
-                uint size = (uint)bytes.Length;
+                uint size = (uint)Encoding.UTF8.GetByteCount(ioData);
                 success &= Transfer_(ref size);
 
-                _cos.WriteRawBytes(bytes);
-                _cos.Flush();
+                Span<byte> bytes = stackalloc byte[(int)size];
+                Encoding.UTF8.GetBytes(ioData, bytes);
+                success &= WriteBytes(bytes);
             }
             else
             {
                 uint size = 0;
                 success &= Transfer_(ref size);
 
-                ioData = Encoding.UTF8.GetString(_cis.ReadRawBytes((int)size));
+                Span<byte> bytes = stackalloc byte[(int)size];
+                success &= ReadBytes(bytes);
+                ioData = Encoding.UTF8.GetString(bytes);
             }
 
             return success;
@@ -604,6 +606,33 @@ namespace MHServerEmu.Core.Serialization
             }
         }
 
+        /// <summary>
+        /// Writes the provided <see cref="ReadOnlySpan{T}"/> at the current position in the underlying stream. Returns <see langword="true"/> if successful.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool WriteBytes(ReadOnlySpan<byte> bytes)
+        {
+            foreach (byte @byte in bytes)
+                _cos.WriteRawByte(@byte);
+
+            _cos.Flush();
+            return true;
+        }
+
+        /// <summary>
+        /// Read bytes at the current position in the underlying stream to the provided <see cref="Span{T}"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ReadBytes(Span<byte> bytes)
+        {
+            int length = bytes.Length;
+
+            for (int i = 0; i < length; i++)
+                bytes[i] = _cis.ReadRawByte();
+
+            return true;
+        }
+
         // These methods are also used for FavorSpeed (disk mode).
 
         /// <summary>
@@ -611,9 +640,9 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool WriteUnencodedStream(uint value)
         {
-            _cos.WriteRawBytes(BitConverter.GetBytes(value));
-            _cos.Flush();
-            return true;
+            Span<byte> bytes = stackalloc byte[sizeof(uint)];
+            value.UnsafeWriteBytesTo(bytes);
+            return WriteBytes(bytes);
         }
 
         /// <summary>
@@ -632,9 +661,9 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool WriteUnencodedStream(ulong value)
         {
-            _cos.WriteRawBytes(BitConverter.GetBytes(value));
-            _cos.Flush();
-            return true;
+            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
+            value.UnsafeWriteBytesTo(bytes);
+            return WriteBytes(bytes);
         }
 
         /// <summary>
@@ -644,7 +673,9 @@ namespace MHServerEmu.Core.Serialization
         {
             try
             {
-                value = BitConverter.ToUInt32(_cis.ReadRawBytes(4));
+                Span<byte> bytes = stackalloc byte[sizeof(uint)];
+                ReadBytes(bytes);
+                value = bytes.UnsafeToUInt32();
                 return true;
             }
             catch (Exception e)
@@ -661,7 +692,9 @@ namespace MHServerEmu.Core.Serialization
         {
             try
             {
-                value = BitConverter.ToUInt64(_cis.ReadRawBytes(8));
+                Span<byte> bytes = stackalloc byte[sizeof(ulong)];
+                ReadBytes(bytes);
+                value = bytes.UnsafeToUInt64();
                 return true;
             }
             catch (Exception e)

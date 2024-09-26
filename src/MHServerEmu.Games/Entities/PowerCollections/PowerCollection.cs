@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Gazillion;
+﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -15,7 +14,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.PowerCollections
 {
-    public class PowerCollection : IEnumerable<KeyValuePair<PrototypeId, PowerCollectionRecord>>
+    public class PowerCollection
     {
         private const int MaxNumRecordsToSerialize = 256;
 
@@ -120,10 +119,11 @@ namespace MHServerEmu.Games.Entities.PowerCollections
 
             return success;
         }
-
-        // IEnumerable implementation
-        public IEnumerator<KeyValuePair<PrototypeId, PowerCollectionRecord>> GetEnumerator() => _powerDict.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
+        public SortedDictionary<PrototypeId, PowerCollectionRecord>.Enumerator GetEnumerator()
+        {
+            return _powerDict.GetEnumerator();
+        }
 
         public Power GetPower(PrototypeId powerProtoRef)
         {

@@ -39,8 +39,8 @@ namespace MHServerEmu.Games.GameData.Calligraphy
             if (record.Curve == null)
             {
                 string filePath = $"Calligraphy/{GameDatabase.GetCurveName(id)}";
-                using (MemoryStream ms = PakFileSystem.Instance.LoadFromPak(filePath, PakFileId.Calligraphy))
-                    record.Curve = new(ms, id);
+                using (Stream stream = PakFileSystem.Instance.LoadFromPak(filePath, PakFileId.Calligraphy))
+                    record.Curve = new(stream, id);
             }
             
             return record.Curve;

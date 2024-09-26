@@ -77,9 +77,9 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Returns a <see cref="MemoryStream"/> for a file stored in a <see cref="PakFile"/>.
+        /// Returns a <see cref="Stream"/> for a file stored in a <see cref="PakFile"/>.
         /// </summary>
-        private MemoryStream LoadPakDataFile(string filePath, PakFileId pakId)
+        private Stream LoadPakDataFile(string filePath, PakFileId pakId)
         {
             return PakFileSystem.Instance.LoadFromPak(filePath, pakId);
         }
@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.GameData
             // Load all directories
             foreach (var directory in directories)
             {
-                using (MemoryStream stream = LoadPakDataFile(directory.Item1, PakFileId.Calligraphy))
+                using (Stream stream = LoadPakDataFile(directory.Item1, PakFileId.Calligraphy))
                 using (BinaryReader reader = new(stream))
                 {
                     CalligraphyHeader header = new(reader);
@@ -140,9 +140,9 @@ namespace MHServerEmu.Games.GameData
             _blueprintGuidToDataRefDict[guid] = id;
 
             // Deserialize
-            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{GameDatabase.GetBlueprintName(id)}", PakFileId.Calligraphy))
+            using (Stream stream = LoadPakDataFile($"Calligraphy/{GameDatabase.GetBlueprintName(id)}", PakFileId.Calligraphy))
             {
-                Blueprint blueprint = new(ms, id, guid);
+                Blueprint blueprint = new(stream, id, guid);
 
                 // Add a new blueprint record
                 _blueprintRecordDict.Add(id, new(blueprint, flags));
@@ -433,9 +433,9 @@ namespace MHServerEmu.Games.GameData
                     else throw new NotImplementedException($"Prototype deserialization for data origin {record.DataOrigin} is not supported.");
 
                     // Deserialize and postprocess
-                    using (MemoryStream ms = LoadPakDataFile(filePath, pakFileId))
+                    using (Stream stream = LoadPakDataFile(filePath, pakFileId))
                     {
-                        Prototype prototype = DeserializePrototypeFromStream(ms, record);
+                        Prototype prototype = DeserializePrototypeFromStream(stream, record);
                         record.Prototype = prototype;
                         prototype.DataRefRecord = record;
                         prototype.PostProcess();
@@ -757,8 +757,8 @@ namespace MHServerEmu.Games.GameData
             GameDatabase.AssetTypeRefManager.AddDataRef(dataId, filePath);
             var record = AssetDirectory.CreateAssetTypeRecord(dataId, flags);
 
-            using (MemoryStream ms = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
-                record.AssetType = new(ms, AssetDirectory, dataId, assetTypeGuid);
+            using (Stream stream = LoadPakDataFile($"Calligraphy/{filePath}", PakFileId.Calligraphy))
+                record.AssetType = new(stream, AssetDirectory, dataId, assetTypeGuid);
         }
 
         /// <summary>

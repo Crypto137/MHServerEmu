@@ -145,7 +145,38 @@ namespace MHServerEmu.Games.Powers
             TimeSpan cooldownTimeRemaining = GetCooldownTimeRemaining();
             if (cooldownTimeRemaining > TimeSpan.Zero)
             {
+                // Restore saved cooldown that is still in progress.
                 StartCooldown(cooldownTimeRemaining);
+            }
+            else
+            {
+                // One or more cooldown cycles may have finished while the owner was not in the world
+                // (cooldown ran out during transition, when the player swapped to another avatar, etc.).
+                // If not handled, this will break the cooldown cycle and prevent charges from replenishing.
+                int powerChargesMax = Owner.GetPowerChargesMax(PrototypeDataRef);
+                if (powerChargesMax > 0)
+                {
+                    int powerChargesAvailable = Owner.GetPowerChargesAvailable(PrototypeDataRef);
+                    if (powerChargesAvailable < powerChargesMax)
+                    {
+                        TimeSpan cooldownDuration = default;
+                        TimeSpan cooldownTimeElapsed = Owner.GetAbilityCooldownTimeElapsed(Prototype);
+
+                        if (cooldownTimeElapsed != TimeSpan.Zero)
+                        {
+                            // Replenish charges that would have been replenished if the cooldown continued to cycle normally
+                            cooldownDuration = GetCooldownDuration();
+                            float numCooldowns = (float)(cooldownTimeElapsed.TotalMilliseconds / cooldownDuration.TotalMilliseconds);
+                            numCooldowns = MathF.Min(numCooldowns, powerChargesMax - powerChargesAvailable);
+                            Owner.Properties.AdjustProperty((int)numCooldowns, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
+
+                            // Restore the current cooldown from remaining time
+                            cooldownDuration *= 1f - (numCooldowns - MathF.Floor(numCooldowns));
+                        }
+
+                        StartCooldown(cooldownDuration);
+                    }
+                }
             }
 
             if (IsRecurring())

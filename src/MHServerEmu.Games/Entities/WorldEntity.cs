@@ -929,9 +929,35 @@ namespace MHServerEmu.Games.Entities
             return ActivatePower(power, ref settings);
         }
 
-        public void EndAllPowers(bool v)
+        public void EndAllPowers(bool notSimulated)
         {
-            // TODO
+            // No powers to end if no collection
+            if (PowerCollection == null)
+                return;
+
+            // Ending powers can remove them, so we store all proto refs in a temporary collection.
+            Span<PrototypeId> powerProtoRefs = stackalloc PrototypeId[PowerCollection.PowerCount];
+            int i = 0;
+
+            foreach (var kvp in PowerCollection)
+                powerProtoRefs[i++] = kvp.Key;
+
+            foreach (PrototypeId powerProtoRef in powerProtoRefs)
+            {
+                Power power = PowerCollection.GetPower(powerProtoRef);
+
+                if (power == null)
+                    continue;
+
+                if (notSimulated && power.Properties[PropertyEnum.RemovePowerWhenNotSimulated] == false)
+                    continue;
+
+                EndPowerFlags flags = EndPowerFlags.ExplicitCancel;
+                if (notSimulated)
+                    flags |= EndPowerFlags.ExitWorld;
+
+                power.EndPower(flags);
+            }
         }
 
         public T GetMostResponsiblePowerUser<T>(bool skipPet = false) where T : WorldEntity
@@ -1601,7 +1627,12 @@ namespace MHServerEmu.Games.Entities
         public override void OnChangePlayerAOI(Player player, InterestTrackOperation operation, AOINetworkPolicyValues newInterestPolicies, AOINetworkPolicyValues previousInterestPolicies, AOINetworkPolicyValues archiveInterestPolicies = AOINetworkPolicyValues.AOIChannelNone)
         {
             base.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
-            //UpdateSimulationState();      // We do simulation updates per-cell now
+
+            // We need to update our simulation state when we lose proximity because when a player's AOI is cleared,
+            // cells are removed before entities, and at that point entities still have the proximity policy.
+            AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
+            if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                UpdateSimulationState();
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
@@ -1842,6 +1873,10 @@ namespace MHServerEmu.Games.Entities
 
             if (newCell != null)
                 Properties[PropertyEnum.MapCellId] = newCell.Id;
+
+            // Simulation updates for entering world happen in OnEnteredWorld()
+            if (flags.HasFlag(ChangePositionFlags.EnterWorld) == false)
+                UpdateSimulationState();
 
             // TODO other events
         }
@@ -2089,6 +2124,10 @@ namespace MHServerEmu.Games.Entities
                     // Also the rank proto ref is never going to be invalid here because we do a HasProperty check above.
                     ModChangeModEffects(Properties[PropertyEnum.Rank], 1);
                 }
+            }
+            else if (result == SimulateResult.Clear)
+            {
+                EndAllPowers(true);
             }
 
             return result;

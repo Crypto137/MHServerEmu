@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Buffers;
+using System.Collections;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
@@ -47,6 +48,11 @@ namespace MHServerEmu.Core.Network
         public bool IsDataPacket { get => Command == MuxCommand.Data || Command == MuxCommand.ConnectWithData; }
 
         /// <summary>
+        /// Returns the full serialized size of this <see cref="MuxPacket"/>.
+        /// </summary>
+        public int SerializedSize { get => HeaderSize + CalculateSerializedBodySize(); }
+
+        /// <summary>
         /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream"/>.
         /// </summary>
         public MuxPacket(Stream stream)
@@ -60,13 +66,21 @@ namespace MHServerEmu.Core.Network
                     int bodyLength = reader.ReadUInt24();
                     Command = (MuxCommand)reader.ReadByte();
 
+                    if (bodyLength > TcpClientConnection.ReceiveBufferSize)
+                        throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
+
                     if (IsDataPacket)
                     {
                         _messageList = new();
 
-                        CodedInputStream cis = CodedInputStream.CreateInstance(reader.ReadBytes(bodyLength));
+                        byte[] buffer = ArrayPool<byte>.Shared.Rent(bodyLength);
+                        reader.Read(buffer, 0, bodyLength);
+
+                        CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
                         while (cis.IsAtEnd == false)
                             _messageList.Add(new(cis, MuxId));
+
+                        ArrayPool<byte>.Shared.Return(buffer);
                     }
                 }
                 catch (Exception e)
@@ -128,15 +142,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public int Serialize(Stream stream)
         {
-            int bodySize = 0;
-            if (IsDataPacket)
-            {
-                foreach (MessagePackage messagePackage in _messageList)
-                    bodySize += messagePackage.GetSize();
-
-                if ((HeaderSize + bodySize) >= TcpClientConnection.MaxPacketSize)
-                    return Logger.ErrorReturn(0, "Serialize(): Protobuf buffer overflow");
-            }
+            int bodySize = CalculateSerializedBodySize();
 
             using (BinaryWriter writer = new(stream))
             {
@@ -155,18 +161,27 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public byte[] ToArray()
         {
+            using (MemoryStream ms = new(SerializedSize))
+            {
+                Serialize(ms);
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Returns the combined serialized size of all messages in this <see cref="MuxPacket"/>.
+        /// </summary>
+        private int CalculateSerializedBodySize()
+        {
             int bodySize = 0;
+
             if (IsDataPacket)
             {
                 foreach (MessagePackage messagePackage in _messageList)
                     bodySize += messagePackage.GetSize();
             }
 
-            using (MemoryStream ms = new(HeaderSize + bodySize))
-            {
-                Serialize(ms);
-                return ms.ToArray();
-            }
+            return bodySize;
         }
 
         /// <summary>

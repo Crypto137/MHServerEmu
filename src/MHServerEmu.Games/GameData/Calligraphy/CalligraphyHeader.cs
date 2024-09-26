@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public CalligraphyHeader(BinaryReader reader)
         {
-            Magic = Encoding.UTF8.GetString(reader.ReadBytes(3));
+            Magic = reader.ReadBytesAsUtf8String(3);
             Version = reader.ReadByte();
         }
     }

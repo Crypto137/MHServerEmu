@@ -4,28 +4,33 @@ using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData
 {
+    /// <summary>
+    /// Represents a loaded .sip package file.
+    /// </summary>
     public class PakFile
     {
+        // PAK / GPAK / .sip files are package files that contain compressed game data files.
+        // They consist of a header, an entry table, and data for all stored files compressed using the LZ4 algorithm.
+
         private const uint Signature = 1196441931;  // KAPG
         private const uint Version = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<string, PakEntry> _entryDict = new();
+        private readonly byte[] _data;
 
         /// <summary>
-        /// Loads a pak file from the specified path.
+        /// Loads a <see cref="PakFile"/> from the specified path.
         /// </summary>
         public PakFile(string pakFilePath)
         {
-            // Make sure the specified file exists
             if (File.Exists(pakFilePath) == false)
             {
                 Logger.Error($"{Path.GetFileName(pakFilePath)} not found");
                 return;
             }
 
-            // Read pak file
             using (FileStream stream = File.OpenRead(pakFilePath))
             using (BinaryReader reader = new(stream))
             {
@@ -45,19 +50,30 @@ namespace MHServerEmu.Games.GameData
                 }
 
                 // Read all entries
-                uint numEntries = reader.ReadUInt32();
-                for (int i = 0; i < numEntries; i++)
-                {
-                    PakEntry entry = new(reader);
-                    _entryDict.Add(entry.FilePath, entry);
-                }
+                int numEntries = reader.ReadInt32();
 
-                // Read and store compressed data
-                long dataOffset = reader.BaseStream.Position;
-                foreach (PakEntry entry in _entryDict.Values)
+                if (numEntries > 0)
                 {
-                    reader.BaseStream.Position = dataOffset + entry.Offset;
-                    entry.CompressedData = reader.ReadBytes(entry.CompressedSize);
+                    _entryDict.EnsureCapacity(numEntries);
+
+                    // We make use of the fact that entries are in the same order as their compressed data that follows,
+                    // so we can get the full size of the compressed data section from the last entry.
+                    PakEntry newEntry = default;
+
+                    for (int i = 0; i < numEntries; i++)
+                    {
+                        newEntry = new(reader);
+                        _entryDict.Add(newEntry.FilePath, newEntry);
+                    }
+
+                    // Read and store compressed data as a single array we will slice with spans
+                    int dataSize = newEntry.Offset + newEntry.CompressedSize;
+                    _data = reader.ReadBytes(dataSize);
+                }
+                else
+                {
+                    // Empty pak file
+                    _data = Array.Empty<byte>();
                 }
             }
 
@@ -65,37 +81,38 @@ namespace MHServerEmu.Games.GameData
         }
 
         /// <summary>
-        /// Returns a stream of decompressed pak data.
+        /// Returns a <see cref="Stream"/> of decompressed data for the file stored at the specified path in this <see cref="PakFile"/>.
         /// </summary>
-        public MemoryStream LoadFileDataInPak(string filePath)
+        public Stream LoadFileDataInPak(string filePath)
         {
             if (_entryDict.TryGetValue(filePath, out PakEntry entry) == false)
             {
-                Logger.Warn($"File {filePath} not found");
-                return new(Array.Empty<byte>());
+                Logger.Warn($"LoadFileDataInPak(): File {filePath} not found");
+                return new MemoryStream(Array.Empty<byte>());
             }
 
+            ReadOnlySpan<byte> compressedData = _data.AsSpan(entry.Offset, entry.CompressedSize);
             byte[] uncompressedData = new byte[entry.UncompressedSize];
-            CompressionHelper.LZ4Decode(entry.CompressedData, uncompressedData);
-            return new(uncompressedData);
+            CompressionHelper.LZ4Decode(compressedData, uncompressedData);
+            return new MemoryStream(uncompressedData);
         }
 
         /// <summary>
-        /// Returns an <see cref="IEnumerable{T}"/> collection of file paths with the specified prefix contained in this pak file.
+        /// Returns file paths with the specified prefix contained in this <see cref="PakFile"/>.
         /// </summary>
         public IEnumerable<string> GetFilesFromPak(string prefix)
         {
-            foreach (PakEntry entry in _entryDict.Values)
+            foreach (string filePath in _entryDict.Keys)
             {
-                if (entry.FilePath.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
-                    yield return entry.FilePath;
+                if (filePath.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                    yield return filePath;
             }
         }
 
         /// <summary>
-        /// Represents a file contained in a pak.
+        /// Metadata for a file contained in a <see cref="PakFile"/>.
         /// </summary>
-        private class PakEntry
+        private readonly struct PakEntry
         {
             public ulong FileHash { get; }
             public string FilePath { get; }
@@ -103,8 +120,6 @@ namespace MHServerEmu.Games.GameData
             public int Offset { get; }
             public int CompressedSize { get; }
             public int UncompressedSize { get; }
-
-            public byte[] CompressedData { get; set; }
 
             public PakEntry(BinaryReader reader)
             {

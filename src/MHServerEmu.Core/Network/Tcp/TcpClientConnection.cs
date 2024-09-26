@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Buffers;
+using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
@@ -11,15 +12,13 @@ namespace MHServerEmu.Core.Network.Tcp
     /// </summary>
     public class TcpClientConnection
     {
-        // 640K ought to be enough for anybody
-        public const int MaxPacketSize = 1024 * 640;
+        public const int ReceiveBufferSize = 1024 * 8;
 
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         private readonly TcpServer _server;
-        private readonly byte[] _packetBuffer = new byte[MaxPacketSize];
 
-        public byte[] ReceiveBuffer { get; } = new byte[1024 * 8];
+        public byte[] ReceiveBuffer { get; } = new byte[ReceiveBufferSize];
 
         public Socket Socket { get; }
         public bool Connected { get => Socket.Connected; }
@@ -50,7 +49,8 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         public void Disconnect()
         {
-            if (Connected) _server.DisconnectClient(this);
+            if (Connected)
+                _server.DisconnectClient(this);
         }
 
         #region Send Methods
@@ -58,22 +58,28 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Sends a <see cref="byte"/> buffer over this connection.
         /// </summary>
-        public int Send(byte[] buffer, SocketFlags flags = SocketFlags.None)
+        public int Send(byte[] buffer, int size, SocketFlags flags = SocketFlags.None)
         {
-            return _server.Send(this, buffer, flags);
+            // Send one message at a time for each client
+            lock (_server)
+                return _server.Send(this, buffer, size, flags);
         }
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         /// <summary>
         /// Sends an <see cref="IPacket"/> over this connection.
         /// </summary>
         public int Send(IPacket packet, SocketFlags flags = SocketFlags.None)
         {
-            // Keep this buffer thread-safe
-            lock (_packetBuffer)
-            {
-                int size = packet.Serialize(_packetBuffer);
-                return _server.Send(this, _packetBuffer, size, flags);
-            }
+            int size = packet.SerializedSize;
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(size);
+            
+            packet.Serialize(buffer);
+            int sent = Send(buffer, size, flags);
+            
+            ArrayPool<byte>.Shared.Return(buffer);
+            return sent;
         }
 
         #endregion

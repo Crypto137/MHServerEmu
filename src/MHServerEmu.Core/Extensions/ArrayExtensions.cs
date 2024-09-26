@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Core.Extensions
@@ -61,6 +63,50 @@ namespace MHServerEmu.Core.Extensions
 
         #endregion
 
+        #region Conversion
+
+        /// <summary>
+        /// Converts this <see cref="Span{T}"/> to <see cref="uint"/> without checking its length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint UnsafeToUInt32(this Span<byte> bytes)
+        {
+            // We do the same thing as BitConverter.ToUInt32(), but without the length check.
+            return Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetReference(bytes));
+        }
+
+        /// <summary>
+        /// Converts this <see cref="Span{T}"/> to <see cref="ulong"/> without checking its length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong UnsafeToUInt64(this Span<byte> bytes)
+        {
+            // We do the same thing as BitConverter.ToUInt64(), but without the length check.
+            return Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(bytes));
+        }
+
+        /// <summary>
+        /// Writes byte representation of this <see cref="uint"/> to the provided <see cref="Span{T}"/> without checking its length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnsafeWriteBytesTo(this uint value, Span<byte> bytes)
+        {
+            // We do the same thing as BitConverter.TryWriteBytes(), but without the length check.
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(bytes), value);
+        }
+
+        /// <summary>
+        /// Writes byte representation of this <see cref="ulong"/> to the provided <see cref="Span{T}"/> without checking its length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnsafeWriteBytesTo(this ulong value, Span<byte> bytes)
+        {
+            // We do the same thing as BitConverter.TryWriteBytes(), but without the length check.
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(bytes), value);
+        }
+
+        #endregion
+
         #region Bit/Byte Manipulation
 
         /// <summary>
@@ -68,9 +114,10 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static ulong ReverseBytes(this ulong value)
         {
-            byte[] bytes = BitConverter.GetBytes(value);
-            Array.Reverse(bytes);
-            return BitConverter.ToUInt64(bytes);
+            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
+            value.UnsafeWriteBytesTo(bytes);
+            bytes.Reverse();
+            return bytes.UnsafeToUInt64();
         }
 
         /// <summary>
@@ -78,14 +125,15 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static ulong ReverseBits(this ulong value)
         {
-            byte[] bytes = BitConverter.GetBytes(value);
-            Array.Reverse(bytes);
+            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
+            value.UnsafeWriteBytesTo(bytes);
+            bytes.Reverse();
 
             // Use a lookup table to speed up bit reversal for each byte
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < sizeof(ulong); i++)
                 bytes[i] = BitReversalLookupTable[bytes[i]];
 
-            return BitConverter.ToUInt64(bytes);
+            return bytes.UnsafeToUInt64();
         }
 
         #endregion
@@ -93,13 +141,18 @@ namespace MHServerEmu.Core.Extensions
         #region Misc
 
         /// <summary>
-        /// Indicates whether this array of <typeparamref name="T"/> is <see langword="null"/> or empty.
+        /// Returns <see langword="true"/> if this array of <typeparamref name="T"/> is <see langword="null"/> or empty.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullOrEmpty<T>(this T[] array)
         {
             return array == null || array.Length == 0;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this array of <typeparamref name="T"/> is not <see langword="null"/> and is not empty.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool HasValue<T>(this T[] array)
         {
             return array != null && array.Length != 0;
