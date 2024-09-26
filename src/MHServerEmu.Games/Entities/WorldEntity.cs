@@ -2301,7 +2301,7 @@ namespace MHServerEmu.Games.Entities
 
             Game.NetworkManager.SendMessageToInterested(entityTracked, this, policy);
 
-            // region UIDataProvider
+            Region?.UIDataProvider?.OnEntityTracked(this, contextRef);
 
             return true;
         }

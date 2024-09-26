@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -162,6 +163,23 @@ namespace MHServerEmu.Games.UI
             uiData.UpdateUI();
 
             return uiData;
+        }
+
+        public void OnEntityTracked(WorldEntity worldEntity, PrototypeId contextRef)
+        {
+            var metaGameProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(contextRef);
+            if (metaGameProto == null) return;
+            var uiSyncData = FindWidget(worldEntity, contextRef);
+            uiSyncData?.OnEntityTracked(worldEntity);
+        }
+
+        private UISyncData FindWidget(WorldEntity worldEntity, PrototypeId contextRef)
+        {
+            if (_dataDict.TryGetValue((contextRef, PrototypeId.Invalid), out UISyncData widget)) return widget;
+            if (_dataDict.TryGetValue((contextRef, worldEntity.MissionPrototype), out widget)) return widget;
+            foreach(var kvp in _dataDict)
+                if (kvp.Key.Item1 == contextRef) return kvp.Value;
+            return null;
         }
     }
 }

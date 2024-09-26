@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -144,5 +145,7 @@ namespace MHServerEmu.Games.UI
                 UpdateUI();
             }
         }
+
+        public virtual void OnEntityTracked(WorldEntity worldEntity) { }
     }
 }

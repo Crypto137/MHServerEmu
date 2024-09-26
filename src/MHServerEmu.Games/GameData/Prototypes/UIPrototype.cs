@@ -4,6 +4,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Resources;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -408,6 +409,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public WidgetPropertyEntryPrototype[] PropertyEntryTable { get; protected set; }
         public EvalPrototype PropertyEval { get; protected set; }
+
+        [DoNotCopy]
+        public List<PropertyId> PropertyIds { get; private set; } = new();
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            PropertyIds.Clear();
+            if (PropertyEntryTable.HasValue())
+                foreach (var entryProto in PropertyEntryTable)
+                    if (entryProto != null && entryProto.PropertyEval != null)
+                        Eval.GetEvalPropertyIds(entryProto.PropertyEval, PropertyIds, GetEvalPropertyIdEnum.Input, null);
+        }
     }
 
     public class HealthPercentIconPrototype : Prototype
