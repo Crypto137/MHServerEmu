@@ -10,7 +10,10 @@ namespace MHServerEmu.Games.Properties
     public class PropertyList : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
     {
         // PropertyEnumNode stores either a single non-parameterized property value,
-        // or a sorted dictionary of property values sharing the same enum.
+        // or a dictionary of property values sharing the same enum.
+        //
+        // NOTE: We are using regular dictionaries for value collections instead of
+        // sorted ones because it's been faster in the benchmarks we've done so far.
         //
         // When a property value is assigned, a node is created for it that either
         // stores the non-parameterized value on its own, or instantiates a new dictionary
@@ -85,7 +88,7 @@ namespace MHServerEmu.Games.Properties
 
             // If we do not have an existing dictionary, either update the non-parameterized value,
             // or create a new dictionary to store the parameterized value.
-            SortedDictionary<PropertyId, PropertyValue> dict = node.ValueDictionary;
+            Dictionary<PropertyId, PropertyValue> dict = node.ValueDictionary;
             if (dict == null)
             {
                 // Set a non-parameterized value on a node that does not have parameterized values
@@ -155,7 +158,7 @@ namespace MHServerEmu.Games.Properties
             if (_nodeDict.TryGetValue(propertyEnum, out PropertyEnumNode node) == false)
                 return false;
 
-            SortedDictionary<PropertyId, PropertyValue> dict = node.ValueDictionary;
+            Dictionary<PropertyId, PropertyValue> dict = node.ValueDictionary;
             if (dict == null)
             {
                 // This is a node that stores a single non-parameterized value,
@@ -166,8 +169,7 @@ namespace MHServerEmu.Games.Properties
                 // Remove the non-parameterized node
                 value = node.PropertyValue;
                 _nodeDict.Remove(propertyEnum);
-                _count--;
-                _version++;
+                _count--;   // No need to increment version, because everything is dictionary-based
                 return true;
             }
 
@@ -176,8 +178,7 @@ namespace MHServerEmu.Games.Properties
                 return false;
 
             // We have successfully removed the value
-            _count--;
-            _version++;
+            _count--;   // No need to increment version, because everything is dictionary-based
 
             // TODO: Would it be more efficient to allow GC to clean up empty dictionary nodes, or should we leave them in place?
             // Also consider pooling for value dictionaries.
@@ -242,7 +243,7 @@ namespace MHServerEmu.Games.Properties
         private struct PropertyEnumNode
         {
             public PropertyValue PropertyValue { get; set; }
-            public SortedDictionary<PropertyId, PropertyValue> ValueDictionary { get; set; }
+            public Dictionary<PropertyId, PropertyValue> ValueDictionary { get; set; }
 
             // PropertyEnumNode always has a count of at least 1 for the non-parameterized property
             public int Count { get => ValueDictionary != null ? ValueDictionary.Count : 1; }
@@ -329,11 +330,11 @@ namespace MHServerEmu.Games.Properties
         public readonly struct Iterator : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
         {
             private readonly PropertyList _propertyList;
+
             private readonly PropertyId _propertyId;
+            private readonly int _numParams;
             private readonly PropertyEnum[] _propertyEnums;
             private readonly PropertyEnumFilter.Func _filterFunc;
-
-            private readonly int _numParams;
 
             public Iterator(PropertyList propertyList)
             {
@@ -436,7 +437,7 @@ namespace MHServerEmu.Games.Properties
                 private Dictionary<PropertyEnum, PropertyEnumNode>.Enumerator _nodeEnumerator;
 
                 private bool _hasValueEnumerator;
-                private SortedDictionary<PropertyId, PropertyValue>.Enumerator _valueEnumerator;
+                private Dictionary<PropertyId, PropertyValue>.Enumerator _valueEnumerator;
 
                 public KeyValuePair<PropertyId, PropertyValue> Current { get; private set; }
                 object IEnumerator.Current { get => Current; }
