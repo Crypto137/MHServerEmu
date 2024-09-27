@@ -479,6 +479,16 @@ namespace MHServerEmu.Games.Behavior
                 ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50), true);
         }
 
+        public void OnAIGotDamaged(WorldEntity attacker, long damage)
+        {
+            if (attacker != null)
+            {
+                // TODO PropertyEnum.AIDefeatedAtHealthPct
+            }
+
+            Brain?.OnOwnerGotDamaged();
+        }
+
         public void OnAIStartThrowing(WorldEntity throwableEntity, PrototypeId throwablePowerRef, PrototypeId throwableCancelPowerRef)
         {
             if (Owner == null) return;

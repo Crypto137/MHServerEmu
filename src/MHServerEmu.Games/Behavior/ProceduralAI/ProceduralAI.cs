@@ -309,6 +309,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             _proceduralPtr.Profile?.OnEntityDeadEvent(_owningController, deadEvent);
         }
 
+        public void OnOwnerGotDamaged()
+        {
+            _proceduralPtr.Profile?.OnOwnerGotDamaged(_owningController);
+        }
+
         public void OnAIBroadcastBlackboardEvent(in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             _proceduralPtr.Profile?.OnAIBroadcastBlackboardEvent(_owningController, broadcastEvent);

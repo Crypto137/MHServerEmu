@@ -1677,6 +1677,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PopulatePowerPicker(ownerController, powerPicker);
             ownerController.AddPowersToPicker(powerPicker, DisappearPower);
         }
+
+        public override void OnOwnerGotDamaged(AIController ownerController)
+        {
+            var collection = ownerController.Blackboard.PropertyCollection;
+            if (collection[PropertyEnum.AICustomStateVal1] == 0)
+                collection[PropertyEnum.AICustomStateVal1] = (int)State.Flee;
+        }
     }
 
     public class ProceduralProfileGorgonPrototype : ProceduralProfileWithAttackPrototype

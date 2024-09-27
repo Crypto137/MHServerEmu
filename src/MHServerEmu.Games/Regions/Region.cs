@@ -148,6 +148,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerEnteredRegionGameEvent> PlayerEnteredRegionEvent = new();
         public Event<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent = new();
         public Event<PlayerRegionChangeGameEvent> PlayerRegionChangeEvent = new();
+        public Event<PlayerDeathRecordedEvent> PlayerDeathRecordedEvent = new();
         public Event<AvatarUsedPowerGameEvent> AvatarUsedPowerEvent = new();
         public Event<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent = new();
         public Event<PlayerCompletedMissionObjectiveGameEvent> PlayerCompletedMissionObjectiveEvent = new();
@@ -1597,6 +1598,22 @@ namespace MHServerEmu.Games.Regions
                 _uniqueSelectorIndexes[dataRef] |= 1UL << index;
             else
                 _uniqueSelectorIndexes[dataRef] &= ~(1UL << index);
+        }
+
+        public void OnRecordPlayerDeath(Player player, Avatar avatar, WorldEntity killer)
+        {
+            if (player == null) return;
+
+            /*  TODO PvP
+                PropertyEnum.PvPDeathsDuringMatch
+                PropertyEnum.PvPKillsDuringMatch
+                PropertyEnum.PvPKills
+            */
+
+            if (Properties.HasProperty(PropertyEnum.EndlessLevel))
+                player.Properties.AdjustProperty(1, PropertyEnum.EndlessLevelDeathCount);
+
+            PlayerDeathRecordedEvent.Invoke(new(player));
         }
     }
 

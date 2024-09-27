@@ -1238,6 +1238,7 @@ namespace MHServerEmu.Games.Entities
             // Calculate health difference based on all damage types and healing
             // NOTE: Health can be > 2147483647, so we have to use 64-bit integers here to avoid overflows
             long health = Properties[PropertyEnum.Health];
+            long startHealth = health;
             float healthDelta = 0f;
 
             if (powerResults.Flags.HasFlag(PowerResultFlags.InstantKill))
@@ -1262,25 +1263,61 @@ namespace MHServerEmu.Games.Entities
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
             WorldEntity ultimatePowerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
+            long adjustHealth = health - startHealth;
+
+            var avatar = ultimatePowerUser?.GetMostResponsiblePowerUser<Avatar>();
+
+            var region = Region;
+
+            if (region != null)
+            {
+                var player = avatar?.GetOwnerOfType<Player>();
+                bool isDodged = powerResults.TestFlag(PowerResultFlags.Dodged);
+                region.AdjustHealthEvent.Invoke(new(this, ultimatePowerUser, player, adjustHealth, isDodged));
+            }
+
             if (health <= 0)
             {
+                if (this is Avatar killedAvatar)
+                {
+                    var killedPlayer = GetOwnerOfType<Player>();
+                    region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimatePowerUser);
+                }
+
                 Kill(ultimatePowerUser, KillFlags.None, powerUser);
+                TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
             else
             {
                 Properties[PropertyEnum.Health] = health;
                 if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
                     OnGotHit(ultimatePowerUser);
+
+                TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
 
+            if (this is Agent agent && adjustHealth < 0)
+                agent.AIController?.OnAIGotDamaged(ultimatePowerUser, adjustHealth);
+
             return true;
+        }
+
+        private void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
+        {
+            if (SpawnGroup == null) return;
+            foreach (var spec in SpawnGroup.Specs)
+                spec.ActiveEntity?.TriggerEntityActionEvent(eventType);
         }
 
         public virtual void OnGotHit(WorldEntity attacker)
         {
             TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttacked);
+            TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyGotAttacked);
             if (attacker != null && attacker.GetMostResponsiblePowerUser<Avatar>() != null)
+            {
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotAttackedByPlayer);
+                TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyGotAttackedByPlayer);
+            }
         }
 
         public string PowerCollectionToString()

@@ -181,6 +181,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent) { }
         public virtual void OnMissileReturnEvent(AIController ownerController) { }
         public virtual void OnSetSimulated(AIController ownerController, bool simulated) { }
+        public virtual void OnOwnerGotDamaged(AIController ownerController) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
