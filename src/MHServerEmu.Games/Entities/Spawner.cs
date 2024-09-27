@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Entities
 
         private EventPointer<SpawnerDefeatEvent> _defeatEvent = new();
         private EventPointer<SpawnIntervalEvent> _spawnEvent = new();
+        private EventPointer<EnableTriggerEvent> _enableTriggerEvent = new();
 
         private Dictionary<ulong, SpawnerSequenceEntryPrototype> _spawnedSequences = new(); 
         private readonly HashSet<int> _uniqueSequences = new ();
@@ -380,6 +381,22 @@ namespace MHServerEmu.Games.Entities
         private void CancelSpawnIntervalEvent()
         {
             Game?.GameEventScheduler?.CancelEvent(_spawnEvent);
+        }
+
+        public void ScheduleEnableTrigger()
+        {
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+            var timeOffset = TimeSpan.Zero;
+            if (_defeatEvent.IsValid)
+                scheduler.RescheduleEvent(_enableTriggerEvent, timeOffset);
+            else
+                ScheduleEntityEvent(_enableTriggerEvent, timeOffset);
+        }
+
+        protected class EnableTriggerEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as Spawner)?.Trigger(EntityTriggerEnum.Enabled);
         }
 
         protected class SpawnerDefeatEvent : CallMethodEvent<Entity>

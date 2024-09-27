@@ -1170,7 +1170,8 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsControlledEntity || EntityActionComponent == null) return false;
 
-            // TODO action.SpawnerTrigger
+            if (action.SpawnerTrigger != PrototypeId.Invalid)
+                TriggerLocalSpawner(action.SpawnerTrigger);
 
             if (action.AttributeActions.HasValue())
                 foreach (var attr in action.AttributeActions)

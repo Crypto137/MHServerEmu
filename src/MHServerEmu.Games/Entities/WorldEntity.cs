@@ -2185,7 +2185,8 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsControlledEntity || EntityActionComponent == null || IsInWorld == false) return false;
 
-            // TODO action.SpawnerTrigger
+            if (action.SpawnerTrigger != PrototypeId.Invalid)
+                TriggerLocalSpawner(action.SpawnerTrigger);
 
             var aiOverride = action.PickAIOverride(Game.Random);
             if (aiOverride != null)
@@ -2215,6 +2216,17 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        public void TriggerLocalSpawner(PrototypeId spawnerTrigger)
+        {
+            var spawnerTriggerProto = GameDatabase.GetPrototype<EntityActionSpawnerTriggerPrototype>(spawnerTrigger);
+            if (spawnerTriggerProto == null) return;
+
+            if (spawnerTriggerProto.EnableClusterLocalSpawner && SpawnGroup != null) 
+                foreach (var spec in SpawnGroup.Specs)
+                    if (spec.ActiveEntity is Spawner spawner)
+                        spawner.ScheduleEnableTrigger();
         }
 
         public void ShowOverheadText(LocaleStringId idText, float duration)
