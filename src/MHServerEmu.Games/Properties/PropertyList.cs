@@ -27,6 +27,7 @@ namespace MHServerEmu.Games.Properties
 
         private readonly Dictionary<PropertyEnum, PropertyEnumNode> _nodeDict = new();
         private int _count = 0;
+        private int _version = 0;
 
         /// <summary>
         /// Gets the number of key/value pairs contained in this <see cref="PropertyList"/>.
@@ -96,7 +97,10 @@ namespace MHServerEmu.Games.Properties
                     hasChanged = wasAdded || oldValue.RawLong != newValue.RawLong;
 
                     if (wasAdded)
+                    {
                         _count++;
+                        _version++;
+                    }
 
                     _nodeDict[propertyEnum] = node;     // Update the struct stored in the enum dictionary when we change non-parameterized value
                     return;
@@ -120,6 +124,7 @@ namespace MHServerEmu.Games.Properties
                 wasAdded = true;
                 hasChanged = true;
                 _count++;
+                _version++;
 
                 return;
             }
@@ -130,7 +135,10 @@ namespace MHServerEmu.Games.Properties
             dict[id] = newValue;
 
             if (hasChanged)
+            {
                 _count++;
+                _version++;
+            }
 
             // No need to update the enum dictionary node if we are just changing the contents of the same dictionary
         }
@@ -159,6 +167,7 @@ namespace MHServerEmu.Games.Properties
                 value = node.PropertyValue;
                 _nodeDict.Remove(propertyEnum);
                 _count--;
+                _version++;
                 return true;
             }
 
@@ -168,8 +177,10 @@ namespace MHServerEmu.Games.Properties
 
             // We have successfully removed the value
             _count--;
+            _version++;
 
             // TODO: Would it be more efficient to allow GC to clean up empty dictionary nodes, or should we leave them in place?
+            // Also consider pooling for value dictionaries.
             //if (dict.Count == 0)
             //    _nodeDict.Remove(propertyEnum);
 
@@ -412,6 +423,7 @@ namespace MHServerEmu.Games.Properties
             {
                 // The list we are enumerating
                 private readonly PropertyList _propertyList;
+                private readonly int _version;
 
                 // Filters
                 private readonly PropertyId _propertyIdFilter;
@@ -433,6 +445,7 @@ namespace MHServerEmu.Games.Properties
                     PropertyEnum[] propertyEnums, PropertyEnumFilter.Func propertyEnumFilterFunc)
                 {
                     _propertyList = propertyList;
+                    _version = propertyList._version;
 
                     _propertyIdFilter = propertyIdFilter;
                     _numParams = numParams;
@@ -449,6 +462,10 @@ namespace MHServerEmu.Games.Properties
                 public bool MoveNext()
                 {
                     Current = default;
+
+                    // Check for list version changes (TODO: reset enumeration instead of throwing?)
+                    if (_propertyList._version != _version)
+                        throw new("PropertyList was modified during iteration.");
 
                     // Continue iterating the current node (if we have one)
                     if (AdvanceToValidProperty())
