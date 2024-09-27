@@ -329,10 +329,21 @@ namespace MHServerEmu.Games.Entities
 
             Physics.AcquireCollisionId();
 
-            if (ChangeRegionPosition(position, orientation, ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.SkipInterestUpdate) == ChangePositionResult.PositionChanged)
+            ChangePositionResult result = ChangeRegionPosition(position, orientation,
+                ChangePositionFlags.Update | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.SkipInterestUpdate | ChangePositionFlags.EnterWorld);
+
+            if (result == ChangePositionResult.PositionChanged)
+            {
+                CancelExitWorldEvent();
+
+                // TODO: applyState
+
                 OnEnteredWorld(settings);
+            }
             else
+            {
                 ClearWorldLocation();
+            }
 
             SetStatus(EntityStatus.EnteringWorld, false);
 
