@@ -388,7 +388,7 @@ namespace MHServerEmu.Games.Entities
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;
             var timeOffset = TimeSpan.Zero;
-            if (_defeatEvent.IsValid)
+            if (_enableTriggerEvent.IsValid)
                 scheduler.RescheduleEvent(_enableTriggerEvent, timeOffset);
             else
                 ScheduleEntityEvent(_enableTriggerEvent, timeOffset);
