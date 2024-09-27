@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Text;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Properties
@@ -10,8 +9,6 @@ namespace MHServerEmu.Games.Properties
     /// </summary>
     public class NewPropertyList : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         // PropertyEnumNode stores either a single non-parameterized property value,
         // or a sorted dictionary of property values sharing the same enum.
         //
@@ -81,7 +78,7 @@ namespace MHServerEmu.Games.Properties
             // Created a new node if needed
             if (_nodeDict.TryGetValue(propertyEnum, out PropertyEnumNode node) == false)
             {
-                node = new(propertyEnum);
+                node = new();
                 isNewNode = true;
             }
 
@@ -108,14 +105,15 @@ namespace MHServerEmu.Games.Properties
                 // If our id has params, we need to create a dictionary to store it
                 dict = new();                           // The client preallocates a size of 3 here
                 node.ValueDictionary = dict;
-                _nodeDict[propertyEnum] = node;         // Update the struct stored in the enum dictionary when we create a new value dictionary
 
                 // Add our existing non-parameterized value to the new dictionary
                 if (isNewNode == false)
                 {
-                    dict.Add(node.PropertyEnum, node.PropertyValue);
+                    dict.Add(propertyEnum, node.PropertyValue);
                     node.PropertyValue = default;
                 }
+
+                _nodeDict[propertyEnum] = node;         // Update the struct stored in the enum dictionary when we create a new value dictionary
 
                 // Add the new value
                 dict.Add(id, newValue);
@@ -221,16 +219,14 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         private struct PropertyEnumNode
         {
-            public PropertyEnum PropertyEnum { get; }
             public PropertyValue PropertyValue { get; set; }
             public SortedDictionary<PropertyId, PropertyValue> ValueDictionary { get; set; }
 
             // PropertyEnumNode always has a count of at least 1 for the non-parameterized property
             public int Count { get => ValueDictionary != null ? ValueDictionary.Count : 1; }
 
-            public PropertyEnumNode(PropertyEnum propertyEnum)
+            public PropertyEnumNode()
             {
-                PropertyEnum = propertyEnum;
                 PropertyValue = default;
                 ValueDictionary = null;
             }
@@ -238,11 +234,64 @@ namespace MHServerEmu.Games.Properties
 
         #region Iteration
 
-        // TODO
-
-        public PropertyIterator.Enumerator GetEnumerator()
+        /// <summary>
+        /// Returns the default enumerator for this <see cref="NewPropertyList"/>.
+        /// </summary>=
+        public Iterator.Enumerator GetEnumerator()
         {
-            return new PropertyIterator().GetEnumerator();
+            return new Iterator(this).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
+        /// </summary>
+        public Iterator IteratePropertyRange(PropertyEnum propertyEnum)
+        {
+            return new(this, propertyEnum);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="int"/> value as param0.
+        /// </summary>
+        public Iterator IteratePropertyRange(PropertyEnum propertyEnum, int param0)
+        {
+            return new(this, propertyEnum, param0);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0.
+        /// </summary>
+        public Iterator IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
+        {
+            return new(this, propertyEnum, param0);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// and have the specified <see cref="PrototypeId"/> as param0 and param1.
+        /// </summary>
+        public Iterator IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+        {
+            return new(this, propertyEnum, param0, param1);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use any of the specified <see cref="PropertyEnum"/> values.
+        /// Count specifies how many <see cref="PropertyEnum"/> elements to get from the provided <see cref="IEnumerable"/>.
+        /// </summary>
+        public Iterator IteratePropertyRange(PropertyEnum[] enums)
+        {
+            return new(this, enums);
+        }
+
+        /// <summary>
+        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that match the provided <see cref="PropertyEnumFilter"/>.
+        /// </summary>
+        public Iterator IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
+        {
+            return new(this, filterFunc);
         }
 
         IEnumerator<KeyValuePair<PropertyId, PropertyValue>> IEnumerable<KeyValuePair<PropertyId, PropertyValue>>.GetEnumerator()
@@ -255,17 +304,87 @@ namespace MHServerEmu.Games.Properties
             return GetEnumerator();
         }
 
-        public struct PropertyIterator : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
+        public readonly struct Iterator : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
         {
+            private readonly NewPropertyList _propertyList;
+            private readonly PropertyId _propertyId;
+            private readonly PropertyEnum[] _propertyEnums;
+            private readonly PropertyEnumFilter.Func _filterFunc;
 
-            public PropertyIterator()
+            private readonly int _numParams;
+
+            public Iterator(NewPropertyList propertyList)
             {
+                _propertyList = propertyList;
 
+                _propertyId = PropertyId.Invalid;
+                _numParams = 0;
+                _propertyEnums = null;
+                _filterFunc = null;
+            }
+
+            public Iterator(NewPropertyList propertyList, PropertyEnum propertyEnum)
+            {
+                _propertyList = propertyList;
+
+                _propertyId = propertyEnum;
+                _numParams = 0;
+                _propertyEnums = null;
+                _filterFunc = null;
+            }
+
+            public Iterator(NewPropertyList propertyList, PropertyEnum propertyEnum, int param0)
+            {
+                _propertyList = propertyList;
+
+                _propertyId = new(propertyEnum, (PropertyParam)param0);
+                _numParams = 1;
+                _propertyEnums = null;
+                _filterFunc = null;
+            }
+
+            public Iterator(NewPropertyList propertyList, PropertyEnum propertyEnum, PrototypeId param0)
+            {
+                _propertyList = propertyList;
+
+                _propertyId = new(propertyEnum, param0);
+                _numParams = 1;
+                _propertyEnums = null;
+                _filterFunc = null;
+            }
+
+            public Iterator(NewPropertyList propertyList, PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+            {
+                _propertyList = propertyList;
+
+                _propertyId = new(propertyEnum, param0, param1);
+                _numParams = 2;
+                _propertyEnums = null;
+                _filterFunc = null;
+            }
+
+            public Iterator(NewPropertyList propertyList, PropertyEnum[] enums)
+            {
+                _propertyList = propertyList;
+                _propertyId = PropertyId.Invalid;
+                _numParams = 0;
+                _propertyEnums = enums;
+                _filterFunc = null;
+            }
+
+            public Iterator(NewPropertyList propertyList, PropertyEnumFilter.Func filterFunc)
+            {
+                _propertyList = propertyList;
+
+                _propertyId = PropertyId.Invalid;
+                _numParams = 0;
+                _propertyEnums = null;
+                _filterFunc = filterFunc;
             }
 
             public Enumerator GetEnumerator()
             {
-                return new();
+                return new(_propertyList, _propertyId, _numParams, _propertyEnums, _filterFunc);
             }
 
             IEnumerator<KeyValuePair<PropertyId, PropertyValue>> IEnumerable<KeyValuePair<PropertyId, PropertyValue>>.GetEnumerator()
@@ -280,26 +399,142 @@ namespace MHServerEmu.Games.Properties
 
             public struct Enumerator : IEnumerator<KeyValuePair<PropertyId, PropertyValue>>
             {
-                public KeyValuePair<PropertyId, PropertyValue> Current { get => throw new NotImplementedException(); }
+                // The list we are enumerating
+                private readonly NewPropertyList _propertyList;
+
+                // Filters
+                private readonly PropertyId _propertyIdFilter;
+                private readonly int _numParams;
+
+                private readonly PropertyEnum[] _propertyEnums;
+                private readonly PropertyEnumFilter.Func _propertyEnumFilterFunc;
+
+                // Enumeration state
+                private Dictionary<PropertyEnum, PropertyEnumNode>.Enumerator _nodeEnumerator;
+
+                private bool _hasValueEnumerator;
+                private SortedDictionary<PropertyId, PropertyValue>.Enumerator _valueEnumerator;
+
+                public KeyValuePair<PropertyId, PropertyValue> Current { get; private set; }
                 object IEnumerator.Current { get => Current; }
 
-                public Enumerator()
+                public Enumerator(NewPropertyList propertyList, PropertyId propertyIdFilter, int numParams,
+                    PropertyEnum[] propertyEnums, PropertyEnumFilter.Func propertyEnumFilterFunc)
                 {
+                    _propertyList = propertyList;
 
+                    _propertyIdFilter = propertyIdFilter;
+                    _numParams = numParams;
+                    _propertyEnums = propertyEnums;
+                    _propertyEnumFilterFunc = propertyEnumFilterFunc;
+
+                    _nodeEnumerator = propertyList._nodeDict.GetEnumerator();
+                    _hasValueEnumerator = false;
+                    _valueEnumerator = default;
+
+                    Current = default;
                 }
 
                 public bool MoveNext()
                 {
-                    throw new NotImplementedException();
+                    Current = default;
+
+                    // Continue iterating the current node (if we have one)
+                    if (AdvanceToValidProperty())
+                        return true;
+
+                    // Move on to the next node (while there are still any left)
+                    while (_nodeEnumerator.MoveNext() != false)
+                    {
+                        var kvp = _nodeEnumerator.Current;
+                        PropertyEnum propertyEnum = kvp.Key;
+
+                        // Filter nodes
+                        if (ValidatePropertyEnum(propertyEnum) == false)
+                            continue;
+
+                        PropertyEnumNode node = kvp.Value;
+
+                        // Special handling for non-parameterized nodes
+                        if (node.ValueDictionary == null)
+                        {
+                            if (_propertyIdFilter.HasParams)
+                                continue;
+
+                            Current = new(propertyEnum, node.PropertyValue);
+                            _hasValueEnumerator = false;
+                            _valueEnumerator = default;
+                            return true;
+                        }
+
+                        _valueEnumerator = node.ValueDictionary.GetEnumerator();
+                        if (AdvanceToValidProperty())
+                            return true;
+                    }
+
+                    // The current node is finished and there are no more nodes
+                    return false;
                 }
 
                 public void Reset()
                 {
-                    throw new NotSupportedException();
+                    _nodeEnumerator = _propertyList._nodeDict.GetEnumerator();
+
+                    _hasValueEnumerator = false;
+                    _valueEnumerator = default;
                 }
 
                 public void Dispose()
                 {
+                }
+
+                private bool AdvanceToValidProperty()
+                {
+                    // No enumerator for the current node
+                    if (_hasValueEnumerator == false)
+                        return false;
+
+                    // Continue iteration until we find a valid property
+                    while (_valueEnumerator.MoveNext())
+                    {
+                        var kvp = _valueEnumerator.Current;
+                        if (ValidatePropertyParams(kvp.Key) == false)
+                            continue;
+
+                        Current = kvp;
+                        return true;
+                    }
+
+                    // Current node finished
+                    return false;
+                }
+
+                private bool ValidatePropertyEnum(PropertyEnum propertyEnum)
+                {
+                    if (_propertyIdFilter != PropertyId.Invalid && _propertyIdFilter.Enum != propertyEnum)
+                        return false;
+
+                    if (_propertyEnums != null && _propertyEnums.Contains(propertyEnum) == false)
+                        return false;
+
+                    if (_propertyEnumFilterFunc != null && _propertyEnumFilterFunc(propertyEnum) == false)
+                        return false;
+
+                    return true;
+                }
+
+                private bool ValidatePropertyParams(PropertyId propertyIdToCheck)
+                {
+                    for (int i = 0; i < _numParams; i++)
+                    {
+                        Property.FromParam(_propertyIdFilter, i, out int filterParam);
+                        Property.FromParam(propertyIdToCheck, i, out int paramToCompare);
+
+                        if (filterParam != paramToCompare)
+                            return false;
+                    }
+
+                    return true;
                 }
             }
         }
