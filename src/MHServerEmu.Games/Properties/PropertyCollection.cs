@@ -321,13 +321,8 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool HasProperty(PropertyEnum propertyEnum)
         {
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    return true;
-            }
-
-            return false;
+            PropertyList.Iterator iterator = _aggregateList.IteratePropertyRange(propertyEnum);
+            return iterator.GetEnumerator().MoveNext();
         }
 
         /// <summary>
