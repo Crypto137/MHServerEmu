@@ -388,7 +388,7 @@ namespace MHServerEmu.Games.Entities
             {
                 CancelExitWorldEvent();
 
-                // TODO: applyState
+                ApplyState(Properties[PropertyEnum.EntityState]);
 
                 OnEnteredWorld(settings);
             }
@@ -2097,18 +2097,10 @@ namespace MHServerEmu.Games.Entities
         public override SimulateResult SetSimulated(bool simulated)
         {
             SimulateResult result = base.SetSimulated(simulated);
-            
+
             if (result != SimulateResult.None && Locomotor != null)
             {
                 ModifyCollectionMembership(EntityCollection.Locomotion, IsSimulated);
-                if (Region != null)
-                {
-                    if (simulated)
-                        Region.EntitySetSimulatedEvent.Invoke(new(this));
-                    else
-                        Region.EntitySetUnSimulatedEvent.Invoke(new(this));
-                }
-                SpawnSpec?.OnUpdateSimulation();
             }
             if (result == SimulateResult.Set)
             {
@@ -2139,6 +2131,18 @@ namespace MHServerEmu.Games.Entities
             else if (result == SimulateResult.Clear)
             {
                 EndAllPowers(true);
+            }
+
+            if (result != SimulateResult.None)
+            {
+                if (Region != null)
+                {
+                    if (simulated)
+                        Region.EntitySetSimulatedEvent.Invoke(new(this));
+                    else
+                        Region.EntitySetUnSimulatedEvent.Invoke(new(this));
+                }
+                SpawnSpec?.OnUpdateSimulation();
             }
 
             return result;
