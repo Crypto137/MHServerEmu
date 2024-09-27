@@ -581,17 +581,19 @@ namespace MHServerEmu.Games.Powers
                 levelScalingMult = MathHelper.Ratio(unscaledTargetHealthMax, scaledTargetHealthMax);
             }
 
+            Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
+            int i = 0;
             foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
-            {
-                Property.FromParam(kvp.Key, 0, out int damageType);
-                float damage = kvp.Value;
+                damage[i++] = kvp.Value;
 
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+            {
                 if (levelScalingMult != 1f)
-                    results.Properties[PropertyEnum.Damage, damageType] = damage * levelScalingMult;
+                    results.Properties[PropertyEnum.Damage, damageType] = damage[(int)damageType] * levelScalingMult;
 
                 // Show unscaled damage numbers to the client
                 // TODO: Hide region difficulty multipliers using this as well
-                results.SetDamageForClient((DamageType)damageType, damage);
+                results.SetDamageForClient(damageType, damage[(int)damageType]);
             }
 
             return true;
