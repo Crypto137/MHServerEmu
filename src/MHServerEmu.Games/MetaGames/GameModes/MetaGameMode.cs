@@ -164,7 +164,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         private void SendMessage(IMessage message, Player player = null)
         {
             if (player == null)
-                Game.NetworkManager.BroadcastMessage(message);
+                Game.NetworkManager.SendMessageToInterested(message, Region);
             else
                 player.SendMessage(message);
         }
