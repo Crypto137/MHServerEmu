@@ -12,7 +12,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames.GameModes;
 using MHServerEmu.Games.MetaGames.MetaStates;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
@@ -462,6 +461,7 @@ namespace MHServerEmu.Games.MetaGames
 
         public bool InitializePlayer(Player player)
         {
+            if (Debug) Logger.Info($"InitializePlayer {player.Id}");
             var team = GetTeamByPlayer(player);
             // TODO crate team?
             team?.AddPlayer(player);
@@ -518,6 +518,15 @@ namespace MHServerEmu.Games.MetaGames
             {
                 var entity = evt.Entity;
                 if (entity is Avatar) DiscoverEntity(entity);
+            }
+
+            // REMOVEME this method of activating AddPlayer is used because OnPlayerEnteredRegion
+            // is triggered before MetaState is created. Try fix this and remove.
+            if (evt.Entity is Avatar avatar)
+            {
+                if (Debug) Logger.Info($"OnEntityEnteredWorld for {avatar.PrototypeName}");
+                var player = avatar.GetOwnerOfType<Player>();
+                if (player != null) AddPlayer(player);
             }
         }
 
