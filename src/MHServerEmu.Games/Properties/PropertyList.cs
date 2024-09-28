@@ -257,6 +257,8 @@ namespace MHServerEmu.Games.Properties
 
         #region Iteration
 
+        // NOTE: IteratePropertyRange() are basically factory methods for constructing filtered iterators.
+
         /// <summary>
         /// Returns the default enumerator for this <see cref="PropertyList"/>.
         /// </summary>=
@@ -266,7 +268,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
+        /// Returns an <see cref="Iterator"/> for <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
         /// </summary>
         public Iterator IteratePropertyRange(PropertyEnum propertyEnum)
         {
@@ -274,7 +276,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// Returns an <see cref="Iterator"/> for <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
         /// and have the specified <see cref="int"/> value as param0.
         /// </summary>
         public Iterator IteratePropertyRange(PropertyEnum propertyEnum, int param0)
@@ -283,7 +285,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// Returns an <see cref="Iterator"/> for <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
         /// and have the specified <see cref="PrototypeId"/> as param0.
         /// </summary>
         public Iterator IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
@@ -292,7 +294,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
+        /// Returns an <see cref="Iterator"/> for <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
         /// and have the specified <see cref="PrototypeId"/> as param0 and param1.
         /// </summary>
         public Iterator IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
@@ -301,8 +303,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use any of the specified <see cref="PropertyEnum"/> values.
-        /// Count specifies how many <see cref="PropertyEnum"/> elements to get from the provided <see cref="IEnumerable"/>.
+        /// Returns an <see cref="Iterator"/> for <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use any of the specified <see cref="PropertyEnum"/> values.
         /// </summary>
         public Iterator IteratePropertyRange(PropertyEnum[] enums)
         {
@@ -310,7 +311,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
-        /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that match the provided <see cref="PropertyEnumFilter"/>.
+        /// Returns an <see cref="Iterator"/> for <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that match the provided <see cref="PropertyEnumFilter"/>.
         /// </summary>
         public Iterator IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
         {
@@ -327,87 +328,116 @@ namespace MHServerEmu.Games.Properties
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Wrapper for <see cref="Enumerator"/> to allow parameterized foreach iteration.
+        /// </summary>
         public readonly struct Iterator : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
         {
             private readonly PropertyList _propertyList;
 
-            private readonly PropertyId _propertyId;
+            // Filters
+            private readonly PropertyId _propertyIdFilter;
             private readonly int _numParams;
             private readonly PropertyEnum[] _propertyEnums;
             private readonly PropertyEnumFilter.Func _filterFunc;
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with no filters.
+            /// </summary>
             public Iterator(PropertyList propertyList)
             {
                 _propertyList = propertyList;
 
-                _propertyId = PropertyId.Invalid;
+                _propertyIdFilter = PropertyId.Invalid;
                 _numParams = 0;
                 _propertyEnums = null;
                 _filterFunc = null;
             }
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+            /// </summary>
             public Iterator(PropertyList propertyList, PropertyEnum propertyEnum)
             {
                 _propertyList = propertyList;
 
-                _propertyId = propertyEnum;
+                _propertyIdFilter = propertyEnum;
                 _numParams = 0;
                 _propertyEnums = null;
                 _filterFunc = null;
             }
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+            /// </summary>
             public Iterator(PropertyList propertyList, PropertyEnum propertyEnum, int param0)
             {
                 _propertyList = propertyList;
 
-                _propertyId = new(propertyEnum, (PropertyParam)param0);
+                _propertyIdFilter = new(propertyEnum, (PropertyParam)param0);
                 _numParams = 1;
                 _propertyEnums = null;
                 _filterFunc = null;
             }
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+            /// </summary>
             public Iterator(PropertyList propertyList, PropertyEnum propertyEnum, PrototypeId param0)
             {
                 _propertyList = propertyList;
 
-                _propertyId = new(propertyEnum, param0);
+                _propertyIdFilter = new(propertyEnum, param0);
                 _numParams = 1;
                 _propertyEnums = null;
                 _filterFunc = null;
             }
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+            /// </summary>
             public Iterator(PropertyList propertyList, PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
             {
                 _propertyList = propertyList;
 
-                _propertyId = new(propertyEnum, param0, param1);
+                _propertyIdFilter = new(propertyEnum, param0, param1);
                 _numParams = 2;
                 _propertyEnums = null;
                 _filterFunc = null;
             }
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+            /// </summary>
             public Iterator(PropertyList propertyList, PropertyEnum[] enums)
             {
                 _propertyList = propertyList;
-                _propertyId = PropertyId.Invalid;
+
+                _propertyIdFilter = PropertyId.Invalid;
                 _numParams = 0;
                 _propertyEnums = enums;
                 _filterFunc = null;
             }
 
+            /// <summary>
+            /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+            /// </summary>
             public Iterator(PropertyList propertyList, PropertyEnumFilter.Func filterFunc)
             {
                 _propertyList = propertyList;
 
-                _propertyId = PropertyId.Invalid;
+                _propertyIdFilter = PropertyId.Invalid;
                 _numParams = 0;
                 _propertyEnums = null;
                 _filterFunc = filterFunc;
             }
 
+            /// <summary>
+            /// Returns a new <see cref="Enumerator"/> with this <see cref="Iterator"/>'s filters.
+            /// </summary>
             public Enumerator GetEnumerator()
             {
-                return new(_propertyList, _propertyId, _numParams, _propertyEnums, _filterFunc);
+                return new(_propertyList, _propertyIdFilter, _numParams, _propertyEnums, _filterFunc);
             }
 
             IEnumerator<KeyValuePair<PropertyId, PropertyValue>> IEnumerable<KeyValuePair<PropertyId, PropertyValue>>.GetEnumerator()
@@ -420,6 +450,9 @@ namespace MHServerEmu.Games.Properties
                 return GetEnumerator();
             }
 
+            /// <summary>
+            /// An implementation of <see cref="IEnumerator"/> for filtered enumeration of <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs.
+            /// </summary>
             public struct Enumerator : IEnumerator<KeyValuePair<PropertyId, PropertyValue>>
             {
                 // The list we are enumerating
@@ -442,6 +475,9 @@ namespace MHServerEmu.Games.Properties
                 public KeyValuePair<PropertyId, PropertyValue> Current { get; private set; }
                 object IEnumerator.Current { get => Current; }
 
+                /// <summary>
+                /// Constructs a new <see cref="Enumerator"/> with the provided filters.
+                /// </summary>
                 public Enumerator(PropertyList propertyList, PropertyId propertyIdFilter, int numParams,
                     PropertyEnum[] propertyEnums, PropertyEnumFilter.Func propertyEnumFilterFunc)
                 {
@@ -487,6 +523,7 @@ namespace MHServerEmu.Games.Properties
                         // Special handling for non-parameterized nodes
                         if (node.ValueDictionary == null)
                         {
+                            // We check only the params here because the enum has already been validated in ValidatePropertyEnum()
                             if (_propertyIdFilter.HasParams)
                                 continue;
 
@@ -496,6 +533,7 @@ namespace MHServerEmu.Games.Properties
                             return true;
                         }
 
+                        // Begin iterating a new dictionary node
                         _hasValueEnumerator = true;
                         _valueEnumerator = node.ValueDictionary.GetEnumerator();
                         if (AdvanceToValidProperty())
@@ -518,6 +556,9 @@ namespace MHServerEmu.Games.Properties
                 {
                 }
 
+                /// <summary>
+                /// Advances <see cref="Enumerator"/> to the next valid property in the current node.
+                /// </summary>
                 private bool AdvanceToValidProperty()
                 {
                     // No enumerator for the current node
@@ -539,7 +580,10 @@ namespace MHServerEmu.Games.Properties
                     return false;
                 }
 
-                private bool ValidatePropertyEnum(PropertyEnum propertyEnum)
+                /// <summary>
+                /// Validates the specified <see cref="PropertyEnum"/> for iteration given this <see cref="Enumerator"/>'s filters.
+                /// </summary>
+                private readonly bool ValidatePropertyEnum(PropertyEnum propertyEnum)
                 {
                     if (_propertyIdFilter != PropertyId.Invalid && _propertyIdFilter.Enum != propertyEnum)
                         return false;
@@ -553,7 +597,10 @@ namespace MHServerEmu.Games.Properties
                     return true;
                 }
 
-                private bool ValidatePropertyParams(PropertyId propertyIdToCheck)
+                /// <summary>
+                /// Validates the params in the provided <see cref="PropertyId"/> for iteration given this <see cref="Enumerator"/>'s filters.
+                /// </summary>
+                private readonly bool ValidatePropertyParams(PropertyId propertyIdToCheck)
                 {
                     if (_propertyIdFilter == PropertyId.Invalid)
                         return true;
