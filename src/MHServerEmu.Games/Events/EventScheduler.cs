@@ -5,6 +5,8 @@ namespace MHServerEmu.Games.Events
 {
     public class EventScheduler
     {
+        private const int MaxEventsPerUpdate = 50000;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // TODO: Implement frame buckets
@@ -123,7 +125,9 @@ namespace MHServerEmu.Games.Events
                         @event.EventGroupNode?.Remove();
                         @event.InvalidatePointers();
                         @event.OnTriggered();
-                        numEvents++;
+
+                        if (++numEvents > MaxEventsPerUpdate)
+                            throw new Exception($"Infinite loop detected in EventScheduler.");
                     }
 
                     // See if any more events got scheduled for this frame
@@ -134,6 +138,21 @@ namespace MHServerEmu.Games.Events
             }
 
             //if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
+        }
+
+        public Dictionary<string, int> GetScheduledEventCounts()
+        {
+            Dictionary<string, int> countDict = new();
+
+            foreach (var value in _scheduledEvents)
+            {
+                string eventName = value.GetType().Name;
+                countDict.TryGetValue(eventName, out int count);
+                count++;
+                countDict[eventName] = count;
+            }
+
+            return countDict;
         }
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
