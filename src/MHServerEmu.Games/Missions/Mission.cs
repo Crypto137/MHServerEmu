@@ -1830,7 +1830,7 @@ namespace MHServerEmu.Games.Missions
                     requiredCount += required;
                     found = true;
                 }
-                return false;
+                else return false;
             }
             return found;
         }
