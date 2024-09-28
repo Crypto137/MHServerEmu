@@ -316,6 +316,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         private void ScheduleActiveGoalRepeat(int timeMs)
         {
+            if (timeMs == 0) return;
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;
             TimeSpan timeOffset = TimeSpan.FromMilliseconds(timeMs);
