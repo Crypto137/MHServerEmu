@@ -2123,7 +2123,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
-        public override void OnOwnerGotDamaged(AIController ownerController, WorldEntity attacker)
+        public override void OnOwnerGotDamaged(AIController ownerController)
         {
             ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
         }
