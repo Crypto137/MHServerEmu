@@ -10,23 +10,19 @@ namespace MHServerEmu.Games.Properties
     public class PropertyList : IEnumerable<KeyValuePair<PropertyId, PropertyValue>>
     {
         // PropertyEnumNode stores either a single non-parameterized property value,
-        // or a dictionary of property values sharing the same enum.
-        //
-        // NOTE: We are using regular dictionaries for value collections instead of
-        // sorted ones because it's been faster in the benchmarks we've done so far.
+        // or a collection of property id/value pairs sharing the same enum.
         //
         // When a property value is assigned, a node is created for it that either
-        // stores the non-parameterized value on its own, or instantiates a new dictionary
+        // stores the non-parameterized value on its own, or instantiates a new PropertyArray
         // for the parameterized value.
         //
         // When a parameterized value is added to a node that contains only a non-parameterized
-        // value, a dictionary is instantiated and both values are added to it.
+        // value, a PropertyArray is instantiated and both values are added to it.
         //
         // Doing it this way allows us to avoid heap allocations for enum buckets that contain
         // only a single non-parameterized property, which is a pretty common case.
         //
         // NOTE: This implementation is based on NewPropertyList from the client.
-        // PropertyEnumNode.ValueDictionary is called PropertyArray in the original implementation.
 
         private readonly Dictionary<PropertyEnum, PropertyEnumNode> _nodeDict = new();
         private int _count = 0;
@@ -48,12 +44,11 @@ namespace MHServerEmu.Games.Properties
             if (_nodeDict.TryGetValue(id.Enum, out PropertyEnumNode node) == false)
                 return false;
 
-            // If the node has a property dictionary, the value will be stored in it
-            if (node.ValueDictionary != null)
-                return node.ValueDictionary.TryGetValue(id, out value);
+            // If the node has a property array, the value will be stored in it
+            if (node.PropertyArray != null)
+                return node.PropertyArray.Value.TryGetValue(id, out value);
 
-            // If the node does not have a property dictionary, it means it contains only a single
-            // non-parameterized value.
+            // If the node does not have a property array, it means it contains only a single non-parameterized value.
             if (id.HasParams)
                 return false;
 
@@ -86,10 +81,12 @@ namespace MHServerEmu.Games.Properties
                 isNewNode = true;
             }
 
-            // If we do not have an existing dictionary, either update the non-parameterized value,
-            // or create a new dictionary to store the parameterized value.
-            Dictionary<PropertyId, PropertyValue> dict = node.ValueDictionary;
-            if (dict == null)
+            // If we do not have an existing property array, either update the non-parameterized value,
+            // or create a new property array to store the parameterized value.
+            PropertyArray propertyArray;
+            PropertyArray? nullablePropertyArray = node.PropertyArray;
+
+            if (nullablePropertyArray == null)
             {
                 // Set a non-parameterized value on a node that does not have parameterized values
                 if (id.HasParams == false)
@@ -109,21 +106,21 @@ namespace MHServerEmu.Games.Properties
                     return;
                 }
 
-                // If our id has params, we need to create a dictionary to store it
-                dict = new(3);      // Initial capacity is the same as the client's PropertyArray
-                node.ValueDictionary = dict;
+                // If our id has params, we need to create a property array to store it
+                propertyArray = new(3);      // Initial capacity is the same as the client
+                node.PropertyArray = propertyArray;
 
-                // Add our existing non-parameterized value to the new dictionary
+                // Add our existing non-parameterized value to the new property array
                 if (isNewNode == false)
                 {
-                    dict.Add(propertyEnum, node.PropertyValue);
+                    propertyArray.Add(propertyEnum, node.PropertyValue);
                     node.PropertyValue = default;
                 }
 
-                _nodeDict[propertyEnum] = node;         // Update the struct stored in the enum dictionary when we create a new value dictionary
+                _nodeDict[propertyEnum] = node;         // Update the struct stored in the enum dictionary when we create a new property array
 
                 // Add the new value
-                dict.Add(id, newValue);
+                propertyArray.Add(id, newValue);
                 wasAdded = true;
                 hasChanged = true;
                 _count++;
@@ -132,10 +129,23 @@ namespace MHServerEmu.Games.Properties
                 return;
             }
 
-            // Add or update a value in the existing dictionary
-            wasAdded = dict.TryGetValue(id, out oldValue) == false;
-            hasChanged = wasAdded || oldValue.RawLong != newValue.RawLong;
-            dict[id] = newValue;
+            // Add or update a value in the existing property array
+            propertyArray = nullablePropertyArray.Value;
+
+            if (propertyArray.TryGetValue(id, out oldValue) == false)
+            {
+                propertyArray.Add(id, newValue);
+                wasAdded = true;
+                hasChanged = true;
+            }
+            else
+            {
+                wasAdded = false;
+                hasChanged = oldValue.RawLong != newValue.RawLong;
+
+                if (hasChanged)
+                    propertyArray.Replace(id, newValue);
+            }
 
             if (hasChanged)
             {
@@ -143,7 +153,7 @@ namespace MHServerEmu.Games.Properties
                 _version++;
             }
 
-            // No need to update the enum dictionary node if we are just changing the contents of the same dictionary
+            // No need to update the enum dictionary if we are just changing the contents of an existing property array
         }
 
         /// <summary>
@@ -158,8 +168,8 @@ namespace MHServerEmu.Games.Properties
             if (_nodeDict.TryGetValue(propertyEnum, out PropertyEnumNode node) == false)
                 return false;
 
-            Dictionary<PropertyId, PropertyValue> dict = node.ValueDictionary;
-            if (dict == null)
+            PropertyArray? propertyArray = node.PropertyArray;
+            if (propertyArray == null)
             {
                 // This is a node that stores a single non-parameterized value,
                 // and our id is parameterized, so the requested id will not be in this list.
@@ -169,20 +179,22 @@ namespace MHServerEmu.Games.Properties
                 // Remove the non-parameterized node
                 value = node.PropertyValue;
                 _nodeDict.Remove(propertyEnum);
-                _count--;   // No need to increment version, because everything is dictionary-based
+                _count--;
+                _version++;
                 return true;
             }
 
             // Try to remove the value from our value dictionary
-            if (dict.Remove(id, out value) == false)
+            if (propertyArray.Value.Remove(id, out value) == false)
                 return false;
 
             // We have successfully removed the value
-            _count--;   // No need to increment version, because everything is dictionary-based
+            _count--;
+            _version++;
 
-            // TODO: Would it be more efficient to allow GC to clean up empty dictionary nodes, or should we leave them in place?
-            // Also consider pooling for value dictionaries.
-            //if (dict.Count == 0)
+            // TODO: Would it be more efficient to allow GC to clean up empty property arrays, or should we leave them in place?
+            // Also consider pooling for property arrays.
+            //if (node.Count == 0)
             //    _nodeDict.Remove(propertyEnum);
 
             return true;
@@ -243,15 +255,168 @@ namespace MHServerEmu.Games.Properties
         private struct PropertyEnumNode
         {
             public PropertyValue PropertyValue { get; set; }
-            public Dictionary<PropertyId, PropertyValue> ValueDictionary { get; set; }
+            public PropertyArray? PropertyArray { get; set; }
+
+            // NOTE: It's safe to use nullable for PropertyArray because it's a thin wrapper around List with no state of its own.
 
             // PropertyEnumNode always has a count of at least 1 for the non-parameterized property
-            public int Count { get => ValueDictionary != null ? ValueDictionary.Count : 1; }
+            public int Count { get => PropertyArray != null ? PropertyArray.Value.Count : 1; }
 
             public PropertyEnumNode()
             {
                 PropertyValue = default;
-                ValueDictionary = null;
+                PropertyArray = null;
+            }
+        }
+
+        /// <summary>
+        /// A collection of <see cref="KeyValuePair{TKey, TValue}"/> of <see cref="PropertyId"/> and <see cref="PropertyValue"/> optimized for smaller sizes.
+        /// </summary>
+        private readonly struct PropertyArray
+        {
+            // The current implementation is a simple wrapper around List, which performs best with collections of < 10 elements.
+            private readonly List<KeyValuePair<PropertyId, PropertyValue>> _list;
+
+            /// <summary>
+            /// Returns the number of <see cref="PropertyId"/>/<see cref="PropertyValue"/> pairs contained in this <see cref="PropertyArray"/>.
+            /// </summary>
+            public int Count { get => _list.Count; }
+
+            /// <summary>
+            /// Constructs a new <see cref="PropertyArray"/> with the specified initial capacity.
+            /// </summary>
+            public PropertyArray(int capacity = 0)
+            {
+                _list = new(capacity);
+            }
+
+            /// <summary>
+            /// Adds a new <see cref="PropertyId"/>/<see cref="PropertyValue"/> pair to this <see cref="PropertyArray"/>.
+            /// </summary>
+            public void Add(PropertyId id, PropertyValue value)
+            {
+                /*
+                for (int i = 0; i < _list.Count; i++)
+                {
+                    if (_list[i].Key == id)
+                        throw new($"PropertyId {id} already exists.");
+                }
+                */
+
+                _list.Add(new(id, value));
+            }
+
+            /// <summary>
+            /// Replaces the <see cref="PropertyValue"/> for the <see cref="PropertyId"/> contained in this list.
+            /// Throws an exception if not found.
+            /// </summary>
+            public void Replace(PropertyId id, PropertyValue value)
+            {
+                for (int i = 0; i < _list.Count; i++)
+                {
+                    var kvp = _list[i];
+
+                    if (kvp.Key == id)
+                    {
+                        _list[i] = new(id, value);
+                        return;
+                    }
+                }
+
+                throw new($"PropertyId {id} not found.");
+            }
+
+            /// <summary>
+            /// Removes the pair associated with the specified <see cref="PropertyId"/>.
+            /// Returns <see langword="false"/> if no pair with the specified <see cref="PropertyId"/> is found.
+            /// </summary>
+            public bool Remove(PropertyId id, out PropertyValue value)
+            {
+                for (int i = 0; i < _list.Count; i++)
+                {
+                    var kvp = _list[i];
+
+                    if (kvp.Key == id)
+                    {
+                        _list.RemoveAt(i);
+                        value = kvp.Value;
+                        return true;
+                    }
+                }
+
+                value = default;
+                return false;
+            }
+
+            /// <summary>
+            /// Returns the <see cref="PropertyValue"/> for the specified <see cref="PropertyId"/> contained in this <see cref="PropertyArray"/>.
+            /// Returns <see langword="false"/> if no pair with the specified <see cref="PropertyId"/> is found.
+            /// </summary>
+            public bool TryGetValue(PropertyId id, out PropertyValue value)
+            {
+                // NOTE: This is called quite often, and may require additional optimizations for larger (> 10 elements) arrays.
+
+                for (int i = 0; i < _list.Count; i++)
+                {
+                    var kvp = _list[i];
+
+                    if (kvp.Key == id)
+                    {
+                        value = kvp.Value;
+                        return true;
+                    }
+                }
+
+                value = default;
+                return false;
+            }
+
+            /// <summary>
+            /// Returns a new <see cref="Enumerator"/> for this <see cref="PropertyArray"/>.
+            /// </summary>
+            public Enumerator GetEnumerator()
+            {
+                return new(this);
+            }
+
+            /// <summary>
+            /// Iterates <see cref="PropertyId"/>/<see cref="PropertyValue"/> pairs contained in a <see cref="PropertyArray"/>.
+            /// </summary>
+            public struct Enumerator : IEnumerator<KeyValuePair<PropertyId, PropertyValue>>
+            {
+                private readonly List<KeyValuePair<PropertyId, PropertyValue>> _list;
+                private int _index;
+
+                public KeyValuePair<PropertyId, PropertyValue> Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(PropertyArray propertyArray)
+                {
+                    _list = propertyArray._list;
+                    _index = -1;
+
+                    Current = default;
+                }
+
+                public bool MoveNext()
+                {
+                    while (++_index < _list.Count)
+                    {
+                        Current = _list[_index];
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                public void Reset()
+                {
+                    _index = -1;
+                }
+
+                public void Dispose()
+                {
+                }
             }
         }
 
@@ -469,8 +634,11 @@ namespace MHServerEmu.Games.Properties
                 // Enumeration state
                 private Dictionary<PropertyEnum, PropertyEnumNode>.Enumerator _nodeEnumerator;
 
-                private bool _hasValueEnumerator;
-                private Dictionary<PropertyId, PropertyValue>.Enumerator _valueEnumerator;
+                // NOTE: We are using separate bool + enumerator fields instead of a nullable
+                // because getting a enumerator via Nullable.Value would return a copy, and
+                // the original iterator stored in our field would remain unmodified.
+                private bool _hasArrayEnumerator;
+                private PropertyArray.Enumerator _arrayEnumerator;
 
                 public KeyValuePair<PropertyId, PropertyValue> Current { get; private set; }
                 object IEnumerator.Current { get => Current; }
@@ -490,8 +658,8 @@ namespace MHServerEmu.Games.Properties
                     _propertyEnumFilterFunc = propertyEnumFilterFunc;
 
                     _nodeEnumerator = propertyList._nodeDict.GetEnumerator();
-                    _hasValueEnumerator = false;
-                    _valueEnumerator = default;
+                    _hasArrayEnumerator = false;
+                    _arrayEnumerator = default;
 
                     Current = default;
                 }
@@ -521,21 +689,21 @@ namespace MHServerEmu.Games.Properties
                         PropertyEnumNode node = kvp.Value;
 
                         // Special handling for non-parameterized nodes
-                        if (node.ValueDictionary == null)
+                        if (node.PropertyArray == null)
                         {
                             // We check only the params here because the enum has already been validated in ValidatePropertyEnum()
                             if (_propertyIdFilter.HasParams)
                                 continue;
 
                             Current = new(propertyEnum, node.PropertyValue);
-                            _hasValueEnumerator = false;
-                            _valueEnumerator = default;
+                            _hasArrayEnumerator = false;
+                            _arrayEnumerator = default;
                             return true;
                         }
 
-                        // Begin iterating a new dictionary node
-                        _hasValueEnumerator = true;
-                        _valueEnumerator = node.ValueDictionary.GetEnumerator();
+                        // Begin iterating a new enum node
+                        _hasArrayEnumerator = true;
+                        _arrayEnumerator = node.PropertyArray.Value.GetEnumerator();
                         if (AdvanceToValidProperty())
                             return true;
                     }
@@ -547,9 +715,8 @@ namespace MHServerEmu.Games.Properties
                 public void Reset()
                 {
                     _nodeEnumerator = _propertyList._nodeDict.GetEnumerator();
-
-                    _hasValueEnumerator = false;
-                    _valueEnumerator = default;
+                    _hasArrayEnumerator = false;
+                    _arrayEnumerator = default;
                 }
 
                 public void Dispose()
@@ -561,14 +728,14 @@ namespace MHServerEmu.Games.Properties
                 /// </summary>
                 private bool AdvanceToValidProperty()
                 {
-                    // No enumerator for the current node
-                    if (_hasValueEnumerator == false)
+                    // No valid enumerator for the current node
+                    if (_hasArrayEnumerator == false)
                         return false;
 
                     // Continue iteration until we find a valid property
-                    while (_valueEnumerator.MoveNext())
+                    while (_arrayEnumerator.MoveNext())
                     {
-                        var kvp = _valueEnumerator.Current;
+                        var kvp = _arrayEnumerator.Current;
                         if (ValidatePropertyParams(kvp.Key) == false)
                             continue;
 
