@@ -375,19 +375,23 @@ namespace MHServerEmu.Games.Properties
             /// </summary>
             private int Find(PropertyId id, out PropertyValue value)
             {
-                // Linear search with early breaks. TODO: Binary search for larger lists (> 20 elements)?
-                for (int i = 0; i < _list.Count; i++)
+                // Linear search with early breaks. This should be faster than binary search for our use case (small arrays).
+                int count = _list.Count;
+
+                for (int i = 0; i < count; i++)
                 {
                     PropertyPair pair = _list[i];
 
-                    if (pair.Id.CompareTo(id) > 0)
-                        break;
-
+                    // Best case: the first element is the pair we are looking for.
                     if (pair.Id == id)
                     {
                         value = pair.Value;
                         return i;
                     }
+
+                    // Early exit if we are past the point of where our pair should be
+                    if (pair.Id.Raw > id.Raw)
+                        break;
                 }
                 
                 value = default;
