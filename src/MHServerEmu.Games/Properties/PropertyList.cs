@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Properties
         // only a single non-parameterized property, which is a pretty common case.
         //
         // NOTE: This implementation is based on NewPropertyList from the client.
-        // PropertyDictionary is called PropertyArray in the original implementation.
+        // PropertyEnumNode.ValueDictionary is called PropertyArray in the original implementation.
 
         private readonly Dictionary<PropertyEnum, PropertyEnumNode> _nodeDict = new();
         private int _count = 0;
@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.Properties
                 }
 
                 // If our id has params, we need to create a dictionary to store it
-                dict = new();                           // The client preallocates a size of 3 here
+                dict = new(3);      // Initial capacity is the same as the client's PropertyArray
                 node.ValueDictionary = dict;
 
                 // Add our existing non-parameterized value to the new dictionary
