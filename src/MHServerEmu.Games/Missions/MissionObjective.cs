@@ -650,7 +650,11 @@ namespace MHServerEmu.Games.Missions
             {
                 var uiGlobals = GameDatabase.UIGlobalsPrototype;
                 var textWidget = uiDataProvider.GetWidget<UIWidgetMissionText>(uiGlobals.MetaGameWidgetMissionName, missionRef);
-                textWidget?.SetText(missionProto.Name, LocaleStringId.Blank);
+                if (textWidget != null)
+                {
+                    textWidget.SetAreaContext(missionRef);
+                    textWidget.SetText(missionProto.Name, LocaleStringId.Blank);
+                }
             }
 
             var widget = uiDataProvider.GetWidget<UISyncData>(widgetRef, missionRef);
