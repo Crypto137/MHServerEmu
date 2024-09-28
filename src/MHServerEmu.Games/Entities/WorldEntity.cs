@@ -259,6 +259,10 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            var worldEntityProto = WorldEntityPrototype;
+            CancelScheduledLifespanExpireEvent();
+            EntityActionComponent?.CancelAll();
+
             bool notMissile = this is not Missile;
             // HACK: LOOT AND XP
             if (this is Agent agent && notMissile && agent is not Avatar && agent.IsTeamUpAgent == false)
@@ -273,18 +277,11 @@ namespace MHServerEmu.Games.Entities
                 Region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
 
-            // HACK: Schedule respawn in public zones using SpawnSpec
-            /*if (RegionLocation.Region != null && RegionLocation.Region.IsPublic && SpawnSpec != null)
-            {
-                Logger.Trace($"Respawn scheduled for {this}");
-                EventPointer<TEMP_SpawnEntityEvent> eventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(eventPointer, Game.CustomGameOptions.WorldEntityRespawnTime);
-                eventPointer.Get().Initialize(SpawnSpec);
-            }*/
-
             // Set death state properties
             Properties[PropertyEnum.IsDead] = true;
-            Properties[PropertyEnum.NoEntityCollide] = true;
+
+            if (worldEntityProto.RemoveNavInfluenceOnKilled)
+                Properties[PropertyEnum.NoEntityCollide] = true;
 
             // Send kill message to clients
             var killMessage = NetMessageEntityKill.CreateBuilder()
@@ -295,10 +292,9 @@ namespace MHServerEmu.Games.Entities
 
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
-            EntityActionComponent?.CancelAll();
 
             // Schedule destruction
-            int removeFromWorldTimerMS = WorldEntityPrototype.RemoveFromWorldTimerMS;
+            int removeFromWorldTimerMS = worldEntityProto.RemoveFromWorldTimerMS;
             if (removeFromWorldTimerMS < 0)     // -1 means entities are not destroyed (e.g. avatars)
                 return;
 
@@ -350,6 +346,8 @@ namespace MHServerEmu.Games.Entities
         public override void Destroy()
         {
             if (Game == null) return;
+
+            SpawnSpec?.Destroy();
 
             ExitWorld();
             if (IsDestroyed == false)
