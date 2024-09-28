@@ -79,10 +79,11 @@ namespace MHServerEmu.Games.MetaGames
         {
             if (base.AddPlayer(player) == false) return false;
 
-
             var mode = CurrentMode;
             if (mode == null) return false;
             mode.OnAddPlayer(player);
+
+            if (Debug) Logger.Warn($"AddPlayer {player.Id} {mode.PrototypeDataRef.GetNameFormatted()}");
 
             foreach (var state in MetaStates)
                 state.OnAddPlayer(player);
