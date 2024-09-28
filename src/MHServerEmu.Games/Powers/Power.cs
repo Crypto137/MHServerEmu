@@ -2704,12 +2704,12 @@ namespace MHServerEmu.Games.Powers
         {
             if (serializeType == PowerSerializeType.Entity)
             {
-                foreach (var kvp in sourceProperties.IteratePropertyRange(PropertyEnumFilter.SerializeEntityToPowerPayload))
+                foreach (var kvp in sourceProperties.IteratePropertyRange(PropertyEnumFilter.SerializeEntityToPowerPayloadFunc))
                     destinationProperties[kvp.Key] = kvp.Value;
             }
             else if (serializeType == PowerSerializeType.Power)
             {
-                foreach (var kvp in sourceProperties.IteratePropertyRange(PropertyEnumFilter.SerializePowerToPowerPayload))
+                foreach (var kvp in sourceProperties.IteratePropertyRange(PropertyEnumFilter.SerializePowerToPowerPayloadFunc))
                     destinationProperties[kvp.Key] = kvp.Value;
             }
         }
