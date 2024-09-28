@@ -275,7 +275,7 @@ namespace MHServerEmu.Games.Properties
         private readonly struct PropertyArray
         {
             // The current implementation is a simple wrapper around List, which performs best with collections of < 10 elements.
-            private readonly List<KeyValuePair<PropertyId, PropertyValue>> _list;
+            private readonly List<PropertyPair> _list;
 
             /// <summary>
             /// Returns the number of <see cref="PropertyId"/>/<see cref="PropertyValue"/> pairs contained in this <see cref="PropertyArray"/>.
@@ -296,14 +296,41 @@ namespace MHServerEmu.Games.Properties
             public void Add(PropertyId id, PropertyValue value)
             {
                 /*
-                for (int i = 0; i < _list.Count; i++)
-                {
-                    if (_list[i].Key == id)
-                        throw new($"PropertyId {id} already exists.");
-                }
+                if (Find(id, out _) != -1)
+                    throw new($"PropertyId {id} already exists.");
                 */
 
-                _list.Add(new(id, value));
+                // We add pairs to the list in sorted order to speed up lookups
+                PropertyPair pair = new(id, value);
+
+                // No elements in the list - add as is.
+                if (_list.Count == 0)
+                {
+                    _list.Add(pair);
+                    return;
+                }
+
+                // Larger than the last element in the list - push back.
+                // This should be the case we always run into when copying.
+                if (_list[^1] <= pair)
+                {
+                    _list.Add(pair);
+                    return;
+                }
+
+                // Smaller than the first element - push front.
+                if (_list[0] >= pair)
+                {
+                    _list.Insert(0, pair);
+                    return;
+                }
+
+                // Binary search for an index in the middle.
+                int index = _list.BinarySearch(pair);
+                if (index < 0)
+                    index = ~index;
+
+                _list.Insert(index, pair);
             }
 
             /// <summary>
@@ -312,18 +339,11 @@ namespace MHServerEmu.Games.Properties
             /// </summary>
             public void Replace(PropertyId id, PropertyValue value)
             {
-                for (int i = 0; i < _list.Count; i++)
-                {
-                    var kvp = _list[i];
+                int index = Find(id, out _);
+                if (index == -1)
+                    throw new($"PropertyId {id} not found.");
 
-                    if (kvp.Key == id)
-                    {
-                        _list[i] = new(id, value);
-                        return;
-                    }
-                }
-
-                throw new($"PropertyId {id} not found.");
+                _list[index] = new(id, value);
             }
 
             /// <summary>
@@ -332,20 +352,12 @@ namespace MHServerEmu.Games.Properties
             /// </summary>
             public bool Remove(PropertyId id, out PropertyValue value)
             {
-                for (int i = 0; i < _list.Count; i++)
-                {
-                    var kvp = _list[i];
+                int index = Find(id, out value);
+                if (index == -1)
+                    return false;
 
-                    if (kvp.Key == id)
-                    {
-                        _list.RemoveAt(i);
-                        value = kvp.Value;
-                        return true;
-                    }
-                }
-
-                value = default;
-                return false;
+                _list.RemoveAt(index);
+                return true;
             }
 
             /// <summary>
@@ -354,21 +366,32 @@ namespace MHServerEmu.Games.Properties
             /// </summary>
             public bool TryGetValue(PropertyId id, out PropertyValue value)
             {
-                // NOTE: This is called quite often, and may require additional optimizations for larger (> 10 elements) arrays.
+                return Find(id, out value) != -1;
+            }
 
+            /// <summary>
+            /// Find the index of the specified <see cref="PropertyId"/> in this <see cref="PropertyArray"/>.
+            /// Returns -1 if not found.
+            /// </summary>
+            private int Find(PropertyId id, out PropertyValue value)
+            {
+                // Linear search with early breaks. TODO: Binary search for larger lists (> 20 elements)?
                 for (int i = 0; i < _list.Count; i++)
                 {
-                    var kvp = _list[i];
+                    PropertyPair pair = _list[i];
 
-                    if (kvp.Key == id)
+                    if (pair.Id.CompareTo(id) > 0)
+                        break;
+
+                    if (pair.Id == id)
                     {
-                        value = kvp.Value;
-                        return true;
+                        value = pair.Value;
+                        return i;
                     }
                 }
-
+                
                 value = default;
-                return false;
+                return -1;
             }
 
             /// <summary>
@@ -384,7 +407,7 @@ namespace MHServerEmu.Games.Properties
             /// </summary>
             public struct Enumerator : IEnumerator<KeyValuePair<PropertyId, PropertyValue>>
             {
-                private readonly List<KeyValuePair<PropertyId, PropertyValue>> _list;
+                private readonly List<PropertyPair> _list;
                 private int _index;
 
                 public KeyValuePair<PropertyId, PropertyValue> Current { get; private set; }
@@ -402,7 +425,7 @@ namespace MHServerEmu.Games.Properties
                 {
                     while (++_index < _list.Count)
                     {
-                        Current = _list[_index];
+                        Current = _list[_index].ToKeyValuePair();
                         return true;
                     }
 
@@ -418,6 +441,31 @@ namespace MHServerEmu.Games.Properties
                 {
                 }
             }
+        }
+
+        private readonly struct PropertyPair : IComparable<PropertyPair>
+        {
+            public readonly PropertyId Id;
+            public readonly PropertyValue Value;
+
+            public PropertyPair(PropertyId id, PropertyValue value)
+            {
+                Id = id;
+                Value = value;
+            }
+
+            public KeyValuePair<PropertyId, PropertyValue> ToKeyValuePair()
+            {
+                return new(Id, Value);
+            }
+
+            public int CompareTo(PropertyPair other)
+            {
+                return Id.CompareTo(other.Id);
+            }
+
+            public static bool operator >=(PropertyPair left, PropertyPair right) => left.CompareTo(right) >= 0;
+            public static bool operator <=(PropertyPair left, PropertyPair right) => left.CompareTo(right) <= 0;
         }
 
         #region Iteration
