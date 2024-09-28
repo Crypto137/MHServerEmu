@@ -6,6 +6,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.DRAG.Generators.Regions
@@ -26,21 +27,23 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             }
             else if (regionGeneratorProto.EndlessThemes.HasValue())
             {
-                // TODO for DangerRoom 
-                int endlessLevelsTotal = 0;// TODO region.PropertyCollection.GetProperty(PropertyEnum.EndlessLevelsTotal);
+                int endlessLevelsTotal = region.Properties[PropertyEnum.EndlessLevelsTotal];
                 EndlessThemeEntryPrototype endlessTheme = regionGeneratorProto.GetEndlessGeneration(randomSeed, setting.EndlessLevel, endlessLevelsTotal);
                 MetaStateChallengeTierEnum missionTier = region.RegionAffixGetMissionTier();
                 EndlessStateEntryPrototype endlessState = endlessTheme.GetState(randomSeed, setting.EndlessLevel, missionTier);
 
-                if (endlessState.MetaState != 0)
+                if (endlessTheme != null)
                 {
-                    // region.PropertyCollection.SetProperty(PropertyEnum.MetaStateApplyOnInit, endlessState.MetaState);
-                }
+                    if (endlessState.MetaState != PrototypeId.Invalid)
+                    {
+                        region.Properties[PropertyEnum.MetaStateApplyOnInit, endlessState.MetaState] = true;
+                    }
 
-                if (endlessState.RegionPOIPicker != 0)
-                {
-                    if (GeneratorPrototype.POIGroups.HasValue()) POIPickerCollection = new(regionGeneratorProto);
-                    POIPickerCollection.RegisterPOIGroup(endlessState.RegionPOIPicker);
+                    if (endlessState.RegionPOIPicker != PrototypeId.Invalid)
+                    {
+                        if (GeneratorPrototype.POIGroups.HasValue()) POIPickerCollection = new(regionGeneratorProto);
+                        POIPickerCollection.RegisterPOIGroup(endlessState.RegionPOIPicker);
+                    }
                 }
 
                 sequenceStack.Initialize(log, region, this, endlessTheme.AreaSequence);
