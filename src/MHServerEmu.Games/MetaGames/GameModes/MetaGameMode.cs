@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             Game.NetworkManager.SendMessageToMultiple(interestedClients, message.Build());
         }
 
-        private void SendUINotification(PrototypeId uiNotificationRef)
+        public void SendUINotification(PrototypeId uiNotificationRef)
         {
             if (uiNotificationRef == PrototypeId.Invalid) return;
             SendMessage(NetMessageUINotificationMessage.CreateBuilder().SetUiNotificationRef((ulong)uiNotificationRef).Build());
@@ -270,6 +270,16 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 foreach (var regionPlayer in new PlayerIterator(region))
                     regionPlayer.SendRegionDifficultyChange(dificultyIndex);
             }
+        }
+
+        public void SendPvEInstanceDeathUpdate(int current)
+        {
+            var message = NetMessagePvEInstanceDeathUpdate.CreateBuilder()
+                 .SetMetaGameId(MetaGame.Id)
+                 .SetCurrentDeathCount((ulong)current)
+                 .Build();
+
+            SendMessage(message);
         }
 
         protected void SendStartPvPTimer(TimeSpan startTime, TimeSpan endTime, TimeSpan lowTime, TimeSpan criticalTime, 

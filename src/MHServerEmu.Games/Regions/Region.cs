@@ -126,6 +126,7 @@ namespace MHServerEmu.Games.Regions
         public TuningTable TuningTable { get; private set; }    // Difficulty table
         public bool IsFirstLoaded { get; private set; }
         public bool ToShutdown { get; set; }
+        public int PlayerDeaths { get => _playerDeaths; set => SetPlayerDeaths(value); }
 
         #region Events
 
@@ -1600,6 +1601,12 @@ namespace MHServerEmu.Games.Regions
                 _uniqueSelectorIndexes[dataRef] &= ~(1UL << index);
         }
 
+        private void SetPlayerDeaths(int value)
+        {
+            _playerDeaths = value;
+            PlayerDeathRecordedEvent.Invoke(new(null));
+        }
+
         public void OnRecordPlayerDeath(Player player, Avatar avatar, WorldEntity killer)
         {
             if (player == null) return;
@@ -1612,6 +1619,8 @@ namespace MHServerEmu.Games.Regions
 
             if (Properties.HasProperty(PropertyEnum.EndlessLevel))
                 player.Properties.AdjustProperty(1, PropertyEnum.EndlessLevelDeathCount);
+
+            _playerDeaths++;
 
             PlayerDeathRecordedEvent.Invoke(new(player));
         }
