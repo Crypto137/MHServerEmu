@@ -10,6 +10,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -333,6 +334,7 @@ namespace MHServerEmu.Games.Populations
 
         public void DespawnSpawnGroups(PrototypeId missionRef)
         {
+            if (MetaGame.Debug) Logger.Info($"DespawnSpawnGroups for {missionRef.GetNameFormatted()}");
             List<SpawnGroup> despawnGroups = new ();
             foreach (var group in _spawnGroups.Values)
                 if (group!= null && group.MissionRef == missionRef)
