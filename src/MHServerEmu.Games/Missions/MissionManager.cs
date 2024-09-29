@@ -1111,8 +1111,9 @@ namespace MHServerEmu.Games.Missions
             MissionPrototypeId.CivilWarDailyIronmanOM05HydraZoo,
             MissionPrototypeId.CivilWarDailyIronmanOM06TeamUpDefeatAIM,
             MissionPrototypeId.CivilWarDailyIronmanOM07InteractDefeatHand,*/
-
+            MissionPrototypeId.XMasGiftXChange,
             MissionPrototypeId.SiegeMissionGiverController,
+            MissionPrototypeId.AgentsOfSHIELDEvent,
         };
 
         // TODO replace this mission to MetaStates
@@ -1162,6 +1163,9 @@ namespace MHServerEmu.Games.Missions
         {
             NPE1Flag = 10079041614323716371,
             NPE2Flag = 11142636152886137108,
+
+            XMasGiftXChange = 13809096718282792311,
+            AgentsOfSHIELDEvent = 3971370332354387752,
 
             CH00TrainingPathingController = 3126128604301631533,
             CH00NPETrainingRoom = 17508547083537161214,
