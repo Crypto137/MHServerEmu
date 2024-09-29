@@ -65,6 +65,11 @@ namespace MHServerEmu.Games.Entities
             // InitPowersCollection
             InitLocomotor(settings.LocomotorHeightOverride);
 
+            // Wait in dormant while play start animation
+            if (agentProto.WakeRange > 0.0f || agentProto.WakeDelayMS > 0) SetDormant(true);
+
+            Properties[PropertyEnum.InitialCharacterLevel] = CharacterLevel;
+
             // When Gazillion implemented DCL, it looks like they made it switchable at first (based on Eval::runIsDynamicCombatLevelEnabled),
             // so all agents need to have their default non-DCL health base curves overriden with new DCL ones.
             if (CanBePlayerOwned() == false)
@@ -848,6 +853,9 @@ namespace MHServerEmu.Games.Entities
 
             if (result == SimulateResult.Set)
             {
+                if (AgentPrototype.WakeRange <= 0.0f) SetDormant(false);
+                if (IsDormant == false) TryAutoActivatePowersInCollection();
+
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnSimulated);
             }
             else if (result == SimulateResult.Clear)
@@ -1396,12 +1404,8 @@ namespace MHServerEmu.Games.Entities
             var prototype = AgentPrototype;
             if (prototype != null && prototype.PlayDramaticEntrance == DramaticEntranceType.Once)
                 Properties[PropertyEnum.DramaticEntrancePlayedOnce] = true;
-            var region = Region;
-            if (region != null)
-            {
-                var evt = new EntityLeaveDormantGameEvent(this);
-                region.EntityLeaveDormantEvent.Invoke(evt);
-            }
+
+            Region?.EntityLeaveDormantEvent.Invoke(new(this));
             TryAutoActivatePowersInCollection();
         }
 
