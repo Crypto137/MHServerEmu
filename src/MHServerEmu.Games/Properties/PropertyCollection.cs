@@ -1095,7 +1095,9 @@ namespace MHServerEmu.Games.Properties
                 Protect(Protection.Child);
                 foreach (PropertyCollection child in _childCollections)
                 {
-                    child.GetAggregateValue(id, out PropertyValue childValue);
+                    if (child.GetAggregateValue(id, out PropertyValue childValue) == false)
+                        continue;
+
                     if (hasValue)
                     {
                         AggregatePropertyValue(info, childValue, ref aggregateValue);
