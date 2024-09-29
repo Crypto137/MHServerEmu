@@ -36,15 +36,11 @@ namespace MHServerEmu.Core.Serialization
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // Reuse the same MemoryStream for all archives on the same thread.
-        // In practice this means one MemoryStream instance per game.
+        // Reuse the same buffers for all archives on the same thread. In practice this means one buffer instance of each type per game.
         [ThreadStatic]
-        private static readonly MemoryStream SharedAutoBuffer = new(1024);
-
-        // We flush after every value, so we can use very small buffer sizes (default is 4096).
-        // This buffer is reused for multiple archives with reflection hackery.
+        private static MemoryStream SharedAutoBuffer;
         [ThreadStatic]
-        private static readonly byte[] CodedOutputStreamBuffer = new byte[32]; 
+        private static byte[] CodedOutputStreamBuffer; 
 
         private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
 
@@ -99,6 +95,13 @@ namespace MHServerEmu.Core.Serialization
         {
             if ((serializeType == ArchiveSerializeType.Replication || serializeType == ArchiveSerializeType.Database) == false)
                 throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
+
+            // Initialize new buffers if this is being called for the first time on this thread.
+            if (SharedAutoBuffer == null)
+            {
+                SharedAutoBuffer = new(1024);
+                CodedOutputStreamBuffer = new byte[32];     // We flush after every value, so we can use very small buffer sizes (default is 4096).
+            }      
 
             // Reuse the same stream for all packing archives
             _bufferStream = SharedAutoBuffer;
