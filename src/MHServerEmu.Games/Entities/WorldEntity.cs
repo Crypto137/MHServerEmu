@@ -1319,7 +1319,6 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in PowerCollection)
             {
                 var proto = kvp.Value.PowerPrototype;
-                if (proto == null || proto.ParentDataRef != (PrototypeId)12629255876483748397) continue; // ProcTriggerPower 
                 if (proto.Activation != PowerActivationType.Passive) continue;
 
                 string protoName = kvp.Key.GetNameFormatted();
