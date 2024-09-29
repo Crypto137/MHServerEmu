@@ -11,10 +11,15 @@ namespace MHServerEmu.Games.Properties
     {
         public delegate bool Func(PropertyEnum propertyEnum);
 
+        public static Func AggFunc { get; } = Agg;
+        public static Func SerializeConditionSrcToConditionFunc { get; } = SerializeConditionSrcToCondition;
+        public static Func SerializeEntityToPowerPayloadFunc { get; } = SerializeEntityToPowerPayload;
+        public static Func SerializePowerToPowerPayloadFunc { get; } = SerializePowerToPowerPayload;
+
         /// <summary>
         /// Includes properties that have a valid <see cref="AggregationMethod"/>.
         /// </summary>
-        public static bool Agg(PropertyEnum propertyEnum)
+        private static bool Agg(PropertyEnum propertyEnum)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             return info.Prototype.AggMethod != AggregationMethod.None;
@@ -23,7 +28,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Includes properties that are valid for <see cref="Condition"/> serialization.
         /// </summary>
-        public static bool SerializeConditionSrcToCondition(PropertyEnum propertyEnum)
+        private static bool SerializeConditionSrcToCondition(PropertyEnum propertyEnum)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             return info.Prototype.SerializeConditionSrcToCondition;
@@ -32,7 +37,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Includes properties that are valid for <see cref="Entity"/> -> <see cref="PowerPayload"/> transfer.
         /// </summary>
-        public static bool SerializeEntityToPowerPayload(PropertyEnum propertyEnum)
+        private static bool SerializeEntityToPowerPayload(PropertyEnum propertyEnum)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             return info.Prototype.SerializeEntityToPowerPayload;
@@ -41,7 +46,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Includes properties that are valid for <see cref="Power"/> -> <see cref="PowerPayload"/> transfer.
         /// </summary>
-        public static bool SerializePowerToPowerPayload(PropertyEnum propertyEnum)
+        private static bool SerializePowerToPowerPayload(PropertyEnum propertyEnum)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
             return info.Prototype.SerializePowerToPowerPayload;

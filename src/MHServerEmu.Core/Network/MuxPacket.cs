@@ -3,6 +3,7 @@ using System.Collections;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Tcp;
 
@@ -55,7 +56,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream"/>.
         /// </summary>
-        public MuxPacket(Stream stream)
+        public MuxPacket(Stream stream, bool checkSize = true)
         {
             using (BinaryReader reader = new(stream, Encoding.UTF8, true))
             {
@@ -66,7 +67,7 @@ namespace MHServerEmu.Core.Network
                     int bodyLength = reader.ReadUInt24();
                     Command = (MuxCommand)reader.ReadByte();
 
-                    if (bodyLength > TcpClientConnection.ReceiveBufferSize)
+                    if (checkSize && bodyLength > TcpClientConnection.ReceiveBufferSize)
                         throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
 
                     if (IsDataPacket)
@@ -196,10 +197,15 @@ namespace MHServerEmu.Core.Network
             if (_messageList.Count == 0)
                 return Logger.WarnReturn(false, "SerializeBody(): Data packet contains no messages");
 
-            CodedOutputStream cos = CodedOutputStream.CreateInstance(stream);
+            // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
+
+            CodedOutputStream cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, buffer);
             foreach (MessagePackage message in _messageList)
                 message.WriteTo(cos);
             cos.Flush();
+
+            ArrayPool<byte>.Shared.Return(buffer);
 
             return true;
         }

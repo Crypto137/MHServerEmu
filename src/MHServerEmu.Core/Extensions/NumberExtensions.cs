@@ -38,5 +38,40 @@ namespace MHServerEmu.Core.Extensions
         /// Determines the index of the highest bit set in an <see cref="int"/> value.
         /// </summary>
         public static int HighestBitSet(this int value) => MathHelper.HighestBitSet((uint)value);
+
+        /// <summary>
+        /// Calculates the average value of a collection of <see cref="float"/>.
+        /// </summary>
+        public static float ToAverage(this IEnumerable<float> values)
+        {
+            float total = 0f;
+            int count = 0;
+
+            foreach (float value in values)
+            {
+                total += value;
+                count++;
+            }
+
+            if (count == 0)
+                return 0f;
+
+            return total / count;
+        }
+
+        /// <summary>
+        /// Calculates the median value of a collection of <see cref="TimeSpan"/>.
+        /// </summary>
+        public static float ToMedian(this IEnumerable<float> values)
+        {
+            List<float> list = new(values);
+            int count = list.Count;
+
+            if (count == 0)
+                return 0f;
+
+            list.Sort();
+            return list[count / 2];
+        }
     }
 }

@@ -402,12 +402,19 @@ namespace MHServerEmu.Games
 
                 writer.WriteLine($"Local Server Time: {now:yyyy.MM.dd HH:mm:ss.fff}\n");
 
-                writer.WriteLine($"Active Regions:");
+                writer.WriteLine($"Game: {this}\n");
+
+                writer.WriteLine($"Exception:\n{exception}\n");
+
+                writer.WriteLine("Active Regions:");
                 foreach (Region region in RegionIterator())
                     writer.WriteLine(region.ToString());
                 writer.WriteLine();
 
-                writer.WriteLine($"Exception:\n{exception}\n");
+                writer.WriteLine("Scheduled Events:");
+                foreach (var kvp in GameEventScheduler.GetScheduledEventCounts())
+                    writer.WriteLine($"{kvp.Key} x{kvp.Value}");
+                writer.WriteLine();
 
                 writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus()}\n");
             }

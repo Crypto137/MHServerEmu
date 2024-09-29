@@ -9,44 +9,47 @@ namespace MHServerEmu.Games.GameData.Calligraphy
     {
         private delegate bool ParseDelegate(in FieldParserParams @params);
 
+        private static readonly Dictionary<PrototypeFieldType, ParseDelegate> ParseDelegateDict = new()
+        {
+            { PrototypeFieldType.Bool,                  ParseBool },
+            { PrototypeFieldType.Int8,                  ParseInt8 },
+            { PrototypeFieldType.Int16,                 ParseInt16 },
+            { PrototypeFieldType.Int32,                 ParseInt32 },
+            { PrototypeFieldType.Int64,                 ParseInt64 },
+            { PrototypeFieldType.Float32,               ParseFloat32 },
+            { PrototypeFieldType.Float64,               ParseFloat64 },
+            { PrototypeFieldType.Enum,                  ParseEnum },
+            { PrototypeFieldType.AssetRef,              ParseDataRef },
+            { PrototypeFieldType.AssetTypeRef,          ParseDataRef },
+            { PrototypeFieldType.CurveRef,              ParseDataRef },
+            { PrototypeFieldType.PrototypeDataRef,      ParseDataRef },
+            { PrototypeFieldType.LocaleStringId,        ParseDataRef },
+            { PrototypeFieldType.PrototypePtr,          ParsePrototypePtr },
+            { PrototypeFieldType.PropertyId,            ParsePropertyId },
+            { PrototypeFieldType.ListBool,              ParseListBool },
+            { PrototypeFieldType.ListInt8,              ParseListInt8 },
+            { PrototypeFieldType.ListInt16,             ParseListInt16 },
+            { PrototypeFieldType.ListInt32,             ParseListInt32 },
+            { PrototypeFieldType.ListInt64,             ParseListInt64 },
+            { PrototypeFieldType.ListFloat32,           ParseListFloat32 },
+            { PrototypeFieldType.ListFloat64,           ParseListFloat64 },
+            { PrototypeFieldType.ListEnum,              ParseListEnum },
+            { PrototypeFieldType.ListAssetRef,          ParseListAssetRef },
+            { PrototypeFieldType.ListAssetTypeRef,      ParseListAssetTypeRef },
+            { PrototypeFieldType.ListPrototypeDataRef,  ParseListPrototypeDataRef },
+            { PrototypeFieldType.ListPrototypePtr,      ParseListPrototypePtr },
+            { PrototypeFieldType.PropertyCollection,    ParsePropertyList },
+        };
+
         /// <summary>
         /// Returns a <see cref="ParseDelegate"/> for the specified <see cref="PrototypeFieldType"/> enum value.
         /// </summary>
         private static ParseDelegate GetParser(PrototypeFieldType prototypeFieldType)
         {
-            switch (prototypeFieldType)
-            {
-                case PrototypeFieldType.Bool:                   return ParseBool;
-                case PrototypeFieldType.Int8:                   return ParseInt8;
-                case PrototypeFieldType.Int16:                  return ParseInt16;
-                case PrototypeFieldType.Int32:                  return ParseInt32;
-                case PrototypeFieldType.Int64:                  return ParseInt64;
-                case PrototypeFieldType.Float32:                return ParseFloat32;
-                case PrototypeFieldType.Float64:                return ParseFloat64;
-                case PrototypeFieldType.Enum:                   return ParseEnum;
-                case PrototypeFieldType.AssetRef:
-                case PrototypeFieldType.AssetTypeRef:
-                case PrototypeFieldType.CurveRef:
-                case PrototypeFieldType.PrototypeDataRef:
-                case PrototypeFieldType.LocaleStringId:         return ParseDataRef;
-                case PrototypeFieldType.PrototypePtr:           return ParsePrototypePtr;
-                case PrototypeFieldType.PropertyId:             return ParsePropertyId;
-                case PrototypeFieldType.ListBool:               return ParseListBool;
-                case PrototypeFieldType.ListInt8:               return ParseListInt8;
-                case PrototypeFieldType.ListInt16:              return ParseListInt16;
-                case PrototypeFieldType.ListInt32:              return ParseListInt32;
-                case PrototypeFieldType.ListInt64:              return ParseListInt64;
-                case PrototypeFieldType.ListFloat32:            return ParseListFloat32;
-                case PrototypeFieldType.ListFloat64:            return ParseListFloat64;
-                case PrototypeFieldType.ListEnum:               return ParseListEnum;
-                case PrototypeFieldType.ListAssetRef:           return ParseListAssetRef;
-                case PrototypeFieldType.ListAssetTypeRef:       return ParseListAssetTypeRef;
-                case PrototypeFieldType.ListPrototypeDataRef:   return ParseListPrototypeDataRef;
-                case PrototypeFieldType.ListPrototypePtr:       return ParseListPrototypePtr;
-                case PrototypeFieldType.PropertyCollection:     return ParsePropertyList;
+            if (ParseDelegateDict.TryGetValue(prototypeFieldType, out ParseDelegate parser) == false)
+                return Logger.ErrorReturn<ParseDelegate>(null, $"GetParser(): Unsupported prototype field type {prototypeFieldType}");
 
-                default: return Logger.ErrorReturn<ParseDelegate>(null, $"GetParser(): Unsupported prototype field type {prototypeFieldType}");
-            }
+            return parser;
         }
 
         /// <summary>

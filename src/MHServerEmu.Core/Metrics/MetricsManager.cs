@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Metrics.Categories;
 
 namespace MHServerEmu.Core.Metrics
 {
@@ -11,10 +12,16 @@ namespace MHServerEmu.Core.Metrics
 
     public class MetricsManager
     {
-        private const int UpdateIntervalMS = 1000;
+        private const int UpdateTickIntervalMS = 1000;
+
+        private readonly object _lock = new();
+
+        private readonly MemoryMetrics _memoryMetrics = new();
 
         private readonly ConcurrentQueue<(ulong, TimeSpan)> _fixedUpdateTimeQueue = new();
         private readonly Dictionary<ulong, GamePerformanceMetrics> _gamePerformanceMetricsDict = new();
+
+        private long _tick;
 
         public static MetricsManager Instance { get; } = new();
 
@@ -25,20 +32,26 @@ namespace MHServerEmu.Core.Metrics
 
         public void Update()
         {
-            while (_fixedUpdateTimeQueue.TryDequeue(out var entry))
+            lock (_lock)
             {
-                ulong gameId = entry.Item1;
-                TimeSpan fixedUpdateTime = entry.Item2;
+                _tick++;
 
-                lock (_gamePerformanceMetricsDict)
+                // Sample new GC data
+                _memoryMetrics.Update();
+
+                // Update game performance metrics
+                while (_fixedUpdateTimeQueue.TryDequeue(out var entry))
                 {
-                    if (_gamePerformanceMetricsDict.TryGetValue(gameId, out GamePerformanceMetrics metrics) == false)
+                    ulong gameId = entry.Item1;
+                    TimeSpan fixedUpdateTime = entry.Item2;
+
+                    if (_gamePerformanceMetricsDict.TryGetValue(gameId, out GamePerformanceMetrics gameMetrics) == false)
                     {
-                        metrics = new(gameId);
-                        _gamePerformanceMetricsDict.TryAdd(gameId, metrics);
+                        gameMetrics = new(gameId);
+                        _gamePerformanceMetricsDict.TryAdd(gameId, gameMetrics);
                     }
 
-                    metrics.RecordFixedUpdateTime(fixedUpdateTime);
+                    gameMetrics.Update(fixedUpdateTime);
                 }
             }
         }
@@ -52,8 +65,8 @@ namespace MHServerEmu.Core.Metrics
         {
             using PerformanceReport report = ObjectPoolManager.Instance.Get<PerformanceReport>();
 
-            lock (_gamePerformanceMetricsDict)
-                report.Initialize(_gamePerformanceMetricsDict.Values);
+            lock (_lock)
+                report.Initialize(_memoryMetrics, _gamePerformanceMetricsDict.Values);
 
             return report.ToString(format);
         }
@@ -63,7 +76,7 @@ namespace MHServerEmu.Core.Metrics
             while (true)
             {
                 Update();
-                await Task.Delay(UpdateIntervalMS);
+                await Task.Delay(UpdateTickIntervalMS);
             }
         }
     }

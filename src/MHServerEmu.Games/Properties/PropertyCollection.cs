@@ -256,20 +256,19 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool RemovePropertyRange(PropertyEnum propertyEnum)
         {
-            // NOTE: Our current PropertyList implementation supports removal during iteration.
-            // If that ever changes, use a temporary id stack here like the client does.
-            bool removedAny = false;
+            int propertyEnumCount = _baseList.GetCountForPropertyEnum(propertyEnum);
+            if (propertyEnumCount == 0)
+                return false;
 
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum != propertyEnum)
-                    continue;
+            Span<PropertyId> range = stackalloc PropertyId[propertyEnumCount];
+            int i = 0;
+            foreach (var kvp in _baseList.IteratePropertyRange(propertyEnum))
+                range[i++] = kvp.Key;
 
-                RemoveProperty(kvp.Key);
-                removedAny = true;
-            }
+            foreach (PropertyId propertyId in range)
+                RemoveProperty(propertyId);
 
-            return removedAny;
+            return true;
         }
 
         /// <summary>
@@ -322,13 +321,8 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public bool HasProperty(PropertyEnum propertyEnum)
         {
-            foreach (var kvp in this)
-            {
-                if (kvp.Key.Enum == propertyEnum)
-                    return true;
-            }
-
-            return false;
+            PropertyList.Iterator iterator = _aggregateList.IteratePropertyRange(propertyEnum);
+            return iterator.GetEnumerator().MoveNext();
         }
 
         /// <summary>
@@ -489,7 +483,7 @@ namespace MHServerEmu.Games.Properties
             // Cache property info lookups for copying multiple properties of the same type in a row
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
-            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.AggFunc))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;
@@ -576,8 +570,21 @@ namespace MHServerEmu.Games.Properties
         // or group KVPs by property enum in some other way.
 
         // IEnumerable implementation, iterates over _aggregateList
-        public IEnumerator<KeyValuePair<PropertyId, PropertyValue>> GetEnumerator() => _aggregateList.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public PropertyList.Iterator.Enumerator GetEnumerator()
+        {
+            return _aggregateList.GetEnumerator();
+        }
+
+        IEnumerator<KeyValuePair<PropertyId, PropertyValue>> IEnumerable<KeyValuePair<PropertyId, PropertyValue>>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         /// <summary>
         /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
@@ -927,7 +934,7 @@ namespace MHServerEmu.Games.Properties
                 resultValue = MathF.Floor(resultValue);
 
             // Set the value and aggregate it
-            _baseList[curveProp.PropertyId] = resultValue;
+            _baseList.SetPropertyValue(curveProp.PropertyId, resultValue);
             UpdateAggregateValueFromBase(curveProp.PropertyId, info, flags, true, resultValue);
 
             return true;
@@ -1007,7 +1014,7 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum previousEnum = PropertyEnum.Invalid;
             PropertyInfo info = null;
 
-            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.Agg))
+            foreach (var kvp in childCollection.IteratePropertyRange(PropertyEnumFilter.AggFunc))
             {
                 PropertyId propertyId = kvp.Key;
                 PropertyEnum propertyEnum = propertyId.Enum;
@@ -1088,17 +1095,17 @@ namespace MHServerEmu.Games.Properties
                 Protect(Protection.Child);
                 foreach (PropertyCollection child in _childCollections)
                 {
-                    if (child.GetAggregateValue(id, out PropertyValue childValue))
+                    if (child.GetAggregateValue(id, out PropertyValue childValue) == false)
+                        continue;
+
+                    if (hasValue)
                     {
-                        if (hasValue)
-                        {
-                            AggregatePropertyValue(info, childValue, ref aggregateValue);
-                        }
-                        else
-                        {
-                            aggregateValue = childValue;
-                            hasValue = true;
-                        }
+                        AggregatePropertyValue(info, childValue, ref aggregateValue);
+                    }
+                    else
+                    {
+                        aggregateValue = childValue;
+                        hasValue = true;
                     }
                 }
                 ReleaseProtection(Protection.Child);

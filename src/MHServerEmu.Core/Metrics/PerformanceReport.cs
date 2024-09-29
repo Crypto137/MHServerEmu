@@ -2,6 +2,7 @@
 using System.Text.Json;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Metrics.Categories;
 
 namespace MHServerEmu.Core.Metrics
 {
@@ -9,12 +10,15 @@ namespace MHServerEmu.Core.Metrics
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public MemoryMetrics.Report Memory { get; private set; }
         public Dictionary<ulong, GamePerformanceMetrics.Report> Games { get; } = new();
 
         public PerformanceReport() { }
 
-        public void Initialize(IEnumerable<GamePerformanceMetrics> gameMetrics)
+        public void Initialize(MemoryMetrics memoryMetrics, IEnumerable<GamePerformanceMetrics> gameMetrics)
         {
+            Memory = memoryMetrics.GetReport();
+
             foreach (GamePerformanceMetrics metrics in gameMetrics)
             {
                 Games.Add(metrics.GameId, metrics.GetReport());
@@ -43,6 +47,7 @@ namespace MHServerEmu.Core.Metrics
 
         public void ResetForPool()
         {
+            Memory = default;
             Games.Clear();
         }
 
@@ -55,6 +60,10 @@ namespace MHServerEmu.Core.Metrics
         {
             StringBuilder sb = new();
 
+            sb.AppendLine("Memory:");
+            sb.AppendLine(Memory.ToString());
+
+            sb.AppendLine("Games:");
             foreach (var kvp in Games)
                 sb.AppendLine($"[0x{kvp.Key:X}] {kvp.Value}");
 
