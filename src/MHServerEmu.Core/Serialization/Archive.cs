@@ -35,8 +35,12 @@ namespace MHServerEmu.Core.Serialization
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        // Reuse the same MemoryStream for all archives on the same thread.
+        // In practice this means one MemoryStream instance per game.
+        [ThreadStatic]
+        private static readonly MemoryStream SharedAutoBuffer = new(1024);
+
         private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
-        // TODO: Reuse some kind of shared AutoBuffer implementation for multiple archives
 
         // C# coded stream implementation is buffered, so we have to use the same stream for the whole archive
         private readonly CodedOutputStream _cos;
@@ -90,8 +94,17 @@ namespace MHServerEmu.Core.Serialization
             if ((serializeType == ArchiveSerializeType.Replication || serializeType == ArchiveSerializeType.Database) == false)
                 throw new NotImplementedException($"Unsupported archive serialize type {serializeType}.");
 
-            _bufferStream = new(1024);
-            _cos = CodedOutputStream.CreateInstance(_bufferStream);
+            // Reuse the same stream for all packing archives
+            _bufferStream = SharedAutoBuffer;
+            if (_bufferStream.Length > 0)
+                _bufferStream.SetLength(0);
+
+            // We flush after each value, so we can use very small buffer sizes (default is 4096).
+            // We have to allocate new buffer arrays for each archive because protobuf-csharp-port
+            // is dumb and hides the constructor that accepts external buffers.
+            //
+            // TODO: Modify protobuf-csharp-port to use ArrayPool or something.
+            _cos = CodedOutputStream.CreateInstance(_bufferStream, 32);
 
             SerializeType = serializeType;
             ReplicationPolicy = replicationPolicy;
@@ -840,7 +853,9 @@ namespace MHServerEmu.Core.Serialization
 
             if (disposing)
             {
-                _bufferStream.Dispose();
+                // Not sure if we even still need IDisposable for archives with reusable streams,
+                // we can just rely on doing cleanup after the previous use in the constructor.
+                _bufferStream.SetLength(0);
             }
 
             _isDisposed = true;
