@@ -3,6 +3,7 @@ using System.Collections;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Tcp;
 
@@ -196,10 +197,15 @@ namespace MHServerEmu.Core.Network
             if (_messageList.Count == 0)
                 return Logger.WarnReturn(false, "SerializeBody(): Data packet contains no messages");
 
-            CodedOutputStream cos = CodedOutputStream.CreateInstance(stream);
+            // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
+
+            CodedOutputStream cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, buffer);
             foreach (MessagePackage message in _messageList)
                 message.WriteTo(cos);
             cos.Flush();
+
+            ArrayPool<byte>.Shared.Return(buffer);
 
             return true;
         }

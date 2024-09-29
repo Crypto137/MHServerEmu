@@ -2,6 +2,7 @@
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 
@@ -39,6 +40,11 @@ namespace MHServerEmu.Core.Serialization
         // In practice this means one MemoryStream instance per game.
         [ThreadStatic]
         private static readonly MemoryStream SharedAutoBuffer = new(1024);
+
+        // We flush after every value, so we can use very small buffer sizes (default is 4096).
+        // This buffer is reused for multiple archives with reflection hackery.
+        [ThreadStatic]
+        private static readonly byte[] CodedOutputStreamBuffer = new byte[32]; 
 
         private readonly MemoryStream _bufferStream;  // MemoryStream replaces AutoBuffer from the original implementation
 
@@ -99,12 +105,8 @@ namespace MHServerEmu.Core.Serialization
             if (_bufferStream.Length > 0)
                 _bufferStream.SetLength(0);
 
-            // We flush after each value, so we can use very small buffer sizes (default is 4096).
-            // We have to allocate new buffer arrays for each archive because protobuf-csharp-port
-            // is dumb and hides the constructor that accepts external buffers.
-            //
-            // TODO: Modify protobuf-csharp-port to use ArrayPool or something.
-            _cos = CodedOutputStream.CreateInstance(_bufferStream, 32);
+            // Use reflection hackery to reuse the same buffer for all coded output streams, see ProtobufHelper for details.
+            _cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(_bufferStream, CodedOutputStreamBuffer);
 
             SerializeType = serializeType;
             ReplicationPolicy = replicationPolicy;
