@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Network.Parsing
 
             MuxPacket packet;
             using (MemoryStream ms = new(File.ReadAllBytes(path)))
-                packet = new(ms);
+                packet = new(ms, false);
 
             if (packet.IsDataPacket)
                 ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_parsed.txt"));
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.Network.Parsing
 
                 while (ms.Position < ms.Length)
                 {
-                    MuxPacket packet = new(ms);
+                    MuxPacket packet = new(ms, false);
                     if (packet.IsDataPacket == false) continue;
 
                     ParseServerMessagesFromPacket(packet, Path.Combine(PacketDirectory, $"{Path.GetFileNameWithoutExtension(path)}_packet{packetCount}_parsed.txt"));
@@ -83,7 +83,7 @@ namespace MHServerEmu.Games.Network.Parsing
 
                 while (ms.Position < ms.Length)
                 {
-                    MuxPacket packet = new(ms);
+                    MuxPacket packet = new(ms, false);
                     if (packet.IsDataPacket == false) continue;
 
                     byte[] rawPacket = packet.ToArray();
@@ -104,7 +104,7 @@ namespace MHServerEmu.Games.Network.Parsing
 
             using (MemoryStream ms = new(File.ReadAllBytes(path)))
             {
-                MuxPacket packet = new(ms);
+                MuxPacket packet = new(ms, false);
                 Logger.Info($"Loaded {packet.Messages.Count()} messages from {fileName}");
                 return packet.Messages;
             }

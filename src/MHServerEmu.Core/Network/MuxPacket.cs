@@ -55,7 +55,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream"/>.
         /// </summary>
-        public MuxPacket(Stream stream)
+        public MuxPacket(Stream stream, bool checkSize = true)
         {
             using (BinaryReader reader = new(stream, Encoding.UTF8, true))
             {
@@ -66,7 +66,7 @@ namespace MHServerEmu.Core.Network
                     int bodyLength = reader.ReadUInt24();
                     Command = (MuxCommand)reader.ReadByte();
 
-                    if (bodyLength > TcpClientConnection.ReceiveBufferSize)
+                    if (checkSize && bodyLength > TcpClientConnection.ReceiveBufferSize)
                         throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
 
                     if (IsDataPacket)
