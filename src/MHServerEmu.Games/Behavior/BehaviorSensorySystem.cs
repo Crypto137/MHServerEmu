@@ -332,17 +332,17 @@ namespace MHServerEmu.Games.Behavior
                     }
 
                 agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedEnemy);
-                agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedEnemy);
+                agent.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedEnemy);
 
                 if (playerDetect)
                 {
                     agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedPlayer);
-                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedPlayer);
+                    agent.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedPlayer);
                 }
                 else
                 {
                     agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedNonPlayer);
-                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedNonPlayer);
+                    agent.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedNonPlayer);
                 }
             }
 

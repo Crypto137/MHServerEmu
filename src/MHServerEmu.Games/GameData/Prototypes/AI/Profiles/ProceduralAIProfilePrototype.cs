@@ -539,7 +539,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (spawnGroup.GetEntities(out List <WorldEntity> allies, filterFlag, agent.Alliance))                        
                             foreach (var ally in allies)
                                 if (ally != agent)
-                                    ally.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedPlayer);                        
+                                    ally.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedPlayer);                        
                     }
                 }
 

@@ -1282,6 +1282,14 @@ namespace MHServerEmu.Games.Entities
                     region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimatePowerUser);
                 }
 
+                if (powerResults.PowerOwnerId != powerResults.TargetId)
+                {
+                    ultimatePowerUser?.TriggerEntityActionEvent(EntitySelectorActionEventType.OnKilledOther);
+
+                    if (IsControlledEntity == false)
+                        TriggerOnDeath(powerResults, ultimatePowerUser);
+                }
+
                 Kill(ultimatePowerUser, KillFlags.None, powerUser);
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
@@ -1300,7 +1308,50 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
+        private void TriggerOnDeath(PowerResults powerResults, WorldEntity killer)
+        {
+            // TODO Rewrite this
+
+            if (this is not Agent) return;
+            Power power = null;
+
+            // Get OnDeath ProcPower
+            foreach (var kvp in PowerCollection)
+            {
+                var proto = kvp.Value.PowerPrototype;
+                if (proto == null || proto.ParentDataRef != (PrototypeId)12629255876483748397) continue; // ProcTriggerPower 
+                if (proto.Activation != PowerActivationType.Passive) continue;
+
+                string protoName = kvp.Key.GetNameFormatted();
+                if (protoName.Contains("OnDeath"))
+                {
+                    power = kvp.Value.Power;
+                    break;
+                }
+            }
+
+            if (power == null) return;
+
+            // Get OnDead power
+            var conditions = power.Prototype.AppliesConditions;
+            if (conditions.Count != 1) return;
+            var conditionProto = conditions[0].Prototype as ConditionPrototype;
+
+            // Get summon power
+            SummonPowerPrototype summonPower = null;
+            foreach (var kvp in conditionProto.Properties.IteratePropertyRange(PropertyEnum.Proc))
+            {
+                Property.FromParam(kvp.Key, 0, out int procEnum);
+                if ((ProcTriggerType)procEnum != ProcTriggerType.OnDeath) continue;
+                Property.FromParam(kvp.Key, 1, out PrototypeId summonPowerRef);
+                summonPower = GameDatabase.GetPrototype<SummonPowerPrototype>(summonPowerRef);
+                if (summonPower != null) break;
+            }
+
+            if (summonPower != null) EntityHelper.OnDeathSummonFromPowerPrototype(this, summonPower);
+        }
+
+        public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
         {
             if (SpawnGroup == null) return;
             foreach (var spec in SpawnGroup.Specs)

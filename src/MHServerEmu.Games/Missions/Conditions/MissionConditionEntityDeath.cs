@@ -151,14 +151,6 @@ namespace MHServerEmu.Games.Missions.Conditions
                         if (killer == player) killerTagged = true;
                         UpdatePlayerContribution(player);
                     }
-
-                // HardCode spawn MalekithFriendly instead MalekithOnDeathSummonFriendly
-                if (Mission.PrototypeDataRef == (PrototypeId)7653080694154141685) // CanalPortalActivator = 7653080694154141685,
-                    if (entity.PrototypeDataRef == (PrototypeId)17854169569096045150) // MalekithCh9 = 17854169569096045150,
-                    {
-                        var summonPower = GameDatabase.GetPrototype<SummonPowerPrototype>((PrototypeId)2307265150892711295); // MalekithOnDeathSummonFriendly = 2307265150892711295
-                        EntityHelper.OnDeathSummonFromPowerPrototype(entity, summonPower); 
-                    }
             }
 
             if (killerTagged == false && killer != null && Mission.IsOpenMission)

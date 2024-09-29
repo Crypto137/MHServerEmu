@@ -985,9 +985,10 @@ namespace MHServerEmu.Games.Entities
             // AI
             // if (TestAI() == false) return;
 
+            var behaviorProfile = AgentPrototype?.BehaviorProfile;
+
             if (AIController != null)
-            {
-                var behaviorProfile = AgentPrototype?.BehaviorProfile;
+            {                
                 if (behaviorProfile == null) return;
                 AIController.Initialize(behaviorProfile, null, null);
             }
@@ -998,7 +999,10 @@ namespace MHServerEmu.Games.Entities
                 AIController.OnAIEnteredWorld();
                 ActivateAI();
             }
-            
+
+            if (behaviorProfile != null)
+                EquipPassivePowers(behaviorProfile.EquippedPassivePowers);
+
             if (IsSimulated && Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
             {
                 PrototypeId startPower = Properties[PropertyEnum.AIPowerOnSpawn];
@@ -1015,6 +1019,19 @@ namespace MHServerEmu.Games.Entities
 
             if (AIController == null)
                 EntityActionComponent?.InitActionBrain();
+        }
+
+        private void EquipPassivePowers(PrototypeId[] passivePowers)
+        {
+            if (passivePowers.IsNullOrEmpty()) return;
+            foreach(var powerRef in passivePowers)
+            {
+                var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+                if (powerProto == null || powerProto.Activation != PowerActivationType.Passive) continue;
+                int rank = Properties[PropertyEnum.PowerRank];
+                PowerIndexProperties indexProps = new(rank, CharacterLevel, CombatLevel);
+                AssignPower(powerRef, indexProps);
+            }
         }
 
         public override void OnExitedWorld()
