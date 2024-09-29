@@ -136,6 +136,13 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendPlayUISoundTheme(proto.PlayerEnterAudioTheme, player);
         }
 
+        public void TeleportPlayersToTarget(PrototypeId targetRef)
+        {
+            var players = new PlayerIterator(Region);
+            foreach (var player in players.ToArray())
+                player.PlayerConnection.MoveToTarget(targetRef);
+        }
+
         public void SetModeText(LocaleStringId modeText)
         {
             if (_modeText == modeText) return;

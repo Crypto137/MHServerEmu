@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
     {
         private MetaGameModeIdlePrototype _proto;
         private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
-        private EventPointer<ActiveGoalRepeatEvent> _nextModeEvent;
+        private EventPointer<NextModeEvent> _nextModeEvent;
         private TimeSpan _endTime;
         private int _playerCount;
 
