@@ -2,6 +2,9 @@
 
 namespace MHServerEmu.Core.Collections
 {
+    /// <summary>
+    /// A collection of <typeparamref name="T"/> with a fixed size that loops back and overwrites the oldest element when it reaches the end. 
+    /// </summary>
     public class CircularBuffer<T> : IEnumerable<T>
     {
         private readonly T[] _data;
@@ -11,6 +14,9 @@ namespace MHServerEmu.Core.Collections
         public int Capacity { get => _data.Length; }
         public int Count { get => _count; }
 
+        /// <summary>
+        /// Constructs a new <see cref="CircularBuffer{T}"/> with the specified capacity.
+        /// </summary>
         public CircularBuffer(int capacity)
         {
             if (capacity <= 0 ) throw new ArgumentException("Capacity must be > 0.");
@@ -35,15 +41,59 @@ namespace MHServerEmu.Core.Collections
             _position = 0;
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public Enumerator GetEnumerator()
         {
-            for (int i = 0; i < _count; i++)
-                yield return _data[i];
+            return new(this);
+        }
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            return new Enumerator(this);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            return new Enumerator(this);
         }
+
+        public struct Enumerator : IEnumerator<T>
+        {
+            private readonly CircularBuffer<T> _buffer;
+            private int _index;
+
+            public T Current { get; private set; }
+            object IEnumerator.Current { get => Current; }
+
+            public Enumerator(CircularBuffer<T> buffer)
+            {
+                _buffer = buffer;
+                _index = -1;
+
+                Current = default;
+            }
+
+            public bool MoveNext()
+            {
+                Current = default;
+
+                while (++_index < _buffer._count)
+                {
+                    Current = _buffer._data[_index];
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void Reset()
+            {
+                _index = -1;
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
     }
 }
