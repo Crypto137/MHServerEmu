@@ -365,7 +365,8 @@ namespace MHServerEmu.Games.Populations
 
             _encounterSpawnPhases[key] = 1ul << encounterPhase;
 
-            foreach(var group in _spawnGroups.Values)
+            var groups = _spawnGroups.Values.ToArray();
+            foreach (var group in groups)
             {
                 if (group == null) continue;
                 if (group.EncounterRef == encounterRef)
