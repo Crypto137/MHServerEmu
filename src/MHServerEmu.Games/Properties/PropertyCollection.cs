@@ -589,7 +589,7 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>.
         /// </summary>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum)
+        public PropertyList.Iterator IteratePropertyRange(PropertyEnum propertyEnum)
         {
             return _aggregateList.IteratePropertyRange(propertyEnum);
         }
@@ -602,7 +602,7 @@ namespace MHServerEmu.Games.Properties
         /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this is checked
         /// against every key/value pair rather than once per enum.
         /// </remarks>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum[] enums)
+        public PropertyList.Iterator IteratePropertyRange(PropertyEnum[] enums)
         {
             return _aggregateList.IteratePropertyRange(enums);
         }
@@ -611,7 +611,7 @@ namespace MHServerEmu.Games.Properties
         /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
         /// and have the specified <see cref="int"/> value as param0.
         /// </summary>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, int param0)
+        public PropertyList.Iterator IteratePropertyRange(PropertyEnum propertyEnum, int param0)
         {
             return _aggregateList.IteratePropertyRange(propertyEnum, param0);
         }
@@ -620,7 +620,7 @@ namespace MHServerEmu.Games.Properties
         /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
         /// and have the specified <see cref="PrototypeId"/> as param0.
         /// </summary>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
+        public PropertyList.Iterator IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0)
         {
             return _aggregateList.IteratePropertyRange(propertyEnum, param0);
         }
@@ -629,7 +629,7 @@ namespace MHServerEmu.Games.Properties
         /// Returns all <see cref="PropertyId"/> and <see cref="PropertyValue"/> pairs that use the specified <see cref="PropertyEnum"/>
         /// and have the specified <see cref="PrototypeId"/> as param0 and param1.
         /// </summary>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
+        public PropertyList.Iterator IteratePropertyRange(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1)
         {
             return _aggregateList.IteratePropertyRange(propertyEnum, param0, param1);
         }
@@ -641,7 +641,7 @@ namespace MHServerEmu.Games.Properties
         /// This can be potentially slow because our current implementation does not group key/value pairs by enum, so this filter is executed
         /// on every key/value pair rather than once per enum.
         /// </remarks>
-        public IEnumerable<KeyValuePair<PropertyId, PropertyValue>> IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
+        public PropertyList.Iterator IteratePropertyRange(PropertyEnumFilter.Func filterFunc)
         {
             return _aggregateList.IteratePropertyRange(filterFunc);
         }
