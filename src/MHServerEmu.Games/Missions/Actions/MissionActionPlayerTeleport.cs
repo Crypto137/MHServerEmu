@@ -19,7 +19,12 @@ namespace MHServerEmu.Games.Missions.Actions
             foreach (Player player in GetDistributors(_proto.SendTo))
             {
                 if (teleportRegion)
-                    Transition.TeleportToRemoteTarget(player, _proto.TeleportRegionTarget);
+                {
+                    if (Mission.PrototypeDataRef == (PrototypeId)2356138960907149996) // TimesBehaviorController
+                        Transition.TeleportToLocalTarget(player, _proto.TeleportRegionTarget);
+                    else
+                        Transition.TeleportToRemoteTarget(player, _proto.TeleportRegionTarget);
+                }
                 else
                     Transition.TeleportToLastTown(player);
             }
