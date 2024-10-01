@@ -47,7 +47,7 @@ namespace Setup
                 return SetupResult.ClientDataNotFound;
 
             // Find the server executable
-            string serverRootDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string serverRootDirectory = Path.GetDirectoryName(AppContext.BaseDirectory);
             if (FindServerExecutablePath(serverRootDirectory, out string serverDirectory, out string serverExecutablePath) == false)
                 return SetupResult.ServerNotFound;
 
@@ -81,10 +81,10 @@ namespace Setup
             {
                 SetupResult.Success =>                  "Setup successful.",
                 SetupResult.InvalidFilePath =>          "Invalid file path.",
-                SetupResult.ClientNotFound =>           "Marvel Heroes game files not found.",      // TODO: make it clearer that you need to get the client separately
-                SetupResult.ClientVersionMismatch =>    "Game version mismatch. Make sure you have version 1.52.0.1700.",
-                SetupResult.ClientDataNotFound =>       "Game data files are missing. Please reinstall the game.",
-                SetupResult.ServerNotFound =>           "Failed to find MHServerEmu.",
+                SetupResult.ClientNotFound =>           "Marvel Heroes game client not found.",
+                SetupResult.ClientVersionMismatch =>    "Game client version mismatch. Please make sure you have version 1.52.0.1700.",
+                SetupResult.ClientDataNotFound =>       "Game data files are missing. Please reinstall the game client.",
+                SetupResult.ServerNotFound =>           "MHServerEmu not found.",
                 _ =>                                    "Unknown error.",
             };
         }
@@ -150,7 +150,7 @@ namespace Setup
                 writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
 
             // Starting servers
-            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartServers.bat")))
+            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartServer.bat")))
             {
                 writer.WriteLine("@echo off");
                 writer.WriteLine($"set APACHE_SERVER_ROOT={Path.Combine("%cd%", "Apache24")}");
@@ -159,7 +159,7 @@ namespace Setup
             }
 
             // Stopping servers
-            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StopServers.bat")))
+            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StopServer.bat")))
             {
                 writer.WriteLine("@echo off");
                 writer.WriteLine("taskkill /f /im MHServerEmu.exe");

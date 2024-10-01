@@ -76,12 +76,15 @@ namespace Setup
             {
                 case SetupState.Start:
                     headerLabel.Text = "Welcome to the MHServerEmu Setup Sorcerer Supreme";
-                    bodyLabel.Text = "This program will help you set up MHServerEmu.\r\n\r\nTo continue, click Next.";
+                    bodyLabel.Text = "This program will help you set up MHServerEmu.\r\n" +
+                                     "\r\n" +
+                                     "To continue, click Next.";
                     break;
 
                 case SetupState.SelectFolder:
                     headerLabel.Text = "Marvel Heroes Files";
-                    bodyLabel.Text = "Please choose the folder in which Marvel Heroes game files are located.";
+                    bodyLabel.Text = "MHServerEmu requires the original Marvel Heroes game client files to work.\r\n" +
+                                     "Please choose the game client folder.";
 
                     folderBrowseTextBox.Visible = true;
                     folderBrowseButton.Visible = true;
@@ -90,7 +93,14 @@ namespace Setup
 
                 case SetupState.Complete:
                     headerLabel.Text = "Setup Complete";
-                    bodyLabel.Text = "Setup successful.\r\n\r\nRun StartClient.bat to launch the game normally.\r\n\r\nRun StartClientAutoLogin.bat to launch the game and automatically log in with a default account.";
+                    bodyLabel.Text = "Setup successful.\r\n" +
+                                     "\r\n" +
+                                     "Run StartServer.bat first to start the server.\r\n" +
+                                     "\r\n" +
+                                     "Run StartClient.bat to launch the game normally OR StartClientAutoLogin.bat to launch the game and automatically log in with a default account.\r\n" +
+                                     "\r\n" +
+                                     "Make sure to start the server before the client.";
+
                     nextButton.Text = "Exit";
 
                     folderBrowseTextBox.Visible = false;
