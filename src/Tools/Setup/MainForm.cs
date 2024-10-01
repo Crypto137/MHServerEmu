@@ -37,9 +37,10 @@ namespace Setup
                     return;
 
                 case SetupState.SelectFolder:
-                    (bool result, string message) = SetupHelper.RunSetup(folderBrowseTextBox.Text);
-                    if (result == false)
+                    SetupResult result = SetupHelper.RunSetup(folderBrowseTextBox.Text);
+                    if (result != SetupResult.Success)
                     {
+                        string message = SetupHelper.GetResultText(result);
                         MessageBox.Show(message, "Setup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }

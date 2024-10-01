@@ -3,6 +3,16 @@ using System.Security.Cryptography;
 
 namespace Setup
 {
+    public enum SetupResult
+    {
+        Success,
+        InvalidFilePath,
+        ClientNotFound,
+        ClientVersionMismatch,
+        ClientDataNotFound,
+        ServerNotFound
+    }
+
     internal static class SetupHelper
     {
         private const string ExecutableHash = "6DC9BCDB145F98E5C2D7A1F7E25AEB75507A9D1A";  // Win64 1.52.0.1700
@@ -13,52 +23,42 @@ namespace Setup
         /// <summary>
         /// Sets up MHServerEmu using the client in the specified directory.
         /// </summary>
-        public static (bool, string) RunSetup(string clientDir)
+        public static SetupResult RunSetup(string clientRootDirectory)
         {
             // Validate directory path
-            if (string.IsNullOrWhiteSpace(clientDir))
-                return (false, "Invalid file path.");
+            if (string.IsNullOrWhiteSpace(clientRootDirectory))
+                return SetupResult.InvalidFilePath;
 
-            // Validate game executable
-            string clientExecutablePath = Path.Combine(clientDir, "UnrealEngine3", "Binaries", "Win64", "MarvelHeroesOmega.exe");
-            if (File.Exists(clientExecutablePath) == false)
-                return (false, "Marvel Heroes game files not found.");
+            // Find and verify the client executable
+            if (FindClientExecutablePath(clientRootDirectory, out string clientDirectory, out string clientExecutablePath) == false)
+                return SetupResult.ClientNotFound;           
 
             byte[] executableData = File.ReadAllBytes(clientExecutablePath);
             string executableHash = Convert.ToHexString(SHA1.HashData(executableData));
 
             if (ExecutableHash != executableHash)
-                return (false, "Game version mismatch. Make sure you have version 1.52.0.1700.");
+                return SetupResult.ClientVersionMismatch;
 
-            // Validate data files
-            string clientCalligraphyPath = Path.Combine(clientDir, CalligraphyPath);
-            string clientResourcePath = Path.Combine(clientDir, ResourcePath);
+            // Verify data files
+            string clientCalligraphyPath = Path.Combine(clientDirectory, CalligraphyPath);
+            string clientResourcePath = Path.Combine(clientDirectory, ResourcePath);
 
             if (File.Exists(clientCalligraphyPath) == false || File.Exists(clientResourcePath) == false)
-                return (false, "Game data files are missing. Please reinstall the game.");
+                return SetupResult.ClientDataNotFound;
 
-            // Find server directory
-            string rootDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string serverDir = rootDirectory;
-
-            string serverExecutablePath = Path.Combine(serverDir, "MHServerEmu.exe");
-            if (File.Exists(serverExecutablePath) == false)
-            {
-                // Try looking in the MHServerEmu subdirectory if it's not in the same directory as the setup tool
-                serverDir = Path.Combine(serverDir, "MHServerEmu");
-                serverExecutablePath = Path.Combine(serverDir, "MHServerEmu.exe");
-                if (File.Exists(serverExecutablePath) == false)
-                    return (false, "Failed to find MHServerEmu.");
-            }
+            // Find the server executable
+            string serverRootDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (FindServerExecutablePath(serverRootDirectory, out string serverDirectory, out string serverExecutablePath) == false)
+                return SetupResult.ServerNotFound;
 
             // Create server data directory if needed
-            string serverDataDir = Path.Combine(serverDir, "Data", "Game");
+            string serverDataDir = Path.Combine(serverDirectory, "Data", "Game");
             if (Directory.Exists(serverDataDir) == false)
                 Directory.CreateDirectory(serverDataDir);
 
             // Copy data files
-            string serverCalligraphyPath = Path.Combine(serverDir, CalligraphyPath);
-            string serverResourcePath = Path.Combine(serverDir, ResourcePath);
+            string serverCalligraphyPath = Path.Combine(serverDirectory, CalligraphyPath);
+            string serverResourcePath = Path.Combine(serverDirectory, ResourcePath);
 
             if (File.Exists(serverCalligraphyPath) == false)
                 File.Copy(clientCalligraphyPath, serverCalligraphyPath);
@@ -66,17 +66,88 @@ namespace Setup
             if (File.Exists(serverResourcePath) == false)
                 File.Copy(clientResourcePath, serverResourcePath);
 
-            CreateBatFiles(rootDirectory, serverExecutablePath, clientExecutablePath);
+            CreateBatFiles(serverRootDirectory, clientExecutablePath, serverCalligraphyPath);
 
-            return (true, "Setup successful.");
+            return SetupResult.Success;
+        }
+
+        /// <summary>
+        /// Returns the text message for the specified <see cref="SetupResult"/>.
+        /// </summary>
+        public static string GetResultText(SetupResult result)
+        {
+            // TODO: translations
+            return result switch
+            {
+                SetupResult.Success =>                  "Setup successful.",
+                SetupResult.InvalidFilePath =>          "Invalid file path.",
+                SetupResult.ClientNotFound =>           "Marvel Heroes game files not found.",      // TODO: make it clearer that you need to get the client separately
+                SetupResult.ClientVersionMismatch =>    "Game version mismatch. Make sure you have version 1.52.0.1700.",
+                SetupResult.ClientDataNotFound =>       "Game data files are missing. Please reinstall the game.",
+                SetupResult.ServerNotFound =>           "Failed to find MHServerEmu.",
+                _ =>                                    "Unknown error.",
+            };
+        }
+
+        /// <summary>
+        /// Searches for the game client in the specified directory.
+        /// </summary>
+        private static bool FindClientExecutablePath(string rootDirectory, out string clientDirectory, out string clientExecutablePath)
+        {
+            // Check if we are in the client root directory
+            clientDirectory = rootDirectory;
+            clientExecutablePath = Path.Combine(clientDirectory, "UnrealEngine3", "Binaries", "Win64", "MarvelHeroesOmega.exe");
+
+            if (File.Exists(clientExecutablePath))
+                return true;
+
+            // Check if we are in the executable directory instead of the client root
+            clientExecutablePath = Path.Combine(rootDirectory, "MarvelHeroesOmega.exe");
+            if (File.Exists(clientExecutablePath))
+            {
+                // Adjust client directory
+                clientDirectory = Path.GetFullPath(Path.Combine(rootDirectory, "..", "..", ".."));
+                return true;
+            }
+
+            // Not found
+            return false;
+        }
+
+        /// <summary>
+        /// Searches for MHServerEmu in the specified directory.
+        /// </summary>
+        private static bool FindServerExecutablePath(string rootDirectory, out string serverDirectory, out string serverExecutablePath)
+        {
+            serverDirectory = rootDirectory;
+
+            serverExecutablePath = Path.Combine(serverDirectory, "MHServerEmu.exe");
+            if (File.Exists(serverExecutablePath) == false)
+            {
+                // Try looking in the MHServerEmu subdirectory if it's not in the same directory as the setup tool
+                serverDirectory = Path.Combine(serverDirectory, "MHServerEmu");
+                serverExecutablePath = Path.Combine(serverDirectory, "MHServerEmu.exe");
+
+                return File.Exists(serverExecutablePath);
+            }
+
+            return true;
         }
 
         /// <summary>
         /// Creates .bat files required for managing the server and the client.
         /// </summary>
-        private static void CreateBatFiles(string rootDirectory, string serverExecutablePath, string clientExecutablePath)
+        private static void CreateBatFiles(string rootDirectory, string clientExecutablePath, string serverExecutablePath)
         {
             string relativeServerExecutablePath = Path.GetRelativePath(rootDirectory, serverExecutablePath);
+
+            // Launching the client normally
+            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartClient.bat")))
+                writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml");
+
+            // Launching the client with auto-login
+            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartClientAutoLogin.bat")))
+                writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
 
             // Starting servers
             using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartServers.bat")))
@@ -94,14 +165,6 @@ namespace Setup
                 writer.WriteLine("taskkill /f /im MHServerEmu.exe");
                 writer.WriteLine("taskkill /f /im httpd.exe");
             }
-
-            // Launching the client normally
-            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartClient.bat")))
-                writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml");
-
-            // Launching the client with auto-login
-            using (StreamWriter writer = new(Path.Combine(rootDirectory, "StartClientAutoLogin.bat")))
-                writer.WriteLine($"@start \"\" \"{clientExecutablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
         }
     }
 }
