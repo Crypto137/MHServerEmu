@@ -1,4 +1,4 @@
-namespace SetupSorcererSupreme
+namespace Setup
 {
     internal static class Program
     {

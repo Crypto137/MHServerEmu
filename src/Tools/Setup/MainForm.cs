@@ -4,13 +4,11 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace SetupSorcererSupreme
+namespace Setup
 {
     public partial class MainForm : Form
     {
@@ -39,10 +37,10 @@ namespace SetupSorcererSupreme
                     return;
 
                 case SetupState.SelectFolder:
-                    (bool, string) runResult = RunSetup(folderBrowseTextBox.Text);
-                    if (runResult.Item1 == false)
+                    (bool result, string message) = SetupHelper.RunSetup(folderBrowseTextBox.Text);
+                    if (result == false)
                     {
-                        MessageBox.Show(runResult.Item2, "Setup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(message, "Setup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
@@ -105,76 +103,5 @@ namespace SetupSorcererSupreme
                     break;
             }
         }
-
-        #region Setup Logic
-
-        const string ExecutableHash = "6DC9BCDB145F98E5C2D7A1F7E25AEB75507A9D1A";  // Win64 1.52.0.1700
-
-        static readonly string CalligraphyPath = Path.Combine("Data", "Game", "Calligraphy.sip");
-        static readonly string ResourcePath = Path.Combine("Data", "Game", "mu_cdata.sip");
-
-        static (bool, string) RunSetup(string clientDir)
-        {
-            // Validate directory path
-            if (string.IsNullOrWhiteSpace(clientDir))
-                return (false, "Invalid file path.");
-
-            // Validate game executable
-            string executablePath = Path.Combine(clientDir, "UnrealEngine3", "Binaries", "Win64", "MarvelHeroesOmega.exe");
-            if (File.Exists(executablePath) == false)
-                return (false, "Marvel Heroes game files not found.");
-
-            byte[] executableData = File.ReadAllBytes(executablePath);
-            string executableHash = Convert.ToHexString(SHA1.HashData(executableData));
-
-            if (ExecutableHash != executableHash)
-                return (false, "Game version mismatch. Make sure you have version 1.52.0.1700.");
-
-            // Validate data files
-            string clientCalligraphyPath = Path.Combine(clientDir, CalligraphyPath);
-            string clientResourcePath = Path.Combine(clientDir, ResourcePath);
-
-            if (File.Exists(clientCalligraphyPath) == false || File.Exists(clientResourcePath) == false)
-                return (false, "Game data files are missing. Please reinstall the game.");
-
-            // Find server directory
-            string assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string serverDir = assemblyDir;
-
-            if (File.Exists(Path.Combine(serverDir, "MHServerEmu.exe")) == false)
-            {
-                // Try looking in the MHServerEmu subdirectory if it's not in the same directory as the setup tool
-                serverDir = Path.Combine(serverDir, "MHServerEmu");
-                if (File.Exists(Path.Combine(serverDir, "MHServerEmu.exe")) == false)
-                    return (false, "Failed to find MHServerEmu.");
-            }
-
-            // Create server data directory if needed
-            string serverDataDir = Path.Combine(serverDir, "Data", "Game");
-            if (Directory.Exists(serverDataDir) == false)
-                Directory.CreateDirectory(serverDataDir);
-
-            // Copy data files
-            string serverCalligraphyPath = Path.Combine(serverDir, CalligraphyPath);
-            string serverResourcePath = Path.Combine(serverDir, ResourcePath);
-
-            if (File.Exists(serverCalligraphyPath) == false)
-                File.Copy(clientCalligraphyPath, serverCalligraphyPath);
-
-            if (File.Exists(serverResourcePath) == false)
-                File.Copy(clientResourcePath, serverResourcePath);
-
-            // Create a .bat file for launching the client normally
-            using (StreamWriter writer = new(Path.Combine(assemblyDir, "StartClient.bat")))
-                writer.WriteLine($"@start \"\" \"{executablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml");
-
-            // Create a .bat file for launching the client with auto login
-            using (StreamWriter writer = new(Path.Combine(assemblyDir, "StartClientAutoLogin.bat")))
-                writer.WriteLine($"@start \"\" \"{executablePath}\" -robocopy -nosteam -siteconfigurl=localhost/SiteConfig.xml -emailaddress=test1@test.com -password=123");
-
-            return (true, "Setup successful.");
-        }
-
-        #endregion
     }
 }
