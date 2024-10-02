@@ -96,9 +96,11 @@
         </Grid>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="40*"/>
-                <ColumnDefinition Width="60*"/>
+                <ColumnDefinition Width="300" MinWidth="300" MaxWidth="900" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+
+            <GridSplitter Grid.Row="0" Grid.Column="0" Width="4" Margin=" 0 6 0 6" Background="DarkGray" />
 
             <TreeView Name="treeView" Grid.Row="0" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
                 <TreeView.ItemsPanel>
