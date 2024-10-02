@@ -318,5 +318,11 @@ namespace MHServerEmu.Games.Populations
             return spec;
         }
 
+        public void TEMP_DestroyAllSpawnedEntities()
+        {
+            foreach (SpawnSpec spawnSpec in _spawnSpecs.Values)
+                spawnSpec.ActiveEntity?.Destroy();
+        }
+
     }
 }
