@@ -401,7 +401,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     _owner.Physics.ApplyInternalForce(dir);
 
                     if (!IsMissile && !_owner.ActivePowerDisablesOrientation())
-                        if (Vector3.LengthSquared(dirTo2d) > Segment.Epsilon)
+                        if (Vector3.LengthSqr(dirTo2d) > Segment.Epsilon)
                         {
                             var orientation = Orientation.FromDeltaVector(Vector3.Normalize(dirTo2d));
                             SetOrientation(orientation);
@@ -426,6 +426,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     bool giveUp = false;
                     if (_giveUpDistance < _giveUpDistanceThreshold)
                     {
+                        if (_giveUpRepathCount < 0) _giveUpRepathCount = _repathCount;
+
                         if (_repathDelay == TimeSpan.Zero || (_giveUpRepathCount < _repathCount))
                             giveUp = true;
                         else
@@ -868,9 +870,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 }
             }
 
-            float finalDistance = Vector3.Distance2D(finalPosition, _owner.RegionLocation.Position) - _owner.Bounds.Radius;
-            if (repath && (finalDistance < 16.0f) && _generatedPath.Path.IsValid && !_generatedPath.Path.IsComplete)
-                repath = false;
+            if (repath)
+            {
+                float finalDistance = Vector3.Distance2D(finalPosition, _owner.RegionLocation.Position) - _owner.Bounds.Radius;
+                if (finalDistance < 16.0f && _generatedPath.Path.IsValid && !_generatedPath.Path.IsComplete)
+                    repath = false;
+            }
 
             if (repath)
             {
@@ -1063,7 +1068,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.LocomotionFlags &= LocomotionFlags.IsDrivingMovementMode;
 
             _giveUpDistance = 0.0f;
-            _giveUpTime = TimeSpan.Zero;
+            _giveUpNextTime = TimeSpan.Zero;
             _giveUpRepathCount = -1;
             _pathGenerationFlags = 0;
             _incompleteDistance = 0.0f;
