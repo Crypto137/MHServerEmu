@@ -870,9 +870,12 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 }
             }
 
-            float finalDistance = Vector3.Distance2D(finalPosition, _owner.RegionLocation.Position) - _owner.Bounds.Radius;
-            if (repath && (finalDistance < 16.0f) && _generatedPath.Path.IsValid && !_generatedPath.Path.IsComplete)
-                repath = false;
+            if (repath)
+            {
+                float finalDistance = Vector3.Distance2D(finalPosition, _owner.RegionLocation.Position) - _owner.Bounds.Radius;
+                if (finalDistance < 16.0f && _generatedPath.Path.IsValid && !_generatedPath.Path.IsComplete)
+                    repath = false;
+            }
 
             if (repath)
             {
