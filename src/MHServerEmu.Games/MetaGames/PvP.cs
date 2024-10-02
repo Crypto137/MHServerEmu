@@ -7,8 +7,8 @@ namespace MHServerEmu.Games.MetaGames
 {
     public class PvP : MetaGame
     {
-        private RepInt _team1;
-        private RepInt _team2;
+        private RepInt _team1 = new();
+        private RepInt _team2 = new();
 
         public PvP(Game game) : base(game) { }
 
