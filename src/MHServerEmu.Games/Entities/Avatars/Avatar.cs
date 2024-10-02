@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
         private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
 
-        private RepString _playerName;
+        private RepString _playerName = new();
         private ulong _ownerPlayerDbId;
         private List<AbilityKeyMapping> _abilityKeyMappingList = new();
 

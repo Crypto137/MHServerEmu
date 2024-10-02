@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Network
     // By version 1.52 only three types (int, ulong, string) are still in use,
     // although ReplicatedPropertyCollection is also part of the same overall system.
 
-    public struct RepInt : IArchiveMessageHandler, ISerialize
+    public class RepInt : IArchiveMessageHandler, ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -21,11 +21,11 @@ namespace MHServerEmu.Games.Network
         private int _value = 0;
 
         public ulong ReplicationId { get => _replicationId; }
-        public readonly bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
         public RepInt() { }
 
-        public readonly int Get()
+        public int Get()
         {
             return _value;
         }
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Network
         }
     }
 
-    public struct RepULong : IArchiveMessageHandler, ISerialize
+    public class RepULong : IArchiveMessageHandler, ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -87,11 +87,11 @@ namespace MHServerEmu.Games.Network
         private ulong _value = 0;
 
         public ulong ReplicationId { get => _replicationId; }
-        public readonly bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
         public RepULong() { }
 
-        public readonly ulong Get()
+        public ulong Get()
         {
             return _value;
         }
@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.Network
         }
     }
 
-    public struct RepString : IArchiveMessageHandler, ISerialize
+    public class RepString : IArchiveMessageHandler, ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -153,11 +153,11 @@ namespace MHServerEmu.Games.Network
         private string _value = string.Empty;
 
         public ulong ReplicationId { get => _replicationId; }
-        public readonly bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
 
         public RepString() { }
 
-        public readonly string Get()
+        public string Get()
         {
             return _value;
         }

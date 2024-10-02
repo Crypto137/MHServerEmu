@@ -1795,6 +1795,10 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnDeallocate();
             PowerCollection?.OnOwnerDeallocate();
+
+            // We need to remove all conditions here to unbind their property collections.
+            // If we don't do that, the garbage collector can't clean them and we end up with a memory leak.
+            ConditionCollection?.RemoveAllConditions();     
         }
 
         public virtual void OnDramaticEntranceEnd() { }

@@ -482,6 +482,12 @@ namespace MHServerEmu.Games.Regions
                 if (entity is WorldEntity worldEntity)
                     worldEntity.EmergencyRegionCleanup(this);
 
+            // We need to destroy everything we spawned, because even a single
+            // existing entity that references the population manager is going
+            // to cause all SpawnSpecs and the entities they reference to get
+            // stuck in memory, causing a leak.
+            PopulationManager.TEMP_DestroyAllSpawnedEntities();
+
             NaviMesh.Release();
             PopulationManager.Deallocate();
             MissionManager.Deallocate();

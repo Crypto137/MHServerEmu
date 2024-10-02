@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Entities
         private bool _emailVerified;
         private TimeSpan _accountCreationTimestamp;     // UnixTime
 
-        private RepULong _partyId;
+        private RepULong _partyId = new();
 
         private ulong _guildId;
         private string _guildName;
