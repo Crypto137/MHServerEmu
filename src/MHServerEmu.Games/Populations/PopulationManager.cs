@@ -60,6 +60,15 @@ namespace MHServerEmu.Games.Populations
 
         public void Deallocate()
         {
+            // We need to destroy everything we spawned, because even a single
+            // existing entity that references the population manager is going
+            // to cause all SpawnSpecs and the entities they reference to get
+            // stuck in memory, causing a leak.
+
+            foreach (var spec in _spawnSpecs.Values)
+                if (spec.State != SpawnState.Destroyed)
+                    spec.Destroy();
+
             var scheduler = Game.GameEventScheduler;
             scheduler.CancelAllEvents(_pendingEvents);
             _encounterSpawnPhases.Clear();
