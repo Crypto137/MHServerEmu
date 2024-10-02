@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHExecutableAnalyzer", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MHPakTool", "src\Tools\MHPakTool\MHPakTool.csproj", "{8B76417F-BE52-45B6-B167-0DD8EEF60956}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SetupSorcererSupreme", "src\Tools\SetupSorcererSupreme\SetupSorcererSupreme.csproj", "{4AC87CB1-2C39-4C68-B64D-C61D99FA87C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Setup", "src\Tools\Setup\Setup.csproj", "{4AC87CB1-2C39-4C68-B64D-C61D99FA87C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

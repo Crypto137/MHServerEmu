@@ -74,7 +74,8 @@ namespace MHServerEmu.Auth.Handlers
             }
 
             // Send an AuthTicket if we were able to create a session
-            Logger.Info($"Sending AuthTicket for sessionId 0x{ticket.SessionId:X} to the game client on {endPointName}");
+            string machineId = loginDataPB.HasMachineId ? loginDataPB.MachineId : string.Empty;
+            Logger.Info($"Sending AuthTicket for SessionId 0x{ticket.SessionId:X} to the game client on {endPointName}, machineId={machineId}");
             await HttpHelper.SendProtobufAsync(httpResponse, ticket);
             return true;
         }

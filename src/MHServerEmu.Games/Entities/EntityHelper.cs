@@ -103,6 +103,7 @@ namespace MHServerEmu.Games.Entities
             if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
             var summonerProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
+            if (summonerProto == null) return;
 
             Agent summoner;
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())

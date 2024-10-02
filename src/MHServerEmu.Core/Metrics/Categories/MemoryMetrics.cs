@@ -10,6 +10,7 @@ namespace MHServerEmu.Core.Metrics.Categories
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private long _gcIndex = 0;
+        private long[] _gcKindIndices = new long[4];
         private long[] _gcCounts = new long[GC.MaxGeneration + 1];
         private long _totalCommittedBytes;
         private double _pauseTimePercentage;
@@ -17,23 +18,42 @@ namespace MHServerEmu.Core.Metrics.Categories
 
         public void Update()
         {
-            // Get newest memory info and see if we are up to date
-            GCMemoryInfo memoryInfo = GC.GetGCMemoryInfo();
-
-            long index = memoryInfo.Index;
-            if (_gcIndex >= index)
-                return;
-
-            _gcIndex = memoryInfo.Index;
-            _gcCounts[memoryInfo.Generation]++;
-            _totalCommittedBytes = memoryInfo.TotalCommittedBytes;
-            _pauseTimePercentage = memoryInfo.PauseTimePercentage;
-            _pauseDurationTracker.Track(memoryInfo.PauseDurations[0]);
+            // Update data for each GCKind separately
+            UpdateForGCKind(GCKind.Ephemeral);
+            UpdateForGCKind(GCKind.FullBlocking);
+            UpdateForGCKind(GCKind.Background);
         }
 
         public Report GetReport()
         {
             return new(this);
+        }
+
+        private void UpdateForGCKind(GCKind gcKind)
+        {
+            GCMemoryInfo memoryInfo = GC.GetGCMemoryInfo(gcKind);
+
+            // Check if we are up to date with this kind
+            if (memoryInfo.Index <= _gcKindIndices[(int)gcKind])
+                return;
+
+            // Update metrics tracked for all collections
+            _gcKindIndices[(int)gcKind] = memoryInfo.Index;
+            _gcCounts[memoryInfo.Generation]++;
+
+            TimeSpan combinedPauseDuration = memoryInfo.PauseDurations[0] + memoryInfo.PauseDurations[1];
+            _pauseDurationTracker.Track(combinedPauseDuration);
+
+            if (gcKind != GCKind.Ephemeral)
+                Logger.Debug($"{gcKind} GC tracked: Index={memoryInfo.Index}, Generation={memoryInfo.Generation}, PauseDuration={combinedPauseDuration.TotalMilliseconds} ms");
+
+            // Update metrics tracked for the most recent collection
+            if (memoryInfo.Index > _gcIndex)
+            {
+                _gcIndex = memoryInfo.Index;
+                _totalCommittedBytes = memoryInfo.TotalCommittedBytes;
+                _pauseTimePercentage = memoryInfo.PauseTimePercentage;
+            }
         }
 
         public readonly struct Report

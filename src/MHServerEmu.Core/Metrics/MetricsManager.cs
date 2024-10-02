@@ -13,6 +13,7 @@ namespace MHServerEmu.Core.Metrics
     public class MetricsManager
     {
         private const int UpdateTickIntervalMS = 1000;
+        private const int MemoryUpdateIntervalTicks = 6;
 
         private readonly object _lock = new();
 
@@ -37,7 +38,8 @@ namespace MHServerEmu.Core.Metrics
                 _tick++;
 
                 // Sample new GC data
-                _memoryMetrics.Update();
+                if (_tick % MemoryUpdateIntervalTicks == 0)
+                    _memoryMetrics.Update();
 
                 // Update game performance metrics
                 while (_fixedUpdateTimeQueue.TryDequeue(out var entry))
