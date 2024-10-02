@@ -13,7 +13,7 @@ namespace MHServerEmu.Core.Metrics
     public class MetricsManager
     {
         private const int UpdateTickIntervalMS = 1000;
-        private const int MemoryUpdateIntervalTicks = 6;
+        private const int MemoryUpdateIntervalTicks = 3;
 
         private readonly object _lock = new();
 
