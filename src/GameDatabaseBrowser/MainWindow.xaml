@@ -100,9 +100,9 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <GridSplitter Grid.Row="0" Grid.Column="0" Width="4" Margin=" 0 6 0 6" Background="DarkGray" />
+            <GridSplitter Grid.Row="0" Grid.Column="0" Width="6" Margin="0 6 0 6" Background="LightGray" />
 
-            <TreeView Name="treeView" Grid.Row="0" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
+            <TreeView Name="treeView" Grid.Row="0" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5 5 8 5">
                 <TreeView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <src:MyVirtualizingStackPanel/>
