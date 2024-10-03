@@ -34,6 +34,7 @@ namespace MHServerEmu.Core.Metrics.Categories
 
         private readonly TimeTracker _frameTimeTracker = new(1024);    // At 20 FPS this gives us about 51.2 seconds of data
         private readonly FloatTracker _catchUpFrameCountTracker = new(1024);
+        private readonly TimeTracker _timeSkipTracker = new(1024);
 
         public ulong GameId { get; }
 
@@ -56,6 +57,10 @@ namespace MHServerEmu.Core.Metrics.Categories
                     _catchUpFrameCountTracker.Track(metricValue.FloatValue);
                     break;
 
+                case GamePerformanceMetricEnum.TimeSkip:
+                    _timeSkipTracker.Track(metricValue.TimeValue);
+                    break;
+
                 default:
                     Logger.Warn($"Update(): Unknown game performance metric {metricValue.Metric}");
                     break;
@@ -72,16 +77,18 @@ namespace MHServerEmu.Core.Metrics.Categories
         {
             public ReportTimeEntry FrameTime { get; }
             public ReportFloatEntry CatchUpFrameCount { get; }
+            public ReportTimeEntry TimeSkip { get; }
 
             public Report(GamePerformanceMetrics metrics)
             {
                 FrameTime = metrics._frameTimeTracker.AsReportEntry();
                 CatchUpFrameCount = metrics._catchUpFrameCountTracker.AsReportEntry();
+                TimeSkip = metrics._timeSkipTracker.AsReportEntry();
             }
 
             public override string ToString()
             {
-                return $"{nameof(FrameTime)}: {FrameTime}\n{nameof(CatchUpFrameCount)}: {CatchUpFrameCount}";
+                return $"{nameof(FrameTime)}: {FrameTime}\n{nameof(CatchUpFrameCount)}: {CatchUpFrameCount}\n{nameof(TimeSkip)}: {TimeSkip}";
             }
         }
     }

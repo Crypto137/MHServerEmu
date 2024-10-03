@@ -10,6 +10,7 @@
     {
         Invalid,
         FrameTime,
-        CatchUpFrameCount
+        CatchUpFrameCount,
+        TimeSkip
     }
 }
