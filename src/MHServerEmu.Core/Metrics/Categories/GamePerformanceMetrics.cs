@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Metrics.Entries;
 using MHServerEmu.Core.Metrics.Trackers;
@@ -36,6 +37,10 @@ namespace MHServerEmu.Core.Metrics.Categories
         private readonly FloatTracker _catchUpFrameCountTracker = new(1024);
         private readonly TimeTracker _timeSkipTracker = new(1024);
 
+        private readonly FloatTracker _scheduledEventsPerUpdateTracker = new(1024);
+        private readonly FloatTracker _eventSchedulerFramesPerUpdate = new(1024);
+        private readonly FloatTracker _remainingScheduledEventsTracker = new(1024);
+
         public ulong GameId { get; }
 
         public GamePerformanceMetrics(ulong gameId)
@@ -53,7 +58,7 @@ namespace MHServerEmu.Core.Metrics.Categories
                     _frameTimeTracker.Track(metricValue.TimeValue);
                     break;
 
-                case GamePerformanceMetricEnum.CatchUpFrameCount:
+                case GamePerformanceMetricEnum.CatchUpFrames:
                     _catchUpFrameCountTracker.Track(metricValue.FloatValue);
                     break;
 
@@ -61,10 +66,21 @@ namespace MHServerEmu.Core.Metrics.Categories
                     _timeSkipTracker.Track(metricValue.TimeValue);
                     break;
 
+                case GamePerformanceMetricEnum.ScheduledEventsPerUpdate:
+                    _scheduledEventsPerUpdateTracker.Track(metricValue.FloatValue);
+                    break;
+
+                case GamePerformanceMetricEnum.EventSchedulerFramesPerUpdate:
+                    _eventSchedulerFramesPerUpdate.Track(metricValue.FloatValue);
+                    break;
+
+                case GamePerformanceMetricEnum.RemainingScheduledEvents:
+                    _remainingScheduledEventsTracker.Track(metricValue.FloatValue);
+                    break;
+
                 default:
                     Logger.Warn($"Update(): Unknown game performance metric {metricValue.Metric}");
                     break;
-
             }
         }
 
@@ -76,19 +92,32 @@ namespace MHServerEmu.Core.Metrics.Categories
         public readonly struct Report
         {
             public ReportTimeEntry FrameTime { get; }
-            public ReportFloatEntry CatchUpFrameCount { get; }
+            public ReportFloatEntry CatchUpFrames { get; }
             public ReportTimeEntry TimeSkip { get; }
+            public ReportFloatEntry ScheduledEventsPerUpdate { get; }
+            public ReportFloatEntry EventSchedulerFramesPerUpdate { get; }
+            public ReportFloatEntry RemainingScheduledEvents { get; }
 
             public Report(GamePerformanceMetrics metrics)
             {
                 FrameTime = metrics._frameTimeTracker.AsReportEntry();
-                CatchUpFrameCount = metrics._catchUpFrameCountTracker.AsReportEntry();
+                CatchUpFrames = metrics._catchUpFrameCountTracker.AsReportEntry();
                 TimeSkip = metrics._timeSkipTracker.AsReportEntry();
+                ScheduledEventsPerUpdate = metrics._scheduledEventsPerUpdateTracker.AsReportEntry();
+                EventSchedulerFramesPerUpdate = metrics._eventSchedulerFramesPerUpdate.AsReportEntry();
+                RemainingScheduledEvents = metrics._remainingScheduledEventsTracker.AsReportEntry();
             }
 
             public override string ToString()
             {
-                return $"{nameof(FrameTime)}: {FrameTime}\n{nameof(CatchUpFrameCount)}: {CatchUpFrameCount}\n{nameof(TimeSkip)}: {TimeSkip}";
+                StringBuilder sb = new();
+                sb.AppendLine($"{nameof(FrameTime)}: {FrameTime}");
+                sb.AppendLine($"{nameof(CatchUpFrames)}: {CatchUpFrames}");
+                sb.AppendLine($"{nameof(TimeSkip)}: {TimeSkip}");
+                sb.AppendLine($"{nameof(ScheduledEventsPerUpdate)}: {ScheduledEventsPerUpdate}");
+                sb.AppendLine($"{nameof(EventSchedulerFramesPerUpdate)}: {EventSchedulerFramesPerUpdate}");
+                sb.AppendLine($"{nameof(RemainingScheduledEvents)}: {RemainingScheduledEvents}");
+                return sb.ToString();
             }
         }
     }

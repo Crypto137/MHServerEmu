@@ -346,7 +346,7 @@ namespace MHServerEmu.Games
             if (timesUpdated > 1)
             {
                 Logger.Trace($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
-                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.CatchUpFrameCount, timesUpdated - 1);
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.CatchUpFrames, timesUpdated - 1);
             }
 
             // Skip time if we have fallen behind
@@ -424,7 +424,7 @@ namespace MHServerEmu.Games
                     writer.WriteLine($"{kvp.Key} x{kvp.Value}");
                 writer.WriteLine();
 
-                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus()}\n");
+                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");
             }
 
             Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");

@@ -180,7 +180,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Returns a <see cref="string"/> representing the current status of all running <see cref="IGameService"/> instances.
         /// </summary>
-        public string GetServerStatus()
+        public string GetServerStatus(bool includeMetrics)
         {
             StringBuilder sb = new();
 
@@ -198,8 +198,11 @@ namespace MHServerEmu.Core.Network
                     sb.AppendLine("Not running");
             }
 
-            sb.AppendLine("Performance Metrics:");
-            sb.AppendLine(MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText));
+            if (includeMetrics)
+            {
+                sb.AppendLine("Performance Metrics:");
+                sb.AppendLine(MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText));
+            }
 
             return sb.ToString();
         }

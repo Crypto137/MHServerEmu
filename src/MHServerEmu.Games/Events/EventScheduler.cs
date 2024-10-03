@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics;
 
 namespace MHServerEmu.Games.Events
 {
@@ -137,7 +138,14 @@ namespace MHServerEmu.Games.Events
                 CurrentTime = frameEndTime;
             }
 
-            //if (numEvents > 0) Logger.Trace($"Triggered {numEvents} event(s) in {endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
+            // Record metrics
+            ulong gameId = Game.Current != null ? Game.Current.Id : 0;
+            MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.ScheduledEventsPerUpdate, numEvents);
+            MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.EventSchedulerFramesPerUpdate, 1 + endFrame - startFrame);
+            MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.RemainingScheduledEvents, _scheduledEvents.Count);
+
+            //if (numEvents > 0)
+            //    Logger.Trace($"Triggered {numEvents} event(s) in {1 + endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
         }
 
         public Dictionary<string, int> GetScheduledEventCounts()

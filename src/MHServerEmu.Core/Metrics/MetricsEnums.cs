@@ -10,7 +10,10 @@
     {
         Invalid,
         FrameTime,
-        CatchUpFrameCount,
-        TimeSkip
+        CatchUpFrames,
+        TimeSkip,
+        ScheduledEventsPerUpdate,
+        EventSchedulerFramesPerUpdate,
+        RemainingScheduledEvents
     }
 }

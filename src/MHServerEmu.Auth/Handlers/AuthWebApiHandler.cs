@@ -142,7 +142,7 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         private async Task<bool> OnServerStatus(HttpListenerResponse httpResponse, AuthWebApiOutputFormat outputFormat)
         {
-            string status = ServerManager.Instance.GetServerStatus();
+            string status = ServerManager.Instance.GetServerStatus(true);
 
             // Fix line breaks for display in browsers
             if (outputFormat == AuthWebApiOutputFormat.Html)

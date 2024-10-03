@@ -65,7 +65,10 @@ namespace MHServerEmu.Core.Metrics
 
             sb.AppendLine("Games:");
             foreach (var kvp in Games)
-                sb.AppendLine($"[0x{kvp.Key:X}] {kvp.Value}");
+            {
+                sb.AppendLine($"Game [0x{kvp.Key:X}]:");
+                sb.AppendLine(kvp.Value.ToString());
+            }
 
             return sb.ToString();
         }
