@@ -362,7 +362,7 @@ namespace GameDatabaseBrowser
                 // Special search case: search currently selected prototype
                 if (searchDetails.SearchType == SearchType.SelectedPrototype)
                 {
-                    SearchSelectedPrototype(searchDetails.TextValue);
+                    SearchSelectedPrototype(searchDetails);
                     return;
                 }
 
@@ -391,8 +391,16 @@ namespace GameDatabaseBrowser
             selectedPrototypeSearchText.Text = "";
 
             SearchDetails searchDetails = GetSearchDetails();
-            if (searchDetails.SearchType != SearchType.SelectedPrototype)
+            if (searchDetails.SearchType == SearchType.SelectedPrototype)
+            {
+                PropertyNodes[0].ClearSearch();
+                PropertyNodes[0].IsExpanded = true;
+                propertytreeView.Items.Refresh();
+            }   
+            else
+            {
                 RefreshPrototypeTree(searchDetails);
+            }
         }
 
         /// <summary>
@@ -768,6 +776,7 @@ namespace GameDatabaseBrowser
                         {
                             node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Name = "", Value = localeString, TypeName = "" }, IsExpanded = needExpand });
                             node.Childs.Last().IsExpanded = true;
+                            node.Childs.Last().CollapseOnSearchClear = false;
                         }
                     }
                 }
@@ -823,6 +832,8 @@ namespace GameDatabaseBrowser
 
             Prototype proto = GameDatabase.DataDirectory.GetPrototype<Prototype>((PrototypeId)prototypeId);
             PropertyNodes[0].Childs.Clear();
+            PropertyNodes[0].ClearSearch();
+            propertytreeView.Items.Refresh();
 
             bool needExpand = expandResultToggle.IsChecked ?? false;
             ConstructPropertyNodeHierarchy(PropertyNodes[0], proto, needExpand);
@@ -934,21 +945,25 @@ namespace GameDatabaseBrowser
             return null;
         }
 
-        private void SearchSelectedPrototype(string text)
+        private void SearchSelectedPrototype(SearchDetails searchDetails)
         {
-            if (string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(searchDetails.TextValue))
                 return;
 
             if (PropertyNodes[0].Childs.Count == 0)
                 return;
 
             List<PropertyNode> matches = new();
-            PropertyNodes[0].SearchText(text, matches);
+            PropertyNodes[0].ClearSearch();
+            PropertyNodes[0].IsExpanded = true;
+            PropertyNodes[0].SearchText(searchDetails.TextValue, matches);
 
             StringBuilder sb = new();
             sb.AppendLine($"Found {matches.Count} matches:\n");
             foreach (PropertyNode node in matches)
                 sb.AppendLine(node.PropertyDetails.ToString());
+
+            propertytreeView.Items.Refresh();
 
             MessageBox.Show(sb.ToString(), "Search Result");
         }
