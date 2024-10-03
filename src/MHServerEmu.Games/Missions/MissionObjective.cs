@@ -264,7 +264,7 @@ namespace MHServerEmu.Games.Missions
             IsChangingState = true;
 
             bool success = true;
-            success &= OnUnsetState();
+            success &= OnUnsetState(newState);
             if (success)
             {
                 _objectiveState = newState;
@@ -328,13 +328,13 @@ namespace MHServerEmu.Games.Missions
             };
         }
 
-        private bool OnUnsetState()
+        private bool OnUnsetState(MissionObjectiveState newState = MissionObjectiveState.Invalid)
         {
             return _objectiveState switch
             {
                 MissionObjectiveState.Invalid or MissionObjectiveState.Skipped => true,
                 MissionObjectiveState.Available => OnUnsetStateAvailable(),
-                MissionObjectiveState.Active => OnUnsetStateActive(),
+                MissionObjectiveState.Active => OnUnsetStateActive(newState),
                 MissionObjectiveState.Completed => OnUnsetStateCompleted(),
                 MissionObjectiveState.Failed => OnUnsetStateFailed(),
                 _ => true,
@@ -442,7 +442,7 @@ namespace MHServerEmu.Games.Missions
             return timeLimit;
         }
 
-        private bool OnUnsetStateActive()
+        private bool OnUnsetStateActive(MissionObjectiveState newState)
         {
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
@@ -453,7 +453,13 @@ namespace MHServerEmu.Games.Missions
 
             _interactedEntityList.Clear();
             CancelTimeLimitEvent();
-            RemoveMetaGameWidgets(); 
+
+            bool removeWidget = true;
+            if (newState == MissionObjectiveState.Completed) 
+                if (Mission.GetWidgetCompletionCount(objetiveProto.MetaGameWidget, out int currentCount, out int requiredCount, false))
+                    removeWidget = currentCount == requiredCount;
+
+            if (removeWidget) RemoveMetaGameWidgets(); 
 
             var region = Region;
             if (region != null)
@@ -486,8 +492,6 @@ namespace MHServerEmu.Games.Missions
                         region.PlayerCompletedMissionObjectiveEvent
                             .Invoke(new(activity.Player, missionRef, objectiveId, activity.Participant, activity.Contributor || isOpenMission == false));
                 }
-
-                UpdateMetaGameWidgets();
             }
 
             return true;
