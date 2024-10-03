@@ -1,25 +1,22 @@
 ﻿using System.Collections.Concurrent;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics.Categories;
 
 namespace MHServerEmu.Core.Metrics
 {
-    public enum MetricsReportFormat
-    {
-        PlainText,
-        Json
-    }
-
     public class MetricsManager
     {
         private const int UpdateTickIntervalMS = 1000;
         private const int MemoryUpdateIntervalTicks = 3;
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly object _lock = new();
 
         private readonly MemoryMetrics _memoryMetrics = new();
 
-        private readonly ConcurrentQueue<(ulong, TimeSpan)> _fixedUpdateTimeQueue = new();
+        private readonly ConcurrentQueue<(ulong, GamePerformanceMetricValue)> _gamePerformanceMetricQueue = new();
         private readonly Dictionary<ulong, GamePerformanceMetrics> _gamePerformanceMetricsDict = new();
 
         private long _tick;
@@ -28,6 +25,7 @@ namespace MHServerEmu.Core.Metrics
 
         private MetricsManager()
         {
+            Logger.Info("Started processing metrics");
             Task.Run(UpdateAsync);
         }
 
@@ -42,10 +40,10 @@ namespace MHServerEmu.Core.Metrics
                     _memoryMetrics.Update();
 
                 // Update game performance metrics
-                while (_fixedUpdateTimeQueue.TryDequeue(out var entry))
+                while (_gamePerformanceMetricQueue.TryDequeue(out var entry))
                 {
                     ulong gameId = entry.Item1;
-                    TimeSpan fixedUpdateTime = entry.Item2;
+                    GamePerformanceMetricValue metricValue = entry.Item2;
 
                     if (_gamePerformanceMetricsDict.TryGetValue(gameId, out GamePerformanceMetrics gameMetrics) == false)
                     {
@@ -53,16 +51,21 @@ namespace MHServerEmu.Core.Metrics
                         _gamePerformanceMetricsDict.TryAdd(gameId, gameMetrics);
                     }
 
-                    gameMetrics.Update(fixedUpdateTime);
+                    gameMetrics.Update(metricValue);
                 }
             }
         }
 
-        public void RecordFixedUpdateTime(ulong gameId, TimeSpan fixedUpdateTime)
+        public void RecordGamePerformanceMetric(ulong gameId, GamePerformanceMetricEnum metric, float value)
         {
-            _fixedUpdateTimeQueue.Enqueue((gameId, fixedUpdateTime));
+            _gamePerformanceMetricQueue.Enqueue((gameId, new(metric, value)));
         }
-        
+
+        public void RecordGamePerformanceMetric(ulong gameId, GamePerformanceMetricEnum metric, TimeSpan value)
+        {
+            _gamePerformanceMetricQueue.Enqueue((gameId, new(metric, value)));
+        }
+
         public string GeneratePerformanceReport(MetricsReportFormat format)
         {
             using PerformanceReport report = ObjectPoolManager.Instance.Get<PerformanceReport>();

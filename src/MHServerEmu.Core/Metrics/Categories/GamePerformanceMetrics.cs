@@ -1,13 +1,39 @@
-﻿using MHServerEmu.Core.Metrics.Entries;
+﻿using System.Runtime.InteropServices;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Metrics.Entries;
 using MHServerEmu.Core.Metrics.Trackers;
 
 namespace MHServerEmu.Core.Metrics.Categories
 {
+    [StructLayout(LayoutKind.Explicit)]
+    public readonly struct GamePerformanceMetricValue
+    {
+        [FieldOffset(0)]
+        public readonly GamePerformanceMetricEnum Metric = default;
+        [FieldOffset(4)]
+        public readonly float FloatValue = default;
+        [FieldOffset(4)]
+        public readonly TimeSpan TimeValue = default;
+
+        public GamePerformanceMetricValue(GamePerformanceMetricEnum metric, float value)
+        {
+            Metric = metric;
+            FloatValue = value;
+        }
+
+        public GamePerformanceMetricValue(GamePerformanceMetricEnum metric, TimeSpan value)
+        {
+            Metric = metric;
+            TimeValue = value;
+        }
+    }
+
     public class GamePerformanceMetrics
     {
-        private readonly object _lock = new();
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly TimeTracker _fixedUpdateTimeTracker = new(1024);    // At 20 FPS this gives us about 51.2 seconds of data
+        private readonly TimeTracker _frameTimeTracker = new(1024);    // At 20 FPS this gives us about 51.2 seconds of data
+        private readonly FloatTracker _catchUpFrameCountTracker = new(1024);
 
         public ulong GameId { get; }
 
@@ -16,10 +42,25 @@ namespace MHServerEmu.Core.Metrics.Categories
             GameId = gameId;
         }
 
-        public void Update(TimeSpan fixedUpdateTime)
+        public void Update(in GamePerformanceMetricValue metricValue)
         {
-            _fixedUpdateTimeTracker.Track(fixedUpdateTime);
             // add more data here
+
+            switch (metricValue.Metric)
+            {
+                case GamePerformanceMetricEnum.FrameTime:
+                    _frameTimeTracker.Track(metricValue.TimeValue);
+                    break;
+
+                case GamePerformanceMetricEnum.CatchUpFrameCount:
+                    _catchUpFrameCountTracker.Track(metricValue.FloatValue);
+                    break;
+
+                default:
+                    Logger.Warn($"Update(): Unknown game performance metric {metricValue.Metric}");
+                    break;
+
+            }
         }
 
         public Report GetReport()
@@ -29,16 +70,18 @@ namespace MHServerEmu.Core.Metrics.Categories
 
         public readonly struct Report
         {
-            public ReportTimeEntry FixedUpdateTime { get; }
+            public ReportTimeEntry FrameTime { get; }
+            public ReportFloatEntry CatchUpFrameCount { get; }
 
             public Report(GamePerformanceMetrics metrics)
             {
-                FixedUpdateTime = metrics._fixedUpdateTimeTracker.AsReportEntry();
+                FrameTime = metrics._frameTimeTracker.AsReportEntry();
+                CatchUpFrameCount = metrics._catchUpFrameCountTracker.AsReportEntry();
             }
 
             public override string ToString()
             {
-                return $"{nameof(FixedUpdateTime)}: {FixedUpdateTime}";
+                return $"{nameof(FrameTime)}: {FrameTime}\n{nameof(CatchUpFrameCount)}: {CatchUpFrameCount}";
             }
         }
     }

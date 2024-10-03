@@ -45,7 +45,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             _pauseDurationTracker.Track(combinedPauseDuration);
 
             if (gcKind != GCKind.Ephemeral)
-                Logger.Debug($"{gcKind} GC tracked: Index={memoryInfo.Index}, Generation={memoryInfo.Generation}, PauseDuration={combinedPauseDuration.TotalMilliseconds} ms");
+                Logger.Trace($"{gcKind} GC recorded: Index={memoryInfo.Index}, Generation={memoryInfo.Generation}, PauseDuration={combinedPauseDuration.TotalMilliseconds} ms");
 
             // Update metrics tracked for the most recent collection
             if (memoryInfo.Index > _gcIndex)

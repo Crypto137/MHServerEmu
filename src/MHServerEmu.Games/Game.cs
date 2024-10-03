@@ -332,7 +332,7 @@ namespace MHServerEmu.Games
                 timesUpdated++;
 
                 _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - stepStartTime;
-                MetricsManager.Instance.RecordFixedUpdateTime(Id, _lastFixedTimeUpdateProcessTime);
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameTime, _lastFixedTimeUpdateProcessTime);
 
                 if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
                     Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
@@ -346,7 +346,10 @@ namespace MHServerEmu.Games
             _currentGameTime = RealGameTime;
 
             if (timesUpdated > 1)
+            {
                 Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.CatchUpFrameCount, timesUpdated - 1);
+            }
         }
 
         private void DoFixedTimeUpdate()
