@@ -32,6 +32,9 @@ namespace GameDatabaseBrowser.Search
                 case SearchType.ByPrototypeBlueprint:
                     TextValue = mainWindow.blueprintAutoCompletionText.Text;
                     break;
+                case SearchType.SelectedPrototype:
+                    TextValue = mainWindow.selectedPrototypeSearchText.Text;
+                    break;
             }
         }
     }

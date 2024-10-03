@@ -15,6 +15,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -356,9 +357,19 @@ namespace GameDatabaseBrowser
 
             try
             {
+                SearchDetails searchDetails = GetSearchDetails();
+
+                // Special search case: search currently selected prototype
+                if (searchDetails.SearchType == SearchType.SelectedPrototype)
+                {
+                    SearchSelectedPrototype(searchDetails.TextValue);
+                    return;
+                }
+
+                // Default search: search the prototype tree
                 progressBar.Visibility = Visibility.Visible;
                 progressBar.IsIndeterminate = true;
-                await Task.Run(() => RefreshPrototypeTree(GetSearchDetails(), true));
+                await Task.Run(() => RefreshPrototypeTree(searchDetails, true));
             }
             catch (Exception ex)
             {
@@ -377,7 +388,11 @@ namespace GameDatabaseBrowser
             txtSearch.Text = "";
             classAutoCompletionText.Text = "";
             blueprintAutoCompletionText.Text = "";
-            RefreshPrototypeTree(GetSearchDetails());
+            selectedPrototypeSearchText.Text = "";
+
+            SearchDetails searchDetails = GetSearchDetails();
+            if (searchDetails.SearchType != SearchType.SelectedPrototype)
+                RefreshPrototypeTree(searchDetails);
         }
 
         /// <summary>
@@ -513,24 +528,46 @@ namespace GameDatabaseBrowser
             {
                 case 0: // Search by text
                     SearchByTextField.Visibility = Visibility.Visible;
-                    SearchByTextToggles.Visibility = Visibility.Visible;
                     SearchByBlueprintField.Visibility = Visibility.Collapsed;
                     SearchByClassField.Visibility = Visibility.Collapsed;
+                    SearchSelectedPrototypeField.Visibility = Visibility.Collapsed;
+
+                    SearchByTextToggles.Visibility = Visibility.Visible;
                     SearchByClassAndBlueprintToggles.Visibility = Visibility.Collapsed;
+
                     break;
+
                 case 1: // Search by class
                     SearchByTextField.Visibility = Visibility.Collapsed;
-                    SearchByTextToggles.Visibility = Visibility.Collapsed;
-                    SearchByBlueprintField.Visibility = Visibility.Collapsed;
                     SearchByClassField.Visibility = Visibility.Visible;
+                    SearchByBlueprintField.Visibility = Visibility.Collapsed;
+                    SearchSelectedPrototypeField.Visibility = Visibility.Collapsed;
+
+                    SearchByTextToggles.Visibility = Visibility.Collapsed;
                     SearchByClassAndBlueprintToggles.Visibility = Visibility.Visible;
+
                     break;
+
                 case 2: // Search by blueprint
                     SearchByTextField.Visibility = Visibility.Collapsed;
-                    SearchByTextToggles.Visibility = Visibility.Collapsed;
                     SearchByClassField.Visibility = Visibility.Collapsed;
                     SearchByBlueprintField.Visibility = Visibility.Visible;
+                    SearchSelectedPrototypeField.Visibility = Visibility.Collapsed;
+
+                    SearchByTextToggles.Visibility = Visibility.Collapsed;
                     SearchByClassAndBlueprintToggles.Visibility = Visibility.Visible;
+
+                    break;
+
+                case 3: // Search selected prototype
+                    SearchByTextField.Visibility = Visibility.Collapsed;
+                    SearchByClassField.Visibility = Visibility.Collapsed;
+                    SearchByBlueprintField.Visibility = Visibility.Collapsed;
+                    SearchSelectedPrototypeField.Visibility = Visibility.Visible;
+
+                    SearchByTextToggles.Visibility = Visibility.Collapsed;
+                    SearchByClassAndBlueprintToggles.Visibility = Visibility.Collapsed;
+
                     break;
             }
         }
@@ -895,6 +932,25 @@ namespace GameDatabaseBrowser
             }
 
             return null;
+        }
+
+        private void SearchSelectedPrototype(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            if (PropertyNodes[0].Childs.Count == 0)
+                return;
+
+            List<PropertyNode> matches = new();
+            PropertyNodes[0].SearchText(text, matches);
+
+            StringBuilder sb = new();
+            sb.AppendLine($"Found {matches.Count} matches:\n");
+            foreach (PropertyNode node in matches)
+                sb.AppendLine(node.PropertyDetails.ToString());
+
+            MessageBox.Show(sb.ToString(), "Search Result");
         }
     }
 

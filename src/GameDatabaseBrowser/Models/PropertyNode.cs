@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace GameDatabaseBrowser.Models
 {
@@ -14,6 +16,18 @@ namespace GameDatabaseBrowser.Models
         public PropertyNode()
         {
             Childs = new ObservableCollection<PropertyNode>();
+        }
+
+        public bool SearchText(string text, List<PropertyNode> matches)
+        {
+            bool found = PropertyDetails.ToString().Contains(text, StringComparison.OrdinalIgnoreCase);
+            if (found)
+                matches.Add(this);
+
+            foreach (PropertyNode child in Childs)
+                child.SearchText(text, matches);
+
+            return found;
         }
     }
 }

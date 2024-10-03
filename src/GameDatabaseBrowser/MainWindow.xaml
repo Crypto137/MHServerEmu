@@ -59,15 +59,21 @@
                 <wpfcontrols:AutoCompleteTextBox x:Name="blueprintAutoCompletionText" Watermark="Enter a blueprint name" FontSize="15" Background="White" />
             </Grid>
 
+            <!-- Search selected prototype -->
+            <Grid Grid.Column="1" x:Name="SearchSelectedPrototypeField" Visibility="Collapsed" Height="35" Background="White">
+                <wpfcontrols:AutoCompleteTextBox x:Name="selectedPrototypeSearchText" Watermark="Enter text" FontSize="15" Background="White" />
+            </Grid>
+
             <Button Grid.Column="2" x:Name="btnSearch" Content="Search" Margin="5" Click="OnSearchButtonClicked" Width="100"/>
         </Grid>
 
         <!-- Search options -->
         <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" >
-            <ComboBox x:Name="SearchTypeComboBox" Grid.Row="0" Margin="0,0,6,0" SelectionChanged="OnSearchTypeSelected" Width="140" >
+            <ComboBox x:Name="SearchTypeComboBox" Grid.Row="0" Margin="0,0,6,0" SelectionChanged="OnSearchTypeSelected" Width="170" >
                 <ComboBoxItem Content="Search by text"/>
                 <ComboBoxItem Content="Search by class"/>
                 <ComboBoxItem Content="Search by blueprint"/>
+                <ComboBoxItem Content="Search selected prototype"/>
             </ComboBox>
 
             <CheckBox Grid.Row="1" x:Name="expandResultToggle" Content="Expand results" Margin="5" ToolTip="Expand all the results" />
