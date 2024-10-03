@@ -19,146 +19,134 @@
         </ContextMenu>
     </Window.Resources>
     <Grid Background="Gainsboro" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="380" MinWidth="300" MaxWidth="900" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="80" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0">
+
+        <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" Margin="5 0 0 0">
+            <Button x:Name="btnBack" Content="&lt;&lt; Back" Click="OnBackButtonClicked" Width="100" Height="30" Margin="0,5" ToolTip="Back to the previous prototype selected"/>
+            <Button x:Name="btnForward" Content="Forward >>" Click="OnForwardButtonClicked" Width="100" Height="30" Margin="0,5" ToolTip="Return to the last state before Back action"/>
+        </StackPanel>
+
+        <!-- Search fields -->
+        <Grid Grid.Column="1" Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="100*"/>
-                <ColumnDefinition Width="200"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="40" />
-                <RowDefinition Height="40" />
-            </Grid.RowDefinitions>
-
-            <StackPanel Grid.Column="0" Grid.RowSpan="2" Orientation="Vertical" VerticalAlignment="Center" Margin="5">
-                <Button x:Name="btnBack" Content="&lt;&lt; Back" Click="OnBackButtonClicked" Width="100" Height="30" Margin="0,5" ToolTip="Back to the previous prototype selected"/>
-                <Button x:Name="btnForward" Content="Forward >>" Click="OnForwardButtonClicked" Width="100" Height="30" Margin="0,5" ToolTip="Return to the last state before Back action"/>
-            </StackPanel>
-
-
-            <!-- Search fields -->
-            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <Button Width="24" Height="24" Margin="0 0 8 0" Background="Green" Foreground="White" Content="✕" Click="OnResetButtonClicked" ToolTip="Reset the search filters"/>
-
-                <!-- Search by text field -->
-                <StackPanel x:Name="SearchByTextField" Visibility="Visible" Orientation="Horizontal" Height="35" >
-                    <wpfcontrols:AutoCompleteTextBox x:Name="txtSearch" Watermark="Enter text" Width="500" FontSize="15" VerticalContentAlignment="Center" Background="White"/>
-                </StackPanel>
-
-                <!-- Search by class field -->
-                <StackPanel x:Name="SearchByClassField" Visibility="Collapsed" Orientation="Horizontal" Height="35" Background="White">
-                    <wpfcontrols:AutoCompleteTextBox x:Name="classAutoCompletionText" Watermark="Enter a class name" FontSize="15" Width="500" HorizontalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Search by blueprint field -->
-                <StackPanel x:Name="SearchByBlueprintField" Visibility="Collapsed" Orientation="Horizontal" Height="35" Background="White">
-                    <wpfcontrols:AutoCompleteTextBox x:Name="blueprintAutoCompletionText" Watermark="Enter a blueprint name" FontSize="15" Width="500" HorizontalAlignment="Center"/>
-                </StackPanel>
-                
-            </StackPanel>
-
-            <Grid Grid.Column="1" Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="100*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="40" />
-                    <RowDefinition Height="40" />
-                </Grid.RowDefinitions>
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <ComboBox x:Name="SearchTypeComboBox" Grid.Row="0" Margin="0,0,6,0" SelectionChanged="OnSearchTypeSelected" Width="140" >
-                        <ComboBoxItem Content="Search by text"/>
-                        <ComboBoxItem Content="Search by class"/>
-                        <ComboBoxItem Content="Search by blueprint"/>
-                    </ComboBox>
-
-                    <!-- Search by text toggles -->
-                    <StackPanel x:Name="SearchByTextToggles" Visibility="Visible" Grid.Column="2" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <CheckBox Grid.Row="0" x:Name="exactMatchToggle" Content="Exact" Margin="5" ToolTip="Ignore results that only contain the search" />
-                        <CheckBox Grid.Row="1" x:Name="referencesToggle" Content="Search References" Margin="5" ToolTip="Get all the results that reference the prototype" />
-                    </StackPanel>
-
-                    <!-- Search by class/blueprint toggle -->
-                    <StackPanel x:Name="SearchByClassAndBlueprintToggles" Visibility="Collapsed" Grid.Column="2" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <CheckBox Grid.Row="0" x:Name="abstractClassToggle" Content="Abstract" Margin="5" ToolTip="Include abstract classes" IsChecked="False"/>
-                        <CheckBox Grid.Row="1" x:Name="notApprovedClassToggle" Content="Not Approved" Margin="5" ToolTip="Include not approved classes" IsChecked="False"/>
-                    </StackPanel>
-
-                    <CheckBox Grid.Row="1" x:Name="expandResultToggle" Content="Expand results" Margin="5" ToolTip="Expand all the results" />
-                    <Button Grid.Row="0" x:Name="btnSearch" Content="Search" Click="OnSearchButtonClicked" Width="100"/>
-                </StackPanel>
-            </Grid>
-        </Grid>
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" MinWidth="300" MaxWidth="900" />
+                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
+            
+            <Button Grid.Column="0" Width="24" Height="24" Margin="0 0 8 0" Background="Green" Foreground="White" Content="✕" Click="OnResetButtonClicked" ToolTip="Reset the search filters"/>
 
-            <GridSplitter Grid.Row="0" Grid.Column="0" Width="6" Margin="0 6 0 6" Background="LightGray" />
+            <!-- Search by text field -->
+            <Grid Grid.Column="1" x:Name="SearchByTextField" Visibility="Visible" Height="35" >
+                <wpfcontrols:AutoCompleteTextBox x:Name="txtSearch" Watermark="Enter text" FontSize="15" Background="White"/>
+            </Grid>
 
-            <TreeView Name="treeView" Grid.Row="0" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5 5 8 5">
-                <TreeView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <src:MyVirtualizingStackPanel/>
-                    </ItemsPanelTemplate>
-                </TreeView.ItemsPanel>
+            <!-- Search by class field -->
+            <Grid Grid.Column="1" x:Name="SearchByClassField" Visibility="Collapsed" Height="35">
+                <wpfcontrols:AutoCompleteTextBox x:Name="classAutoCompletionText" Watermark="Enter a class name" FontSize="15" Background="White"/>
+            </Grid>
+
+            <!-- Search by blueprint field -->
+            <Grid Grid.Column="1" x:Name="SearchByBlueprintField" Visibility="Collapsed" Height="35" Background="White">
+                <wpfcontrols:AutoCompleteTextBox x:Name="blueprintAutoCompletionText" Watermark="Enter a blueprint name" FontSize="15" Background="White" />
+            </Grid>
+
+            <Button Grid.Column="2" x:Name="btnSearch" Content="Search" Margin="5" Click="OnSearchButtonClicked" Width="100"/>
+        </Grid>
+
+        <!-- Search options -->
+        <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" >
+            <ComboBox x:Name="SearchTypeComboBox" Grid.Row="0" Margin="0,0,6,0" SelectionChanged="OnSearchTypeSelected" Width="140" >
+                <ComboBoxItem Content="Search by text"/>
+                <ComboBoxItem Content="Search by class"/>
+                <ComboBoxItem Content="Search by blueprint"/>
+            </ComboBox>
+
+            <CheckBox Grid.Row="1" x:Name="expandResultToggle" Content="Expand results" Margin="5" ToolTip="Expand all the results" />
+
+            <!-- Search by text toggles -->
+            <StackPanel x:Name="SearchByTextToggles" Visibility="Visible" Grid.Column="2" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox Grid.Row="0" x:Name="exactMatchToggle" Content="Exact" Margin="5" ToolTip="Ignore results that only contain the search" />
+                <CheckBox Grid.Row="1" x:Name="referencesToggle" Content="Search References" Margin="5" ToolTip="Get all the results that reference the prototype" />
+            </StackPanel>
+
+            <!-- Search by class/blueprint toggle -->
+            <StackPanel x:Name="SearchByClassAndBlueprintToggles" Visibility="Collapsed" Grid.Column="2" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <CheckBox Grid.Row="0" x:Name="abstractClassToggle" Content="Abstract" Margin="5" ToolTip="Include abstract classes" IsChecked="False"/>
+                <CheckBox Grid.Row="1" x:Name="notApprovedClassToggle" Content="Not Approved" Margin="5" ToolTip="Include not approved classes" IsChecked="False"/>
+            </StackPanel>
+        </StackPanel>
+
+        <GridSplitter Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Width="6" Margin="0 6 0 6" Background="LightGray" />
+
+        <!-- Prototype Tree -->
+        <TreeView Name="treeView" Grid.Row="1" Grid.RowSpan="2" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5 5 8 5">
+            <TreeView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <src:MyVirtualizingStackPanel/>
+                </ItemsPanelTemplate>
+            </TreeView.ItemsPanel>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <src:MyVirtualizingStackPanel/>
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>               
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type models:PrototypeNode}" ItemsSource="{Binding Childs}">
+                    <TextBlock Text="{Binding PrototypeDetails.Name}" ContextMenu="{StaticResource PropertyContextMenu}" />
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+        
+        <!-- Loading Progress -->        
+        <StackPanel Orientation="Vertical" Width="300" Grid.Row="1" Grid.RowSpan="2">
+            <TextBlock x:Name="NoSipMessage" Text="The sip file cannot be found. Add it in bin folder and restart the app" 
+                        FontSize="20" TextWrapping="Wrap" HorizontalAlignment="Center" Visibility="Collapsed" Margin="30"></TextBlock>
+        </StackPanel>
+        <ProgressBar x:Name="progressBar" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
+
+        <!-- Selected Prototype -->
+        <Grid Grid.Row="2" Grid.Column="1" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="20" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock x:Name="txtDataRef" Grid.Row="0" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
+            <ContentControl MouseDoubleClick="OnPropertyDoubleClicked" Grid.Row="1">
+                <TextBlock x:Name="txtParentDataRef" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
+            </ContentControl>
+            <Separator Grid.Row="2" Height="5" Background="Black"/>
+            <TreeView Name="propertytreeView" Grid.Row="3" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
                         <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-                        <Setter Property="ItemsPanel">
-                            <Setter.Value>
-                                <ItemsPanelTemplate>
-                                    <src:MyVirtualizingStackPanel/>
-                                </ItemsPanelTemplate>
-                            </Setter.Value>
-                        </Setter>               
                     </Style>
                 </TreeView.ItemContainerStyle>
                 <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate DataType="{x:Type models:PrototypeNode}" ItemsSource="{Binding Childs}">
-                        <TextBlock Text="{Binding PrototypeDetails.Name}" ContextMenu="{StaticResource PropertyContextMenu}" />
+                    <HierarchicalDataTemplate DataType="{x:Type models:PropertyNode}" ItemsSource="{Binding Childs}">
+                        <TextBlock Text="{Binding PropertyDetails}" ContextMenu="{StaticResource PropertyContextMenu}" />
                     </HierarchicalDataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
-            <StackPanel Orientation="Vertical" Width="400">
-                <TextBlock x:Name="NoSipMessage" Text="The sip file cannot be found. Add it in bin folder and restart the app" 
-                           FontSize="20" TextWrapping="Wrap" HorizontalAlignment="Center" Visibility="Collapsed" Margin="30"></TextBlock>
-            </StackPanel>
-            <ProgressBar x:Name="progressBar" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Stretch" Height="20" Margin="20"/>
-
-            <Grid Grid.Row="2" Grid.Column="1" Margin="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="20" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <TextBlock x:Name="txtDataRef" Grid.Row="0" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
-                <ContentControl MouseDoubleClick="OnPropertyDoubleClicked" Grid.Row="1">
-                    <TextBlock x:Name="txtParentDataRef" VerticalAlignment="Center" ContextMenu="{StaticResource PropertyContextMenu}" />
-                </ContentControl>
-                <Separator Grid.Row="2" Height="5" Background="Black"/>
-                <TreeView Name="propertytreeView" Grid.Row="3" Grid.Column="0" TextOptions.TextFormattingMode="Display" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" Margin="5">
-                    <TreeView.ItemContainerStyle>
-                        <Style TargetType="TreeViewItem">
-                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
-                            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-                        </Style>
-                    </TreeView.ItemContainerStyle>
-                    <TreeView.ItemTemplate>
-                        <HierarchicalDataTemplate DataType="{x:Type models:PropertyNode}" ItemsSource="{Binding Childs}">
-                            <TextBlock Text="{Binding PropertyDetails}" ContextMenu="{StaticResource PropertyContextMenu}" />
-                        </HierarchicalDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
-            </Grid>
         </Grid>
     </Grid>
 </Window>
