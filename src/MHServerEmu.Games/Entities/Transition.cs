@@ -34,14 +34,6 @@ namespace MHServerEmu.Games.Entities
             // old
             var destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
-            if (destination == null) // HardCode fix for Exit Teleport
-            {
-                var region = settings.Cell.Region;
-                var targets = region.Targets;
-                if (targets.Count == 1)
-                    destination = Destination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
-            }
-
             if (destination != null)
                 _destinationList.Add(destination);
 
@@ -67,14 +59,14 @@ namespace MHServerEmu.Games.Entities
                 if (hotspot != null) hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transProto.Waypoint;
             }
 
-            /* TODO check this code in future
             if (transProto.Type == RegionTransitionType.Transition)
             {
                 var area = Area;
                 var entityRef = PrototypeDataRef;
                 var cellRef = Cell.PrototypeDataRef;
                 var region = Region;
-                if (_destinationList.Count == 0 && area.RandomInstances.Count > 0)
+                bool noDest = _destinationList.Count == 0;
+                if (noDest && area.RandomInstances.Count > 0)
                     foreach(var instance in area.RandomInstances)
                     {
                         var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
@@ -83,8 +75,32 @@ namespace MHServerEmu.Games.Entities
                         var destination = Destination.DestinationFromTarget(instance.Target, region, transProto);
                         if (destination == null) continue;
                         _destinationList.Add(destination);
+                        noDest = false;
                     }
-            }*/
+
+                if (noDest)
+                {
+                    // TODO destination from region origin target
+                    var targets = region.Targets;
+                    if (targets.Count == 1)
+                    {
+                        var destination = Destination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
+                        if (destination != null)
+                        {
+                            _destinationList.Add(destination);
+                            noDest = false;
+                        }
+                    }
+                }
+
+                // Get default region
+                if (noDest)
+                {
+                    var targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+                    var destination = Destination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                    if (destination != null) _destinationList.Add(destination);
+                }
+            }
 
             base.OnEnteredWorld(settings);
         }
