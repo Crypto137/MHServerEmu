@@ -71,13 +71,6 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             
             ActivateMission(missionRef);
 
-            MetaGame.RemoveSpawnEvent(PrototypeDataRef);
-            
-            var popManager = region.PopulationManager;
-            popManager.DespawnSpawnGroups(missionRef);
-            popManager.ResetEncounterSpawnPhase(missionRef);
-            
-
             var spawnEvent = MetaGame.GetSpawnEvent(PrototypeDataRef);
             if (spawnEvent == null) return;
 
