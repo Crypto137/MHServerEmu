@@ -6,7 +6,7 @@ The following instructions are intended for stable builds of the server. If you 
 
 1. Get a copy of version `1.52.0.1700` of the game client. This is the final released version of Marvel Heroes, so if you still have the game in your Steam library, you can download it from there. If you do not have the game in your Steam library, you may be able to find an archived copy of it on websites like Archive.org.
 
-2. Install .NET Desktop Runtime 6 if you do not have it installed already. You can download it [here](https://dotnet.microsoft.com/en-us/download/dotnet/6.0). Download [this version](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-6.0.33-windows-x64-installer) if you are not sure which one to get.
+2. Install .NET Desktop Runtime 6 if you do not have it installed already. You can download it [here](https://dotnet.microsoft.com/en-us/download/dotnet/6.0). Download [this version](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.33-windows-x64-installer) if you are not sure which one to get.
 
 3. Download the latest [MHServerEmu stable build](https://github.com/Crypto137/MHServerEmu/releases/latest) and extract it.
 

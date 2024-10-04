@@ -152,7 +152,7 @@ namespace MHServerEmu
                     writer.WriteLine($"{VersionInfo}\n");
                     writer.WriteLine($"Local Server Time: {now:yyyy.MM.dd HH:mm:ss.fff}\n");
                     writer.WriteLine($"Exception:\n{exception}\n");
-                    writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus()}\n");
+                    writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");
                 }
 
                 Logger.FatalException(exception, $"MHServerEmu terminating because of unhandled exception, report saved to {crashReportFilePath}");

@@ -335,21 +335,32 @@ namespace MHServerEmu.Games
                 timesUpdated++;
 
                 _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - stepStartTime;
-                MetricsManager.Instance.RecordFixedUpdateTime(Id, _lastFixedTimeUpdateProcessTime);
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameTime, _lastFixedTimeUpdateProcessTime);
 
                 if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
-                    Logger.Warn($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+                    Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
 
                 // Bail out if we have fallen behind more exceeded frame budget
                 if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
                     break;
             }
 
-            // Skip time if we have fallen behind
-            _currentGameTime = RealGameTime;
-
+            // Track catch-up frames
             if (timesUpdated > 1)
-                Logger.Warn($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
+            {
+                Logger.Trace($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.CatchUpFrames, timesUpdated - 1);
+            }
+
+            // Skip time if we have fallen behind
+            TimeSpan timeSkip = RealGameTime - _currentGameTime;
+            if (timeSkip != TimeSpan.Zero)
+            {
+                Logger.Trace($"UpdateFixedTime(): Taking too long to catch up, skipping {timeSkip.TotalMilliseconds} ms");
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.TimeSkip, timeSkip);
+            }
+
+            _currentGameTime = RealGameTime;
         }
 
         private void DoFixedTimeUpdate()
@@ -416,7 +427,7 @@ namespace MHServerEmu.Games
                     writer.WriteLine($"{kvp.Key} x{kvp.Value}");
                 writer.WriteLine();
 
-                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus()}\n");
+                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");
             }
 
             Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");

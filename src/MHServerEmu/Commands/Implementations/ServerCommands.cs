@@ -21,7 +21,7 @@ namespace MHServerEmu.Commands.Implementations
             StringBuilder sb = new();
             sb.AppendLine("Server Status");
             sb.AppendLine(ServerApp.VersionInfo);
-            sb.Append(ServerManager.Instance.GetServerStatus());
+            sb.Append(ServerManager.Instance.GetServerStatus(client == null));
             string status = sb.ToString();
 
             // Display in the console as is
