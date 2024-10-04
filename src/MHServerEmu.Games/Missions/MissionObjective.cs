@@ -454,12 +454,8 @@ namespace MHServerEmu.Games.Missions
             _interactedEntityList.Clear();
             CancelTimeLimitEvent();
 
-            bool removeWidget = true;
-            if (newState == MissionObjectiveState.Completed) 
-                if (Mission.GetWidgetCompletionCount(objetiveProto.MetaGameWidget, out int currentCount, out int requiredCount, false))
-                    removeWidget = currentCount == requiredCount;
-
-            if (removeWidget) RemoveMetaGameWidgets(); 
+            if (NoBossWidget(objetiveProto.MetaGameWidget, newState)) // HardFix for BossWidget
+                RemoveMetaGameWidgets(); 
 
             var region = Region;
             if (region != null)
@@ -467,6 +463,18 @@ namespace MHServerEmu.Games.Missions
                 _successConditions?.UnRegisterEvents(region);
                 _failureConditions?.UnRegisterEvents(region);
             }
+
+            return true;
+        }
+
+        private bool NoBossWidget(PrototypeId widgetRef, MissionObjectiveState newState)
+        {
+            if (widgetRef == PrototypeId.Invalid || newState != MissionObjectiveState.Completed) return true;
+            // Fix TargetsSupervillains TargetsSupervillains
+            if (widgetRef != (PrototypeId)10568534331900497465 && widgetRef != (PrototypeId)8489091020826284347) return true;
+
+            if (Mission.GetWidgetCompletionCount(widgetRef, out int currentCount, out int requiredCount, false))
+                return currentCount == requiredCount;
 
             return true;
         }
