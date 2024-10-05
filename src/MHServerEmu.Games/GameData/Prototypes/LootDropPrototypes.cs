@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -125,12 +126,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): {Type.GetName()}");
-            return LootRollResult.NoRoll;
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (Type == CurveId.Invalid)
+                return result;
+
+            int level = resolver.ResolveLevel(settings.Level, settings.UseLevelVerbatim);
+            Curve curve = CurveDirectory.Instance.GetCurve(Type);
+            
+            int amount = curve.GetIntAt(level);
+            amount = resolver.Random.Next(amount, amount * 3 / 2 + 1);
+
+            result = resolver.PushCredits(amount);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 

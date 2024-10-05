@@ -94,6 +94,12 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.NoRoll;
         }
 
+        public LootRollResult PushCredits(int amount)
+        {
+            Logger.Debug($"PushCredits(): {amount}");
+            return LootRollResult.NoRoll;
+        }
+
         public void PushLootNodeCallback()
         {
             Logger.Debug($"PushLootNodeCallback()");
