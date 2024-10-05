@@ -10,10 +10,79 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Agent { get; protected set; }
 
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (Agent != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsAbstract(Agent))
+                Agent = PrototypeId.Invalid;
+        }
+
+        public static LootRollResult RollAgent(WorldEntityPrototype agentProto, int numAgents, LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (numAgents < 1)
+                return result;
+
+            switch (resolver.LootContext)
+            {
+                case LootContext.AchievementReward:
+                case LootContext.LeaderboardReward:
+                case LootContext.Drop:
+                case LootContext.MissionReward:
+                    break;
+
+                default:
+                    return LootRollResult.Failure;
+            }
+
+            RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) || settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown))
+                restrictionFlags &= ~RestrictionTestFlags.Cooldown;
+
+            if (agentProto.IsCurrency)
+            {
+                for (int i = 0; i < numAgents; i++)
+                {
+                    result |= resolver.PushCurrency(agentProto, null, restrictionFlags, settings.DropChanceModifiers, 1);
+                    if (result.HasFlag(LootRollResult.Failure))
+                    {
+                        resolver.ClearPending();
+                        return LootRollResult.Failure;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < numAgents; i++)
+                {
+                    int level = resolver.ResolveLevel(settings.Level, true);
+                    result |= resolver.PushAgent(agentProto.DataRef, level, restrictionFlags);
+                    if (result.HasFlag(LootRollResult.Failure))
+                    {
+                        resolver.ClearPending();
+                        return LootRollResult.Failure;
+                    }
+                }
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            // TODO (overriding this to reduce log spam)
-            return LootRollResult.NoRoll;
+            if (Agent == PrototypeId.Invalid)
+                return LootRollResult.NoRoll;
+
+            WorldEntityPrototype agentProto = Agent.As<WorldEntityPrototype>();
+            int numAgents = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
+
+            return RollAgent(agentProto, numAgents, settings, resolver);
         }
     }
 
@@ -58,7 +127,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Item == PrototypeId.Invalid)
                 return LootRollResult.NoRoll;
 
-            int numItems = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax);
+            int numItems = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
 
             return RollItem(Item.As<ItemPrototype>(), numItems, settings, resolver, Mutations);
         }

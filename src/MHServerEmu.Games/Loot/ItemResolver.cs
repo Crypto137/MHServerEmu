@@ -84,7 +84,13 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             LootDropChanceModifiers dropChanceModifiers, int stackCount)
         {
-            //Logger.Debug($"PushCurrency(): {worldEntityProto}");
+            Logger.Debug($"PushCurrency(): {worldEntityProto} filters=[{restrictionFlags}] mods=[{dropChanceModifiers}]");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionTestFlags)
+        {
+            Logger.Debug($"PushAgent(): {agentProtoRef.GetName()} [{restrictionTestFlags}]");
             return LootRollResult.NoRoll;
         }
 

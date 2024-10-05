@@ -20,6 +20,7 @@ namespace MHServerEmu.Games.Loot
             int stackCount, IEnumerable<LootMutationPrototype> mutations);
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs,
             RestrictionTestFlags restrictionFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
+        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags);
 
         public void PushLootNodeCallback();
         public void PushCraftingCallback();
