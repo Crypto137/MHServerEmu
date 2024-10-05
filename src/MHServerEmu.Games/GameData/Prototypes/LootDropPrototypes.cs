@@ -91,17 +91,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CharacterTokenType AllowedTokenType { get; protected set; }
         public CharacterFilterType FilterType { get; protected set; }
         public LootNodePrototype OnTokenUnavailable { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): AllowedTokenType={AllowedTokenType}, FilterType={FilterType}");
+            return base.Roll(settings, resolver);
+        }
     }
 
     public class LootDropClonePrototype : LootNodePrototype
     {
         public LootMutationPrototype[] Mutations { get; protected set; }
         public short SourceIndex { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll()");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropCreditsPrototype : LootNodePrototype
     {
         public CurveId Type { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): {Type.GetName()}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropItemPrototype : LootDropPrototype
@@ -220,6 +250,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootDropXPPrototype : LootNodePrototype
     {
         public CurveId XPCurve { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): {XPCurve.GetName()}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropRealMoneyPrototype : LootDropPrototype
@@ -231,33 +271,94 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootDropBannerMessagePrototype : LootNodePrototype
     {
         public PrototypeId BannerMessage { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): {BannerMessage.GetName()}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropUsePowerPrototype : LootNodePrototype
     {
         public PrototypeId Power { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): {Power.GetName()}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropPlayVisualEffectPrototype : LootNodePrototype
     {
         public AssetId RecipientVisualEffect { get; protected set; }
         public AssetId DropperVisualEffect { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropChatMessagePrototype : LootNodePrototype
     {
         public LocaleStringId ChatMessage { get; protected set; }
         public PlayerScope MessageScope { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): ChatMessage={ChatMessage}, MessageScope={MessageScope}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropVanityTitlePrototype : LootNodePrototype
     {
         public PrototypeId VanityTitle { get; protected set; }
+
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): {VanityTitle.GetName()}");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropVendorXPPrototype : LootNodePrototype
     {
         public PrototypeId Vendor { get; protected set; }
         public int XP { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): {Vendor.GetName()} - {XP}");
+            return LootRollResult.NoRoll;
+        }
     }
 }
