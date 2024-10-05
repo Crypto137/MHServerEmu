@@ -53,6 +53,13 @@ namespace MHServerEmu.Games
         private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
         private int _frameCount;
 
+        // Temp: fixed time update profiling times
+        private TimeSpan _triggerEventsTime;
+        private TimeSpan _locomoteEntitiesTime;
+        private TimeSpan _physicsResolveEntitiesTime;
+        private TimeSpan _processDeferredListsTime;
+        private TimeSpan _sendAllPendingMessagesTime;
+
         private int _liveTuningChangeNum;
 
         private Thread _gameThread;
@@ -335,7 +342,15 @@ namespace MHServerEmu.Games
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameTime, _lastFixedTimeUpdateProcessTime);
 
                 if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
+                {
                     Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+                    Logger.Debug("Detailed Frame Time:\n" +
+                        $"\tTriggerEvents: {_triggerEventsTime.TotalMilliseconds} ms\n" +
+                        $"\tLocomoteEntities: {_locomoteEntitiesTime.TotalMilliseconds} ms\n" +
+                        $"\tPhysicsResolveEntities: {_physicsResolveEntitiesTime.TotalMilliseconds} ms\n" +
+                        $"\tProcessDeferredLists: {_processDeferredListsTime.TotalMilliseconds} ms\n" +
+                        $"\tSendAllPendingMessage: {_sendAllPendingMessagesTime.TotalMilliseconds} ms");
+                }
 
                 // Bail out if we have fallen behind more exceeded frame budget
                 if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
@@ -362,15 +377,28 @@ namespace MHServerEmu.Games
 
         private void DoFixedTimeUpdate()
         {
-            GameEventScheduler.TriggerEvents(_currentGameTime);
+            TimeSpan referenceTime;
 
-            // Re-enable locomotion and physics when we get rid of multithreading issues
+            referenceTime = _gameTimer.Elapsed;
+            GameEventScheduler.TriggerEvents(_currentGameTime);
+            _triggerEventsTime = _gameTimer.Elapsed - referenceTime;
+
+            referenceTime = _gameTimer.Elapsed;
             EntityManager.LocomoteEntities();
+            _locomoteEntitiesTime = _gameTimer.Elapsed - referenceTime;
+
+            referenceTime = _gameTimer.Elapsed;
             EntityManager.PhysicsResolveEntities();
+            _physicsResolveEntitiesTime = _gameTimer.Elapsed - referenceTime;
+
+            referenceTime = _gameTimer.Elapsed;
             EntityManager.ProcessDeferredLists();
+            _processDeferredListsTime = _gameTimer.Elapsed - referenceTime;
 
             // Send responses to all clients
+            referenceTime = _gameTimer.Elapsed;            
             NetworkManager.SendAllPendingMessages();
+            _sendAllPendingMessagesTime = _gameTimer.Elapsed - referenceTime;
         }
 
         private void UpdateLiveTuning()
