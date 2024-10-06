@@ -2231,7 +2231,7 @@ namespace MHServerEmu.Games.Missions
 
         private bool ScheduleRestartMission()
         {            
-            if (RestartingMission && _restartMissionEvent.IsValid == false)
+            if (RestartingMission == false && _restartMissionEvent.IsValid == false)
             {
                 var scheduler = GameEventScheduler;
                 if (scheduler == null) return false;
