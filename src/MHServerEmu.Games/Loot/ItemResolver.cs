@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Loot
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
-            _pendingItemList.Add(new(itemSpec, filterArgs.RollFor));
+            _pendingItemList.Add(new(new(itemSpec), filterArgs.RollFor));
 
             return LootRollResult.Success;
         }
@@ -93,8 +93,9 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushCredits(int amount)
         {
-            Logger.Debug($"PushCredits(): {amount}");
-            return LootRollResult.NoRoll;
+            // TODO: Credits bonuses
+            _pendingItemList.Add(new(new(LootType.Credits, amount)));
+            return LootRollResult.Success;
         }
 
         public void PushLootNodeCallback()
@@ -227,15 +228,24 @@ namespace MHServerEmu.Games.Loot
         {
             foreach (PendingItem pendingItem in _pendingItemList)
             {
-                using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
-                LootCloneRecord.Initialize(args, LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                // Non-item loot does not need additional processing
+                if (pendingItem.LootResult.Type != LootType.Item)
+                {
+                    _processedItemList.Add(pendingItem.LootResult);
+                    continue;
+                }
 
-                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+                ItemSpec itemSpec = pendingItem.LootResult.ItemSpec;
+
+                using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                LootCloneRecord.Initialize(args, LootContext, itemSpec, pendingItem.RollFor);
+
+                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, itemSpec, settings);
 
                 if (result.HasFlag(MutationResults.Error))
                     Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
 
-                _processedItemList.Add(new(pendingItem.ItemSpec));
+                _processedItemList.Add(new(itemSpec));
             }
 
             _pendingItemList.Clear();
@@ -250,12 +260,18 @@ namespace MHServerEmu.Games.Loot
 
         private readonly struct PendingItem
         {
-            public ItemSpec ItemSpec { get; }
+            public LootResult LootResult { get; }
             public PrototypeId RollFor { get; }
 
-            public PendingItem(ItemSpec itemSpec, PrototypeId rollFor)
+            public PendingItem(in LootResult lootResult)
             {
-                ItemSpec = itemSpec;
+                LootResult = lootResult;
+                RollFor = PrototypeId.Invalid;
+            }
+
+            public PendingItem(in LootResult lootResult, PrototypeId rollFor)
+            {
+                LootResult = lootResult;
                 RollFor = rollFor;
             }
         }
