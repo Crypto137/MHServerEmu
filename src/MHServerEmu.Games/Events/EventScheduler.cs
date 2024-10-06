@@ -134,8 +134,8 @@ namespace MHServerEmu.Games.Events
                         @event.OnTriggered();
                         TimeSpan triggerTime = _stopwatch.Elapsed - referenceTime;
 
-                        if (triggerTime >= EventTriggerTimeLogThreshold)
-                            Logger.Debug($"{@event.GetType().Name} took {(_stopwatch.Elapsed - referenceTime).TotalMilliseconds} ms");
+                        if (triggerTime >= _quantumSize)
+                            Logger.Warn($"{@event.GetType().Name} took {(_stopwatch.Elapsed - referenceTime).TotalMilliseconds} ms");
 
                         if (++numEvents > MaxEventsPerUpdate)
                             throw new Exception($"Infinite loop detected in EventScheduler.");
