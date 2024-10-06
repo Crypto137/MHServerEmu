@@ -975,6 +975,11 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
+        public void RunCompleted()
+        {
+            if (State == MissionState.Completed) _onSuccessActions?.Run(true);
+        }
+
         private bool OnUnsetStateCompleted()
         {
             var missionProto = Prototype;

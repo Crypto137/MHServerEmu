@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames.GameModes;
 using MHServerEmu.Games.MetaGames.MetaStates;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
@@ -527,6 +528,19 @@ namespace MHServerEmu.Games.MetaGames
                 if (Debug) Logger.Info($"OnEntityEnteredWorld for {avatar.PrototypeName}");
                 var player = avatar.GetOwnerOfType<Player>();
                 if (player != null) AddPlayer(player);
+
+                // HARDFix for TrainingRoom
+                if (PrototypeDataRef == (PrototypeId)11068099654406640132) // TrainingRoom
+                {
+                    var manager = player.MissionManager;
+                    var mission = manager.FindMissionByDataRef((PrototypeId)3126128604301631533); // CH00TrainingPathingController
+                    mission.RunCompleted(); 
+                    mission = manager.FindMissionByDataRef((PrototypeId)15270503549571702218); // CH00NPEEternitySplinter
+                    mission.RunCompleted();
+                    mission = manager.FindMissionByDataRef((PrototypeId)17508547083537161214); // CH00NPETrainingRoom
+                    if (mission.State == MissionState.Completed)
+                        Region.PopulationManager.DespawnSpawnGroups((PrototypeId)17508547083537161214); 
+                }
             }
         }
 
