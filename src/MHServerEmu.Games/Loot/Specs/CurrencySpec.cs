@@ -3,13 +3,13 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
-namespace MHServerEmu.Games.Entities.Items
+namespace MHServerEmu.Games.Loot.Specs
 {
-    public class CurrencySpec       // This class looks pretty struct-y
+    public readonly struct CurrencySpec
     {
-        private PrototypeId _agentOrItemProtoRef;
-        private PrototypeId _currencyRef;
-        private int _amount;
+        private readonly PrototypeId _agentOrItemProtoRef;
+        private readonly PrototypeId _currencyRef;
+        private readonly int _amount;
 
         public bool IsAgent { get => _agentOrItemProtoRef != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsA<AgentPrototype>(_agentOrItemProtoRef); }
         public bool IsItem { get => _agentOrItemProtoRef != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(_agentOrItemProtoRef); }
@@ -39,10 +39,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public override string ToString()
         {
-            return string.Format("{0}={1}, {2}={3}, {4}={5}",
-                nameof(_agentOrItemProtoRef), GameDatabase.GetPrototypeName(_agentOrItemProtoRef),
-                nameof(_currencyRef), GameDatabase.GetFormattedPrototypeName(_currencyRef),
-                nameof(_amount), _amount);
+            return $"agentOrItemProtoRef={_agentOrItemProtoRef.GetName()}, currencyRef={_currencyRef.GetNameFormatted()}, amount={_amount}";
         }
 
         public void ApplyCurrency(PropertyCollection properties)

@@ -3,20 +3,23 @@ using Gazillion;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot.Specs;
 
 namespace MHServerEmu.Games.Loot
 {
     public class LootResultSummary
     {
-        public LootTypes Types { get; set; }
+        public LootType Types { get; set; }
         public List<AgentSpec> AgentSpecs { get; private set; } = new();
         public List<int> Credits { get; private set; } = new();
-        public uint EnduranceBonus { get; private set; }
-        public uint Experience { get; private set; }
-        public uint HealthBonus { get; private set; }
+        public int EnduranceBonus { get; private set; }
+        public int Experience { get; private set; }
+        public int HealthBonus { get; private set; }
         public List<ItemSpec> ItemSpecs { get; set; } = new();
-        public uint RealMoney { get; private set; }
-        public bool LootResult { get => Types != LootTypes.None; }
+        public int RealMoney { get; private set; }
+
+        public bool LootResult { get => Types != LootType.None; }
+
         public List<LootNodePrototype> CallbackNodes { get; private set; } = new();
         public List<PrototypeId> VanityTitles { get; private set; } = new();
         public List<VendorXPSummary> Vendors { get; private set; } = new();
@@ -25,85 +28,76 @@ namespace MHServerEmu.Games.Loot
 
         public NetStructLootResultSummary ToProtobuf()
         {
-            var message = NetStructLootResultSummary.CreateBuilder();
+            var builder = NetStructLootResultSummary.CreateBuilder();
 
-            if (Types.HasFlag(LootTypes.Agent))
-                foreach (var agentSpec in AgentSpecs)
-                    message.AddAgents(agentSpec.ToProtobuf());
+            if (Types.HasFlag(LootType.Agent))
+            {
+                foreach (AgentSpec agentSpec in AgentSpecs)
+                    builder.AddAgents(agentSpec.ToProtobuf());
+            }
 
-            if (Types.HasFlag(LootTypes.Credits))
-                foreach (var creditsAmount in Credits)
-                    message.AddCredits(creditsAmount);
+            if (Types.HasFlag(LootType.Credits))
+            {
+                foreach (int creditsAmount in Credits)
+                    builder.AddCredits(creditsAmount);
+            }
 
-            if (Types.HasFlag(LootTypes.EnduranceBonus)) message.SetEnduranceBonus(EnduranceBonus);
-            if (Types.HasFlag(LootTypes.Experience)) message.SetEnduranceBonus(Experience);
-            if (Types.HasFlag(LootTypes.HealthBonus)) message.SetEnduranceBonus(HealthBonus);
+            if (Types.HasFlag(LootType.EnduranceBonus))
+                builder.SetEnduranceBonus((uint)EnduranceBonus);
 
-            if (Types.HasFlag(LootTypes.Item))
-                foreach (var itemSpec in ItemSpecs)
-                    message.AddItems(itemSpec.ToStackProtobuf());
+            if (Types.HasFlag(LootType.Experience))
+                builder.SetEnduranceBonus((uint)Experience);
 
-            if (Types.HasFlag(LootTypes.RealMoney)) message.SetEnduranceBonus(RealMoney);
+            if (Types.HasFlag(LootType.HealthBonus))
+                builder.SetEnduranceBonus((uint)HealthBonus);
 
-            if (Types.HasFlag(LootTypes.CallbackNode))
-                foreach (var callbackNode in CallbackNodes)
-                    message.AddCallbackNodes((ulong)callbackNode.DataRef);
+            if (Types.HasFlag(LootType.Item))
+            {
+                foreach (ItemSpec itemSpec in ItemSpecs)
+                    builder.AddItems(itemSpec.ToStackProtobuf());
+            }
 
-            if (Types.HasFlag(LootTypes.VanityTitle))
-                foreach (var protoRef in VanityTitles)
-                    message.AddProtorefs((ulong)protoRef);
+            if (Types.HasFlag(LootType.RealMoney))
+                builder.SetEnduranceBonus((uint)RealMoney);
 
-            if (Types.HasFlag(LootTypes.VendorXP))
-                foreach (var vendor in Vendors)
-                    message.AddVendorxp(vendor.ToProtobuf());
+            if (Types.HasFlag(LootType.CallbackNode))
+            {
+                foreach (LootNodePrototype callbackNode in CallbackNodes)
+                    builder.AddCallbackNodes((ulong)callbackNode.DataRef);
+            }
 
-            if (Types.HasFlag(LootTypes.Currency))
-                foreach (var currency in Currencies)
-                    message.AddCurrencies(currency.ToProtobuf());
+            if (Types.HasFlag(LootType.VanityTitle))
+            {
+                foreach (PrototypeId protoRef in VanityTitles)
+                    builder.AddProtorefs((ulong)protoRef);
+            }
 
-            if (Types.HasFlag(LootTypes.PowerPoints)) message.SetPowerPoints(PowerPoints);
+            if (Types.HasFlag(LootType.VendorXP))
+            {
+                foreach (VendorXPSummary vendorXP in Vendors)
+                    builder.AddVendorxp(vendorXP.ToProtobuf());
+            }
 
-            return message.Build();
+            if (Types.HasFlag(LootType.Currency))
+            {
+                foreach (CurrencySpec currency in Currencies)
+                    builder.AddCurrencies(currency.ToProtobuf());
+            }
+
+            if (Types.HasFlag(LootType.PowerPoints))
+                builder.SetPowerPoints(PowerPoints);
+
+            return builder.Build();
         }
 
         public override string ToString()
         {
             StringBuilder sb = new();
 
-            if (Types.HasFlag(LootTypes.Item))
+            if (Types.HasFlag(LootType.Item))
                 sb.AppendLine($"Item {ItemSpecs[0].ItemProtoRef.GetNameFormatted()} [{ItemSpecs.Count}]");
 
             return sb.ToString();
-        }
-    }
-
-    public struct VendorXPSummary
-    {
-        public ulong VendorProtoRef;
-        public uint XpAmount;
-
-        public NetStructVendorXPSummary ToProtobuf()
-        {
-            return NetStructVendorXPSummary.CreateBuilder()
-                .SetVendorProtoRef(VendorProtoRef)
-                .SetXpAmount(XpAmount)
-                .Build();
-        }
-    }
-
-    public struct AgentSpec
-    {
-        public uint AgentLevel;
-        public uint CreditsAmount;
-        public PrototypeId AgentProtoRef;
-
-        public NetStructAgentSpec ToProtobuf()
-        {
-            return NetStructAgentSpec.CreateBuilder()
-                .SetAgentLevel(AgentLevel)
-                .SetCreditsAmount(CreditsAmount)
-                .SetAgentProtoRef((ulong)AgentProtoRef)
-                .Build();
         }
     }
 }

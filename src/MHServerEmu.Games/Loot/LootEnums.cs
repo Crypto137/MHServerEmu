@@ -210,7 +210,7 @@ namespace MHServerEmu.Games.Loot
     }
 
     [Flags]
-    public enum LootTypes
+    public enum LootType
     {
         None            = 0,
         PowerPoints     = 1 << 0,

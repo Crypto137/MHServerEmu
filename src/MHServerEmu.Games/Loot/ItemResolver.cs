@@ -250,7 +250,7 @@ namespace MHServerEmu.Games.Loot
             // TODO other types
             if (ProcessedItemCount > 0)
             {
-                lootSummary.Types |= LootTypes.Item;
+                lootSummary.Types |= LootType.Item;
                 foreach (ItemSpec itemSpec in _processedItemList)
                     lootSummary.ItemSpecs.Add(itemSpec);
             }
