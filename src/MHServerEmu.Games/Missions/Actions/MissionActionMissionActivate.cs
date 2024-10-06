@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Missions.Actions
             {
                 var missionState = mission.State;
                 if (missionState == MissionState.Completed || missionState == MissionState.Failed)
-                    mission.RestartMission();
+                    if (mission.RestartMission() == false) return;
             }
 
             missionManager.ActivateMission(missionProtoRef);
