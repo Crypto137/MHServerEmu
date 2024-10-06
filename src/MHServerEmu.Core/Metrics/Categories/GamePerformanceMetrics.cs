@@ -33,7 +33,14 @@ namespace MHServerEmu.Core.Metrics.Categories
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly TimeTracker _frameTimeTracker = new(1024);    // At 20 FPS this gives us about 51.2 seconds of data
+        // At 20 FPS this gives us about 51.2 seconds of data
+        private readonly TimeTracker _frameTimeTracker = new(1024);
+        private readonly TimeTracker _frameTriggerEventsTimeTracker = new(1024);
+        private readonly TimeTracker _frameLocomoteEntitiesTimeTracker = new(1024);
+        private readonly TimeTracker _framePhysicsResolveEntitiesTimeTracker = new(1024);
+        private readonly TimeTracker _frameProcessDeferredListsTimeTracker = new(1024);
+        private readonly TimeTracker _frameSendAllPendingMessagesTime = new(1024);
+
         private readonly FloatTracker _catchUpFrameCountTracker = new(1024);
         private readonly TimeTracker _timeSkipTracker = new(1024);
 
@@ -56,6 +63,26 @@ namespace MHServerEmu.Core.Metrics.Categories
             {
                 case GamePerformanceMetricEnum.FrameTime:
                     _frameTimeTracker.Track(metricValue.TimeValue);
+                    break;
+
+                case GamePerformanceMetricEnum.FrameTriggerEventsTime:
+                    _frameTriggerEventsTimeTracker.Track(metricValue.TimeValue);
+                    break;
+
+                case GamePerformanceMetricEnum.FrameLocomoteEntitiesTime:
+                    _frameLocomoteEntitiesTimeTracker.Track(metricValue.TimeValue);
+                    break;
+
+                case GamePerformanceMetricEnum.FramePhysicsResolveEntitiesTime:
+                    _framePhysicsResolveEntitiesTimeTracker.Track(metricValue.TimeValue);
+                    break;
+
+                case GamePerformanceMetricEnum.FrameProcessDeferredListsTime:
+                    _frameProcessDeferredListsTimeTracker.Track(metricValue.TimeValue);
+                    break;
+
+                case GamePerformanceMetricEnum.FrameSendAllPendingMessagesTime:
+                    _frameSendAllPendingMessagesTime.Track(metricValue.TimeValue);
                     break;
 
                 case GamePerformanceMetricEnum.CatchUpFrames:
@@ -92,6 +119,11 @@ namespace MHServerEmu.Core.Metrics.Categories
         public readonly struct Report
         {
             public ReportTimeEntry FrameTime { get; }
+            public ReportTimeEntry FrameTriggerEventsTime { get; }
+            public ReportTimeEntry FrameLocomoteEntitiesTime { get; }
+            public ReportTimeEntry FramePhysicsResolveEntitiesTime { get; }
+            public ReportTimeEntry FrameProcessDeferredListsTime { get; }
+            public ReportTimeEntry FrameSendAllPendingMessagesTime { get; }
             public ReportFloatEntry CatchUpFrames { get; }
             public ReportTimeEntry TimeSkip { get; }
             public ReportFloatEntry ScheduledEventsPerUpdate { get; }
@@ -101,6 +133,11 @@ namespace MHServerEmu.Core.Metrics.Categories
             public Report(GamePerformanceMetrics metrics)
             {
                 FrameTime = metrics._frameTimeTracker.AsReportEntry();
+                FrameTriggerEventsTime = metrics._frameTriggerEventsTimeTracker.AsReportEntry();
+                FrameLocomoteEntitiesTime = metrics._frameLocomoteEntitiesTimeTracker.AsReportEntry();
+                FramePhysicsResolveEntitiesTime = metrics._framePhysicsResolveEntitiesTimeTracker.AsReportEntry();
+                FrameProcessDeferredListsTime = metrics._frameProcessDeferredListsTimeTracker.AsReportEntry();
+                FrameSendAllPendingMessagesTime = metrics._frameSendAllPendingMessagesTime.AsReportEntry();
                 CatchUpFrames = metrics._catchUpFrameCountTracker.AsReportEntry();
                 TimeSkip = metrics._timeSkipTracker.AsReportEntry();
                 ScheduledEventsPerUpdate = metrics._scheduledEventsPerUpdateTracker.AsReportEntry();
@@ -112,6 +149,11 @@ namespace MHServerEmu.Core.Metrics.Categories
             {
                 StringBuilder sb = new();
                 sb.AppendLine($"{nameof(FrameTime)}: {FrameTime}");
+                sb.AppendLine($"{nameof(FrameTriggerEventsTime)}: {FrameTriggerEventsTime}");
+                sb.AppendLine($"{nameof(FrameLocomoteEntitiesTime)}: {FrameLocomoteEntitiesTime}");
+                sb.AppendLine($"{nameof(FramePhysicsResolveEntitiesTime)}: {FramePhysicsResolveEntitiesTime}");
+                sb.AppendLine($"{nameof(FrameProcessDeferredListsTime)}: {FrameProcessDeferredListsTime}");
+                sb.AppendLine($"{nameof(FrameSendAllPendingMessagesTime)}: {FrameSendAllPendingMessagesTime}");
                 sb.AppendLine($"{nameof(CatchUpFrames)}: {CatchUpFrames}");
                 sb.AppendLine($"{nameof(TimeSkip)}: {TimeSkip}");
                 sb.AppendLine($"{nameof(ScheduledEventsPerUpdate)}: {ScheduledEventsPerUpdate}");

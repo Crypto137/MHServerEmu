@@ -10,6 +10,11 @@
     {
         Invalid,
         FrameTime,
+        FrameTriggerEventsTime,
+        FrameLocomoteEntitiesTime,
+        FramePhysicsResolveEntitiesTime,
+        FrameProcessDeferredListsTime,
+        FrameSendAllPendingMessagesTime,
         CatchUpFrames,
         TimeSkip,
         ScheduledEventsPerUpdate,

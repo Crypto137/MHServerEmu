@@ -201,6 +201,7 @@ namespace MHServerEmu.Core.Network.Tcp
                 {
                     // Wait for a connection
                     Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
+                    socket.SendTimeout = 10000;
 
                     // Establish a new client connection
                     TcpClientConnection connection = new(this, socket);
