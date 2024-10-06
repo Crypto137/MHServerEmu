@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -7,24 +9,42 @@ using MHServerEmu.Games.Loot.Specs;
 
 namespace MHServerEmu.Games.Loot
 {
-    public class LootResultSummary
+    /// <summary>
+    /// A collection of data accumulated from various <see cref="Loot.LootResult"/> instances.
+    /// </summary>
+    public class LootResultSummary : IPoolable, IDisposable
     {
-        public LootType Types { get; set; }
-        public List<AgentSpec> AgentSpecs { get; private set; } = new();
-        public List<int> Credits { get; private set; } = new();
-        public int EnduranceBonus { get; private set; }
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public LootType Types { get; private set; }
+        public bool HasAnyResult { get => Types != LootType.None; }
+
+        public List<ItemSpec> ItemSpecs { get; } = new();
+        public List<AgentSpec> AgentSpecs { get; } = new();
+        public List<int> Credits { get; } = new();
         public int Experience { get; private set; }
+        public int PowerPoints { get; private set; }
         public int HealthBonus { get; private set; }
-        public List<ItemSpec> ItemSpecs { get; set; } = new();
+        public int EnduranceBonus { get; private set; }
         public int RealMoney { get; private set; }
+        public List<LootNodePrototype> CallbackNodes { get; } = new();
+        public List<PrototypeId> VanityTitles { get; } = new();
+        public List<VendorXPSummary> VendorXP { get; } = new();
+        public List<CurrencySpec> Currencies { get; } = new();
 
-        public bool LootResult { get => Types != LootType.None; }
+        public void Add(in LootResult lootResult)
+        {
+            switch (lootResult.Type)
+            {
+                case LootType.Item:
+                    ItemSpecs.Add(lootResult.ItemSpec);
+                    break;
 
-        public List<LootNodePrototype> CallbackNodes { get; private set; } = new();
-        public List<PrototypeId> VanityTitles { get; private set; } = new();
-        public List<VendorXPSummary> Vendors { get; private set; } = new();
-        public List<CurrencySpec> Currencies { get; private set; } = new();
-        public uint PowerPoints { get; private set; }
+                default:
+                    Logger.Warn($"Add(): Unimplemented LootType {lootResult.Type}");
+                    break;
+            }
+        }
 
         public NetStructLootResultSummary ToProtobuf()
         {
@@ -74,7 +94,7 @@ namespace MHServerEmu.Games.Loot
 
             if (Types.HasFlag(LootType.VendorXP))
             {
-                foreach (VendorXPSummary vendorXP in Vendors)
+                foreach (VendorXPSummary vendorXP in VendorXP)
                     builder.AddVendorxp(vendorXP.ToProtobuf());
             }
 
@@ -85,7 +105,7 @@ namespace MHServerEmu.Games.Loot
             }
 
             if (Types.HasFlag(LootType.PowerPoints))
-                builder.SetPowerPoints(PowerPoints);
+                builder.SetPowerPoints((uint)PowerPoints);
 
             return builder.Build();
         }
@@ -98,6 +118,29 @@ namespace MHServerEmu.Games.Loot
                 sb.AppendLine($"Item {ItemSpecs[0].ItemProtoRef.GetNameFormatted()} [{ItemSpecs.Count}]");
 
             return sb.ToString();
+        }
+
+        public void ResetForPool()
+        {
+            Types = default;
+
+            ItemSpecs.Clear();
+            AgentSpecs.Clear();
+            Credits.Clear();
+            Experience = default;
+            PowerPoints = default;
+            HealthBonus = default;
+            EnduranceBonus = default;
+            RealMoney = default;
+            CallbackNodes.Clear();
+            VanityTitles.Clear();
+            VendorXP.Clear();
+            Currencies.Clear();
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
     }
 }

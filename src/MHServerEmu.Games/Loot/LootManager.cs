@@ -135,10 +135,13 @@ namespace MHServerEmu.Games.Loot
             _resolver.SetContext(LootContext.Drop, player);
 
             lootTableProto.RollLootTable(settings, _resolver);
-            
-            float maxDistanceFromSource = MathF.Min(75f + 25f * _resolver.ProcessedItemCount, 300f);
 
-            foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            _resolver.FillLootResultSummary(lootResultSummary);
+
+            float maxDistanceFromSource = MathF.Min(75f + 25f * lootResultSummary.ItemSpecs.Count, 300f);
+
+            foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                 DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
         }
 
@@ -159,7 +162,10 @@ namespace MHServerEmu.Games.Loot
 
             lootTableProto.RollLootTable(settings, _resolver);
 
-            foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            _resolver.FillLootResultSummary(lootResultSummary);
+
+            foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                 Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
 
             Logger.Info("--- Loot Table Test Over ---");

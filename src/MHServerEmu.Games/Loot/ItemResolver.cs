@@ -26,15 +26,12 @@ namespace MHServerEmu.Games.Loot
         private readonly int _itemLevelMax;
 
         private readonly List<PendingItem> _pendingItemList = new();
-        private readonly List<ItemSpec> _processedItemList = new();
+        private readonly List<LootResult> _processedItemList = new();
 
         public GRandom Random { get; }
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
         public Region Region { get => Player?.GetRegion(); }
-
-        public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
-        public int ProcessedItemCount { get => _processedItemList.Count; }
 
         public ItemResolver(GRandom random)
         {
@@ -238,22 +235,17 @@ namespace MHServerEmu.Games.Loot
                 if (result.HasFlag(MutationResults.Error))
                     Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
 
-                _processedItemList.Add(pendingItem.ItemSpec);
+                _processedItemList.Add(new(pendingItem.ItemSpec));
             }
 
             _pendingItemList.Clear();
             return true;
         }
 
-        public void LootSummary(LootResultSummary lootSummary)
+        public void FillLootResultSummary(LootResultSummary lootResultSummary)
         {
-            // TODO other types
-            if (ProcessedItemCount > 0)
-            {
-                lootSummary.Types |= LootType.Item;
-                foreach (ItemSpec itemSpec in _processedItemList)
-                    lootSummary.ItemSpecs.Add(itemSpec);
-            }
+            foreach (LootResult lootResult in _processedItemList)
+                lootResultSummary.Add(lootResult);
         }
 
         private readonly struct PendingItem
