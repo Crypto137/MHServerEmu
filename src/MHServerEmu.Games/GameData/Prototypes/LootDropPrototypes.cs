@@ -319,8 +319,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): {XPCurve.GetName()}");
-            return LootRollResult.NoRoll;
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (XPCurve == CurveId.Invalid)
+                return result;
+
+            Curve xpCurve = CurveDirectory.Instance.GetCurve(XPCurve);
+            if (xpCurve == null) return Logger.WarnReturn(result, "Roll(): xpCurve == null");
+
+            int amount = (int)MathF.Ceiling(xpCurve.GetAt(settings.Level));
+
+            result = resolver.PushXP(XPCurve, amount);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 

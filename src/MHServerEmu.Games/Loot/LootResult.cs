@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -23,11 +24,15 @@ namespace MHServerEmu.Games.Loot
         private readonly ItemSpec _itemSpec = default;
 
         // Value types
-        //[FieldOffset(16)]
-        // todo
+        [FieldOffset(16)]
+        private readonly CurveId _xpCurveRef = default;
 
         public LootType Type { get => _type; }
+        public int Amount { get => _amount; }
+        
         public ItemSpec ItemSpec { get => _type.HasFlag(LootType.Item) ? _itemSpec : null; }
+
+        public CurveId XPCurveRef { get => _type.HasFlag(LootType.Experience) ? _xpCurveRef : CurveId.Invalid; }
 
         public LootResult(ItemSpec itemSpec)
         {
@@ -59,6 +64,13 @@ namespace MHServerEmu.Games.Loot
 
             _type = type;
             _amount = amount;
+        }
+
+        public LootResult(CurveId xpCurveRef, int amount)
+        {
+            _type = LootType.Experience;
+            _amount = amount;
+            _xpCurveRef = xpCurveRef;
         }
     }
 }

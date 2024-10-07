@@ -80,7 +80,9 @@ namespace MHServerEmu.Games.Loot
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
-            _pendingItemList.Add(new(new(itemSpec), filterArgs.RollFor));
+            LootResult lootResult = new(itemSpec);
+            PendingItem pendingItem = new(lootResult, filterArgs.RollFor);
+            _pendingItemList.Add(pendingItem);
 
             return LootRollResult.Success;
         }
@@ -101,7 +103,9 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushCredits(int amount)
         {
             // TODO: Credits bonuses
-            _pendingItemList.Add(new(new(LootType.Credits, amount)));
+            LootResult lootResult = new(LootType.Credits, amount);
+            PendingItem pendingItem = new(lootResult);
+            _pendingItemList.Add(pendingItem);
             return LootRollResult.Success;
         }
 
@@ -121,6 +125,15 @@ namespace MHServerEmu.Games.Loot
         {
             Logger.Debug($"PushEnduranceBonus(): {amount}");
             return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushXP(CurveId xpCurveRef, int amount)
+        {
+            // TODO: XP bonuses
+            LootResult lootResult = new(xpCurveRef, amount);
+            PendingItem pendingItem = new(lootResult);
+            _pendingItemList.Add(pendingItem);
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushLootNodeCallback()

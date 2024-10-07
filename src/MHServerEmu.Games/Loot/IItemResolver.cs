@@ -26,6 +26,7 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushPowerPoints(int amount);
         public LootRollResult PushHealthBonus(int amount);
         public LootRollResult PushEnduranceBonus(int amount);
+        public LootRollResult PushXP(CurveId curveRef, int amount);
         public LootRollResult PushLootNodeCallback();
         public LootRollResult PushCraftingCallback();
 
