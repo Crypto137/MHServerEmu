@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Loot.Specs;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -25,6 +26,8 @@ namespace MHServerEmu.Games.Loot
 
         // Value types
         [FieldOffset(16)]
+        private readonly AgentSpec _agentSpec = default;
+        [FieldOffset(16)]
         private readonly CurveId _xpCurveRef = default;
 
         public LootType Type { get => _type; }
@@ -32,12 +35,19 @@ namespace MHServerEmu.Games.Loot
         
         public ItemSpec ItemSpec { get => _type.HasFlag(LootType.Item) ? _itemSpec : null; }
 
+        public AgentSpec AgentSpec { get => _type.HasFlag(LootType.Agent) ? _agentSpec : default; }
         public CurveId XPCurveRef { get => _type.HasFlag(LootType.Experience) ? _xpCurveRef : CurveId.Invalid; }
 
         public LootResult(ItemSpec itemSpec)
         {
             _type = LootType.Item;
             _itemSpec = itemSpec;
+        }
+
+        public LootResult(in AgentSpec agentSpec)
+        {
+            _type = LootType.Agent;
+            _agentSpec = agentSpec;
         }
 
         public LootResult(LootType type, int amount)

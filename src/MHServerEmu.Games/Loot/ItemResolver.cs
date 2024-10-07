@@ -8,6 +8,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -94,10 +95,20 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.NoRoll;
         }
 
-        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionTestFlags)
+        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags)
         {
-            Logger.Debug($"PushAgent(): {agentProtoRef.GetName()} [{restrictionTestFlags}]");
-            return LootRollResult.NoRoll;
+            if (agentProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(LootRollResult.Failure, "PushAgent(): agentProtoRef == PrototypeId.Invalid");
+
+            // TODO: check restrictionFlags
+
+            AgentSpec agentSpec = new(agentProtoRef, level, 0);
+            LootResult lootResult = new(agentSpec);
+            PendingItem pendingItem = new(lootResult);
+            _pendingItemList.Add(pendingItem);
+
+            Logger.Debug($"PushAgent(): {agentSpec} [{restrictionFlags}]");
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushCredits(int amount)

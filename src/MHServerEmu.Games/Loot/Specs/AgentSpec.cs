@@ -9,11 +9,11 @@ namespace MHServerEmu.Games.Loot.Specs
         public int AgentLevel { get; }
         public int CreditsAmount { get; }
 
-        public AgentSpec(int agentLevel, int creditsAmount, PrototypeId agentProtoRef)
+        public AgentSpec(PrototypeId agentProtoRef, int agentLevel, int creditsAmount)
         {
+            AgentProtoRef = agentProtoRef;
             AgentLevel = agentLevel;
             CreditsAmount = creditsAmount;
-            AgentProtoRef = agentProtoRef;
         }
 
         public NetStructAgentSpec ToProtobuf()
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Loot.Specs
 
         public override string ToString()
         {
-            return $"agentProtoRef={AgentProtoRef}, level={AgentLevel}, creditsAmount={CreditsAmount}";
+            return $"agentProtoRef={AgentProtoRef.GetName()}, level={AgentLevel}, creditsAmount={CreditsAmount}";
         }
     }
 }
