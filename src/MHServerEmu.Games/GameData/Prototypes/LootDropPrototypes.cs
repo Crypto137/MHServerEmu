@@ -13,8 +13,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public override void PostProcess()
         {
             base.PostProcess();
@@ -253,14 +251,62 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropPowerPointsPrototype : LootDropPrototype
     {
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0)
+                return result;
+
+            result = resolver.PushPowerPoints(NumMin);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropHealthBonusPrototype : LootDropPrototype
     {
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0)
+                return result;
+
+            result = resolver.PushHealthBonus(NumMin);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropEnduranceBonusPrototype : LootDropPrototype
     {
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0)
+                return result;
+
+            result = resolver.PushEnduranceBonus(NumMin);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropXPPrototype : LootNodePrototype

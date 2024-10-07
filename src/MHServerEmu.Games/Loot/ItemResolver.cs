@@ -56,6 +56,9 @@ namespace MHServerEmu.Games.Loot
             _itemLevelMax = (int)propertyInfoProto.Max;
         }
 
+        /// <summary>
+        /// Resets this <see cref="ItemResolver"/> and sets new rolling context.
+        /// </summary>
         public void SetContext(LootContext lootContext, Player player)
         {
             _pendingItemList.Clear();
@@ -64,6 +67,10 @@ namespace MHServerEmu.Games.Loot
             LootContext = lootContext;
             Player = player;
         }
+
+        #region Push Functions
+
+        // These functions are used to "push" intermediary data from rolling loot tables
 
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
@@ -98,15 +105,41 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.Success;
         }
 
-        public void PushLootNodeCallback()
+        public LootRollResult PushPowerPoints(int amount)
         {
-            Logger.Debug($"PushLootNodeCallback()");
+            Logger.Debug($"PushPowerPoints(): {amount}");
+            return LootRollResult.NoRoll;
         }
 
-        public void PushCraftingCallback()
+        public LootRollResult PushHealthBonus(int amount)
+        {
+            Logger.Debug($"PushHealthBonus(): {amount}");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushEnduranceBonus(int amount)
+        {
+            Logger.Debug($"PushEnduranceBonus(): {amount}");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushLootNodeCallback()
+        {
+            Logger.Debug($"PushLootNodeCallback()");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushCraftingCallback()
         {
             Logger.Debug($"PushCraftingCallback()");
+            return LootRollResult.NoRoll;
         }
+
+        #endregion
+
+        #region Resolving
+
+        // Resolve functions are helper functions for rolling loot given the context set for this item resolver
 
         public int ResolveLevel(int level, bool useLevelVerbatim)
         {
@@ -219,6 +252,10 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
+        #endregion
+
+        #region Pending Item Processing
+
         public void ClearPending()
         {
             _pendingItemList.Clear();
@@ -235,6 +272,7 @@ namespace MHServerEmu.Games.Loot
                     continue;
                 }
 
+                // Items need to have their affixes rolled
                 ItemSpec itemSpec = pendingItem.LootResult.ItemSpec;
 
                 using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
@@ -257,6 +295,8 @@ namespace MHServerEmu.Games.Loot
             foreach (LootResult lootResult in _processedItemList)
                 lootResultSummary.Add(lootResult);
         }
+
+        #endregion
 
         private readonly struct PendingItem
         {

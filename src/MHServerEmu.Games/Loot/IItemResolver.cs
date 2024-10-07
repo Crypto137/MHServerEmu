@@ -7,8 +7,11 @@ using MHServerEmu.Games.Regions;
 namespace MHServerEmu.Games.Loot
 {
     /// <summary>
-    /// An interface for a class that does the rolling ("resolves") on loot tables.
+    /// An interface for a class that provides context for rolling loot tables and stores intermediary results.
     /// </summary>
+    /// <remarks>
+    /// Although it is called an "item" resolver, it actually does the rolling for all loot types.
+    /// </remarks>
     public interface IItemResolver
     {
         public GRandom Random { get; }
@@ -16,15 +19,15 @@ namespace MHServerEmu.Games.Loot
         public Player Player { get; }
         public Region Region { get; }
 
-        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
-            int stackCount, IEnumerable<LootMutationPrototype> mutations);
-        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs,
-            RestrictionTestFlags restrictionFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
+        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations);
+        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
         public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags);
         public LootRollResult PushCredits(int amount);
-
-        public void PushLootNodeCallback();
-        public void PushCraftingCallback();
+        public LootRollResult PushPowerPoints(int amount);
+        public LootRollResult PushHealthBonus(int amount);
+        public LootRollResult PushEnduranceBonus(int amount);
+        public LootRollResult PushLootNodeCallback();
+        public LootRollResult PushCraftingCallback();
 
         public int ResolveLevel(int level, bool useLevelVerbatim);
         public AvatarPrototype ResolveAvatarPrototype(AvatarPrototype usableAvatarProto, bool forceUsable, float usablePercent);
