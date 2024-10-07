@@ -19,25 +19,130 @@ namespace MHServerEmu.Games.Loot
         public Player Player { get; }
         public Region Region { get; }
 
-        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations);
-        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
-        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags);
-        public LootRollResult PushCredits(int amount);
-        public LootRollResult PushPowerPoints(int amount);
-        public LootRollResult PushHealthBonus(int amount);
-        public LootRollResult PushEnduranceBonus(int amount);
-        public LootRollResult PushXP(CurveId curveRef, int amount);
-        public LootRollResult PushLootNodeCallback();
-        public LootRollResult PushCraftingCallback();
+        #region Push Functions
 
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropItemPrototype"/> or a <see cref="LootDropItemFilterPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropAgentPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropCreditsPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushCredits(int amount);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropXPPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushXP(CurveId curveRef, int amount);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropPowerPointsPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushPowerPoints(int amount);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropHealthBonusPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushHealthBonus(int amount);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropEnduranceBonusPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushEnduranceBonus(int amount);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropRealMoneyPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushRealMoney(LootDropRealMoneyPrototype lootDropRealMoneyProto);
+
+        /// <summary>
+        /// Pushes the result of rolling a callback loot node to this <see cref="IItemResolver"/>.
+        /// </summary>
+        /// <remarks>
+        /// Callback nodes are <see cref="LootDropBannerMessagePrototype"/>, <see cref="LootDropUsePowerPrototype"/>,
+        /// <see cref="LootDropPlayVisualEffectPrototype"/>, and <see cref="LootDropChatMessagePrototype"/>.
+        /// </remarks>
+        public LootRollResult PushLootNodeCallback(LootNodePrototype lootNodeProto);
+
+        /// <summary>
+        /// Pushes the result of a loot mutation (crafting) to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushCraftingCallback(LootMutationPrototype lootMutationProto);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropVanityTitlePrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushVanityTitle(VanityTitlePrototype vanityTitleProto);
+
+        /// <summary>
+        /// Pushes the result of rollign a <see cref="LootDropVendorXPPrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushVendorXP(VendorTypePrototype vendorTypeProto, int amount);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropItemPrototype"/> or <see cref="LootDropAgentPrototype"/> representing a currency to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, LootDropChanceModifiers dropChanceModifiers, int stackCount);
+
+        #endregion
+
+        #region Resolving
+
+        /// <summary>
+        /// Determines the level of a drop.
+        /// </summary>
         public int ResolveLevel(int level, bool useLevelVerbatim);
+
+        /// <summary>
+        /// Determines the <see cref="AvatarPrototype"/> a drop should be usable by.
+        /// </summary>
         public AvatarPrototype ResolveAvatarPrototype(AvatarPrototype usableAvatarProto, bool forceUsable, float usablePercent);
+
+        /// <summary>
+        /// Determines the team-up <see cref="AgentPrototype"/> a drop should be usable by.
+        /// </summary>
         public AgentPrototype ResolveTeamUpPrototype(AgentPrototype usableTeamUpProto, float usablePercent);
+
+        /// <summary>
+        /// Determines the rarity of a drop.
+        /// </summary>
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarities, int level, ItemPrototype itemProto);
+
+        /// <summary>
+        /// Returns <see langword="true"/> if something should drop.
+        /// </summary>
         public bool CheckDropPercent(LootRollSettings settings, float noDropPercent);
+
+        /// <summary>
+        /// Returns <see langword="true"/> if an item is allowed to drop given the specified filters.
+        /// </summary>
         public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2);
 
+        /// <summary>
+        /// Returns <see langword="true"/> if an agent is allowed to drop given the specified filters.
+        /// </summary>
+        public bool CheckAgent(PrototypeId agentProtoRef, RestrictionTestFlags restrictionFlags);
+
+        #endregion
+
+        #region Pending Item Processing
+
+        /// <summary>
+        /// Clears pending data pushed to this <see cref="IItemResolver"/>.
+        /// </summary>
         public void ClearPending();
+
+        /// <summary>
+        /// Processes pending data pushed to this <see cref="IItemResolver"/>.
+        /// </summary>
         public bool ProcessPending(LootRollSettings settings);
+
+        #endregion
     }
 }

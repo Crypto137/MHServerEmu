@@ -137,23 +137,32 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.NoRoll;
         }
 
-        // PushRealMoney()
+        public LootRollResult PushRealMoney(LootDropRealMoneyPrototype lootDropRealMoneyProto)
+        {
+            return LootRollResult.NoRoll;
+        }
 
-        public LootRollResult PushLootNodeCallback()
+        public LootRollResult PushLootNodeCallback(LootNodePrototype lootNodeProto)
         {
             Logger.Debug($"PushLootNodeCallback()");
             return LootRollResult.NoRoll;
         }
 
-        public LootRollResult PushCraftingCallback()
+        public LootRollResult PushCraftingCallback(LootMutationPrototype lootMutationProto)
         {
             Logger.Debug($"PushCraftingCallback()");
             return LootRollResult.NoRoll;
         }
 
-        // PushVanityTitle()
+        public LootRollResult PushVanityTitle(VanityTitlePrototype vanityTitleProto)
+        {
+            return LootRollResult.NoRoll;
+        }
 
-        // PushVendorXP()
+        public LootRollResult PushVendorXP(VendorTypePrototype vendorTypeProto, int amount)
+        {
+            return LootRollResult.NoRoll;
+        }
 
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             LootDropChanceModifiers dropChanceModifiers, int stackCount)
