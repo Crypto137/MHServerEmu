@@ -71,7 +71,8 @@ namespace MHServerEmu.Games.Loot
 
         #region Push Functions
 
-        // These functions are used to "push" intermediary data from rolling loot tables
+        // These functions are used to "push" intermediary data from rolling loot tables.
+        // Order is the same as fields in NetStructLootResultSummary.
 
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
@@ -87,6 +88,72 @@ namespace MHServerEmu.Games.Loot
 
             return LootRollResult.Success;
         }
+
+        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags)
+        {
+            if (CheckAgent(agentProtoRef, restrictionFlags) == false)
+                return LootRollResult.Failure;
+
+            AgentSpec agentSpec = new(agentProtoRef, level, 0);
+            LootResult lootResult = new(agentSpec);
+            _pendingItemList.Add(new(lootResult));
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushCredits(int amount)
+        {
+            // TODO: Credits bonuses
+            LootResult lootResult = new(LootType.Credits, amount);
+            _pendingItemList.Add(new(lootResult));
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushXP(CurveId xpCurveRef, int amount)
+        {
+            // TODO: XP bonuses
+            LootResult lootResult = new(xpCurveRef, amount);
+            _pendingItemList.Add(new(lootResult));
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushPowerPoints(int amount)
+        {
+            Logger.Debug($"PushPowerPoints(): {amount}");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushHealthBonus(int amount)
+        {
+            Logger.Debug($"PushHealthBonus(): {amount}");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushEnduranceBonus(int amount)
+        {
+            Logger.Debug($"PushEnduranceBonus(): {amount}");
+            return LootRollResult.NoRoll;
+        }
+
+        // PushRealMoney()
+
+        public LootRollResult PushLootNodeCallback()
+        {
+            Logger.Debug($"PushLootNodeCallback()");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushCraftingCallback()
+        {
+            Logger.Debug($"PushCraftingCallback()");
+            return LootRollResult.NoRoll;
+        }
+
+        // PushVanityTitle()
+
+        // PushVendorXP()
 
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             LootDropChanceModifiers dropChanceModifiers, int stackCount)
@@ -115,67 +182,7 @@ namespace MHServerEmu.Games.Loot
             LootResult lootResult = new(currencySpec);
             _pendingItemList.Add(new(lootResult));
 
-            Logger.Debug($"PushCurrency(): {currencySpec} [{restrictionFlags}]");
             return LootRollResult.Success;
-        }
-
-        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags)
-        {
-            if (CheckAgent(agentProtoRef, restrictionFlags) == false)
-                return LootRollResult.Failure;
-
-            AgentSpec agentSpec = new(agentProtoRef, level, 0);
-            LootResult lootResult = new(agentSpec);
-            _pendingItemList.Add(new(lootResult));
-
-            Logger.Debug($"PushAgent(): {agentSpec} [{restrictionFlags}]");
-            return LootRollResult.Success;
-        }
-
-        public LootRollResult PushCredits(int amount)
-        {
-            // TODO: Credits bonuses
-            LootResult lootResult = new(LootType.Credits, amount);
-            _pendingItemList.Add(new(lootResult));
-            return LootRollResult.Success;
-        }
-
-        public LootRollResult PushPowerPoints(int amount)
-        {
-            Logger.Debug($"PushPowerPoints(): {amount}");
-            return LootRollResult.NoRoll;
-        }
-
-        public LootRollResult PushHealthBonus(int amount)
-        {
-            Logger.Debug($"PushHealthBonus(): {amount}");
-            return LootRollResult.NoRoll;
-        }
-
-        public LootRollResult PushEnduranceBonus(int amount)
-        {
-            Logger.Debug($"PushEnduranceBonus(): {amount}");
-            return LootRollResult.NoRoll;
-        }
-
-        public LootRollResult PushXP(CurveId xpCurveRef, int amount)
-        {
-            // TODO: XP bonuses
-            LootResult lootResult = new(xpCurveRef, amount);
-            _pendingItemList.Add(new(lootResult));
-            return LootRollResult.Success;
-        }
-
-        public LootRollResult PushLootNodeCallback()
-        {
-            Logger.Debug($"PushLootNodeCallback()");
-            return LootRollResult.NoRoll;
-        }
-
-        public LootRollResult PushCraftingCallback()
-        {
-            Logger.Debug($"PushCraftingCallback()");
-            return LootRollResult.NoRoll;
         }
 
         #endregion

@@ -27,6 +27,7 @@ namespace MHServerEmu.Games.Loot
         public int HealthBonus { get; private set; }
         public int EnduranceBonus { get; private set; }
         public int RealMoney { get; private set; }
+        //public List<long> CouponCodes { get; private set; } = new();  // seems to be unused
         public List<LootNodePrototype> CallbackNodes { get; } = new();
         public List<PrototypeId> VanityTitles { get; } = new();
         public List<VendorXPSummary> VendorXP { get; } = new();
@@ -38,6 +39,31 @@ namespace MHServerEmu.Games.Loot
             {
                 case LootType.Item:
                     ItemSpecs.Add(lootResult.ItemSpec);
+                    Types |= LootType.Item;
+                    break;
+
+                case LootType.Agent:
+                    Logger.Debug($"Add(): agentSpec=[{lootResult.AgentSpec}]");
+                    AgentSpecs.Add(lootResult.AgentSpec);
+                    Types |= LootType.Agent;
+                    break;
+
+                case LootType.Credits:
+                    Logger.Debug($"Add(): credits=[{lootResult.Amount}]");
+                    Credits.Add(lootResult.Amount);
+                    Types |= LootType.Credits;
+                    break;
+
+                case LootType.Experience:
+                    Logger.Debug($"Add(): experience=[{lootResult.Amount}]");
+                    Experience += lootResult.Amount;
+                    Types |= LootType.Experience;
+                    break;
+
+                case LootType.Currency:
+                    Logger.Debug($"Add(): currencySpec=[{lootResult.CurrencySpec}]");
+                    Currencies.Add(lootResult.CurrencySpec);
+                    Types |= LootType.Currency;
                     break;
 
                 default:

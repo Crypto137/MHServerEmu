@@ -141,6 +141,9 @@ namespace MHServerEmu.Games.Loot
 
             float maxDistanceFromSource = MathF.Min(75f + 25f * lootResultSummary.ItemSpecs.Count, 300f);
 
+            if (lootResultSummary.Types != LootType.None && lootResultSummary.Types != LootType.Item)
+                Logger.Debug($"DropRandomLoot(): Types={lootResultSummary.Types}");
+
             foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                 DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
         }
