@@ -352,6 +352,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
 
+        public bool GetCurrency(out PrototypeId currencyRef, out int amount)
+        {
+            currencyRef = PrototypeId.Invalid;
+            amount = 0;
+
+            if (Properties == null)
+                return Logger.WarnReturn(false, "GetCurrency(): Properties == null");
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ItemCurrency))
+            {
+                Property.FromParam(kvp.Key, 0, out currencyRef);
+                if (currencyRef == PrototypeId.Invalid)
+                    return Logger.WarnReturn(false, "GetCurrency(): currencyRef == PrototypeId.Invalid");
+
+                amount = kvp.Value;
+                return true;
+            }
+
+            return Logger.WarnReturn(false, $"GetCurrency(): No currency property found for world entity {this}");
+        }
+
         public bool GetXPAwarded(int level, out long xp, out long minXP, bool applyGlobalTuning)
         {
             xp = 0;

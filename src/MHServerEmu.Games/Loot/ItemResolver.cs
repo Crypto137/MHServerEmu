@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
             if (CheckItem(filterArgs, restrictionFlags, false) == false)
-                return LootRollResult.NoRoll;
+                return LootRollResult.Failure;
 
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
@@ -91,21 +91,42 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             LootDropChanceModifiers dropChanceModifiers, int stackCount)
         {
-            Logger.Debug($"PushCurrency(): {worldEntityProto} filters=[{restrictionFlags}] mods=[{dropChanceModifiers}]");
-            return LootRollResult.NoRoll;
+            // Currency can come from agents and items
+            if (worldEntityProto is AgentPrototype)
+            {
+                if (CheckAgent(worldEntityProto.DataRef, restrictionFlags) == false)
+                    return LootRollResult.Failure;
+            }
+            else if (worldEntityProto is ItemPrototype)
+            {
+                if (CheckItem(filterArgs, restrictionFlags, false) == false)
+                    return LootRollResult.Failure;
+            }
+            else
+            {
+                return Logger.WarnReturn(LootRollResult.Failure, $"PushCurrency(): Unsupported currency entity prototype {worldEntityProto}");
+            }
+
+            if (worldEntityProto.GetCurrency(out PrototypeId currencyRef, out int amount) == false)
+                return LootRollResult.Failure;
+
+            // TODO: currency bonuses
+            CurrencySpec currencySpec = new(worldEntityProto.DataRef, currencyRef, amount * stackCount);
+            LootResult lootResult = new(currencySpec);
+            _pendingItemList.Add(new(lootResult));
+
+            Logger.Debug($"PushCurrency(): {currencySpec} [{restrictionFlags}]");
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags)
         {
-            if (agentProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(LootRollResult.Failure, "PushAgent(): agentProtoRef == PrototypeId.Invalid");
-
-            // TODO: check restrictionFlags
+            if (CheckAgent(agentProtoRef, restrictionFlags) == false)
+                return LootRollResult.Failure;
 
             AgentSpec agentSpec = new(agentProtoRef, level, 0);
             LootResult lootResult = new(agentSpec);
-            PendingItem pendingItem = new(lootResult);
-            _pendingItemList.Add(pendingItem);
+            _pendingItemList.Add(new(lootResult));
 
             Logger.Debug($"PushAgent(): {agentSpec} [{restrictionFlags}]");
             return LootRollResult.Success;
@@ -115,8 +136,7 @@ namespace MHServerEmu.Games.Loot
         {
             // TODO: Credits bonuses
             LootResult lootResult = new(LootType.Credits, amount);
-            PendingItem pendingItem = new(lootResult);
-            _pendingItemList.Add(pendingItem);
+            _pendingItemList.Add(new(lootResult));
             return LootRollResult.Success;
         }
 
@@ -142,8 +162,7 @@ namespace MHServerEmu.Games.Loot
         {
             // TODO: XP bonuses
             LootResult lootResult = new(xpCurveRef, amount);
-            PendingItem pendingItem = new(lootResult);
-            _pendingItemList.Add(pendingItem);
+            _pendingItemList.Add(new(lootResult));
             return LootRollResult.Success;
         }
 
@@ -272,6 +291,16 @@ namespace MHServerEmu.Games.Loot
 
             if (itemProto.IsDroppableForRestrictions(filterArgs, restrictionFlags) == false)
                 return false;
+
+            return true;
+        }
+
+        public bool CheckAgent(PrototypeId agentProtoRef, RestrictionTestFlags restrictionFlags)
+        {
+            if (agentProtoRef == PrototypeId.Invalid)
+                return false;
+
+            // TODO: restrictionFlags
 
             return true;
         }

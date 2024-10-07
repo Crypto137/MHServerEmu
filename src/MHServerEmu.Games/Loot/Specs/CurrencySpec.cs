@@ -7,44 +7,37 @@ namespace MHServerEmu.Games.Loot.Specs
 {
     public readonly struct CurrencySpec
     {
-        private readonly PrototypeId _agentOrItemProtoRef;
-        private readonly PrototypeId _currencyRef;
-        private readonly int _amount;
+        public PrototypeId AgentOrItemProtoRef { get; }
+        public PrototypeId CurrencyRef { get; }
+        public int Amount { get; }
 
-        public bool IsAgent { get => _agentOrItemProtoRef != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsA<AgentPrototype>(_agentOrItemProtoRef); }
-        public bool IsItem { get => _agentOrItemProtoRef != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(_agentOrItemProtoRef); }
+        public bool IsAgent { get => AgentOrItemProtoRef != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsA<AgentPrototype>(AgentOrItemProtoRef); }
+        public bool IsItem { get => AgentOrItemProtoRef != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsA<ItemPrototype>(AgentOrItemProtoRef); }
 
         public CurrencySpec(PrototypeId agentOrItemProtoRef, PrototypeId currencyRef, int amount)
         {
-            _agentOrItemProtoRef = agentOrItemProtoRef;
-            _currencyRef = currencyRef;
-            _amount = amount;
-        }
-
-        public CurrencySpec(NetStructCurrencySpec protobuf)
-        {
-            _agentOrItemProtoRef = (PrototypeId)protobuf.AgentOrItemProtoRef;
-            _currencyRef = (PrototypeId)protobuf.CurrencyRef;
-            _amount = (int)protobuf.Amount;
+            AgentOrItemProtoRef = agentOrItemProtoRef;
+            CurrencyRef = currencyRef;
+            Amount = amount;
         }
 
         public NetStructCurrencySpec ToProtobuf()
         {
             return NetStructCurrencySpec.CreateBuilder()
-                .SetAgentOrItemProtoRef((ulong)_agentOrItemProtoRef)
-                .SetCurrencyRef((ulong)_currencyRef)
-                .SetAmount((uint)_amount)
+                .SetAgentOrItemProtoRef((ulong)AgentOrItemProtoRef)
+                .SetCurrencyRef((ulong)CurrencyRef)
+                .SetAmount((uint)Amount)
                 .Build();
         }
 
         public override string ToString()
         {
-            return $"agentOrItemProtoRef={_agentOrItemProtoRef.GetName()}, currencyRef={_currencyRef.GetNameFormatted()}, amount={_amount}";
+            return $"agentOrItemProtoRef={AgentOrItemProtoRef.GetName()}, currencyRef={CurrencyRef.GetNameFormatted()}, amount={Amount}";
         }
 
         public void ApplyCurrency(PropertyCollection properties)
         {
-            properties[PropertyEnum.ItemCurrency, _currencyRef] = _amount;
+            properties[PropertyEnum.ItemCurrency, CurrencyRef] = Amount;
         }
     }
 }

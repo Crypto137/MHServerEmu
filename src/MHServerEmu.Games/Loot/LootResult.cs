@@ -28,6 +28,8 @@ namespace MHServerEmu.Games.Loot
         [FieldOffset(16)]
         private readonly AgentSpec _agentSpec = default;
         [FieldOffset(16)]
+        private readonly CurrencySpec _currencySpec = default;
+        [FieldOffset(16)]
         private readonly CurveId _xpCurveRef = default;
 
         public LootType Type { get => _type; }
@@ -36,6 +38,7 @@ namespace MHServerEmu.Games.Loot
         public ItemSpec ItemSpec { get => _type.HasFlag(LootType.Item) ? _itemSpec : null; }
 
         public AgentSpec AgentSpec { get => _type.HasFlag(LootType.Agent) ? _agentSpec : default; }
+        public CurrencySpec CurrencySpec { get => _type.HasFlag(LootType.Currency) ? _currencySpec : default; }
         public CurveId XPCurveRef { get => _type.HasFlag(LootType.Experience) ? _xpCurveRef : CurveId.Invalid; }
 
         public LootResult(ItemSpec itemSpec)
@@ -48,6 +51,12 @@ namespace MHServerEmu.Games.Loot
         {
             _type = LootType.Agent;
             _agentSpec = agentSpec;
+        }
+
+        public LootResult(in CurrencySpec currencySpec)
+        {
+            _type = LootType.Currency;
+            _currencySpec = currencySpec;
         }
 
         public LootResult(LootType type, int amount)
