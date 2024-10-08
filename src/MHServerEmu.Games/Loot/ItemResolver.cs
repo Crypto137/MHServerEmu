@@ -170,14 +170,16 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.Success;
         }
 
-        public LootRollResult PushLootNodeCallback(LootNodePrototype lootNodeProto)
+        public LootRollResult PushLootNodeCallback(LootNodePrototype callbackNodeProto)
         {
-            Logger.Debug($"PushLootNodeCallback()");
-            return LootRollResult.NoRoll;
+            LootResult lootResult = new(callbackNodeProto);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushCraftingCallback(LootMutationPrototype lootMutationProto)
         {
+            // TODO
             Logger.Debug($"PushCraftingCallback()");
             return LootRollResult.NoRoll;
         }
@@ -191,6 +193,8 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushVendorXP(VendorTypePrototype vendorTypeProto, int amount)
         {
+            // TODO
+            Logger.Debug($"PushVendorXP()");
             return LootRollResult.NoRoll;
         }
 

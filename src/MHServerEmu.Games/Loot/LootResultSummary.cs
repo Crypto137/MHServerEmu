@@ -80,8 +80,14 @@ namespace MHServerEmu.Games.Loot
 
                 case LootType.RealMoney:
                     Logger.Debug($"Add(): realMoney=[{lootResult.Amount}]");
-                    RealMoney += lootResult.LootDropRealMoneyProto.NumMin;
+                    RealMoney += lootResult.RealMoneyProto.NumMin;
                     Types |= LootType.RealMoney;
+                    break;
+
+                case LootType.CallbackNode:
+                    Logger.Debug($"Add(): callbackNode=[{lootResult.CallbackNodeProto.GetType()}]");
+                    CallbackNodes.Add(lootResult.CallbackNodeProto);
+                    Types |= LootType.CallbackNode;
                     break;
 
                 case LootType.VanityTitle:

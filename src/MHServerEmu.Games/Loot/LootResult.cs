@@ -25,7 +25,9 @@ namespace MHServerEmu.Games.Loot
         [FieldOffset(8)]
         private readonly ItemSpec _itemSpec = default;
         [FieldOffset(8)]
-        private readonly LootDropRealMoneyPrototype _lootDropRealMoneyProto = default;
+        private readonly LootDropRealMoneyPrototype _realMoneyProto = default;
+        [FieldOffset(8)]
+        private readonly LootNodePrototype _callbackNodeProto = default;
 
         // Value types
         [FieldOffset(16)]
@@ -41,7 +43,8 @@ namespace MHServerEmu.Games.Loot
         public int Amount { get => _amount; }
         
         public ItemSpec ItemSpec { get => _type == LootType.Item ? _itemSpec : null; }
-        public LootDropRealMoneyPrototype LootDropRealMoneyProto { get => _type == LootType.RealMoney ? _lootDropRealMoneyProto : null; }
+        public LootDropRealMoneyPrototype RealMoneyProto { get => _type == LootType.RealMoney ? _realMoneyProto : null; }
+        public LootNodePrototype CallbackNodeProto { get => _type == LootType.CallbackNode ? _callbackNodeProto : null; }
 
         public AgentSpec AgentSpec { get => _type == LootType.Agent ? _agentSpec : default; }
         public PrototypeId VanityTitleProtoRef { get => _type == LootType.VanityTitle ? _vanityTitleProtoRef : PrototypeId.Invalid; }
@@ -95,7 +98,13 @@ namespace MHServerEmu.Games.Loot
         public LootResult(LootDropRealMoneyPrototype lootDropRealMoneyProto)
         {
             _type = LootType.RealMoney;
-            _lootDropRealMoneyProto = lootDropRealMoneyProto;
+            _realMoneyProto = lootDropRealMoneyProto;
+        }
+
+        public LootResult(LootNodePrototype callbackNodeProto)
+        {
+            _type = LootType.CallbackNode;
+            _callbackNodeProto = callbackNodeProto;
         }
 
         public LootResult(PrototypeId vanityTitleProtoRef)

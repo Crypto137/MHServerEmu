@@ -70,7 +70,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected LootRollResult PushLootNodeCallback(LootRollSettings settings, IItemResolver resolver)
         {
-            return LootRollResult.NoRoll;
+            LootRollResult result = resolver.PushLootNodeCallback(this);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 

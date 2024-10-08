@@ -376,10 +376,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (BannerMessage={BannerMessage.GetName()})");
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): {BannerMessage.GetName()}");
-            return LootRollResult.NoRoll;
+            return PushLootNodeCallback(settings, resolver);
         }
     }
 
@@ -391,10 +395,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (Power={Power.GetName()})");
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): {Power.GetName()}");
-            return LootRollResult.NoRoll;
+            return PushLootNodeCallback(settings, resolver);
         }
     }
 
@@ -407,10 +415,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()})");
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()}");
-            return LootRollResult.NoRoll;
+            return PushLootNodeCallback(settings, resolver);
         }
     }
 
@@ -423,10 +435,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (ChatMessage={ChatMessage}, MessageScope={MessageScope})");
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): ChatMessage={ChatMessage}, MessageScope={MessageScope}");
-            return LootRollResult.NoRoll;
+            return PushLootNodeCallback(settings, resolver);
         }
     }
 
