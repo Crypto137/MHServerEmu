@@ -11,9 +11,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         //---
 
-        public virtual bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
+        public virtual bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust = RestrictionTestFlags.All)
         {
-            return restrictionFlags.HasFlag(RestrictionTestFlags.Output) || Allow(filterArgs, restrictionFlags);
+            return flagsToAdjust.HasFlag(RestrictionTestFlags.Output) || Allow(filterArgs, flagsToAdjust);
         }
 
         public virtual bool Allow(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All)
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 _lootContextFlags |= context;
         }
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
             if ((filterArgs.LootContext & _lootContextFlags) == filterArgs.LootContext)
             {
@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 foreach (DropRestrictionPrototype restrictionProto in Apply)
                 {
-                    if (restrictionProto.Adjust(filterArgs, ref outputRestrictionFlags, restrictionFlags) == false)
+                    if (restrictionProto.Adjust(filterArgs, ref adjustResultFlags, flagsToAdjust) == false)
                         return false;
                 }
             }
@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 foreach (DropRestrictionPrototype restrictionProto in Else)
                 {
-                    if (restrictionProto.Adjust(filterArgs, ref outputRestrictionFlags, restrictionFlags) == false)
+                    if (restrictionProto.Adjust(filterArgs, ref adjustResultFlags, flagsToAdjust) == false)
                         return false;
                 }
             }
@@ -253,15 +253,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             LevelRange = Math.Max(LevelRange, -1);
         }
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (Allow(filterArgs, restrictionFlags))
+            if (Allow(filterArgs, flagsToAdjust))
                 return true;
 
-            if (outputRestrictionFlags.HasFlag(RestrictionTestFlags.OutputLevel) || restrictionFlags.HasFlag(RestrictionTestFlags.Output))
+            if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputLevel) || flagsToAdjust.HasFlag(RestrictionTestFlags.Output))
                 return true;
 
-            if (restrictionFlags.HasFlag(RestrictionTestFlags.Level) == false)
+            if (flagsToAdjust.HasFlag(RestrictionTestFlags.Level) == false)
                 return false;
 
             filterArgs.Level = Math.Max(filterArgs.Level, LevelMin);
@@ -269,7 +269,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (LevelRange >= 0)
                 filterArgs.Level = Math.Min(filterArgs.Level, LevelMin + LevelRange);
 
-            outputRestrictionFlags |= RestrictionTestFlags.Level;
+            adjustResultFlags |= RestrictionTestFlags.Level;
             
             return true;
         }
@@ -297,15 +297,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.PostProcess();
         }
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (restrictionFlags.HasFlag(RestrictionTestFlags.Level))
+            if (flagsToAdjust.HasFlag(RestrictionTestFlags.Level))
             {
-                outputRestrictionFlags |= RestrictionTestFlags.OutputLevel;
+                adjustResultFlags |= RestrictionTestFlags.OutputLevel;
 
                 if (filterArgs.Level != Value)
                 {
-                    outputRestrictionFlags |= RestrictionTestFlags.Level;
+                    adjustResultFlags |= RestrictionTestFlags.Level;
                     filterArgs.Level = Value;
                 }
             }
@@ -326,15 +326,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (restrictionFlags.HasFlag(RestrictionTestFlags.Rank))
+            if (flagsToAdjust.HasFlag(RestrictionTestFlags.Rank))
             {
-                outputRestrictionFlags |= RestrictionTestFlags.OutputLevel;
+                adjustResultFlags |= RestrictionTestFlags.OutputLevel;
 
                 if (filterArgs.Level != Value)
                 {
-                    outputRestrictionFlags |= RestrictionTestFlags.Level;
+                    adjustResultFlags |= RestrictionTestFlags.Level;
                     filterArgs.Level = Value;
                 }
             }
@@ -356,15 +356,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity))
+            if (flagsToAdjust.HasFlag(RestrictionTestFlags.Rarity))
             {
-                outputRestrictionFlags |= RestrictionTestFlags.OutputRarity;
+                adjustResultFlags |= RestrictionTestFlags.OutputRarity;
 
                 if (filterArgs.Rarity != Value)
                 {
-                    outputRestrictionFlags |= RestrictionTestFlags.Rarity;
+                    adjustResultFlags |= RestrictionTestFlags.Rarity;
                     filterArgs.Rarity = Value;
                 }
             }
@@ -394,18 +394,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Array.Sort(AllowedRarities, CompareRarityRefs);
         }
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (Allow(filterArgs, restrictionFlags))
+            if (Allow(filterArgs, flagsToAdjust))
                 return true;
 
-            if (outputRestrictionFlags.HasFlag(RestrictionTestFlags.OutputRarity) || restrictionFlags.HasFlag(RestrictionTestFlags.Output))
+            if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputRarity) || flagsToAdjust.HasFlag(RestrictionTestFlags.Output))
                 return true;
 
-            if (restrictionFlags.HasFlag(RestrictionTestFlags.Rarity) == false)
+            if (flagsToAdjust.HasFlag(RestrictionTestFlags.Rarity) == false)
                 return false;
 
-            outputRestrictionFlags |= RestrictionTestFlags.Rarity;
+            adjustResultFlags |= RestrictionTestFlags.Rarity;
 
             RarityPrototype rarityProto = filterArgs.Rarity.As<RarityPrototype>();
             if (rarityProto != null)
@@ -492,17 +492,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (Allow(filterArgs, restrictionFlags) == false || (restrictionFlags.HasFlag(RestrictionTestFlags.Rank) && filterArgs.Rank == 0))
+            if (Allow(filterArgs, flagsToAdjust) == false || (flagsToAdjust.HasFlag(RestrictionTestFlags.Rank) && filterArgs.Rank == 0))
             {
-                if (outputRestrictionFlags.HasFlag(RestrictionTestFlags.OutputRank) || restrictionFlags.HasFlag(RestrictionTestFlags.Output))
+                if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputRank) || flagsToAdjust.HasFlag(RestrictionTestFlags.Output))
                     return true;
 
-                if (restrictionFlags.HasFlag(RestrictionTestFlags.Rank) == false)
+                if (flagsToAdjust.HasFlag(RestrictionTestFlags.Rank) == false)
                     return false;
 
-                outputRestrictionFlags |= RestrictionTestFlags.Rank;
+                adjustResultFlags |= RestrictionTestFlags.Rank;
                 filterArgs.Rank = MathHelper.BitfieldGetLS1B(AllowedRanks);
             }
 
@@ -521,14 +521,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
             if (Children.IsNullOrEmpty())
                 return false;
 
             foreach (DropRestrictionPrototype dropRestrictionProto in Children)
             {
-                if (dropRestrictionProto.Adjust(filterArgs, ref outputRestrictionFlags, restrictionFlags) == false)
+                if (dropRestrictionProto.Adjust(filterArgs, ref adjustResultFlags, flagsToAdjust) == false)
                     return false;
             }
 
@@ -556,17 +556,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags outputRestrictionFlags, RestrictionTestFlags restrictionFlags)
+        public override bool Adjust(DropFilterArguments filterArgs, ref RestrictionTestFlags adjustResultFlags, RestrictionTestFlags flagsToAdjust)
         {
-            if (Allow(filterArgs, restrictionFlags) == false)
+            if (Allow(filterArgs, flagsToAdjust) == false)
             {
-                if (restrictionFlags.HasFlag(RestrictionTestFlags.Output))
+                if (flagsToAdjust.HasFlag(RestrictionTestFlags.Output))
                     return true;
 
-                if (restrictionFlags.HasFlag(RestrictionTestFlags.Slot) == false || AllowedSlots.IsNullOrEmpty())
+                if (flagsToAdjust.HasFlag(RestrictionTestFlags.Slot) == false || AllowedSlots.IsNullOrEmpty())
                     return false;
 
-                outputRestrictionFlags |= RestrictionTestFlags.Slot;
+                adjustResultFlags |= RestrictionTestFlags.Slot;
                 filterArgs.Slot = AllowedSlots[0];
             }
 

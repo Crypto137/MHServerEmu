@@ -24,8 +24,8 @@ namespace MHServerEmu.Games.Entities.Items
         private int _count = 1;
 
         public PrototypeId ItemProtoRef { get => _itemProtoRef; }
-        public PrototypeId RarityProtoRef { get => _rarityProtoRef; }
-        public int ItemLevel { get => _itemLevel; }
+        public PrototypeId RarityProtoRef { get => _rarityProtoRef; set => _rarityProtoRef = value; }
+        public int ItemLevel { get => _itemLevel; set => _itemLevel = value; }
         public int CreditsAmount { get => _creditsAmount; }
         public IEnumerable<AffixSpec> AffixSpecs { get => _affixSpecList; }
         public int Seed { get => _seed; }

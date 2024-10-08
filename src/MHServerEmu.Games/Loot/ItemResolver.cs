@@ -15,7 +15,7 @@ using MHServerEmu.Games.Regions;
 namespace MHServerEmu.Games.Loot
 {
     /// <summary>
-    /// A basic implementation of <see cref="IItemResolver"/>.
+    /// A general-purpose implementation of <see cref="IItemResolver"/>.
     /// </summary>
     public class ItemResolver : IItemResolver
     {
@@ -344,14 +344,30 @@ namespace MHServerEmu.Games.Loot
                 // Items need to have their affixes rolled
                 ItemSpec itemSpec = pendingItem.LootResult.ItemSpec;
 
-                using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
-                LootCloneRecord.Initialize(args, LootContext, itemSpec, pendingItem.RollFor);
+                using LootCloneRecord affixArgs = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                LootCloneRecord.Initialize(affixArgs, LootContext, itemSpec, pendingItem.RollFor);
 
-                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, itemSpec, settings);
+                MutationResults result = LootUtilities.UpdateAffixes(this, affixArgs, AffixCountBehavior.Roll, itemSpec, settings);
 
                 if (result.HasFlag(MutationResults.Error))
                     Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
 
+                // Modify the item spec using output "restrictions" (OutputLevelPrototype, OutputRarityPrototype)
+                ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+                RestrictionTestFlags flagsToAdjust = RestrictionTestFlags.Level | RestrictionTestFlags.Rarity | RestrictionTestFlags.Output;
+
+                using DropFilterArguments restrictionArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                DropFilterArguments.Initialize(restrictionArgs, itemProto, itemSpec.EquippableBy, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, LootContext);
+                
+                itemProto.MakeRestrictionsDroppable(restrictionArgs, flagsToAdjust, out RestrictionTestFlags adjustResultFlags);
+
+                if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputLevel))
+                    itemSpec.ItemLevel = restrictionArgs.Level;
+
+                if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputRarity))
+                    itemSpec.RarityProtoRef = restrictionArgs.Rarity;
+
+                // Push the final processed item
                 _processedItemList.Add(new(itemSpec));
             }
 
