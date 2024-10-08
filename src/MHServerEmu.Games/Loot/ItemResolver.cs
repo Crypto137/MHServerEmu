@@ -182,9 +182,11 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.NoRoll;
         }
 
-        public LootRollResult PushVanityTitle(VanityTitlePrototype vanityTitleProto)
+        public LootRollResult PushVanityTitle(PrototypeId vanityTitleProtoRef)
         {
-            return LootRollResult.NoRoll;
+            LootResult lootResult = new(vanityTitleProtoRef);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushVendorXP(VendorTypePrototype vendorTypeProto, int amount)

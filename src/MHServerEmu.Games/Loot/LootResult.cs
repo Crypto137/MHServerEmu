@@ -31,9 +31,11 @@ namespace MHServerEmu.Games.Loot
         [FieldOffset(16)]
         private readonly AgentSpec _agentSpec = default;
         [FieldOffset(16)]
-        private readonly CurrencySpec _currencySpec = default;
-        [FieldOffset(16)]
         private readonly CurveId _xpCurveRef = default;
+        [FieldOffset(16)]
+        private readonly PrototypeId _vanityTitleProtoRef = default;
+        [FieldOffset(16)]
+        private readonly CurrencySpec _currencySpec = default;
 
         public LootType Type { get => _type; }
         public int Amount { get => _amount; }
@@ -42,8 +44,9 @@ namespace MHServerEmu.Games.Loot
         public LootDropRealMoneyPrototype LootDropRealMoneyProto { get => _type == LootType.RealMoney ? _lootDropRealMoneyProto : null; }
 
         public AgentSpec AgentSpec { get => _type == LootType.Agent ? _agentSpec : default; }
-        public CurrencySpec CurrencySpec { get => _type == LootType.Currency ? _currencySpec : default; }
+        public PrototypeId VanityTitleProtoRef { get => _type == LootType.VanityTitle ? _vanityTitleProtoRef : PrototypeId.Invalid; }
         public CurveId XPCurveRef { get => _type == LootType.Experience ? _xpCurveRef : CurveId.Invalid; }
+        public CurrencySpec CurrencySpec { get => _type == LootType.Currency ? _currencySpec : default; }
 
         public LootResult(ItemSpec itemSpec)
         {
@@ -93,6 +96,12 @@ namespace MHServerEmu.Games.Loot
         {
             _type = LootType.RealMoney;
             _lootDropRealMoneyProto = lootDropRealMoneyProto;
+        }
+
+        public LootResult(PrototypeId vanityTitleProtoRef)
+        {
+            _type = LootType.VanityTitle;
+            _vanityTitleProtoRef = vanityTitleProtoRef;
         }
 
         public LootResult(in CurrencySpec currencySpec)

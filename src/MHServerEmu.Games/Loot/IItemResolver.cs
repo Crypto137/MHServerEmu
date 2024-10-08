@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Pushes the result of rolling a <see cref="LootDropVanityTitlePrototype"/> to this <see cref="IItemResolver"/>.
         /// </summary>
-        public LootRollResult PushVanityTitle(VanityTitlePrototype vanityTitleProto);
+        public LootRollResult PushVanityTitle(PrototypeId vanityTitleProtoRef);
 
         /// <summary>
         /// Pushes the result of rollign a <see cref="LootDropVendorXPPrototype"/> to this <see cref="IItemResolver"/>.

@@ -437,12 +437,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): {VanityTitle.GetName()}");
-            return LootRollResult.NoRoll;
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (VanityTitle == PrototypeId.Invalid)
+                return result;
+
+            result = resolver.PushVanityTitle(VanityTitle);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 

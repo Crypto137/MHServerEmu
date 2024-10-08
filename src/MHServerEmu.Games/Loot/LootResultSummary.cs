@@ -84,6 +84,12 @@ namespace MHServerEmu.Games.Loot
                     Types |= LootType.RealMoney;
                     break;
 
+                case LootType.VanityTitle:
+                    Logger.Debug($"Add(): vanityTitle=[{lootResult.VanityTitleProtoRef.GetName()}]");
+                    VanityTitles.Add(lootResult.VanityTitleProtoRef);
+                    Types |= LootType.VanityTitle;
+                    break;
+
                 case LootType.Currency:
                     Logger.Debug($"Add(): currencySpec=[{lootResult.CurrencySpec}]");
                     Currencies.Add(lootResult.CurrencySpec);
