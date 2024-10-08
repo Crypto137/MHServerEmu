@@ -324,7 +324,14 @@ namespace MHServerEmu.Games.Loot
             return Random.NextFloat() < dropChance;
         }
 
-        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2)
+        public bool CheckDropCooldown(PrototypeId dropProtoRef, int amount)
+        {
+            // TODO
+            //Logger.Debug($"CheckDropCooldown(): {dropProtoRef.GetName()} x{amount}");
+            return false;
+        }
+
+        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2, int stackCount = 1)
         {
             ItemPrototype itemProto = filterArgs.ItemProto as ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
@@ -338,6 +345,30 @@ namespace MHServerEmu.Games.Loot
             if (itemProto.IsDroppableForRestrictions(filterArgs, restrictionFlags) == false)
                 return false;
 
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Slot))
+            {
+                EquipmentInvUISlot slot = filterArgs.Slot;
+                if (slot != EquipmentInvUISlot.Invalid)
+                {
+                    AgentPrototype agentProto = filterArgs.RollFor.As<AgentPrototype>();
+                    if (itemProto.GetInventorySlotForAgent(agentProto) != slot)
+                        return false;
+                }
+            }
+
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.UsableBy))
+            {
+                AgentPrototype agentProto = filterArgs.RollFor.As<AgentPrototype>();
+                if (itemProto.IsDroppableForAgent(agentProto) == false)
+                    return false;
+            }
+
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Cooldown))
+            {
+                if (CheckDropCooldown(itemProto.DataRef, stackCount))
+                    return false;
+            }
+
             return true;
         }
 
@@ -346,7 +377,8 @@ namespace MHServerEmu.Games.Loot
             if (agentProtoRef == PrototypeId.Invalid)
                 return false;
 
-            // TODO: restrictionFlags
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Cooldown) && CheckDropCooldown(agentProtoRef, 1))
+                return false;
 
             return true;
         }
