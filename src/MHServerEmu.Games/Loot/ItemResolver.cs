@@ -104,8 +104,12 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushCredits(int amount)
         {
             // TODO: Credits bonuses
-            LootResult lootResult = new(LootType.Credits, amount);
-            _pendingItemList.Add(new(lootResult));
+
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.Credits, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
 
             return LootRollResult.Success;
         }
@@ -113,28 +117,50 @@ namespace MHServerEmu.Games.Loot
         public LootRollResult PushXP(CurveId xpCurveRef, int amount)
         {
             // TODO: XP bonuses
-            LootResult lootResult = new(xpCurveRef, amount);
-            _pendingItemList.Add(new(lootResult));
+
+            if (amount > 0)
+            {
+                LootResult lootResult = new(xpCurveRef, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
 
             return LootRollResult.Success;
         }
 
         public LootRollResult PushPowerPoints(int amount)
         {
-            Logger.Debug($"PushPowerPoints(): {amount}");
-            return LootRollResult.NoRoll;
+            // NOTE: Unused in BUE
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.PowerPoints, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushHealthBonus(int amount)
         {
-            Logger.Debug($"PushHealthBonus(): {amount}");
-            return LootRollResult.NoRoll;
+            // NOTE: Unused in BUE
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.HealthBonus, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushEnduranceBonus(int amount)
         {
-            Logger.Debug($"PushEnduranceBonus(): {amount}");
-            return LootRollResult.NoRoll;
+            // NOTE: Unused in BUE
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.EnduranceBonus, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushRealMoney(LootDropRealMoneyPrototype lootDropRealMoneyProto)
