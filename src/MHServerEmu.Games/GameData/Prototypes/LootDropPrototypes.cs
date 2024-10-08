@@ -344,6 +344,28 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public LocaleStringId CouponCode { get; protected set; }
         public PrototypeId TransactionContext { get; protected set; }
+
+        //---
+
+        // NOTE: This loot drop type appears to had been used only for the Vibranium Ticket promotion during the game's second anniversary.
+        // See Loot/Tables/Mob/Bosses/GoldenTicketTable.prototype for reference.
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0 || CouponCode == LocaleStringId.Invalid)
+                return result;
+
+            result = resolver.PushRealMoney(this);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropBannerMessagePrototype : LootNodePrototype

@@ -165,7 +165,9 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushRealMoney(LootDropRealMoneyPrototype lootDropRealMoneyProto)
         {
-            return LootRollResult.NoRoll;
+            LootResult lootResult = new(lootDropRealMoneyProto);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushLootNodeCallback(LootNodePrototype lootNodeProto)

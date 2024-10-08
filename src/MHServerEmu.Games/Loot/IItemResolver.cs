@@ -59,6 +59,9 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Pushes the result of rolling a <see cref="LootDropRealMoneyPrototype"/> to this <see cref="IItemResolver"/>.
         /// </summary>
+        /// <remarks>
+        /// This loot drop type appears to had been used only for the Vibranium Ticket promotion during the game's second anniversary.
+        /// </remarks>
         public LootRollResult PushRealMoney(LootDropRealMoneyPrototype lootDropRealMoneyProto);
 
         /// <summary>

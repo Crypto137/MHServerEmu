@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot.Specs;
 
 namespace MHServerEmu.Games.Loot
@@ -23,6 +24,8 @@ namespace MHServerEmu.Games.Loot
         // Reference types (need to be at offset 8 for memory alignment reasons)
         [FieldOffset(8)]
         private readonly ItemSpec _itemSpec = default;
+        [FieldOffset(8)]
+        private readonly LootDropRealMoneyPrototype _lootDropRealMoneyProto = default;
 
         // Value types
         [FieldOffset(16)]
@@ -35,11 +38,12 @@ namespace MHServerEmu.Games.Loot
         public LootType Type { get => _type; }
         public int Amount { get => _amount; }
         
-        public ItemSpec ItemSpec { get => _type.HasFlag(LootType.Item) ? _itemSpec : null; }
+        public ItemSpec ItemSpec { get => _type == LootType.Item ? _itemSpec : null; }
+        public LootDropRealMoneyPrototype LootDropRealMoneyProto { get => _type == LootType.RealMoney ? _lootDropRealMoneyProto : null; }
 
-        public AgentSpec AgentSpec { get => _type.HasFlag(LootType.Agent) ? _agentSpec : default; }
-        public CurrencySpec CurrencySpec { get => _type.HasFlag(LootType.Currency) ? _currencySpec : default; }
-        public CurveId XPCurveRef { get => _type.HasFlag(LootType.Experience) ? _xpCurveRef : CurveId.Invalid; }
+        public AgentSpec AgentSpec { get => _type == LootType.Agent ? _agentSpec : default; }
+        public CurrencySpec CurrencySpec { get => _type == LootType.Currency ? _currencySpec : default; }
+        public CurveId XPCurveRef { get => _type == LootType.Experience ? _xpCurveRef : CurveId.Invalid; }
 
         public LootResult(ItemSpec itemSpec)
         {
@@ -53,21 +57,21 @@ namespace MHServerEmu.Games.Loot
             _agentSpec = agentSpec;
         }
 
-        public LootResult(in CurrencySpec currencySpec)
+        public LootResult(CurveId xpCurveRef, int amount)
         {
-            _type = LootType.Currency;
-            _currencySpec = currencySpec;
+            _type = LootType.Experience;
+            _amount = amount;
+            _xpCurveRef = xpCurveRef;
         }
 
         public LootResult(LootType type, int amount)
         {
             switch (type)
             {
-                case LootType.PowerPoints:
                 case LootType.Credits:
-                case LootType.EnduranceBonus:
+                case LootType.PowerPoints:
                 case LootType.HealthBonus:
-                case LootType.Currency:
+                case LootType.EnduranceBonus:
                     break;
 
                 default:
@@ -85,11 +89,16 @@ namespace MHServerEmu.Games.Loot
             _amount = amount;
         }
 
-        public LootResult(CurveId xpCurveRef, int amount)
+        public LootResult(LootDropRealMoneyPrototype lootDropRealMoneyProto)
         {
-            _type = LootType.Experience;
-            _amount = amount;
-            _xpCurveRef = xpCurveRef;
+            _type = LootType.RealMoney;
+            _lootDropRealMoneyProto = lootDropRealMoneyProto;
+        }
+
+        public LootResult(in CurrencySpec currencySpec)
+        {
+            _type = LootType.Currency;
+            _currencySpec = currencySpec;
         }
     }
 }
