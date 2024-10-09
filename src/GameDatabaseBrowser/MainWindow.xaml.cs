@@ -739,8 +739,22 @@ namespace GameDatabaseBrowser
                     {
                         if (subPropertyInfo is Array)
                         {
-                            string itemName = subPropInfo.ToString();
-                            if (subPropInfo is EntityMarkerPrototype marker) itemName = GameDatabase.GetFormattedPrototypeName(GameDatabase.GetDataRefByPrototypeGuid(marker.EntityGuid));
+                            string itemName;
+
+                            if (subPropInfo is EntityMarkerPrototype marker)
+                            {
+                                itemName = GameDatabase.GetDataRefByPrototypeGuid(marker.EntityGuid).GetNameFormatted();
+                            }
+                            else if (subPropInfo is MissionObjectivePrototype missionObjective)
+                            {
+                                string objectiveName = LocaleManager.Instance.CurrentLocale.GetLocaleString(missionObjective.Name);
+                                itemName = string.IsNullOrWhiteSpace(objectiveName) == false ? objectiveName : subPropInfo.ToString();
+                            }
+                            else
+                            {
+                                itemName = subPropInfo.ToString();
+                            }
+
                             node.Childs.Last().Childs.Add(new() { PropertyDetails = new() { Index = index++, Name = "", Value = itemName, TypeName = subPropInfo.GetType().Name }, IsExpanded = needExpand });
 
                             if (IsTypeBrowsable(subPropInfo.GetType()) == false)
