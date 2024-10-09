@@ -86,7 +86,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Pushes the result of rollign a <see cref="LootDropVendorXPPrototype"/> to this <see cref="IItemResolver"/>.
         /// </summary>
-        public LootRollResult PushVendorXP(VendorTypePrototype vendorTypeProto, int amount);
+        public LootRollResult PushVendorXP(PrototypeId vendorProtoRef, int xpAmount);
 
         /// <summary>
         /// Pushes the result of rolling a <see cref="LootDropItemPrototype"/> or <see cref="LootDropAgentPrototype"/> representing a currency to this <see cref="IItemResolver"/>.

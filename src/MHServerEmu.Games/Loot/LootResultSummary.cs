@@ -96,6 +96,12 @@ namespace MHServerEmu.Games.Loot
                     Types |= LootType.VanityTitle;
                     break;
 
+                case LootType.VendorXP:
+                    Logger.Debug($"Add(): vendorXPSummary=[{lootResult.VendorXPSummary}]");
+                    VendorXP.Add(lootResult.VendorXPSummary);
+                    Types |= LootType.VendorXP;
+                    break;
+
                 case LootType.Currency:
                     Logger.Debug($"Add(): currencySpec=[{lootResult.CurrencySpec}]");
                     Currencies.Add(lootResult.CurrencySpec);

@@ -191,11 +191,12 @@ namespace MHServerEmu.Games.Loot
             return LootRollResult.Success;
         }
 
-        public LootRollResult PushVendorXP(VendorTypePrototype vendorTypeProto, int amount)
+        public LootRollResult PushVendorXP(PrototypeId vendorProtoRef, int xpAmount)
         {
-            // TODO
-            Logger.Debug($"PushVendorXP()");
-            return LootRollResult.NoRoll;
+            VendorXPSummary vendorXPSummary = new(vendorProtoRef, xpAmount);
+            LootResult lootResult = new(vendorXPSummary);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,

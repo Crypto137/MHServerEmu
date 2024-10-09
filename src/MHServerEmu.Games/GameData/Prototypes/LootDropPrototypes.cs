@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -482,8 +483,65 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): {Vendor.GetName()} - {XP}");
-            return LootRollResult.NoRoll;
+            LootRollResult result = LootRollResult.NoRoll;
+
+            // Validate this drop
+            if (XP <= 0 || Vendor == PrototypeId.Invalid)
+                return result;
+
+            // Make sure this drop is not on cooldown
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false &&
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
+            {
+                if (resolver.CheckDropCooldown(Vendor, XP))
+                    return result;
+            }
+
+            // Get XP can info prototype for this drop's vendor
+            VendorXPCapInfoPrototype vendorXPCapInfoProto = null;
+            foreach (VendorXPCapInfoPrototype currentInfoProto in GameDatabase.LootGlobalsPrototype.VendorXPCapInfo)
+            {
+                if (currentInfoProto.DataRef == Vendor)
+                {
+                    vendorXPCapInfoProto = currentInfoProto;
+                    break;
+                }
+            }
+
+            // Adjust xp amount to prevent it from going over cap
+            int xpAmount = XP;
+
+            if (vendorXPCapInfoProto != null && settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCap) == false)
+            {
+                // NOTE: This loot drop type can modify the player's VendorXPCapCounter property while it is being rolled.
+                // The only vendor this can theoretically happen with in 1.52 is Entity/Characters/Vendors/VendorTypes/VendorRaidGenosha.prototype.
+                Logger.Debug($"Roll(): Vendor={Vendor.GetName()}, XP={XP}");
+
+                Player player = resolver.Player;
+                if (player == null)
+                    return Logger.WarnReturn(LootRollResult.NoRoll, "Roll(): Unable to get player when rewarding VendorXP");
+
+                int vendorXPCapCounter = player.Properties[PropertyEnum.VendorXPCapCounter, Vendor];
+                bool shouldAdjustCounter = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false && player.IsInGame;
+
+                if (vendorXPCapCounter + xpAmount > vendorXPCapInfoProto.Cap)
+                    xpAmount = Math.Max(0, vendorXPCapInfoProto.Cap - vendorXPCapCounter);
+
+                if (shouldAdjustCounter)
+                    player.Properties.AdjustProperty(xpAmount, new(PropertyEnum.VendorXPCapCounter, Vendor));
+            }
+
+            if (xpAmount <= 0)
+                return result;
+
+            result = resolver.PushVendorXP(Vendor, xpAmount);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 }
