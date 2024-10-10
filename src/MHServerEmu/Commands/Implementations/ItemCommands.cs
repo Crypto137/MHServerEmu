@@ -33,12 +33,12 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            LootManager lootGenerator = playerConnection.Game.LootManager;
+            LootManager lootManager = playerConnection.Game.LootManager;
             
             for (int i = 0; i < count; i++)
             {
-                var item = lootGenerator.DropItem(avatar, itemProtoRef, 100f);
-                Logger.Debug($"DropItem(): {item} from {avatar}");
+                lootManager.SpawnItem(avatar, itemProtoRef);
+                Logger.Debug($"DropItem(): {itemProtoRef.GetName()} from {avatar}");
             }
 
             return string.Empty;
