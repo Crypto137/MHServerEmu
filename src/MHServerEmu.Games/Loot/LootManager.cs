@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -79,7 +80,8 @@ namespace MHServerEmu.Games.Loot
         /// </summary>
         public void SpawnLootFromSummary(LootResultSummary lootResultSummary, WorldEntity sourceEntity, ulong restrictedToPlayerGuid = 0)
         {
-            float maxDistanceFromSource = MathF.Min(75f + 25f * lootResultSummary.ItemSpecs.Count, 300f);
+            int numDrops = lootResultSummary.ItemSpecs.Count + lootResultSummary.AgentSpecs.Count;
+            float maxDistanceFromSource = MathF.Min(300f, 75f + 25f * numDrops);
 
             if (lootResultSummary.Types != LootType.None && lootResultSummary.Types != LootType.Item)
                 Logger.Debug($"SpawnLootFromSummary(): Types={lootResultSummary.Types}");
@@ -88,6 +90,12 @@ namespace MHServerEmu.Games.Loot
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                     SpawnItem(itemSpec, sourceEntity, maxDistanceFromSource, restrictedToPlayerGuid);
+            }
+
+            if (lootResultSummary.Types.HasFlag(LootType.Agent))
+            {
+                foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
+                    SpawnAgent(agentSpec, sourceEntity, maxDistanceFromSource, restrictedToPlayerGuid);
             }
         }
 
@@ -177,6 +185,9 @@ namespace MHServerEmu.Games.Loot
             sourceEntity.Region.ChooseRandomPositionNearPoint(sourceEntity.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
                 BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
 
+            // Get item prototype to calculate lifespan
+            ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = itemSpec.ItemProtoRef;
@@ -185,17 +196,56 @@ namespace MHServerEmu.Games.Loot
             settings.SourceEntityId = sourceEntity.Id;
             settings.SourcePosition = sourceEntity.RegionLocation.Position;
             settings.ItemSpec = itemSpec;
+            settings.Lifespan = itemProto.GetExpirationTime(itemSpec.RarityProtoRef);
 
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             settings.Properties = properties;
             settings.Properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
 
             Item item = Game.EntityManager.CreateEntity(settings) as Item;
-            if (item == null) return Logger.WarnReturn(false, "DropItem(): item == null");
+            if (item == null) return Logger.WarnReturn(false, "SpawnItem(): item == null");
 
-            // Set lifespan
-            TimeSpan expirationTime = item.GetExpirationTime();
-            item.InitLifespan(expirationTime);
+            return true;
+        }
+
+        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        {
+            // this looks very similar to SpawnItem, TODO: move common functionality to a separate method
+
+            // Pick a random point near source entity
+            sourceEntity.Region.ChooseRandomPositionNearPoint(sourceEntity.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+                BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
+
+            // NOTE: Orbs shrink over time using their behavior profile, see CAgent::onEnterWorldScheduleOrbShrink for details.
+            // Until we have their AI implemented, calculated lifespan here.
+            TimeSpan lifespan = TimeSpan.Zero;
+
+            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
+            if (agentProto.BehaviorProfile != null)
+            {
+                ProceduralProfileOrbPrototype orbProto = agentProto.BehaviorProfile.Brain.As<ProceduralProfileOrbPrototype>();
+                if (orbProto != null)
+                    lifespan = TimeSpan.FromMilliseconds(orbProto.ShrinkageDelayMS + orbProto.ShrinkageDurationMS);
+            }
+
+            // Create entity
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = agentSpec.AgentProtoRef;
+            settings.RegionId = sourceEntity.RegionLocation.RegionId;
+            settings.Position = dropPosition;
+            settings.SourceEntityId = sourceEntity.Id;
+            settings.SourcePosition = sourceEntity.RegionLocation.Position;
+
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settings.Properties = properties;
+            settings.Properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
+            settings.Properties[PropertyEnum.CharacterLevel] = agentSpec.AgentLevel;
+            settings.Properties[PropertyEnum.CombatLevel] = agentSpec.AgentLevel;
+
+            settings.Lifespan = lifespan;
+
+            Agent agent = Game.EntityManager.CreateEntity(settings) as Agent;
+            if (agent == null) return Logger.WarnReturn(false, "SpawnAgent(): item == null");
 
             return true;
         }
