@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.Entities
         MissileOwnedByPlayer            = 1ul << 29,
         HasMissionPrototype             = 1ul << 30,
         Flag31                          = 1ul << 31,
-        Flag32                          = 1ul << 32,
+        IsPopulation                    = 1ul << 32,
         Flag33                          = 1ul << 33,
         AttachedToEntityId              = 1ul << 34,
         IsHotspot                       = 1ul << 35,
@@ -172,6 +172,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasPowerUserOverride { get => _flags.HasFlag(EntityFlags.PowerUserOverrideId); }
         public bool IsMissilePlayerOwned { get => _flags.HasFlag(EntityFlags.MissileOwnedByPlayer); }
         public bool HasMissionPrototype { get => _flags.HasFlag(EntityFlags.HasMissionPrototype); }
+        public bool IsPopulation { get => _flags.HasFlag(EntityFlags.IsPopulation); }
         public bool IsAttachedToEntity { get => _flags.HasFlag(EntityFlags.AttachedToEntityId); }
         public bool IsHotspot { get => _flags.HasFlag(EntityFlags.IsHotspot); }
         public bool IsCollidableHotspot { get => _flags.HasFlag(EntityFlags.IsCollidableHotspot); }

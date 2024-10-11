@@ -30,9 +30,6 @@ namespace MHServerEmu.Games.Populations
         {
             Region = region;
             SpawnAreas = new();
-            /* foreach (var area in Region.IterateAreas())
-                 if (area.IsDynamicArea() == false)
-                     SpawnAreas.Add(area.PrototypeDataRef);*/
             SpawnCells = new();
             AddCellAssets(restrictToCells);
         }
@@ -45,6 +42,13 @@ namespace MHServerEmu.Games.Populations
 
             SpawnCells = new(other.SpawnCells);
             AddCellAssets(restrictToCells);
+        }
+
+        public SpawnLocation(Region region, Cell cell)
+        {
+            Region = region;
+            SpawnAreas = new();
+            SpawnCells = new() { cell };
         }
 
         public void AddAreaRefs(PrototypeId[] restrictToAreas)

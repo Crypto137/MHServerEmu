@@ -113,30 +113,38 @@ namespace MHServerEmu.Games.Populations
             var populationObject = PopAny();
             if (populationObject != null)
             {
-                Picker<Cell> picker = new(SpawnEvent.Game.Random);
-                var region = populationObject.SpawnLocation.Region;
-                foreach (var area in region.IterateAreas())
+                var picker = CellPicker(populationObject);
+                if (picker.Pick(out var cell))
                 {
-                    if (area.IsDynamicArea) continue;
-                    var popArea = area.PopulationArea;
-                    if (popArea == null) continue;
-                    foreach (var kvp in popArea.SpawnCells)
-                    {
-                        var cell = kvp.Key;
-                        if (populationObject.SpawnLocation.SpawnableCell(cell) == false) continue;
-                        SpawnCell spawnCell = kvp.Value;
-                        if (spawnCell.CheckDensity(popArea.PopulationPrototype))
-                            picker.Add(cell, spawnCell.CellWeight);
-                    }
-                }
+                    bool spawned;
+                    if (populationObject.Position == null)
+                        spawned = populationObject.SpawnInCell(cell); // PopulationArea.SpawnPopulation(PopulationObjects);
+                    else 
+                        spawned = populationObject.SpawnInPosition(populationObject.Position.Value);
 
-                if (picker.Empty() == false)
-                {
-                    var cell = picker.Pick();
-                    if (populationObject.SpawnInCell(cell)) // PopulationArea.SpawnPopulation(PopulationObjects);
+                    if (spawned)
                         OnSpawnedPopulation(populationObject);
                 }
             }
+        }
+
+        private static Picker<Cell> CellPicker(PopulationObject populationObject)
+        {
+            Picker<Cell> picker = new(populationObject.Random);
+            if (populationObject.SpawnEvent is not PopulationAreaSpawnEvent popEvent) return picker;
+
+            var popArea = popEvent.Area.PopulationArea;
+            if (popArea == null) return picker;
+
+            foreach (var kvp in popArea.SpawnCells)
+            {
+                var cell = kvp.Key;
+                if (populationObject.SpawnLocation.SpawnableCell(cell) == false) continue;
+                SpawnCell spawnCell = kvp.Value;
+                if (spawnCell.CheckDensity(popArea.PopulationPrototype, populationObject.RemoveOnSpawnFail))
+                    picker.Add(cell, spawnCell.CellWeight);
+            }
+            return picker;
         }
     }
 

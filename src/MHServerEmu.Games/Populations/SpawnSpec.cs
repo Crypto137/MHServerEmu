@@ -44,6 +44,7 @@ namespace MHServerEmu.Games.Populations
         public ScriptRoleKeyEnum RoleKey { get; set; }
         public TimeSpan SpawnedTime { get; private set; } = TimeSpan.Zero;
         public TimeSpan PostContactDelayMS { get; set; } = TimeSpan.Zero;
+        public Cell CellSlot { get; private set; }
         public float LeashDistance
         {
             get
@@ -132,14 +133,32 @@ namespace MHServerEmu.Games.Populations
 
             settings.Actions = Actions;
             settings.SpawnSpec = this;
+            settings.IsPopulation = true;
 
             ActiveEntity = manager.CreateEntity(settings) as WorldEntity;
+
+            ReserveSlot(cell);
             State = SpawnState.Live;
             SpawnedTime = Game.CurrentTime;
 
             EntitySelectorProto?.SetUniqueEntity(EntityRef, region, true);
 
             return true;
+        }
+
+        private void ReserveSlot(Cell cell)
+        {
+            if (ActiveEntity == null || ActiveEntity.IsHostileToPlayers() == false) return;
+            
+            FreeSlot();
+            CellSlot = cell;
+            CellSlot.EnemySpawn();
+        }
+
+        private void FreeSlot()
+        {
+            CellSlot?.EnemyDespawn();
+            CellSlot = null;
         }
 
         public bool CheckEncounterPhase()
@@ -196,6 +215,8 @@ namespace MHServerEmu.Games.Populations
                 ActiveEntity = null;
             }
 
+            FreeSlot();
+
             return true;
         }
 
@@ -226,6 +247,8 @@ namespace MHServerEmu.Games.Populations
 
             if (destroyGroup)
                 Group?.ScheduleClearCluster(entity, null);
+
+            FreeSlot();
         }
 
         public void Respawn()
@@ -238,6 +261,8 @@ namespace MHServerEmu.Games.Populations
                 ActiveEntity.ScheduleDestroyEvent(TimeSpan.Zero);
                 ActiveEntity = null;
             }
+
+            FreeSlot();
             State = SpawnState.Pending;
             Spawn();
         }
@@ -283,6 +308,7 @@ namespace MHServerEmu.Games.Populations
         public List<ulong> Killers { get; }
         public bool SpawnCleanup { get; set; }
         public Region Region { get; }
+        public SpawnHeat SpawnHeat { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
@@ -423,11 +449,14 @@ namespace MHServerEmu.Games.Populations
 
             // Clear reserved place
             if (Reservation != null) Reservation.State = MarkerState.Free;
+
             if (BlackOutId != BlackOutZone.InvalidId)
             {
                 manager.RemoveBlackOutZone(BlackOutId);
                 BlackOutId = BlackOutZone.InvalidId;
             }
+
+            SpawnHeat?.Return();
 
             // Reschedule SpawnEvent
             if (SpawnEvent != null && SpawnEvent.RespawnObject)
@@ -458,6 +487,8 @@ namespace MHServerEmu.Games.Populations
                 var entity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
                 // TODO Loot for Killers
             }
+
+            SpawnHeat?.Return();
         }
 
         public Area GetArea()

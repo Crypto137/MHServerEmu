@@ -978,9 +978,6 @@ namespace MHServerEmu.Games.Entities
         public override void OnEnteredWorld(EntitySettings settings)
         {
             base.OnEnteredWorld(settings);
-            if (this is not Avatar)     // fix for avatar
-                RegionLocation.Cell.EnemySpawn(); // Calc Enemy
-                                                  // ActivePowerRef = settings.PowerPrototype
 
             // Assign on resurrected power
             PrototypeId onResurrectedPowerRef = AgentPrototype.OnResurrectedPower;

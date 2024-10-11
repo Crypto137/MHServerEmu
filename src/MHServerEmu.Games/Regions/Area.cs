@@ -166,6 +166,9 @@ namespace MHServerEmu.Games.Regions
             DestroyAllConnections();
             RemoveAllCells();
 
+            SpawnMap?.Destroy();
+            // PopuliationArea.Destroy() ?
+
             PropTable = null;
             Generator = null;
             _towerFixupList = null;
@@ -288,10 +291,7 @@ namespace MHServerEmu.Games.Regions
 
             var populationProto = PopulationArea.PopulationPrototype;
             if (populationProto?.UseSpawnMap == true)
-            {
-                SpawnMap = new(this);
-                SpawnMap.Initialize(populationProto);
-            }
+                SpawnMap = new(this, populationProto);
 
             BlackOutZonesRebuild();
             SetStatus(GenerateFlag.Population, true);            
@@ -311,6 +311,8 @@ namespace MHServerEmu.Games.Regions
         {
             foreach (var cell in CellIterator())
                 cell.BlackOutZonesRebuild();
+
+            SpawnMap?.BlackOutZonesRebuild();
         }
 
         public void RebuildBlackOutZone(BlackOutZone zone)
@@ -318,6 +320,8 @@ namespace MHServerEmu.Games.Regions
             foreach (var cell in CellIterator())
                 if (zone.Sphere.Intersects(cell.RegionBounds))
                     cell.BlackOutZonesRebuild();
+
+            SpawnMap?.BlackOutZonesRebuild();
         }
 
         private bool GenerateNavi()

@@ -30,6 +30,7 @@ namespace MHServerEmu.Games.Regions
         private CellStatusFlag _status;
         private float _playableNavArea;
         private float _spawnableNavArea;
+        private PrototypeId _populationThemeRef;
 
         private int _numInterestedPlayers = 0;
 
@@ -99,13 +100,15 @@ namespace MHServerEmu.Games.Regions
 
             CellType = Prototype.Type;
             Seed = settings.Seed;
-            PopulationThemeOverrideRef = settings.PopulationThemeOverrideRef;
+            PopulationThemeOverrideRef = settings.PopulationThemeOverrideRef;            
 
             if (settings.ConnectedCells != null && settings.ConnectedCells.Any())
                 CellConnections.AddRange(settings.ConnectedCells);
 
             Settings = settings;
             SetAreaPosition(settings.PositionInArea, settings.OrientationInArea);
+
+            _populationThemeRef = PopulationThemeOverrideRef; // override this?
 
             return true;
         }
@@ -484,6 +487,11 @@ namespace MHServerEmu.Games.Regions
             PopulationArea.AddEnemyWeight(this);
         }
 
+        public void EnemyDespawn()
+        {
+            PopulationArea.RemoveEnemyWeight(this);
+        }
+
         public void SpawnMarkerSet(MarkerSetOptions options)
         {
             options |= MarkerSetOptions.Default;
@@ -503,6 +511,12 @@ namespace MHServerEmu.Games.Regions
             InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
         }
 
+        public PrototypeId GetPopulationTheme(PopulationPrototype populationProto)
+        {
+            if (_populationThemeRef == PrototypeId.Invalid) 
+                _populationThemeRef = populationProto.PickTheme(Game.Random);
+            return _populationThemeRef;
+        }
 
         public void OnAddedToAOI()
         {

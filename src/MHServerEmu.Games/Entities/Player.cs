@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -21,6 +22,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -95,6 +97,7 @@ namespace MHServerEmu.Games.Entities
         private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
 
         private TeleportData _teleportData;
+        private SpawnGimbal _spawnGimbal;
 
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
@@ -157,6 +160,10 @@ namespace MHServerEmu.Games.Entities
 
             // Default loading screen before we start loading into a region
             QueueLoadingScreen(PrototypeId.Invalid);
+
+            var popProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+            if (popProto == null) return false;
+            _spawnGimbal = new (popProto.SpawnMapGimbalRadius);
 
             return true;
         }
@@ -1779,6 +1786,26 @@ namespace MHServerEmu.Games.Entities
             if (missionRef == PrototypeId.Invalid) return;                 
             if (InterestedInEntity(entity, AOINetworkPolicyValues.AOIChannelOwner))
                 SendMessage(NetMessageMissionInteractRelease.DefaultInstance);            
+        }
+
+        public void UpdateSpawnMap(Vector3 position)
+        {
+            var region = GetRegion();
+            if (region == null || _spawnGimbal == null) return;
+            if (SpawnMap.ProjectGimbalPosition(region.Aabb, position, out Point2 coord) == false) return;
+            if (_spawnGimbal.Coord == coord) return;
+
+            bool inGimbal = _spawnGimbal.InGimbal(coord);
+            _spawnGimbal.UpdateGimbal(coord);
+            if (inGimbal) return;
+
+            var popProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+            if (popProto == null) return;
+            Aabb volume = SpawnMap.HorizonVolume(position, popProto.SpawnMapHorizon);
+
+            foreach (var area in region.IterateAreas(volume))
+                if (area.SpawnMap != null)
+                    area.PopulationArea?.UpdateSpawnMap(position);
         }
 
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>

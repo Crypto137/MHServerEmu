@@ -108,7 +108,7 @@ namespace MHServerEmu.Games.Populations
         public virtual void SetLocationDirty() { }
         public virtual bool IsFormationObject() => false;
         public virtual bool Initialize() => false;
-        public virtual ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities) { return SpawnGroup.InvalidId; }
+        public virtual ulong Spawn(SpawnGroup group, WorldEntity spawner, SpawnHeat spawnHeat, List<WorldEntity> entities) { return SpawnGroup.InvalidId; }
         public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes) { }
         public virtual bool TestLayout() => false;
@@ -698,7 +698,7 @@ namespace MHServerEmu.Games.Populations
             Parent?.UpdateBounds(this);
         }
 
-        public override ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities)
+        public override ulong Spawn(SpawnGroup group, WorldEntity spawner, SpawnHeat spawnHeat, List<WorldEntity> entities)
         {
             var manager = Region.PopulationManager;
 
@@ -711,13 +711,14 @@ namespace MHServerEmu.Games.Populations
                 group.ObjectProto = ObjectProto;
                 group.MissionRef = MissionRef;
                 group.Reservation = Reservation;
+                group.SpawnHeat = spawnHeat;
                 group.SpawnCleanup = SpawnFlags.HasFlag(SpawnFlags.Cleanup);
                 group.SpawnerId = spawner != null ? spawner.Id : Entity.InvalidId;
             }
             if (group == null) return SpawnGroup.InvalidId;
 
             foreach (var obj in Objects)
-                if (obj.Spawn(group, spawner, entities) == SpawnGroup.InvalidId)
+                if (obj.Spawn(group, spawner, spawnHeat, entities) == SpawnGroup.InvalidId)
                 {
                     if (Parent == null) 
                         manager.RemoveSpawnGroup(group.Id);
@@ -964,7 +965,7 @@ namespace MHServerEmu.Games.Populations
         }
 
 
-        public override ulong Spawn(SpawnGroup group, WorldEntity spawner, List<WorldEntity> entities)
+        public override ulong Spawn(SpawnGroup group, WorldEntity spawner, SpawnHeat spawnHeat, List<WorldEntity> entities)
         {
             var manager = Region.PopulationManager;
             if (group == null) return SpawnGroup.InvalidId;

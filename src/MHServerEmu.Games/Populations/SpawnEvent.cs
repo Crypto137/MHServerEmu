@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -160,48 +161,20 @@ namespace MHServerEmu.Games.Populations
             Area = area;
         }
 
-        public static Picker<PopulationObjectPrototype> PopulatePicker(GRandom random, PopulationObjectInstancePrototype[] objectList)
-        {
-            Picker<PopulationObjectPrototype> picker = new(random);
-            foreach (var objectInstance in objectList)
-            {
-                var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(objectInstance.Object);
-                if (objectProto == null) continue;
-                int weight = objectInstance.Weight;
-                if (weight > 0)
-                    picker.Add(objectProto, weight);
-            }
-
-            return picker;
-        }
-
-        public static void GetContainedEncounters(PopulationObjectInstancePrototype[] objectList, List<PopulationObjectInstancePrototype> encounters)
-        {
-            foreach (var objectInstance in objectList)
-            {
-                if (objectInstance == null || objectInstance.Weight <= 0) continue;
-                var proto = GameDatabase.GetPrototype<Prototype>(objectInstance.Object);
-                if (proto is PopulationObjectPrototype)
-                    encounters.Add(objectInstance);
-                else if (proto is PopulationObjectListPrototype populationObjectList)
-                    GetContainedEncounters(populationObjectList.List, encounters);
-            }
-        }
-
         public void PopulationRegisty(PopulationPrototype populationProto)
         {
             int objCount = 0;
             int markerCount = 0;
             var manager = PopulationManager;
             float spawnableNavArea = Area.SpawnableNavArea;
-            if (spawnableNavArea <= 0.0f || populationProto.UseSpawnMap) return; // TODO SpawnMap
+            if (spawnableNavArea <= 0.0f || populationProto.UseSpawnMap) return; // SpawnMap
             if (populationProto.Themes == null || populationProto.Themes.List.IsNullOrEmpty()) return;
 
             var spawnLocation = new SpawnLocation(Region, Area);
 
             float density = spawnableNavArea / PopulationPrototype.PopulationClusterSq * (populationProto.ClusterDensityPct / 100.0f);
             var themeProto = GameDatabase.GetPrototype<PopulationThemePrototype>(populationProto.Themes.List[0].Object);
-            var picker = PopulatePicker(manager.Random, themeProto.Enemies.List);
+            var picker = PopulationObject.PopulatePicker(manager.Random, themeProto.Enemies.List);
             while (density > 0.0f && picker.Pick(out var objectProto))
             {
                 density -= objectProto.GetAverageSize();
@@ -210,10 +183,11 @@ namespace MHServerEmu.Games.Populations
             }
 
             List<PopulationObjectInstancePrototype> encounters = new();
-            if (populationProto.GlobalEncounters != null) GetContainedEncounters(populationProto.GlobalEncounters.List, encounters);
-            if (themeProto.Encounters != null) GetContainedEncounters(themeProto.Encounters.List, encounters);
+            if (populationProto.GlobalEncounters != null) PopulationObject.GetContainedEncounters(populationProto.GlobalEncounters.List, encounters);
+            if (themeProto.Encounters != null) PopulationObject.GetContainedEncounters(themeProto.Encounters.List, encounters);
 
-            var registry = Area.Region.SpawnMarkerRegistry;
+            var registry = Region.SpawnMarkerRegistry;
+            var random = Game.Random;
             Dictionary<PrototypeId, SpawnPicker> markerPicker = new();
 
             foreach (var encounter in encounters)
@@ -233,7 +207,7 @@ namespace MHServerEmu.Games.Populations
                     {
                         density = populationProto.GetEncounterDensity(markerRef) / 100.0f;
                         int count = Math.Max(1, (int)(slots * density));
-                        spawnPicker = new(new(Game.Random), count);
+                        spawnPicker = new(new(random), count);
                     }
 
                     markerPicker[markerRef] = spawnPicker;
@@ -255,6 +229,37 @@ namespace MHServerEmu.Games.Populations
             }
             Logger.Debug($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(populationProto.DataRef)}][{objCount}][{markerCount}]");
         }
+
+        public PopulationObject AddHeatObject(Vector3 position, PopulationObjectPrototype population, SpawnHeat spawnHeat)
+        {
+            var random = Game.Random;
+            PropertyCollection properties = null;
+
+            var cell = Area.GetCellAtPosition(position);
+            var spawnLocation = new SpawnLocation(Region, cell);
+
+            PopulationObject populationObject = new()
+            {
+                SpawnEvent = this,
+                IsMarker = false,
+                MarkerRef = PrototypeId.Invalid,
+                MissionRef = PrototypeId.Invalid,
+                Position = position,
+                Random = random,
+                Critical = false,
+                Time = TimeSpan.Zero,
+                Properties = properties,
+                SpawnFlags = SpawnFlags.IgnoreSimulated,
+                Object = population,
+                SpawnLocation = spawnLocation,
+                SpawnHeat = spawnHeat,
+                SpawnCleanup = true,
+                RemoveOnSpawnFail = true
+            };
+
+            populationObject.Scheduler = AddToScheduler(populationObject);
+            return populationObject;
+        }
     }
 
     public class MissionSpawnEvent : SpawnEvent
@@ -275,11 +280,12 @@ namespace MHServerEmu.Games.Populations
             bool notOpen = missionProto is not OpenMissionPrototype;
             bool spawnCleanup = notOpen;
             bool critical = notOpen || missionProto.PopulationRequired;
+            var difficultyRef = Region.DifficultyTierRef;
 
             if (missionProto.PopulationSpawns.HasValue())            
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
-                    if (entry.AllowedInDifficulty(Region.DifficultyTierRef) == false) continue;
+                    if (entry.AllowedInDifficulty(difficultyRef) == false) continue;
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
                         bool foundArea = false;
@@ -333,10 +339,11 @@ namespace MHServerEmu.Games.Populations
             bool spawnCleanup, bool removeOnSpawnFail, TimeSpan time = default)
         {
             float spawnableArea = spawnLocation.CalcSpawnableArea();
+            var difficultyRef = Region.DifficultyTierRef;
 
             foreach (var reqObject in populationObjects)
             {
-                if (reqObject.AllowedInDifficulty(Region.DifficultyTierRef) == false) continue;
+                if (reqObject.AllowedInDifficulty(difficultyRef) == false) continue;
                 int count = reqObject.Count;
                 var objectProto = reqObject.GetPopObject();
                 if (count <= 0 && reqObject.Density > 0.0f)

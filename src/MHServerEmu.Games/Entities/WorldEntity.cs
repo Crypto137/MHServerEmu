@@ -169,6 +169,7 @@ namespace MHServerEmu.Games.Entities
             OnAllianceChanged(Properties[PropertyEnum.AllianceOverride]);
             RegionLocation.Initialize(this);
             SpawnSpec = settings.SpawnSpec;
+            SetFlag(EntityFlags.IsPopulation, settings.IsPopulation);
 
             if (worldEntityProto.Bounds != null)
                 Bounds.InitializeFromPrototype(worldEntityProto.Bounds);
@@ -1560,6 +1561,13 @@ namespace MHServerEmu.Games.Entities
             AlliancePrototype thisAllianceProto = allianceOverrideProto ?? Alliance;
             if (thisAllianceProto == null) return false;
             return thisAllianceProto.IsFriendlyTo(otherAllianceProto) && !thisAllianceProto.IsHostileTo(otherAllianceProto);
+        }
+
+        public bool IsHostileToPlayers()
+        {
+            var globalProto = GameDatabase.GlobalsPrototype;
+            if (globalProto == null) return false;
+            return IsHostileTo(globalProto.PlayerAlliancePrototype);
         }
 
         public bool IsHostileTo(AlliancePrototype otherAllianceProto, AlliancePrototype allianceOverrideProto = null)
