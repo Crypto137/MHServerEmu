@@ -1906,7 +1906,7 @@ namespace MHServerEmu.Games.Entities
                 if (player == null) continue;
 
                 // Loot
-                Game.LootManager.DropRandomLoot(this, player);
+                Game.LootManager.DropRandomLoot(player, this);
 
                 // XP
                 if (killer is not Avatar avatar)

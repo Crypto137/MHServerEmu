@@ -36,7 +36,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Drops random loot from the provided source <see cref="WorldEntity"/>.
         /// </summary>
-        public void DropRandomLoot(WorldEntity sourceEntity, Player player)
+        public void DropRandomLoot(Player player, WorldEntity sourceEntity)
         {
             LootDropEventType lootDropEventType = LootDropEventType.OnKilled;
 
@@ -52,10 +52,7 @@ namespace MHServerEmu.Games.Loot
 
             if (lootResultSummary.HasAnyResult == false) return;
 
-            // Instance the loot if we have a player provided and instanced loot is not disabled by server config
-            ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
-
-            SpawnLootFromSummary(lootResultSummary, sourceEntity, restrictedToPlayerGuid);
+            SpawnLootFromSummary(lootResultSummary, player, sourceEntity);
         }
 
         /// <summary>
@@ -69,6 +66,8 @@ namespace MHServerEmu.Games.Loot
             if (RollLootTable(lootTableProtoRef, player, lootResultSummary) == false)
                 Logger.Warn($"TestLootTable(): Failed to roll loot table {lootTableProtoRef.GetName()}");
 
+            Logger.Info($"Types: {lootResultSummary.Types}");
+
             foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                 Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
 
@@ -78,28 +77,34 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Spawns loot contained in the provided <see cref="LootResultSummary"/> in the game world.
         /// </summary>
-        public void SpawnLootFromSummary(LootResultSummary lootResultSummary, WorldEntity sourceEntity, ulong restrictedToPlayerGuid = 0)
+        public void SpawnLootFromSummary(LootResultSummary lootResultSummary, Player player, WorldEntity sourceEntity)
         {
+            // Calculate drop radius
             int numDrops = lootResultSummary.ItemSpecs.Count + lootResultSummary.AgentSpecs.Count;
-            float maxDistanceFromSource = MathF.Min(300f, 75f + 25f * numDrops);
+            float maxDropRadius = MathF.Min(300f, 75f + 25f * numDrops);
+
+            // Instance the loot if we have a player provided and instanced loot is not disabled by server config
+            ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
 
             if (lootResultSummary.Types != LootType.None && lootResultSummary.Types != LootType.Item)
                 Logger.Debug($"SpawnLootFromSummary(): Types={lootResultSummary.Types}");
 
+            // Spawn items
             if (lootResultSummary.Types.HasFlag(LootType.Item))
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
-                    SpawnItem(itemSpec, sourceEntity, maxDistanceFromSource, restrictedToPlayerGuid);
+                    SpawnItem(itemSpec, sourceEntity, maxDropRadius, restrictedToPlayerGuid);
             }
 
+            // Spawn agents (orbs)
             if (lootResultSummary.Types.HasFlag(LootType.Agent))
             {
                 foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
-                    SpawnAgent(agentSpec, sourceEntity, maxDistanceFromSource, restrictedToPlayerGuid);
+                    SpawnAgent(agentSpec, sourceEntity, maxDropRadius, restrictedToPlayerGuid);
             }
         }
 
-        public bool SpawnItem(WorldEntity sourceEntity, PrototypeId itemProtoRef)
+        public bool SpawnItem(PrototypeId itemProtoRef, Player player, WorldEntity sourceEntity)
         {
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
             if (itemSpec == null)
@@ -109,15 +114,17 @@ namespace MHServerEmu.Games.Loot
             LootResult lootResult = new(itemSpec);
             lootResultSummary.Add(lootResult);
 
-            SpawnLootFromSummary(lootResultSummary, sourceEntity);
+            SpawnLootFromSummary(lootResultSummary, player, sourceEntity);
             return true;
         }
 
         /// <summary>
         /// Creates and gives a new item to the provided <see cref="Player"/>.
         /// </summary>
-        public Item GiveItem(Player player, PrototypeId itemProtoRef)
+        public Item GiveItem(PrototypeId itemProtoRef, Player player)
         {
+            // TODO: Do the itemProtoRef -> LootResultSummary -> Give flow, similar to spawning
+
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
             if (itemSpec == null)
                 return Logger.WarnReturn<Item>(null, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
@@ -169,9 +176,9 @@ namespace MHServerEmu.Games.Loot
 
             _resolver.SetContext(LootContext.Drop, player);
 
-            lootTableProto.RollLootTable(settings, _resolver);
-
-            _resolver.FillLootResultSummary(lootResultSummary);
+            LootRollResult result = lootTableProto.RollLootTable(settings, _resolver);
+            if (result.HasFlag(LootRollResult.Success))
+                _resolver.FillLootResultSummary(lootResultSummary);
 
             return true;
         }
@@ -179,11 +186,11 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Spawns an <see cref="Item"/> in the game world.
         /// </summary>
-        private bool SpawnItem(ItemSpec itemSpec, WorldEntity sourceEntity, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        private bool SpawnItem(ItemSpec itemSpec, WorldEntity sourceEntity, float dropRadius, ulong restrictedToPlayerGuid = 0)
         {
             // Pick a random point near source entity
-            sourceEntity.Region.ChooseRandomPositionNearPoint(sourceEntity.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
-                BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
+            if (ChooseDropPosition(sourceEntity, dropRadius, out Vector3 dropPosition) == false)
+                return Logger.WarnReturn(false, $"SpawnItem(): Failed to find position to spawn item {itemSpec.ItemProtoRef.GetName()}");
 
             // Get item prototype to calculate lifespan
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
@@ -208,13 +215,13 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float maxDropRadius, ulong restrictedToPlayerGuid = 0)
         {
             // this looks very similar to SpawnItem, TODO: move common functionality to a separate method
 
             // Pick a random point near source entity
-            sourceEntity.Region.ChooseRandomPositionNearPoint(sourceEntity.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
-                BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
+            if (ChooseDropPosition(sourceEntity, maxDropRadius, out Vector3 dropPosition) == false)
+                return Logger.WarnReturn(false, $"SpawnAgent(): Failed to find position to spawn agent {agentSpec}");
 
             // NOTE: Orbs shrink over time using their behavior profile, see CAgent::onEnterWorldScheduleOrbShrink for details.
             // Until we have their AI implemented, calculated lifespan here.
@@ -248,6 +255,21 @@ namespace MHServerEmu.Games.Loot
             if (agent == null) return Logger.WarnReturn(false, "SpawnAgent(): item == null");
 
             return true;
+        }
+
+        private static bool ChooseDropPosition(WorldEntity sourceEntity, float maxDropRadius, out Vector3 dropPosition)
+        {
+            if (sourceEntity == null)
+            {
+                dropPosition = Vector3.Zero;
+                return Logger.WarnReturn(false, "ChooseDropPosition(): sourceEntity == null");
+            }
+
+            const float MinDropRadius = 50f;
+            maxDropRadius = MathF.Max(MinDropRadius, maxDropRadius);
+
+            return sourceEntity.Region.ChooseRandomPositionNearPoint(sourceEntity.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+                BlockingCheckFlags.CheckSpawns, MinDropRadius, maxDropRadius, out dropPosition);
         }
     }
 }
