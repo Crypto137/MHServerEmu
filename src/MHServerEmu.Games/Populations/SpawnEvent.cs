@@ -1,13 +1,9 @@
-﻿using MHServerEmu.Core.Collections;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.MetaGames;
-using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -227,7 +223,7 @@ namespace MHServerEmu.Games.Populations
                     AddPopulationObject(markerRef, objectProto, false, spawnLocation, PrototypeId.Invalid, true);
                 markerCount++;
             }
-            Logger.Debug($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(populationProto.DataRef)}][{objCount}][{markerCount}]");
+            // Logger.Debug($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(populationProto.DataRef)}][{objCount}][{markerCount}]");
         }
 
         public PopulationObject AddHeatObject(Vector3 position, PopulationObjectPrototype population, SpawnHeat spawnHeat)
