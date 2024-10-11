@@ -1,4 +1,7 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -28,6 +31,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class PopulationPrototype : Prototype
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public PrototypeId RespawnMethod { get; protected set; }
         public float ClusterDensityPct { get; protected set; }
         public float ClusterDensityPeak { get; protected set; }
@@ -67,6 +71,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var entry in EncounterDensityOverrides)
                     if (entry.MarkerType == markerRef) return entry.Density;            
             return EncounterDensityBase;
+        }
+
+        public PrototypeId PickTheme(GRandom random)
+        {
+            if (Themes == null) return Logger.WarnReturn(PrototypeId.Invalid, $"Population contains no themes.\r\t{this}");
+
+            Picker<PrototypeId> picker = new(random);
+            foreach (var instance in Themes.List)
+            {
+                if (instance == null || instance.Object == PrototypeId.Invalid) continue;
+                var themeProto = GameDatabase.GetPrototype<PopulationThemePrototype>(instance.Object);
+                if (themeProto == null) continue;
+                if (instance.Weight > 0)
+                    picker.Add(instance.Object, instance.Weight);
+            }
+
+            var pickTheme = PrototypeId.Invalid;
+            if (picker.Empty() == false) picker.Pick(out pickTheme);
+
+            return pickTheme;
         }
     }
 
@@ -128,7 +152,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     Console.WriteLine("Unsupported population prototype");
             }
         }
-
     }
 
     public class PopulationObjectListPrototype : Prototype
