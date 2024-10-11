@@ -456,30 +456,26 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
         private static Walls GetWallMask(Walls walls, Dir dir)
         {
-            switch (dir)
+            return dir switch
             {
-                case Dir.N:
-                    return (walls.HasFlag(Walls.NW) ? Walls.SW : Walls.None) |
-                                    (walls.HasFlag(Walls.N) ? Walls.S : Walls.None) |
-                                    (walls.HasFlag(Walls.NE) ? Walls.SE : Walls.None);
-                case Dir.NE: return walls.HasFlag(Walls.NE) ? Walls.SW : Walls.None;
-                case Dir.E:
-                    return (walls.HasFlag(Walls.SE) ? Walls.SW : Walls.None) |
-                                    (walls.HasFlag(Walls.E) ? Walls.W : Walls.None) |
-                                    (walls.HasFlag(Walls.NE) ? Walls.NW : Walls.None);
-                case Dir.ES: return walls.HasFlag(Walls.SE) ? Walls.NW : Walls.None;
-                case Dir.S:
-                    return (walls.HasFlag(Walls.SW) ? Walls.NW : Walls.None) |
-                                    (walls.HasFlag(Walls.S) ? Walls.N : Walls.None) |
-                                    (walls.HasFlag(Walls.SE) ? Walls.NE : Walls.None);
-                case Dir.SW: return walls.HasFlag(Walls.SW) ? Walls.NE : Walls.None;
-                case Dir.W:
-                    return (walls.HasFlag(Walls.NW) ? Walls.NE : Walls.None) |
-                                    (walls.HasFlag(Walls.W) ? Walls.E : Walls.None) |
-                                    (walls.HasFlag(Walls.SW) ? Walls.SE : Walls.None);
-                case Dir.NW: return walls.HasFlag(Walls.NW) ? Walls.SE : Walls.None;
-                default: return Walls.None;
-            }
+                Dir.N => (walls.HasFlag(Walls.NW) ? Walls.SW : Walls.None)
+                       | (walls.HasFlag(Walls.N) ? Walls.S : Walls.None)
+                       | (walls.HasFlag(Walls.NE) ? Walls.SE : Walls.None),
+                Dir.NE => walls.HasFlag(Walls.NE) ? Walls.SW : Walls.None,
+                Dir.E => (walls.HasFlag(Walls.SE) ? Walls.SW : Walls.None)
+                       | (walls.HasFlag(Walls.E) ? Walls.W : Walls.None)
+                       | (walls.HasFlag(Walls.NE) ? Walls.NW : Walls.None),
+                Dir.ES => walls.HasFlag(Walls.SE) ? Walls.NW : Walls.None,
+                Dir.S => (walls.HasFlag(Walls.SW) ? Walls.NW : Walls.None)
+                       | (walls.HasFlag(Walls.S) ? Walls.N : Walls.None) 
+                       | (walls.HasFlag(Walls.SE) ? Walls.NE : Walls.None),
+                Dir.SW => walls.HasFlag(Walls.SW) ? Walls.NE : Walls.None,
+                Dir.W => (walls.HasFlag(Walls.NW) ? Walls.NE : Walls.None)
+                       | (walls.HasFlag(Walls.W) ? Walls.E : Walls.None)
+                       | (walls.HasFlag(Walls.SW) ? Walls.SE : Walls.None),
+                Dir.NW => walls.HasFlag(Walls.NW) ? Walls.SE : Walls.None,
+                _ => Walls.None,
+            };
         }
 
         public override bool Initialize(int iX, int iY, CellSetRegistry registry, int deadEndMax)
