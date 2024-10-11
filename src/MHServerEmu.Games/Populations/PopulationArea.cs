@@ -115,7 +115,7 @@ namespace MHServerEmu.Games.Populations
                     distributed++;
                 }
             }
-            Logger.Info($"UpdateSpawnMap spawned {spawned} distributed {distributed}");
+            // Logger.Info($"UpdateSpawnMap spawned {spawned} distributed {distributed}");
         }
 
         private void SpawnHeatPopulation(Vector3 position, int index, GRandom random, SpawnMap spawnMap)
