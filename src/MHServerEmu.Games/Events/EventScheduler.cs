@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using System.Diagnostics;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Metrics;
 
@@ -9,6 +10,9 @@ namespace MHServerEmu.Games.Events
         private const int MaxEventsPerUpdate = 50000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly TimeSpan EventTriggerTimeLogThreshold = TimeSpan.FromMilliseconds(5);
+
+        private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 
         // TODO: Implement frame buckets
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
@@ -125,7 +129,13 @@ namespace MHServerEmu.Games.Events
                         _scheduledEvents.Remove(@event);
                         @event.EventGroupNode?.Remove();
                         @event.InvalidatePointers();
+
+                        TimeSpan referenceTime = _stopwatch.Elapsed;
                         @event.OnTriggered();
+                        TimeSpan triggerTime = _stopwatch.Elapsed - referenceTime;
+
+                        if (triggerTime >= _quantumSize)
+                            Logger.Warn($"{@event.GetType().Name} took {(_stopwatch.Elapsed - referenceTime).TotalMilliseconds} ms");
 
                         if (++numEvents > MaxEventsPerUpdate)
                             throw new Exception($"Infinite loop detected in EventScheduler.");

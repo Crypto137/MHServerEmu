@@ -51,7 +51,7 @@ namespace MHServerEmu.Games
         private FixedQuantumGameTime _realGameTime = new(TimeSpan.FromMilliseconds(1));
         private TimeSpan _currentGameTime = TimeSpan.FromMilliseconds(1);   // Current time in the game simulation
         private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
-        private int _frameCount;
+        private long _frameCount;
 
         private int _liveTuningChangeNum;
 
@@ -365,15 +365,29 @@ namespace MHServerEmu.Games
 
         private void DoFixedTimeUpdate()
         {
-            GameEventScheduler.TriggerEvents(_currentGameTime);
+            TimeSpan referenceTime;
+            MetricsManager metrics = MetricsManager.Instance;
 
-            // Re-enable locomotion and physics when we get rid of multithreading issues
+            referenceTime = _gameTimer.Elapsed;
+            GameEventScheduler.TriggerEvents(_currentGameTime);
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameTriggerEventsTime, _gameTimer.Elapsed - referenceTime);
+
+            referenceTime = _gameTimer.Elapsed;
             EntityManager.LocomoteEntities();
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameLocomoteEntitiesTime, _gameTimer.Elapsed - referenceTime);
+
+            referenceTime = _gameTimer.Elapsed;
             EntityManager.PhysicsResolveEntities();
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FramePhysicsResolveEntitiesTime, _gameTimer.Elapsed - referenceTime);
+
+            referenceTime = _gameTimer.Elapsed;
             EntityManager.ProcessDeferredLists();
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameProcessDeferredListsTime, _gameTimer.Elapsed - referenceTime);
 
             // Send responses to all clients
+            referenceTime = _gameTimer.Elapsed;            
             NetworkManager.SendAllPendingMessages();
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameSendAllPendingMessagesTime, _gameTimer.Elapsed - referenceTime);
         }
 
         private void UpdateLiveTuning()

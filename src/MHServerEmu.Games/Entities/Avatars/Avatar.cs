@@ -1291,6 +1291,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarTeamUpAgentId] = teamUpAgent.Id;
             teamUpAgent.Properties[PropertyEnum.TeamUpOwnerId] = Id;
             teamUpAgent.Properties[PropertyEnum.PowerUserOverrideID] = Id;
+
+            teamUpAgent.CombatLevel = CombatLevel;
         }
 
         public bool IsTeamUpAgentUnlocked(PrototypeId teamUpProtoRef)
@@ -1310,10 +1312,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             Agent teamUp = CurrentTeamUpAgent;
             if (teamUp == null) return;
 
-            teamUp.CombatLevel = CombatLevel;
-
+            // Resurrect or restore team-up health
             if (teamUp.IsDead)
                 teamUp.Resurrect();
+            else
+                teamUp.Properties[PropertyEnum.Health] = teamUp.Properties[PropertyEnum.HealthMax];
 
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             if (playIntro)
