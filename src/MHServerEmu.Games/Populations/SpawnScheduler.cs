@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -36,6 +37,8 @@ namespace MHServerEmu.Games.Populations
 
     public class SpawnScheduler
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly PopulationObjectQueue _criticalQueue = new();
         private readonly PopulationObjectQueue _regularQueue = new();
 
@@ -95,7 +98,8 @@ namespace MHServerEmu.Games.Populations
             {
                 if (populationObject.SpawnByMarker()) // cell.SpawnPopulation(population);
                     OnSpawnedPopulation(populationObject);
-                else FailedObjects.Enqueue(populationObject);
+                else if (populationObject.RemoveOnSpawnFail == false)
+                    PushFailedObject(populationObject);
             }
         }
 
@@ -124,6 +128,13 @@ namespace MHServerEmu.Games.Populations
 
                     if (spawned)
                         OnSpawnedPopulation(populationObject);
+                    else
+                    {
+                        if (populationObject.RemoveOnSpawnFail)
+                            populationObject.SpawnHeat?.Return();
+                        else
+                            PushFailedObject(populationObject);
+                    }
                 }
             }
         }
@@ -145,6 +156,19 @@ namespace MHServerEmu.Games.Populations
                     picker.Add(cell, spawnCell.CellWeight);
             }
             return picker;
+        }
+
+        public void PushFailedObject(PopulationObject populationObject)
+        {
+            // Logger.Trace($"Failed Spawn {populationObject}");
+            // FailedObjects.Enqueue(populationObject);
+        }
+
+        public void PopFailedObjects()
+        {
+            // we can retry spawn failed object but do we need to???
+            while (FailedObjects.Count > 0)
+                Push(FailedObjects.Dequeue());
         }
     }
 

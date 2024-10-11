@@ -169,9 +169,8 @@ namespace MHServerEmu.Games.Populations
                 if (scheduler.CanAnySpawn(currentTime))
                     schedulerPicker.Add(scheduler);
 
-            while (schedulerPicker.Empty() == false)
+            while (schedulerPicker.PickRemove(out var scheduler))
             {
-                schedulerPicker.PickRemove(out var scheduler);
                 if (scheduler.CanAnySpawn(currentTime))
                 {
                     // Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");

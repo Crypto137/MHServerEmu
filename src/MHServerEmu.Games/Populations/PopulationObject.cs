@@ -163,6 +163,13 @@ namespace MHServerEmu.Games.Populations
             }
             return enemyPicks == 0;
         }
+
+        public override string ToString()
+        {
+            string type = IsMarker ? "M" : "R";
+            if (Position != null) type = "P";
+            return $"PopulationObject [{type}] [{Object}]";
+        }
     }
 
     public enum SpawnTargetType

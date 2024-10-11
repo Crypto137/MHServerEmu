@@ -96,8 +96,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override string ToString()
         {
+            HashSet<PrototypeId> entities = new();
+            GetContainedEntities(entities);
+
             StringBuilder sb = new();
-            sb.AppendLine($"[{GetType().Name}]: {GameDatabase.GetFormattedPrototypeName(UsePopulationMarker)}");
+            sb.AppendLine($"[{GetType().Name}]");
+            if (entities.Count > 0)
+            {
+                sb.AppendLine($"Entity: {entities.First().GetNameFormatted()}");
+                sb.AppendLine($"Entities: {entities.Count}");
+            }
+            sb.AppendLine($"Marker: {GameDatabase.GetFormattedPrototypeName(UsePopulationMarker)}");
             sb.AppendLine($"Riders: {Riders.Length}");
             return sb.ToString();
         }
