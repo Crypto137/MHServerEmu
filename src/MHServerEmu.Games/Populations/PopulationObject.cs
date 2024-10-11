@@ -208,7 +208,7 @@ namespace MHServerEmu.Games.Populations
                     break;
 
                 case SpawnTargetType.Position:
-                    success = clusterGroup.PickPositionInSector(Position, Orientation.Zero, 0, SpawnMap.SpawnMapResolution);
+                    success = clusterGroup.PickPositionInSector(Position, Orientation.Zero, 0, SpawnMap.Resolution);
                     break;
 
                 case SpawnTargetType.Spawner:

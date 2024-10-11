@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -12,8 +11,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
-using System;
-using System.Reflection;
 
 namespace MHServerEmu.Games.Populations
 {
@@ -50,8 +47,7 @@ namespace MHServerEmu.Games.Populations
 
     public class SpawnMap
     {
-        public const int GimbalResolution = 128;
-        public const int SpawnMapResolution = 256;
+        public const int Resolution = 256;
 
         public Area Area;
 
@@ -102,8 +98,8 @@ namespace MHServerEmu.Games.Populations
             Area = area;
 
             var aabb = area.LocalBounds;
-            _boundsX = MathHelper.RoundToInt(aabb.Width) / SpawnMapResolution;
-            _boundsY = MathHelper.RoundToInt(aabb.Length) / SpawnMapResolution;
+            _boundsX = MathHelper.RoundToInt(aabb.Width) / Resolution;
+            _boundsY = MathHelper.RoundToInt(aabb.Length) / Resolution;
             if (_boundsX == 0 || _boundsY == 0) return;
             int size = _boundsX * _boundsY;
 
@@ -143,7 +139,7 @@ namespace MHServerEmu.Games.Populations
             _heatMap = new HeatData[size];
             _heatMap.AsSpan().Fill(HeatData.Empty);
 
-            float spawnRadius = SpawnMapResolution / 2;
+            float spawnRadius = Resolution / 2.0f;
             var navi = area.Region.NaviMesh;
             var center = area.RegionBounds.Min + new Vector3(spawnRadius, spawnRadius, 0.0f);
 
@@ -154,7 +150,7 @@ namespace MHServerEmu.Games.Populations
             for (int y = 0; y < _boundsY; y++)
                 for (int x = 0; x < _boundsX; x++)
                 {
-                    var position = center + new Vector3(SpawnMapResolution * x, SpawnMapResolution * y, 0.0f);
+                    var position = center + new Vector3(Resolution * x, Resolution * y, 0.0f);
                     if (navi.Contains(position, spawnRadius, new WalkPathFlagsCheck()))
                     {
                         _heatMap[index] = HeatData.Min;
@@ -203,21 +199,20 @@ namespace MHServerEmu.Games.Populations
         {
             int oldHeatMax = _heatMax;
 
-            int index;
-            for (index = 0; index < _heatMap.Length; index++)
-                _heatMap[index] &= ~HeatData.BlackOut;
-
             var manager = Area.Region.PopulationManager;
             var zones = manager.IterateBlackOutZoneInVolume(Area.RegionBounds).ToArray();
 
-            float spawnRadius = SpawnMapResolution / 2;
+            float spawnRadius = Resolution / 2.0f;
             var center = Area.RegionBounds.Min + new Vector3(spawnRadius, spawnRadius, 0.0f);
 
-            index = 0;
+            int index = 0;
+            int spawnZone = 0;
             for (int y = 0; y < _boundsY; y++)
                 for (int x = 0; x < _boundsX; x++)
                 {
-                    var position = center + new Vector3(SpawnMapResolution * x, SpawnMapResolution * y, 0.0f);
+                    _heatMap[index] &= ~HeatData.BlackOut;
+
+                    var position = center + new Vector3(Resolution * x, Resolution * y, 0.0f);
                     foreach (var zone in zones)
                     {
                         float radiusSq = MathHelper.Square(zone.Sphere.Radius);
@@ -229,17 +224,15 @@ namespace MHServerEmu.Games.Populations
                             PoolHeat(heat);
                         }
                     }
+
+                    if (HasFlags(_heatMap[index]) == false) spawnZone++;
                     index++;
                 }
-
-            _spawnZone = 0;
-            for (index = 0; index < _heatMap.Length; index++)
-                if (HasFlags(_heatMap[index]) == false)
-                    _spawnZone++;
 
             int newHeatMax = _heatBase * _spawnZone;
             if (oldHeatMax == newHeatMax) return;
 
+            _spawnZone = spawnZone;
             _heatMax = newHeatMax;
 
             PoolHeat(newHeatMax - oldHeatMax);
@@ -369,8 +362,9 @@ namespace MHServerEmu.Games.Populations
 
             position = aabb.Min;
 
-            position.X += coord.X * SpawnMapResolution;
-            position.Y += coord.Y * SpawnMapResolution;
+            position.X += coord.X * Resolution;
+            position.Y += coord.Y * Resolution;
+            position.Z = 0f;
 
             return aabb.IntersectsXY(position);
         }
@@ -383,41 +377,14 @@ namespace MHServerEmu.Games.Populations
 
             var pos = position - aabb.Min;
 
-            int posX = MathHelper.RoundToInt(pos.X) / SpawnMapResolution;
+            int posX = MathHelper.RoundToInt(pos.X) / Resolution;
             if (checkBounds && (posX < 0 || posX > _boundsX)) return false;
 
-            int posY = MathHelper.RoundToInt(pos.Y) / SpawnMapResolution;
+            int posY = MathHelper.RoundToInt(pos.Y) / Resolution;
             if (checkBounds && (posY < 0 || posY > _boundsY)) return false;
 
             coord = new(posX, posY);
             return true;
-        }
-
-        public static bool ProjectGimbalPosition(Aabb aabb, Vector3 position, out Point2 coord)
-        {
-            coord = new();
-            if (aabb.IntersectsXY(position) == false) return false;
-
-            var pos = position - aabb.Min;
-
-            int boundsX = MathHelper.RoundToInt(aabb.Width) / GimbalResolution;
-            int posX = MathHelper.RoundToInt(pos.X) / GimbalResolution;
-            if (posX < 0 || posX > boundsX) return false;
-
-            int boundsY = MathHelper.RoundToInt(aabb.Length) / GimbalResolution;
-            int posY = MathHelper.RoundToInt(pos.Y) / GimbalResolution;
-            if (posY < 0 || posY > boundsY) return false;
-
-            coord = new(posX, posY);
-            return true;
-        }
-
-        public static Aabb HorizonVolume(Vector3 position, int spawnMapHorizon)
-        {
-            float horizon = spawnMapHorizon * SpawnMapResolution;
-            Vector3 min = new(position.X - horizon, position.Y - horizon, -1024.0f);
-            Vector3 max = new(position.X + horizon, position.Y + horizon, 1024.0f);
-            return new(min, max);
         }
 
         public void DistributeHeat(int index, Point2 start)
@@ -615,11 +582,20 @@ namespace MHServerEmu.Games.Populations
     {
         public Point2 Coord;
         public Square Gimbal;
+        public float Horizon;
 
-        public SpawnGimbal(int radius)
+        public SpawnGimbal(int radius, int horizon)
         {
             Coord = new Point2(0, 0);
             Gimbal = new Square(new(-radius, -radius), new(radius, radius));
+            Horizon = horizon * SpawnMap.Resolution;
+        }
+
+        public Aabb HorizonVolume(Vector3 position)
+        {
+            Vector3 min = new(position.X - Horizon, position.Y - Horizon, -1024.0f);
+            Vector3 max = new(position.X + Horizon, position.Y + Horizon, 1024.0f);
+            return new(min, max);
         }
 
         public void UpdateGimbal(Point2 coord)
@@ -645,6 +621,25 @@ namespace MHServerEmu.Games.Populations
         {
             return Gimbal.Min.X <= coord.X && Gimbal.Max.X >= coord.X 
                 && Gimbal.Min.Y <= coord.Y && Gimbal.Max.Y >= coord.Y;
+        }
+
+        public bool ProjectGimbalPosition(Aabb aabb, Vector3 position, out Point2 coord)
+        {
+            coord = new();
+            if (aabb.IntersectsXY(position) == false) return false;
+
+            var pos = position - aabb.Min;
+
+            int boundsX = MathHelper.RoundToInt(aabb.Width) / SpawnMap.Resolution;
+            int posX = MathHelper.RoundToInt(pos.X) / SpawnMap.Resolution;
+            if (posX < 0 || posX > boundsX) return false;
+
+            int boundsY = MathHelper.RoundToInt(aabb.Length) / SpawnMap.Resolution;
+            int posY = MathHelper.RoundToInt(pos.Y) / SpawnMap.Resolution;
+            if (posY < 0 || posY > boundsY) return false;
+
+            coord = new(posX, posY);
+            return true;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.System.Random;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -8,6 +9,7 @@ namespace MHServerEmu.Games.Populations
 {
     public class PopulationArea
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public Game Game { get; }
         public Area Area { get; }
         public PrototypeId PopulationRef { get; }
@@ -78,7 +80,8 @@ namespace MHServerEmu.Games.Populations
 
             var picker = spawnMap.Picker;
             picker.AddHorizon(coord, spawnMap.Horizon, false);
-
+            int spawned = 0;
+            int distributed = 0;
             while (picker.Pick(out int index))
             {
                 if (index < 0) continue;
@@ -102,14 +105,17 @@ namespace MHServerEmu.Games.Populations
                 if (spawn)
                 {
                     // spawn population
-                    SpawnHeatPopulation(position, index, random, spawnMap);
+                    SpawnHeatPopulation(spawnPosition, index, random, spawnMap);
+                    spawned++;
                 }
                 else
                 {
                     // distribute Heat
                     spawnMap.DistributeHeat(index, coord);
+                    distributed++;
                 }
             }
+            Logger.Info($"UpdateSpawnMap spawned {spawned} distributed {distributed}");
         }
 
         private void SpawnHeatPopulation(Vector3 position, int index, GRandom random, SpawnMap spawnMap)

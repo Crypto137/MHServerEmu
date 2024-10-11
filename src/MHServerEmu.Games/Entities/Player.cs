@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.Entities
 
             var popProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
             if (popProto == null) return false;
-            _spawnGimbal = new (popProto.SpawnMapGimbalRadius);
+            _spawnGimbal = new (popProto.SpawnMapGimbalRadius, popProto.SpawnMapHorizon);
 
             return true;
         }
@@ -1792,17 +1792,14 @@ namespace MHServerEmu.Games.Entities
         {
             var region = GetRegion();
             if (region == null || _spawnGimbal == null) return;
-            if (SpawnMap.ProjectGimbalPosition(region.Aabb, position, out Point2 coord) == false) return;
+            if (_spawnGimbal.ProjectGimbalPosition(region.Aabb, position, out Point2 coord) == false) return;
             if (_spawnGimbal.Coord == coord) return;
 
             bool inGimbal = _spawnGimbal.InGimbal(coord);
             _spawnGimbal.UpdateGimbal(coord);
             if (inGimbal) return;
 
-            var popProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
-            if (popProto == null) return;
-            Aabb volume = SpawnMap.HorizonVolume(position, popProto.SpawnMapHorizon);
-
+            Aabb volume = _spawnGimbal.HorizonVolume(position);
             foreach (var area in region.IterateAreas(volume))
                 if (area.SpawnMap != null)
                     area.PopulationArea?.UpdateSpawnMap(position);
