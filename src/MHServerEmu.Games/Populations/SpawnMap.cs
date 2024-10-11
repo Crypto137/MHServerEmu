@@ -369,19 +369,13 @@ namespace MHServerEmu.Games.Populations
             return aabb.IntersectsXY(position);
         }
 
-        public bool ProjectAreaPosition(Vector3 position, out Point2 coord, bool checkBounds = true)
+        public bool ProjectAreaPosition(Vector3 position, out Point2 coord)
         {
             var aabb = Area.RegionBounds;
-            coord = new();
-            if (checkBounds && aabb.IntersectsXY(position) == false) return false;
-
             var pos = position - aabb.Min;
 
             int posX = MathHelper.RoundToInt(pos.X) / Resolution;
-            if (checkBounds && (posX < 0 || posX > _boundsX)) return false;
-
             int posY = MathHelper.RoundToInt(pos.Y) / Resolution;
-            if (checkBounds && (posY < 0 || posY > _boundsY)) return false;
 
             coord = new(posX, posY);
             return true;
@@ -487,8 +481,7 @@ namespace MHServerEmu.Games.Populations
         {
             if (_pool == 0) return;
 
-            int heatReturnPerSecond = CalcHeatReturnPerSecond();
-            int heatReturn = PoolTickSec * heatReturnPerSecond;
+            int heatReturn = PoolTickSec * CalcHeatReturnPerSecond();
             if (heatReturn > 0)
             {
                 heatReturn = Math.Min(_pool, heatReturn);
@@ -581,13 +574,15 @@ namespace MHServerEmu.Games.Populations
     public class SpawnGimbal
     {
         public Point2 Coord;
-        public Square Gimbal;
+        public Point2 Min;
+        public Point2 Max;
         public float Horizon;
 
         public SpawnGimbal(int radius, int horizon)
         {
-            Coord = new Point2(0, 0);
-            Gimbal = new Square(new(-radius, -radius), new(radius, radius));
+            Coord = new(0, 0);
+            Min = new(-radius, -radius);
+            Max = new(radius, radius);
             Horizon = horizon * SpawnMap.Resolution;
         }
 
@@ -603,24 +598,24 @@ namespace MHServerEmu.Games.Populations
             Coord = coord;
 
             int x = 0;
-            if (Gimbal.Max.X < coord.X) x = coord.X - Gimbal.Max.X;
-            else if (Gimbal.Min.X > coord.X) x = coord.X - Gimbal.Min.X;
+            if (Max.X < coord.X) x = coord.X - Max.X;
+            else if (Min.X > coord.X) x = coord.X - Min.X;
 
-            Gimbal.Min.X += x;
-            Gimbal.Max.X += x;
+            Min.X += x;
+            Max.X += x;
 
             int y = 0;
-            if (Gimbal.Max.Y < coord.Y) y = coord.Y - Gimbal.Max.Y;
-            else if (Gimbal.Min.Y > coord.Y) y = coord.Y - Gimbal.Min.Y;
+            if (Max.Y < coord.Y) y = coord.Y - Max.Y;
+            else if (Min.Y > coord.Y) y = coord.Y - Min.Y;
 
-            Gimbal.Min.Y += y;
-            Gimbal.Max.Y += y;
+            Min.Y += y;
+            Max.Y += y;
         }
 
         public bool InGimbal(Point2 coord)
         {
-            return Gimbal.Min.X <= coord.X && Gimbal.Max.X >= coord.X 
-                && Gimbal.Min.Y <= coord.Y && Gimbal.Max.Y >= coord.Y;
+            return Min.X <= coord.X && Max.X >= coord.X 
+                && Min.Y <= coord.Y && Max.Y >= coord.Y;
         }
 
         public bool ProjectGimbalPosition(Aabb aabb, Vector3 position, out Point2 coord)

@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Populations
         public void UpdateSpawnMap(Vector3 position)
         {
             var spawnMap = Area.SpawnMap;
-            if (spawnMap.ProjectAreaPosition(position, out Point2 coord, false) == false) return;
+            if (spawnMap.ProjectAreaPosition(position, out Point2 coord) == false) return;
 
             var random = Game.Random;
 
