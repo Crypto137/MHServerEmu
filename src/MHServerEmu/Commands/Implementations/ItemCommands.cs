@@ -116,14 +116,18 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
+            int numLootTables = 0;
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             foreach (PrototypeId lootTableProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<LootTablePrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
                 player.Game.LootManager.TestLootTable(lootTableProtoRef, player);
+                numLootTables++;
+            }
 
             stopwatch.Stop();
 
-            return $"Finished rolling all loot tables in {stopwatch.Elapsed.TotalMilliseconds} ms, see the server console for results.";
+            return $"Finished rolling {numLootTables} loot tables in {stopwatch.Elapsed.TotalMilliseconds} ms, see the server console for results.";
         }
     }
 }

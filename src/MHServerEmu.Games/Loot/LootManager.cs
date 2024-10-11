@@ -66,10 +66,8 @@ namespace MHServerEmu.Games.Loot
             if (RollLootTable(lootTableProtoRef, player, lootResultSummary) == false)
                 Logger.Warn($"TestLootTable(): Failed to roll loot table {lootTableProtoRef.GetName()}");
 
-            Logger.Info($"Types: {lootResultSummary.Types}");
-
-            foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
-                Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
+            if (lootResultSummary.Types != LootType.None)
+                Logger.Info($"Summary: {lootResultSummary}\n{lootResultSummary.ToStringVerbose()}");
 
             Logger.Info("--- Loot Table Test Over ---");
         }

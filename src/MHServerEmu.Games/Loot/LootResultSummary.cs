@@ -43,13 +43,11 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 case LootType.Agent:
-                    Logger.Debug($"Add(): agentSpec=[{lootResult.AgentSpec}]");
                     AgentSpecs.Add(lootResult.AgentSpec);
                     Types |= LootType.Agent;
                     break;
 
                 case LootType.Credits:
-                    Logger.Debug($"Add(): credits=[{lootResult.Amount}]");
                     Credits.Add(lootResult.Amount);
                     Types |= LootType.Credits;
                     break;
@@ -180,10 +178,102 @@ namespace MHServerEmu.Games.Loot
 
         public override string ToString()
         {
+            return $"Types=[{Types}]";
+        }
+
+        public string ToStringVerbose()
+        {
             StringBuilder sb = new();
 
             if (Types.HasFlag(LootType.Item))
-                sb.AppendLine($"Item {ItemSpecs[0].ItemProtoRef.GetNameFormatted()} [{ItemSpecs.Count}]");
+            {
+                sb.AppendLine("Item:");
+
+                foreach (ItemSpec itemSpec in ItemSpecs)
+                    sb.AppendLine($"\titemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
+            }
+
+            if (Types.HasFlag(LootType.Agent))
+            {
+                sb.AppendLine("Agent:");
+
+                foreach (AgentSpec agentSpec in AgentSpecs)
+                    sb.AppendLine($"\t{agentSpec}");
+            }
+
+            if (Types.HasFlag(LootType.Credits))
+            {
+                sb.AppendLine("Credits:");
+
+                sb.Append($"\t{Credits[0]}");
+
+                for (int i = 1; i < Credits.Count; i++)
+                    sb.Append($"+{Credits[i]}");
+
+                sb.AppendLine();
+            }
+
+            if (Types.HasFlag(LootType.Experience))
+            {
+                sb.AppendLine("Experience:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.PowerPoints))
+            {
+                sb.AppendLine("PowerPoints:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.HealthBonus))
+            {
+                sb.AppendLine("HealthBonus:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.EnduranceBonus))
+            {
+                sb.AppendLine("EnduranceBonus:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.RealMoney))
+            {
+                sb.AppendLine("RealMoney:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.CallbackNode))
+            {
+                sb.AppendLine("CallbackNode:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.LootMutation))
+            {
+                sb.AppendLine("LootMutation:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.VanityTitle))
+            {
+                sb.AppendLine("VanityTitle:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.VendorXP))
+            {
+                sb.AppendLine("VendorXP:");
+                // TODO
+            }
+
+            if (Types.HasFlag(LootType.Currency))
+            {
+                sb.AppendLine("Currency:");
+
+                foreach (CurrencySpec currencySpec in Currencies)
+                    sb.AppendLine($"\t{currencySpec}");
+            }
 
             return sb.ToString();
         }
