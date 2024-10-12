@@ -61,9 +61,9 @@ namespace MHServerEmu.Games.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly BitList _collisionIds = new();
-        private readonly BitList _collisionBits = new();
-        private readonly List<BitList> _collisionBitList = new();
+        private readonly GBitArray _collisionIds = new();
+        private readonly GBitArray _collisionBits = new();
+        private readonly List<GBitArray> _collisionBitList = new();
         private Dictionary<PrototypeId, ulong> _uniqueSelectorIndexes = new();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
@@ -990,7 +990,7 @@ namespace MHServerEmu.Games.Regions
         public int AcquireCollisionId()
         {
             int index = _collisionIds.FirstUnset();
-            if (index == BitList.Invalid) index = _collisionIds.Size;
+            if (index == GBitArray.Invalid) index = _collisionIds.Size;
             _collisionIds.Set(index);
             return index;
         }

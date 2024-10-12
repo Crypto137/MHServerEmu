@@ -1,16 +1,17 @@
 ﻿namespace MHServerEmu.Core.Collections
 {
-    public class BitList
+    public class GBitArray
     {
         public const int Invalid = -1;
-        private const int BitsPerWord = 64; // bits in ulong
+        private const int BitsPerWord = 8 * sizeof(ulong); // bits in ulong
 
         protected ulong[] _bits; // ulong array of words
         private int _size; // size in words
 
         public int Size => _size * BitsPerWord;
+        public int Bytes => _size * sizeof(ulong);
 
-        public BitList()
+        public GBitArray()
         {
             Free();
         }
@@ -85,7 +86,7 @@
                 _bits[i] = 0;
         }
 
-        public T Copy<T>() where T : BitList, new()
+        public T Copy<T>() where T : GBitArray, new()
         {
             T result = new (); 
             result.Reserve(Size);
@@ -139,7 +140,7 @@
             return Invalid;
         }
 
-        public static T And<T>(T left, T right) where T: BitList, new()
+        public static T And<T>(T left, T right) where T: GBitArray
         {
             left.Reserve(right.Size);
             for (int i = 0; i < right._size; i++)
@@ -148,12 +149,12 @@
             return left;
         }
 
-        public static BitList operator &(BitList left, BitList right)
+        public static GBitArray operator &(GBitArray left, GBitArray right)
         {
             return And(left, right);
         }
 
-        public static T Or<T>(T left, T right) where T : BitList, new()
+        public static T Or<T>(T left, T right) where T : GBitArray
         {
             left.Reserve(right.Size);
             for (int i = 0; i < right._size; i++)
@@ -162,12 +163,12 @@
             return left;
         }
 
-        public static BitList operator |(BitList left, BitList right)
+        public static GBitArray operator |(GBitArray left, GBitArray right)
         {
             return Or(left, right);
         }
 
-        public static T Xor<T>(T left, T right) where T : BitList, new()
+        public static T Xor<T>(T left, T right) where T : GBitArray
         {
             left.Reserve(right.Size);
             for (int i = 0; i < right._size; i++)
@@ -176,7 +177,7 @@
             return left;
         }
 
-        public static BitList operator ^(BitList left, BitList right)
+        public static GBitArray operator ^(GBitArray left, GBitArray right)
         {
             return Xor(left, right);
         }
