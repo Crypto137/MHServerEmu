@@ -990,8 +990,8 @@ namespace MHServerEmu.Games.Regions
         public int AcquireCollisionId()
         {
             int index = _collisionIds.FirstUnset();
-            if (index == -1) index = _collisionIds.Size;
-            _collisionIds.Set(index, true);
+            if (index == BitList.Invalid) index = _collisionIds.Size;
+            _collisionIds.Set(index);
             return index;
         }
 

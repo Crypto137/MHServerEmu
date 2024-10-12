@@ -2,88 +2,18 @@
 {
     public class BitList
     {
-        protected List<bool> _bits;
+        public const int Invalid = -1;
+        private const int BitsPerWord = 64; // bits in ulong
+
+        protected ulong[] _bits; // ulong array of words
+        private int _size; // size in words
+
+        public int Size => _size * BitsPerWord;
 
         public BitList()
         {
-            _bits = new();
+            Free();
         }
-
-        public BitList(List<bool> bits)
-        {
-            _bits = new (bits);
-        }
-
-        public void Set(int index, bool value)
-        {
-            Expand(index);
-            _bits[index] = value;
-        }
-
-        public void Reset(int index)
-        {
-            Expand(index);
-            _bits[index] = false;
-        }
-
-        public void Set(int bitIndex)
-        {
-            Set(bitIndex, true);
-        }
-
-        private void Expand(int index)
-        {
-            while (index >= _bits.Count)
-                _bits.Add(false);
-        }
-
-        public bool Get(int index)
-        {
-            if (index < _bits.Count)
-                return _bits[index];
-            return false; 
-        }
-
-        public bool Any()
-        {
-            return _bits.Any(bit => bit);
-        }
-
-        public void Clear()
-        {
-            for (int i = 0; i < _bits.Count; i++)
-                _bits[i] = false;
-        }
-
-        public T Copy<T>() where T : BitList, new()
-        {
-            T result = new ();
-            result._bits.AddRange(_bits);
-            return result;
-        }
-
-        public void Resize(int newSize)
-        {
-            Reserve(newSize);
-            _bits.RemoveRange(newSize, _bits.Count - newSize);
-        }
-
-        public void Reserve(int newSize)
-        {
-            if (newSize > _bits.Capacity)
-                _bits.Capacity = newSize;
-
-            while (_bits.Count < newSize)
-                _bits.Add(false);
-        }
-
-        public int FirstUnset()
-        {
-            int index = _bits.FindIndex(bit => !bit);
-            return index < Size ? index : -1;
-        }
-
-        public int Size => _bits.Count;
 
         public bool this[int index]
         {
@@ -91,15 +21,131 @@
             set => Set(index, value);
         }
 
+        public ulong Test(int index)
+        {
+            if (index >= Size)
+                return 0;
+            return _bits[index / BitsPerWord] & (1UL << (index % BitsPerWord));
+        }
+
+        public bool Get(int index)
+        {
+            return Test(index) != 0;
+        }
+
+        public void Set(int index, bool value)
+        {
+            if (value) Set(index);
+            else Reset(index);
+        }
+
+        public void Reset(int index)
+        {
+            Expand(index);
+            _bits[index / BitsPerWord] &= ~(1UL << (index % BitsPerWord));
+        }
+
+        public void Set(int index)
+        {
+            Expand(index);
+            _bits[index / BitsPerWord] |= (1UL << (index % BitsPerWord));
+        }
+
+        private void Expand(int index)
+        {
+            if (index >= Size)
+            {
+                int newSize = (int)Math.Max(NextPowerOfTwo((ulong)index / BitsPerWord + 1), sizeof(ulong));
+                Reserve(newSize * BitsPerWord);
+            }
+        }
+
+        private static ulong NextPowerOfTwo(ulong n)
+        {
+            n--;
+            n |= n >> 1;
+            n |= n >> 2;
+            n |= n >> 4;
+            n |= n >> 8;
+            n |= n >> 16;
+            n |= n >> 32;
+            return ++n;
+        }
+
+        public bool Any()
+        {
+            for (int i = 0; i < _size; i++)
+                if (_bits[i] != 0) return true;
+            return false;
+        }
+
+        public void Clear()
+        {
+            for (int i = 0; i < _size; i++)
+                _bits[i] = 0;
+        }
+
+        public T Copy<T>() where T : BitList, new()
+        {
+            T result = new (); 
+            result.Reserve(Size);
+            for (int i = 0; i < _size; i++)
+                result._bits[i] = _bits[i];
+            return result;
+        }
+
+        private void Free()
+        {
+            _bits = null;
+            _size = 0;
+        }
+
+        public void Resize(int len)
+        {
+            int words = (len + BitsPerWord - 1) / BitsPerWord;
+            if (_size != words)
+            {
+                if (words > 0)
+                {
+                    Array.Resize(ref _bits, words);
+                    _size = words;
+                } 
+                else Free();
+            }
+        }
+
+        private void Reserve(int len)
+        {
+            int words = (len + BitsPerWord - 1) / BitsPerWord;
+            if (words > _size)
+            {
+                Array.Resize(ref _bits, words);
+                _size = words;
+            }
+        }
+
+        public int FirstUnset()
+        {
+            int index = ScanForwardUnset(_bits, _size, 0);
+            return index < Size ? index : Invalid;
+        }
+
+        private int ScanForwardUnset(ulong[] data, int size, int startIndex)
+        {
+            for (int i = startIndex; i < size * BitsPerWord; i++)
+                if ((data[i / BitsPerWord] & (1UL << (i % BitsPerWord))) == 0)
+                    return i;
+
+            return Invalid;
+        }
+
         public static T And<T>(T left, T right) where T: BitList, new()
         {
-            T result = left.Copy<T>();
-            result.Reserve(right.Size);
+            left.Reserve(right.Size);
+            for (int i = 0; i < right._size; i++)
+                left._bits[i] &= right._bits[i];
 
-            for (int i = 0; i < right.Size; i++)
-                result._bits[i] &= right._bits[i];
-
-            return result;
+            return left;
         }
 
         public static BitList operator &(BitList left, BitList right)
@@ -109,13 +155,11 @@
 
         public static T Or<T>(T left, T right) where T : BitList, new()
         {
-            T result = left.Copy<T>();
-            result.Reserve(right.Size);
+            left.Reserve(right.Size);
+            for (int i = 0; i < right._size; i++)
+                left._bits[i] |= right._bits[i];
 
-            for (int i = 0; i < right.Size; i++)
-                result._bits[i] |= right._bits[i];
-
-            return result;
+            return left;
         }
 
         public static BitList operator |(BitList left, BitList right)
@@ -125,13 +169,11 @@
 
         public static T Xor<T>(T left, T right) where T : BitList, new()
         {
-            T result = left.Copy<T>();
-            result.Reserve(right.Size);
+            left.Reserve(right.Size);
+            for (int i = 0; i < right._size; i++)
+                left._bits[i] ^= right._bits[i];
 
-            for (int i = 0; i < right.Size; i++)
-                result._bits[i] ^= right._bits[i];
-
-            return result;
+            return left;
         }
 
         public static BitList operator ^(BitList left, BitList right)

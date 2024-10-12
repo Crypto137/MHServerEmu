@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (_bitIndex == -1)
             {
                 CacheBitMaskInfo();
-                if (_bitMask.Any() == false) return 0;
+                if (_bitIndex == -1) return 0;
 
             }
             return _bitIndex;
