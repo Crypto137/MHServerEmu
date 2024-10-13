@@ -159,6 +159,10 @@ namespace MHServerEmu.Games.Populations
                     index++;
                 }
 
+            var random = Area.Game.Random;
+            Picker = new SpawnMapPicker(random, this);
+            DistributePicker = new SpawnMapPicker(random, this);
+
             // calc Density and Heat
             float dencity = CalcDencity();
             if (dencity == 0.0f) return;
@@ -181,10 +185,6 @@ namespace MHServerEmu.Games.Populations
                 else
                     _pool += _heatBase;
             }
-
-            var random = Area.Game.Random;
-            Picker = new SpawnMapPicker(random, this);
-            DistributePicker = new SpawnMapPicker(random, this);
 
             ScheduleLevelEvent();
         }
