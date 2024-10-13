@@ -77,6 +77,9 @@ namespace MHServerEmu.Games.Loot
         /// </summary>
         public void SpawnLootFromSummary(LootResultSummary lootResultSummary, Player player, WorldEntity sourceEntity)
         {
+            if (lootResultSummary.Types == LootType.None)
+                return;
+
             // Calculate drop radius
             int numDrops = lootResultSummary.ItemSpecs.Count + lootResultSummary.AgentSpecs.Count;
             float maxDropRadius = MathF.Min(300f, 75f + 25f * numDrops);
@@ -86,6 +89,13 @@ namespace MHServerEmu.Games.Loot
 
             if (lootResultSummary.Types != LootType.None && lootResultSummary.Types != LootType.Item)
                 Logger.Debug($"SpawnLootFromSummary(): Types={lootResultSummary.Types}");
+
+            // Trigger callbacks
+            if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
+            {
+                foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
+                    callbackNode.OnResultsEvaluation(player, sourceEntity);
+            }
 
             // Spawn items
             if (lootResultSummary.Types.HasFlag(LootType.Item))
