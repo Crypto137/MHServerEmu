@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Loot
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly ItemResolver _resolver;
+        private readonly PrototypeId _creditsItemProtoRef; 
 
         public Game Game { get; }
 
@@ -30,7 +31,9 @@ namespace MHServerEmu.Games.Loot
         public LootManager(Game game)
         {
             Game = game;
+
             _resolver = new(game.Random);
+            _creditsItemProtoRef = GameDatabase.GlobalsPrototype.CreditsItemPrototype;
         }
 
         /// <summary>
@@ -109,6 +112,16 @@ namespace MHServerEmu.Games.Loot
             {
                 foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
                     SpawnAgent(agentSpec, sourceEntity, maxDropRadius, restrictedToPlayerGuid);
+            }
+
+            // Spawn credits
+            if (lootResultSummary.Types.HasFlag(LootType.Credits))
+            {
+                foreach (int creditsAmount in lootResultSummary.Credits)
+                {
+                    AgentSpec agentSpec = new(_creditsItemProtoRef, 1, creditsAmount);
+                    SpawnAgent(agentSpec, sourceEntity, maxDropRadius, restrictedToPlayerGuid);
+                }
             }
         }
 
@@ -256,6 +269,9 @@ namespace MHServerEmu.Games.Loot
             settings.Properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
             settings.Properties[PropertyEnum.CharacterLevel] = agentSpec.AgentLevel;
             settings.Properties[PropertyEnum.CombatLevel] = agentSpec.AgentLevel;
+
+            if (agentSpec.CreditsAmount > 0)
+                settings.Properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
 
             settings.Lifespan = lifespan;
 
