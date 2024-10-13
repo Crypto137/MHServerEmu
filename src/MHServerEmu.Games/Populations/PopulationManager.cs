@@ -163,20 +163,33 @@ namespace MHServerEmu.Games.Populations
 
         private void ScheduleLocationObject()
         {
+            bool critical = true;
+            bool normal = true;
             var currentTime = Game.CurrentTime;
             Picker<SpawnScheduler> schedulerPicker = new(Game.Random);
             foreach (var scheduler in LocationSchedulers)
-                if (scheduler.CanAnySpawn(currentTime))
+                if (scheduler.CanSpawn(currentTime, critical))
+                {
                     schedulerPicker.Add(scheduler);
+                    normal = false;
+                }
+
+            if (normal)
+            {
+                critical = false;
+                foreach (var scheduler in LocationSchedulers)
+                    if (scheduler.CanSpawn(currentTime, critical))
+                        schedulerPicker.Add(scheduler);
+            }
 
             while (schedulerPicker.PickRemove(out var scheduler))
             {
-                if (scheduler.CanAnySpawn(currentTime))
+                if (scheduler.CanSpawn(currentTime, critical))
                 {
                     // Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");
-                    scheduler.ScheduleLocationObject();
+                    scheduler.ScheduleLocationObject(critical);
                 }
-                if (scheduler.CanAnySpawn(currentTime))
+                if (scheduler.CanSpawn(currentTime, critical))
                     schedulerPicker.Add(scheduler);
             }
 
@@ -190,17 +203,21 @@ namespace MHServerEmu.Games.Populations
             {
                 var currentTime = Game.CurrentTime;
                 bool normal = true;
+                bool critical = true;
                 foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                    if (scheduler.CanSpawn(currentTime, true))
+                    if (scheduler.CanSpawn(currentTime, critical))
                     {
-                        scheduler.ScheduleMarkerObject(true);
+                        scheduler.ScheduleMarkerObject(critical);
                         normal = false;
                     }
 
                 if (normal)
+                {
+                    critical = false;
                     foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                        if (scheduler.CanSpawn(currentTime, false))
-                            scheduler.ScheduleMarkerObject(false);
+                        if (scheduler.CanSpawn(currentTime, critical))
+                            scheduler.ScheduleMarkerObject(critical);
+                }
             }
 
             MarkerSchedule(markerRef);

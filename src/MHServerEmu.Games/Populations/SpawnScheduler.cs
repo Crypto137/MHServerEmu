@@ -112,9 +112,9 @@ namespace MHServerEmu.Games.Populations
             SpawnEvent.OnSpawnedPopulation();
         }
 
-        public void ScheduleLocationObject() // Spawn Themes
+        public void ScheduleLocationObject(bool critical) // Spawn Themes
         {
-            var populationObject = PopAny();
+            var populationObject = Pop(critical);
             if (populationObject != null)
             {
                 var picker = CellPicker(populationObject);
@@ -142,18 +142,26 @@ namespace MHServerEmu.Games.Populations
         private static Picker<Cell> CellPicker(PopulationObject populationObject)
         {
             Picker<Cell> picker = new(populationObject.Random);
-            if (populationObject.SpawnEvent is not PopulationAreaSpawnEvent popEvent) return picker;
+            var region = populationObject.SpawnLocation.Region;
 
-            var popArea = popEvent.Area.PopulationArea;
-            if (popArea == null) return picker;
+            IEnumerable<Area> spawnAreas;
+            if (populationObject.SpawnEvent is PopulationAreaSpawnEvent popEvent)
+                spawnAreas = new Area[] { popEvent.Area };
+            else
+                spawnAreas = region.IterateAreas();
 
-            foreach (var kvp in popArea.SpawnCells)
+            foreach (var area in spawnAreas)
             {
-                var cell = kvp.Key;
-                if (populationObject.SpawnLocation.SpawnableCell(cell) == false) continue;
-                SpawnCell spawnCell = kvp.Value;
-                if (spawnCell.CheckDensity(popArea.PopulationPrototype, populationObject.RemoveOnSpawnFail))
-                    picker.Add(cell, spawnCell.CellWeight);
+                var popArea = area.PopulationArea;
+                if (popArea == null) continue;
+                foreach (var kvp in popArea.SpawnCells)
+                {
+                    var cell = kvp.Key;
+                    if (populationObject.SpawnLocation.SpawnableCell(cell) == false) continue;
+                    SpawnCell spawnCell = kvp.Value;
+                    if (spawnCell.CheckDensity(popArea.PopulationPrototype, populationObject.RemoveOnSpawnFail))
+                        picker.Add(cell, spawnCell.CellWeight);
+                }
             }
             return picker;
         }

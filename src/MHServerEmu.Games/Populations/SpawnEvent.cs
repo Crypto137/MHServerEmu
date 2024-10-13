@@ -67,11 +67,6 @@ namespace MHServerEmu.Games.Populations
         public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, bool critical,
             SpawnLocation spawnLocation, PrototypeId missionRef, bool spawnCleanup = false, TimeSpan time = default, bool removeOnSpawnFail = false)
         {
-            /*HashSet<PrototypeId> entities = new();
-            population.GetContainedEntities(entities);
-            if (entities.Count > 0) 
-                Logger.Debug($"SpawnMarker[{GameDatabase.GetFormattedPrototypeName(entities.First())}][{population.IgnoreBlackout}] {GameDatabase.GetFormattedPrototypeName(populationMarkerRef)}");*/
-
             var random = Game.Random;
             PropertyCollection properties = null;
             if (missionRef != PrototypeId.Invalid)
@@ -101,7 +96,7 @@ namespace MHServerEmu.Games.Populations
                 SpawnCleanup = spawnCleanup,
                 RemoveOnSpawnFail = removeOnSpawnFail
             };
-
+            // Logger.Info($"AddPopulationObject {populationObject}");
             populationObject.Scheduler = AddToScheduler(populationObject);
             return populationObject;
         }
