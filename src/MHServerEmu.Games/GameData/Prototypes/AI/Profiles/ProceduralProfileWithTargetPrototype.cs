@@ -584,11 +584,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (ValidateTarget(agent, avatar) == false)
                 return false;
 
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "TryGetPickedUp(): player == null");
+
             if (EffectPower != PrototypeId.Invalid)
             {
                 Logger.Debug($"TryGetPickedUp(): {EffectPower.GetName()}");
                 agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
             }
+
+            player.AcquireCurrencyItem(agent);
 
             agent.Kill(avatar, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
             return true;

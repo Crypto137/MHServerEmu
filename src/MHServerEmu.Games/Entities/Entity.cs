@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Events;
@@ -1049,6 +1050,17 @@ namespace MHServerEmu.Games.Entities
             if (PrototypeDataRef != other.PrototypeDataRef) return false;
             if (isAdding && CurrentStackSize + other.CurrentStackSize > other.MaxStackSize) return false;
             return true;
+        }
+
+        public bool IsCurrencyItem()
+        {
+            if (Properties.HasProperty(PropertyEnum.RunestonesAmount))
+                return true;
+
+            if (Properties.HasProperty(PropertyEnum.ItemCurrency) && Game.AdminCommandManager.TestAdminFlag(AdminFlags.CurrencyItemsConvertToggle))
+                return true;
+
+            return false;
         }
 
         protected virtual bool InitInventories(bool populateInventories)
