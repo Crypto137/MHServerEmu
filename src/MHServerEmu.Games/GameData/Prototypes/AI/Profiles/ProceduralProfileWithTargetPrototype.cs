@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -469,8 +470,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Init(Agent agent)
         {
-            // NOTE/TODO: Orbs should shrink and have their effect be reduced over time, see CAgent::onEnterWorldScheduleOrbShrink for reference.
-
             base.Init(agent);
 
             Game game = agent?.Game;
@@ -580,7 +579,50 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private bool TryGetPickedUp(Agent agent, Avatar avatar)
         {
+            // TODO: Orbs should shrink and have their effect be reduced over time, see CAgent::onEnterWorldScheduleOrbShrink for reference.
+
+            if (ValidateTarget(agent, avatar) == false)
+                return false;
+
+            if (EffectPower != PrototypeId.Invalid)
+            {
+                Logger.Debug($"TryGetPickedUp(): {EffectPower.GetName()}");
+                agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
+            }
+
             agent.Kill(avatar, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
+            return true;
+        }
+
+        private bool ValidateTarget(Agent agent, Avatar target)
+        {
+            if (agent == null) return false;
+            if (target == null) return false;
+
+            // TODO: Other restrictions?
+
+            // If this is an instanced orb, make sure the target belong to our player
+            ulong restrictedToPlayerGuid = agent.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0)
+            {
+                Player player = target.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "ValidateTarget(): player == null");
+
+                if (player.DatabaseUniqueId != restrictedToPlayerGuid)
+                    return false;
+            }
+
+            // Do not allow this orb to be picked up if the avatar is not a valid for its target
+            // (e.g. trying to pick up a healing orb with full health).
+            if (EffectPower != PrototypeId.Invalid)
+            {
+                Power power = agent.GetPower(EffectPower);
+                if (power == null) return Logger.WarnReturn(false, "ValidateTarget(): power == null");
+
+                if (power.IsValidTarget(target) == false)
+                    return false;
+            }
+
             return true;
         }
     }
