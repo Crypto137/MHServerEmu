@@ -1,14 +1,16 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.ProceduralAI;
 using MHServerEmu.Games.Behavior.StaticAI;
-using MHServerEmu.Games.Behavior;
-using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -452,14 +454,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ShrinkageMinScale { get; protected set; }
         public bool DestroyOrbOnUnSimOrTargetLoss { get; protected set; }
 
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private float _orbRadiusSquared;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            _orbRadiusSquared = OrbRadius * OrbRadius;
+        }
+
         public override void Init(Agent agent)
         {
+            // NOTE/TODO: Orbs should shrink and have their effect be reduced over time, see CAgent::onEnterWorldScheduleOrbShrink for reference.
+
             base.Init(agent);
 
-            // InitialMoveToDelayMS
-            Game game = agent.Game;
-            var blackboard = agent.AIController?.Blackboard;
-            if (game == null || blackboard == null) return;
+            Game game = agent?.Game;
+            if (game == null) return;
+
+            AIController aiController = agent.AIController;
+            if (aiController == null) return;
+
+            BehaviorBlackboard blackboard = aiController.Blackboard;
+            if (blackboard == null) return;
+
+            // Delay AI activation to let the drop animation finish before an avatar can pick up this orb
+            EventPointer<AIController.EnableAIEvent> enableEvent = new();
+            aiController.ScheduleAIEvent(enableEvent, TimeSpan.FromMilliseconds(InitialMoveToDelayMS));
+
             agent.Properties[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
 
             InitPower(agent, EffectPower);
@@ -474,24 +500,65 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = agent.Game;
             if (game == null) return;
 
+            // Destroy this orb if it has finished shrinking
             if (ShrinkageDurationMS > 0)
             {
-                TimeSpan shrinkageTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
-                    + TimeSpan.FromSeconds(ShrinkageDelayMS) 
-                    + TimeSpan.FromSeconds(ShrinkageDurationMS);
-                if (game.CurrentTime > shrinkageTime)
+                TimeSpan shrinkageEndTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
+                    + TimeSpan.FromMilliseconds(ShrinkageDelayMS) 
+                    + TimeSpan.FromMilliseconds(ShrinkageDurationMS);
+
+                if (game.CurrentTime >= shrinkageEndTime)
                 {
-                    agent.Destroy(); // or Kill
+                    Logger.Debug($"Think(): Shrinkage ended for {agent}");
+                    agent.Kill(null, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
                     return;
                 }
             }
 
-            // DestroyOrbOnUnSimOrTargetLoss
+            // Find an avatar that can potentially pick this orb up
+            Avatar avatar = null;
 
-            // OrbRadius
+            ulong restrictedToPlayerGuid = agent.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0)
+            {
+                Player player = game.EntityManager.GetEntityByDbGuid<Player>(restrictedToPlayerGuid);
+                if (player != null)
+                {
+                    // Get current avatar for the player we are looking for
+                    if (player.CurrentAvatar?.IsInWorld == true)
+                        avatar = player.CurrentAvatar;
+                }
+                else
+                {
+                    // Our player no longer exists
+                    // DestroyOrbOnUnSimOrTargetLoss
+                }
+            }
+            else
+            {
+                // TODO: non-instanced orbs
+                // TODO: Find the nearest avatar belonging to any player
+                Logger.Warn("Think(): Non-instanced orbs are not yet implemented");
+                agent.Destroy();    // REMOVEME
+                return;
+            }
 
+            // If we found an avatar, check if it can pick this orb up
+            if (avatar != null)
+            {
+                Vector3 agentPosition = agent.RegionLocation.Position;
+                Vector3 avatarPosition = avatar.RegionLocation.Position;
+
+                if (Vector3.DistanceSquared2D(agentPosition, avatarPosition) < _orbRadiusSquared && TryGetPickedUp(agent, avatar))
+                    return;
+            }
+
+            // Follow our avatar if needed
             if (MoveToTarget != null)
             {
+                // NOTE: Health and endurance orbs follow players, credits and experience orbs do not
+
+                /*
                 BehaviorSensorySystem senses = ownerController.Senses;
                 var target = ownerController.TargetEntity;
                 if (senses.ShouldSense())
@@ -507,7 +574,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
                 if (target != null)
                     HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, MoveToTarget, false, out _);
+                */
             }
+        }
+
+        private bool TryGetPickedUp(Agent agent, Avatar avatar)
+        {
+            agent.Kill(avatar, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
+            return true;
         }
     }
 

@@ -244,18 +244,6 @@ namespace MHServerEmu.Games.Loot
             if (ChooseDropPosition(sourceEntity, maxDropRadius, out Vector3 dropPosition) == false)
                 return Logger.WarnReturn(false, $"SpawnAgent(): Failed to find position to spawn agent {agentSpec}");
 
-            // NOTE: Orbs shrink over time using their behavior profile, see CAgent::onEnterWorldScheduleOrbShrink for details.
-            // Until we have their AI implemented, calculated lifespan here.
-            TimeSpan lifespan = TimeSpan.Zero;
-
-            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
-            if (agentProto.BehaviorProfile != null)
-            {
-                ProceduralProfileOrbPrototype orbProto = agentProto.BehaviorProfile.Brain.As<ProceduralProfileOrbPrototype>();
-                if (orbProto != null)
-                    lifespan = TimeSpan.FromMilliseconds(orbProto.ShrinkageDelayMS + orbProto.ShrinkageDurationMS);
-            }
-
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = agentSpec.AgentProtoRef;
@@ -272,8 +260,6 @@ namespace MHServerEmu.Games.Loot
 
             if (agentSpec.CreditsAmount > 0)
                 settings.Properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
-
-            settings.Lifespan = lifespan;
 
             Agent agent = Game.EntityManager.CreateEntity(settings) as Agent;
             if (agent == null) return Logger.WarnReturn(false, "SpawnAgent(): item == null");
