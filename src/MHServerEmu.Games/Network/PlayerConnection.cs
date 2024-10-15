@@ -51,6 +51,7 @@ namespace MHServerEmu.Games.Network
         public AreaOfInterest AOI { get; }
         public WorldView WorldView { get; }
         public TransferParams TransferParams { get; }
+        public MigrationData MigrationData { get; }
 
         public Player Player { get; private set; }
 
@@ -68,6 +69,7 @@ namespace MHServerEmu.Games.Network
             AOI = new(this);
             WorldView = new(this);
             TransferParams = new(this);
+            MigrationData = new();
 
             InitializeFromDBAccount();
 
