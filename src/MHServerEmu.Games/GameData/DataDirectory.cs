@@ -436,6 +436,10 @@ namespace MHServerEmu.Games.GameData
                     using (Stream stream = LoadPakDataFile(filePath, pakFileId))
                     {
                         Prototype prototype = DeserializePrototypeFromStream(stream, record);
+
+                        if (prototype.ShouldCacheCRC)
+                            record.Crc = GameDatabase.PrototypeClassManager.CalculateDataCRC(prototype);
+
                         record.Prototype = prototype;
                         prototype.DataRefRecord = record;
                         prototype.PostProcess();
@@ -460,6 +464,24 @@ namespace MHServerEmu.Games.GameData
         public uint GetCrcForPrototype(PrototypeId prototypeDataRef)
         {
             return (uint)((ulong)prototypeDataRef >> 32);
+        }
+
+        /// <summary>
+        /// Returns the CRC checksum for the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
+        /// </summary>
+        public ulong GetCrcForPrototype(PrototypeId prototypeId)
+        {
+            if (prototypeId == PrototypeId.Invalid)
+                return 0;
+
+            PrototypeDataRefRecord record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null) return Logger.WarnReturn(0ul, "GetCrcForPrototype(): record == null");
+            if (record.Prototype == null) return Logger.WarnReturn(0ul, "GetCrcForPrototype(): record.Prototype == null");
+
+            if (record.Prototype.ShouldCacheCRC == false)
+                return Logger.WarnReturn(0ul, $"GetCrcForPrototype(): {record.Prototype} prototypes should have ShouldCacheCRC set to 'true' so that their crc is available on load");
+
+            return record.Crc;
         }
 
         /// <summary>
@@ -896,8 +918,9 @@ namespace MHServerEmu.Games.GameData
         public BlueprintId BlueprintId { get; set; }
         public PrototypeRecordFlags Flags { get; set; }
         public Type ClassType { get; set; }                 // We use C# type instead of class id
-        public DataOrigin DataOrigin { get; set; }          // Original memory location: PrototypeDataRefRecord + 32
+        public DataOrigin DataOrigin { get; set; }          // PrototypeDataRefRecord + 32
         public Blueprint Blueprint { get; set; }
-        public Prototype Prototype { get; set; }
+        public Prototype Prototype { get; set; }            // PrototypeDataRefRecord + 48
+        public ulong Crc { get; set; }                      // PrototypeDataRefRecord + 56
     }
 }

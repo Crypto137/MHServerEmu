@@ -271,6 +271,12 @@ namespace MHServerEmu.Games.GameData
             return copyableFields;
         }
 
+        public uint CalculateDataCRC(Prototype prototype)
+        {
+            // Since we don't have version migration, we can get away with using just the prototype's path crc for now.
+            return (uint)((ulong)prototype.DataRef >> 32);
+        }
+
         /// <summary>
         /// Calls PostProcess() on all prototypes embedded in the provided one.
         /// </summary>

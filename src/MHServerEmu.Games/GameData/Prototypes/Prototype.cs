@@ -44,6 +44,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeDataRefRecord DataRefRecord { get; set; }
 
         /// <summary>
+        /// Returns <see cref="true"/> if this <see cref="Prototype"/> needs to have its CRC calculated.
+        /// </summary>
+        public virtual bool ShouldCacheCRC { get => false; }
+
+        /// <summary>
         /// Returns <see langword="true"/> if this prototype is approved for use. Approval criteria differ depending on the prototype type.
         /// </summary>
         public virtual bool ApprovedForUse()
