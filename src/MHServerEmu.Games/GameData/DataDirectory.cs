@@ -461,11 +461,6 @@ namespace MHServerEmu.Games.GameData
             return record.ClassType;
         }
 
-        public uint GetCrcForPrototype(PrototypeId prototypeDataRef)
-        {
-            return (uint)((ulong)prototypeDataRef >> 32);
-        }
-
         /// <summary>
         /// Returns the CRC checksum for the <see cref="Prototype"/> that the specified <see cref="PrototypeId"/> refers to.
         /// </summary>
