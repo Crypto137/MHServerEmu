@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Regions
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly HashSet<ulong> _regionIds = new();
         private readonly Dictionary<PrototypeId, ulong> _regionInstanceDict = new();
 
         public PlayerConnection Owner { get; }
@@ -33,13 +34,29 @@ namespace MHServerEmu.Games.Regions
             if (regionProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AddRegion(): regionProtoRef == PrototypeId.Invalid");
             if (regionId == 0) return Logger.WarnReturn(false, "AddRegion(): regionId == 0");
 
+            if (_regionIds.Contains(regionId))
+                return Logger.WarnReturn(false, $"AddRegion(): World view for {Owner} already contains region 0x{regionId:X} ({regionProtoRef.GetName()})");
+
+            _regionIds.Add(regionId);
             _regionInstanceDict[regionProtoRef] = regionId;
             return true;
         }
 
         public bool RemoveRegion(PrototypeId regionProtoRef)
         {
-            return _regionInstanceDict.Remove(regionProtoRef);
+            if (_regionInstanceDict.TryGetValue(regionProtoRef, out ulong regionId) == false)
+                return false;
+
+            if (_regionIds.Remove(regionId) == false)
+                Logger.Warn($"RemoveRegion(): 0x{regionId:X} not found");
+
+            _regionInstanceDict.Remove(regionProtoRef);
+            return true;
+        }
+
+        public bool ContainsRegionInstanceId(ulong regionId)
+        {
+            return _regionIds.Contains(regionId);
         }
 
         public ulong GetRegionInstanceId(PrototypeId regionProtoRef)
@@ -52,10 +69,23 @@ namespace MHServerEmu.Games.Regions
 
         public void Clear()
         {
+            _regionIds.Clear();
             _regionInstanceDict.Clear();
         }
 
-        public IEnumerator<KeyValuePair<PrototypeId, ulong>> GetEnumerator() => _regionInstanceDict.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public Dictionary<PrototypeId, ulong>.Enumerator GetEnumerator()
+        {
+            return _regionInstanceDict.GetEnumerator();
+        }
+
+        IEnumerator<KeyValuePair<PrototypeId, ulong>> IEnumerable<KeyValuePair<PrototypeId, ulong>>.GetEnumerator()
+        {
+            return _regionInstanceDict.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _regionInstanceDict.GetEnumerator();
+        }
     }
 }
