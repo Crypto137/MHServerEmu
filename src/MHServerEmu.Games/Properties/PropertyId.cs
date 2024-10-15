@@ -158,6 +158,14 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0, int param1, int param2)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0), (PropertyParam)param1, (PropertyParam)param2).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
         public PropertyId(PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);

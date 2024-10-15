@@ -3,6 +3,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
@@ -26,6 +27,20 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool Serialize(Archive archive)
         {
             return Serializer.Transfer(archive, ref _count);
+        }
+
+        public override void StoreConditionState(PropertyCollection properties, PropertyEnum propEnum, byte index)
+        {
+            var missionRef = Mission.PrototypeDataRef;
+            var propId = new PropertyId(propEnum, missionRef, index, ConditionIndex);
+            properties[propId] = Count;
+        }
+
+        public override void RestoreConditionState(PropertyCollection properties, PropertyEnum propEnum, byte index)
+        {
+            var missionRef = Mission.PrototypeDataRef;
+            var propId = new PropertyId(propEnum, missionRef, index, ConditionIndex);
+            if (properties.HasProperty(propId)) Count = properties[propId];
         }
 
         public override bool Initialize(int conditionIndex)

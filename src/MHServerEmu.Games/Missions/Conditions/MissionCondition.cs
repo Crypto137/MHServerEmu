@@ -3,6 +3,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
@@ -59,6 +60,8 @@ namespace MHServerEmu.Games.Missions.Conditions
         public virtual bool Initialize(int conditionIndex) => true;
         public virtual void RegisterEvents(Region region) { }
         public virtual void UnRegisterEvents(Region region) { }
+        public virtual void StoreConditionState(PropertyCollection properties, PropertyEnum propEnum, byte index) { }
+        public virtual void RestoreConditionState(PropertyCollection properties, PropertyEnum propEnum, byte index) { }
         public virtual bool EvaluateOnReset() => false;
         public virtual bool GetCompletionCount(ref long currentCount, ref long requiredCount, bool isRequired) => false;
         public virtual void OnUpdateCondition(MissionCondition condition) => Owner.OnUpdateCondition(this);

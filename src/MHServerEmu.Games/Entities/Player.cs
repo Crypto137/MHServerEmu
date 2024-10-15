@@ -25,6 +25,7 @@ using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Regions.MatchQueues;
@@ -1785,7 +1786,29 @@ namespace MHServerEmu.Games.Entities
         {
             if (missionRef == PrototypeId.Invalid) return;                 
             if (InterestedInEntity(entity, AOINetworkPolicyValues.AOIChannelOwner))
-                SendMessage(NetMessageMissionInteractRelease.DefaultInstance);            
+                SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+        }
+
+        public void RequestLegendaryMissionReroll()
+        {
+            var game = Game;
+            var avatar = CurrentAvatar;
+            var manager = MissionManager;
+            if (game == null || avatar == null || manager == null) return;
+
+            var currencyProto = GameDatabase.CurrencyGlobalsPrototype;
+            var missionProto = GameDatabase.MissionGlobalsPrototype;
+            if (currencyProto == null || missionProto?.LegendaryRerollCost == null) return;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = Game;
+            evalContext.SetVar_EntityPtr(EvalContext.Default, avatar);
+            int rerollCost = Eval.RunInt(missionProto.LegendaryRerollCost, evalContext);
+            var propId = new PropertyId(PropertyEnum.Currency, currencyProto.Credits);
+            if (Properties[propId] < rerollCost) return;
+
+            manager.LegendaryMissionReroll();
+            Properties.AdjustProperty(-rerollCost, propId);
         }
 
         public void UpdateSpawnMap(Vector3 position)

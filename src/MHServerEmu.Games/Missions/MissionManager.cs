@@ -16,6 +16,11 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Core.System.Time;
+using System.Reflection;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -25,6 +30,8 @@ namespace MHServerEmu.Games.Missions
         public static bool Debug = false;
 
         private EventGroup _pendingEvents = new();
+        private readonly EventPointer<DailyMissionEvent> _dailyMissionEvent = new();
+
         private PrototypeId _avatarPrototypeRef;
         private Dictionary<PrototypeId, Mission> _missionDict = new();
         private SortedDictionary<PrototypeGuid, List<PrototypeGuid>> _legendaryMissionBlacklist = new();
@@ -120,8 +127,8 @@ namespace MHServerEmu.Games.Missions
             Player = player;
             SetRegion(region);
             IsInitialized = true;
-
-            if (HasMissions)
+            bool hasMissions = HasMissions;
+            if (hasMissions)
                 InitializeMissions();
             else
                 foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
@@ -140,14 +147,429 @@ namespace MHServerEmu.Games.Missions
                             }
                         }
                 }
+            
+            LegendaryMissionRoll();
 
-            // TODO PropertyEnum.LegendaryMissionWasShared
-            // PropertyEnum.LastDailyMissionCalendarDay;
+            UpdateDailyMissions(true, hasMissions);
+            ScheduleDailyMissionUpdate();
 
             RegisterEvents(region);
 
             return true;
         }
+
+        #region LegendaryMission
+
+        private void LegendaryMissionRoll()
+        {
+            if (HasLegendaryMission()) return;
+            ActivateLegendaryMission(PickLegendaryMission(), false);
+        }
+
+        public void LegendaryMissionReroll()
+        {
+            var currentLegendary = GetCurrentLegendaryMission();
+            if (DeactivateLegendaryMission(currentLegendary))
+            {
+                LegendaryMissionBlackListAdd(currentLegendary);
+                LegendaryMissionRoll();
+            }
+        }
+
+        private void LegendaryMissionBlackListAdd(Mission mission)
+        {
+            if (mission == null) return;
+
+            PrototypeId categoryRef = PrototypeId.Invalid;
+
+            if (mission.Prototype is LegendaryMissionPrototype legendaryProto)
+                categoryRef = legendaryProto.Category;
+            else if (mission.Prototype is AdvancedMissionPrototype AdvancedProto)
+                categoryRef = AdvancedProto.CategoryType;
+
+            if (categoryRef == PrototypeId.Invalid) return;
+
+            var categoryGuid = GameDatabase.GetPrototypeGuid(categoryRef);
+            var categoryProto = GameDatabase.GetPrototype<LegendaryMissionCategoryPrototype>(categoryRef);
+            if (categoryProto == null || categoryProto.BlacklistLength <= 0) return;
+
+            var missionGuid = GameDatabase.GetPrototypeGuid(mission.PrototypeDataRef);
+            if (_legendaryMissionBlacklist.TryGetValue(categoryGuid, out var missionGuids) == false)
+            {
+                missionGuids = new() { missionGuid };
+                _legendaryMissionBlacklist.Add(categoryGuid, missionGuids);
+            }
+            else
+            {
+                while (missionGuids.Count >= categoryProto.BlacklistLength)
+                    missionGuids.RemoveAt(0);
+
+                missionGuids.Add(missionGuid);
+            }
+        }
+
+        private PrototypeId PickLegendaryMission()
+        { 
+            PrototypeId pickedMissionRef = PrototypeId.Invalid;
+
+            var picker = LegendaryMissionCategoryPicker();
+            while (picker.PickRemove(out var categoryProto))
+            {
+                List<PrototypeGuid> blacklist = null;
+                if (categoryProto.BlacklistLength > 0)
+                {
+                    var guid = GameDatabase.GetPrototypeGuid(categoryProto.DataRef);
+                    _legendaryMissionBlacklist.TryGetValue(guid, out blacklist);
+                }
+                pickedMissionRef = PickLegendaryMissionForCategory(categoryProto, blacklist);
+                if (pickedMissionRef != PrototypeId.Invalid) break;
+            }
+
+            if (pickedMissionRef == PrototypeId.Invalid)
+            {
+                picker = LegendaryMissionCategoryPicker();
+                while (picker.PickRemove(out var categoryProto))
+                {
+                    pickedMissionRef = PickLegendaryMissionForCategory(categoryProto, null);
+                    if (pickedMissionRef != PrototypeId.Invalid) break;
+                }
+            }
+
+            return pickedMissionRef;
+        }
+
+        private PrototypeId PickLegendaryMissionForCategory(LegendaryMissionCategoryPrototype categoryProto, List<PrototypeGuid> blacklist)
+        {
+            if (categoryProto == null) return PrototypeId.Invalid;
+
+            var categoryRef = categoryProto.DataRef;
+            Picker<LegendaryMissionPrototype> picker = new(Game.Random);
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LegendaryMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var missionProto = GameDatabase.GetPrototype<LegendaryMissionPrototype>(missionRef);
+                if (missionProto.Category == categoryRef)
+                    picker.Add(missionProto);
+            }
+
+            while (picker.PickRemove(out var missionProto))
+            {
+                if (ShouldCreateMission(missionProto) == false || PlayerEvaluateLegendaryMission(missionProto) == false) continue;
+                if (blacklist != null)
+                {
+                    var guid = GameDatabase.GetPrototypeGuid(missionProto.DataRef);
+                    if (blacklist.Contains(guid)) continue;
+                }
+                return missionProto.DataRef;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        private bool PlayerEvaluateLegendaryMission(LegendaryMissionPrototype missionProto)
+        {
+            var avatar = Player?.CurrentAvatar;
+            if (avatar == null) return false;
+            if (missionProto.EvalCanStart == null) return true;
+            
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = Game;
+            evalContext.SetVar_EntityPtr(EvalContext.Default, avatar);
+            evalContext.SetVar_EntityPtr(EvalContext.Other, Player);
+            return Eval.RunBool(missionProto.EvalCanStart, evalContext);            
+        }
+
+        private Picker<LegendaryMissionCategoryPrototype> LegendaryMissionCategoryPicker()
+        {
+            Picker<LegendaryMissionCategoryPrototype> picker = new(Game.Random);
+            foreach (var categoryRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LegendaryMissionCategoryPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var categoryProto = GameDatabase.GetPrototype<LegendaryMissionCategoryPrototype>(categoryRef);
+                if (categoryProto != null && categoryProto is not AdvancedMissionCategoryPrototype)
+                    picker.Add(categoryProto, categoryProto.Weight);
+            }
+            return picker;
+        }
+
+        private void ActivateLegendaryMission(PrototypeId missionRef, bool shared)
+        {
+            if (missionRef == PrototypeId.Invalid) return;
+
+            if (IsPlayerMissionManager() == false) return;
+            var avatar = Player?.CurrentAvatar;
+            if (avatar == null) return;
+
+            var mission = MissionByDataRef(missionRef);
+            if (mission == null) return;
+            if (mission.State != MissionState.Active && mission.SetState(MissionState.Active) == false) return;
+
+            avatar.Properties[PropertyEnum.LegendaryMissionWasShared] = shared;
+        }
+
+        private bool DeactivateLegendaryMission(Mission mission)
+        {
+            var avatar = Player?.CurrentAvatar;
+            if (mission == null || avatar == null) return false;
+
+            mission.SetState(MissionState.Invalid);
+            if (HasLegendaryMission()) return false;
+
+            avatar.Properties.RemoveProperty(PropertyEnum.LegendaryMissionWasShared);
+            return true;
+        }
+
+        private bool HasLegendaryMission(bool shared = false)
+        {
+            if (GetCurrentLegendaryMission() == null) return false;
+            if (shared && CurrentLegendaryMissionWasShared()) return false;
+            return true;
+        }
+
+        private Mission GetCurrentLegendaryMission()
+        {
+            foreach (var mission in _missionDict.Values)
+            {
+                if (mission == null) continue;
+                if (mission.IsLegendaryMission && mission.State == MissionState.Active) return mission;
+            }
+            return null;
+        }
+
+        private bool CurrentLegendaryMissionWasShared()
+        {
+	        if (IsPlayerMissionManager() == false || HasLegendaryMission() == false) return false;
+            var avatar = Player?.CurrentAvatar;
+            if (avatar == null) return false;
+	        return avatar.Properties[PropertyEnum.LegendaryMissionWasShared];
+        }
+
+        #endregion
+
+        #region DailyMissions
+
+        private void UpdateDailyMissions(bool forceAdvanced = false, bool rerollDaily = false)
+        {
+            if (IsPlayerMissionManager() == false || Player == null) return;
+
+            int calendarDay = CalendarDay();
+            int lastDailyDay = Player.Properties[PropertyEnum.LastDailyMissionCalendarDay];
+            if (lastDailyDay < calendarDay)
+            {
+                ResetDailyMissions(calendarDay, lastDailyDay);
+                RollDailyMissions();
+                Player.Properties[PropertyEnum.LastDailyMissionCalendarDay] = calendarDay;
+            }
+
+            int lastAdvDay = Player.Properties[PropertyEnum.LastDailyAdvMishCalendarDay];
+            if (forceAdvanced || lastAdvDay < calendarDay)
+            {
+                ResetAdvancedMissions(calendarDay, lastAdvDay);
+                RollAdvancedMissions();
+                Player.Properties[PropertyEnum.LastDailyAdvMishCalendarDay] = calendarDay;
+            }
+
+            if (rerollDaily)
+                RollDailyMissions();
+        }
+
+        private void RollDailyMissions()
+        {
+            var dayOfWeek = GetDayOfWeek();
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<DailyMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var missionProto = GameDatabase.GetPrototype<DailyMissionPrototype>(missionRef);
+                if (ShouldCreateMission(missionProto) == false) continue;
+                if (missionProto.Day == dayOfWeek || missionProto.Day == Weekday.All || missionProto.ResetFrequency == DailyMissionResetFrequency.Weekly)
+                {
+                    var mission = MissionByDataRef(missionRef);
+                    if (mission == null) continue;
+
+                    var state = mission.State;
+                    if (state != MissionState.Active && state != MissionState.Completed &&  state != MissionState.Failed)
+                        mission.SetState(MissionState.Active);
+                }
+            }
+        }
+
+        private void ResetDailyMissions(int calendarDay, int lastDailyDay)
+        {
+            var dayOfWeek = GetDayOfWeek();
+            int lastLoginDay = calendarDay - lastDailyDay;
+            foreach(var mission in _missionDict.Values)
+                if (mission.Prototype is DailyMissionPrototype dailyProto)
+                {
+                    bool reset = false;
+                    switch (dailyProto.ResetFrequency)
+                    {
+                        case DailyMissionResetFrequency.Daily:
+                            reset = true;
+                            break;
+
+                        case DailyMissionResetFrequency.Weekly:
+                            int lastDay = (int)(dayOfWeek - dailyProto.Day + Weekday.All) % (int)Weekday.All;
+                            reset = lastDailyDay == 0 || lastDay < lastLoginDay;
+                            break;
+                    }
+
+                    if (reset)
+                    {
+                        if (mission.State != MissionState.Invalid) 
+                            mission.SetState(MissionState.Invalid);
+
+                        Player.Properties.RemoveProperty(new(PropertyEnum.SharedQuestCompletionCount, mission.PrototypeDataRef));
+                    }
+                }
+        }
+
+        private static Weekday GetDayOfWeek() => (Weekday)Clock.UnixTimeToDateTime(GetAdjustedDateTime()).DayOfWeek;
+        private static int CalendarDay() => GetAdjustedDateTime().Days;
+        private static TimeSpan GetAdjustedDateTime() => Clock.UnixTime + TimeSpan.FromHours(GameDatabase.GlobalsPrototype.TimeZone);
+
+        private void ScheduleDailyMissionUpdate()
+        {
+            if (IsPlayerMissionManager() == false || _dailyMissionEvent.IsValid) return;
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(_dailyMissionEvent, TimeSpan.FromSeconds(1), _pendingEvents);
+            _dailyMissionEvent.Get().Initialize(this);
+        }
+
+        private void OnDailyMissionUpdate()
+        {
+            UpdateDailyMissions();
+            ScheduleDailyMissionUpdate();
+        }
+
+        #endregion
+
+        #region AdvancedMissions
+
+        private void AdvancedMissionReroll(AdvancedMissionCategoryPrototype categoryProto)
+        {
+            PrototypeId missionRef = PickAdvancedMission(categoryProto);
+            if (missionRef == PrototypeId.Invalid) return;
+
+            var mission = MissionByDataRef(missionRef);
+            if (mission == null) return;
+
+            mission.SendToParticipants(MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.Default, false);
+
+            var state = mission.State;
+            if (state != MissionState.Inactive)
+                mission.SetState(MissionState.Inactive);
+        }
+
+        private PrototypeId PickAdvancedMission(AdvancedMissionCategoryPrototype categoryProto)
+        {
+            List<PrototypeGuid> blacklist = null;
+            if (categoryProto.BlacklistLength > 0)
+            {
+                var guid = GameDatabase.GetPrototypeGuid(categoryProto.DataRef);
+                _legendaryMissionBlacklist.TryGetValue(guid, out blacklist);
+            }
+
+            PrototypeId pickedMissionRef = PickAdvancedMissionForCategory(categoryProto, blacklist);
+
+            if (pickedMissionRef == PrototypeId.Invalid)
+            {
+                while (blacklist.Count > 0)
+                {
+                    blacklist.RemoveAt(0);
+                    pickedMissionRef = PickAdvancedMissionForCategory(categoryProto, blacklist);
+                    if (pickedMissionRef != PrototypeId.Invalid) break;
+                }
+            }
+
+            return pickedMissionRef;
+        }
+
+        private PrototypeId PickAdvancedMissionForCategory(AdvancedMissionCategoryPrototype categoryProto, List<PrototypeGuid> blacklist)
+        {
+            if (categoryProto == null) return PrototypeId.Invalid;
+
+            var categoryRef = categoryProto.DataRef;
+            Picker<AdvancedMissionPrototype> picker = new(Game.Random);
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AdvancedMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var missionProto = GameDatabase.GetPrototype<AdvancedMissionPrototype>(missionRef);
+                if (missionProto.CategoryType == categoryRef)
+                    picker.Add(missionProto);
+            }
+
+            while (picker.PickRemove(out var missionProto))
+            {
+                if (ShouldCreateMission(missionProto) == false) continue;
+                if (blacklist != null)
+                {
+                    var guid = GameDatabase.GetPrototypeGuid(missionProto.DataRef);
+                    if (blacklist.Contains(guid)) continue;
+                }
+                return missionProto.DataRef;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        private void RollAdvancedMissions()
+        {
+            foreach (var missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AdvancedMissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var missionProto = GameDatabase.GetPrototype<AdvancedMissionPrototype>(missionRef);
+                var category = missionProto.CategoryProto;
+                if (AdvancedMissionsHasCategory(category) == false)
+                    AdvancedMissionReroll(category);
+            }
+        }
+
+        private bool AdvancedMissionsHasCategory(AdvancedMissionCategoryPrototype categoryProto)
+        {
+            if (categoryProto == null) return false;
+
+            foreach (var mission in _missionDict.Values)
+                if (mission.Prototype is AdvancedMissionPrototype advancedProto)
+                    if (advancedProto.CategoryProto == categoryProto && mission.State != MissionState.Invalid)
+                        return true;
+
+            return false;
+        }
+
+        private void ResetAdvancedMissions(int calendarDay, int lastAdvDay)
+        {
+            var dayOfWeek = GetDayOfWeek();
+            int lastLoginDay = calendarDay - lastAdvDay;
+            foreach (var mission in _missionDict.Values)
+                if (mission.Prototype is AdvancedMissionPrototype advancedProto)
+                {
+                    var categoryProto = advancedProto.CategoryProto;
+                    if (categoryProto == null) continue;
+
+                    bool reset = false;
+
+                    switch (categoryProto.MissionType)
+                    {
+                        case AdvancedMissionFrequencyType.Daily:
+                            reset = lastLoginDay > 0;
+                            break;
+
+                        case AdvancedMissionFrequencyType.Weekly:
+                            var resetDay = categoryProto.WeeklyResetDay;
+                            if (resetDay != Weekday.All)
+                            {
+                                int lastDay = (int)(dayOfWeek - resetDay + Weekday.All) % (int)Weekday.All;
+                                reset = lastAdvDay == 0 || lastDay < lastLoginDay;
+                            }
+                            else reset = true;
+                            break;
+                    }
+
+                    if (reset)
+                    {
+                        if (mission.State != MissionState.Invalid)
+                            mission.SetState(MissionState.Invalid);
+                    }
+                }
+        }
+
+        #endregion
 
         private void InitializeMissions()
         {
@@ -426,12 +848,21 @@ namespace MHServerEmu.Games.Missions
                     player.Properties.AdjustProperty(1, PropertyEnum.LegendaryMissionsComplete);
                     avatar.Properties.RemoveProperty(PropertyEnum.LegendaryMissionWasShared);
                 }
-
-                // TODO Add _legendaryMissionBlacklist missionRef
+                LegendaryMissionBlackListAdd(mission);
+                LegendaryMissionRoll();
             }
-            else if (mission.IsAdvancedMission)
+            else if (mission.Prototype is AdvancedMissionPrototype advancedProto)
             {
-                // TODO AdvancedMissionFrequencyType
+                LegendaryMissionBlackListAdd(mission);
+
+                var categoryProto = advancedProto.CategoryProto;
+                if (categoryProto == null) return;
+
+                if (categoryProto.MissionType == AdvancedMissionFrequencyType.Repeatable)
+                {
+                    mission.SetState(MissionState.Invalid);
+                    AdvancedMissionReroll(categoryProto);
+                }
             }
         }
 
@@ -445,11 +876,19 @@ namespace MHServerEmu.Games.Missions
 
             if (mission.IsLegendaryMission)
             {
-                // TODO Add _legendaryMissionBlacklist missionRef
+                LegendaryMissionBlackListAdd(mission);
+                LegendaryMissionRoll();
             }
-            else if (mission.IsAdvancedMission)
+            else if (mission.Prototype is AdvancedMissionPrototype advancedProto)
             {
-                // TODO AdvancedMissionFrequencyType
+                var categoryProto = advancedProto.CategoryProto;
+                if (categoryProto == null) return;
+
+                if (categoryProto.MissionType == AdvancedMissionFrequencyType.Repeatable)
+                {
+                    mission.SetState(MissionState.Invalid);
+                    AdvancedMissionReroll(categoryProto);
+                }
             }
         }
 
@@ -922,7 +1361,10 @@ namespace MHServerEmu.Games.Missions
                 }
             }
 
-            // TODO Save LegendaryMissions properties
+
+            foreach (var mission in _missionDict.Values)
+                if (mission.IsLegendaryMission)
+                    mission.RestoreLegendaryMissionState(properties);
 
             InitializeMissions();
 
@@ -1094,6 +1536,11 @@ namespace MHServerEmu.Games.Missions
         public class PlayerInteractEvent : CallMethodEventParam2<MissionManager, ulong, ulong>
         {
             protected override CallbackDelegate GetCallback() => (manager, playerId, targetId) => manager.SendPlayerInteract(playerId, targetId);
+        }
+
+        protected class DailyMissionEvent : CallMethodEvent<MissionManager>
+        {
+            protected override CallbackDelegate GetCallback() => (manager) => manager.OnDailyMissionUpdate();
         }
 
         #region Hardcoded

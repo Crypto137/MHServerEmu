@@ -426,6 +426,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
+                case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break; // 123
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
@@ -1150,6 +1151,14 @@ namespace MHServerEmu.Games.Network
                 avatar.Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] = true;
             }
 
+            return true;
+        }
+
+        private bool OnRequestLegendaryMissionReroll(MailboxMessage message)    // 117
+        {
+            var requestLegendaryMissionRerol = message.As<NetMessageRequestLegendaryMissionReroll>();
+            if (requestLegendaryMissionRerol == null) return Logger.WarnReturn(false, $"OnRequestLegendaryMissionReroll(): Failed to retrieve message");
+            Player.RequestLegendaryMissionReroll();
             return true;
         }
 

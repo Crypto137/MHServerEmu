@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
@@ -134,6 +135,18 @@ namespace MHServerEmu.Games.Missions.Conditions
             foreach (var condition in _conditions)
                 condition?.UnRegisterEvents(region);
             EventsRegistered = false;
+        }
+
+        public override void StoreConditionState(PropertyCollection properties, PropertyEnum propEnum, byte index)
+        {
+            foreach (var condition in _conditions)
+                condition?.StoreConditionState(properties, propEnum, index);
+        }
+
+        public override void RestoreConditionState(PropertyCollection properties, PropertyEnum propEnum, byte index)
+        {
+            foreach (var condition in _conditions)
+                condition?.RestoreConditionState(properties, propEnum, index);
         }
     }
 }

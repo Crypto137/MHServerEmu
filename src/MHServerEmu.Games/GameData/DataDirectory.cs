@@ -457,6 +457,11 @@ namespace MHServerEmu.Games.GameData
             return record.ClassType;
         }
 
+        public uint GetCrcForPrototype(PrototypeId prototypeDataRef)
+        {
+            return (uint)((ulong)prototypeDataRef >> 32);
+        }
+
         /// <summary>
         /// Returns the <see cref="PrototypeId"/> of the default <see cref="Prototype"/> paired with the <see cref="Blueprint"/> that the provided <see cref="BlueprintId"/> refers to.
         /// </summary>

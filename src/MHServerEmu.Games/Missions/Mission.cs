@@ -303,13 +303,36 @@ namespace MHServerEmu.Games.Missions
                     properties[PropertyEnum.AvatarMissionObjectiveSeq, missionRef] = CurrentObjectiveSequence;
                     properties[PropertyEnum.AvatarMissionResetsWithRegionId, missionRef] = ResetsWithRegionId;
 
-                    // TODO LegendaryMission
+                    if (IsLegendaryMission)
+                        StoreLegendaryMissionState(properties);
 
                     break;
             }
 
             if (missionProto.Rewards.HasValue() && LootSeed != 0)
                 properties[PropertyEnum.AvatarMissionLootSeed, missionRef] = LootSeed;
+        }
+
+        private void StoreLegendaryMissionState(PropertyCollection properties)
+        {
+            var propId = new PropertyId(PropertyEnum.LegendaryMissionCRC, PrototypeDataRef);
+            properties[propId] = GetCRC();
+            foreach (var objective in Objectives)
+                objective.StoreLegendaryMissionState(properties);
+        }
+
+        public void RestoreLegendaryMissionState(PropertyCollection properties)
+        {
+            var propId = new PropertyId(PropertyEnum.LegendaryMissionCRC, PrototypeDataRef);
+            if (properties.HasProperty(propId) == false) return;
+            if (properties[propId] != GetCRC()) return;
+            foreach (var objective in Objectives)
+                objective.RestoreLegendaryMissionState(properties);
+        }
+
+        private uint GetCRC()
+        {
+            return GameDatabase.DataDirectory.GetCrcForPrototype(PrototypeDataRef);
         }
 
         public override string ToString()
@@ -376,7 +399,7 @@ namespace MHServerEmu.Games.Missions
                 }
         }
 
-        private void SendToParticipants(MissionUpdateFlags missionFlags, MissionObjectiveUpdateFlags objectiveFlags, bool contributors = false)
+        public void SendToParticipants(MissionUpdateFlags missionFlags, MissionObjectiveUpdateFlags objectiveFlags, bool contributors = false)
         {
             HashSet<Player> players = new();
             foreach (var player in GetParticipants())

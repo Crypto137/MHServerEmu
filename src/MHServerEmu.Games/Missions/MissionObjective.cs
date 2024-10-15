@@ -13,6 +13,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.UI;
@@ -859,6 +860,39 @@ namespace MHServerEmu.Games.Missions
             }
 
             return hasLoot;
+        }
+
+        public void StoreLegendaryMissionState(PropertyCollection properties)
+        {
+            var index = PrototypeIndex;
+            var propId = new PropertyId(PropertyEnum.LegendaryMissionObjsComp, Mission.PrototypeDataRef, index);
+
+            if (State == MissionObjectiveState.Completed || State == MissionObjectiveState.Failed)
+            {
+                properties[propId] = (int)State;
+                return;
+            }
+            _successConditions?.StoreConditionState(properties, PropertyEnum.LegendaryMissionSuccCondCnt, index);
+            _failureConditions?.StoreConditionState(properties, PropertyEnum.LegendaryMissionFailCondCnt, index);
+        }
+
+        public void RestoreLegendaryMissionState(PropertyCollection properties)
+        {
+            var index = PrototypeIndex;
+            var propId = new PropertyId(PropertyEnum.LegendaryMissionObjsComp, Mission.PrototypeDataRef, index);
+
+            MissionObjectiveState state = (MissionObjectiveState)(int)properties[propId];
+            if (state == MissionObjectiveState.Completed || state == MissionObjectiveState.Failed)
+            {
+                SetState(state);
+                return;
+            }
+
+            if (State == MissionObjectiveState.Active)
+            {
+                _successConditions?.RestoreConditionState(properties, PropertyEnum.LegendaryMissionSuccCondCnt, index);
+                _failureConditions?.RestoreConditionState(properties, PropertyEnum.LegendaryMissionFailCondCnt, index);
+            }
         }
 
         protected class TimeLimitEvent : CallMethodEvent<MissionObjective>
