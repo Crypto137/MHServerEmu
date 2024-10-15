@@ -334,6 +334,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
 
         [DoNotCopy]
+        public override bool ShouldCacheCRC { get => true; }
+
+        [DoNotCopy]
         public PrototypeId FirstMarker { get; private set; }
         [DoNotCopy]
         public bool HasClientInterest { get; private set; } = true;
