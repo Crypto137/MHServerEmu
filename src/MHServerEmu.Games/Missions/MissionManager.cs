@@ -20,7 +20,6 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Core.System.Time;
-using System.Reflection;
 
 namespace MHServerEmu.Games.Missions
 {
@@ -1315,6 +1314,7 @@ namespace MHServerEmu.Games.Missions
             player.SetActiveChapter(PrototypeId.Invalid);
 
             // Save suspend state and reset mission state
+            player.PlayerConnection.MigrationData.ResetObjective();
             foreach(var mission in _missionDict.Values)
                 if (mission.Prototype.SaveStatePerAvatar)
                 {

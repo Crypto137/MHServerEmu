@@ -330,7 +330,7 @@ namespace MHServerEmu.Games.Missions
                 objective.RestoreLegendaryMissionState(properties);
         }
 
-        private uint GetCRC()
+        private ulong GetCRC()
         {
             return GameDatabase.DataDirectory.GetCrcForPrototype(PrototypeDataRef);
         }
@@ -2405,6 +2405,7 @@ namespace MHServerEmu.Games.Missions
             bool found = false;
 
             // resets all objectives without checkpoint and moves current order to checkpoint
+            var player = MissionManager.Player;
 
             foreach (var objective in _objectiveDict.Values.Reverse())
             {
@@ -2413,7 +2414,7 @@ namespace MHServerEmu.Games.Missions
 
                 order = objProto.Order;
 
-                if (objProto.Checkpoint)
+                if (objProto.Checkpoint || objective.RegionCheckpoint(player))
                     found = true;
                 else
                     objective.SetState(MissionObjectiveState.Invalid);

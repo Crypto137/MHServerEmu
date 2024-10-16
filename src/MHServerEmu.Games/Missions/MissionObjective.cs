@@ -13,6 +13,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -53,6 +54,7 @@ namespace MHServerEmu.Games.Missions
         private EventPointer<TimeLimitEvent> _timeLimitEvent = new();
 
         private byte _prototypeIndex;
+        private ulong _activeRegionId;
 
         private MissionObjectiveState _objectiveState;
         private TimeSpan _objectiveStateExpireTime;
@@ -155,6 +157,14 @@ namespace MHServerEmu.Games.Missions
                 success &= Serializer.Transfer(archive, ref _failCurrentCount);
                 success &= Serializer.Transfer(archive, ref _failRequiredCount);
             }
+
+            // Save migration data
+            if (archive.IsReplication == false)
+                if (Mission.MissionManager.Owner is Player player)
+                {
+                    var key = (Mission.PrototypeDataRef, _prototypeIndex);
+                    player.PlayerConnection.MigrationData.MigrationObjectiveData(key, archive.IsPacking, ref _activeRegionId);
+                }
 
             if (archive.IsReplication == false)
                 success &= SerializeConditions(archive);
@@ -370,7 +380,12 @@ namespace MHServerEmu.Games.Missions
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
 
-            if (reset) _interactedEntityList.Clear();
+            if (reset)
+            {
+                _interactedEntityList.Clear();
+                if (Region != null && objetiveProto.Checkpoint == false && Mission.IsOpenMission == false)
+                    _activeRegionId = Region.Id; // save region for RegionCheckpoint
+            }
 
             if (objetiveProto.TimeLimitSeconds > 0 || objetiveProto.TimeLimitSecondsEval != null)
             {
@@ -405,6 +420,12 @@ namespace MHServerEmu.Games.Missions
             }
 
             return true;
+        }
+
+        public bool RegionCheckpoint(Player player)
+        {
+            if (player == null) return false;
+            return _activeRegionId != 0 && player.ViewedRegion(_activeRegionId); 
         }
 
         private TimeSpan EvaluateTimeLimit(long timeLimitSeconds, EvalPrototype timeLimitSecondsEval)

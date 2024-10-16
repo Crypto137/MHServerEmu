@@ -1828,6 +1828,11 @@ namespace MHServerEmu.Games.Entities
                     area.PopulationArea?.UpdateSpawnMap(position);
         }
 
+        public bool ViewedRegion(ulong regionId)
+        {
+            return PlayerConnection.WorldView.ContainsRegionInstanceId(regionId);
+        }
+
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as Player).ResetHUDTutorial();
