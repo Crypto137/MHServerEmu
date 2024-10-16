@@ -479,7 +479,7 @@ namespace MHServerEmu.Games.Populations
 
         private void OnPoolUpdate()
         {
-            if (_pool == 0) return;
+            if (_pool == 0 || _heatMap == null) return;
 
             int heatReturn = PoolTickSec * CalcHeatReturnPerSecond();
             if (heatReturn > 0)
