@@ -581,20 +581,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             // TODO: Orbs should shrink and have their effect be reduced over time, see CAgent::onEnterWorldScheduleOrbShrink for reference.
 
+            OrbPrototype orbProto = agent.Prototype as OrbPrototype;
+            if (orbProto == null) return Logger.WarnReturn(false, "TryGetPickedUp(): orbProto == null");
+
             if (ValidateTarget(agent, avatar) == false)
                 return false;
 
             Player player = avatar.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "TryGetPickedUp(): player == null");
 
+            // Power (healing, endurance, boons)
             if (EffectPower != PrototypeId.Invalid)
             {
                 Logger.Debug($"TryGetPickedUp(): {EffectPower.GetName()}");
                 agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
             }
 
+            // Experience
+            // Scale exp based on avatar level rather than orb level
+            // TODO: apply region difficulty multipliers
+            if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, true))
+                avatar.AwardXP(xp, agent.Properties[PropertyEnum.ShowXPRewardText]);
+
+            // Credits / currency
             player.AcquireCurrencyItem(agent);
 
+            // "Kill" this orb to play its pickup (death) animation
             agent.Kill(avatar, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
             return true;
         }

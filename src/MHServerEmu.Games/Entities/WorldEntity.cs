@@ -1898,6 +1898,11 @@ namespace MHServerEmu.Games.Entities
 
         #region Rewards
 
+        public bool GetXPAwarded(out long xp, out long minXP, bool applyGlobalTuning)
+        {
+            return WorldEntityPrototype.GetXPAwarded(CharacterLevel, out xp, out minXP, applyGlobalTuning);
+        }
+
         public void GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             // TODO: Track kill participation somehow to prevent exploits
@@ -1924,8 +1929,8 @@ namespace MHServerEmu.Games.Entities
                 // XP
                 if (killer is Avatar avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
                 {
-                    WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
-                    avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                    if (WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true))
+                        avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
                 }
             }
         }
