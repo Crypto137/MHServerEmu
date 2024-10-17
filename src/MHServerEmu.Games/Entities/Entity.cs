@@ -417,7 +417,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // Update only players who are already interested in this entity.
                 // This is what should be used to remove entities if possible.
-                foreach (ulong playerId in InterestReferences.PlayerIds)
+                foreach (ulong playerId in InterestReferences)
                 {
                     Player player = Game.EntityManager.GetEntity<Player>(playerId);
                     player?.AOI.ConsiderEntity(this, settings);

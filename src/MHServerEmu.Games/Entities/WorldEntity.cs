@@ -1620,7 +1620,7 @@ namespace MHServerEmu.Games.Entities
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
             {
-                foreach (ulong playerId in InterestReferences.PlayerIds)
+                foreach (ulong playerId in InterestReferences)
                 {
                     Player player = Game.EntityManager.GetEntity<Player>(playerId);
 
@@ -1900,7 +1900,7 @@ namespace MHServerEmu.Games.Entities
         public void GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             // TODO: Track kill participation somehow to prevent exploits
-            foreach (ulong playerId in InterestReferences.PlayerIds)
+            foreach (ulong playerId in InterestReferences)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(playerId);
                 if (player == null) continue;
