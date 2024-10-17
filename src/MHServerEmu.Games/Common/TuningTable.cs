@@ -1,11 +1,15 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
-namespace MHServerEmu.Games.Regions
+namespace MHServerEmu.Games.Common
 {
     public class TuningTable
     {
+        // NOTE: In the client this class is referenced as D:\mirrorBuilds_source05\MarvelGame_v52\Source\Game\Game\Combat\TuningTable.cpp,
+        // but it's awkward for namespaces and classes to use the same names in C#, so we moved both combat classes to Common.
+
         public static readonly Logger Logger = LogManager.CreateLogger();
 
         private Region _region;
@@ -29,7 +33,7 @@ namespace MHServerEmu.Games.Regions
                 _difficultyIndexMin = difficultyIndexC.MinPosition;
                 _difficultyIndexMax = difficultyIndexC.MaxPosition;
             }
-            else 
+            else
                 Logger.Error("Failed to retrieve DifficultyIndexDamageDefaultPtoM from DifficultyGlobals! Is it set?");
         }
 
