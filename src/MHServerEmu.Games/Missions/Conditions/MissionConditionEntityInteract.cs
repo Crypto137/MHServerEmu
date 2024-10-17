@@ -21,9 +21,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         private ulong _cinematicEntityId;
         private bool _cinematicEventRegistered;
 
+        public MissionObjective MissionObjective { get; }
+
         protected override long RequiredCount => _proto.Count;
 
-        public MissionConditionEntityInteract(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
+        public MissionConditionEntityInteract(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype)
             : base(mission, owner, prototype)
         {
             // CH00NPEEternitySplinter
@@ -31,6 +33,11 @@ namespace MHServerEmu.Games.Missions.Conditions
             _playerInteractAction = OnPlayerInteract;
             _playerRequestMissionRewardsAction = OnPlayerRequestMissionRewards;
             _cinematicFinishedAction = OnCinematicFinished;
+
+            if (Owner is MissionObjective objective)
+                MissionObjective = objective;
+            else if (Owner is MissionConditionList list && list.Owner is MissionObjective listObjective) 
+                MissionObjective = listObjective;
         }
 
         private void OnCinematicFinished(CinematicFinishedGameEvent evt)
@@ -40,7 +47,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
             if (player == null || IsMissionPlayer(player) == false) return;
             if (_proto.Cinematic == PrototypeId.Invalid || _proto.Cinematic != movieRef) return;
-            
+
             var entity = Game.EntityManager.GetEntity<WorldEntity>(_cinematicEntityId);
             if (entity == null) return;
 
@@ -85,15 +92,15 @@ namespace MHServerEmu.Games.Missions.Conditions
         }
 
         private bool GetGiveItems(Player player, out LootResultSummary lootSummary)
-        {        
+        {
             lootSummary = new();
 
             if (_proto.GiveItems.HasValue())
                 Mission.RollLootSummaryReward(lootSummary, player, _proto.GiveItems, Mission.LootSeed + _proto.Index + 1);
 
-            if (_proto.IsTurnInNPC) 
+            if (_proto.IsTurnInNPC)
                 LootMissionReward(player, lootSummary);
-            
+
             return lootSummary.LootResult;
         }
 
@@ -128,7 +135,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
 
             if (_proto.RequiredItems.HasValue())
-               if (MissionManager.MatchItemsToRemove(player, _proto.RequiredItems) == false) return;
+                if (MissionManager.MatchItemsToRemove(player, _proto.RequiredItems) == false) return;
 
             if (entity.IsInWorld)
             {
@@ -147,19 +154,19 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (_cinematicEventRegistered == false)
                 {
                     var region = player.GetRegion();
-                    if (region != null) 
+                    if (region != null)
                     {
                         region.CinematicFinishedEvent.AddActionBack(_cinematicFinishedAction);
                         _cinematicEntityId = entity.Id;
                         _cinematicEventRegistered = true;
                     }
                 }
-                
+
                 player.QueueFullscreenMovie(_proto.Cinematic);
                 return;
             }
 
-            EntityInteract(player, entity);   
+            EntityInteract(player, entity);
         }
 
         private void EntityInteract(Player player, WorldEntity entity)
@@ -193,7 +200,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                     entity.Destroy();
                     break;
                 case OnInteractAction.Disable:
-                    entity.Properties[PropertyEnum.Interactable] = (int)TriBool.False; 
+                    entity.Properties[PropertyEnum.Interactable] = (int)TriBool.False;
                     break;
             }
 
