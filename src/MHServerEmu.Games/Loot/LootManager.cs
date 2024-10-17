@@ -37,19 +37,10 @@ namespace MHServerEmu.Games.Loot
         }
 
         /// <summary>
-        /// Drops random loot from the provided source <see cref="WorldEntity"/>.
+        /// Rolls the specified loot table and drops loot from the provided source <see cref="WorldEntity"/>.
         /// </summary>
-        public void DropRandomLoot(Player player, WorldEntity sourceEntity)
+        public void SpawnLootFromTable(PrototypeId lootTableProtoRef, Player player, WorldEntity sourceEntity)
         {
-            LootDropEventType lootDropEventType = LootDropEventType.OnKilled;
-
-            RankPrototype rankProto = sourceEntity.GetRankPrototype();
-            if (rankProto.LootTableParam != LootDropEventType.None)
-                lootDropEventType = rankProto.LootTableParam;
-
-            PrototypeId lootTableProtoRef = sourceEntity.Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
-            if (lootTableProtoRef == PrototypeId.Invalid) return;
-
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
             RollLootTable(lootTableProtoRef, player, lootResultSummary);
 

@@ -20,6 +20,7 @@ using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -1906,15 +1907,26 @@ namespace MHServerEmu.Games.Entities
                 if (player == null) continue;
 
                 // Loot
-                Game.LootManager.DropRandomLoot(player, this);
+                if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
+                {
+                    // TODO: Other loot drop event / action types?
+                    RankPrototype rankProto = GetRankPrototype();
+                    LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
+                        ? rankProto.LootTableParam
+                        : LootDropEventType.OnKilled;
+
+                    PrototypeId lootTableProtoRef = Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
+
+                    if (lootTableProtoRef != PrototypeId.Invalid)
+                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, player, this);
+                }
 
                 // XP
-                if (killer is not Avatar avatar)
-                    continue;
-
-                WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
-                xp *= 3;    // REMOVEME: Triple experience gains to compensate for the lack of experience orbs and boosts
-                avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                if (killer is Avatar avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
+                {
+                    WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
+                    avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                }
             }
         }
 
