@@ -658,6 +658,10 @@ namespace MHServerEmu.Games.Entities
         public virtual bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
         {
             // NOTE: This appears to be unused by regular agents.
+            var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+            if (interactableObject == null || interactableObject.IsInWorld == false) return false;
+            if (InInteractRange(interactableObject, InteractionMethod.Use) == false) return false;
+            interactableObject.OnInteractedWith(this);
             return true;
         }
 
