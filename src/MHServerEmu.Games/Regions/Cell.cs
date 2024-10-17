@@ -254,8 +254,10 @@ namespace MHServerEmu.Games.Regions
 
         public void SpawnMarker(MarkerPrototype marker, in Transform3 transform, MarkerSetOptions options)
         {
-            if (marker is not EntityMarkerPrototype entityMarker)
-                return;
+            if (marker is not EntityMarkerPrototype entityMarker) return;
+
+            PrototypeId filterRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.FilterGuid);
+            if (Region.CheckMarkerFilter(filterRef) == false) return;
 
             PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
             Prototype entity = GameDatabase.GetPrototype<Prototype>(dataRef);

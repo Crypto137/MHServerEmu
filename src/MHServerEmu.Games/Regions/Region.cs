@@ -903,9 +903,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool CheckMarkerFilter(PrototypeId filterRef)
         {
-            if (filterRef == 0) return true;
+            if (filterRef == PrototypeId.Invalid) return true;
             PrototypeId markerFilter = Prototype.MarkerFilter;
-            if (markerFilter == 0) return true;
+            if (markerFilter == PrototypeId.Invalid) return true;
             return markerFilter == filterRef;
         }
 

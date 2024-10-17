@@ -102,12 +102,11 @@ namespace MHServerEmu.Games.Populations
                 if (spawnMarker != null && spawnMarker.Type != MarkerType.Prop)
                 {
                     var filterRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.FilterGuid);
-
                     if (cell.Region.CheckMarkerFilter(filterRef))
                     {
                         if (entityMarker.EntityGuid == 0) continue;
                         var markerRef = GameDatabase.GetDataRefByPrototypeGuid(entityMarker.EntityGuid);
-                        if (markerRef == 0) continue;
+                        if (markerRef == PrototypeId.Invalid) continue;
 
                         Vector3 cellPos = entityMarker.Position - cell.Prototype.BoundingBox.Center;
                         Vector3 regionPos = cell.RegionBounds.Center + cellPos;
