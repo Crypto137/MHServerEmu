@@ -73,6 +73,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
+        private readonly EventPointer<ScheduledKillEvent> _scheduledKillEvent = new();
 
         private AlliancePrototype _allianceProto;
         private Transform3 _transform = Transform3.Identity();
@@ -337,11 +338,6 @@ namespace MHServerEmu.Games.Entities
 
             Properties[PropertyEnum.Health] = 0;
             OnKilled(killer, killFlags, directKiller);   
-        }
-
-        public void CancelKillEvent()
-        {
-            // TODO
         }
 
         public override void Destroy()
@@ -2493,11 +2489,52 @@ namespace MHServerEmu.Games.Entities
 
         public void OnInteractedWith(WorldEntity other)
         {
+            int usesLeft = Properties[PropertyEnum.InteractableUsesLeft];
+            bool used = usesLeft == -1 || usesLeft > 0;
+
+            if (usesLeft != -1)
+            {
+                usesLeft--;
+                Properties[PropertyEnum.InteractableUsesLeft] = usesLeft;
+            }
+
+            bool lastUsed = used && usesLeft == 0;
+
+            // TODO InteractableSpawnLootDelayMS
+
+            if (lastUsed)
+            {
+                long destroyDelayMS = Properties[PropertyEnum.InteractableDestroyDelayMS];
+                if (destroyDelayMS > 0)
+                    ScheduleKillEvent(TimeSpan.FromMilliseconds(destroyDelayMS));
+            }
+
             if (WorldEntityPrototype.PostInteractState != null)
                 ApplyStateFromPrototype(WorldEntityPrototype.PostInteractState);
         }
 
         #region Scheduled Events
+
+        public bool ScheduleKillEvent(TimeSpan delay)
+        {
+            if (TestStatus(EntityStatus.PendingDestroy))
+                return Logger.WarnReturn(false, $"ScheduleKillEvent(): WorldEntity {this} is already pending destroy");
+
+            if (TestStatus(EntityStatus.Destroyed))
+                return Logger.WarnReturn(false, $"ScheduleKillEvent(): WorldEntity {this} is already destroyed");
+
+            if (IsDead)
+                return Logger.WarnReturn(false, $"ScheduleKillEvent(): WorldEntity {this} is dead");
+
+            if (_scheduledKillEvent.IsValid)
+            {
+                if (_scheduledKillEvent.Get().FireTime > (Game.CurrentTime + delay))
+                    Game?.GameEventScheduler?.RescheduleEvent(_scheduledKillEvent, delay);
+            }
+            else ScheduleEntityEvent(_scheduledKillEvent, delay);
+
+            return true;
+        }
 
         public override bool ScheduleDestroyEvent(TimeSpan delay)
         {
@@ -2524,9 +2561,20 @@ namespace MHServerEmu.Games.Entities
                 Game?.GameEventScheduler?.CancelEvent(_exitWorldEvent);
         }
 
+        public void CancelKillEvent()
+        {
+            if (_scheduledKillEvent.IsValid)
+                Game?.GameEventScheduler?.CancelEvent(_scheduledKillEvent);
+        }
+
         protected class ScheduledExitWorldEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.ExitWorld();
+        }
+
+        protected class ScheduledKillEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.Kill();
         }
 
         #endregion
