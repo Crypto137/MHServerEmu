@@ -388,7 +388,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 Logger.Warn($"GetXPAwarded(): Invalid result returned from XP Curve! Level: {level} WorldEntity: {this}");
 
             float xpMinPct = Properties != null ? Properties[PropertyEnum.ExperienceAwardMinimumPct] : 0f;
-            minXP = Math.Max(1, (long)(baseXP * xpMinPct));
+            if (xpMinPct > 0f)  // If this entity has a minimum XP pct defined, always award at least 1 XP
+                minXP = Math.Max(1, (long)(baseXP * xpMinPct));
 
             float multiplier = LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_MobXP);
             if (applyGlobalTuning || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalXP) == 0f)

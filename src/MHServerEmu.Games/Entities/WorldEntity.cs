@@ -1903,8 +1903,14 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.GetXPAwarded(CharacterLevel, out xp, out minXP, applyGlobalTuning);
         }
 
-        public void GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        public bool GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "GiveKillRewards(): region == null");
+
+            TuningTable tuningTable = region.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(false, "GiveKillRewards(): tuningTable == null");
+
             // TODO: Track kill participation somehow to prevent exploits
             foreach (ulong playerId in InterestReferences)
             {
@@ -1930,9 +1936,14 @@ namespace MHServerEmu.Games.Entities
                 if (killer is Avatar avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
                 {
                     if (WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true))
+                    {
+                        xp = avatar.ApplyXPModifiers(xp, tuningTable);
                         avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                    }
                 }
             }
+
+            return true;
         }
 
         #endregion
