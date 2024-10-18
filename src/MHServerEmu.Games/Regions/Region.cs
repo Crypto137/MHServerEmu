@@ -1120,7 +1120,8 @@ namespace MHServerEmu.Games.Regions
             int maxSweepHeight = 0)
         {
             resultPosition = Vector3.Zero;
-            if (maxDistanceFromPoint < minDistanceFromPoint) return false;
+            if (maxDistanceFromPoint < minDistanceFromPoint)
+                Logger.Warn("ChooseRandomPositionNearPoint(): maxDistanceFromPoint < minDistanceFromPoint");
 
             if (posFlags.HasFlag(PositionCheckFlags.CanPathTo) && posFlags.HasFlag(PositionCheckFlags.CanSweepTo))
             {

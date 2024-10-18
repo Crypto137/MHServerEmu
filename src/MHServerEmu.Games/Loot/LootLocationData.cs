@@ -7,9 +7,6 @@ namespace MHServerEmu.Games.Loot
 {
     public class LootLocationData : IPoolable, IDisposable
     {
-        // NOTE: This doesn't work properly with random locations, we need to implement some kind
-        // of distribution system that gradually fills space from min radius to max to make use of this.
-
         private const float DefaultBoundsRadius = 10f;
 
         public Bounds Bounds { get; } = new();

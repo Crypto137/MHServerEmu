@@ -200,12 +200,12 @@ namespace MHServerEmu.Games.Loot
         /// </summary>
         private bool SpawnItem(ItemSpec itemSpec, WorldEntity sourceEntity, float dropRadius, ulong restrictedToPlayerGuid = 0)
         {
-            // Pick a random point near source entity
-            if (ChooseDropPosition(sourceEntity, dropRadius, out Vector3 dropPosition) == false)
-                return Logger.WarnReturn(false, $"SpawnItem(): Failed to find position to spawn item {itemSpec.ItemProtoRef.GetName()}");
-
-            // Get item prototype to calculate lifespan
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(false, "SpawnItem(): itemProto == null");
+
+            // Find a position for this item
+            if (FindDropPosition(itemProto, sourceEntity, dropRadius, out Vector3 dropPosition) == false)
+                return Logger.WarnReturn(false, $"SpawnItem(): Failed to find position to spawn item {itemSpec.ItemProtoRef.GetName()}");
 
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
@@ -227,12 +227,14 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float maxDropRadius, ulong restrictedToPlayerGuid = 0)
+        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float dropRadius, ulong restrictedToPlayerGuid = 0)
         {
             // this looks very similar to SpawnItem, TODO: move common functionality to a separate method
+            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgent(): agentProto == null");
 
-            // Pick a random point near source entity
-            if (ChooseDropPosition(sourceEntity, maxDropRadius, out Vector3 dropPosition) == false)
+            // Pick a position for this agent
+            if (FindDropPosition(agentProto, sourceEntity, dropRadius, out Vector3 dropPosition) == false)
                 return Logger.WarnReturn(false, $"SpawnAgent(): Failed to find position to spawn agent {agentSpec}");
 
             // Create entity
@@ -258,19 +260,42 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        private static bool ChooseDropPosition(WorldEntity sourceEntity, float maxDropRadius, out Vector3 dropPosition)
+        private bool FindDropPosition(WorldEntityPrototype dropEntityProto, WorldEntity sourceEntity, float maxRadius, out Vector3 dropPosition)
         {
-            if (sourceEntity == null)
+            dropPosition = Vector3.Zero;
+
+            // TODO: Dropping without a source entity? It seems to be optional for LootLocationTable
+            if (sourceEntity == null) return Logger.WarnReturn(false, "FindDropPosition(): sourceEntity == null");
+            Bounds bounds = sourceEntity.Bounds;
+
+            // Get the loot location table for this drop
+            // NOTE: Loot location tables don't work properly with random locations, we need to implement some kind
+            // of distribution system that gradually fills space from min radius to max to fully make use of this data.
+            PrototypeId lootLocationTableProtoRef = dropEntityProto.Properties[PropertyEnum.LootSpawnPrototype];
+            if (lootLocationTableProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "FindDropPosition(): lootLocationTableProtoRef == PrototypeId.Invalid");
+
+            var lootLocationTableProto = lootLocationTableProtoRef.As<LootLocationTablePrototype>();
+            if (lootLocationTableProto == null) return Logger.WarnReturn(false, "FindDropPosition(): lootLocationTable == null");
+
+            // Roll it
+            using LootLocationData lootLocationData = ObjectPoolManager.Instance.Get<LootLocationData>();
+            lootLocationData.Initialize(Game, bounds.Center, sourceEntity);
+            lootLocationTableProto.Roll(lootLocationData);
+
+            if (lootLocationData.DropInPlace)
             {
-                dropPosition = Vector3.Zero;
-                return Logger.WarnReturn(false, "ChooseDropPosition(): sourceEntity == null");
+                dropPosition = bounds.Center;
+                return true;
             }
 
-            const float MinDropRadius = 50f;
-            maxDropRadius = MathF.Max(MinDropRadius, maxDropRadius);
+            float minRadius = MathF.Max(bounds.Radius, lootLocationData.MinRadius);
 
-            return sourceEntity.Region.ChooseRandomPositionNearPoint(sourceEntity.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
-                BlockingCheckFlags.CheckSpawns, MinDropRadius, maxDropRadius, out dropPosition);
+            // If minRadius is equal to maxRadius, ChooseRandomPositionNearPoint() sometimes fails, so we need to add some padding
+            if (minRadius >= maxRadius)
+                maxRadius = minRadius + 10f;
+
+            return sourceEntity.Region.ChooseRandomPositionNearPoint(bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+                BlockingCheckFlags.CheckSpawns, minRadius, maxRadius, out dropPosition);
         }
     }
 }
