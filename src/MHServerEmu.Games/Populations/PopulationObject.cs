@@ -168,7 +168,7 @@ namespace MHServerEmu.Games.Populations
         {
             string type = IsMarker ? "M" : "R";
             if (Position != null) type = "P";
-            return $"PopulationObject [{type}] [{Object}]";
+            return $"PopulationObject [{type}] [{MissionRef.GetNameFormatted()}] [{Object}]";
         }
     }
 
