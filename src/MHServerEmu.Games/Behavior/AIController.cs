@@ -325,12 +325,23 @@ namespace MHServerEmu.Games.Behavior
                 Brain.ThinkCountPerFrame = 0;
             }
             bool thinking = true;
+
             if (Owner.TestStatus(EntityStatus.PendingDestroy) == false 
                 && Owner.TestStatus(EntityStatus.Destroyed) == false && thinking)
             {
-                float thinkTime = 500; // slow think 
-                if (TargetEntity != null || AssistedEntity != null)
-                    thinkTime = 100; // fast think
+                float thinkTime;
+                int aiCustomThinkRateMS = Blackboard.AICustomThinkRateMS;
+                if (aiCustomThinkRateMS <= 0)
+                {
+                    thinkTime = TargetEntity != null || AssistedEntity != null
+                        ? 100.0f    // slow think
+                        : 500.0f;   // fast think
+                }
+                else
+                {
+                    thinkTime = aiCustomThinkRateMS;
+                }
+
                 ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(thinkTime) * Game.Random.NextFloat(0.9f, 1.1f));
             }
 
@@ -560,7 +571,7 @@ namespace MHServerEmu.Games.Behavior
             }
         }
 
-        private void ScheduleAIEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
+        public void ScheduleAIEvent<TEvent>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset)
             where TEvent : CallMethodEvent<AIController>, new()
         {
             var scheduler = Game?.GameEventScheduler;
@@ -586,6 +597,11 @@ namespace MHServerEmu.Games.Behavior
         public class ThrownObjectPickedUpEvent : CallMethodEventParam1<AIController, TimeSpan>
         {
             protected override CallbackDelegate GetCallback() => (controller, time) => controller.ThrownObjectPickedUp(time);
+        }
+
+        public class EnableAIEvent : CallMethodEvent<AIController>
+        {
+            protected override CallbackDelegate GetCallback() => (controller) => controller.SetIsEnabled(true);
         }
 
         #endregion

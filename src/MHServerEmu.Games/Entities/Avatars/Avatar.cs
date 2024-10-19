@@ -844,6 +844,38 @@ namespace MHServerEmu.Games.Entities.Avatars
             return levelDelta;
         }
 
+        public long ApplyXPModifiers(long xp, TuningTable tuningTable = null)
+        {
+            // TODO: live tuning
+
+            if (IsInWorld == false)
+                return 0;
+
+            float xpMult = 1f;
+
+            // Region bonus
+            Region region = Region;
+            if (region != null)
+                xpMult *= 1f + region.Properties[PropertyEnum.ExperienceBonusPct];
+
+            // Tuning table modifiers
+            if (tuningTable != null)
+            {
+                TuningPrototype tuningProto = tuningTable.Prototype;
+                if (tuningProto == null) return Logger.WarnReturn(0L, "ApplyXPModifiers(): tuningProto == null");
+
+                // Apply difficulty index modifier
+                Curve difficultyIndexCurve = tuningProto.PlayerXPByDifficultyIndexCurve.AsCurve();
+                if (difficultyIndexCurve == null) return Logger.WarnReturn(0L, "ApplyXPModifiers(): difficultyIndexCurve == null");
+                xpMult *= difficultyIndexCurve.GetAt(tuningTable.DifficultyIndex);
+
+                // Apply unconditional tuning table multiplier
+                xpMult *= tuningProto.PctXPMultiplier;
+            }
+
+            return xpMult != 1f ? (long)MathF.Round(xp * xpMult) : xp;
+        }
+
         protected override bool OnLevelUp(int oldLevel, int newLevel)
         {
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];

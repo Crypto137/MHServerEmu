@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using System.Diagnostics;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -8,6 +9,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 
@@ -31,14 +33,15 @@ namespace MHServerEmu.Commands.Implementations
                 count = 1;
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            Player player = playerConnection.Player;
+            Avatar avatar = player.CurrentAvatar;
 
-            LootManager lootGenerator = playerConnection.Game.LootManager;
+            LootManager lootManager = playerConnection.Game.LootManager;
             
             for (int i = 0; i < count; i++)
             {
-                var item = lootGenerator.DropItem(avatar, itemProtoRef, 100f);
-                Logger.Debug($"DropItem(): {item} from {avatar}");
+                lootManager.SpawnItem(itemProtoRef, player, avatar);
+                Logger.Debug($"DropItem(): {itemProtoRef.GetName()} from {avatar}");
             }
 
             return string.Empty;
@@ -57,7 +60,7 @@ namespace MHServerEmu.Commands.Implementations
             Player player = playerConnection.Player;
 
             LootManager lootGenerator = playerConnection.Game.LootManager;
-            var item = lootGenerator.GiveItem(player, itemProtoRef);
+            var item = lootGenerator.GiveItem(itemProtoRef, player);
             Logger.Debug($"GiveItem(): {item} to {player}");
 
             return string.Empty;
@@ -88,22 +91,43 @@ namespace MHServerEmu.Commands.Implementations
             return $"Destroyed {indestructibleItemList.Count} indestructible items.";
         }
 
-        [Command("roll", "Test rolls a loot table.\nUsage: item testloottable", AccountUserLevel.Admin)]
+        [Command("roll", "Rolls a loot table.\nUsage: item roll [pattern]", AccountUserLevel.Admin)]
         public string RollLootTable(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help item roll' to get help.";
+
+            PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client);
+            if (lootTableProtoRef == PrototypeId.Invalid) return string.Empty;
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            player.Game.LootManager.TestLootTable(lootTableProtoRef, player);
+
+            return $"Finished rolling {lootTableProtoRef.GetName()}, see the server console for results.";
+        }
+
+        [Command("rollall", "Rolls all loot tables.\nUsage: item rollall", AccountUserLevel.Admin)]
+        public string RollAllLootTables(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
-            //PrototypeId lootTableProtoRef = (PrototypeId)7277456960932484638;   // Loot/Tables/Mob/NormalMobs/PopcornSharedTable.prototype
-            //PrototypeId lootTableProtoRef = (PrototypeId)10214339958427752538;  // Loot/Tables/Mob/NormalMobs/Chapter01/PopcornCh01Small.prototype
-            //PrototypeId lootTableProtoRef = (PrototypeId)13573205868182115049;   // Loot/Tables/Mob/CowsAndKings/CowsLoot.prototype
-            PrototypeId lootTableProtoRef = (PrototypeId)2972188768208229407;   // Loot/Tables/Mob/CowsAndKings/CowKingLoot.prototype
+            int numLootTables = 0;
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
-            player.Game.LootManager.TestLootTable(lootTableProtoRef, player);
+            foreach (PrototypeId lootTableProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<LootTablePrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                player.Game.LootManager.TestLootTable(lootTableProtoRef, player);
+                numLootTables++;
+            }
 
-            return string.Empty;
+            stopwatch.Stop();
+
+            return $"Finished rolling {numLootTables} loot tables in {stopwatch.Elapsed.TotalMilliseconds} ms, see the server console for results.";
         }
     }
 }

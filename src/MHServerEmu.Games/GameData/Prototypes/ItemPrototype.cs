@@ -141,6 +141,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return IsUsableByAgent(agentProto);
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="DropFilterArguments"/> passes the specified <see cref="RestrictionTestFlags"/>
+        /// for this <see cref="ItemPrototype"/>'s restrictions.
+        /// </summary>
         public bool IsDroppableForRestrictions(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags)
         {
             if (LootDropRestrictions.IsNullOrEmpty())
@@ -150,6 +154,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (dropRestrictionProto.Allow(filterArgs, restrictionFlags) == false)
                     return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Adjusts the provided <see cref="DropFilterArguments"/> to pass the specified <see cref="RestrictionTestFlags"/>
+        /// for this <see cref="ItemPrototype"/>'s restrictions.
+        /// </summary>
+        public bool MakeRestrictionsDroppable(DropFilterArguments filterArgs, RestrictionTestFlags flagsToAdjust, out RestrictionTestFlags adjustResultFlags)
+        {
+            adjustResultFlags = RestrictionTestFlags.None;
+
+            if (LootDropRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in LootDropRestrictions)
+            {
+                if (dropRestrictionProto.Adjust(filterArgs, ref adjustResultFlags, flagsToAdjust) == false)
+                {
+                    adjustResultFlags = RestrictionTestFlags.None;
+                    return false;
+                }
             }
 
             return true;

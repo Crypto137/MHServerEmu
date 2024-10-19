@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.Events.LegacyImplementations
             if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
 
             // Give the player a new bowling ball
-            _player.Game.LootManager.GiveItem(_player, bowlingBallProtoRef);
+            _player.Game.LootManager.GiveItem(bowlingBallProtoRef, _player);
 
             // Assign bowling ball power if the player's avatar doesn't have one
             Avatar avatar = _player.CurrentAvatar;

@@ -1,14 +1,18 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Behavior.ProceduralAI;
 using MHServerEmu.Games.Behavior.StaticAI;
-using MHServerEmu.Games.Behavior;
-using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities.Locomotion;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -452,14 +456,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float ShrinkageMinScale { get; protected set; }
         public bool DestroyOrbOnUnSimOrTargetLoss { get; protected set; }
 
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private float _orbRadiusSquared;
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            _orbRadiusSquared = OrbRadius * OrbRadius;
+        }
+
         public override void Init(Agent agent)
         {
             base.Init(agent);
 
-            // InitialMoveToDelayMS
-            Game game = agent.Game;
-            var blackboard = agent.AIController?.Blackboard;
-            if (game == null || blackboard == null) return;
+            Game game = agent?.Game;
+            if (game == null) return;
+
+            AIController aiController = agent.AIController;
+            if (aiController == null) return;
+
+            BehaviorBlackboard blackboard = aiController.Blackboard;
+            if (blackboard == null) return;
+
+            // Delay AI activation to let the drop animation finish before an avatar can pick up this orb
+            EventPointer<AIController.EnableAIEvent> enableEvent = new();
+            aiController.ScheduleAIEvent(enableEvent, TimeSpan.FromMilliseconds(InitialMoveToDelayMS));
+
             agent.Properties[PropertyEnum.AICustomTimeVal1] = game.CurrentTime;
 
             InitPower(agent, EffectPower);
@@ -474,24 +500,64 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Game game = agent.Game;
             if (game == null) return;
 
+            // Destroy this orb if it has finished shrinking
             if (ShrinkageDurationMS > 0)
             {
-                TimeSpan shrinkageTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
-                    + TimeSpan.FromSeconds(ShrinkageDelayMS) 
-                    + TimeSpan.FromSeconds(ShrinkageDurationMS);
-                if (game.CurrentTime > shrinkageTime)
+                TimeSpan shrinkageEndTime = agent.Properties[PropertyEnum.AICustomTimeVal1] 
+                    + TimeSpan.FromMilliseconds(ShrinkageDelayMS) 
+                    + TimeSpan.FromMilliseconds(ShrinkageDurationMS);
+
+                if (game.CurrentTime >= shrinkageEndTime)
                 {
-                    agent.Destroy(); // or Kill
+                    agent.Kill(null, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
                     return;
                 }
             }
 
-            // DestroyOrbOnUnSimOrTargetLoss
+            // Find an avatar that can potentially pick this orb up
+            Avatar avatar = null;
 
-            // OrbRadius
+            ulong restrictedToPlayerGuid = agent.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0)
+            {
+                Player player = game.EntityManager.GetEntityByDbGuid<Player>(restrictedToPlayerGuid);
+                if (player != null)
+                {
+                    // Get current avatar for the player we are looking for
+                    if (player.CurrentAvatar?.IsInWorld == true)
+                        avatar = player.CurrentAvatar;
+                }
+                else
+                {
+                    // Our player no longer exists
+                    // DestroyOrbOnUnSimOrTargetLoss
+                }
+            }
+            else
+            {
+                // TODO: non-instanced orbs
+                // TODO: Find the nearest avatar belonging to any player
+                Logger.Warn("Think(): Non-instanced orbs are not yet implemented");
+                agent.Destroy();    // REMOVEME
+                return;
+            }
 
+            // If we found an avatar, check if it can pick this orb up
+            if (avatar != null)
+            {
+                Vector3 agentPosition = agent.RegionLocation.Position;
+                Vector3 avatarPosition = avatar.RegionLocation.Position;
+
+                if (Vector3.DistanceSquared2D(agentPosition, avatarPosition) < _orbRadiusSquared && TryGetPickedUp(agent, avatar))
+                    return;
+            }
+
+            // Follow our avatar if needed
             if (MoveToTarget != null)
             {
+                // NOTE: Health and endurance orbs follow players, credits and experience orbs do not
+
+                /*
                 BehaviorSensorySystem senses = ownerController.Senses;
                 var target = ownerController.TargetEntity;
                 if (senses.ShouldSense())
@@ -507,7 +573,74 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
                 if (target != null)
                     HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, MoveToTarget, false, out _);
+                */
             }
+        }
+
+        private bool TryGetPickedUp(Agent agent, Avatar avatar)
+        {
+            // TODO: Orbs should shrink and have their effect be reduced over time, see CAgent::onEnterWorldScheduleOrbShrink for reference.
+
+            OrbPrototype orbProto = agent.Prototype as OrbPrototype;
+            if (orbProto == null) return Logger.WarnReturn(false, "TryGetPickedUp(): orbProto == null");
+
+            if (ValidateTarget(agent, avatar) == false)
+                return false;
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "TryGetPickedUp(): player == null");
+
+            // Power (healing, endurance, boons)
+            if (EffectPower != PrototypeId.Invalid)
+                agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
+
+            // Experience
+            // Scale exp based on avatar level rather than orb level
+            if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, true))
+            {
+                TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
+                xp = avatar.ApplyXPModifiers(xp, tuningTable);
+                avatar.AwardXP(xp, agent.Properties[PropertyEnum.ShowXPRewardText]);
+            }
+
+            // Credits / currency
+            player.AcquireCurrencyItem(agent);
+
+            // "Kill" this orb to play its pickup (death) animation
+            agent.Kill(avatar, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
+            return true;
+        }
+
+        private bool ValidateTarget(Agent agent, Avatar target)
+        {
+            if (agent == null) return false;
+            if (target == null) return false;
+
+            // TODO: Other restrictions?
+
+            // If this is an instanced orb, make sure the target belong to our player
+            ulong restrictedToPlayerGuid = agent.Properties[PropertyEnum.RestrictedToPlayerGuid];
+            if (restrictedToPlayerGuid != 0)
+            {
+                Player player = target.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "ValidateTarget(): player == null");
+
+                if (player.DatabaseUniqueId != restrictedToPlayerGuid)
+                    return false;
+            }
+
+            // Do not allow this orb to be picked up if the avatar is not a valid for its target
+            // (e.g. trying to pick up a healing orb with full health).
+            if (EffectPower != PrototypeId.Invalid)
+            {
+                Power power = agent.GetPower(EffectPower);
+                if (power == null) return Logger.WarnReturn(false, "ValidateTarget(): power == null");
+
+                if (power.IsValidTarget(target) == false)
+                    return false;
+            }
+
+            return true;
         }
     }
 
