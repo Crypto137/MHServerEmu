@@ -302,7 +302,7 @@ namespace MHServerEmu.Games.Entities
             var manager = Game.EntityManager;
             var spawnerProto = SpawnerPrototype;
             if (spawnerProto.OnDefeatBannerMessage != null)
-                foreach (ulong playerId in InterestReferences.PlayerIds)
+                foreach (ulong playerId in InterestReferences)
                 {
                     var player = manager.GetEntity<Player>(playerId); 
                     player?.SendBannerMessage(spawnerProto.OnDefeatBannerMessage);

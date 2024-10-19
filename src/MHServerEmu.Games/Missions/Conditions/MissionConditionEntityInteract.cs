@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (_proto.IsTurnInNPC)
                 LootMissionReward(player, lootSummary);
 
-            return lootSummary.LootResult;
+            return lootSummary.HasAnyResult;
         }
 
         private bool GetShowItems(Player player, out LootResultSummary lootSummary)
@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (Mission.State != MissionState.Active || _proto.ShowRewards)
                 LootMissionReward(player, lootSummary);
 
-            return lootSummary.LootResult;
+            return lootSummary.HasAnyResult;
         }
 
         private void OnPlayerInteract(PlayerInteractGameEvent evt)

@@ -1940,17 +1940,17 @@ namespace MHServerEmu.Games.Missions
             var lootType = lootSummary.Types;
 
             // Test for Item only
-            if (lootType.HasFlag(LootTypes.Item))
+            if (lootType.HasFlag(LootType.Item))
             {
                 if (missionProto.DropLootOnGround || lootDropper != null)
                 {
                     lootDropper ??= player.CurrentAvatar;
-                    // TODO Drop All Loots on Ground
-                    lootManager.DropItem(lootDropper, lootSummary.ItemSpecs[0], 128); // Test for first Item
+                    lootManager.SpawnLootFromSummary(lootSummary, player, lootDropper);
                 }
                 else
                 {
-                    lootManager.GiveItem(player, lootSummary.ItemSpecs[0].ItemProtoRef);
+                    // TODO give all loot
+                    lootManager.GiveItem(lootSummary.ItemSpecs[0].ItemProtoRef, player);
                 }
             }
             return true;
@@ -1990,7 +1990,7 @@ namespace MHServerEmu.Games.Missions
             lootSummary = new();
             var rewards = GetRewardTables();
             RollLootSummaryReward(lootSummary, player, rewards, _lootSeed);
-            return lootSummary.LootResult;
+            return lootSummary.HasAnyResult;
         }
 
         private static bool RollLootSummaryForPrototype(Player player, MissionPrototype missionProto, int lootSeed, out LootResultSummary lootSummary)
@@ -2012,10 +2012,10 @@ namespace MHServerEmu.Games.Missions
             foreach (var reward in rewards)
                 reward.Roll(settings, resolver);
 
-            resolver.LootSummary(lootSummary);
+            resolver.FillLootResultSummary(lootSummary);
             Logger.Trace($"HasLootRewardsForPrototype [{missionProto}] Rewards {lootSummary}");
 
-            return lootSummary.LootResult;
+            return lootSummary.HasAnyResult;
         }
 
         public bool RollLootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
@@ -2035,10 +2035,10 @@ namespace MHServerEmu.Games.Missions
             foreach (var reward in rewards)
                 reward.Roll(settings, resolver);
 
-            resolver.LootSummary(lootSummary);
+            resolver.FillLootResultSummary(lootSummary);
             Logger.Trace($"RollLootSummaryReward [{PrototypeName}] Rewards {lootSummary}");
 
-            return lootSummary.LootResult;
+            return lootSummary.HasAnyResult;
         }
 
         private int GetAvatarLevel(Avatar avatar)
@@ -2472,6 +2472,18 @@ namespace MHServerEmu.Games.Missions
             Player = player;
             Participant = participant;
             Contributor = contributor;
+        }
+    }
+
+    public struct MissionLootTable
+    {
+        public PrototypeId MissionRef;
+        public PrototypeId LootTableRef;
+
+        public MissionLootTable(PrototypeId missionRef, PrototypeId lootTableRef)
+        {
+            MissionRef = missionRef;
+            LootTableRef = lootTableRef;
         }
     }
 }

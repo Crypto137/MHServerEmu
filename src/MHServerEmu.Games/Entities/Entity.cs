@@ -200,7 +200,6 @@ namespace MHServerEmu.Games.Entities
 
         public int CurrentStackSize { get => Properties[PropertyEnum.InventoryStackCount]; }
         public int MaxStackSize { get => Properties[PropertyEnum.InventoryStackSizeMax]; }
-        public bool IsCurrencyItem { get => Properties.HasProperty(PropertyEnum.RunestonesAmount) || Properties.HasProperty(PropertyEnum.ItemCurrency); }
 
         #endregion
 

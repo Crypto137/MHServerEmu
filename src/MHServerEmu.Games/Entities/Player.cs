@@ -1469,21 +1469,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool CanAcquireCurrencyItem(WorldEntity item)
-        {
-            if (item.IsCurrencyItem == false) return false;
-            foreach (var kvp in item.Properties.IteratePropertyRange(PropertyEnum.ItemCurrency))
-            {
-                Property.FromParam(kvp.Key, 0, out PrototypeId currencyProtoRef);
-                var currencyProto = GameDatabase.GetPrototype<CurrencyPrototype>(currencyProtoRef);
-                if (currencyProto == null) continue;
-                int amount = kvp.Value + (int)Properties[PropertyEnum.ItemCurrency, currencyProtoRef];
-                if (currencyProto.MaxAmount > 0 && amount > currencyProto.MaxAmount)
-                    return false;
-            }
-            return true;
-        }
-
         public bool HasAvatarFullyUnlocked(PrototypeId avatarRef)
         {
             AvatarUnlockType unlockType = GetAvatarUnlockType(avatarRef);
