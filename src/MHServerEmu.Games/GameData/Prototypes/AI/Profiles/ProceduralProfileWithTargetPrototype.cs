@@ -509,7 +509,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (game.CurrentTime >= shrinkageEndTime)
                 {
-                    Logger.Debug($"Think(): Shrinkage ended for {agent}");
                     agent.Kill(null, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
                     return;
                 }
@@ -593,10 +592,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // Power (healing, endurance, boons)
             if (EffectPower != PrototypeId.Invalid)
-            {
-                Logger.Debug($"TryGetPickedUp(): {EffectPower.GetName()}");
                 agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
-            }
 
             // Experience
             // Scale exp based on avatar level rather than orb level

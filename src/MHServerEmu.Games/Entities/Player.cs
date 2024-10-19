@@ -783,7 +783,6 @@ namespace MHServerEmu.Games.Entities
                 if (currencyProto.MaxAmount > 0 && currentAmount + delta > currencyProto.MaxAmount)
                     continue;
 
-                Logger.Debug($"AcquireCurrencyItem(): +{delta} {currencyProtoRef.GetNameFormatted()}");
                 Properties.AdjustProperty(delta, new(PropertyEnum.Currency, currencyProtoRef));
                 result = true;
             }
@@ -791,7 +790,6 @@ namespace MHServerEmu.Games.Entities
             int runestonesAmount = entity.Properties[PropertyEnum.RunestonesAmount];
             if (runestonesAmount > 0)
             {
-                Logger.Debug($"AcquireCurrencyItem(): +{runestonesAmount} runestones");
                 Properties.AdjustProperty(runestonesAmount, new(PropertyEnum.RunestonesAmount));
                 result = true;
             }

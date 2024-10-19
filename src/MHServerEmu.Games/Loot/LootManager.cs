@@ -85,9 +85,6 @@ namespace MHServerEmu.Games.Loot
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
 
-            if (lootResultSummary.Types != LootType.None && lootResultSummary.Types != LootType.Item)
-                Logger.Debug($"SpawnLootFromSummary(): Types={lootResultSummary.Types}");
-
             // Trigger callbacks
             if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
             {
