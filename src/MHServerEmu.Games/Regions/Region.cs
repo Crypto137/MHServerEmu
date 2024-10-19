@@ -1624,6 +1624,42 @@ namespace MHServerEmu.Games.Regions
 
             PlayerDeathRecordedEvent.Invoke(new(player));
         }
+
+        public PrototypeId GetStartTarget(Player player)
+        {
+            PrototypeId startTargetRef = Properties[PropertyEnum.RegionStartTargetOverride];
+            if (startTargetRef == PrototypeId.Invalid)
+            {
+                if (GetDividedStartTarget(player, ref startTargetRef) == false)
+                    startTargetRef = Prototype.StartTarget;
+            }
+            return startTargetRef;
+        }
+
+        private bool GetDividedStartTarget(Player player, ref PrototypeId startTargetRef)
+        {
+            if (DividedStartLocations.Count == 0) return false;
+
+            foreach (var startLocation in DividedStartLocations)
+                if (startLocation.UpdatePlayers(player, Game))
+                {
+                    startTargetRef = startLocation.Location.Target;
+                    return true;
+                }
+
+            Picker<DividedStartLocation> picker = new(Game.Random);
+            foreach (var startLocation in DividedStartLocations)
+                if (startLocation.Weight > 0) picker.Add(startLocation, startLocation.Weight);
+
+            if (picker.Pick(out var pickLocation))
+            {
+                pickLocation.AddPlayer(player);
+                startTargetRef = pickLocation.Location.Target;
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public class RandomPositionPredicate    // TODO: Change to interface / struct
@@ -1639,10 +1675,35 @@ namespace MHServerEmu.Games.Regions
     public class DividedStartLocation
     {
         public DividedStartLocationPrototype Location { get; }
+        public int Weight { get => Location.Players - _players.Count; }
+
+        private readonly List<ulong> _players;
 
         public DividedStartLocation(DividedStartLocationPrototype location)
         {
             Location = location;
+            _players = new();
+        }
+
+        public void AddPlayer(Player player)
+        {
+            _players.Add(player.DatabaseUniqueId);
+        }
+
+        public bool UpdatePlayers(Player player, Game game)
+        {
+            if (player == null) return false;
+            var manager = game.EntityManager;
+            if (manager == null) return false;
+
+            foreach(ulong playerGUID in _players.ToArray())
+            {
+                if (playerGUID == player.DatabaseUniqueId) return true;
+                var existplayer = manager.GetEntityByDbGuid<Player>(playerGUID);
+                if (existplayer == null) _players.Remove(playerGUID);
+            }
+
+            return false;
         }
     }
 }
