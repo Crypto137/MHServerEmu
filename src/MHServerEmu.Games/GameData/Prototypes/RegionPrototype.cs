@@ -428,6 +428,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             return null;
         }
+
+        public PrototypeId GetMetagame()
+        {
+            if (MetaGames.HasValue()) return MetaGames[0];
+            return PrototypeId.Invalid;
+        }
     }
 
     public class RegionConnectionTargetPrototype : Prototype

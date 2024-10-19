@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -204,6 +205,13 @@ namespace MHServerEmu.Games.MetaGames
                     var gameMode = MetaGameMode.CreateGameMode(this, gameModeRef);
                     GameModes.Add(gameMode);
                 }
+        }
+
+        public void ActivateNextMode()
+        {
+            int nextIndex = _modeIndex + 1;
+            if (nextIndex < 0 || nextIndex >= GameModes.Count) return;
+            ScheduleActivateGameMode(nextIndex);
         }
 
         public void ActivateGameMode(int index)
@@ -625,6 +633,75 @@ namespace MHServerEmu.Games.MetaGames
             var widget = uiDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
             if (widget != null)
                 uiDataProvider.DeleteWidget(widgetRef);
+        }
+
+        public static bool SaveMetaStateProgress(Avatar avatar, PrototypeId regionRef, PrototypeId difficultyTierRef, PrototypeId stateRef)
+        {
+            var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+            if (regionProto == null) return false;
+
+            var entryProto = regionProto.GetRegionQueueStateEntry(stateRef);
+            if (entryProto == null || entryProto.State == PrototypeId.Invalid) return false;
+
+            TimeSpan currentTime = Clock.UnixTime;
+
+            List<PropertyId> oldProperties = new();
+            foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.MetaStateProgress, regionRef, difficultyTierRef))
+            {
+                Property.FromParam(kvp.Key, 2, out PrototypeId state);
+                TimeSpan stateTime = kvp.Value;
+                TimeSpan timeout = currentTime - stateTime;
+
+                if (timeout < TimeSpan.FromMilliseconds(100000))
+                {
+                    var entry = regionProto.GetRegionQueueStateEntry(state);
+                    if (entry != null && entryProto.Index < entry.Index) return false;
+                }
+                else oldProperties.Add(kvp.Key);
+            }
+
+            foreach (var id in oldProperties)
+                avatar.Properties.RemoveProperty(id);
+
+            var propId = new PropertyId(PropertyEnum.MetaStateProgress, regionRef, difficultyTierRef, stateRef);
+            avatar.Properties[propId] = currentTime;
+
+            return true;
+        }
+
+        public static bool LoadMetaStateProgress(Avatar avatar, PrototypeId regionRef, PrototypeId difficultyTierRef, 
+            ref PrototypeId metagameRef, ref PrototypeId stateRef, ref TimeSpan time)
+        {
+            var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+            if (regionProto == null) return false;
+
+            TimeSpan currentTime = Clock.UnixTime;
+            var metagame = regionProto.GetMetagame();
+            if (metagame != PrototypeId.Invalid && regionProto.RegionQueueStates.HasValue())
+            {
+                List<PropertyId> oldProperties = new();
+                foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.MetaStateProgress, regionRef, difficultyTierRef))
+                {
+                    Property.FromParam(kvp.Key, 2, out PrototypeId state);
+                    var entry = regionProto.GetRegionQueueStateEntry(state);
+                    TimeSpan stateTime = kvp.Value;
+                    TimeSpan timeout = currentTime - stateTime;
+
+                    if (entry != null && state != PrototypeId.Invalid && timeout < TimeSpan.FromMilliseconds(100000))
+                    {
+                        metagameRef = metagame;
+                        stateRef = state;
+                        time = stateTime;
+                        return true;
+                    }
+                    else oldProperties.Add(kvp.Key);                       
+                }
+
+                foreach (var id in oldProperties) 
+                    avatar.Properties.RemoveProperty(id);
+            }
+
+            return false;
         }
 
         protected class ActivateGameModeEvent : CallMethodEventParam1<Entity, int>
