@@ -257,7 +257,10 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (Mission.GiveDropLootForPlayer(lootSummary, player, lootDropper) == false) return;
 
                 if (_proto.IsTurnInNPC)
+                {
                     Mission.OnGiveRewards(avatar);
+                    if (Mission.IsOpenMission == false) Mission.LootSeed = 0;
+                }
             }
         }
 

@@ -950,7 +950,6 @@ namespace MHServerEmu.Games.Missions
                     SendDailyMissionCompleteToAvatar(player.CurrentAvatar);
                 }
 
-                // TODO fix problem with Double Rewards
                 GiveMissionRewards(); 
             }
 
