@@ -428,6 +428,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;                  // 125
                 case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;             // 126
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;       // 132
+                case ClientToGameServerMessage.NetMessageNewItemGlintPlayed:                OnNewItemGlintPlayed(message); break;               // 135
+                case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;          // 136
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
@@ -740,10 +742,30 @@ namespace MHServerEmu.Games.Network
             if (item == null || Player.Owns(item))
                 return true;
 
+            // TODO: Validate pickup range
+
             // Do not allow to pick up items belonging to other players
             ulong restrictedToPlayerGuid = item.Properties[PropertyEnum.RestrictedToPlayerGuid];
             if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != Player.DatabaseUniqueId)
                 return Logger.WarnReturn(false, $"OnPickupInteraction(): Player {Player} is attempting to pick up item {item} restricted to player 0x{restrictedToPlayerGuid:X}");
+
+            // Try to pick up the item as currency
+            if (Player.AcquireCurrencyItem(item))
+            {
+                item.Destroy();
+                return true;
+            }
+
+            // Invoke pickup Event
+            //var region = Player.GetRegion();
+            //region?.PlayerPreItemPickupEvent.Invoke(new(Player, item));
+
+            // Destroy mission items that shouldn't go to the inventory
+            if (item.Properties[PropertyEnum.PickupDestroyPending])
+            {
+                item.Destroy();
+                return true;
+            }
 
             // Add item to the player's inventory
             Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
@@ -755,6 +777,9 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
                 return false;
             }
+
+            // Flag the item as recently added
+            item.SetRecentlyAdded(true);
 
             // Cancel lifespan expiration for the picked up item
             item.CancelScheduledLifespanExpireEvent();
@@ -1182,6 +1207,37 @@ namespace MHServerEmu.Games.Network
             if (omegaBonusAllocationCommit == null) return Logger.WarnReturn(false, $"OnOmegaBonusAllocationCommit(): Failed to retrieve message");
 
             Logger.Debug(omegaBonusAllocationCommit.ToString());
+            return true;
+        }
+
+        private bool OnNewItemGlintPlayed(MailboxMessage message)   // 135
+        {
+            var newItemGlintPlayed = message.As<NetMessageNewItemGlintPlayed>();
+            if (newItemGlintPlayed == null) return Logger.WarnReturn(false, $"OnNewItemGlintPlayed(): Failed to retrieve message");
+
+            Logger.Warn($"OnNewItemGlintPlayed(): {newItemGlintPlayed}");
+
+            // What causes this to be sent? Do we need it?
+
+            return true;
+        }
+
+        private bool OnNewItemHighlightCleared(MailboxMessage message)  // 136
+        {
+            var newItemHighlightCleared = message.As<NetMessageNewItemHighlightCleared>();
+            if (newItemHighlightCleared == null) return Logger.WarnReturn(false, $"OnNewItemHighlightCleared(): Failed to retrieve message");
+
+            if (Player.Id != newItemHighlightCleared.PlayerId)
+                return Logger.WarnReturn(false, $"OnNewItemHighlightCleared(): Player entity id mismatch, expected {Player.Id}, got {newItemHighlightCleared.PlayerId}");
+
+            Item item = Game.EntityManager.GetEntity<Item>(newItemHighlightCleared.ItemId);
+            if (item == null) return Logger.WarnReturn(false, $"OnNewItemHighlightCleared(): item == null");
+
+            Player owner = item.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnNewItemHighlightCleared(): Player {Player} attempted to clear highlight of item {item} belonging to other player {owner}");
+
+            item.SetRecentlyAdded(false);
             return true;
         }
 

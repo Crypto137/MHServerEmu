@@ -205,6 +205,12 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public void SetRecentlyAdded(bool value)
+        {
+            Properties[PropertyEnum.ItemRecentlyAddedGlint] = value;
+            Properties[PropertyEnum.ItemRecentlyAddedToInventory] = value;
+        }
+
         private bool ApplyItemSpec(ItemSpec itemSpec)
         {
             if (itemSpec.IsValid == false) return Logger.WarnReturn(false, $"ApplyItemSpec(): Invalid ItemSpec on Item {this}!");
