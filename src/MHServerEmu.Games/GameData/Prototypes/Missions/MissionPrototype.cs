@@ -366,7 +366,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // TODO: console support
                    
             if (DisabledMissions.Contains((MissionPrototypeId)DataRef)) return false;
-           //  if (EventMissions.Contains((MissionPrototypeId)DataRef)) return true;    
+            if (EnabledMissions.Contains((MissionPrototypeId)DataRef)) return true;    
             return GameDatabase.DesignStateOk(DesignState);
         }
 

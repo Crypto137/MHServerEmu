@@ -138,6 +138,7 @@ namespace MHServerEmu.Games.Network
             // Remove this when we merge missions
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
+                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion);
                 Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
             }
