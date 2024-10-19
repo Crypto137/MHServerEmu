@@ -1081,7 +1081,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             if (IsUsingGamepadInput)
             {
-                if (IsSingleInteraction(interaction) || interaction.HasFlag(InteractionMethod.Throw) == false) return false;
+                if (IsSingleInteraction(interaction) == false && interaction.HasFlag(InteractionMethod.Throw)) return false;
                 if (IsInWorld == false && interactee.IsInWorld == false) return false;
                 return InGamepadInteractRange(interactee);
             }
