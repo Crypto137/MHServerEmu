@@ -24,8 +24,8 @@ namespace MHServerEmu.Games.Entities.Items
         private int _count = 1;
 
         public PrototypeId ItemProtoRef { get => _itemProtoRef; }
-        public PrototypeId RarityProtoRef { get => _rarityProtoRef; }
-        public int ItemLevel { get => _itemLevel; }
+        public PrototypeId RarityProtoRef { get => _rarityProtoRef; set => _rarityProtoRef = value; }
+        public int ItemLevel { get => _itemLevel; set => _itemLevel = value; }
         public int CreditsAmount { get => _creditsAmount; }
         public IEnumerable<AffixSpec> AffixSpecs { get => _affixSpecList; }
         public int Seed { get => _seed; }
@@ -35,13 +35,17 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec() { }
 
-        public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef, int itemLevel, int creditsAmount, IEnumerable<AffixSpec> affixSpecs, int seed, PrototypeId equippableBy)
+        public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef, int itemLevel,
+            int creditsAmount = 0, IEnumerable<AffixSpec> affixSpecs = null, int seed = 0, PrototypeId equippableBy = PrototypeId.Invalid)
         {
             _itemProtoRef = itemProtoRef;
             _rarityProtoRef = rarityProtoRef;
             _itemLevel = itemLevel;
             _creditsAmount = creditsAmount;
-            _affixSpecList.AddRange(affixSpecs);
+
+            if (affixSpecs != null)
+                _affixSpecList.AddRange(affixSpecs);
+            
             _seed = seed;
             _equippableBy = equippableBy;
         }

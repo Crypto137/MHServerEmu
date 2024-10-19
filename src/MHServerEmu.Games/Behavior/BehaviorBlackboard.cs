@@ -24,6 +24,8 @@ namespace MHServerEmu.Games.Behavior
         public Vector3 MoveToCurrentPathNodePos { get; set; }
         public Dictionary<ulong, long> DamageMap { get; set; }       
 
+        public int AICustomThinkRateMS { get; private set; }
+
         public BehaviorBlackboard(Agent owner)
         {
             _owner = owner;
@@ -76,6 +78,12 @@ namespace MHServerEmu.Games.Behavior
 
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
+            if (flags.HasFlag(SetPropertyFlags.Refresh) == false)
+            {
+                if (id.Enum == PropertyEnum.AICustomThinkRateMS)
+                    AICustomThinkRateMS = newValue;
+            }
+
              _owner.AIController?.Brain?.OnPropertyChange(id, newValue, oldValue, flags);
         }
 

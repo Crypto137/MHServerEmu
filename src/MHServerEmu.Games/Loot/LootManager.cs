@@ -5,95 +5,169 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
+    /// <summary>
+    /// Create loot by rolling loot tables and from other sources.
+    /// </summary>
     public class LootManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private ItemResolver _resolver;
+        private readonly ItemResolver _resolver;
+        private readonly PrototypeId _creditsItemProtoRef; 
 
         public Game Game { get; }
 
+        /// <summary>
+        /// Constructs a new <see cref="LootManager"/> for the provided <see cref="Games.Game"/>.
+        /// </summary>
         public LootManager(Game game)
         {
             Game = game;
+
             _resolver = new(game.Random);
+            _creditsItemProtoRef = GameDatabase.GlobalsPrototype.CreditsItemPrototype;
         }
 
         /// <summary>
-        /// Creates an <see cref="ItemSpec"/> for the provided <see cref="PrototypeId"/>.
+        /// Rolls the specified loot table and drops loot from the provided source <see cref="WorldEntity"/>.
         /// </summary>
-        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef)
+        public void SpawnLootFromTable(PrototypeId lootTableProtoRef, Player player, WorldEntity sourceEntity)
         {
-            // Create a dummy item spec for now
-            PrototypeId rarityProtoRef = GameDatabase.LootGlobalsPrototype.RarityDefault;  // R1Common
-            int itemLevel = 1;
-            int creditsAmount = 0;
-            IEnumerable<AffixSpec> affixSpecs = Array.Empty<AffixSpec>();
-            int seed = 1;
-            PrototypeId equippableBy = PrototypeId.Invalid;
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            RollLootTable(lootTableProtoRef, player, lootResultSummary);
 
-            return new(itemProtoRef, rarityProtoRef, itemLevel, creditsAmount, affixSpecs, seed, equippableBy); 
+            if (lootResultSummary.HasAnyResult == false) return;
+
+            SpawnLootFromSummary(lootResultSummary, player, sourceEntity);
         }
 
         /// <summary>
-        /// Creates and drops a new <see cref="Item"/> near the provided source <see cref="WorldEntity"/>. 
+        /// Does a test roll of the specified loot table for the provided <see cref="Player"/>.
         /// </summary>
-        public Item DropItem(WorldEntity source, ItemSpec itemSpec, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        public void TestLootTable(PrototypeId lootTableProtoRef, Player player)
         {
-            // Pick a random point near source entity
-            source.Region.ChooseRandomPositionNearPoint(source.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
-                BlockingCheckFlags.CheckSpawns, 50f, maxDistanceFromSource, out Vector3 dropPosition);
+            Logger.Info($"--- Loot Table Test - {lootTableProtoRef.GetName()} ---");
 
-            // Create entity
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
-            settings.EntityRef = itemSpec.ItemProtoRef;
-            settings.RegionId = source.RegionLocation.RegionId;
-            settings.Position = dropPosition;
-            settings.SourceEntityId = source.Id;
-            settings.SourcePosition = source.RegionLocation.Position;
-            settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;    // needed for drop animation
-            settings.ItemSpec = itemSpec;
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            if (RollLootTable(lootTableProtoRef, player, lootResultSummary) == false)
+                Logger.Warn($"TestLootTable(): Failed to roll loot table {lootTableProtoRef.GetName()}");
 
+            if (lootResultSummary.Types != LootType.None)
+                Logger.Info($"Summary: {lootResultSummary}\n{lootResultSummary.ToStringVerbose()}");
+
+            Logger.Info("--- Loot Table Test Over ---");
+        }
+        
+        /// <summary>
+        /// Spawns loot contained in the provided <see cref="LootResultSummary"/> in the game world.
+        /// </summary>
+        public void SpawnLootFromSummary(LootResultSummary lootResultSummary, Player player, WorldEntity sourceEntity)
+        {
+            if (lootResultSummary.Types == LootType.None)
+                return;
+
+            // Calculate drop radius
+            int numDrops = lootResultSummary.ItemSpecs.Count + lootResultSummary.AgentSpecs.Count;
+            float maxDropRadius = MathF.Min(300f, 75f + 25f * numDrops);
+
+            // Instance the loot if we have a player provided and instanced loot is not disabled by server config
+            ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
+
+            // Temp property collection for transfering properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            settings.Properties = properties;
-            settings.Properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
+            properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
 
-            Item item = Game.EntityManager.CreateEntity(settings) as Item;
-            if (item == null) return Logger.WarnReturn(item, "DropItem(): item == null");
+            // Trigger callbacks
+            if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
+            {
+                foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
+                    callbackNode.OnResultsEvaluation(player, sourceEntity);
+            }
 
-            // Set lifespan
-            TimeSpan expirationTime = item.GetExpirationTime();
-            item.InitLifespan(expirationTime);
+            // Spawn items
+            if (lootResultSummary.Types.HasFlag(LootType.Item))
+            {
+                foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
+                    SpawnItem(itemSpec, sourceEntity, maxDropRadius, properties);
+            }
 
-            return item;
+            // Spawn agents (orbs)
+            if (lootResultSummary.Types.HasFlag(LootType.Agent))
+            {
+                foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
+                    SpawnAgent(agentSpec, sourceEntity, maxDropRadius, properties);
+            }
+
+            // Spawn credits
+            if (lootResultSummary.Types.HasFlag(LootType.Credits))
+            {
+                foreach (int creditsAmount in lootResultSummary.Credits)
+                {
+                    AgentSpec agentSpec = new(_creditsItemProtoRef, 1, creditsAmount);
+                    SpawnAgent(agentSpec, sourceEntity, maxDropRadius, properties);
+                }
+            }
+
+            // Spawn other currencies (items or orbs)
+            if (lootResultSummary.Types.HasFlag(LootType.Currency))
+            {
+                foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
+                {
+                    currencySpec.ApplyCurrency(properties);
+
+                    if (currencySpec.IsItem)
+                    {
+                        // LootUtilities::FillItemSpecFromCurrencySpec()
+                        ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
+                        SpawnItem(itemSpec, sourceEntity, maxDropRadius, properties);
+                    }
+                    else if (currencySpec.IsAgent)
+                    {
+                        AgentSpec agentSpec = new(currencySpec.AgentOrItemProtoRef, 1, 0);
+                        SpawnAgent(agentSpec, sourceEntity, maxDropRadius, properties);
+                    }
+                    else
+                    {
+                        Logger.Warn($"SpawnLootFromSummary(): Unsupported currency type for {currencySpec.CurrencyRef.GetName()}");
+                    }
+
+                    properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
+                }
+            }
         }
 
-        public Item DropItem(WorldEntity source, PrototypeId itemProtoRef, float maxDistanceFromSource, ulong restrictedToPlayerGuid = 0)
+        public bool SpawnItem(PrototypeId itemProtoRef, Player player, WorldEntity sourceEntity)
         {
-            if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
-                return Logger.WarnReturn<Item>(null, $"DropItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
-
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
+            if (itemSpec == null)
+                return Logger.WarnReturn(false, $"SpawnItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
-            return DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            LootResult lootResult = new(itemSpec);
+            lootResultSummary.Add(lootResult);
+
+            SpawnLootFromSummary(lootResultSummary, player, sourceEntity);
+            return true;
         }
 
         /// <summary>
         /// Creates and gives a new item to the provided <see cref="Player"/>.
         /// </summary>
-        public Item GiveItem(Player player, PrototypeId itemProtoRef)
+        public Item GiveItem(PrototypeId itemProtoRef, Player player)
         {
-            if (GameDatabase.DataDirectory.PrototypeIsChildOfBlueprint(itemProtoRef, HardcodedBlueprints.Item) == false)
-                return Logger.WarnReturn<Item>(null, $"GiveItem(): Provided itemProtoRef {GameDatabase.GetPrototypeName(itemProtoRef)} is not an item");
+            // TODO: Do the itemProtoRef -> LootResultSummary -> Give flow, similar to spawning
+
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
+            if (itemSpec == null)
+                return Logger.WarnReturn<Item>(null, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
             Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
             if (inventory == null) return Logger.WarnReturn<Item>(null, "GiveItem(): inventory == null");
@@ -107,24 +181,31 @@ namespace MHServerEmu.Games.Loot
         }
 
         /// <summary>
-        /// Drops random loot from the provided source <see cref="WorldEntity"/>.
+        /// Creates an <see cref="ItemSpec"/> for the provided <see cref="PrototypeId"/>.
         /// </summary>
-        public void DropRandomLoot(WorldEntity source, Player player)
+        public static ItemSpec CreateItemSpec(PrototypeId itemProtoRef)
         {
-            LootDropEventType lootDropEventType = LootDropEventType.OnKilled;
+            if (DataDirectory.Instance.PrototypeIsA<ItemPrototype>(itemProtoRef) == false)
+                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): {itemProtoRef.GetName()} [{itemProtoRef}] is not an item prototype ref");
 
-            RankPrototype rankProto = source.GetRankPrototype();
-            if (rankProto.LootTableParam != LootDropEventType.None)
-                lootDropEventType = rankProto.LootTableParam;
+            // Create a dummy item spec for now
+            PrototypeId rarityProtoRef = GameDatabase.LootGlobalsPrototype.RarityDefault;  // R1Common
+            int itemLevel = 1;
+            int creditsAmount = 0;
+            IEnumerable<AffixSpec> affixSpecs = Array.Empty<AffixSpec>();
+            int seed = 1;
+            PrototypeId equippableBy = PrototypeId.Invalid;
 
-            PrototypeId lootTableProtoRef = source.Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
+            return new(itemProtoRef, rarityProtoRef, itemLevel, creditsAmount, affixSpecs, seed, equippableBy);
+        }
+
+        /// <summary>
+        /// Rolls the specified loot table and fills the provided <see cref="LootResultSummary"/> with results.
+        /// </summary>
+        private bool RollLootTable(PrototypeId lootTableProtoRef, Player player, LootResultSummary lootResultSummary)
+        {
             LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
-            if (lootTableProto == null) return;
-
-            // Instance the loot if we have a player provided and instanced loot is not disabled by server config
-            ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
-
-            //Logger.Trace($"DropRandomLoot(): Rolling loot table {lootTableProto}");
+            if (lootTableProto == null) return Logger.WarnReturn(false, "RollLootTable(): lootTableProto == null");
 
             using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
             settings.Player = player;
@@ -136,66 +217,115 @@ namespace MHServerEmu.Games.Loot
 
             _resolver.SetContext(LootContext.Drop, player);
 
-            lootTableProto.RollLootTable(settings, _resolver);
-            DropLootFromMissions(settings, source, _resolver);
-            
-            float maxDistanceFromSource = MathF.Min(75f + 25f * _resolver.ProcessedItemCount, 300f);
+            LootRollResult result = lootTableProto.RollLootTable(settings, _resolver);
+            if (result.HasFlag(LootRollResult.Success))
+                _resolver.FillLootResultSummary(lootResultSummary);
 
-            foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
-                DropItem(source, itemSpec, maxDistanceFromSource, restrictedToPlayerGuid);
-        }        
+            return true;
+        }
 
-        private void DropLootFromMissions(LootRollSettings settings, WorldEntity enemy, ItemResolver resolver)
+        /// <summary>
+        /// Spawns an <see cref="Item"/> in the game world.
+        /// </summary>
+        private bool SpawnItem(ItemSpec itemSpec, WorldEntity sourceEntity, float dropRadius, PropertyCollection properties)
         {
-            var player = settings.Player;
-            List<MissionLootTable> lootList = new();
-            if (MissionManager.GetDropLootsForEnemy(enemy, player, lootList))
+            ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+            if (itemProto == null)
+                return Logger.WarnReturn(false, "SpawnItem(): itemProto == null");
+
+            // Find a position for this item
+            if (FindDropPosition(itemProto, sourceEntity, dropRadius, out Vector3 dropPosition) == false)
+                return Logger.WarnReturn(false, $"SpawnItem(): Failed to find position to spawn item {itemSpec.ItemProtoRef.GetName()}");
+
+            // Create entity
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = itemSpec.ItemProtoRef;
+            settings.RegionId = sourceEntity.RegionLocation.RegionId;
+            settings.Position = dropPosition;
+            settings.SourceEntityId = sourceEntity.Id;
+            settings.SourcePosition = sourceEntity.RegionLocation.Position;
+            settings.ItemSpec = itemSpec;
+            settings.Lifespan = itemProto.GetExpirationTime(itemSpec.RarityProtoRef);
+            settings.Properties = properties;
+
+            Item item = Game.EntityManager.CreateEntity(settings) as Item;
+            if (item == null) return Logger.WarnReturn(false, "SpawnItem(): item == null");
+
+            return true;
+        }
+
+        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float dropRadius, PropertyCollection properties)
+        {
+            // this looks very similar to SpawnItem, TODO: move common functionality to a separate method
+            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgent(): agentProto == null");
+
+            // Pick a position for this agent
+            if (FindDropPosition(agentProto, sourceEntity, dropRadius, out Vector3 dropPosition) == false)
+                return Logger.WarnReturn(false, $"SpawnAgent(): Failed to find position to spawn agent {agentSpec}");
+
+            // Create entity
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = agentSpec.AgentProtoRef;
+            settings.RegionId = sourceEntity.RegionLocation.RegionId;
+            settings.Position = dropPosition;
+            settings.SourceEntityId = sourceEntity.Id;
+            settings.SourcePosition = sourceEntity.RegionLocation.Position;
+
+            settings.Properties = properties;
+            settings.Properties[PropertyEnum.CharacterLevel] = agentSpec.AgentLevel;
+            settings.Properties[PropertyEnum.CombatLevel] = agentSpec.AgentLevel;
+
+            if (agentSpec.CreditsAmount > 0)
+                settings.Properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
+
+            Agent agent = Game.EntityManager.CreateEntity(settings) as Agent;
+            if (agent == null) return Logger.WarnReturn(false, "SpawnAgent(): item == null");
+
+            // Clean up properties
+            settings.Properties.RemoveProperty(PropertyEnum.CharacterLevel);
+            settings.Properties.RemoveProperty(PropertyEnum.CombatLevel);
+            settings.Properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
+
+            return true;
+        }
+
+        private bool FindDropPosition(WorldEntityPrototype dropEntityProto, WorldEntity sourceEntity, float maxRadius, out Vector3 dropPosition)
+        {
+            dropPosition = Vector3.Zero;
+
+            // TODO: Dropping without a source entity? It seems to be optional for LootLocationTable
+            if (sourceEntity == null) return Logger.WarnReturn(false, "FindDropPosition(): sourceEntity == null");
+            Bounds bounds = sourceEntity.Bounds;
+
+            // Get the loot location table for this drop
+            // NOTE: Loot location tables don't work properly with random locations, we need to implement some kind
+            // of distribution system that gradually fills space from min radius to max to fully make use of this data.
+            PrototypeId lootLocationTableProtoRef = dropEntityProto.Properties[PropertyEnum.LootSpawnPrototype];
+            if (lootLocationTableProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "FindDropPosition(): lootLocationTableProtoRef == PrototypeId.Invalid");
+
+            var lootLocationTableProto = lootLocationTableProtoRef.As<LootLocationTablePrototype>();
+            if (lootLocationTableProto == null) return Logger.WarnReturn(false, "FindDropPosition(): lootLocationTable == null");
+
+            // Roll it
+            using LootLocationData lootLocationData = ObjectPoolManager.Instance.Get<LootLocationData>();
+            lootLocationData.Initialize(Game, bounds.Center, sourceEntity);
+            lootLocationTableProto.Roll(lootLocationData);
+
+            if (lootLocationData.DropInPlace)
             {
-                foreach (var missionLoot in lootList)
-                {
-                    var lootTableProto = missionLoot.LootTableRef.As<LootTablePrototype>();
-                    if (lootTableProto == null) continue;
-                    using LootRollSettings dropSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
-                    dropSettings.Set(settings);
-                    dropSettings.MissionRef = missionLoot.MissionRef;
-                    lootTableProto.RollLootTable(dropSettings, resolver);
-                }
+                dropPosition = bounds.Center;
+                return true;
             }
-        }
 
-        public void TestLootTable(PrototypeId lootTableProtoRef, Player player)
-        {
-            LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
-            if (lootTableProto == null) return;
+            float minRadius = MathF.Max(bounds.Radius, lootLocationData.MinRadius);
 
-            Logger.Info($"--- Loot Table Test - {lootTableProto} ---");
+            // If minRadius is equal to maxRadius, ChooseRandomPositionNearPoint() sometimes fails, so we need to add some padding
+            if (minRadius >= maxRadius)
+                maxRadius = minRadius + 10f;
 
-            using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
-            settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
-            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
-            settings.Level = player.CurrentAvatar.CharacterLevel;
-            settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
-
-            _resolver.SetContext(LootContext.Drop, player);
-
-            lootTableProto.RollLootTable(settings, _resolver);
-
-            foreach (ItemSpec itemSpec in _resolver.ProcessedItems)
-                Logger.Info($"itemProtoRef={itemSpec.ItemProtoRef.GetName()}, rarity={GameDatabase.GetFormattedPrototypeName(itemSpec.RarityProtoRef)}");
-
-            Logger.Info("--- Loot Table Test Over ---");
-        }
-    }
-
-    public struct MissionLootTable
-    {
-        public PrototypeId MissionRef;
-        public PrototypeId LootTableRef;
-
-        public MissionLootTable(PrototypeId missionRef, PrototypeId lootTableRef)
-        {
-            MissionRef = missionRef;
-            LootTableRef = lootTableRef;
+            return sourceEntity.Region.ChooseRandomPositionNearPoint(bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+                BlockingCheckFlags.CheckSpawns, minRadius, maxRadius, out dropPosition);
         }
     }
 }

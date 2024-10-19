@@ -2,7 +2,9 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -10,10 +12,77 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Agent { get; protected set; }
 
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (Agent != PrototypeId.Invalid && GameDatabase.DataDirectory.PrototypeIsAbstract(Agent))
+                Agent = PrototypeId.Invalid;
+        }
+
+        public static LootRollResult RollAgent(WorldEntityPrototype agentProto, int numAgents, LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (numAgents < 1)
+                return result;
+
+            switch (resolver.LootContext)
+            {
+                case LootContext.AchievementReward:
+                case LootContext.LeaderboardReward:
+                case LootContext.Drop:
+                case LootContext.MissionReward:
+                    break;
+
+                default:
+                    return LootRollResult.Failure;
+            }
+
+            RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) || settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown))
+                restrictionFlags &= ~RestrictionTestFlags.Cooldown;
+
+            if (agentProto.IsCurrency)
+            {
+                for (int i = 0; i < numAgents; i++)
+                {
+                    result |= resolver.PushCurrency(agentProto, null, restrictionFlags, settings.DropChanceModifiers, 1);
+                    if (result.HasFlag(LootRollResult.Failure))
+                    {
+                        resolver.ClearPending();
+                        return LootRollResult.Failure;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < numAgents; i++)
+                {
+                    int level = resolver.ResolveLevel(settings.Level, true);
+                    result |= resolver.PushAgent(agentProto.DataRef, level, restrictionFlags);
+                    if (result.HasFlag(LootRollResult.Failure))
+                    {
+                        resolver.ClearPending();
+                        return LootRollResult.Failure;
+                    }
+                }
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            // TODO (overriding this to reduce log spam)
-            return LootRollResult.NoRoll;
+            if (Agent == PrototypeId.Invalid)
+                return LootRollResult.NoRoll;
+
+            WorldEntityPrototype agentProto = Agent.As<WorldEntityPrototype>();
+            int numAgents = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
+
+            return RollAgent(agentProto, numAgents, settings, resolver);
         }
     }
 
@@ -22,17 +91,62 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CharacterTokenType AllowedTokenType { get; protected set; }
         public CharacterFilterType FilterType { get; protected set; }
         public LootNodePrototype OnTokenUnavailable { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll(): AllowedTokenType={AllowedTokenType}, FilterType={FilterType}");
+            return base.Roll(settings, resolver);
+        }
     }
 
     public class LootDropClonePrototype : LootNodePrototype
     {
         public LootMutationPrototype[] Mutations { get; protected set; }
         public short SourceIndex { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            Logger.Warn($"Roll()");
+            return LootRollResult.NoRoll;
+        }
     }
 
     public class LootDropCreditsPrototype : LootNodePrototype
     {
         public CurveId Type { get; protected set; }
+
+        //---
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (Type == CurveId.Invalid)
+                return result;
+
+            int level = resolver.ResolveLevel(settings.Level, settings.UseLevelVerbatim);
+            Curve curve = CurveDirectory.Instance.GetCurve(Type);
+            
+            int amount = curve.GetIntAt(level);
+            amount = resolver.Random.Next(amount, amount * 3 / 2 + 1);
+
+            result = resolver.PushCredits(amount);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropItemPrototype : LootDropPrototype
@@ -58,7 +172,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Item == PrototypeId.Invalid)
                 return LootRollResult.NoRoll;
 
-            int numItems = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax);
+            int numItems = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
 
             return RollItem(Item.As<ItemPrototype>(), numItems, settings, resolver, Mutations);
         }
@@ -138,57 +252,296 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropPowerPointsPrototype : LootDropPrototype
     {
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0)
+                return result;
+
+            result = resolver.PushPowerPoints(NumMin);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropHealthBonusPrototype : LootDropPrototype
     {
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0)
+                return result;
+
+            result = resolver.PushHealthBonus(NumMin);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropEnduranceBonusPrototype : LootDropPrototype
     {
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0)
+                return result;
+
+            result = resolver.PushEnduranceBonus(NumMin);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropXPPrototype : LootNodePrototype
     {
         public CurveId XPCurve { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (XPCurve == CurveId.Invalid)
+                return result;
+
+            Curve xpCurve = CurveDirectory.Instance.GetCurve(XPCurve);
+            if (xpCurve == null) return Logger.WarnReturn(result, "Roll(): xpCurve == null");
+
+            int amount = (int)MathF.Ceiling(xpCurve.GetAt(settings.Level));
+
+            result = resolver.PushXP(XPCurve, amount);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropRealMoneyPrototype : LootDropPrototype
     {
         public LocaleStringId CouponCode { get; protected set; }
         public PrototypeId TransactionContext { get; protected set; }
+
+        //---
+
+        // NOTE: This loot drop type appears to had been used only for the Vibranium Ticket promotion during the game's second anniversary.
+        // See Loot/Tables/Mob/Bosses/GoldenTicketTable.prototype for reference.
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (NumMin <= 0 || CouponCode == LocaleStringId.Invalid)
+                return result;
+
+            result = resolver.PushRealMoney(this);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropBannerMessagePrototype : LootNodePrototype
     {
         public PrototypeId BannerMessage { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (BannerMessage={BannerMessage.GetName()})");
+        }
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            return PushLootNodeCallback(settings, resolver);
+        }
     }
 
     public class LootDropUsePowerPrototype : LootNodePrototype
     {
         public PrototypeId Power { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (Power={Power.GetName()})");
+        }
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            return PushLootNodeCallback(settings, resolver);
+        }
     }
 
     public class LootDropPlayVisualEffectPrototype : LootNodePrototype
     {
         public AssetId RecipientVisualEffect { get; protected set; }
         public AssetId DropperVisualEffect { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()})");
+        }
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            return PushLootNodeCallback(settings, resolver);
+        }
     }
 
     public class LootDropChatMessagePrototype : LootNodePrototype
     {
         public LocaleStringId ChatMessage { get; protected set; }
         public PlayerScope MessageScope { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        {
+            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (ChatMessage={ChatMessage}, MessageScope={MessageScope})");
+        }
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            return PushLootNodeCallback(settings, resolver);
+        }
     }
 
     public class LootDropVanityTitlePrototype : LootNodePrototype
     {
         public PrototypeId VanityTitle { get; protected set; }
+
+
+        //---
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            if (VanityTitle == PrototypeId.Invalid)
+                return result;
+
+            result = resolver.PushVanityTitle(VanityTitle);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 
     public class LootDropVendorXPPrototype : LootNodePrototype
     {
         public PrototypeId Vendor { get; protected set; }
         public int XP { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
+        {
+            LootRollResult result = LootRollResult.NoRoll;
+
+            // Validate this drop
+            if (XP <= 0 || Vendor == PrototypeId.Invalid)
+                return result;
+
+            // Make sure this drop is not on cooldown
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false &&
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
+            {
+                if (resolver.CheckDropCooldown(Vendor, XP))
+                    return result;
+            }
+
+            // Get XP can info prototype for this drop's vendor
+            VendorXPCapInfoPrototype vendorXPCapInfoProto = null;
+            foreach (VendorXPCapInfoPrototype currentInfoProto in GameDatabase.LootGlobalsPrototype.VendorXPCapInfo)
+            {
+                if (currentInfoProto.DataRef == Vendor)
+                {
+                    vendorXPCapInfoProto = currentInfoProto;
+                    break;
+                }
+            }
+
+            // Adjust xp amount to prevent it from going over cap
+            int xpAmount = XP;
+
+            if (vendorXPCapInfoProto != null && settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCap) == false)
+            {
+                // NOTE: This loot drop type can modify the player's VendorXPCapCounter property while it is being rolled.
+                // The only vendor this can theoretically happen with in 1.52 is Entity/Characters/Vendors/VendorTypes/VendorRaidGenosha.prototype.
+                Logger.Debug($"Roll(): Vendor={Vendor.GetName()}, XP={XP}");
+
+                Player player = resolver.Player;
+                if (player == null)
+                    return Logger.WarnReturn(LootRollResult.NoRoll, "Roll(): Unable to get player when rewarding VendorXP");
+
+                int vendorXPCapCounter = player.Properties[PropertyEnum.VendorXPCapCounter, Vendor];
+                bool shouldAdjustCounter = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false && player.IsInGame;
+
+                if (vendorXPCapCounter + xpAmount > vendorXPCapInfoProto.Cap)
+                    xpAmount = Math.Max(0, vendorXPCapInfoProto.Cap - vendorXPCapCounter);
+
+                if (shouldAdjustCounter)
+                    player.Properties.AdjustProperty(xpAmount, new(PropertyEnum.VendorXPCapCounter, Vendor));
+            }
+
+            if (xpAmount <= 0)
+                return result;
+
+            result = resolver.PushVendorXP(Vendor, xpAmount);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
+        }
     }
 }

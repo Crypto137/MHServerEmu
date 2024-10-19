@@ -16,6 +16,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {

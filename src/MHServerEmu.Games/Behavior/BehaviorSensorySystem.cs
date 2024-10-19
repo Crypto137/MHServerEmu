@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior.StaticAI;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Prototypes;

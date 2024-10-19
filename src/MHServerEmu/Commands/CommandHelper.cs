@@ -66,7 +66,7 @@ namespace MHServerEmu.Commands
             // Not enough
             if (matches.Any() == false)
             {
-                ChatHelper.SendMetagameMessage(client, $"Failed to find any powers containing {pattern}.");
+                ChatHelper.SendMetagameMessage(client, $"Failed to find any {((PrototypeId)blueprintRef).GetNameFormatted()} prototypes containing {pattern}.");
                 return PrototypeId.Invalid;
             }
 

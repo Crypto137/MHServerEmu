@@ -15,7 +15,6 @@ namespace MHServerEmu.Games.Entities
         private readonly HashSet<ulong> _interestedPlayerIds = new();
         private readonly int[] _accumulatedPolicyCounts = new int[8];
 
-        public IEnumerable<ulong> PlayerIds { get => _interestedPlayerIds; }
         public int PlayerCount { get => _interestedPlayerIds.Count; }
         public bool IsEmpty { get => PlayerCount == 0 && GetInterestedPoliciesUnion() == AOINetworkPolicyValues.AOIChannelNone; }
 
@@ -86,6 +85,11 @@ namespace MHServerEmu.Games.Entities
         public bool IsPlayerInterested(Player player)
         {
             return _interestedPlayerIds.Contains(player.Id);
+        }
+
+        public HashSet<ulong>.Enumerator GetEnumerator()
+        {
+            return _interestedPlayerIds.GetEnumerator();
         }
 
         public override string ToString()

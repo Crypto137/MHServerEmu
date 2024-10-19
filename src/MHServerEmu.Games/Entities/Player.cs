@@ -745,6 +745,70 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool CanAcquireCurrencyItem(WorldEntity entity)
+        {
+            if (entity.IsCurrencyItem() == false)
+                return false;
+
+            foreach (var kvp in entity.Properties.IteratePropertyRange(PropertyEnum.ItemCurrency))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId currencyProtoRef);
+                CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
+                if (currencyProto == null)
+                {
+                    Logger.Warn("CanAcquireCurrencyItem(): currencyProto == null");
+                    continue;
+                }
+
+                int currentAmount = Properties[PropertyEnum.ItemCurrency, currencyProtoRef];
+                int delta = kvp.Value;
+
+                if (currencyProto.MaxAmount > 0 && currentAmount + delta > currencyProto.MaxAmount)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool AcquireCurrencyItem(Entity entity)
+        {
+            if (entity.IsCurrencyItem() == false)
+                return false;
+
+            bool result = false;
+
+            foreach (var kvp in entity.Properties.IteratePropertyRange(PropertyEnum.ItemCurrency))
+            {
+                int delta = kvp.Value * entity.CurrentStackSize;
+                if (delta <= 0)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out PrototypeId currencyProtoRef);
+                CurrencyPrototype currencyProto = currencyProtoRef.As<CurrencyPrototype>();
+                if (currencyProto == null)
+                {
+                    Logger.Warn("AcquireCurrencyItem(): currencyProto == null");
+                    continue;
+                }
+
+                int currentAmount = Properties[PropertyEnum.ItemCurrency, currencyProtoRef];
+                if (currencyProto.MaxAmount > 0 && currentAmount + delta > currencyProto.MaxAmount)
+                    continue;
+
+                Properties.AdjustProperty(delta, new(PropertyEnum.Currency, currencyProtoRef));
+                result = true;
+            }
+
+            int runestonesAmount = entity.Properties[PropertyEnum.RunestonesAmount];
+            if (runestonesAmount > 0)
+            {
+                Properties.AdjustProperty(runestonesAmount, new(PropertyEnum.RunestonesAmount));
+                result = true;
+            }
+
+            return result;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);

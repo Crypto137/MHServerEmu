@@ -143,7 +143,7 @@ namespace MHServerEmu.Billing
             {
                 case ItemPrototype itemProto:
                     // Give the player the item they are trying to "buy"
-                    player.Game.LootManager.GiveItem(player, itemProto.DataRef);
+                    player.Game.LootManager.GiveItem(itemProto.DataRef, player);
                     break;
 
                 case PlayerStashInventoryPrototype playerStashInventoryProto:

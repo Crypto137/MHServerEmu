@@ -603,8 +603,9 @@ namespace MHServerEmu.Games.Powers
         {
             float healing = Properties[PropertyEnum.Healing];
 
-            // HACK: Increase healing to compensate for the lack of healing over time
-            healing *= 3f;
+            // HACK: Increase medkit healing to compensate for the lack of healing over time
+            if (results.PowerPrototype.DataRef == GameDatabase.GlobalsPrototype.AvatarHealPower)
+                healing *= 2f;
 
             // Pct healing
             float healingBasePct = Properties[PropertyEnum.HealingBasePct];

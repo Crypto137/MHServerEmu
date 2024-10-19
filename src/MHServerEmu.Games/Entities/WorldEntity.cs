@@ -18,6 +18,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -1776,7 +1777,7 @@ namespace MHServerEmu.Games.Entities
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
             {
-                foreach (ulong playerId in InterestReferences.PlayerIds)
+                foreach (ulong playerId in InterestReferences)
                 {
                     Player player = Game.EntityManager.GetEntity<Player>(playerId);
 
@@ -2066,25 +2067,52 @@ namespace MHServerEmu.Games.Entities
 
         #region Rewards
 
-        public void GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        public bool GetXPAwarded(out long xp, out long minXP, bool applyGlobalTuning)
         {
+            return WorldEntityPrototype.GetXPAwarded(CharacterLevel, out xp, out minXP, applyGlobalTuning);
+        }
+
+        public bool GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "GiveKillRewards(): region == null");
+
+            TuningTable tuningTable = region.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(false, "GiveKillRewards(): tuningTable == null");
+
             // TODO: Track kill participation somehow to prevent exploits
-            foreach (ulong playerId in InterestReferences.PlayerIds)
+            foreach (ulong playerId in InterestReferences)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(playerId);
                 if (player == null) continue;
 
                 // Loot
-                Game.LootManager.DropRandomLoot(this, player);
+                if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
+                {
+                    // TODO: Other loot drop event / action types?
+                    RankPrototype rankProto = GetRankPrototype();
+                    LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
+                        ? rankProto.LootTableParam
+                        : LootDropEventType.OnKilled;
+
+                    PrototypeId lootTableProtoRef = Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
+
+                    if (lootTableProtoRef != PrototypeId.Invalid)
+                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, player, this);
+                }
 
                 // XP
-                if (killer is not Avatar avatar)
-                    continue;
-
-                WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true);
-                xp *= 3;    // REMOVEME: Triple experience gains to compensate for the lack of experience orbs and boosts
-                avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                if (killer is Avatar avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
+                {
+                    if (WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true))
+                    {
+                        xp = avatar.ApplyXPModifiers(xp, tuningTable);
+                        avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                    }
+                }
             }
+
+            return true;
         }
 
         #endregion

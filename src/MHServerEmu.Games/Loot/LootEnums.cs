@@ -42,23 +42,41 @@ namespace MHServerEmu.Games.Loot
     public enum RestrictionTestFlags
     {
         None        = 0,
-        Level       = 1 << 0,
-        Rarity      = 1 << 1,
-        Rank        = 1 << 2,
-        Slot        = 1 << 3,
-        ItemType    = 1 << 4,
-        UsableBy    = 1 << 5,
-        Flag6       = 1 << 6,
-        Flag7       = 1 << 7,
-        ItemParent  = 1 << 8,
-        Cooldown    = 1 << 9,
-        All = Level | Rarity | Rank | Slot | ItemType | UsableBy | Flag6 | Flag7 | ItemParent | Cooldown,
+        Level       = 1 << 0,   // LevelRestrictionPrototype    + OutputLevelPrototype
+        Rarity      = 1 << 1,   // RarityRestrictionPrototype   + OutputRarityPrototype
+        Rank        = 1 << 2,   // RankRestrictionPrototype     + OutputRankPrototype
+        Slot        = 1 << 3,   // SlotRestrictionPrototype
+        ItemType    = 1 << 4,   // ItemTypeRestrictionPrototype
+        UsableBy    = 1 << 5,   // UsableByRestrictionPrototype
+        VisualAffix = 1 << 6,   // HasVisualAffixRestrictionPrototype
+        ItemParent  = 1 << 7,   // ItemParentRestrictionPrototype
+        Cooldown    = 1 << 8,
+        All = Level | Rarity | Rank | Slot | ItemType | UsableBy | VisualAffix | ItemParent | Cooldown,
 
         // Extra flags used in output restriction prototypes
         Output          = 1 << 15,
         OutputLevel     = 1 << 16,
         OutputRarity    = 1 << 17,
         OutputRank      = 1 << 18,
+    }
+
+    [Flags]
+    public enum LootType
+    {
+        None            = 0,
+        PowerPoints     = 1 << 0,
+        Credits         = 1 << 1,
+        EnduranceBonus  = 1 << 2,
+        Experience      = 1 << 3,
+        HealthBonus     = 1 << 4,
+        RealMoney       = 1 << 5,
+        VanityTitle     = 1 << 6,
+        CallbackNode    = 1 << 7,
+        LootMutation    = 1 << 8,
+        VendorXP        = 1 << 9,
+        Currency        = 1 << 10,
+        Item            = 1 << 11,
+        Agent           = 1 << 12,
     }
 
     [Flags]
@@ -111,28 +129,13 @@ namespace MHServerEmu.Games.Loot
         MysteryChest        = 1 << 8,
     }
 
-    [AssetEnum]
-    public enum LootEventType   // Loot/LootDropEventType.type
-    {
-        None = 0,
-        OnInteractedWith = 3,
-        OnHealthBelowPct = 2,
-        OnHealthBelowPctHit = 1,
-        OnKilled = 4,
-        OnKilledChampion = 5,
-        OnKilledElite = 6,
-        OnKilledMiniBoss = 7,
-        OnHit = 8,
-        OnDamagedForPctHealth = 9,
-    }
-
     [AssetEnum((int)None)]
-    public enum LootDropEventType
+    public enum LootDropEventType      // Loot/LootDropEventType.type
     {
         None = 0,
-        OnInteractedWith = 3,
-        OnHealthBelowPct = 2,
         OnHealthBelowPctHit = 1,
+        OnHealthBelowPct = 2,
+        OnInteractedWith = 3,
         OnKilled = 4,
         OnKilledChampion = 5,
         OnKilledElite = 6,
@@ -207,24 +210,5 @@ namespace MHServerEmu.Games.Loot
         CategoryGear = 24,
         CategoryArtifacts = 25,
         CategoryOther = 26
-    }
-
-    [Flags]
-    public enum LootTypes
-    {
-        None            = 0,
-        PowerPoints     = 1 << 0,
-        Credits         = 1 << 1,
-        EnduranceBonus  = 1 << 2,
-        Experience      = 1 << 3,
-        HealthBonus     = 1 << 4,
-        RealMoney       = 1 << 5,
-        VanityTitle     = 1 << 6,
-        CallbackNode    = 1 << 7,
-        LootMutation    = 1 << 8,
-        VendorXP        = 1 << 9,
-        Currency        = 1 << 10,
-        Item            = 1 << 11,
-        Agent           = 1 << 12,
     }
 }

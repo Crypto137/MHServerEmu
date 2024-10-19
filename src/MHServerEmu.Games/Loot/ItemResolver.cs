@@ -8,13 +8,14 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
 {
     /// <summary>
-    /// A basic implementation of <see cref="IItemResolver"/>.
+    /// A general-purpose implementation of <see cref="IItemResolver"/>.
     /// </summary>
     public class ItemResolver : IItemResolver
     {
@@ -26,15 +27,12 @@ namespace MHServerEmu.Games.Loot
         private readonly int _itemLevelMax;
 
         private readonly List<PendingItem> _pendingItemList = new();
-        private readonly List<ItemSpec> _processedItemList = new();
+        private readonly List<LootResult> _processedItemList = new();
 
         public GRandom Random { get; }
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
         public Region Region { get => Player?.GetRegion(); }
-
-        public IEnumerable<ItemSpec> ProcessedItems { get => _processedItemList; }
-        public int ProcessedItemCount { get => _processedItemList.Count; }
 
         public ItemResolver(GRandom random)
         {
@@ -59,6 +57,9 @@ namespace MHServerEmu.Games.Loot
             _itemLevelMax = (int)propertyInfoProto.Max;
         }
 
+        /// <summary>
+        /// Resets this <see cref="ItemResolver"/> and sets new rolling context.
+        /// </summary>
         public void SetContext(LootContext lootContext, Player player)
         {
             _pendingItemList.Clear();
@@ -68,35 +69,171 @@ namespace MHServerEmu.Games.Loot
             Player = player;
         }
 
+        #region Push Functions
+
+        // These functions are used to "push" intermediary data from rolling loot tables.
+        // Order is the same as fields in NetStructLootResultSummary.
+
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
             if (CheckItem(filterArgs, restrictionFlags, false) == false)
-                return LootRollResult.NoRoll;
+                return LootRollResult.Failure;
 
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
 
-            _pendingItemList.Add(new(itemSpec, filterArgs.RollFor));
+            LootResult lootResult = new(itemSpec);
+            PendingItem pendingItem = new(lootResult, filterArgs.RollFor);
+            _pendingItemList.Add(pendingItem);
 
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushAgent(PrototypeId agentProtoRef, int level, RestrictionTestFlags restrictionFlags)
+        {
+            if (CheckAgent(agentProtoRef, restrictionFlags) == false)
+                return LootRollResult.Failure;
+
+            AgentSpec agentSpec = new(agentProtoRef, level, 0);
+            LootResult lootResult = new(agentSpec);
+            _pendingItemList.Add(new(lootResult));
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushCredits(int amount)
+        {
+            // TODO: Credits bonuses
+
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.Credits, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushXP(CurveId xpCurveRef, int amount)
+        {
+            // TODO: XP bonuses
+
+            if (amount > 0)
+            {
+                LootResult lootResult = new(xpCurveRef, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushPowerPoints(int amount)
+        {
+            // NOTE: Unused in BUE
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.PowerPoints, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushHealthBonus(int amount)
+        {
+            // NOTE: Unused in BUE
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.HealthBonus, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushEnduranceBonus(int amount)
+        {
+            // NOTE: Unused in BUE
+            if (amount > 0)
+            {
+                LootResult lootResult = new(LootType.EnduranceBonus, amount);
+                _pendingItemList.Add(new(lootResult));
+            }
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushRealMoney(LootDropRealMoneyPrototype lootDropRealMoneyProto)
+        {
+            LootResult lootResult = new(lootDropRealMoneyProto);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushLootNodeCallback(LootNodePrototype callbackNodeProto)
+        {
+            LootResult lootResult = new(callbackNodeProto);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushCraftingCallback(LootMutationPrototype lootMutationProto)
+        {
+            // TODO
+            Logger.Debug($"PushCraftingCallback()");
+            return LootRollResult.NoRoll;
+        }
+
+        public LootRollResult PushVanityTitle(PrototypeId vanityTitleProtoRef)
+        {
+            LootResult lootResult = new(vanityTitleProtoRef);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushVendorXP(PrototypeId vendorProtoRef, int xpAmount)
+        {
+            VendorXPSummary vendorXPSummary = new(vendorProtoRef, xpAmount);
+            LootResult lootResult = new(vendorXPSummary);
+            _pendingItemList.Add(new(lootResult));
             return LootRollResult.Success;
         }
 
         public LootRollResult PushCurrency(WorldEntityPrototype worldEntityProto, DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags,
             LootDropChanceModifiers dropChanceModifiers, int stackCount)
         {
-            //Logger.Debug($"PushCurrency(): {worldEntityProto}");
-            return LootRollResult.NoRoll;
+            // Currency can come from agents and items
+            if (worldEntityProto is AgentPrototype)
+            {
+                if (CheckAgent(worldEntityProto.DataRef, restrictionFlags) == false)
+                    return LootRollResult.Failure;
+            }
+            else if (worldEntityProto is ItemPrototype)
+            {
+                if (CheckItem(filterArgs, restrictionFlags, false) == false)
+                    return LootRollResult.Failure;
+            }
+            else
+            {
+                return Logger.WarnReturn(LootRollResult.Failure, $"PushCurrency(): Unsupported currency entity prototype {worldEntityProto}");
+            }
+
+            if (worldEntityProto.GetCurrency(out PrototypeId currencyRef, out int amount) == false)
+                return LootRollResult.Failure;
+
+            // TODO: currency bonuses
+            CurrencySpec currencySpec = new(worldEntityProto.DataRef, currencyRef, amount * stackCount);
+            LootResult lootResult = new(currencySpec);
+            _pendingItemList.Add(new(lootResult));
+
+            return LootRollResult.Success;
         }
 
-        public void PushLootNodeCallback()
-        {
-            Logger.Debug($"PushLootNodeCallback()");
-        }
+        #endregion
 
-        public void PushCraftingCallback()
-        {
-            Logger.Debug($"PushCraftingCallback()");
-        }
+        #region Resolving
+
+        // Resolve functions are helper functions for rolling loot given the context set for this item resolver
 
         public int ResolveLevel(int level, bool useLevelVerbatim)
         {
@@ -192,7 +329,14 @@ namespace MHServerEmu.Games.Loot
             return Random.NextFloat() < dropChance;
         }
 
-        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2)
+        public bool CheckDropCooldown(PrototypeId dropProtoRef, int amount)
+        {
+            // TODO
+            //Logger.Debug($"CheckDropCooldown(): {dropProtoRef.GetName()} x{amount}");
+            return false;
+        }
+
+        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2, int stackCount = 1)
         {
             ItemPrototype itemProto = filterArgs.ItemProto as ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
@@ -206,8 +350,47 @@ namespace MHServerEmu.Games.Loot
             if (itemProto.IsDroppableForRestrictions(filterArgs, restrictionFlags) == false)
                 return false;
 
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Slot))
+            {
+                EquipmentInvUISlot slot = filterArgs.Slot;
+                if (slot != EquipmentInvUISlot.Invalid)
+                {
+                    AgentPrototype agentProto = filterArgs.RollFor.As<AgentPrototype>();
+                    if (itemProto.GetInventorySlotForAgent(agentProto) != slot)
+                        return false;
+                }
+            }
+
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.UsableBy))
+            {
+                AgentPrototype agentProto = filterArgs.RollFor.As<AgentPrototype>();
+                if (itemProto.IsDroppableForAgent(agentProto) == false)
+                    return false;
+            }
+
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Cooldown))
+            {
+                if (CheckDropCooldown(itemProto.DataRef, stackCount))
+                    return false;
+            }
+
             return true;
         }
+
+        public bool CheckAgent(PrototypeId agentProtoRef, RestrictionTestFlags restrictionFlags)
+        {
+            if (agentProtoRef == PrototypeId.Invalid)
+                return false;
+
+            if (restrictionFlags.HasFlag(RestrictionTestFlags.Cooldown) && CheckDropCooldown(agentProtoRef, 1))
+                return false;
+
+            return true;
+        }
+
+        #endregion
+
+        #region Pending Item Processing
 
         public void ClearPending()
         {
@@ -218,40 +401,69 @@ namespace MHServerEmu.Games.Loot
         {
             foreach (PendingItem pendingItem in _pendingItemList)
             {
-                using LootCloneRecord args = ObjectPoolManager.Instance.Get<LootCloneRecord>();
-                LootCloneRecord.Initialize(args, LootContext, pendingItem.ItemSpec, pendingItem.RollFor);
+                // Non-item loot does not need additional processing
+                if (pendingItem.LootResult.Type != LootType.Item)
+                {
+                    _processedItemList.Add(pendingItem.LootResult);
+                    continue;
+                }
 
-                MutationResults result = LootUtilities.UpdateAffixes(this, args, AffixCountBehavior.Roll, pendingItem.ItemSpec, settings);
+                // Items need to have their affixes rolled
+                ItemSpec itemSpec = pendingItem.LootResult.ItemSpec;
+
+                using LootCloneRecord affixArgs = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                LootCloneRecord.Initialize(affixArgs, LootContext, itemSpec, pendingItem.RollFor);
+
+                MutationResults result = LootUtilities.UpdateAffixes(this, affixArgs, AffixCountBehavior.Roll, itemSpec, settings);
 
                 if (result.HasFlag(MutationResults.Error))
                     Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
 
-                _processedItemList.Add(pendingItem.ItemSpec);
+                // Modify the item spec using output "restrictions" (OutputLevelPrototype, OutputRarityPrototype)
+                ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+                RestrictionTestFlags flagsToAdjust = RestrictionTestFlags.Level | RestrictionTestFlags.Rarity | RestrictionTestFlags.Output;
+
+                using DropFilterArguments restrictionArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+                DropFilterArguments.Initialize(restrictionArgs, itemProto, itemSpec.EquippableBy, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, LootContext);
+                
+                itemProto.MakeRestrictionsDroppable(restrictionArgs, flagsToAdjust, out RestrictionTestFlags adjustResultFlags);
+
+                if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputLevel))
+                    itemSpec.ItemLevel = restrictionArgs.Level;
+
+                if (adjustResultFlags.HasFlag(RestrictionTestFlags.OutputRarity))
+                    itemSpec.RarityProtoRef = restrictionArgs.Rarity;
+
+                // Push the final processed item
+                _processedItemList.Add(new(itemSpec));
             }
 
             _pendingItemList.Clear();
             return true;
         }
 
-        public void LootSummary(LootResultSummary lootSummary)
+        public void FillLootResultSummary(LootResultSummary lootResultSummary)
         {
-            // TODO other types
-            if (ProcessedItemCount > 0)
-            {
-                lootSummary.Types |= LootTypes.Item;
-                foreach (ItemSpec itemSpec in _processedItemList)
-                    lootSummary.ItemSpecs.Add(itemSpec);
-            }
+            foreach (LootResult lootResult in _processedItemList)
+                lootResultSummary.Add(lootResult);
         }
+
+        #endregion
 
         private readonly struct PendingItem
         {
-            public ItemSpec ItemSpec { get; }
+            public LootResult LootResult { get; }
             public PrototypeId RollFor { get; }
 
-            public PendingItem(ItemSpec itemSpec, PrototypeId rollFor)
+            public PendingItem(in LootResult lootResult)
             {
-                ItemSpec = itemSpec;
+                LootResult = lootResult;
+                RollFor = PrototypeId.Invalid;
+            }
+
+            public PendingItem(in LootResult lootResult, PrototypeId rollFor)
+            {
+                LootResult = lootResult;
                 RollFor = rollFor;
             }
         }

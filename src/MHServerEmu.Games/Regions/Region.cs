@@ -8,6 +8,8 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
@@ -256,7 +258,7 @@ namespace MHServerEmu.Games.Regions
 
             GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
             if (globals == null)
-                return Logger.ErrorReturn(false, "Unable to get globals prototype for region initialize");
+                return Logger.ErrorReturn(false, "Initialize(): Unable to get globals prototype for region initialize");
 
             TuningTable = new(this);
 
@@ -266,7 +268,7 @@ namespace MHServerEmu.Games.Regions
                 TuningTable.SetTuningTable(difficultySettings.TuningTable);
 
                 if (Properties.HasProperty(PropertyEnum.DifficultyIndex))
-                       TuningTable.SetDifficultyIndex(Properties[PropertyEnum.DifficultyIndex], false);                
+                    TuningTable.SetDifficultyIndex(Properties[PropertyEnum.DifficultyIndex], false);
             }
 
             // NOTE: Divided start locations are used only in the Age of Ultron game mode
@@ -277,7 +279,7 @@ namespace MHServerEmu.Games.Regions
             if (Aabb.IsZero() == false)
             {
                 if (settings.GenerateAreas)
-                    Logger.Warn("Bound is not Zero with GenerateAreas On");             
+                    Logger.Warn("Initialize(): Bound is not Zero with GenerateAreas On");             
                 
                 InitializeSpacialPartition(Aabb);
                 NaviMesh.Initialize(Aabb, 1000.0f, this);
@@ -1198,7 +1200,8 @@ namespace MHServerEmu.Games.Regions
             int maxSweepHeight = 0)
         {
             resultPosition = Vector3.Zero;
-            if (maxDistanceFromPoint < minDistanceFromPoint) return false;
+            if (maxDistanceFromPoint < minDistanceFromPoint)
+                Logger.Warn("ChooseRandomPositionNearPoint(): maxDistanceFromPoint < minDistanceFromPoint");
 
             if (posFlags.HasFlag(PositionCheckFlags.CanPathTo) && posFlags.HasFlag(PositionCheckFlags.CanSweepTo))
             {

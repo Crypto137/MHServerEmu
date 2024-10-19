@@ -1,11 +1,16 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
-namespace MHServerEmu.Games.Regions
+namespace MHServerEmu.Games.Common
 {
     public class TuningTable
     {
+        // NOTE: In the client this class is referenced as D:\mirrorBuilds_source05\MarvelGame_v52\Source\Game\Game\Combat\TuningTable.cpp,
+        // but it's awkward for namespaces and classes to use the same names in C#, so we moved both combat classes to Common.
+
         public static readonly Logger Logger = LogManager.CreateLogger();
 
         private Region _region;
@@ -14,9 +19,9 @@ namespace MHServerEmu.Games.Regions
         private int _difficultyIndexMin;
         private int _difficultyIndexMax;
         private int _difficultyIndex;
-        public int DifficultyIndex { get => _difficultyIndex > 0 ? _difficultyIndex : 0; set => SetDifficultyIndex(value, true); }
 
         public TuningPrototype Prototype { get => _tuningProto; }
+        public int DifficultyIndex { get => _difficultyIndex > 0 ? _difficultyIndex : 0; set => SetDifficultyIndex(value, true); }
 
         public TuningTable(Region region)
         {
@@ -25,14 +30,16 @@ namespace MHServerEmu.Games.Regions
             DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
             if (difficultyGlobals == null) return;
 
-            var difficultyIndexC = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);
+            Curve difficultyIndexC = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);
             if (difficultyIndexC != null)
             {
                 _difficultyIndexMin = difficultyIndexC.MinPosition;
                 _difficultyIndexMax = difficultyIndexC.MaxPosition;
             }
-            else 
-                Logger.Error("Failed to retrieve DifficultyIndexDamageDefaultPtoM from DifficultyGlobals! Is it set?");
+            else
+            {
+                Logger.Warn("TuningTable(): Failed to retrieve DifficultyIndexDamageDefaultPtoM from DifficultyGlobals! Is it set?");
+            }
         }
 
         public void SetTuningTable(PrototypeId tuningTable)
@@ -44,7 +51,7 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        internal RankPrototype RollRank(List<RankPrototype> ranks, HashSet<PrototypeId> overrides)
+        public RankPrototype RollRank(List<RankPrototype> ranks, HashSet<PrototypeId> overrides)
         {
             throw new NotImplementedException();
         }
@@ -55,11 +62,6 @@ namespace MHServerEmu.Games.Regions
             _difficultyIndex = Math.Clamp(difficultyIndex, _difficultyIndexMin, _difficultyIndexMax);
             if (oldIndex != _difficultyIndex && broadcast)
                 BroadcastChange(oldIndex, _difficultyIndex);
-        }
-
-        private void BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
-        {
-            // TODO
         }
 
         public void GetUIIntArgs(List<long> intArgs)
@@ -92,33 +94,32 @@ namespace MHServerEmu.Games.Regions
 
         public float GetIndexEnemyDamageBonus()
         {
-            var difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
-            if (difficultyGlobals == null) return 0.0f;
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            if (difficultyGlobals == null) return Logger.WarnReturn(0.0f, "GetIndexEnemyDamageBonus(): difficultyGlobal == null");
 
-            var difficultyIndexDamageCurve = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultMtoP);
-            if (difficultyIndexDamageCurve == null) return 0.0f;
+            Curve difficultyIndexDamageCurve = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultMtoP);
+            if (difficultyIndexDamageCurve == null) return Logger.WarnReturn(0.0f, "GetIndexEnemyDamageBonus(): difficultyIndexDamageCurve == null");
 
             return difficultyIndexDamageCurve.GetAt(DifficultyIndex);
         }
 
         public float GetIndexEnemyDamageResistance()
         {
-            var difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
-            if (difficultyGlobals == null) return 0.0f;
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            if (difficultyGlobals == null) return Logger.WarnReturn(0.0f, "GetIndexEnemyDamageResistance(): difficultyGlobal == null");
 
-            var difficultyIndexDamageCurve = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);
-            if (difficultyIndexDamageCurve == null) return 0.0f;
+            Curve difficultyIndexDamageCurve = GameDatabase.GetCurve(difficultyGlobals.DifficultyIndexDamageDefaultPtoM);
+            if (difficultyIndexDamageCurve == null) return Logger.WarnReturn(0.0f, "GetIndexEnemyDamageResistance(): difficultyIndexDamageCurve == null");
 
             return difficultyIndexDamageCurve.GetAt(DifficultyIndex);
         }
 
         public float GetIndexXPBonus()
         {
-            if (Prototype == null) return 0.0f;
+            if (Prototype == null) return Logger.WarnReturn(0.0f, "GetIndexXPBonus(): Prototype == null");
 
-            var modifierCurveR = Prototype.PlayerXPByDifficultyIndexCurve;
-            var modifierCurve = GameDatabase.GetCurve(modifierCurveR);
-            if (modifierCurve == null) return 0.0f;
+            Curve modifierCurve = GameDatabase.GetCurve(Prototype.PlayerXPByDifficultyIndexCurve);
+            if (modifierCurve == null) return Logger.WarnReturn(0.0f, "GetIndexXPBonus(): modifierCurve == null");
 
             int difficultyIndex = Math.Clamp(DifficultyIndex, modifierCurve.MinPosition, modifierCurve.MaxPosition);
             return modifierCurve.GetAt(difficultyIndex);
@@ -126,15 +127,19 @@ namespace MHServerEmu.Games.Regions
 
         public float GetIndexLootBonus()
         {
-            if (Prototype == null) return 0.0f;
+            if (Prototype == null) return Logger.WarnReturn(0.0f, "GetIndexLootBonus(): Prototype == null");
 
-            var modifierCurveR = Prototype.LootFindByDifficultyIndexCurve;
-            var modifierCurve = GameDatabase.GetCurve(modifierCurveR);
-            if (modifierCurve == null) return 0.0f;
+            Curve modifierCurve = GameDatabase.GetCurve(Prototype.LootFindByDifficultyIndexCurve);
+            if (modifierCurve == null) return Logger.WarnReturn(0.0f, "GetIndexLootBonus(): modifierCurve == null");
 
             int difficultyIndex = Math.Clamp(DifficultyIndex, modifierCurve.MinPosition, modifierCurve.MaxPosition);
             return modifierCurve.GetAt(difficultyIndex);
         }
 
+        private void BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
+        {
+            // TODO
+            Logger.Debug($"BroadcastChange(): [{_region}] - {oldDifficultyIndex} => {newDifficultyIndex}");
+        }
     }
 }
