@@ -1888,7 +1888,7 @@ namespace MHServerEmu.Games.Missions
         public void OnUpdateSimulation(MissionSpawnEvent missionSpawnEvent)
         {
             if (missionSpawnEvent == null) return;
-            if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated)
+            if (IsOpenMission && OpenMissionPrototype.ResetWhenUnsimulated && missionSpawnEvent.IsSpawned() == false)
                 ScheduleRestartMission();
         }
 
