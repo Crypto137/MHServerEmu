@@ -15,7 +15,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Events.Templates;
-using MHServerEmu.Games.Loot;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Properties.Evals;
@@ -137,13 +136,6 @@ namespace MHServerEmu.Games.Missions
                         if (missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null)
                         {
                             var mission = CreateMissionByDataRef(missionRef);
-
-                            // Hardcode Complete
-                            if (CompletedMissions.Contains(missionRef))
-                            {
-                                mission.SetState(MissionState.Completed);
-                                mission.AddParticipant(player);
-                            }
                         }
                 }
             
@@ -1545,13 +1537,6 @@ namespace MHServerEmu.Games.Missions
 
         #region Hardcoded
 
-        public static HashSet<PrototypeId> CompletedMissions = new HashSet<PrototypeId>
-        {
-            // MissionPrototypeId.NPE1Flag, // Pre BUE player
-            (PrototypeId)MissionPrototypeId.NPE2Flag, //  TimesSquareTutorial visited
-            // (PrototypeId)MissionPrototypeId.CH00NPETrainingRoom, // Tutorial in TrainingRoom
-        };
-
         public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
         {
          /*   MissionPrototypeId.CivilWarDailyCapOM01DefeatSpiderman,
@@ -1571,6 +1556,12 @@ namespace MHServerEmu.Games.Missions
             MissionPrototypeId.XMasGiftXChange,
             MissionPrototypeId.SiegeMissionGiverController,
             MissionPrototypeId.AgentsOfSHIELDEvent,
+        };
+
+
+        public static readonly MissionPrototypeId[] EnabledMissions = new MissionPrototypeId[]
+        {
+            MissionPrototypeId.PlayOpening,
         };
 
         // TODO replace this mission to MetaStates
@@ -1618,6 +1609,8 @@ namespace MHServerEmu.Games.Missions
 
         public enum MissionPrototypeId : ulong
         {
+            PlayOpening = 10963313100249436843,
+
             NPE1Flag = 10079041614323716371,
             NPE2Flag = 11142636152886137108,
 
