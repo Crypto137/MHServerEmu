@@ -4,6 +4,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -53,6 +54,19 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 manager.ActivateMission(missionRef);
         }
 
+        protected void SetMissionFailedState(PrototypeId missionRef)
+        {
+            if (missionRef == PrototypeId.Invalid) return;
+            var manager = Region?.MissionManager;
+            if (manager == null || manager.IsInitialized == false) return;
+
+            var mission = manager.FindMissionByDataRef(missionRef);
+            if (mission == null) return;
+
+            if (mission.State == MissionState.Active)
+                mission.SetState(MissionState.Failed);
+        }
+
         protected void PlayerMetaStateComplete()
         {
             // TODO achievement
@@ -64,7 +78,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         { 
             GameEventScheduler?.CancelAllEvents(_pendingEvents); 
         }
-
+        public virtual void OnReset() { }
         public virtual void OnRemovedState(PrototypeId removedStateRef) { }
         public virtual void OnAddPlayer(Player player) { }
         public virtual void OnRemovePlayer(Player player) { }

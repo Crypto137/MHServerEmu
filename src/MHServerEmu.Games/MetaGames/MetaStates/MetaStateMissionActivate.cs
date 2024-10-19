@@ -73,6 +73,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 region.OpenMissionFailedEvent.RemoveAction(_openMissionFailedAction);
             }
 
+            SetMissionFailedState(_proto.Mission);
+
             if (_proto.RemovePopulationOnDeactivate)
             {
                 MetaGame.RemoveSpawnEvent(PrototypeDataRef);

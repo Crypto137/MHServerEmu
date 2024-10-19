@@ -88,7 +88,10 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             if (_proto.Sequence.IsNullOrEmpty()) return;
 
             region.OpenMissionCompleteEvent.RemoveAction(_openMissionCompleteAction);
-            region.OpenMissionFailedEvent.RemoveAction(_openMissionFailedAction);            
+            region.OpenMissionFailedEvent.RemoveAction(_openMissionFailedAction);
+
+            foreach(var state in _proto.Sequence)
+                SetMissionFailedState(state.Mission);
 
             if (_proto.RemovePopulationOnDeactivate)
             {
