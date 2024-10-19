@@ -606,6 +606,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Credits / currency
             player.AcquireCurrencyItem(agent);
 
+            // Invoke OrbPickUp event
+            agent.Region?.OrbPickUpEvent.Invoke(new(player, agent));            
+
             // "Kill" this orb to play its pickup (death) animation
             agent.Kill(avatar, KillFlags.NoDeadEvent | KillFlags.NoExp | KillFlags.NoLoot);
             return true;
