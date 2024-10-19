@@ -143,6 +143,19 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 player.PlayerConnection.MoveToTarget(targetRef);
         }
 
+        public void ResetStates()
+        {
+            var applyStates = Prototype.ApplyStates;
+            if (applyStates.IsNullOrEmpty()) return;
+
+            var metaStates = MetaGame.MetaStates;
+            foreach (var state in applyStates)
+            {
+                var metaState = metaStates.FirstOrDefault(ms => ms.PrototypeDataRef == state);
+                metaState?.OnReset();
+            }
+        }
+
         public void SetModeText(LocaleStringId modeText)
         {
             if (_modeText == modeText) return;

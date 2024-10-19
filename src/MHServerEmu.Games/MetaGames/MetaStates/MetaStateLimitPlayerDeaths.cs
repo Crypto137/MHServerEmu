@@ -48,6 +48,12 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
+        public override void OnReset()
+        {
+            if (GetPlayerDeathLimit() > 0 || _proto.FailOnAllPlayersDead)
+                PlayerDeathLimitReset();
+        }
+
         private void PlayerDeathLimitReset()
         {
             var region = Region;
