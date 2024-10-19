@@ -213,7 +213,7 @@ namespace MHServerEmu.Games.Behavior
                 }
 
                 eventScheduler.ScheduleEvent(_thinkEvent, nextThinkTimeOffset, _pendingEvents);
-                _thinkEvent.Get().OwnerController = this;
+                _thinkEvent.Get().Initialize(this);
             }
         }
 
@@ -455,7 +455,11 @@ namespace MHServerEmu.Games.Behavior
 
         public void OnAISetSimulated(bool simulated)
         {
-            SetIsEnabled(simulated);
+            if (simulated)
+                ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(1), true);
+            else
+                ClearScheduledThinkEvent();
+
             Brain?.OnSetSimulated(simulated);
         }
 
@@ -632,15 +636,9 @@ namespace MHServerEmu.Games.Behavior
             protected override CallbackDelegate GetCallback() => (controller) => controller.SetIsEnabled(true);
         }
 
-        public class AIThinkEvent : ScheduledEvent
+        public class AIThinkEvent : CallMethodEvent<AIController>
         {
-            public AIController OwnerController;
-
-            public override bool OnTriggered()
-            {
-                OwnerController?.Think();
-                return true;
-            }
+            protected override CallbackDelegate GetCallback() => (controller) => controller?.Think();
         }
 
         #endregion
