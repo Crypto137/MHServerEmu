@@ -55,9 +55,9 @@ namespace MHServerEmu.Games.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly BitList _collisionIds = new();
-        private readonly BitList _collisionBits = new();
-        private readonly List<BitList> _collisionBitList = new();
+        private readonly GBitArray _collisionIds = new();
+        private readonly GBitArray _collisionBits = new();
+        private readonly List<GBitArray> _collisionBitList = new();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
 
