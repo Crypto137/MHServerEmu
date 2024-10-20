@@ -22,5 +22,6 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateLog { get; set; }
         public bool GenerateEntities { get; set; }
         public bool GenerateAreas { get; set; }
+        public PrototypeId GameStateId { get; set; }
     }
 }

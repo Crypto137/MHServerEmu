@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Regions;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -7,13 +8,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public StaticAreaPrototype[] StaticAreas { get; protected set; }
         public AreaConnectionPrototype[] Connections { get; protected set; }
 
+        //---
+
         public override PrototypeId GetStartAreaRef(Region region)
         {
-
-            if (StaticAreas != null && StaticAreas.Length > 0)
+            if (StaticAreas.HasValue())
                 return StaticAreas[0].Area;
 
-            return 0;
+            return PrototypeId.Invalid;
+        }
+
+        public override void GetAreasInGenerator(HashSet<PrototypeId> areas)
+        {
+            if (StaticAreas.HasValue())
+                foreach (var areaProto in StaticAreas)
+                    if (areaProto != null && areaProto.Area != PrototypeId.Invalid)
+                        areas.Add(areaProto.Area);
         }
     }
 

@@ -143,12 +143,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
 
+        //---
+
+        [DoNotCopy]
+        public DifficultyTierMask DifficultyTierMask { get; private set; }
+        [DoNotCopy]
+        public bool HasPvPMetaGame { get; private set; }
+        [DoNotCopy]
+        public bool HasScoreSchema { get; private set; }
         [DoNotCopy]
         public int RegionPrototypeEnumValue { get; private set; }
+        [DoNotCopy]
+        public HashSet<PrototypeId> AreasInGenerator { get; private set; }
         [DoNotCopy]
         public bool IsPublic { get => Behavior == RegionBehavior.Town || Behavior == RegionBehavior.PublicCombatZone || Behavior == RegionBehavior.MatchPlay; }
         [DoNotCopy]
         public bool IsPrivate { get => IsPublic == false; }
+
+        private Dictionary<AssetId, List<LootTableAssignmentPrototype>> _lootTableMap = new();
 
         private KeywordsMask _keywordsMask;
 
@@ -165,20 +177,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
-        public PrototypeId GetDefaultArea(Region region)
+        public PrototypeId GetDefaultAreaRef(Region region)
         {
-            PrototypeId defaultArea = 0;
+            PrototypeId defaultArea = PrototypeId.Invalid;
 
-            if (StartTarget != 0)
+            if (StartTarget != PrototypeId.Invalid)
             {
-                RegionConnectionTargetPrototype target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(StartTarget);
-                defaultArea = target.Area;
+                var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(StartTarget);
+                if (target != null)
+                    defaultArea = target.Area;
             }
 
-            if (defaultArea == 0)
-            {
+            if (RegionGenerator != null && defaultArea == PrototypeId.Invalid)
                 return RegionGenerator.GetStartAreaRef(region); // TODO check return
-            }
 
             return defaultArea;
         }
@@ -200,16 +211,84 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PostProcess();
 
+            DifficultyTierMask = DifficultyTierMask.None;
+
+            if (AccessDifficulties.HasValue())
+            {
+                foreach (var difficultyTierRef in AccessDifficulties)
+                {
+                    var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(difficultyTierRef);
+                    if (difficultyTierProto == null) continue;
+                    DifficultyTierMask |= (DifficultyTierMask)(1 << (int)difficultyTierProto.Tier);
+                }
+            }
+            else
+                DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
+
+            if (RegionQueueStates.HasValue())
+            {
+                int index = 0;
+                foreach (var entryProto in RegionQueueStates)
+                {
+                    if (entryProto != null) entryProto.Index = index;
+                    index++;
+                }
+            }
+
+            HasPvPMetaGame = false;
+            HasScoreSchema = false;
+
+            if (MetaGames.HasValue())
+                foreach (var metaGameRef in MetaGames)
+                {
+                    if (metaGameRef == PrototypeId.Invalid) continue;
+                    var metaPvP = GameDatabase.GetPrototype<PvPPrototype>(metaGameRef);
+                    if (metaPvP != null)
+                    {
+                        if (metaPvP.IsPvP) HasPvPMetaGame = true;
+                        if (metaPvP.ScoreSchemaPlayer != PrototypeId.Invalid || metaPvP.ScoreSchemaRegion != PrototypeId.Invalid)
+                            HasScoreSchema = true;
+                        break;
+                    }
+                }
+
             _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+
+            // GetLevelAccessRestrictionMinMax client only?
+
+            if (LootTables.HasValue())
+                foreach (var lootTable in LootTables)
+                {
+                    if (lootTable.Name == AssetId.Invalid) continue;
+                    if (_lootTableMap.TryGetValue(lootTable.Name, out var table) == false)
+                    {
+                        table = new();
+                        _lootTableMap[lootTable.Name] = table;
+                    }
+                    table?.Add(lootTable);
+                }
 
             RegionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetRegionBlueprintDataRef());
 
-            // TODO others
+            if (AreasInGenerator == null)
+            {
+                AreasInGenerator = new();
+                HashSet<PrototypeId> regions = new();
+                GetAreasInGenerator(this, AreasInGenerator, regions);
+            }
+
+            // ClientMapOverrides client only
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+        }
+
+        public bool HasKeyword(PrototypeId keywordRef)
+        {
+            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+            return HasKeyword(keywordProto);
         }
 
         public bool AllowRaids()
@@ -254,6 +333,108 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         }
                 }
             return largestTeamSize;
+        }
+
+        public static void BuildRegionsFromFilters(SortedSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
+        {
+            if (includeRegions.HasValue())
+                foreach (var regionRef in includeRegions)
+                    if (regionRef != PrototypeId.Invalid) regions.Add(regionRef);
+
+            if (includeChildren)
+            {
+                List<PrototypeId> parentRegions = new(regions);
+                foreach (var childRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                    foreach (var parentRef in parentRegions)
+                        if (GameDatabase.DataDirectory.PrototypeIsAPrototype(childRef, parentRef))
+                        {
+                            regions.Add(childRef);
+                            break;
+                        }
+            }
+
+            if (excludeRegions.HasValue())
+                foreach (var regionRef in excludeRegions)
+                    regions.Remove(regionRef);
+
+            List<PrototypeId> altRegions = new(regions);
+            foreach (var regionRef in altRegions)
+            {
+                var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+                if (regionProto != null && regionProto.AltRegions.HasValue())
+                    foreach (var altRegionRef in regionProto.AltRegions)
+                        regions.Add(altRegionRef);
+            }
+        }
+
+        public static HashSet<PrototypeId> GetAreasInGenerator(PrototypeId regionRef)
+        {
+            HashSet<PrototypeId> areas = new();
+            if (regionRef == PrototypeId.Invalid) return areas;
+            var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
+            if (regionProto == null) return areas;
+
+            if (regionProto.AreasInGenerator == null)
+            {
+                regionProto.AreasInGenerator = new();
+                HashSet<PrototypeId> regions = new();
+                GetAreasInGenerator(regionProto, regionProto.AreasInGenerator, regions);
+            }
+
+            if (regionProto.AreasInGenerator != null)
+                return regionProto.AreasInGenerator;
+
+            return areas;
+        }
+
+        private static void GetAreasInGenerator(RegionPrototype regionProto, HashSet<PrototypeId> areas, HashSet<PrototypeId> regions)
+        {
+            if (regionProto == null) return;
+            if (regions.Contains(regionProto.DataRef)) return;
+            regions.Add(regionProto.DataRef);
+
+            if (regionProto.AltRegions.HasValue())
+                foreach (var altRegionRef in regionProto.AltRegions)
+                {
+                    var altRegionProto = GameDatabase.GetPrototype<RegionPrototype>(altRegionRef);
+                    if (altRegionProto != null) GetAreasInGenerator(altRegionProto, areas, regions);
+                }
+
+            regionProto.RegionGenerator?.GetAreasInGenerator(areas);
+        }
+
+        public bool FilterRegion(PrototypeId filterRef, bool includeChildren, PrototypeId[] regionsExclude)
+        {
+            if (regionsExclude.HasValue())
+                if (regionsExclude.Contains(DataRef)) return false;
+
+            if (filterRef == PrototypeId.Invalid) return false;
+            var filterProto = GameDatabase.GetPrototype<RegionPrototype>(filterRef);
+            if (filterProto != null)
+            {
+                if (filterProto == this) return true;
+                if (includeChildren && GameDatabase.DataDirectory.PrototypeIsAPrototype(DataRef, filterRef)) return true;
+                if (filterProto.HasAltRegion(DataRef)) return true;
+            }
+            return false;
+        }
+
+        public RegionQueueStateEntryPrototype GetRegionQueueStateEntry(PrototypeId gameStateRef)
+        {
+            if (RegionQueueStates.HasValue())
+                foreach (var entryProto in RegionQueueStates)
+                {
+                    if (entryProto == null) continue;
+                    if (entryProto.State == gameStateRef)
+                        return entryProto;
+                }
+            return null;
+        }
+
+        public PrototypeId GetMetagame()
+        {
+            if (MetaGames.HasValue()) return MetaGames[0];
+            return PrototypeId.Invalid;
         }
     }
 
@@ -301,6 +482,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId StateParent { get; protected set; }
         public PrototypeId State { get; protected set; }
         public LocaleStringId QueueText { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public int Index { get; set; }
     }
 
     public class DividedStartLocationPrototype : Prototype

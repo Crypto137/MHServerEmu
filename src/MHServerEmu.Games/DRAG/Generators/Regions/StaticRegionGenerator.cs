@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             GRandom random = new(randomSeed);
             StaticRegionGeneratorPrototype regionGeneratorProto = (StaticRegionGeneratorPrototype)GeneratorPrototype;
             StaticAreaPrototype[] staticAreas = regionGeneratorProto.StaticAreas;
-            PrototypeId areaRef = region.Prototype.GetDefaultArea(region);
+            PrototypeId areaRef = region.Prototype.GetDefaultAreaRef(region);
 
             foreach (StaticAreaPrototype staticAreaProto in staticAreas)
             {
