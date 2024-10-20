@@ -302,6 +302,16 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             SendMessage(message);
         }
 
+        public void SendPvEInstanceRegionScoreUpdate(int score, Player player)
+        {
+            var message = NetMessagePvEInstanceRegionScoreUpdate.CreateBuilder()
+                 .SetMetaGameId(MetaGame.Id)
+                 .SetCurrentRegionScore((ulong)score)
+                 .Build();
+
+            SendMessage(message, player);
+        }
+
         protected void SendStartPvPTimer(TimeSpan startTime, TimeSpan endTime, TimeSpan lowTime, TimeSpan criticalTime, 
             Player player = null, LocaleStringId labelOverride = LocaleStringId.Blank)
         {

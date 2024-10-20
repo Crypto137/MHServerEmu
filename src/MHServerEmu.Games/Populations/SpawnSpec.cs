@@ -309,6 +309,7 @@ namespace MHServerEmu.Games.Populations
         public bool SpawnCleanup { get; set; }
         public Region Region { get; }
         public SpawnHeat SpawnHeat { get; set; }
+        public bool RegionScored { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
