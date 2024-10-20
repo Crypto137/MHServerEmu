@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             int deathLimit = GetPlayerDeathLimit();
             int regionDeath = _proto.UseRegionDeathCount ? region.Settings.PlayerDeaths : 0;
             
-            if (region.PlayerDeaths != regionDeath)
+            if (region.PlayerDeaths != regionDeath || regionDeath == 0)
             {
                 // region.PlayerDeathLimitResetEvent ???
                 region.PlayerDeaths = regionDeath;

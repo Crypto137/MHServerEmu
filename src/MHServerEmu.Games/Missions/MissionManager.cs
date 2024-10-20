@@ -1090,12 +1090,19 @@ namespace MHServerEmu.Games.Missions
                     success &= Serializer.Transfer(archive, ref guid);
 
                     PrototypeId missionRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)guid);
-                    Mission mission = CreateMission(missionRef);
-                    success &= Serializer.Transfer(archive, ref mission);
-                    InsertMission(mission);
+                    var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+                    // if (ShouldCreateMission(missionProto))
+                    {
+                        Mission mission = CreateMission(missionRef);
+                        success &= Serializer.Transfer(archive, ref mission);
+                        if (ShouldCreateMission(missionProto)) // REMOVEME
+                            InsertMission(mission);
+                        else mission.Destroy(); // REMOVEME
 
-                    if (archive.IsReplication == false)
-                        mission.SetCreationState(MissionCreationState.Loaded);
+                        if (archive.IsReplication == false)
+                            mission.SetCreationState(MissionCreationState.Loaded);
+                    }
+                    // else archive.Skip(); // TODO add Archive.Skip
                 }
 
                 int numBlacklistCategories = 0;

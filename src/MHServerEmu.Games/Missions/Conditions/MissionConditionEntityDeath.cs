@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         private static readonly Logger Logger = LogManager.CreateLogger();
         private MissionConditionEntityDeathPrototype _proto;
         private Action<AdjustHealthGameEvent> _adjustHealthAction;
-        private Action<EntityDeadGameEvent> _EntityDeadAction;
+        private Action<EntityDeadGameEvent> _entityDeadAction;
         private EventGroup _pendingEvents = new();
         private bool _deathEventRegistred;
 
@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             // TrainingRoomBehaviorController
             _proto = prototype as MissionConditionEntityDeathPrototype;
             _adjustHealthAction = OnAdjustHealth;
-            _EntityDeadAction = OnEntityDead;
+            _entityDeadAction = OnEntityDead;
         }
 
         private bool EvaluateEntity(Player killer, WorldEntity entity)
@@ -188,7 +188,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void RegisterEvents(Region region)
         {
             EventsRegistered = true;
-            region.EntityDeadEvent.AddActionBack(_EntityDeadAction);
+            region.EntityDeadEvent.AddActionBack(_entityDeadAction);
             _deathEventRegistred = true;
 
             if (Mission.IsOpenMission)
@@ -198,7 +198,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override void UnRegisterEvents(Region region)
         {
             EventsRegistered = false;
-            region.EntityDeadEvent.RemoveAction(_EntityDeadAction);
+            region.EntityDeadEvent.RemoveAction(_entityDeadAction);
             _deathEventRegistred = false;
             var scheduler = Mission.GameEventScheduler;
             scheduler?.CancelAllEvents(_pendingEvents);
