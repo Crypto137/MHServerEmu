@@ -1,10 +1,15 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
@@ -23,31 +28,34 @@ namespace MHServerEmu.Games.UI.Widgets
                 return;
             }
 
-            if (prototype.Entities == null) return;
+            if (prototype.Entities.IsNullOrEmpty()) return;
 
-            for (int i = 0; i < prototype.Entities.Length; i++)
+            var region = uiDataProvider.Region;
+            if (region == null) return;
+
+            int index = 0;
+            foreach (var entryProto in prototype.Entities)
             {
-                UIWidgetEntityIconsEntryPrototype entryPrototype = prototype.Entities[i];
-                if (entryPrototype.Filter == null)
+                if (entryProto.Filter == null)
                 {
                     Logger.Warn("UIWidgetEntityIconsSyncData(): entryPrototype.Filter == null");
                     continue;
                 }
 
                 FilterEntry filterEntry = new();
-                filterEntry.Index = i;
+                filterEntry.Index = index++;
                 filterEntry.KnownEntityDict = new();
 
-                // TODO: get entity data from the UIDataProvider's owner region, for now add dummy data for testing
-                for (ulong j = 100; j < 101; j++)
-                {
-                    KnownEntityEntry entityEntry = new();
-                    entityEntry.EntityId = j;
-                    entityEntry.State = UIWidgetEntityState.Alive;
-                    entityEntry.HealthPercent = 100;
-                    entityEntry.EnrageStartTime = Clock.GameTime.Add(TimeSpan.FromMilliseconds(1000 * 60 * 60));  // 60 minutes
-                    filterEntry.KnownEntityDict.Add(entityEntry.EntityId, entityEntry);
-                }
+                foreach(var entity in region.EntityTracker.Iterate(widgetRef, Dialog.EntityTrackingFlag.HUD))
+                    if (entryProto.Filter.Evaluate(entity, new()))
+                    {
+                        if (entity == null) continue;
+                        KnownEntityEntry entityEntry = new();
+                        entityEntry.EntityId = entity.Id;
+                        entityEntry.State = entity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;
+                        UpdateKnownEntityTrackedProperties(entity.Id, entityEntry, entryProto, PropertyId.Invalid);
+                        filterEntry.KnownEntityDict.Add(entityEntry.EntityId, entityEntry);
+                    }
 
                 _filterList.Add(filterEntry);
             }
@@ -76,13 +84,14 @@ namespace MHServerEmu.Games.UI.Widgets
                     foreach (var kvp in filterEntry.KnownEntityDict)
                     {
                         ulong entityId = kvp.Key;
-                        int state = (int)kvp.Value.State;
-                        int healthPercent = kvp.Value.HealthPercent;
-                        int iconIndexForHealthPercentEval = kvp.Value.IconIndexForHealthPercentEval;
-                        bool forceRefreshEntityHealthPercent = kvp.Value.ForceRefreshEntityHealthPercent;
-                        long enrageStartTime = (long)kvp.Value.EnrageStartTime.TotalMilliseconds;
-                        bool hasPropertyEntryEval = kvp.Value.HasPropertyEntryEval;
-                        int propertyEntryIndex = kvp.Value.PropertyEntryIndex;
+                        var entityEntry = kvp.Value;
+                        int state = (int)entityEntry.State;
+                        int healthPercent = entityEntry.HealthPercent;
+                        int iconIndexForHealthPercentEval = entityEntry.IconIndexForHealthPercentEval;
+                        bool forceRefreshEntityHealthPercent = entityEntry.ForceRefreshEntityHealthPercent;
+                        long enrageStartTime = (long)entityEntry.EnrageStartTime.TotalMilliseconds;
+                        bool hasPropertyEntryEval = entityEntry.HasPropertyEntryEval;
+                        int propertyEntryIndex = entityEntry.PropertyEntryIndex;
 
                         success &= Serializer.Transfer(archive, ref entityId);
                         success &= Serializer.Transfer(archive, ref state);
@@ -160,6 +169,132 @@ namespace MHServerEmu.Games.UI.Widgets
             for (int i = 0; i < _filterList.Count; i++)
                 sb.AppendLine($"{nameof(_filterList)}[{i}]: {_filterList[i]}");
         }
+
+        public bool UpdateKnownEntityTrackedProperties(ulong entityId, KnownEntityEntry knownEntityEntry, UIWidgetEntityIconsEntryPrototype entryPrototype, PropertyId propertyId)
+        {
+            if (entryPrototype == null) return false;
+            var game = _uiDataProvider.Game;
+
+            if (knownEntityEntry.State == UIWidgetEntityState.Alive)
+            {
+                var worldEntity = game.EntityManager.GetEntity<WorldEntity>(entityId);
+                if (worldEntity != null)
+                {
+                    if (entryPrototype is UIWidgetHealthPercentEntryPrototype healthPercentProto)
+                    {
+                        long health = worldEntity.Properties[PropertyEnum.Health];
+                        long healthMax = worldEntity.Properties[PropertyEnum.HealthMaxOther];
+                        int healthPercent = 100;
+                        if (health != healthMax && healthMax != 0) 
+                            healthPercent = Math.Min((int)Math.Ceiling((double)health / healthMax * 100), 99);
+
+                        if (healthPercent != knownEntityEntry.HealthPercent)
+                        {
+                            knownEntityEntry.HealthPercent = healthPercent;
+
+                            if (healthPercentProto.HealthDisplayTable.IsNullOrEmpty()) return false;
+
+                            int index = 0;
+                            foreach (var healthPercentIcon in healthPercentProto.HealthDisplayTable)
+                            {
+                                if (healthPercentIcon != null && healthPercent >= healthPercentIcon.HealthPercent)
+                                {
+                                    if (knownEntityEntry.IconIndexForHealthPercentEval != index)
+                                    {
+                                        knownEntityEntry.IconIndexForHealthPercentEval = index;
+                                        knownEntityEntry.ForceRefreshEntityHealthPercent = true;
+                                    }
+                                    break;
+                                }
+                                index++;
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    if (entryPrototype is UIWidgetEnrageEntryPrototype && worldEntity.Properties.HasProperty(PropertyEnum.EnrageStartTime))
+                    {
+                        TimeSpan enrageStartTime = worldEntity.Properties[PropertyEnum.EnrageStartTime];
+                        if (enrageStartTime != knownEntityEntry.EnrageStartTime)
+                        {
+                            knownEntityEntry.EnrageStartTime = enrageStartTime;
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    if (entryPrototype is UIWidgetEntityPropertyEntryPrototype propertyProto)
+                    {
+                        if (propertyProto.PropertyEval != null)
+                        {
+                            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();                            
+                            evalContext.Game = game;
+                            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, worldEntity.Properties);
+
+                            if (worldEntity is Agent agent && agent.AIController != null)
+                                evalContext.SetVar_PropertyCollectionPtr(EvalContext.EntityBehaviorBlackboard, agent.AIController.Blackboard.PropertyCollection);
+
+                            List<PropertyId> propertyIds = new();
+                            Eval.GetEvalPropertyIds(propertyProto.PropertyEval, propertyIds, GetEvalPropertyIdEnum.Input, null);
+
+                            if (propertyId == PropertyId.Invalid || propertyIds.Contains(propertyId))
+                            {
+                                bool hasProperty = Eval.RunBool(propertyProto.PropertyEval, evalContext);
+                                if (hasProperty != knownEntityEntry.HasPropertyEntryEval)
+                                {
+                                    knownEntityEntry.HasPropertyEntryEval = hasProperty;
+                                    return true;
+                                }
+                            }                            
+                        }
+
+                        if (propertyProto.PropertyEntryTable.HasValue())
+                        {
+                            bool hasDescriptor = propertyProto.Descriptor != PrototypeId.Invalid;
+
+                            if (propertyId == PropertyId.Invalid || propertyProto.PropertyIds.Contains(propertyId) || hasDescriptor)
+                            {
+                                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, worldEntity.Properties);
+
+                                if (worldEntity is Agent agent && agent.AIController != null)
+                                    evalContext.SetVar_PropertyCollectionPtr(EvalContext.EntityBehaviorBlackboard, agent.AIController.Blackboard.PropertyCollection);
+
+                                int iconIndex = -1; 
+                                int index = 0;
+                                foreach (var entry in propertyProto.PropertyEntryTable)
+                                {
+                                    if (Eval.RunBool(entry.PropertyEval, evalContext))
+                                    {
+                                        iconIndex = index;
+                                        break;
+                                    }
+                                    index++;
+                                }
+
+                                if (knownEntityEntry.IconIndexForHealthPercentEval != iconIndex)
+                                {
+                                    knownEntityEntry.IconIndexForHealthPercentEval = iconIndex;
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (knownEntityEntry.State == UIWidgetEntityState.Dead)
+            {
+                if (entryPrototype is UIWidgetHealthPercentEntryPrototype && knownEntityEntry.HealthPercent != 0)
+                {
+                    knownEntityEntry.HealthPercent = 0;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
     }
 
     public class FilterEntry

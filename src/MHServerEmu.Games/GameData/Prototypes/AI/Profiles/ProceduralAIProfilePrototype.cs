@@ -182,6 +182,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual void OnEntityAggroedEvent(AIController ownerController, in EntityAggroedGameEvent aggroedEvent) { }
         public virtual void OnMissileReturnEvent(AIController ownerController) { }
         public virtual void OnSetSimulated(AIController ownerController, bool simulated) { }
+        public virtual void OnOwnerGotDamaged(AIController ownerController) { }
     }
 
     public class ProceduralProfileEnticerPrototype : ProceduralAIProfilePrototype
@@ -539,7 +540,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (spawnGroup.GetEntities(out List <WorldEntity> allies, filterFlag, agent.Alliance))                        
                             foreach (var ally in allies)
                                 if (ally != agent)
-                                    ally.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedPlayer);                        
+                                    ally.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedPlayer);                        
                     }
                 }
 

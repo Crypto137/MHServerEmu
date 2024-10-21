@@ -6,7 +6,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Dialog
 {
-    public class InteractionOption : IComparable<InteractionOption>
+    public class InteractionOption
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public int Priority { get; protected set; }
@@ -32,12 +32,12 @@ namespace MHServerEmu.Games.Dialog
             OptimizationFlags = InteractionOptimizationFlags.None;
         }
 
-        public int CompareTo(InteractionOption other)
+        public int SortPriority(InteractionOption other)
         {
             return Priority.CompareTo(other.Priority);
         }
 
-        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, HashSet<InteractionOption> checkList)
         {
             checkList.Add(this);
             return EntityTrackingFlag.None;

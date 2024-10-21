@@ -10,10 +10,10 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -34,6 +34,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private readonly EventPointer<ActivateSwapInPowerEvent> _activateSwapInPowerEvent = new();
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
+        private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
 
         private RepString _playerName = new();
         private ulong _ownerPlayerDbId;
@@ -42,7 +43,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
         private GuildMembership _guildMembership = GuildMembership.eGMNone;
-
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
@@ -277,6 +277,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 player.AOI.Update(position.Value);
                 result = ChangePositionResult.Teleport;
             }
+
+            if (result == ChangePositionResult.PositionChanged)
+                player.UpdateSpawnMap(position.Value);
 
             return result;
         }
@@ -977,6 +980,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             SendLevelUpMessage();
+
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return false;
+            Region?.AvatarLeveledUpEvent.Invoke(new(player, PrototypeDataRef, newLevel));
+
             return true;
         }
 
@@ -1001,34 +1009,83 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Interaction
 
-        public override bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        private bool OLD_HandleBowlingBallItem(Player player)
+        {
+            var bowlingBallProtoRef = (PrototypeId)7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
+            var itemPower = (PrototypeId)18211158277448213692; // BowlingBallItemPower
+                                                               // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
+
+            // Destroy bowling balls that are already present in the player general inventory
+            Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
+
+            // A player can't have more than ten balls
+            if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
+
+            // Give the player a new bowling ball
+            player.Game.LootManager.GiveItem(bowlingBallProtoRef, player);
+
+            // Assign bowling ball power if the player's avatar doesn't have one
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar.HasPowerInPowerCollection(itemPower) == false)
+                avatar.AssignPower(itemPower, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+
+            return true;
+        }
+
+        public override bool UseInteractableObject(ulong entityId, PrototypeId missionRef)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
 
-            if (missionProtoRef != PrototypeId.Invalid)
-            {
+            var region = Region;
+            if (region == null)
+            {   
                 // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
-                Logger.Debug($"UseInteractableObject(): missionProtoRef={missionProtoRef.GetName()}");
-                player.SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+                player.MissionInteractRelease(this, missionRef);
+                return false;
+            }
+
+            if (entityId == InvalidId)
+            {
+                region?.NotificationInteractEvent.Invoke(new(player, missionRef));
+                return true;
             }
 
             var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
-            if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
+            if (interactableObject == null || CanInteract(player, interactableObject) == false)
+            {
+                player.MissionInteractRelease(this, missionRef);
+                return false;
+            }
 
             Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
+            // old hardcode
+            if (interactableObject.PrototypeDataRef == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
+                return OLD_HandleBowlingBallItem(player);
+            if (PrototypeName.Contains("DangerRoom")) return false;// fix for scenario crashes                
+            // end
+
+            var objectProto = interactableObject.WorldEntityPrototype;
+            if (objectProto.PreInteractPower != PrototypeId.Invalid)
+            {
+                ulong targetId = player.Properties[PropertyEnum.InteractReadyForTargetId];
+                player.Properties.RemoveProperty(PropertyEnum.InteractReadyForTargetId);
+                if (targetId != entityId) return Logger.WarnReturn(false, "UseInteractableObject(): targetId != entityId");
+            }
+
+            if (interactableObject.IsInWorld == false && interactableObject is Item item)
+                item.InteractWithAvatar(this);
+
+            region.PlayerInteractEvent.Invoke(new(player, interactableObject, missionRef));
+
+            if (interactableObject.Properties[PropertyEnum.EntSelActHasInteractOption])
+                interactableObject.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerInteract);
+
             if (interactableObject is Transition transition)
-            {
                 transition.UseTransition(player);
-            }
-            else
-            {
-                // REMOVEME
-                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(player, interactableObject);
-            }
+
+            interactableObject.OnInteractedWith(this);
 
             return true;
         }
@@ -1047,7 +1104,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             InteractData data = null;
-            var iteractionStatus = InteractionManager.CallGetInteractionStatus(new EntityDesc(interactableObject), this,
+            var iteractionStatus = InteractionManager.CallGetInteractionStatus(new EntityDesc(interactableObject), this, 
                 InteractionOptimizationFlags.None, InteractionFlags.None, ref data);
             return iteractionStatus != InteractionMethod.None;
         }
@@ -1310,12 +1367,63 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Event Handlers
 
+        public override void OnAreaChanged(RegionLocation oldLocation, RegionLocation newLocation)
+        {
+            base.OnAreaChanged(oldLocation, newLocation);
+
+            var oldArea = oldLocation.Area;
+            var newArea = newLocation.Area;
+            if (oldArea == newArea) return;
+
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            if (oldArea != null)
+            {
+                PlayerLeftAreaGameEvent evt = new(player, oldArea.PrototypeDataRef);
+                oldArea.PopulationArea?.OnPlayerLeft();
+                oldArea.PlayerLeftAreaEvent.Invoke(evt);
+                oldArea.Region.PlayerLeftAreaEvent.Invoke(evt);
+            }
+
+            if (newArea != null)
+            {
+                // TODO Achievement?
+                PlayerEnteredAreaGameEvent evt = new(player, newArea.PrototypeDataRef);
+                newArea.PopulationArea?.OnPlayerEntered();
+                newArea.PlayerEnteredAreaEvent.Invoke(evt);
+                newArea.Region.PlayerEnteredAreaEvent.Invoke(evt);
+            }
+        }
+
+        public override void OnCellChanged(RegionLocation oldLocation, RegionLocation newLocation, ChangePositionFlags flags)
+        {
+            base.OnCellChanged(oldLocation, newLocation, flags);
+
+            Cell oldCell = oldLocation.Cell;
+            Cell newCell = newLocation.Cell;
+            if (oldCell == newCell) return;
+
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            if (oldCell != null)
+            {
+                PlayerLeftCellGameEvent evt = new(player, oldCell.PrototypeDataRef);
+                oldCell.PlayerLeftCellEvent.Invoke(evt);
+                oldCell.Region.PlayerLeftCellEvent.Invoke(evt);
+            }
+
+            if (newCell != null)
+            {
+                PlayerEnteredCellGameEvent evt = new(player, newCell.PrototypeDataRef);
+                newCell.PlayerEnteredCellEvent.Invoke(evt);
+                newCell.Region.PlayerEnteredCellEvent.Invoke(evt);
+            }
+        }
+
         public override void OnEnteredWorld(EntitySettings settings)
         {
-            base.OnEnteredWorld(settings);
-            AssignDefaultAvatarPowers();
-
-            // Update AOI of the owner player
             Player player = GetOwnerOfType<Player>();
             if (player == null)
             {
@@ -1323,6 +1431,29 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
             }
 
+            base.OnEnteredWorld(settings);
+            AssignDefaultAvatarPowers();
+
+            // auto unlock chapters and Waypoinst
+            player.UnlockChapters();
+            player.UnlockWaypoints();
+
+            var region = Region;
+            var regionProto = region?.Prototype;
+            if (regionProto != null)
+            {
+                var waypointRef = regionProto.WaypointAutoUnlock;
+                if (waypointRef != PrototypeId.Invalid)
+                    player.UnlockWaypoint(waypointRef);
+                if (regionProto.WaypointAutoUnlockList.HasValue())
+                    foreach(var waypointUnlockRef in regionProto.WaypointAutoUnlockList)
+                        player.UnlockWaypoint(waypointUnlockRef);
+            }
+
+            // Restore missions from Avatar
+            player.MissionManager?.RestoreAvatarMissions(this);
+
+            // Update AOI of the owner player
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
 
@@ -1331,7 +1462,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                 LinkTeamUpAgent(CurrentTeamUpAgent);
                 if (Properties[PropertyEnum.AvatarTeamUpIsSummoned])
                     ActivateTeamUpAgent(true);  // We may want to disable the intro animation in some cases
-            }
+            }        
+
+            if (regionProto?.Chapter != PrototypeId.Invalid)
+                player.SetActiveChapter(regionProto.Chapter);
+
+            ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
         }
 
         public override void OnExitedWorld()
@@ -1343,8 +1479,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
             summonedInventory?.DestroyContained();
 
-            // REMOVEME: Clean up kismet hack property
-            Properties.RemovePropertyRange(PropertyEnum.AvatarMissionResetsWithRegionId);
+            // Store missions to Avatar
+            Player player = GetOwnerOfType<Player>();
+            player?.MissionManager?.StoreAvatarMissions(this);
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
@@ -1374,6 +1511,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Scheduled Events
 
+        private void AvatarEnteredRegion()
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            var region = Region;
+            region?.AvatarEnteredRegionEvent.Invoke(new(player, region.PrototypeDataRef));
+        }
+
         public void ScheduleSwapInPower()
         {
             ScheduleEntityEventCustom(_activateSwapInPowerEvent, TimeSpan.FromMilliseconds(700));
@@ -1389,6 +1535,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             ScheduleEntityEvent(_recheckContinuousPowerEvent, delay);
+        }
+
+        private class AvatarEnteredRegionEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).AvatarEnteredRegion();
         }
 
         private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>

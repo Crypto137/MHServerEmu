@@ -1,9 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
 
@@ -83,11 +81,11 @@ namespace MHServerEmu.Games.Entities.Physics
             if (worldEntity != null && worldEntity.IsInWorld)
             {
                 var entityPhysics = worldEntity.Physics;
-                var overlappedEntries = entityPhysics.OverlappedEntities.ToList();
-                foreach (var overlappedEntry in overlappedEntries)
+                var manager = _game.EntityManager;
+                foreach (var overlappedEntry in entityPhysics.OverlappedEntities.ToArray())
                     if (overlappedEntry.Value.Frame != _physicsFrames)
                     {
-                        var overlappedEntity = _game.EntityManager.GetEntity<WorldEntity>(overlappedEntry.Key);
+                        var overlappedEntity = manager.GetEntity<WorldEntity>(overlappedEntry.Key);
                         if (overlappedEntity != null)
                             overlapEvents.Enqueue(new (OverlapEventType.Remove, worldEntity, overlappedEntity));
                         else

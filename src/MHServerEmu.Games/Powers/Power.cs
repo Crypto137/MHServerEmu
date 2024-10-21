@@ -2462,7 +2462,7 @@ namespace MHServerEmu.Games.Powers
                     if (regionKeywordRef == PrototypeId.Invalid)
                         Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUsePreventInRegionKwd!\n Power Prototype: {powerProto}");
 
-                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()))
+                    if (regionPrototype.HasKeyword(regionKeywordRef))
                         return false;
                 }
 
@@ -2476,7 +2476,7 @@ namespace MHServerEmu.Games.Powers
                     if (regionKeywordRef == PrototypeId.Invalid)
                         Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUseRequiresRegionKwd!\n Power Prototype: {powerProto}");
 
-                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()) == false)
+                    if (regionPrototype.HasKeyword(regionKeywordRef) == false)
                         return false;
                 }
             }
@@ -2925,19 +2925,13 @@ namespace MHServerEmu.Games.Powers
                     var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
                     if (throwableEntity != null)
                     {
-                        // Remember spawn spec to create a replacement
-                        SpawnSpec spawnSpec = throwableEntity.SpawnSpec;
+                        // Trigger EntityDead Event
+                        var avatar = Owner?.GetMostResponsiblePowerUser<Avatar>();
+                        var player = avatar?.GetOwnerOfType<Player>();
+                        Owner.Region.EntityDeadEvent.Invoke(new(throwableEntity, Owner, player));
 
                         // Destroy throwable
                         throwableEntity.Destroy();
-
-                        // Schedule the creation of a replacement entity
-                        if (spawnSpec != null)
-                        {
-                            EventPointer<TEMP_SpawnEntityEvent> spawnEntityEvent = new();
-                            Game.GameEventScheduler.ScheduleEvent(spawnEntityEvent, Game.CustomGameOptions.WorldEntityRespawnTime);
-                            spawnEntityEvent.Get().Initialize(spawnSpec);
-                        }
                     }
                 }
 
@@ -3323,6 +3317,7 @@ namespace MHServerEmu.Games.Powers
                     ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
                     ambientNpcCondition.StartTime = Game.CurrentTime;
                     Owner.ConditionCollection.AddCondition(ambientNpcCondition);
+                    Owner.Properties[PropertyEnum.NPCAmbientLock] = true;
                 }
             }
             else
@@ -3341,6 +3336,7 @@ namespace MHServerEmu.Games.Powers
                     Owner.ConditionCollection.GetCondition(999) != null)
                 {
                     Owner.ConditionCollection.RemoveCondition(999);
+                    Owner.Properties[PropertyEnum.NPCAmbientLock] = false;
                 }
             }
 

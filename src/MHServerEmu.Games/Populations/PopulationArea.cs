@@ -1,7 +1,6 @@
-﻿using MHServerEmu.Core.Collections;
-using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -11,18 +10,22 @@ namespace MHServerEmu.Games.Populations
     public class PopulationArea
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public const float PopulationClusterSq = 3600.0f; // 60 * 60 , 60 - Average Cluster size
         public Game Game { get; }
         public Area Area { get; }
         public PrototypeId PopulationRef { get; }
         public PopulationPrototype PopulationPrototype { get; }
         public Dictionary<Cell, SpawnCell> SpawnCells { get; }
+        public PopulationAreaSpawnEvent SpawnEvent { get; private set; }
+        public int PlayerCount { get; private set; }
+
+        private readonly Dictionary<PrototypeId, List<PopulationObjectInstancePrototype>> _themeDict = new();
 
         public PopulationArea(Area area, PrototypeId populationRef)
         {
             Game = area.Game;
             Area = area;
             PopulationRef = populationRef;
+            PlayerCount = 0;
 
             PopulationPrototype = GameDatabase.GetPrototype<PopulationPrototype>(PopulationRef);
             SpawnCells = new();
@@ -32,127 +35,11 @@ namespace MHServerEmu.Games.Populations
         {
             if (PopulationPrototype == null || Area.PlayableNavArea <= 0.0f) return;
             if (Area.SpawnableNavArea > 0.0f)
-                PopulationRegisty();
-        }
-
-        private void PopulationRegisty()
-        {
-            int objCount = 0;
-            int markerCount = 0;
-            var populationProto = PopulationPrototype;
-            var manager = Area.Region.PopulationManager;
-            float spawnableNavArea = Area.SpawnableNavArea;
-            //if (populationProto.SpawnMapEnabled || (populationProto.SpawnMapDensityMin > 0.0 && populationProto.SpawnMapDensityMax > 0.0f)) return;
-            if (populationProto.Themes == null || populationProto.Themes.List.IsNullOrEmpty()) return;
-
-            List<PrototypeId> areas = new()
             {
-                Area.PrototypeDataRef
-            };
-            List<PrototypeId> cells = new();
-
-            float density = spawnableNavArea / PopulationClusterSq * (populationProto.ClusterDensityPct / 100.0f);
-            var themeProto = GameDatabase.GetPrototype<PopulationThemePrototype>(populationProto.Themes.List[0].Object);
-            var picker = PopulatePicker(manager.Random, themeProto.Enemies.List);
-            while (density > 0.0f && picker.Pick(out var objectProto))
-            {
-                density -= objectProto.GetAverageSize();
-                manager.AddPopulationObject(PrototypeId.Invalid, objectProto, 1, areas, cells, PrototypeId.Invalid);
-                objCount++;
+                SpawnEvent = new PopulationAreaSpawnEvent(Area, Area.Region);
+                SpawnEvent.PopulationRegisty(PopulationPrototype);
+                SpawnEvent.Schedule();
             }
-
-            List<PopulationObjectInstancePrototype> encounters = new();
-            if (populationProto.GlobalEncounters != null) GetContainedEncounters(populationProto.GlobalEncounters.List, encounters);
-            if (themeProto.Encounters != null) GetContainedEncounters(themeProto.Encounters.List, encounters);
-
-            var registry = Area.Region.SpawnMarkerRegistry;
-            Dictionary<PrototypeId, SpawnPicker> markerPicker = new();
-
-            foreach (var encounter in encounters)
-            {
-                var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(encounter.Object);
-                var markerRef = objectProto.UsePopulationMarker;
-                SpawnPicker spawnPicker;
-                if (markerPicker.TryGetValue(markerRef, out var found))
-                    spawnPicker = found;
-                else
-                {
-                    int slots = registry.CalcFreeReservation(markerRef, Area.PrototypeDataRef);
-
-                    if (slots == 0)
-                        spawnPicker = new(null, 0);
-                    else
-                    {
-                        density = populationProto.GetEncounterDensity(markerRef) / 100.0f;
-                        int count = Math.Max(1, (int)(slots * density));
-                        spawnPicker = new(new(Game.Random), count);
-                    }
-
-                    markerPicker[markerRef] = spawnPicker;
-                }
-
-                if (spawnPicker.Count > 0)
-                    spawnPicker.Picker.Add(objectProto, encounter.Weight);
-            }
-
-            foreach (var kvp in markerPicker)
-            {
-                var markerRef = kvp.Key;
-                var spawnPicker = kvp.Value;
-                if (spawnPicker.Picker == null) continue;
-                var objectProto = spawnPicker.Picker.Pick();
-                manager.AddPopulationObject(markerRef, objectProto, spawnPicker.Count, areas, cells, PrototypeId.Invalid);
-                markerCount++;
-            }
-
-            Logger.Info($"Population [{populationProto.SpawnMapDensityMin}][{GameDatabase.GetFormattedPrototypeName(PopulationRef)}][{objCount}][{markerCount}]");
-        }
-
-        public static void GetContainedEncounters(PopulationObjectInstancePrototype[] objectList, List<PopulationObjectInstancePrototype> encounters)
-        {
-            foreach (var objectInstance in objectList)
-            {
-                if (objectInstance == null || objectInstance.Weight <= 0) continue;
-                var proto = GameDatabase.GetPrototype<Prototype>(objectInstance.Object);
-                if (proto is PopulationObjectPrototype)
-                    encounters.Add(objectInstance);
-                else if (proto is PopulationObjectListPrototype populationObjectList)
-                    GetContainedEncounters(populationObjectList.List, encounters);
-            }
-        }
-
-        public static Picker<PopulationObjectPrototype> PopulatePicker(GRandom random, PopulationObjectInstancePrototype[] objectList)
-        {
-            Picker<PopulationObjectPrototype> picker = new(random);
-            foreach (var objectInstance in objectList)
-            {
-                var objectProto = GameDatabase.GetPrototype<PopulationObjectPrototype>(objectInstance.Object);
-                if (objectProto == null) continue;
-                int weight = objectInstance.Weight;
-                picker.Add(objectProto, weight);
-            }
-
-            return picker;
-        }
-
-        public void SpawnPopulation(List<PopulationObject> populationObjects)
-        {
-            if (populationObjects.Count == 0) return;
-            var areaRef = Area.PrototypeDataRef;
-            Picker<Cell> picker = new(Game.Random);
-
-            foreach (var populationObject in populationObjects)
-                if (populationObject.SpawnAreas.Contains(areaRef))
-                {
-                    picker.Clear();
-                    foreach (var kvp in SpawnCells)
-                    {
-                        SpawnCell spawnCell = kvp.Value;
-                        if (spawnCell.CheckDensity(PopulationPrototype))
-                            picker.Add(kvp.Key, spawnCell.CellWeight);
-                    }
-                    if (picker.Pick(out var cell)) populationObject.SpawnInCell(cell);
-                }
         }
 
         public void AddEnemyWeight(Cell cell)
@@ -163,12 +50,124 @@ namespace MHServerEmu.Games.Populations
                 SpawnCells.Add(cell, new(cell, PopulationPrototype));
         }
 
+        public void RemoveEnemyWeight(Cell cell)
+        {
+            if (SpawnCells.TryGetValue(cell, out var spawnCell))
+                spawnCell.Weight--;
+        }
+
         public void UpdateSpawnCell(Cell cell)
         {
             if (SpawnCells.TryGetValue(cell, out var spawnCell))
                 spawnCell.CalcDensity(cell, PopulationPrototype);
             else
                 SpawnCells.Add(cell, new(cell, PopulationPrototype, 0));
+        }
+
+        public float CellDencity(Cell cell)
+        {
+            if (SpawnCells.TryGetValue(cell, out var spawnCell))
+                return spawnCell.WeightDencity;
+            return 0.0f;
+        }
+
+        public void UpdateSpawnMap(Vector3 position)
+        {
+            var spawnMap = Area.SpawnMap;
+            if (spawnMap.ProjectAreaPosition(position, out Point2 coord) == false) return;
+
+            var random = Game.Random;
+
+            var picker = spawnMap.Picker;
+            picker.AddHorizon(coord, spawnMap.Horizon, false);
+            int spawned = 0;
+            int distributed = 0;
+            while (picker.Pick(out int index))
+            {
+                if (index < 0) continue;
+                var heatData = spawnMap.GetHeatData(index);
+                if (SpawnMap.HasFlags(heatData)) continue;
+                int heat = SpawnMap.GetHeat(heatData);
+                if (heat == 0) continue;
+
+                bool spawn = false;
+                if (random.NextFloat() < spawnMap.MaxChance)
+                    spawn = random.Next((int)HeatData.Max + 1) <= heat;
+
+                spawn &= spawnMap.ProjectToPosition(index, out Vector3 spawnPosition);
+
+                if (spawn)
+                {
+                    float crowdSupression = spawnMap.CalcCrowdSupression(spawnPosition);
+                    spawn = random.NextFloat() >= crowdSupression;
+                }
+
+                if (spawn)
+                {
+                    // spawn population
+                    SpawnHeatPopulation(spawnPosition, index, random, spawnMap);
+                    spawned++;
+                }
+                else
+                {
+                    // distribute Heat
+                    spawnMap.DistributeHeat(index, coord);
+                    distributed++;
+                }
+            }
+            // Logger.Info($"UpdateSpawnMap spawned {spawned} distributed {distributed}");
+        }
+
+        private void SpawnHeatPopulation(Vector3 position, int index, GRandom random, SpawnMap spawnMap)
+        {
+            var cell = Area.GetCellAtPosition(position);
+            if (cell == null) return;
+
+            var themeRef = cell.GetPopulationTheme(PopulationPrototype);
+            var enemies = PickThemeEnemies(random, themeRef);
+            if (enemies == null || enemies.Count == 0) return;
+
+            var picker = PopulationObject.PopulatePicker(random, enemies.ToArray());
+            if (picker.Pick(out var objectProto))
+            {
+                int heat = spawnMap.PickBleedHeat(index);
+
+                if (CellDencity(cell) <= 1.0f)
+                {
+                    SpawnEvent.AddHeatObject(position, objectProto, new(spawnMap, heat));
+                    SpawnEvent.Schedule();
+                }
+                else spawnMap.PoolHeat(heat);
+            }
+        }
+
+        private List<PopulationObjectInstancePrototype> PickThemeEnemies(GRandom random, PrototypeId themeRef)
+        {
+            if (_themeDict.TryGetValue(themeRef, out var enemies)) return enemies;
+
+            enemies = new();
+             _themeDict.Add(themeRef, enemies);
+
+            var themeProto = GameDatabase.GetPrototype<PopulationThemePrototype>(themeRef);
+            if (themeProto == null) return null;
+
+            if (themeProto.EnemyPicks > 0)
+                PopulationObject.PickEnemies(random, themeProto.EnemyPicks, themeProto.Enemies.List, enemies);
+            else
+                PopulationObject.GetContainedEncounters(themeProto.Enemies.List, enemies);
+
+            return enemies;
+        }
+
+        public void OnPlayerEntered()
+        {
+            PlayerCount++;
+            Area.SpawnMap?.UpdateMap();
+        }
+
+        public void OnPlayerLeft()
+        {
+            PlayerCount--;
         }
     }
 
@@ -185,30 +184,24 @@ namespace MHServerEmu.Games.Populations
             Weight = weight;
         }
 
-        public bool CheckDensity(PopulationPrototype populationProto)
+        public float WeightDencity => Density > 0.0f ? Weight / Density : 1.0f;
+
+        public bool CheckDensity(PopulationPrototype populationProto, bool removeOnSpawnFail)
         {
-            return populationProto.ClusterDensityPct > 0 && Density >= 1.0f && Weight <= DensityPeak;
+            if (removeOnSpawnFail)
+                return populationProto.ClusterDensityPct > 0 && Density >= 1.0f && Weight <= DensityPeak;
+            else
+                return CellWeight > 0;
         }
 
         public void CalcDensity(Cell cell, PopulationPrototype populationProto)
         {
             float density = populationProto.ClusterDensityPct / 100.0f;
             float densityPeak = populationProto.ClusterDensityPeak / 100.0f;
-            Density = cell.SpawnableArea / PopulationArea.PopulationClusterSq * density;
-            DensityPeak = cell.SpawnableArea / PopulationArea.PopulationClusterSq * densityPeak;
+            Density = cell.SpawnableArea / PopulationPrototype.PopulationClusterSq * density;
+            DensityPeak = cell.SpawnableArea / PopulationPrototype.PopulationClusterSq * densityPeak;
             CellWeight = (int)(cell.SpawnableArea / 1000.0f);
         }
     }
 
-    public class SpawnPicker
-    {
-        public Picker<PopulationObjectPrototype> Picker;
-        public int Count;
-
-        public SpawnPicker(Picker<PopulationObjectPrototype> picker, int count)
-        {
-            Picker = picker;
-            Count = count;
-        }
-    }
 }

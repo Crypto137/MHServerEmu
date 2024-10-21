@@ -6,6 +6,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -47,6 +48,8 @@ namespace MHServerEmu.Games.Entities
         private readonly HashSet<Player> _players = new();
         private readonly HashSet<ulong> _entitiesPendingCondemnedPowerDeletion = new();
         private readonly LinkedList<ulong> _entitiesPendingDestruction = new();     // NOTE: Change this to a regular List<ulong> if this causes GC issues
+
+        public Event<Entity> DestroyEntityEvent = new();
 
         private ulong _nextEntityId = 1;
         private ulong GetNextEntityId() { return _nextEntityId++; }
@@ -252,7 +255,6 @@ namespace MHServerEmu.Games.Entities
             if (entity is WorldEntity worldEntity)
             {
                 worldEntity.RegisterActions(settings.Actions);
-                worldEntity.AppendStartAction_OLD(settings.ActionsTarget); // TODO move to missionAction
 
                 if (settings.RegionId != 0)
                 {
@@ -282,6 +284,9 @@ namespace MHServerEmu.Games.Entities
                 $"DestroyEntity(): Entity already marked as Destroy, this means that something was using an entity reference even though it was destroyed which needs to be fixed! Entity: {entity}");
 
             entity.SetStatus(EntityStatus.PendingDestroy, true);
+
+            // invoke destroyed event
+            DestroyEntityEvent.Invoke(entity);
 
             // Destroy entities belonging to this entity
             entity.DestroyContained();

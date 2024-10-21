@@ -1,9 +1,12 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.DRAG.Generators.Regions;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -29,12 +32,77 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            Destination destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
+            var destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
 
             if (destination != null)
                 _destinationList.Add(destination);
 
             return true;
+        }
+
+        public override void OnEnteredWorld(EntitySettings settings)
+        {
+            var transProto = TransitionPrototype;
+            if (transProto.Waypoint != PrototypeId.Invalid)
+            {
+                var waypointHotspotRef = GameDatabase.GlobalsPrototype.WaypointHotspot;
+
+                using EntitySettings hotspotSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                hotspotSettings.EntityRef = waypointHotspotRef;
+                hotspotSettings.RegionId = Region.Id;
+                hotspotSettings.Position = RegionLocation.Position;
+
+                var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
+                if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+
+                var hotspot = Game.EntityManager.CreateEntity(hotspotSettings);
+                if (hotspot != null) hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transProto.Waypoint;
+            }
+
+            if (transProto.Type == RegionTransitionType.Transition)
+            {
+                var area = Area;
+                var entityRef = PrototypeDataRef;
+                var cellRef = Cell.PrototypeDataRef;
+                var region = Region;
+                bool noDest = _destinationList.Count == 0;
+                if (noDest && area.RandomInstances.Count > 0)
+                    foreach(var instance in area.RandomInstances)
+                    {
+                        var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
+                        if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
+                        if (instance.OriginEntity != entityRef) continue;
+                        var destination = Destination.DestinationFromTarget(instance.Target, region, transProto);
+                        if (destination == null) continue;
+                        _destinationList.Add(destination);
+                        noDest = false;
+                    }
+
+                if (noDest)
+                {
+                    // TODO destination from region origin target
+                    var targets = region.Targets;
+                    if (targets.Count == 1)
+                    {
+                        var destination = Destination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
+                        if (destination != null)
+                        {
+                            _destinationList.Add(destination);
+                            noDest = false;
+                        }
+                    }
+                }
+
+                // Get default region
+                if (noDest)
+                {
+                    var targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+                    var destination = Destination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                    if (destination != null) _destinationList.Add(destination);
+                }
+            }
+
+            base.OnEnteredWorld(settings);
         }
 
         public override bool Serialize(Archive archive)
@@ -142,6 +210,9 @@ namespace MHServerEmu.Games.Entities
             {
                 return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find target location for target {targetProtoRef.GetName()}");
             }
+
+            if (player.CurrentAvatar.Area?.PrototypeDataRef != targetProto.Area)
+                region.PlayerBeginTravelToAreaEvent.Invoke(new(player, targetProto.Area));
 
             player.SendMessage(NetMessageOneTimeSnapCamera.DefaultInstance);    // Disables camera interpolation for movement
 

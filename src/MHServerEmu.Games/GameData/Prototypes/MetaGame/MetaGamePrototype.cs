@@ -2,6 +2,8 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.MetaGames.GameModes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -63,6 +65,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         Immediate = 0,
         Delay = 1,
+    }
+
+    [AssetEnum((int)Invalid)]
+    public enum ScoreTableValueType
+    {
+        Invalid = 0,
+        Int = 1,
+        Float = 2,
+    }
+
+    [AssetEnum((int)Invalid)]
+    public enum ScoreTableValueEvent
+    {
+        Invalid = 0,
+        DamageTaken = 1,
+        DamageDealt = 2,
+        Deaths = 3,
+        PlayerAssists = 4,
+        PlayerDamageDealt = 5,
+        PlayerKills = 6,
     }
 
     #endregion
@@ -271,6 +293,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] ApplyStates { get; protected set; }
         public PrototypeId[] RemoveStates { get; protected set; }
         public AssetId[] RemoveGroups { get; protected set; }
+
+        public virtual MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new MetaGameMode(metaGame, this);
+        }
     }
 
     public class MetaGameModeIdlePrototype : MetaGameModePrototype
@@ -284,12 +311,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int PlayerCountToAdvance { get; protected set; }
         public PrototypeId DeathRegionTarget { get; protected set; }
         public PrototypeId PlayerLockVisualsPower { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new MetaGameModeIdle(metaGame, this);
+        }
     }
 
     public class MetaGameModeShutdownPrototype : MetaGameModePrototype
     {
         public PrototypeId ShutdownTarget { get; protected set; }
         public MetaGameModeShutdownBehaviorType Behavior { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new MetaGameModeShutdown(metaGame, this);
+        }
     }
 
     public class PvEScaleGameModePrototype : MetaGameModePrototype
@@ -328,6 +365,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int BossEnemyBoostsPicks { get; protected set; }
         public PrototypeId WaveOnDespawnPower { get; protected set; }
         public PrototypeId PowerUpPickupUINotification { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new PvEScaleGameMode(metaGame, this);
+        }
     }
 
     public class PvEWaveGameModePrototype : MetaGameModePrototype
@@ -352,6 +394,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int DifficultyIndex { get; protected set; }
         public LocaleStringId BossModeNameOverride { get; protected set; }
         public LocaleStringId PowerUpExtraText { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new PvEWaveGameMode(metaGame, this);
+        }
     }
 
     public class PvPAttackerDataPrototype : Prototype
@@ -427,6 +474,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype DefenderVulnerabilityEval { get; protected set; }
         public int TurretVulnerabilityIntervalMS { get; protected set; }
         public EvalPrototype TurretVulnerabilityEval { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new PvPDefenderGameMode(metaGame, this);
+        }
     }
 
     public class MetaGameStateModePrototype : MetaGameModePrototype
@@ -440,6 +492,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalStateSelection { get; protected set; }
         public EvalPrototype EvalModeEnd { get; protected set; }
         public PrototypeId UIStatePickIntervalWidget { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new MetaGameStateMode(metaGame, this);
+        }
     }
 
     public class NexusPvPCyclePrototype : Prototype
@@ -460,11 +517,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public float TimeBetweenWavesInSeconds { get; protected set; }
         public PrototypeId[] Waves { get; protected set; }
         public PrototypeId WaveSpawnMarker { get; protected set; }
+
+        public override MetaGameMode AllocateGameMode(MetaGame metaGame)
+        {
+            return new NexusPvPMainMode(metaGame, this);
+        }
     }
 
     public class MissionMetaGamePrototype : MetaGamePrototype
     {
         public int LevelLowerBoundsOffset { get; protected set; }
         public int LevelUpperBoundsOffset { get; protected set; }
+    }
+
+    public class ScoreTableSchemaEntryPrototype : Prototype
+    {
+        public ScoreTableValueType Type { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public EvalPrototype EvalOnPlayerAdd { get; protected set; }
+        public EvalPrototype EvalAuto { get; protected set; }
+        public EntityFilterPrototype OnEntityDeathFilter { get; protected set; }
+        public ScoreTableValueEvent Event { get; protected set; }
+
+
+    }
+
+    public class ScoreTableSchemaPrototype : Prototype
+    {
+        public ScoreTableSchemaEntryPrototype[] Schema { get; protected set; }
     }
 }

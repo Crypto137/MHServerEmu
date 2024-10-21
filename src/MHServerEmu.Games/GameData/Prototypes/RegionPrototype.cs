@@ -198,7 +198,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (DifficultySettings != null) return DifficultySettings;
 
-            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+            var difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
             if (difficultyGlobals == null) return null;
 
             if (Behavior == RegionBehavior.PublicCombatZone && difficultyGlobals.RegionSettingsDefaultPCZ != null)
@@ -323,7 +323,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if(MetaGames.HasValue())
                 foreach (var metaGameRef in MetaGames)
                 {
-                    MetaGamePrototype metaGameProto = GameDatabase.GetPrototype<MetaGamePrototype>(metaGameRef);
+                    var metaGameProto = GameDatabase.GetPrototype<MetaGamePrototype>(metaGameRef);
                     if (metaGameProto != null && metaGameProto.Teams.HasValue())
                         foreach (var teamRef in metaGameProto.Teams)
                         {

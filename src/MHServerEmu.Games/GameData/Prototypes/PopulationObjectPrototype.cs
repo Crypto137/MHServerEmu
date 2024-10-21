@@ -3,10 +3,15 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes.Markers;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -91,8 +96,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override string ToString()
         {
+            HashSet<PrototypeId> entities = new();
+            GetContainedEntities(entities);
+
             StringBuilder sb = new();
-            sb.AppendLine($"[{GetType().Name}]: {GameDatabase.GetFormattedPrototypeName(UsePopulationMarker)}");
+            sb.AppendLine($"[{GetType().Name}]");
+            if (entities.Count > 0)
+            {
+                sb.AppendLine($"Entity: {entities.First().GetNameFormatted()}");
+                sb.AppendLine($"Entities: {entities.Count}");
+            }
+            sb.AppendLine($"Marker: {GameDatabase.GetFormattedPrototypeName(UsePopulationMarker)}");
             sb.AppendLine($"Riders: {Riders.Length}");
             return sb.ToString();
         }
@@ -359,20 +373,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (markerSet == null) return;
                     
             group.Flags |= ClusterObjectFlag.SkipFormation;
-            // group.Properties.SetProperty<PrototypeId>(encounterResourceRef, PropertyEnum.EncounterResource);
+            group.Properties[PropertyEnum.EncounterResource] = encounterResourceRef;
 
             foreach (var marker in markerSet.Markers)
             {
-                if (marker is not EntityMarkerPrototype markerP) continue;
-                if (markerP.EntityGuid == PrototypeGuid.Invalid)
+                if (marker is not EntityMarkerPrototype markerProto) continue;
+                if (markerProto.EntityGuid == PrototypeGuid.Invalid)
                 {
-                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerP.Position}\nhas invalid GUID");
+                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerProto.Position}\nhas invalid GUID");
                     continue;
                 }
-                PrototypeId markerRef = GameDatabase.GetDataRefByPrototypeGuid(markerP.EntityGuid);
+                PrototypeId markerRef = GameDatabase.GetDataRefByPrototypeGuid(markerProto.EntityGuid);
                 if (markerRef == PrototypeId.Invalid)
                 {
-                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerP.Position}\nhas invalid Ref, GUID was valid, so likely prototype ref was deleted from calligraphy:\n  {markerP.LastKnownEntityName}");
+                    Logger.Warn($"Marker at in Cell:\n  {ToString()}\nand position:\n  {markerProto.Position}\nhas invalid Ref, GUID was valid, so likely prototype ref was deleted from calligraphy:\n  {markerProto.LastKnownEntityName}");
                     continue;
                 }
                 
@@ -384,17 +398,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (clusterEntity != null)
                     {
                         clusterEntity.Flags |= flags;
-                        clusterEntity.SetParentRelativePosition(markerP.Position);
-                        clusterEntity.SetParentRelativeOrientation(markerP.Rotation);
-                        clusterEntity.SnapToFloor = SpawnSpec.SnapToFloorConvert(markerP.OverrideSnapToFloor, markerP.OverrideSnapToFloorValue);
-                        clusterEntity.EncounterSpawnPhase = markerP.EncounterSpawnPhase;
+                        clusterEntity.SetParentRelativePosition(markerProto.Position);
+                        clusterEntity.SetParentRelativeOrientation(markerProto.Rotation);
+                        clusterEntity.SnapToFloor = SpawnSpec.SnapToFloorConvert(markerProto.OverrideSnapToFloor, markerProto.OverrideSnapToFloorValue);
+                        clusterEntity.EncounterSpawnPhase = markerProto.EncounterSpawnPhase;
                         clusterEntity.Flags |= ClusterObjectFlag.SkipFormation;
                     }
                 }
                 if (proto is BlackOutZonePrototype)
                 {
                     if (group.BlackOutZone.Key == PrototypeId.Invalid)
-                        group.BlackOutZone = new(markerRef, markerP.Position);
+                        group.BlackOutZone = new(markerRef, markerProto.Position);
                 }
             }
 
@@ -414,14 +428,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (EncounterResource == AssetId.Invalid)
             {
-                Logger.Warn($"PopulationEncounter {ToString()} has no value in its EncounterResource field.");
+                Logger.Warn($"{ToString()} has no value in its EncounterResource field.");
                 return PrototypeId.Invalid;
             }
 
             PrototypeId encounterProtoRef = GameDatabase.GetDataRefByAsset(EncounterResource);
             if (encounterProtoRef == PrototypeId.Invalid)
             {
-                Console.WriteLine($"PopulationEncounter {ToString()} was unable to find resource for asset {GameDatabase.GetAssetName(EncounterResource)}, check file path and verify file exists.");
+                Logger.Warn($"{ToString()} was unable to find resource for asset {GameDatabase.GetAssetName(EncounterResource)}, check file path and verify file exists.");
                 return PrototypeId.Invalid;
             }
 
@@ -520,6 +534,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             var objectProto = GetPopObject();
             objectProto?.GetContainedEntities( refs );
+        }
+
+        public void EvaluateSpawnProperties(PropertyCollection properties, Region region, MetaGame metaGame)
+        {
+            if (properties == null) return;
+
+            if (RankOverride != PrototypeId.Invalid)
+            {
+                PrototypeId rankRef = RankPrototype.DoOverride(properties[PropertyEnum.Rank], RankOverride);
+                if (rankRef != PrototypeId.Invalid) properties[PropertyEnum.Rank] = rankRef;
+            }
+
+            if (EvalSpawnProperties == null) return;
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = region.Game;
+            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, metaGame);
+            Eval.RunBool(EvalSpawnProperties, evalContext);
+        }
+
+        public bool AllowedInDifficulty(PrototypeId difficultyRef)
+        {
+            return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
         }
     }
 

@@ -7,12 +7,13 @@ namespace MHServerEmu.Games.Populations
 {
     public class BlackOutZone
     {
+        public const ulong InvalidId = 0;
         public ulong Id { get; private set; }
         public Sphere Sphere { get; private set; }
         public Aabb RegionBounds { get; private set; }
         public PrototypeId MissionRef { get; private set; }
 
-        public BlackOutSpatialPartitionLocation SpatialPartitionLocation { get; internal set; }
+        public BlackOutSpatialPartitionLocation SpatialPartitionLocation { get; set; }
 
         public BlackOutZone(ulong id, Vector3 position, float radius, PrototypeId missionRef)
         {

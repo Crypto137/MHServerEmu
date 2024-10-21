@@ -323,6 +323,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
             _isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
 
+            // hack for Mutants CivilianFemaleMutantV01 CivilianMaleMutantV01 CivilianMaleMutantV02
+            if (DataRef == (PrototypeId)428108881470233161 || DataRef == (PrototypeId)14971691258158061950 || DataRef == (PrototypeId)6207165219079199103)
+                GameDatabase.GetPrototype<KeywordPrototype>((PrototypeId)5036792181542097410).GetBitMask(ref _keywordsMask); // Mutant
+
             // NOTE: This is a hack straight from the client, do not change
             if (DataRef != (PrototypeId)DataDirectory.Instance.GetBlueprintDataRefByGuid((BlueprintGuid)13337309842336122384))  // Entity/PowerAgnostic.blueprint
                 WorldEntityPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetWorldEntityBlueprintDataRef());
@@ -599,13 +603,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (Entities.HasValue())
             {
-                // SelectUniqueEntities region ???
-
                 int index = random.Next(0, Entities.Length);
+                if (SelectUniqueEntities)
+                {
+                    if (region == null) return PrototypeId.Invalid;
+                    region.GetUnuqueSelectorIndex(ref index, Entities.Length, DataRef);
+                }
                 return Entities[index];
             }
 
             return PrototypeId.Invalid;
+        }
+
+        public void SetUniqueEntity(PrototypeId entityRef, Region region, bool set)
+        {
+            if (Entities.IsNullOrEmpty() || SelectUniqueEntities == false || region == null) return;
+            int index = Array.IndexOf(Entities, entityRef);
+            if (index != -1) region.SetUnuqueSelectorIndex(index, set, DataRef);
         }
     }
 

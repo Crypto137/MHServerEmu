@@ -224,7 +224,7 @@ namespace MHServerEmu.Games.Regions
                 else
                 {
                     // TODO: check world views of players this region is relevant to
-                    if (now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
+                    if (region.ToShutdown || now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
                         _regionsToDestroy.Push(region.Id);
                 }
             }
@@ -260,8 +260,8 @@ namespace MHServerEmu.Games.Regions
             // region = EmptyRegion(prototype);
             if (region != null)
             {
-                RegionHelper.TEMP_InitializeHardcodedRegionData(region);
-                EntityHelper.SetUpHardcodedEntities(region);
+                // Off Region Mission info // RegionHelper.TEMP_InitializeHardcodedRegionData(region);
+                // EntityHelper.SetUpHardcodedEntities(region);
                 ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
                 Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
 

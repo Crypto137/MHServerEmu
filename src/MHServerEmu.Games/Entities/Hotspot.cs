@@ -13,6 +13,7 @@ using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Behavior;
 using static MHServerEmu.Games.Missions.MissionManager;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -25,7 +26,8 @@ namespace MHServerEmu.Games.Entities
         public HotspotPrototype HotspotPrototype { get => Prototype as HotspotPrototype; }
         public bool HasApplyEffectsDelay { get; private set; }
 
-        private Dictionary<MissionConditionContext, int> ConditionEntityCounter;
+        private Dictionary<MissionConditionContext, int> _missionConditionEntityCounter;
+        private HashSet<ulong> _missionAvatars;
         private bool _skipCollide;
         private PropertyCollection _directApplyToMissileProperties;
 
@@ -102,7 +104,8 @@ namespace MHServerEmu.Games.Entities
 
             if (IsMissionHotspot)
             {
-                ConditionEntityCounter = new();
+                _missionConditionEntityCounter = new();
+                _missionAvatars = new();
                 MissionEntityTracker();
             }
 
@@ -228,149 +231,101 @@ namespace MHServerEmu.Games.Entities
         {
             // Logger.Trace($"HandleOverlapBegin_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
+            if (targetAvatar) _missionAvatars?.Add(target.Id);
+
             bool missionEvent = false;
-            if (ConditionEntityCounter.Count > 0)
-                foreach(var context in ConditionEntityCounter)
+            if (_missionConditionEntityCounter.Count > 0)
+                foreach(var context in _missionConditionEntityCounter)
                 {
                     var missionRef = context.Key.MissionRef;
                     var conditionProto = context.Key.ConditionProto;
                     if (EvaluateTargetCondition(target, missionRef, conditionProto))
                     {
-                        ConditionEntityCounter[context.Key]++;
+                        _missionConditionEntityCounter[context.Key]++;
                         missionEvent = true;
                     }
-                    // Hardcoded part
-                    if (targetAvatar) OLD_AvatarEnter(target as Avatar, missionRef, conditionProto);
                 }
 
             if (Region == null) return;
             // entered hotspot mision event
-            if (missionEvent || targetAvatar) 
-            {
-                EntityEnteredMissionHotspotGameEvent hotspotEvent = new(target, this);
-                Region.EntityEnteredMissionHotspotEvent.Invoke(hotspotEvent);
-            }
+            if (missionEvent || targetAvatar)
+                Region.EntityEnteredMissionHotspotEvent.Invoke(new(target, this));
         }
 
         private void HandleOverlapEnd_Missions(WorldEntity target)
         {
             // Logger.Trace($"HandleOverlapEnd_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
+            if (targetAvatar) _missionAvatars?.Remove(target.Id);
+
             bool missionEvent = false;
-            if (ConditionEntityCounter.Count > 0)
-                foreach (var context in ConditionEntityCounter)
+            if (_missionConditionEntityCounter.Count > 0)
+                foreach (var context in _missionConditionEntityCounter)
                 {
                     var missionRef = context.Key.MissionRef;
                     var conditionProto = context.Key.ConditionProto;
                     if (EvaluateTargetCondition(target, missionRef, conditionProto))
                     {
-                        ConditionEntityCounter[context.Key]--;
+                        _missionConditionEntityCounter[context.Key]--;
                         missionEvent = true;
                     }
-                    // Hardcoded part
-                    if (targetAvatar) OLD_AvatarLeave(target as Avatar, missionRef, conditionProto);
                 }
 
             if (Region == null) return;
             // left hotspot mision event
             if (missionEvent || targetAvatar)
+                Region.EntityLeftMissionHotspotEvent.Invoke(new(target, this));
+        }
+
+        public bool ContainsAvatar(Avatar avatar)
+        {
+            return _missionAvatars != null && _missionAvatars.Contains(avatar.Id);
+        }
+
+        public int GetMissionConditionCount(PrototypeId missionRef, MissionConditionPrototype conditionProto)
+        {
+            if (_missionConditionEntityCounter != null)
             {
-                EntityLeftMissionHotspotGameEvent hotspotEvent = new(target, this);
-                Region.EntityLeftMissionHotspotEvent.Invoke(hotspotEvent);
+                var key = new MissionConditionContext(missionRef, conditionProto);
+                if (_missionConditionEntityCounter.TryGetValue(key, out int count))
+                    return count;
             }
+            return 0;
         }
-
-        #region hardcoded
-
-        public static MissionPrototypeId[] HotspotEnterKismetControllers = new MissionPrototypeId[]
-        {
-            MissionPrototypeId.RaftNPEVenomKismetController,
-            MissionPrototypeId.RaftNPEElectroKismetController,
-            MissionPrototypeId.RaftNPEGreenGoblinKismetController,
-            MissionPrototypeId.RaftNPEJuggernautKismetController,
-            MissionPrototypeId.OpVultureKismetController, 
-            MissionPrototypeId.CH06BlobKismetController,
-            MissionPrototypeId.CH07MrSinisterKismetController,
-            MissionPrototypeId.CH07SabretoothKismetController,
-            //MissionPrototypeId.CH08MODOKSpawnKismetController, // Client blocked
-        };
-
-        public static MissionPrototypeId[] HotspotLeaveKismetControllers = new MissionPrototypeId[]
-        {
-          //  MissionPrototypeId.RaftNPEQuinjetKismetController,
-        };
-
-        private void OLD_AvatarEnter(Avatar avatar, PrototypeId missionRef, MissionConditionPrototype conditionProto)
-        {
-            // TODO move this as EntityEnteredMissionHotspotEvent in MissionManager
-            if (conditionProto is MissionConditionHotspotEnterPrototype)
-            {
-                var mission = GameDatabase.GetPrototype<MissionPrototype>(missionRef);                
-                if (HotspotEnterKismetControllers.Contains((MissionPrototypeId)missionRef))
-                {
-                    PropertyId missionReset = new(PropertyEnum.AvatarMissionResetsWithRegionId, missionRef);
-                    if (avatar.Properties.HasProperty(missionReset)) return;
-                    if (avatar.GetOwner() is not Player player) return;
-                    if (mission.Objectives.IsNullOrEmpty()) return;
-                    var objective = mission.Objectives[0];
-                    if (MissionPrototypeId.CH08MODOKSpawnKismetController == (MissionPrototypeId)missionRef)
-                        objective = mission.Objectives[3];
-                    MissionActionPlayKismetSeqPrototype missionKismetSeq = null;
-                    if (objective != null && objective.OnSuccessActions.HasValue()) 
-                        missionKismetSeq = objective.OnSuccessActions[0] as MissionActionPlayKismetSeqPrototype;
-                    else if(mission.OnSuccessActions.HasValue()) 
-                        missionKismetSeq = mission.OnSuccessActions[0] as MissionActionPlayKismetSeqPrototype;
-                    if (missionKismetSeq == null) return;
-                    var kismetSeq = missionKismetSeq.KismetSeqPrototype;
-                    avatar.Properties[missionReset] = Region.Id;
-                    if (objective.InteractionsWhenActive.HasValue() && objective.InteractionsWhenActive[0] is EntityVisibilitySpecPrototype visibilitySpec)
-                        OLD_HideEntity(visibilitySpec);
-                    player.PlayKismetSeq(kismetSeq);
-                }
-                // Logger.Warn($"AvatarEnter {avatar} {mission}");
-            }
-        }
-
-        private void OLD_HideEntity(EntityVisibilitySpecPrototype visibilitySpec) 
-        {
-            HashSet<PrototypeId> refs = new();
-            visibilitySpec.EntityFilter.GetEntityDataRefs(refs);
-            if (visibilitySpec.Visible == false && refs.Count > 0)
-                foreach(var entity in RegionLocation.Cell.Entities)
-                    if (refs.Contains(entity.PrototypeDataRef))
-                        entity.Properties[PropertyEnum.Visible] = false;
-        }
-
-        private void OLD_AvatarLeave(Avatar avatar, PrototypeId missionRef, MissionConditionPrototype conditionProto)
-        {
-            // TODO move this as EntityLeftMissionHotspotEvent in MissionManager
-            if (conditionProto is MissionConditionHotspotLeavePrototype)
-            {
-                var mission = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                if (HotspotLeaveKismetControllers.Contains((MissionPrototypeId)missionRef))
-                {
-                    PropertyId missionReset = new(PropertyEnum.AvatarMissionObjectiveRegionId, missionRef);
-                    if (avatar.Properties.HasProperty(missionReset)) return;
-                    if (avatar.GetOwner() is not Player player) return;
-                    if (mission.Objectives.IsNullOrEmpty()) return;
-                    var objective = mission.Objectives[0];
-                    if (objective == null || objective.OnSuccessActions.IsNullOrEmpty()) return;
-                    var missionKismetSeq = objective.OnSuccessActions[0] as MissionActionPlayKismetSeqPrototype;
-                    var kismetSeq = missionKismetSeq.KismetSeqPrototype;
-                    avatar.Properties[missionReset] = Region.Id;
-                    player.PlayKismetSeq(kismetSeq);
-                }
-                // Logger.Warn($"AvatarLeave {avatar} {mission}");
-            }
-        }
-
-        #endregion
 
         private void HandleOverlapBegin_Player(Avatar avatar)
         {
-            // Logger.Trace($"HandleOverlapBegin_Player {this} {avatar}");
+            var player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return;
 
-            // TODO Unlock Waypoint Properties[PropertyEnum.WaypointHotspotUnlock]
+            PrototypeId waypointRef = Properties[PropertyEnum.WaypointHotspotUnlock];
+            if (waypointRef != PrototypeId.Invalid)
+                player.UnlockWaypoint(waypointRef);
+
+            var manager = Game.EntityManager;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.HotspotTriggerEntity))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerEnum);
+                ulong spawnerId = kvp.Value;
+                if (spawnerId != 0)
+                {
+                    var spawner = manager.GetEntity<Spawner>(spawnerId);
+                    if (spawner != null)
+                    {
+                        spawner.Trigger((EntityTriggerEnum)triggerEnum);
+                        ScheduleDestroyEvent(TimeSpan.Zero);
+                    }
+                }
+            }
+
+            // TODO Spawner Respawn
+
+            var hotspotProto = HotspotPrototype;
+            if (hotspotProto.TutorialTip != PrototypeId.Invalid)
+                player.ShowHUDTutorial(hotspotProto.TutorialTip.As<HUDTutorialPrototype>());
+
+            if (hotspotProto.KismetSeq != PrototypeId.Invalid)
+                player.PlayKismetSeq(hotspotProto.KismetSeq);
         }
 
         private void HandleOverlapEnd_Player(Avatar avatar)
@@ -414,7 +369,7 @@ namespace MHServerEmu.Games.Entities
                     if (EvaluateHotspotCondition(missionRef, conditionProto))
                     {
                         var key = new MissionConditionContext(missionRef, conditionProto);
-                        ConditionEntityCounter[key] = 0;
+                        _missionConditionEntityCounter[key] = 0;
                     }
             }
 

@@ -63,6 +63,12 @@ namespace MHServerEmu.Games.Navi
         }
     }
 
+    public readonly struct WalkPathFlagsCheck : IContainsPathFlagsCheck
+    {
+        public bool CanBypassCheck() => true;
+        public bool PathingFlagsCheck(PathFlags pathingFlags) => pathingFlags.HasFlag(PathFlags.Walk);
+    }
+
     public class ContentFlagCounts // TODO: optimize it
     {
         public int AddWalk { get; set; }

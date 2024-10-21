@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -9,7 +10,7 @@ namespace MHServerEmu.Games.Loot
         public int Depth { get; set; }
         public LootDropChanceModifiers DropChanceModifiers { get; set; }
         public float NoDropModifier { get; set; } = 1f;         // LootRollModifyDropByDifficultyTierPrototype
-
+        public Player Player { get; set; }                      // LootRollMissionStateRequiredPrototype
         public AvatarPrototype UsableAvatar { get; set; }       // LootRollSetAvatarPrototype
         public AgentPrototype UsableTeamUp { get; set; }        // Team-ups are the only agents other than avatars that have equipment
         public bool UseSecondaryAvatar { get; set; }            // LootNodePrototype::select()
@@ -35,6 +36,7 @@ namespace MHServerEmu.Games.Loot
         public Dictionary<AffixPosition, short> AffixLimitMinByPositionModifierDict { get; } = new();   // Modifies the minimum number of affixes for position
         public Dictionary<AffixPosition, short> AffixLimitMaxByPositionModifierDict { get; } = new();   // Modifies the maximum number of affixes for position
         public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
+        public PrototypeId MissionRef { get; set; }
 
         public LootRollSettings() { }   // Use pooling instead of calling this directly
 
@@ -44,6 +46,7 @@ namespace MHServerEmu.Games.Loot
             DropChanceModifiers = other.DropChanceModifiers;
             NoDropModifier = other.NoDropModifier;
 
+            Player = other.Player;
             UsableAvatar = other.UsableAvatar;
             UsableTeamUp = other.UsableTeamUp;
             UseSecondaryAvatar = other.UseSecondaryAvatar;

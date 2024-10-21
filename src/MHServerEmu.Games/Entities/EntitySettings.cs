@@ -65,7 +65,6 @@ namespace MHServerEmu.Games.Entities
         public PropertyCollection Properties { get; set; }
         public Cell Cell { get; set; }
         public List<EntitySelectorActionPrototype> Actions { get; set; }
-        public PrototypeId ActionsTarget { get; set; }
         public SpawnSpec SpawnSpec { get; set; }
         public float LocomotorHeightOverride { get; set; }
 
@@ -108,7 +107,6 @@ namespace MHServerEmu.Games.Entities
             Properties = null;
             Cell = null;
             Actions = null;
-            ActionsTarget = PrototypeId.Invalid;
             SpawnSpec = null;
             LocomotorHeightOverride = 0f;
 

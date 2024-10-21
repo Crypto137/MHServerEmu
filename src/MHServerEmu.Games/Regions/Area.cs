@@ -1,6 +1,4 @@
-﻿using Gazillion;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
@@ -9,6 +7,7 @@ using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Areas;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -43,6 +42,9 @@ namespace MHServerEmu.Games.Regions
         private List<TowerFixupData> _towerFixupList;
         private PrototypeId _respawnOverride;
 
+        public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
+        public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
+
         public bool GenerateLog { get; private set; }
 
         public uint Id { get; private set; }
@@ -53,7 +55,7 @@ namespace MHServerEmu.Games.Regions
         public string PrototypeName { get => GameDatabase.GetFormattedPrototypeName(PrototypeDataRef); }
 
         public bool IsDynamicArea { get => PrototypeDataRef == GameDatabase.GlobalsPrototype.DynamicArea; }
-
+        public IEnumerable<Entity> Entities { get => Game.EntityManager.IterateEntities(this); }
         public PrototypeId PopulationRef { get; private set; }
         public PopulationArea PopulationArea { get; private set; }
         public int AreaLevel { get; private set; }
@@ -70,16 +72,12 @@ namespace MHServerEmu.Games.Regions
         public int MinimapRevealGroupId { get; set; }
 
         public PropTable PropTable { get; set; }
-
         public Generator Generator { get; set; }
-
+        public SpawnMap SpawnMap { get; private set; }
         public float PlayableNavArea { get; set; }
         public float SpawnableNavArea { get; set; }
-
         public List<AreaConnectionPoint> AreaConnections { get; set; } = new();
-
         public List<RandomInstanceRegionPrototype> RandomInstances { get; } = new();
-
         public Dictionary<uint, Cell> Cells { get; } = new();
 
         public Area(Game game, Region region)
@@ -140,14 +138,14 @@ namespace MHServerEmu.Games.Regions
 
             MinimapRevealGroupId = Prototype.MinimapRevealGroupId;
 
-            PrototypeId emptyPopulation = GameDatabase.PopulationGlobalsPrototype.EmptyPopulation;
-            PrototypeId[] populationOverrides = Region.Prototype.PopulationOverrides;
+            var emptyPopulation = GameDatabase.PopulationGlobalsPrototype.EmptyPopulation;
+            var populationOverrides = Region.Prototype.PopulationOverrides;
 
             if (populationOverrides.HasValue() && Prototype.Population != emptyPopulation)
             {
                 GRandom random = new(RandomSeed);
                 PrototypeId regionPopulation = populationOverrides[random.Next(0, populationOverrides.Length)];
-                if (regionPopulation != GameData.PrototypeId.Invalid)
+                if (regionPopulation != PrototypeId.Invalid)
                     PopulationRef = regionPopulation;
                 else
                     PopulationRef = Prototype.Population;
@@ -167,6 +165,9 @@ namespace MHServerEmu.Games.Regions
         {
             DestroyAllConnections();
             RemoveAllCells();
+
+            SpawnMap?.Destroy();
+            // PopuliationArea.Destroy() ?
 
             PropTable = null;
             Generator = null;
@@ -274,17 +275,9 @@ namespace MHServerEmu.Games.Regions
             if (IsDynamicArea)
                 return true;
 
-            // if (AreaPrototype.FullyGenerateCells) // only TheRaft
-            foreach (Cell cell in CellIterator())
-                cell.PostGenerate(); // can be here?
-
-            // Spawn Entity from Missions, MetaStates
-            List<PopulationObject> population = Region.PopulationManager.PopulationMarkers;
-            foreach (Cell cell in CellIterator())
-                cell.SpawnPopulation(population);
-
-            // Spawn Themes
-            PopulationArea.SpawnPopulation(Region.PopulationManager.PopulationObjects);
+            if (Prototype.FullyGenerateCells) // only TheRaft
+                foreach (Cell cell in CellIterator())
+                    cell.Generate();
 
             return true;
         }
@@ -292,30 +285,22 @@ namespace MHServerEmu.Games.Regions
         private bool GeneratePopulation()
         {
             if (TestStatus(GenerateFlag.Background) == false)
-            {
-                return Logger.WarnReturn(false, $"Generate population should have background generator \nRegion:{Region}\nArea:{ToString()}");
-            }
+                return Logger.WarnReturn(false, $"Generate population should have background generator \nRegion:{Region}\nArea:{this}");
 
-            if (TestStatus(GenerateFlag.Population))
-                return true;
+            if (TestStatus(GenerateFlag.Population)) return true;
 
-            SetStatus(GenerateFlag.Population, true);
+            var populationProto = PopulationArea.PopulationPrototype;
+            if (populationProto?.UseSpawnMap == true)
+                SpawnMap = new(this, populationProto);
 
             BlackOutZonesRebuild();
+            SetStatus(GenerateFlag.Population, true);            
+
+            Region.AreaCreatedEvent.Invoke(new(this));
 
             if (Region.Settings.GenerateEntities)
-            {
                 foreach (Cell cell in CellIterator())
-                {
-                    MarkerSetOptions options = MarkerSetOptions.Default | MarkerSetOptions.SpawnMissionAssociated;
-                    CellPrototype cellProto = cell.Prototype;
-
-                    if (cellProto.IsOffsetInMapFile == false)
-                        options |= MarkerSetOptions.NoOffset;
-
-                    cell.InstanceMarkerSet(cellProto.MarkerSet, Transform3.Identity(), options);
-                }
-            }
+                    cell.SpawnMarkerSet(MarkerSetOptions.SpawnMissionAssociated);
 
             PopulationArea?.Generate();
 
@@ -326,15 +311,23 @@ namespace MHServerEmu.Games.Regions
         {
             foreach (var cell in CellIterator())
                 cell.BlackOutZonesRebuild();
+
+            SpawnMap?.BlackOutZonesRebuild();
+        }
+
+        public void RebuildBlackOutZone(BlackOutZone zone)
+        {
+            foreach (var cell in CellIterator())
+                if (zone.Sphere.Intersects(cell.RegionBounds))
+                    cell.BlackOutZonesRebuild();
+
+            SpawnMap?.BlackOutZonesRebuild();
         }
 
         private bool GenerateNavi()
         {
             if (TestStatus(GenerateFlag.Background) == false)
-            {
-                return Logger.WarnReturn(false,
-                    $"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{this}");
-            }
+                return Logger.WarnReturn(false, $"[Engineering Issue] Navi is getting generated out of order with, or after a failed area generator\nRegion:{Region}\nArea:{this}");
 
             if (TestStatus(GenerateFlag.Navi))
                 return true;

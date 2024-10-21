@@ -481,7 +481,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] Keywords { get; protected set; }
         public int BonusItemFindPoints { get; protected set; }
 
-        //--
+        public static PrototypeId DoOverride(PrototypeId rankRef, PrototypeId rankOverride)
+        {
+            var rankProto = rankRef.As<RankPrototype>();
+            var rankOverrideProto = rankOverride.As<RankPrototype>();
+            return DoOverride(rankProto, rankOverrideProto).DataRef;
+        }
+
+        private static RankPrototype DoOverride(RankPrototype rankProto, RankPrototype rankOverrideProto)
+        {
+            if (rankProto == null) return rankOverrideProto;
+            if (rankOverrideProto == null) return rankProto;
+            if (rankProto.Rank < rankOverrideProto.Rank) return rankOverrideProto;
+            return rankProto;
+        }
 
         [DoNotCopy]
         public bool IsRankBoss { get => Rank == Rank.Boss || Rank == Rank.GroupBoss; }

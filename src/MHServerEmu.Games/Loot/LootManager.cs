@@ -208,6 +208,7 @@ namespace MHServerEmu.Games.Loot
             if (lootTableProto == null) return Logger.WarnReturn(false, "RollLootTable(): lootTableProto == null");
 
             using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+            settings.Player = player;
             settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
             settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = player.CurrentAvatar.CharacterLevel;

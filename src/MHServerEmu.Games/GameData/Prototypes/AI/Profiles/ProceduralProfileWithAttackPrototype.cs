@@ -2124,6 +2124,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
 
+        public override void OnOwnerGotDamaged(AIController ownerController)
+        {
+            ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
+        }
     }
 
     public class ProceduralProfileBotAIPrototype : ProceduralProfileWithAttackPrototype
@@ -2322,8 +2326,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.PopulatePowerPicker(ownerController, powerPicker);
             int stateVal = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIEnrageState];
-            if (stateVal == 3)
+            if (stateVal == (int)EnrageState.Enraged)
                 ownerController.AddPowersToPicker(powerPicker, PostEnragePowers);
+        }
+
+        public override void OnOwnerGotDamaged(AIController ownerController)
+        {
+            Agent agent = ownerController.Owner;
+            if (agent == null) return;
+            if (agent.Properties.HasProperty(PropertyEnum.EnrageStartTime) == false)
+            {
+                Game game = agent.Game;
+                if (game == null) return;
+                TimeSpan currentTime = game.CurrentTime;
+                agent.Properties[PropertyEnum.EnrageStartTime] = currentTime + TimeSpan.FromMinutes(EnrageTimerInMinutes);
+            }
         }
     }
 

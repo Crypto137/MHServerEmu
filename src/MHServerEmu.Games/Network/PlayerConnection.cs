@@ -16,10 +16,9 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Persistence;
-using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -41,8 +40,6 @@ namespace MHServerEmu.Games.Network
         private readonly FrontendClient _frontendClient;
         private readonly DBAccount _dbAccount;
         private readonly List<IMessage> _pendingMessageList = new();
-
-        private readonly EventPointer<OLD_PreInteractPowerEndEvent> _preInteractPowerEndEvent = new();
 
         private bool _waitingForRegionIsAvailableResponse = false;
 
@@ -141,6 +138,7 @@ namespace MHServerEmu.Games.Network
             // Remove this when we merge missions
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
+                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion);
                 Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
             }
@@ -290,15 +288,22 @@ namespace MHServerEmu.Games.Network
 
         public void MoveToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
         {
-            // Simulate exiting and re-entering the game on a real GIS
-            ExitGame();
+            var oldRegion = AOI.Region;
 
             // Update our target
             TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
 
+            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestTargetRegionProtoRef));
+
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
             Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
+
+            oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
+
+            // Simulate exiting and re-entering the game on a real GIS
+            ExitGame();
+
             Game.NetworkManager.SetPlayerConnectionPending(this);
         }
 
@@ -337,6 +342,7 @@ namespace MHServerEmu.Games.Network
             }
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
+            region.PlayerEnteredRegionEvent.Invoke(new(Player, region.PrototypeDataRef));
             Player.SendMiniMapUpdate();
         }
 
@@ -410,13 +416,20 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
+                case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
+                case ClientToGameServerMessage.NetMessageMetaGameUpdateNotification:        OnMetaGameUpdateNotification(message); break;       // 63
+                case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
+                case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
+                case ClientToGameServerMessage.NetMessageSetDialogTarget:                   OnSetDialogTarget(message); break;                  // 100
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
+                case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
+                case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
                 case ClientToGameServerMessage.NetMessageRequestInterestInAvatarEquipment:  OnRequestInterestInAvatarEquipment(message); break; // 123
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
@@ -427,8 +440,10 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;          // 136
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
+                case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
+                case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:       OnMissionTrackerFiltersUpdate(message); break;      // 166
 
                 // Grouping Manager
                 case ClientToGameServerMessage.NetMessageChat:                                                                                  // 64
@@ -620,12 +635,9 @@ namespace MHServerEmu.Games.Network
                 Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
 
                 Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
-                if (bowlingBall == null) return false;
+                if (bowlingBall is not Item item) return false;
 
-                if (bowlingBall.Properties[PropertyEnum.InventoryStackCount] > 1)
-                    bowlingBall.Properties.AdjustProperty(-1, PropertyEnum.InventoryStackCount);
-                else
-                    bowlingBall.Destroy();
+                item.DecrementStack();
             }
 
             return true;
@@ -752,8 +764,8 @@ namespace MHServerEmu.Games.Network
             }
 
             // Invoke pickup Event
-            //var region = Player.GetRegion();
-            //region?.PlayerPreItemPickupEvent.Invoke(new(Player, item));
+            var region = Player.GetRegion();
+            region?.PlayerPreItemPickupEvent.Invoke(new(Player, item));
 
             // Destroy mission items that shouldn't go to the inventory
             if (item.Properties[PropertyEnum.PickupDestroyPending])
@@ -846,22 +858,13 @@ namespace MHServerEmu.Games.Network
             var performPreInteractPower = message.As<NetMessagePerformPreInteractPower>();
             if (performPreInteractPower == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to retrieve message");
 
-            Logger.Trace($"Received PerformPreInteractPower for {performPreInteractPower.IdTarget}");
+            var currentAvatar = Player.CurrentAvatar;
+            if (currentAvatar == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): CurrentAvatar is null");
 
-            var interactableObject = Game.EntityManager.GetEntity<Entity>(performPreInteractPower.IdTarget);
-            if (interactableObject == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to get entity {performPreInteractPower.IdTarget}");
+            var target = Game.EntityManager.GetEntity<WorldEntity>(performPreInteractPower.IdTarget);
+            if (target == null) return Logger.WarnReturn(false, $"OnPerformPreInteractPower(): Failed to get terget {performPreInteractPower.IdTarget}");
 
-            if (_preInteractPowerEndEvent.IsValid == false)
-            {
-                EventPointer<OLD_PreInteractPowerEvent> preInteractPowerEventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(preInteractPowerEventPointer, TimeSpan.Zero);
-                preInteractPowerEventPointer.Get().Initialize(this, interactableObject);
-
-                Game.GameEventScheduler.ScheduleEvent(_preInteractPowerEndEvent, TimeSpan.FromMilliseconds(1000));  // ChargingTimeMS
-                _preInteractPowerEndEvent.Get().Initialize(this, interactableObject);
-            }
-
-            return true;
+            return currentAvatar.PerformPreInteractPower(target, performPreInteractPower.HasDialog);
         }
 
         private bool OnUseInteractableObject(MailboxMessage message)    // 38
@@ -1018,6 +1021,48 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnRequestMissionRewards(MailboxMessage message) // 57
+        {
+            var requestMissionRewards = message.As<NetMessageRequestMissionRewards>();
+            if (requestMissionRewards == null) return Logger.WarnReturn(false, $"OnRequestMissionRewards(): Failed to retrieve message");
+
+            var missionRef = (PrototypeId)requestMissionRewards.MissionPrototypeId;
+            if (missionRef == PrototypeId.Invalid) return Logger.WarnReturn(false, $"OnRequestMissionRewards(): MissionPrototypeId == PrototypeId.Invalid");
+            ulong entityId = requestMissionRewards.EntityId;
+
+            if (requestMissionRewards.HasConditionIndex)
+                Player.GetRegion()?.PlayerRequestMissionRewardsEvent.Invoke(new(Player, missionRef, requestMissionRewards.ConditionIndex, entityId));
+            else
+                Player.MissionManager?.OnRequestMissionRewards(missionRef, entityId);
+
+            return true;
+        }
+
+        private bool OnMetaGameUpdateNotification(MailboxMessage message)
+        {
+            var metaGameUpdate = message.As<NetMessageMetaGameUpdateNotification>();
+            if (metaGameUpdate == null) return Logger.WarnReturn(false, $"OnMetaGameUpdateNotification(): Failed to retrieve message");
+            var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameUpdate.MetaGameEntityId);
+            metaGame?.UpdatePlayerNotification(Player);
+            return true;
+        }
+
+        private bool OnNotifyFullscreenMovieStarted(MailboxMessage message)
+        {
+            var movieStarted = message.As<NetMessageNotifyFullscreenMovieStarted>();
+            if (movieStarted == null) return Logger.WarnReturn(false, $"OnNotifyFullscreenMovieStarted(): Failed to retrieve message");
+            Player.OnFullscreenMovieStarted((PrototypeId)movieStarted.MoviePrototypeId);
+            return true;
+        }
+
+        private bool OnNotifyFullscreenMovieFinished(MailboxMessage message)
+        {
+            var movieFinished = message.As<NetMessageNotifyFullscreenMovieFinished>(); 
+            if (movieFinished == null) return Logger.WarnReturn(false, $"OnNotifyFullscreenMovieFinished(): Failed to retrieve message");
+            Player.OnFullscreenMovieFinished((PrototypeId)movieFinished.MoviePrototypeId, movieFinished.UserCancelled, movieFinished.SyncRequestId);
+            return true;
+        }
+
         private void OnNotifyLoadingScreenFinished(MailboxMessage message)  // 86
         {
             Player.OnLoadingScreenFinished();
@@ -1056,17 +1101,31 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnSetDialogTarget(MailboxMessage message)
+        {
+            var setDialogTarget = message.As<NetMessageSetDialogTarget>();
+            if (setDialogTarget == null) return Logger.WarnReturn(false, $"OnSetDialogTarget(): Failed to retrieve message");
+            Player.SetDialogTarget(setDialogTarget.TargetId, setDialogTarget.InteractorId);
+            return true;
+        }
+
         private bool OnSetTipSeen(MailboxMessage message)   // 110
         {
             var setTipSeen = message.As<NetMessageSetTipSeen>();
             if (setTipSeen == null) return Logger.WarnReturn(false, $"OnSetTipSeen(): Failed to retrieve message");
+            Player.SetTipSeen((PrototypeId)setTipSeen.TipDataRefId);
+            return true;
+        }
 
-            PrototypeId tipProtoRef = (PrototypeId)setTipSeen.TipDataRefId;
-            if (DataDirectory.Instance.PrototypeIsA<HUDTutorialPrototype>(tipProtoRef) == false)
-                return Logger.WarnReturn(false, $"OnSetTipSeen(): {tipProtoRef} is not a valid tip prototype ref");
+        private bool OnHUDTutorialDismissed(MailboxMessage message)
+        {
+            var hudTutorialDismissed = message.As<NetMessageHUDTutorialDismissed>();
+            if (hudTutorialDismissed == null) return Logger.WarnReturn(false, $"OnHUDTutorialDismissed(): Failed to retrieve message");
 
-            Player.Properties[PropertyEnum.TutorialHasSeenTip, tipProtoRef] = true;
-            Logger.Trace($"OnSetTipSeen(): 0x{Player.DatabaseUniqueId:X} => {tipProtoRef.GetName()}");
+            PrototypeId hudTutorialRef = (PrototypeId)hudTutorialDismissed.HudTutorialProtoId;
+            var currentHUDTutorial = Player.CurrentHUDTutorial;
+            if (currentHUDTutorial?.DataRef == hudTutorialRef && currentHUDTutorial.CanDismiss)
+                Player.ShowHUDTutorial(null);
 
             return true;
         }
@@ -1117,6 +1176,14 @@ namespace MHServerEmu.Games.Network
                 avatar.Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] = true;
             }
 
+            return true;
+        }
+
+        private bool OnRequestLegendaryMissionReroll(MailboxMessage message)    // 117
+        {
+            var requestLegendaryMissionRerol = message.As<NetMessageRequestLegendaryMissionReroll>();
+            if (requestLegendaryMissionRerol == null) return Logger.WarnReturn(false, $"OnRequestLegendaryMissionReroll(): Failed to retrieve message");
+            Player.RequestLegendaryMissionReroll();
             return true;
         }
 
@@ -1259,6 +1326,20 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnUISystemLockState(MailboxMessage message)
+        {
+            var uiSystemLockState = message.As<NetMessageUISystemLockState>();
+            if (uiSystemLockState == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): Failed to retrieve message");
+            var region = Player.GetRegion();
+            if (region == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): Region is null");
+            PrototypeId uiSystemRef = (PrototypeId)uiSystemLockState.PrototypeId;
+            var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemRef);
+            if (uiSystemLockProto == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): UISystemLockPrototype is null");
+            uint state = uiSystemLockState.State;
+            Player.Properties[PropertyEnum.UISystemLock, uiSystemRef] = state;
+            return true;
+        }
+
         private bool OnStashTabInsert(MailboxMessage message)  // 155
         {
             var stashTabInsert = message.As<NetMessageStashTabInsert>();
@@ -1273,6 +1354,21 @@ namespace MHServerEmu.Games.Network
             if (stashTabOptions == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
 
             return Player.UpdateStashTabOptions(stashTabOptions);
+        }
+
+        private bool OnMissionTrackerFiltersUpdate(MailboxMessage message)
+        {
+            var filters = message.As<NetMessageMissionTrackerFiltersUpdate>();
+            if (filters == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
+
+            foreach (var filter in filters.MissionTrackerFilterChangesList)
+            {
+                PrototypeId filterPrototypeId = (PrototypeId)filter.FilterPrototypeId;
+                if (filterPrototypeId == PrototypeId.Invalid) continue;                
+                Player.Properties[PropertyEnum.MissionTrackerFilter, filterPrototypeId] = filter.IsFiltered;
+            }
+
+            return true; ;
         }
 
         #endregion

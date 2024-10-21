@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -21,8 +22,10 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Regions.MatchQueues;
@@ -62,7 +65,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
 
-        private MissionManager _missionManager = new();
+        private MissionManager _missionManager;
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
         private RepString _playerName = new();
@@ -95,6 +98,7 @@ namespace MHServerEmu.Games.Entities
         private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
 
         private TeleportData _teleportData;
+        private SpawnGimbal _spawnGimbal;
 
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
@@ -136,7 +140,7 @@ namespace MHServerEmu.Games.Entities
 
         public Player(Game game) : base(game)
         {
-            _missionManager.Owner = this;
+            _missionManager = new(Game, this);
             _gameplayOptions.SetOwner(this);
         }
 
@@ -158,6 +162,10 @@ namespace MHServerEmu.Games.Entities
             // Default loading screen before we start loading into a region
             QueueLoadingScreen(PrototypeId.Invalid);
 
+            var popProto = GameDatabase.GlobalsPrototype.PopulationGlobalsPrototype;
+            if (popProto == null) return false;
+            _spawnGimbal = new (popProto.SpawnMapGimbalRadius, popProto.SpawnMapHorizon);
+
             return true;
         }
 
@@ -174,9 +182,6 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
             }
 
-            foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.Waypoint, waypointRef] = true;
-
             foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
 
@@ -185,19 +190,6 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
-
-            // Complete all missions
-            foreach (PrototypeId missionRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MissionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                var missionPrototype = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                if (_missionManager.ShouldCreateMission(missionPrototype))
-                {
-                    Mission mission = _missionManager.CreateMission(missionRef);
-                    mission.SetState(MissionState.Completed);
-                    mission.AddParticipant(this);
-                    _missionManager.InsertMission(mission);
-                }
-            }
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -313,8 +305,8 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = base.Serialize(archive);
 
-            if (archive.IsTransient)    // REMOVEME/TODO: Persistent missions
-                success &= Serializer.Transfer(archive, ref _missionManager);
+            // Persistent missions
+            success &= Serializer.Transfer(archive, ref _missionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
@@ -931,6 +923,8 @@ namespace MHServerEmu.Games.Entities
             teamUp.Properties[PropertyEnum.PowerProgressionVersion] = teamUp.GetLatestPowerProgressionVersion();
 
             SendNewTeamUpAcquired(teamUpRef);
+
+            GetRegion()?.PlayerUnlockedTeamUpEvent.Invoke(new(this, teamUpRef));
         }
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
@@ -987,6 +981,9 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
 
             EnableCurrentAvatar(true, lastCurrentAvatarId, prevRegionId, prevPosition, prevOrientation);
+
+            GetRegion()?.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
+
             return true;
         }
 
@@ -1123,6 +1120,7 @@ namespace MHServerEmu.Games.Entities
             if (movieProto.MovieType == MovieType.Cinematic)
             {
                 FullScreenMovieDequeued(movieRef);
+                GetRegion()?.CinematicFinishedEvent.Invoke(new(this, movieRef));
                 Properties.RemoveProperty(PropertyEnum.FullScreenMovieSession);
             }
         }
@@ -1177,7 +1175,14 @@ namespace MHServerEmu.Games.Entities
 
         public void OnLoadingScreenFinished()
         {
-            IsOnLoadingScreen = false;
+            if (IsOnLoadingScreen)
+            {
+                IsOnLoadingScreen = false;
+                var region = GetRegion();
+                if (region == null) return;
+                region.LoadingScreenFinishedEvent.Invoke(new(this, region.PrototypeDataRef));
+                region.OnLoadingFinished();
+            }
         }
 
         public void BeginTeleport(ulong regionId, in Vector3 position, in Orientation orientation)
@@ -1204,7 +1209,7 @@ namespace MHServerEmu.Games.Entities
             EnableCurrentAvatar(false, CurrentAvatar.Id, _teleportData.RegionId, _teleportData.Position, _teleportData.Orientation);
             _teleportData.Clear();
             DequeueLoadingScreen();
-            TryPlayIntroKismetSeqForRegion(CurrentAvatar.RegionLocation.RegionId);
+            TryPlayKismetSequences();
 
             return true;
         }
@@ -1297,61 +1302,56 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        public override void Destroy()
+        {
+            var region = GetRegion();
+            if (region != null)
+                MissionManager.Shutdown(region);
+
+            base.Destroy();
+        }
+
         public override void OnDeallocate()
         {
+            MissionManager.Deallocate();
             Game.EntityManager.RemovePlayer(this);
             base.OnDeallocate();
         }
 
-        public bool TryPlayIntroKismetSeqForRegion(ulong regionId)
+        public bool TryPlayKismetSequences()
         {
-            // TODO/REMOVEME: Remove this when we have working Kismet sequence triggers
-            Region region = Game.RegionManager.GetRegion(regionId);
-            if (region == null) return Logger.WarnReturn(false, "TryPlayIntroKismetSeqForRegion(): region == null");
-
-            KismetSeqPrototypeId kismetSeqRef = (RegionPrototypeId)region.PrototypeDataRef switch
+            // play kismetSeq from Queue
+            while (_kismetSeqQueue.Count > 0)
             {
-                RegionPrototypeId.NPERaftRegion             => KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart,
-                RegionPrototypeId.TimesSquareTutorialRegion => KismetSeqPrototypeId.Times01CaptainAmericaLanding,
-                RegionPrototypeId.TutorialBankRegion        => KismetSeqPrototypeId.BlackCatEntrance,
-                _ => 0
-            };
+                var kismetSeq = _kismetSeqQueue.Dequeue();
+                if (kismetSeq != PrototypeId.Invalid)
+                    PlayKismetSeq(kismetSeq);
+            }
 
-            if (kismetSeqRef == 0)
-                return false;
+            // try play kismetSeq for region
+            var region = CurrentAvatar.Region;
+            if (region == null) return Logger.WarnReturn(false, "TryPlayKismetSequences(): region == null");
 
-            PlayKismetSeq((PrototypeId)kismetSeqRef);
+            var startTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(region.Prototype.StartTarget);
+            if (startTarget == null || startTarget.IntroKismetSeq == PrototypeId.Invalid) return false;
+            var targetCellRef = GameDatabase.GetDataRefByAsset(startTarget.Cell);
+            var cellRef = CurrentAvatar.Cell.PrototypeDataRef;
+            if (targetCellRef != cellRef) return false;
+
+            PlayKismetSeq(startTarget.IntroKismetSeq);
             return true;
         }
 
-        public void PlayKismetSeq(PrototypeId kismetSeqRef)
+        public void OnPlayKismetSeqDone(PrototypeId kismetSeqRef)
         {
-            SendPlayKismetSeq(kismetSeqRef);
-        }
-
-        public void OnPlayKismetSeqDone(PrototypeId kismetSeqPrototypeId)
-        {
-            if (kismetSeqPrototypeId == PrototypeId.Invalid) return;
-
-            if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.RaftHeliPadQuinJetLandingStart)
+            if (kismetSeqRef == PrototypeId.Invalid) return;
+            var kismetSeqProto = GameDatabase.GetPrototype<KismetSequencePrototype>(kismetSeqRef);
+            if (kismetSeqProto == null) return;
+            if (kismetSeqProto.KismetSeqBlocking && IsFullscreenMoviePlaying)
             {
-                // TODO trigger by hotspot
-                KismetSeqPrototypeId kismetSeqRef = KismetSeqPrototypeId.RaftHeliPadQuinJetDustoff;
-                SendMessage(NetMessagePlayKismetSeq.CreateBuilder().SetKismetSeqPrototypeId((ulong)kismetSeqRef).Build());
-            }
-            else if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.OpDailyBugleVultureKismet)
-            {
-                // TODO trigger by MissionManager
-                foreach (var entity in CurrentAvatar.RegionLocation.Cell.Entities)
-                    if ((KismetBosses)entity.PrototypeDataRef == KismetBosses.EGD15GVulture)
-                        entity.Properties[PropertyEnum.Visible] = true;
-            }
-            else if ((KismetSeqPrototypeId)kismetSeqPrototypeId == KismetSeqPrototypeId.SinisterEntrance)
-            {
-                // TODO trigger by MissionManager
-                foreach (var entity in CurrentAvatar.RegionLocation.Cell.Entities)
-                    if ((KismetBosses)entity.PrototypeDataRef == KismetBosses.MrSinisterCH7)
-                        entity.Properties[PropertyEnum.Visible] = true;
+                FullScreenMovieDequeued(kismetSeqRef);
+                SendMissionInteract(Id);
+                GetRegion()?.KismetSeqFinishedEvent.Invoke(new(this, kismetSeqRef));
             }
         }
 
@@ -1481,7 +1481,7 @@ namespace MHServerEmu.Games.Entities
             var avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatarRef);
             if (avatarProto == null) return AvatarUnlockType.None;
             AvatarUnlockType unlockType = (AvatarUnlockType)(int)Properties[PropertyEnum.AvatarUnlock, avatarRef];
-            if (unlockType == AvatarUnlockType.None && avatarProto.IsStarterAvatar)
+            if (unlockType == AvatarUnlockType.None && avatarProto.IsStarterAvatar) 
                 return AvatarUnlockType.Starter;
             return unlockType;
         }
@@ -1499,6 +1499,7 @@ namespace MHServerEmu.Games.Entities
         public void SetActiveChapter(PrototypeId chapterRef)
         {
             Properties[PropertyEnum.ActiveMissionChapter] = chapterRef;
+            GetRegion()?.ActiveChapterChangedEvent.Invoke(new(this, chapterRef));
         }
 
         public bool ChapterIsUnlocked(PrototypeId chapterRef)
@@ -1572,6 +1573,31 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void PlayKismetSeq(PrototypeId kismetSeq)
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+
+            var kismetProto = GameDatabase.GetPrototype<KismetSequencePrototype>(kismetSeq);
+            if (kismetProto == null) return;
+
+            if (kismetProto.KismetSeqBlocking)
+            {
+                if (IsFullscreenMoviePlaying) return;
+                FullScreenMovieQueued(kismetSeq);
+            }
+
+            SendPlayKismetSeq(kismetSeq);
+        }
+
+        public void QueuePlayKismetSeq(PrototypeId kismetSeq)
+        {
+            if (_teleportData.IsValid)
+                _kismetSeqQueue.Enqueue(kismetSeq);
+            else
+                PlayKismetSeq(kismetSeq);
+        }
+
         #region SendMessage
 
         public void SendMessage(IMessage message) => PlayerConnection?.SendMessage(message);
@@ -1601,9 +1627,42 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void SendMissionInteract(ulong targetId)
+        {
+            var avatar = CurrentAvatar;
+            if (avatar == null) return;
+            var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+            if (target != null)
+            {
+                var entityDesc = new EntityDesc(target);
+                var outInteractData = new InteractData { IndicatorType = HUDEntityOverheadIcon.None };
+                var interactionType = InteractionManager.CallGetInteractionStatus(entityDesc, avatar, 0, InteractionFlags.Default, ref outInteractData);           
+                if (interactionType.HasFlag(InteractionMethod.Converse) && outInteractData.IndicatorType.HasValue)
+                {
+                    var indicatorType = outInteractData.IndicatorType.Value;
+                    if (indicatorType == HUDEntityOverheadIcon.DiscoveryBestower
+                        || indicatorType == HUDEntityOverheadIcon.MissionBestower
+                        || indicatorType == HUDEntityOverheadIcon.DiscoveryAdvancer
+                        || indicatorType == HUDEntityOverheadIcon.MissionAdvancer)
+                    {
+                        var message = NetMessageMissionInteractRepeat.CreateBuilder()
+                            .SetTargetEntityId(targetId)
+                            .SetMissionPrototypeId(0).Build(); // client not use MissionPrototype
+
+                        Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelOwner);
+                        return;
+                    }
+                }
+            }
+
+            var messageRelease = NetMessageMissionInteractRelease.DefaultInstance;
+            Game.NetworkManager.SendMessageToInterested(messageRelease, this, AOINetworkPolicyValues.AOIChannelOwner);           
+        }
+
         public void SendRegionRestrictedRosterUpdate(bool enabled)
         {
-            var message = NetMessageRegionRestrictedRosterUpdate.CreateBuilder().SetEnabled(enabled).Build();
+            var message = NetMessageRegionRestrictedRosterUpdate.CreateBuilder().SetEnabled(enabled).Build(); 
             SendMessage(message);
         }
 
@@ -1732,7 +1791,7 @@ namespace MHServerEmu.Games.Entities
                 bool send = hudTutorialProto != null;
                 if (CurrentHUDTutorial != null)
                 {
-                    foreach (var entry in inventory)
+                    foreach(var entry in inventory)
                     {
                         var avatar = manager.GetEntity<Avatar>(entry.Id);
                         avatar?.ResetTutorialProps();
@@ -1775,9 +1834,53 @@ namespace MHServerEmu.Games.Entities
 
         public void MissionInteractRelease(WorldEntity entity, PrototypeId missionRef)
         {
-            if (missionRef == PrototypeId.Invalid) return;
+            if (missionRef == PrototypeId.Invalid) return;                 
             if (InterestedInEntity(entity, AOINetworkPolicyValues.AOIChannelOwner))
                 SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+        }
+
+        public void RequestLegendaryMissionReroll()
+        {
+            var game = Game;
+            var avatar = CurrentAvatar;
+            var manager = MissionManager;
+            if (game == null || avatar == null || manager == null) return;
+
+            var currencyProto = GameDatabase.CurrencyGlobalsPrototype;
+            var missionProto = GameDatabase.MissionGlobalsPrototype;
+            if (currencyProto == null || missionProto?.LegendaryRerollCost == null) return;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = Game;
+            evalContext.SetVar_EntityPtr(EvalContext.Default, avatar);
+            int rerollCost = Eval.RunInt(missionProto.LegendaryRerollCost, evalContext);
+            var propId = new PropertyId(PropertyEnum.Currency, currencyProto.Credits);
+            if (Properties[propId] < rerollCost) return;
+
+            manager.LegendaryMissionReroll();
+            Properties.AdjustProperty(-rerollCost, propId);
+        }
+
+        public void UpdateSpawnMap(Vector3 position)
+        {
+            var region = GetRegion();
+            if (region == null || _spawnGimbal == null) return;
+            if (_spawnGimbal.ProjectGimbalPosition(region.Aabb, position, out Point2 coord) == false) return;
+            if (_spawnGimbal.Coord == coord) return;
+
+            bool inGimbal = _spawnGimbal.InGimbal(coord);
+            _spawnGimbal.UpdateGimbal(coord);
+            if (inGimbal) return;
+
+            Aabb volume = _spawnGimbal.HorizonVolume(position);
+            foreach (var area in region.IterateAreas(volume))
+                if (area.SpawnMap != null)
+                    area.PopulationArea?.UpdateSpawnMap(position);
+        }
+
+        public bool ViewedRegion(ulong regionId)
+        {
+            return PlayerConnection.WorldView.ContainsRegionInstanceId(regionId);
         }
 
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
@@ -1787,7 +1890,7 @@ namespace MHServerEmu.Games.Entities
 
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
-            protected override CallbackDelegate GetCallback() => (t) => ((Player)t).SwitchAvatar();
+            protected override CallbackDelegate GetCallback() => (t) => (t as Player).SwitchAvatar();
         }
 
         private struct TeleportData

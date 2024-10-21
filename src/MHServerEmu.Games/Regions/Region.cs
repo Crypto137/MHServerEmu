@@ -8,7 +8,6 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Regions;
@@ -134,11 +133,67 @@ namespace MHServerEmu.Games.Regions
 
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
         public Event<AIBroadcastBlackboardGameEvent> AIBroadcastBlackboardEvent = new();
+        public Event<NotificationInteractGameEvent> NotificationInteractEvent = new();
         public Event<PlayerInteractGameEvent> PlayerInteractEvent = new();
         public Event<EntityAggroedGameEvent> EntityAggroedEvent = new();
+        public Event<AdjustHealthGameEvent> AdjustHealthEvent = new();
         public Event<EntityEnteredMissionHotspotGameEvent> EntityEnteredMissionHotspotEvent = new();
         public Event<EntityLeftMissionHotspotGameEvent> EntityLeftMissionHotspotEvent = new();
         public Event<EntityLeaveDormantGameEvent> EntityLeaveDormantEvent = new();
+        public Event<EntityEnteredAreaGameEvent> EntityEnteredAreaEvent = new();
+        public Event<EntityLeftAreaGameEvent> EntityLeftAreaEvent = new();
+        public Event<AreaCreatedGameEvent> AreaCreatedEvent = new();
+        public Event<CellCreatedGameEvent> CellCreatedEvent = new();
+        public Event<PlayerEnteredCellGameEvent> PlayerEnteredCellEvent = new();
+        public Event<PlayerLeftCellGameEvent> PlayerLeftCellEvent = new();
+        public Event<AvatarEnteredRegionGameEvent> AvatarEnteredRegionEvent = new();
+        public Event<PlayerEnteredRegionGameEvent> PlayerEnteredRegionEvent = new();
+        public Event<PlayerLeftRegionGameEvent> PlayerLeftRegionEvent = new();
+        public Event<PlayerRegionChangeGameEvent> PlayerRegionChangeEvent = new();
+        public Event<PlayerDeathRecordedEvent> PlayerDeathRecordedEvent = new();
+        public Event<AvatarUsedPowerGameEvent> AvatarUsedPowerEvent = new();
+        public Event<PlayerCompletedMissionGameEvent> PlayerCompletedMissionEvent = new();
+        public Event<PlayerCompletedMissionObjectiveGameEvent> PlayerCompletedMissionObjectiveEvent = new();
+        public Event<MissionObjectiveUpdatedGameEvent> MissionObjectiveUpdatedEvent = new();
+        public Event<OpenMissionCompleteGameEvent> OpenMissionCompleteEvent = new();
+        public Event<OpenMissionFailedGameEvent> OpenMissionFailedEvent = new();
+        public Event<PlayerFailedMissionGameEvent> PlayerFailedMissionEvent = new();
+        public Event<EntitySetSimulatedGameEvent> EntitySetSimulatedEvent = new();
+        public Event<EntitySetUnSimulatedGameEvent> EntitySetUnSimulatedEvent = new();
+        public Event<ActiveChapterChangedGameEvent> ActiveChapterChangedEvent = new();
+        public Event<CinematicFinishedGameEvent> CinematicFinishedEvent = new();
+        public Event<KismetSeqFinishedGameEvent> KismetSeqFinishedEvent = new();
+        public Event<PlayerEventTeamChangedGameEvent> PlayerEventTeamChangedEvent = new();
+        public Event<PlayerMetaGameCompleteGameEvent> PlayerMetaGameCompleteEvent = new();
+        public Event<PlayerDeathLimitHitGameEvent> PlayerDeathLimitHitEvent = new();
+        public Event<LoadingScreenFinishedGameEvent> LoadingScreenFinishedEvent = new();
+        public Event<PlayerBeginTravelToRegionGameEvent> PlayerBeginTravelToRegionEvent = new();
+        public Event<PlayerBeginTravelToAreaGameEvent> PlayerBeginTravelToAreaEvent = new();
+        public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
+        public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
+        public Event<PartySizeChangedGameEvent> PartySizeChangedEvent = new();
+        public Event<PlayerSwitchedToAvatarGameEvent> PlayerSwitchedToAvatarEvent = new();
+        public Event<PlayerFactionChangedGameEvent> PlayerFactionChangedEvent = new();
+        public Event<PlayerCollectedItemGameEvent> PlayerCollectedItemEvent = new();
+        public Event<PlayerLostItemGameEvent> PlayerLostItemEvent = new();
+        public Event<PlayerBoughtItemGameEvent> PlayerBoughtItemEvent = new();
+        public Event<PlayerCraftedItemGameEvent> PlayerCraftedItemEvent = new();
+        public Event<PlayerDonatedItemGameEvent> PlayerDonatedItemEvent = new();
+        public Event<PlayerEquippedItemGameEvent> PlayerEquippedItemEvent = new();
+        public Event<PlayerPreItemPickupGameEvent> PlayerPreItemPickupEvent = new();
+        public Event<PlayerRequestMissionRewardsGameEvent> PlayerRequestMissionRewardsEvent = new();
+        public Event<AvatarLeveledUpGameEvent> AvatarLeveledUpEvent = new();
+        public Event<CurrencyCollectedGameEvent> CurrencyCollectedEvent = new();
+        public Event<EmotePerformedGameEvent> EmotePerformedEvent = new();
+        public Event<ClusterEnemiesClearedGameEvent> ClusterEnemiesClearedEvent = new();
+        public Event<EntityStatusEffectGameEvent> EntityStatusEffectEvent = new();
+        public Event<PlayerUnlockedAvatarGameEvent> PlayerUnlockedAvatarEvent = new();
+        public Event<EntityEnteredWorldGameEvent> EntityEnteredWorldEvent = new();
+        public Event<EntityExitedWorldGameEvent> EntityExitedWorldEvent = new();
+        public Event<PlayerUnlockedTeamUpGameEvent> PlayerUnlockedTeamUpEvent = new();
+        public Event<ThrowablePickedUpGameEvent> ThrowablePickedUpEvent = new();
+        public Event<SpawnerDefeatedGameEvent> SpawnerDefeatedEvent = new();
+        public Event<OrbPickUpEvent> OrbPickUpEvent = new();
 
         #endregion
 
@@ -266,18 +321,6 @@ namespace MHServerEmu.Games.Regions
 
             Targets = RegionTransition.BuildConnectionEdges(settings.RegionDataRef); // For Teleport system
 
-            // Does this need to be initialized before we generate areas? Is this supposed to be happening later?
-            if (regionProto.MetaGames.HasValue())
-            {
-                foreach (var metaGameRef in regionProto.MetaGames)
-                {
-                    using EntitySettings metaSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
-                    metaSettings.RegionId = Id;
-                    metaSettings.EntityRef = metaGameRef;
-                    MetaGame metagame = Game.EntityManager.CreateEntity(metaSettings) as MetaGame;
-                }
-            }
-
             if (settings.GenerateAreas)
             {
                 if (GenerateAreas(settings.GenerateLog) == false)
@@ -341,6 +384,33 @@ namespace MHServerEmu.Games.Regions
             // if (regionProto.UITopPanel != PrototypeId.Invalid)
             //     Properties[PropertyEnum.RegionUITopPanel] = regionProto.UITopPanel;
 
+            // MetaGames create
+            if (regionProto.MetaGames.HasValue())
+            {
+                using PropertyCollection metaCollection = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                var entryProto = regionProto.GetRegionQueueStateEntry(settings.GameStateId);
+                if (entryProto != null && entryProto.State != PrototypeId.Invalid && entryProto.StateParent != PrototypeId.Invalid)
+                {
+                    var progressionProto = GameDatabase.GetPrototype<MetaStateMissionProgressionPrototype>(entryProto.StateParent);
+                    if (progressionProto != null) {
+                        var nextState = progressionProto.NextState(entryProto.State);
+                        if (nextState != PrototypeId.Invalid)
+                            metaCollection[PropertyEnum.MetaStateWaveForce, entryProto.StateParent] = nextState;
+                    }
+                }
+
+                foreach (var metaGameRef in regionProto.MetaGames)
+                {
+                    using EntitySettings metaSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    metaSettings.RegionId = Id;
+                    metaSettings.EntityRef = metaGameRef;
+                    metaSettings.Properties = metaCollection;
+
+                    var metagame = Game.EntityManager.CreateEntity(metaSettings);
+                    if (metagame == null) Logger.Warn($"Initialize(): metagame [{metaGameRef}] == null");
+                }
+            }
+
             IsGenerated = true;
             CreatedTime = Clock.UnixTime;
             return true;
@@ -389,11 +459,10 @@ namespace MHServerEmu.Games.Regions
                 }
             }
             // } while (found && (tries-- > 0)); // TODO: For what 100 tries?
-
-            /*
-            if (Game != null && MissionManager != null)
-                MissionManager.Shutdown(this);
-            */
+            
+            if (Game != null)
+                MissionManager?.Shutdown(this);
+            
             while (MetaGames.Count > 0)
             {
                 var metaGameId = MetaGames[0];
@@ -414,14 +483,9 @@ namespace MHServerEmu.Games.Regions
                 if (entity is WorldEntity worldEntity)
                     worldEntity.EmergencyRegionCleanup(this);
 
-            // We need to destroy everything we spawned, because even a single
-            // existing entity that references the population manager is going
-            // to cause all SpawnSpecs and the entities they reference to get
-            // stuck in memory, causing a leak.
-            PopulationManager.TEMP_DestroyAllSpawnedEntities();
-
             NaviMesh.Release();
-
+            PopulationManager.Deallocate();
+            MissionManager.Deallocate();
             Properties.Unbind();
         }
 
@@ -510,6 +574,13 @@ namespace MHServerEmu.Games.Regions
             foreach (var area in Areas.Values.ToArray())
                 if (bound == null || area.RegionBounds.Intersects(bound.Value))
                     yield return area;
+        }
+
+        public void RebuildBlackOutZone(BlackOutZone zone)
+        {
+            foreach (var area in IterateAreas())
+                if (area.TestStatus(GenerateFlag.Population) && zone.Sphere.Intersects(area.RegionBounds))
+                    area.RebuildBlackOutZone(zone);
         }
 
         public int GetAreaLevel(Area area)
@@ -687,11 +758,6 @@ namespace MHServerEmu.Games.Regions
 
         public bool GenerateMissionPopulation()
         {
-            foreach (var metaGameId in MetaGames)
-            {
-                var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);
-                metaGame?.RegisterStates();
-            }
             return MissionManager.GenerateMissionPopulation();
         }
 
@@ -1352,10 +1418,23 @@ namespace MHServerEmu.Games.Regions
         {
             Logger.Trace($"OnAddedToAOI(): {this} to {player}");
 
+            // Initialize player Missions
+            player.MissionManager.InitializeForPlayer(player, this);
+
+            var manager = Game.EntityManager;
+            // Consider MetaGames
+            var aoi = player.AOI;
+            if (aoi != null)
+                foreach (var metagameId in MetaGames)
+                {
+                    var metagame = manager.GetEntity<MetaGame>(metagameId);
+                    metagame?.ConsiderInAOI(aoi);                
+                }
+
             // Sync region discovered entities with the player that has entered this region
             foreach (ulong entityId in _discoveredEntities)
             {
-                WorldEntity discoveredEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                WorldEntity discoveredEntity = manager.GetEntity<WorldEntity>(entityId);
                 if (discoveredEntity == null)
                 {
                     Logger.Warn("OnAddedToAOI(): discoveredEntity == null");
@@ -1370,10 +1449,11 @@ namespace MHServerEmu.Games.Regions
         {
             Logger.Trace($"OnRemovedFromAOI(): {this} from {player}");
 
+            var manager = Game.EntityManager;
             // Remove synced region discovered entities from the player that has left this region
             foreach (ulong entityId in _discoveredEntities)
             {
-                WorldEntity discoveredEntity = Game.EntityManager.GetEntity<WorldEntity>(entityId);
+                WorldEntity discoveredEntity = manager.GetEntity<WorldEntity>(entityId);
                 if (discoveredEntity == null)
                 {
                     Logger.Warn("OnRemovedFromAOI(): discoveredEntity == null");
@@ -1382,12 +1462,28 @@ namespace MHServerEmu.Games.Regions
 
                 player.UndiscoverEntity(discoveredEntity, true);
             }
+
+            foreach(var metagameId in MetaGames)
+            {
+                var metagame = manager.GetEntity<MetaGame>(metagameId);
+                metagame?.OnRemovePlayer(player);
+            }
+
+            // Destroy player Missions
+            player.MissionManager.Shutdown(this);
         }
 
         public void OnLoadingFinished()
         {
             if (IsFirstLoaded) return;
             IsFirstLoaded = true;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))                
+                if (kvp.Value == -1) 
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId timerRef);
+                    ScoringEventTimerStart(timerRef);
+                }
         }
 
         public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
@@ -1446,6 +1542,35 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
+        public void ScoringEventTimerStart(PrototypeId timerRef)
+        {
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            if (IsFirstLoaded == false)
+            {
+                Properties[startPropId] = -1;
+                return;
+            }
+
+            Properties[startPropId] = (int)Clock.GameTime.TotalMilliseconds;
+        }
+
+        public void ScoringEventTimerStop(PrototypeId timerRef)
+        {
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
+            if (Properties.HasProperty(startPropId) == false) return;
+
+            int startTime = Properties[startPropId];
+            if (startTime > 0)
+            {
+                var time = Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
+                Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
+                Properties.RemoveProperty(startPropId);
+            }
+        }
+
         public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
         {
             if (evalProto == null) return;
@@ -1481,6 +1606,7 @@ namespace MHServerEmu.Games.Regions
         private void SetPlayerDeaths(int value)
         {
             _playerDeaths = value;
+            PlayerDeathRecordedEvent.Invoke(new(null));
         }
 
         public void OnRecordPlayerDeath(Player player, Avatar avatar, WorldEntity killer)
@@ -1497,6 +1623,8 @@ namespace MHServerEmu.Games.Regions
                 player.Properties.AdjustProperty(1, PropertyEnum.EndlessLevelDeathCount);
 
             _playerDeaths++;
+
+            PlayerDeathRecordedEvent.Invoke(new(player));
         }
 
         public PrototypeId GetStartTarget(Player player)

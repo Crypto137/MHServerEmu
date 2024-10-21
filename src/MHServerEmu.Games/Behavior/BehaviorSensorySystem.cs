@@ -309,6 +309,7 @@ namespace MHServerEmu.Games.Behavior
             BehaviorBlackboard blackboard = _pAIController.Blackboard;
 
             blackboard.PropertyCollection[PropertyEnum.AINextHostileSense] = (long)game.RealGameTime.TotalMilliseconds + 1000;
+            HashSet<ulong> oldTargetIds = new(PotentialHostileTargetIds);
             PotentialHostileTargetIds.Clear();
             WorldEntity lastAttacker = GetLastAttacker();
             if (lastAttacker != null)
@@ -332,17 +333,17 @@ namespace MHServerEmu.Games.Behavior
                     }
 
                 agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedEnemy);
-                agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedEnemy);
+                agent.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedEnemy);
 
                 if (playerDetect)
                 {
                     agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedPlayer);
-                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedPlayer);
+                    agent.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedPlayer);
                 }
                 else
                 {
                     agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnDetectedNonPlayer);
-                    agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnAllyDetectedNonPlayer);
+                    agent.TriggerEntityActionEventAlly(EntitySelectorActionEventType.OnAllyDetectedNonPlayer);
                 }
             }
 
@@ -362,7 +363,9 @@ namespace MHServerEmu.Games.Behavior
                 }
             }
 
-            // TODO EntityAggroedEvent PropertyEnum.AIAggroAnnouncement
+            foreach (var targetId in PotentialHostileTargetIds)
+                if (oldTargetIds.Contains(targetId) == false)
+                    _pAIController.OnAIAggroNotification(targetId);
         }
 
         private WorldEntity GetLastAttacker()

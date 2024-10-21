@@ -1,11 +1,10 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Behavior.ProceduralAI
 {
@@ -308,6 +307,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         public void OnEntityDeadEvent(in EntityDeadGameEvent deadEvent)
         {
             _proceduralPtr.Profile?.OnEntityDeadEvent(_owningController, deadEvent);
+        }
+
+        public void OnOwnerGotDamaged()
+        {
+            _proceduralPtr.Profile?.OnOwnerGotDamaged(_owningController);
         }
 
         public void OnAIBroadcastBlackboardEvent(in AIBroadcastBlackboardGameEvent broadcastEvent)

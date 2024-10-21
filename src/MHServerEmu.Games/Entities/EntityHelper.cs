@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -53,6 +54,48 @@ namespace MHServerEmu.Games.Entities
 
             Agent orb = (Agent)game.EntityManager.CreateEntity(settings);
             return orb;
+        }
+
+        public static void OnDeathSummonFromPowerPrototype(WorldEntity entity, SummonPowerPrototype summonPowerProto)
+        {
+            AssetId creatorAsset = entity.GetEntityWorldAsset();
+            if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
+            PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
+            var summonerProto = entity.WorldEntityPrototype;
+
+            var summonProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
+            if (summonProto == null) return; // Only Agent can be spawn, skip hotspot
+
+            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
+            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
+            {
+                settings.EntityRef = summonerRef;
+                settings.Position = entity.RegionLocation.Position;
+                settings.Orientation = entity.RegionLocation.Orientation;
+                settings.RegionId = entity.Region.Id;
+
+                properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
+                properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
+                properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
+                properties[PropertyEnum.SummonedByPower] = true;
+                properties[PropertyEnum.Rank] = summonerProto.Rank;
+                settings.Properties = properties;
+
+                var group = entity.SpawnGroup;
+
+                if (group != null && summonPowerProto.SummonAsPopulation)
+                {
+                    var spec = entity.Region.PopulationManager.CreateSpawnSpec(group);
+                    spec.EntityRef = summonerRef;
+                    spec.Transform = Transform3.BuildTransform(settings.Position - group.Transform.Translation, settings.Orientation);
+                    spec.Properties.FlattenCopyFrom(properties, false);
+                    spec.Spawn();
+                }
+                else
+                {
+                    Agent summoner = (Agent)entity.Game.EntityManager.CreateEntity(settings);
+                }
+            }
         }
 
         public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto)

@@ -1,10 +1,14 @@
 ﻿using System.Text;
 using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.UI.Widgets;
 
 namespace MHServerEmu.Games.UI
@@ -15,6 +19,7 @@ namespace MHServerEmu.Games.UI
 
         private readonly Dictionary<(PrototypeId, PrototypeId), UISyncData> _dataDict = new();
 
+        public Region Region { get => Owner as Region; }
         public Game Game { get; }
         public IUIDataProviderOwner Owner { get; }
 
@@ -71,7 +76,7 @@ namespace MHServerEmu.Games.UI
             return sb.ToString();
         }
 
-        public T GetWidget<T>(PrototypeId widgetRef, PrototypeId contextRef) where T: UISyncData
+        public T GetWidget<T>(PrototypeId widgetRef, PrototypeId contextRef = PrototypeId.Invalid) where T: UISyncData
         {
             if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData widget) == false)
                 widget = AllocateUIWidget(widgetRef, contextRef);
@@ -79,17 +84,41 @@ namespace MHServerEmu.Games.UI
             return widget as T;
         }
 
-        public void DeleteWidget(PrototypeId widgetRef, PrototypeId contextRef)
+        public void DeleteWidget(PrototypeId widgetRef, PrototypeId contextRef = PrototypeId.Invalid)
         {
             if (_dataDict.Remove((widgetRef, contextRef)) == false)
                 Logger.Warn($"DeleteWidget(): Widget not found, widgetRef={widgetRef}, contextRef={contextRef}");
 
-            // todo: send a NetMessageUISyncDataRemove to clients when a widget is removed server-side
+            var region = Region;
+            if (region == null) return;
+
+            var message = NetMessageUISyncDataRemove.CreateBuilder()
+                .SetUiSyncDataProtoId((ulong)widgetRef)
+                .SetContextProtoId((ulong)contextRef)
+                .Build();
+
+            Game?.NetworkManager.SendMessageToInterested(message, region);
         }
 
-        public void DeleteWidget(NetMessageUISyncDataRemove removeMessage)
+        public void OnUpdateUI(UISyncData uiSyncData)
         {
-            throw new NotImplementedException();
+            var region = Region;
+            if (region == null) return;
+
+            ByteString buffer;
+            using (var archive = new Archive(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
+            {
+                uiSyncData.Serialize(archive);
+                buffer = archive.ToByteString();
+            }
+
+            var message = NetMessageUISyncDataUpdate.CreateBuilder()
+                .SetUiSyncDataProtoId((ulong)uiSyncData.WidgetRef)
+                .SetContextProtoId((ulong)uiSyncData.ContextRef)
+                .SetBuffer(buffer)
+                .Build();
+
+            Game?.NetworkManager.SendMessageToInterested(message, region);
         }
 
         /// <summary>
@@ -134,6 +163,23 @@ namespace MHServerEmu.Games.UI
             uiData.UpdateUI();
 
             return uiData;
+        }
+
+        public void OnEntityTracked(WorldEntity worldEntity, PrototypeId contextRef)
+        {
+            var metaGameProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(contextRef);
+            if (metaGameProto == null) return;
+            var uiSyncData = FindWidget(worldEntity, contextRef);
+            uiSyncData?.OnEntityTracked(worldEntity);
+        }
+
+        private UISyncData FindWidget(WorldEntity worldEntity, PrototypeId contextRef)
+        {
+            if (_dataDict.TryGetValue((contextRef, PrototypeId.Invalid), out UISyncData widget)) return widget;
+            if (_dataDict.TryGetValue((contextRef, worldEntity.MissionPrototype), out widget)) return widget;
+            foreach(var kvp in _dataDict)
+                if (kvp.Key.Item1 == contextRef) return kvp.Value;
+            return null;
         }
     }
 }

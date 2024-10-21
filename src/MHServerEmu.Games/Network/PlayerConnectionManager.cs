@@ -215,6 +215,15 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
+        /// Sends the provided <see cref="IMessage"/> to all <see cref="PlayerConnection"/> instances that are interested in the provided <see cref="Region"/>.
+        /// </summary>
+        public void SendMessageToInterested(IMessage message, Region region)
+        {
+            foreach (PlayerConnection playerConnection in GetInterestedClients(region))
+                playerConnection.SendMessage(message);
+        }
+
+        /// <summary>
         /// Sends the provided <see cref="IMessage"/> to all <see cref="PlayerConnection"/> instances that are interested in the provided <see cref="Entity"/>.
         /// </summary>
         public void SendMessageToInterested(IMessage message, Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)

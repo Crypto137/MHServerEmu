@@ -81,6 +81,7 @@ namespace MHServerEmu.Games
 
         public ulong CurrentRepId { get => ++_currentRepId; }
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
+        public bool OmegaMissionsEnabled { get; set; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
@@ -120,6 +121,8 @@ namespace MHServerEmu.Games
 
             success &= RegionManager.Initialize(this);
             success &= EntityManager.Initialize();
+
+            OmegaMissionsEnabled = true;
 
             LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);
             LiveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
