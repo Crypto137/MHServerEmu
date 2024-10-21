@@ -367,7 +367,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             var itemProto = ItemPrototype;
 
-            if (itemProto.ActionsTriggeredOnItemEvent != null && itemProto.ActionsTriggeredOnItemEvent.Choices.HasValue()) 
+            if (itemProto.ActionsTriggeredOnItemEvent != null && itemProto.ActionsTriggeredOnItemEvent.Choices.HasValue())
                 if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll) // TODO : other pick method
                 {
                     foreach (var choice in itemProto.ActionsTriggeredOnItemEvent.Choices)

@@ -116,6 +116,7 @@ namespace MHServerEmu.Games.Entities
             ItemSpec = null;
             Lifespan = default;
             VariationSeed = 0;
+            IsPopulation = default;
         }
 
         public void Dispose()

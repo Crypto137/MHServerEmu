@@ -295,7 +295,6 @@ namespace MHServerEmu.Games.Entities
 
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
-
             // Schedule destruction
             int removeFromWorldTimerMS = worldEntityProto.RemoveFromWorldTimerMS;
             if (removeFromWorldTimerMS < 0)     // -1 means entities are not destroyed (e.g. avatars)
@@ -2184,7 +2183,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (base.ClearState() == false) return false;
 
-            PrototypeId stateRef = Properties[PropertyEnum.EntityState]; 
+            PrototypeId stateRef = Properties[PropertyEnum.EntityState];
             var entityStateProto = GameDatabase.GetPrototype<EntityStatePrototype>(stateRef);
             if (entityStateProto == null) return false;
 
@@ -2212,7 +2211,7 @@ namespace MHServerEmu.Games.Entities
             {
                 var spawner = Game.EntityManager.GetEntity<Spawner>(group.SpawnerId);
                 spawner?.SetTaggedBy(player, null);
-            }            
+            }
         }
 
         public override SimulateResult SetSimulated(bool simulated)
@@ -2271,7 +2270,7 @@ namespace MHServerEmu.Games.Entities
 
         public void EmergencyRegionCleanup(Region region)
         {
-            if(region == Region)
+            if (region == Region)
             {
                 DisableNavigationInfluence();
                 RegionLocation = null;

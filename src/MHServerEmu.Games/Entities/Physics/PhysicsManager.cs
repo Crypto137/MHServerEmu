@@ -154,8 +154,8 @@ namespace MHServerEmu.Games.Entities.Physics
                         if (worldEntityProto != null)
                         {
                             attachedEntity.ChangeRegionPosition(
-                                parentEntityPosition, 
-                                worldEntityProto.UpdateOrientationWithParent ? parentEntityOrientation : null, 
+                                parentEntityPosition,
+                                worldEntityProto.UpdateOrientationWithParent ? parentEntityOrientation : null,
                                 ChangePositionFlags.PhysicsResolve);
                             CheckForExistingCollisions(attachedEntity, false);
                             physicsContext.AttachedEntities.Add(attachedEntity);

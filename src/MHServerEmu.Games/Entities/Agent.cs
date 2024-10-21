@@ -1033,7 +1033,7 @@ namespace MHServerEmu.Games.Entities
         private void EquipPassivePowers(PrototypeId[] passivePowers)
         {
             if (passivePowers.IsNullOrEmpty()) return;
-            foreach(var powerRef in passivePowers)
+            foreach (var powerRef in passivePowers)
             {
                 var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
                 if (powerProto == null || powerProto.Activation != PowerActivationType.Passive) continue;

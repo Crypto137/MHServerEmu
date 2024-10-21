@@ -8,6 +8,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public StaticAreaPrototype[] StaticAreas { get; protected set; }
         public AreaConnectionPrototype[] Connections { get; protected set; }
 
+        //---
+
         public override PrototypeId GetStartAreaRef(Region region)
         {
             if (StaticAreas.HasValue())
@@ -19,7 +21,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void GetAreasInGenerator(HashSet<PrototypeId> areas)
         {
             if (StaticAreas.HasValue())
-                foreach(var areaProto in StaticAreas)
+                foreach (var areaProto in StaticAreas)
                     if (areaProto != null && areaProto.Area != PrototypeId.Invalid)
                         areas.Add(areaProto.Area);
         }

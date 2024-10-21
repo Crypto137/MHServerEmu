@@ -78,10 +78,11 @@ namespace MHServerEmu.Games.Entities.Physics
         }
 
         public bool GetAttachedEntities(out ulong[] attachedEntities)
-        {            
-            if (AttachedEntities == null) {
+        {
+            if (AttachedEntities == null)
+            {
                 attachedEntities = null;
-                return false; 
+                return false;
             }
             attachedEntities = AttachedEntities.ToArray();
             return attachedEntities.Length > 0;

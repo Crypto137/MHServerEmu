@@ -467,7 +467,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                        | (walls.HasFlag(Walls.NE) ? Walls.NW : Walls.None),
                 Dir.ES => walls.HasFlag(Walls.SE) ? Walls.NW : Walls.None,
                 Dir.S => (walls.HasFlag(Walls.SW) ? Walls.NW : Walls.None)
-                       | (walls.HasFlag(Walls.S) ? Walls.N : Walls.None) 
+                       | (walls.HasFlag(Walls.S) ? Walls.N : Walls.None)
                        | (walls.HasFlag(Walls.SE) ? Walls.NE : Walls.None),
                 Dir.SW => walls.HasFlag(Walls.SW) ? Walls.NE : Walls.None,
                 Dir.W => (walls.HasFlag(Walls.NW) ? Walls.NE : Walls.None)

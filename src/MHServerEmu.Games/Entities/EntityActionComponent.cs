@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (Owner == null || action == null) return false;
             if (_pendingActions.ContainsKey(action)) return false;
-            DeregisterAction(action); 
+            DeregisterAction(action);
             var scheduler = Game.Current.GameEventScheduler;
             if (scheduler == null) return false;
             CancelTableInsert(action);

@@ -124,7 +124,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PublicEventPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetPublicEventBlueprintDataRef());
 
             if (Teams.HasValue())
-                foreach(var teamRef in Teams)
+                foreach (var teamRef in Teams)
                 {
                     if (teamRef == PrototypeId.Invalid) continue;
                     var teamProto = GameDatabase.GetPrototype<PublicEventTeamPrototype>(teamRef);

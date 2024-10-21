@@ -380,7 +380,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (result != PowerUseResult.Success)
                     return Logger.WarnReturn(false, $"PerformPreInteractPower ActivatePower [{powerRef}] = {result}");
             }
-            
+
             player.Properties[PropertyEnum.InteractTargetId] = target.Id;
             player.Properties[PropertyEnum.InteractHasDialog] = hasDialog;
 

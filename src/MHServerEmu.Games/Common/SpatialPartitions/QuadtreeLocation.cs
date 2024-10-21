@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
                 Node.Elements.Remove(this);
                 if (AtTargetLevel) --Node.AtTargetLevelCount;
                 Node = null;
-            } 
+            }
             AtTargetLevel = false;
         }
 

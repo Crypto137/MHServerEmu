@@ -31,6 +31,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EndlessThemePrototype[] EndlessThemes { get; protected set; }
         public SubGenerationPrototype[] SubAreaSequences { get; protected set; }
 
+        //---
+
         public EndlessThemeEntryPrototype GetEndlessGeneration(int randomSeed, int endlessLevel, int endlessLevelsTotal)
         {
             if (EndlessThemes == null || endlessLevel <= 0 || endlessLevelsTotal <= 0) return null;
@@ -57,12 +59,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 HelperGetAreasInGenerator(AreaSequence, areas);
 
             if (SubAreaSequences.HasValue())
-                foreach(var subAreaSequence in SubAreaSequences)
+                foreach (var subAreaSequence in SubAreaSequences)
                     if (subAreaSequence != null && subAreaSequence.AreaSequence.HasValue())
                         HelperGetAreasInGenerator(subAreaSequence.AreaSequence, areas);
 
             if (EndlessThemes.HasValue())
-                foreach(var endlessTheme in EndlessThemes)
+                foreach (var endlessTheme in EndlessThemes)
                 {
                     if (endlessTheme == null) continue;
                     if (endlessTheme.Normal != null && endlessTheme.Normal.AreaSequence.HasValue())
@@ -80,7 +82,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 if (areaProto == null) continue;
                 if (areaProto.AreaChoices.HasValue())
-                    foreach(var weightedArea in areaProto.AreaChoices)
+                    foreach (var weightedArea in areaProto.AreaChoices)
                     {
                         if (weightedArea == null || weightedArea.Area == PrototypeId.Invalid) continue;
                         areas.Add(weightedArea.Area);

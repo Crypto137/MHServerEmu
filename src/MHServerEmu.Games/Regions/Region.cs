@@ -479,7 +479,7 @@ namespace MHServerEmu.Games.Regions
             }
 
             ClearDividedStartLocations();
-            
+
             foreach (var entity in Game.EntityManager.IterateEntities())
                 if (entity is WorldEntity worldEntity)
                     worldEntity.EmergencyRegionCleanup(this);
@@ -1476,7 +1476,7 @@ namespace MHServerEmu.Games.Regions
 
         public void OnLoadingFinished()
         {
-            if (IsFirstLoaded) return;            
+            if (IsFirstLoaded) return;
             IsFirstLoaded = true;
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))                
@@ -1537,39 +1537,10 @@ namespace MHServerEmu.Games.Regions
 
         public bool FilterRegions(PrototypeId[] filterRegions)
         {
-            if (Prototype == null || filterRegions.IsNullOrEmpty()) return false; 
+            if (Prototype == null || filterRegions.IsNullOrEmpty()) return false;
             foreach (var regionRef in filterRegions)
                 if (Prototype.FilterRegion(regionRef, false, null)) return true;
             return false;
-        }
-
-        public void ScoringEventTimerStart(PrototypeId timerRef)
-        {
-            if (timerRef == PrototypeId.Invalid) return;
-            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
-            if (IsFirstLoaded == false)
-            {
-                Properties[startPropId] = -1;
-                return;
-            }
-
-            Properties[startPropId] = (int)Clock.GameTime.TotalMilliseconds;
-        }
-
-        public void ScoringEventTimerStop(PrototypeId timerRef)
-        {
-            if (timerRef == PrototypeId.Invalid) return;
-            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
-            var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
-            if (Properties.HasProperty(startPropId) == false) return;
-
-            int startTime = Properties[startPropId];
-            if (startTime > 0)
-            {
-                var time = Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
-                Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
-                Properties.RemoveProperty(startPropId);
-            }
         }
 
         public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
@@ -1607,7 +1578,6 @@ namespace MHServerEmu.Games.Regions
         private void SetPlayerDeaths(int value)
         {
             _playerDeaths = value;
-            PlayerDeathRecordedEvent.Invoke(new(null));
         }
 
         public void OnRecordPlayerDeath(Player player, Avatar avatar, WorldEntity killer)
@@ -1624,8 +1594,6 @@ namespace MHServerEmu.Games.Regions
                 player.Properties.AdjustProperty(1, PropertyEnum.EndlessLevelDeathCount);
 
             _playerDeaths++;
-
-            PlayerDeathRecordedEvent.Invoke(new(player));
         }
 
         public PrototypeId GetStartTarget(Player player)
@@ -1699,7 +1667,7 @@ namespace MHServerEmu.Games.Regions
             var manager = game.EntityManager;
             if (manager == null) return false;
 
-            foreach(ulong playerGUID in _players.ToArray())
+            foreach (ulong playerGUID in _players.ToArray())
             {
                 if (playerGUID == player.DatabaseUniqueId) return true;
                 var existplayer = manager.GetEntityByDbGuid<Player>(playerGUID);

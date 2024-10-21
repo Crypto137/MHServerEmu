@@ -6,7 +6,7 @@ namespace MHServerEmu.Games.Entities
     {
         private EntityManager _manager;
         private WorldEntity _owner;
-        private SortedSet<TagInfo> _tags;
+        private SortedSet<TagInfo> _tags;        
         public bool HasTags { get => _tags.Count > 0; }
 
         public TagPlayers(WorldEntity worldEntity)

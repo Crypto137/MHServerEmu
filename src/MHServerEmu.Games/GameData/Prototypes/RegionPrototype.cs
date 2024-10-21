@@ -143,6 +143,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] LoadingScreensConsole { get; protected set; }
         public bool AllowLocalCoopMode { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public DifficultyTierMask DifficultyTierMask { get; private set; }
         [DoNotCopy]
@@ -182,7 +184,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (StartTarget != PrototypeId.Invalid)
             {
                 var target = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(StartTarget);
-                if (target != null) 
+                if (target != null)
                     defaultArea = target.Area;
             }
 
@@ -213,17 +215,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (AccessDifficulties.HasValue())
             {
-                foreach(var difficultyTierRef in AccessDifficulties)
+                foreach (var difficultyTierRef in AccessDifficulties)
                 {
                     var difficultyTierProto = GameDatabase.GetPrototype<DifficultyTierPrototype>(difficultyTierRef);
                     if (difficultyTierProto == null) continue;
-                    DifficultyTierMask |= (DifficultyTierMask)(1 << (int)difficultyTierProto.Tier); 
+                    DifficultyTierMask |= (DifficultyTierMask)(1 << (int)difficultyTierProto.Tier);
                 }
             }
             else
                 DifficultyTierMask = DifficultyTierMask.Green | DifficultyTierMask.Red | DifficultyTierMask.Cosmic;
 
-            if (RegionQueueStates.HasValue()) 
+            if (RegionQueueStates.HasValue())
             {
                 int index = 0;
                 foreach (var entryProto in RegionQueueStates)
@@ -237,7 +239,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             HasScoreSchema = false;
 
             if (MetaGames.HasValue())
-                foreach(var metaGameRef in MetaGames)
+                foreach (var metaGameRef in MetaGames)
                 {
                     if (metaGameRef == PrototypeId.Invalid) continue;
                     var metaPvP = GameDatabase.GetPrototype<PvPPrototype>(metaGameRef);
@@ -255,7 +257,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // GetLevelAccessRestrictionMinMax client only?
 
             if (LootTables.HasValue())
-                foreach(var lootTable in LootTables)
+                foreach (var lootTable in LootTables)
                 {
                     if (lootTable.Name == AssetId.Invalid) continue;
                     if (_lootTableMap.TryGetValue(lootTable.Name, out var table) == false)
@@ -336,7 +338,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public static void BuildRegionsFromFilters(SortedSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
         {
             if (includeRegions.HasValue())
-                foreach(var regionRef in includeRegions) 
+                foreach (var regionRef in includeRegions)
                     if (regionRef != PrototypeId.Invalid) regions.Add(regionRef);
 
             if (includeChildren)
@@ -356,7 +358,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     regions.Remove(regionRef);
 
             List<PrototypeId> altRegions = new(regions);
-            foreach(var regionRef in altRegions)
+            foreach (var regionRef in altRegions)
             {
                 var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
                 if (regionProto != null && regionProto.AltRegions.HasValue())
@@ -391,7 +393,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (regions.Contains(regionProto.DataRef)) return;
             regions.Add(regionProto.DataRef);
 
-            if (regionProto.AltRegions.HasValue()) 
+            if (regionProto.AltRegions.HasValue())
                 foreach (var altRegionRef in regionProto.AltRegions)
                 {
                     var altRegionProto = GameDatabase.GetPrototype<RegionPrototype>(altRegionRef);
@@ -420,7 +422,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionQueueStateEntryPrototype GetRegionQueueStateEntry(PrototypeId gameStateRef)
         {
             if (RegionQueueStates.HasValue())
-                foreach(var entryProto in RegionQueueStates)
+                foreach (var entryProto in RegionQueueStates)
                 {
                     if (entryProto == null) continue;
                     if (entryProto.State == gameStateRef)
@@ -480,6 +482,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId StateParent { get; protected set; }
         public PrototypeId State { get; protected set; }
         public LocaleStringId QueueText { get; protected set; }
+
+        //---
 
         [DoNotCopy]
         public int Index { get; set; }
