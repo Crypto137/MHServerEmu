@@ -1,9 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
-using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Regions;
 

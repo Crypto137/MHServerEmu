@@ -923,6 +923,8 @@ namespace MHServerEmu.Games.Entities
             teamUp.Properties[PropertyEnum.PowerProgressionVersion] = teamUp.GetLatestPowerProgressionVersion();
 
             SendNewTeamUpAcquired(teamUpRef);
+
+            GetRegion()?.PlayerUnlockedTeamUpEvent.Invoke(new(this, teamUpRef));
         }
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)

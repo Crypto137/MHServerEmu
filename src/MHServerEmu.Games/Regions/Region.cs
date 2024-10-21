@@ -8,7 +8,6 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.DRAG.Generators.Regions;
@@ -1543,6 +1542,35 @@ namespace MHServerEmu.Games.Regions
             return false;
         }
 
+        public void ScoringEventTimerStart(PrototypeId timerRef)
+        {
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            if (IsFirstLoaded == false)
+            {
+                Properties[startPropId] = -1;
+                return;
+            }
+
+            Properties[startPropId] = (int)Clock.GameTime.TotalMilliseconds;
+        }
+
+        public void ScoringEventTimerStop(PrototypeId timerRef)
+        {
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
+            if (Properties.HasProperty(startPropId) == false) return;
+
+            int startTime = Properties[startPropId];
+            if (startTime > 0)
+            {
+                var time = Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
+                Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
+                Properties.RemoveProperty(startPropId);
+            }
+        }
+
         public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
         {
             if (evalProto == null) return;
@@ -1578,6 +1606,7 @@ namespace MHServerEmu.Games.Regions
         private void SetPlayerDeaths(int value)
         {
             _playerDeaths = value;
+            PlayerDeathRecordedEvent.Invoke(new(null));
         }
 
         public void OnRecordPlayerDeath(Player player, Avatar avatar, WorldEntity killer)
@@ -1594,6 +1623,8 @@ namespace MHServerEmu.Games.Regions
                 player.Properties.AdjustProperty(1, PropertyEnum.EndlessLevelDeathCount);
 
             _playerDeaths++;
+
+            PlayerDeathRecordedEvent.Invoke(new(player));
         }
 
         public PrototypeId GetStartTarget(Player player)
