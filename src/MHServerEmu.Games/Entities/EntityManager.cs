@@ -354,6 +354,13 @@ namespace MHServerEmu.Games.Entities
                 yield return entity;
         }
 
+        public IEnumerable<Entity> IterateEntities(Area area)
+        {
+            foreach (var entity in _entityDict.Values)
+                if (entity is WorldEntity worldEntity && worldEntity.Area == area)
+                    yield return entity;
+        }
+
         public IEnumerable<Entity> IterateEntities(Cell cell)
         {
             foreach (var entity in _entityDict.Values)

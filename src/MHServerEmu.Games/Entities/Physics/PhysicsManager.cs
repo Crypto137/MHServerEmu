@@ -140,7 +140,7 @@ namespace MHServerEmu.Games.Entities.Physics
         private void UpdateAttachedEntityPositions(PhysicsContext physicsContext, WorldEntity parentEntity)
         {
             if (parentEntity == null) return;
-            if (parentEntity.Physics.GetAttachedEntities(out List<ulong> attachedEntities))
+            if (parentEntity.Physics.GetAttachedEntities(out ulong[] attachedEntities))
             {
                 Vector3 parentEntityPosition = parentEntity.RegionLocation.Position;
                 Orientation parentEntityOrientation = parentEntity.Orientation;
@@ -154,8 +154,8 @@ namespace MHServerEmu.Games.Entities.Physics
                         if (worldEntityProto != null)
                         {
                             attachedEntity.ChangeRegionPosition(
-                                parentEntityPosition, 
-                                worldEntityProto.UpdateOrientationWithParent ? parentEntityOrientation : null, 
+                                parentEntityPosition,
+                                worldEntityProto.UpdateOrientationWithParent ? parentEntityOrientation : null,
                                 ChangePositionFlags.PhysicsResolve);
                             CheckForExistingCollisions(attachedEntity, false);
                             physicsContext.AttachedEntities.Add(attachedEntity);

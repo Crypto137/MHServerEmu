@@ -113,9 +113,9 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnExitedWorld();
 
-            var sheduler = Game?.GameEventScheduler;
-            if (sheduler == null) return;
-            sheduler.CancelEvent(_applyEffectsDelayEvent);
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_applyEffectsDelayEvent);
 
             // TODO cancel other events
         }

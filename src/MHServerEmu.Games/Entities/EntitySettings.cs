@@ -76,6 +76,7 @@ namespace MHServerEmu.Games.Entities
         public ItemSpec ItemSpec { get; set; }                      // For Item
         public TimeSpan Lifespan { get; set; }
         public uint VariationSeed { get; set; }
+        public bool IsPopulation { get; set; }
 
         public EntitySettings() { }     // Use pooling instead of calling this directly
 
@@ -117,6 +118,7 @@ namespace MHServerEmu.Games.Entities
             ItemSpec = null;
             Lifespan = default;
             VariationSeed = 0;
+            IsPopulation = default;
         }
 
         public void Dispose()

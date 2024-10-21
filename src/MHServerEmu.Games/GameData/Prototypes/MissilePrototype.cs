@@ -156,9 +156,4 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
         }
     }
-
-    public class PublicEventTeamPrototype : Prototype
-    {
-        public LocaleStringId Name { get; protected set; }
-    }
 }

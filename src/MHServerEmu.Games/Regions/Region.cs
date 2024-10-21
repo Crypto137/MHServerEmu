@@ -410,18 +410,9 @@ namespace MHServerEmu.Games.Regions
 
             ClearDividedStartLocations();
 
-            /* var scheduler = Game?.GameEventScheduler;
-             if (scheduler != null)
-             {
-                 scheduler.CancelAllEvents(_events);
-             }
-
-             foreach (var entity in Game.EntityManager.GetEntities())
-             {
-                 if (entity is WorldEntity worldEntity)
-                     worldEntity.EmergencyRegionCleanup(this);
-             }
-            */
+            foreach (var entity in Game.EntityManager.IterateEntities())
+                if (entity is WorldEntity worldEntity)
+                    worldEntity.EmergencyRegionCleanup(this);
 
             // We need to destroy everything we spawned, because even a single
             // existing entity that references the population manager is going

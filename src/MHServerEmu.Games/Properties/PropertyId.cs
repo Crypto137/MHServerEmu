@@ -142,9 +142,33 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0, int param1)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0), (PropertyParam)param1).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
         public PropertyId(PropertyEnum propertyEnum, int param0, PrototypeId param1)
         {
             Raw = new PropertyId(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0, int param1, int param2)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0), (PropertyParam)param1, (PropertyParam)param2).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, PrototypeId param0, PrototypeId param1, PrototypeId param2)
+        {
+            Raw = new PropertyId(propertyEnum, Property.ToParam(propertyEnum, 0, param0), Property.ToParam(propertyEnum, 1, param1), Property.ToParam(propertyEnum, 2, param2)).Raw;
         }
 
         /// <summary>

@@ -141,14 +141,7 @@ namespace MHServerEmu.Games.Network
             // Remove this when we merge missions
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
-                foreach (PrototypeId missionFilterTrackerProtoRef in
-                    DataDirectory.Instance.IteratePrototypesInHierarchy<MissionTrackerFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                {
-                    var missionFilterTrackerProto = missionFilterTrackerProtoRef.As<MissionTrackerFilterPrototype>();
-                    if (missionFilterTrackerProto.DisplayByDefault)
-                        Player.Properties[PropertyEnum.MissionTrackerFilter, missionFilterTrackerProtoRef] = true;
-                }
-
+                Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
             }
 

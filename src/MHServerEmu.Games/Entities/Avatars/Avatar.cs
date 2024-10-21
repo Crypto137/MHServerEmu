@@ -1,12 +1,14 @@
 ﻿using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
@@ -69,6 +71,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public PendingActionState PendingActionState { get => _pendingAction.PendingActionState; }
 
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
+        public PrototypeId UltimatePowerRef { get => AvatarPrototype.UltimatePowerRef; }
 
         public Avatar(Game game) : base(game) { }
 
@@ -208,6 +211,23 @@ namespace MHServerEmu.Games.Entities.Avatars
             _ownerPlayerDbId = player.DatabaseUniqueId;
         }
 
+        public void SetTutorialProps(HUDTutorialPrototype hudTutorialProto)
+        {
+            if (hudTutorialProto.AllowMovement == false)
+                Properties[PropertyEnum.TutorialImmobilized] = true;
+            if (hudTutorialProto.AllowPowerUsage == false)
+                Properties[PropertyEnum.TutorialPowerLock] = true;
+            if (hudTutorialProto.AllowTakingDamage == false)
+                Properties[PropertyEnum.TutorialInvulnerable] = true;
+        }
+
+        public void ResetTutorialProps()
+        {
+            Properties.RemoveProperty(PropertyEnum.TutorialImmobilized);
+            Properties.RemoveProperty(PropertyEnum.TutorialPowerLock);
+            Properties.RemoveProperty(PropertyEnum.TutorialInvulnerable);
+        }
+
         #region World and Positioning
 
         public override bool CanMove()
@@ -333,6 +353,58 @@ namespace MHServerEmu.Games.Entities.Avatars
         #endregion
 
         #region Powers
+
+        public bool PerformPreInteractPower(WorldEntity target, bool hasDialog)
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return false;
+
+            var targetProto = target.WorldEntityPrototype;
+            if (targetProto == null || IsExecutingPower) return false;
+
+            var powerRef = targetProto.PreInteractPower;
+            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return false;
+
+            if (HasPowerInPowerCollection(powerRef) == false)
+                AssignPower(powerRef, new(0, CharacterLevel, CombatLevel));
+
+            if (powerProto.Activation != PowerActivationType.Passive)
+            {
+                PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
+                settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                var result = ActivatePower(powerRef, ref settings);
+                if (result != PowerUseResult.Success)
+                    return Logger.WarnReturn(false, $"PerformPreInteractPower ActivatePower [{powerRef}] = {result}");
+            }
+
+            player.Properties[PropertyEnum.InteractTargetId] = target.Id;
+            player.Properties[PropertyEnum.InteractHasDialog] = hasDialog;
+
+            return true;
+        }
+
+        public bool PreInteractPowerEnd()
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return false;
+
+            ulong targetId = player.Properties[PropertyEnum.InteractTargetId];
+            player.Properties.RemoveProperty(PropertyEnum.InteractTargetId);
+            player.Properties.RemoveProperty(PropertyEnum.InteractHasDialog);
+
+            var targetEntity = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+            if (targetEntity == null) return false;
+
+            player.Properties[PropertyEnum.InteractReadyForTargetId] = targetId;
+
+            if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                player.SendMessage(NetMessageOnPreInteractPowerEnd.CreateBuilder()
+                    .SetIdTargetEntity(targetId)
+                    .SetAvatarIndex(0).Build());
+
+            return true;
+        }
 
         public override bool OnPowerAssigned(Power power)
         {
@@ -712,9 +784,22 @@ namespace MHServerEmu.Games.Entities.Avatars
             return info.IsValid;
         }
 
+        public override int GetLatestPowerProgressionVersion()
+        {
+            if (AvatarPrototype == null) return 0;
+            return AvatarPrototype.PowerProgressionVersion;
+        }
+
         public bool IsValidTargetForCurrentPower(WorldEntity target)
         {
-            throw new NotImplementedException();
+            if (_pendingAction.PowerProtoRef != PrototypeId.Invalid && IsInPendingActionState(PendingActionState.Targeting))
+            {
+                var power = GetPower(_pendingAction.PowerProtoRef);
+                if (power == null) return false;
+                return power.IsValidTarget(target);
+            }
+            else
+                return IsHostileTo(target);
         }
 
         private bool AssignDefaultAvatarPowers()
@@ -946,6 +1031,67 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private bool CanInteract(Player player, WorldEntity interactableObject)
+        {
+            if (IsAliveInWorld == false) return false;
+
+            if (interactableObject.IsInWorld)
+            {
+                if (InInteractRange(interactableObject, InteractionMethod.Use) == false) return false;
+            }
+            else
+            {
+                if (player.Owns(interactableObject.Id) == false) return false;
+            }
+
+            InteractData data = null;
+            var iteractionStatus = InteractionManager.CallGetInteractionStatus(new EntityDesc(interactableObject), this,
+                InteractionOptimizationFlags.None, InteractionFlags.None, ref data);
+            return iteractionStatus != InteractionMethod.None;
+        }
+
+        public override bool InInteractRange(WorldEntity interactee, InteractionMethod interaction, bool interactFallbackRange = false)
+        {
+            if (IsUsingGamepadInput)
+            {
+                if (IsSingleInteraction(interaction) == false && interaction.HasFlag(InteractionMethod.Throw)) return false;
+                if (IsInWorld == false && interactee.IsInWorld == false) return false;
+                return InGamepadInteractRange(interactee);
+            }
+            return base.InInteractRange(interactee, interaction, interactFallbackRange);
+        }
+
+        public bool InGamepadInteractRange(WorldEntity interactee)
+        {
+            var gamepadGlobals = GameDatabase.GamepadGlobalsPrototype;
+            if (gamepadGlobals == null || RegionLocation.Region == null) return false;
+
+            Vector3 direction = Forward;
+            Vector3 interacteePosition = interactee.RegionLocation.Position;
+            Vector3 avatarPosition = RegionLocation.Position;
+            Vector3 velocity = Vector3.Normalize2D(interacteePosition - avatarPosition);
+
+            float minAngle = Math.Abs(MathHelper.ToDegrees(Vector3.Angle2D(direction, velocity)));
+            float distance = Vector3.Distance2D(interacteePosition, avatarPosition);
+
+            if (distance < Bounds.Radius + gamepadGlobals.GamepadInteractBoundsIncrease)
+                return true;
+
+            if (minAngle < gamepadGlobals.GamepadInteractionHalfAngle)
+            {
+                Bounds capsuleBound = new();
+                capsuleBound.InitializeCapsule(0.0f, 500, BoundsCollisionType.Overlapping, BoundsFlags.None);
+                capsuleBound.Center = avatarPosition + (direction * gamepadGlobals.GamepadInteractionOffset);
+
+                velocity *= gamepadGlobals.GamepadInteractRange + Bounds.Radius;
+                float timeOfIntersection = 1.0f;
+                Vector3? resultNormal = null;
+                return capsuleBound.Sweep(interactee.Bounds, Vector3.Zero, velocity, ref timeOfIntersection, ref resultNormal);
+            }
+
+            return false;
         }
 
         #endregion
