@@ -12,17 +12,17 @@ namespace MHServerEmu.Games.Loot
         public Bounds Bounds { get; } = new();
         public Game Game { get; private set; }
         public Vector3 Position { get; private set; }
-        public WorldEntity SourceEntity { get; set; }
+        public WorldEntity Recipient { get; set; }
         public float MinRadius { get; set; }
         public float MaxRadius { get; set; }
         public bool DropInPlace { get; set; }
         public Vector3 Offset { get; set; }
 
-        public void Initialize(Game game, Vector3 position, WorldEntity sourceEntity = null)
+        public void Initialize(Game game, Vector3 position, WorldEntity recipient = null)
         {
             Game = game;
             Position = position;
-            SourceEntity = sourceEntity;
+            Recipient = recipient;
 
             Bounds.InitializeSphere(DefaultBoundsRadius, BoundsCollisionType.Overlapping);
             Bounds.Center = Position;
@@ -32,7 +32,7 @@ namespace MHServerEmu.Games.Loot
         {
             // Bounds are reset during initialization
             Position = default;
-            SourceEntity = default;
+            Recipient = default;
             MinRadius = default;
             MaxRadius = default;
             DropInPlace = default;

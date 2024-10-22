@@ -33,6 +33,8 @@ namespace MHServerEmu.Games.Loot
         public List<VendorXPSummary> VendorXP { get; } = new();
         public List<CurrencySpec> Currencies { get; } = new();
 
+        public int NumDrops { get => ItemSpecs.Count + AgentSpecs.Count + Credits.Count + Currencies.Count; }
+
         public void Add(in LootResult lootResult)
         {
             switch (lootResult.Type)
