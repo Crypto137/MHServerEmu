@@ -13,12 +13,11 @@ using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
-    public class UIWidgetEntityIconsSyncData : UISyncData, IPropertyChangeWatcher
+    public class UIWidgetEntityIconsSyncData : UISyncData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly List<FilterEntry> _filterList = new();
-        private readonly HashSet<PropertyCollection> _attached = new();
 
         public UIWidgetEntityIconsPrototype Prototype;
 
@@ -54,16 +53,30 @@ namespace MHServerEmu.Games.UI.Widgets
                     {
                         KnownEntityEntry entityEntry = new();
                         entityEntry.EntityId = entity.Id;
-                        entityEntry.State = entity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;                        
+                        entityEntry.State = entity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;
+                        entityEntry.AttachWatcher(this, entity);
                         filterEntry.KnownEntityDict.Add(entityEntry.EntityId, entityEntry);
-                        // attach for update
-                        if (entity is Agent agent && agent.AIController != null) Attach(agent.AIController.Blackboard.PropertyCollection);
-                        Attach(entity.Properties);
                         UpdateKnownEntityTrackedProperties(entity.Id, entityEntry, entryProto, PropertyId.Invalid);                       
                     }
 
                 _filterList.Add(filterEntry);
             }
+        }
+
+        public override void Deallocate() => ClearData();
+
+        private void ClearData()
+        {
+            foreach (var filterEntry in _filterList)
+                if (filterEntry.KnownEntityDict != null)
+                {
+                    foreach (var knowEntity in filterEntry.KnownEntityDict.Values)
+                        knowEntity?.Destroy();
+
+                    filterEntry.KnownEntityDict.Clear();
+                }
+
+            _filterList.Clear();
         }
 
         public override bool Serialize(Archive archive)
@@ -213,9 +226,8 @@ namespace MHServerEmu.Games.UI.Widgets
                         entityEntry = new();
                         filter.KnownEntityDict.Add(worldEntity.Id, entityEntry);
                     }
-                    entityEntry.State = worldEntity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;                    
-                    if (worldEntity is Agent agent && agent.AIController != null) Attach(agent.AIController.Blackboard.PropertyCollection);
-                    Attach(worldEntity.Properties);
+                    entityEntry.State = worldEntity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;
+                    entityEntry.AttachWatcher(this, worldEntity);
                     update = true;
                 }
             }
@@ -223,20 +235,7 @@ namespace MHServerEmu.Games.UI.Widgets
             if (update) UpdateUI();
         }
 
-        public void Attach(PropertyCollection propertyCollection)
-        {
-            if (_attached.Contains(propertyCollection)) return;
-            propertyCollection.AttachWatcher(this);
-            _attached.Add(propertyCollection);
-        }
-
-        public void Detach(bool removeFromAttachedCollection)
-        {
-            foreach (var collection in _attached)
-                collection?.DetachWatcher(this);
-        }
-
-        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags) // OnKnownEntityPropertyChanged
+        public override void OnKnownEntityPropertyChanged(PropertyId id)
         {
             UpdateKnownEntitiesTrackedProperties(id);
         }
@@ -406,8 +405,10 @@ namespace MHServerEmu.Games.UI.Widgets
         }
     }
 
-    public class KnownEntityEntry
+    public class KnownEntityEntry : IPropertyChangeWatcher
     {
+        private PropertyCollection _properties;
+        private UISyncData _uiSyncData;
         public ulong EntityId { get; set; }
         public UIWidgetEntityState State { get; set; }
         public int HealthPercent { get; set; }
@@ -416,6 +417,38 @@ namespace MHServerEmu.Games.UI.Widgets
         public TimeSpan EnrageStartTime { get; set; }
         public bool HasPropertyEntryEval { get; set; }
         public int PropertyEntryIndex { get; set; }
+
+        public void Destroy()
+        {
+            if (_properties != null) Detach(true);
+        }
+
+        public void Attach(PropertyCollection propertyCollection)
+        {
+            if (_properties != null && _properties == propertyCollection) return;
+            _properties = propertyCollection;
+            _properties.AttachWatcher(this);
+        }
+
+        public void Detach(bool removeFromAttachedCollection)
+        {
+            if (removeFromAttachedCollection)
+                _properties?.DetachWatcher(this);
+        }
+
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            _uiSyncData?.OnKnownEntityPropertyChanged(id);
+        }
+
+        public void AttachWatcher(UISyncData widget, WorldEntity entity)
+        {
+            _uiSyncData = widget;
+
+            if (entity is Agent agent && agent.AIController != null) 
+                Attach(agent.AIController.Blackboard.PropertyCollection);
+            Attach(entity.Properties);
+        }
 
         public override string ToString()
         {

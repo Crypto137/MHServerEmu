@@ -7,6 +7,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.UI
 {
@@ -37,6 +38,8 @@ namespace MHServerEmu.Games.UI
             _widgetRef = widgetRef;
             _contextRef = contextRef;
         }
+
+        public virtual void Deallocate() { }
 
         public virtual bool Serialize(Archive archive)
         {
@@ -148,5 +151,6 @@ namespace MHServerEmu.Games.UI
 
         public virtual void OnEntityTracked(WorldEntity worldEntity) { }
         public virtual void OnEntityLifecycle(WorldEntity worldEntity) { }
+        public virtual void OnKnownEntityPropertyChanged(PropertyId id) { }
     }
 }

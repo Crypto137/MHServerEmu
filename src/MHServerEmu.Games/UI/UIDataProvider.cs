@@ -30,6 +30,14 @@ namespace MHServerEmu.Games.UI
             Owner = owner;
         }
 
+        public void Deallocate()
+        {
+            foreach (var widget in _dataDict.Values)
+                widget?.Deallocate();
+
+            _dataDict.Clear();
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;

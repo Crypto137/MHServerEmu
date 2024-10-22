@@ -486,6 +486,7 @@ namespace MHServerEmu.Games.Regions
             NaviMesh.Release();
             PopulationManager.Deallocate();
             MissionManager.Deallocate();
+            UIDataProvider.Deallocate();
             Properties.Unbind();
         }
 
