@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Loot
@@ -21,11 +22,13 @@ namespace MHServerEmu.Games.Loot
             SourceEntity = sourceEntity;
             PositionOverride = positionOverride;
 
+            Avatar avatar = player.CurrentAvatar;
+
             LootRollSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
-            LootRollSettings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
+            LootRollSettings.UsableAvatar = avatar.AvatarPrototype;
             LootRollSettings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
-            LootRollSettings.Level = player.CurrentAvatar.CharacterLevel;
-            LootRollSettings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
+            LootRollSettings.Level = avatar.CharacterLevel;
+            LootRollSettings.LevelForRequirementCheck = avatar.CharacterLevel;
             LootRollSettings.DifficultyTier = player.GetRegion().DifficultyTierRef;
         }
 

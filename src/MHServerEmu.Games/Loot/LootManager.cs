@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Loot
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly ItemResolver _resolver;
-        private readonly PrototypeId _creditsItemProtoRef; 
+        private readonly WorldEntityPrototype _creditsItemProto; 
 
         public Game Game { get; }
 
@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Loot
             Game = game;
 
             _resolver = new(game.Random);
-            _creditsItemProtoRef = GameDatabase.GlobalsPrototype.CreditsItemPrototype;
+            _creditsItemProto = GameDatabase.GlobalsPrototype.CreditsItemPrototype.As<WorldEntityPrototype>();
         }
 
         /// <summary>
@@ -78,11 +78,8 @@ namespace MHServerEmu.Games.Loot
                 return;
 
             Player player = inputSettings.Player;
+            WorldEntity recipient = player.CurrentAvatar;
             WorldEntity sourceEntity = inputSettings.SourceEntity;
-
-            // Calculate drop radius
-            int numDrops = lootResultSummary.ItemSpecs.Count + lootResultSummary.AgentSpecs.Count;
-            float maxDropRadius = MathF.Min(300f, 75f + 25f * numDrops);
 
             // Instance the loot if we have a player provided and instanced loot is not disabled by server config
             ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
@@ -95,21 +92,42 @@ namespace MHServerEmu.Games.Loot
             if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
             {
                 foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
-                    callbackNode.OnResultsEvaluation(player, sourceEntity);
+                    callbackNode.OnResultsEvaluation(player, inputSettings.SourceEntity);
             }
 
+            // Determine drop source bounds
+            Bounds bounds = sourceEntity != null ? sourceEntity.Bounds : recipient.Bounds;
+
+            // Override source bounds if needed
+            if (inputSettings.PositionOverride != null)
+            {
+                bounds = new(bounds);
+                bounds.Center = inputSettings.PositionOverride.Value;
+                sourceEntity = null;
+            }
+
+            Vector3 sourcePosition = bounds.Center;
+
+            // Find positions for all drops in the summary
+            Span<Vector3> dropPositions = stackalloc Vector3[lootResultSummary.NumDrops];
+            FindDropPositions(lootResultSummary, recipient, bounds, ref dropPositions);
+            int i = 0;
+
             // Spawn items
+            ulong regionId = recipient.Region.Id;
+            ulong sourceEntityId = sourceEntity != null ? sourceEntity.Id : Entity.InvalidId;
+
             if (lootResultSummary.Types.HasFlag(LootType.Item))
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
-                    SpawnItem(itemSpec, sourceEntity, maxDropRadius, properties);
+                    SpawnItemInternal(itemSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
             }
 
             // Spawn agents (orbs)
             if (lootResultSummary.Types.HasFlag(LootType.Agent))
             {
                 foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
-                    SpawnAgent(agentSpec, sourceEntity, maxDropRadius, properties);
+                    SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
             }
 
             // Spawn credits
@@ -117,8 +135,8 @@ namespace MHServerEmu.Games.Loot
             {
                 foreach (int creditsAmount in lootResultSummary.Credits)
                 {
-                    AgentSpec agentSpec = new(_creditsItemProtoRef, 1, creditsAmount);
-                    SpawnAgent(agentSpec, sourceEntity, maxDropRadius, properties);
+                    AgentSpec agentSpec = new(_creditsItemProto.DataRef, 1, creditsAmount);
+                    SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                 }
             }
 
@@ -133,16 +151,16 @@ namespace MHServerEmu.Games.Loot
                     {
                         // LootUtilities::FillItemSpecFromCurrencySpec()
                         ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
-                        SpawnItem(itemSpec, sourceEntity, maxDropRadius, properties);
+                        SpawnItemInternal(itemSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                     }
                     else if (currencySpec.IsAgent)
                     {
                         AgentSpec agentSpec = new(currencySpec.AgentOrItemProtoRef, 1, 0);
-                        SpawnAgent(agentSpec, sourceEntity, maxDropRadius, properties);
+                        SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                     }
                     else
                     {
-                        Logger.Warn($"SpawnLootFromSummary(): Unsupported currency type for {currencySpec.CurrencyRef.GetName()}");
+                        Logger.Warn($"SpawnLootFromSummary(): Unsupported currency entity type for {currencySpec.AgentOrItemProtoRef.GetName()}");
                     }
 
                     properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
@@ -228,50 +246,41 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Spawns an <see cref="Item"/> in the game world.
         /// </summary>
-        private bool SpawnItem(ItemSpec itemSpec, WorldEntity sourceEntity, float dropRadius, PropertyCollection properties)
+        private bool SpawnItemInternal(ItemSpec itemSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null)
-                return Logger.WarnReturn(false, "SpawnItem(): itemProto == null");
-
-            // Find a position for this item
-            if (FindDropPosition(itemProto, sourceEntity, dropRadius, out Vector3 dropPosition) == false)
-                return Logger.WarnReturn(false, $"SpawnItem(): Failed to find position to spawn item {itemSpec.ItemProtoRef.GetName()}");
+                return Logger.WarnReturn(false, "SpawnItemInternal(): itemProto == null");
 
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = itemSpec.ItemProtoRef;
-            settings.RegionId = sourceEntity.RegionLocation.RegionId;
-            settings.Position = dropPosition;
-            settings.SourceEntityId = sourceEntity.Id;
-            settings.SourcePosition = sourceEntity.RegionLocation.Position;
-            settings.ItemSpec = itemSpec;
-            settings.Lifespan = itemProto.GetExpirationTime(itemSpec.RarityProtoRef);
+            settings.RegionId = regionId;
+            settings.Position = position;
+            settings.SourceEntityId = sourceEntityId;
+            settings.SourcePosition = sourcePosition;
             settings.Properties = properties;
 
+            settings.ItemSpec = itemSpec;
+            settings.Lifespan = itemProto.GetExpirationTime(itemSpec.RarityProtoRef);
+
             Item item = Game.EntityManager.CreateEntity(settings) as Item;
-            if (item == null) return Logger.WarnReturn(false, "SpawnItem(): item == null");
+            if (item == null) return Logger.WarnReturn(false, "SpawnItemInternal(): item == null");
 
             return true;
         }
 
-        private bool SpawnAgent(in AgentSpec agentSpec, WorldEntity sourceEntity, float dropRadius, PropertyCollection properties)
+        private bool SpawnAgentInternal(in AgentSpec agentSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
         {
-            // this looks very similar to SpawnItem, TODO: move common functionality to a separate method
-            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
-            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgent(): agentProto == null");
-
-            // Pick a position for this agent
-            if (FindDropPosition(agentProto, sourceEntity, dropRadius, out Vector3 dropPosition) == false)
-                return Logger.WarnReturn(false, $"SpawnAgent(): Failed to find position to spawn agent {agentSpec}");
+            // TODO: figure out a way to move functionality shared with SpawnItemInternal to a separate method?
 
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
             settings.EntityRef = agentSpec.AgentProtoRef;
-            settings.RegionId = sourceEntity.RegionLocation.RegionId;
-            settings.Position = dropPosition;
-            settings.SourceEntityId = sourceEntity.Id;
-            settings.SourcePosition = sourceEntity.RegionLocation.Position;
+            settings.RegionId = regionId;
+            settings.Position = position;
+            settings.SourceEntityId = sourceEntityId;
+            settings.SourcePosition = sourcePosition;
 
             settings.Properties = properties;
             settings.Properties[PropertyEnum.CharacterLevel] = agentSpec.AgentLevel;
@@ -281,43 +290,95 @@ namespace MHServerEmu.Games.Loot
                 settings.Properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
 
             Agent agent = Game.EntityManager.CreateEntity(settings) as Agent;
-            if (agent == null) return Logger.WarnReturn(false, "SpawnAgent(): item == null");
 
-            // Clean up properties
+            // Clean up properties (even if we failed to create the agent for some reason)
             settings.Properties.RemoveProperty(PropertyEnum.CharacterLevel);
             settings.Properties.RemoveProperty(PropertyEnum.CombatLevel);
             settings.Properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
 
+            if (agent == null) return Logger.WarnReturn(false, "SpawnAgentInternal(): agent == null");
+
             return true;
         }
 
-        private bool FindDropPosition(WorldEntityPrototype dropEntityProto, WorldEntity sourceEntity, float maxRadius, out Vector3 dropPosition)
-        {
-            dropPosition = Vector3.Zero;
+        #region Drop Positioning
 
-            // TODO: Dropping without a source entity? It seems to be optional for LootLocationTable
-            if (sourceEntity == null) return Logger.WarnReturn(false, "FindDropPosition(): sourceEntity == null");
-            Bounds bounds = sourceEntity.Bounds;
+        private void FindDropPositions(LootResultSummary lootResultSummary, WorldEntity recipient, Bounds bounds, ref Span<Vector3> dropPositions)
+        {
+            // Calculate max drop radius
+            float maxRadius = MathF.Min(300f, 75f + 25f * lootResultSummary.NumDrops);
+
+            // Find drop positions for each item
+            int i = 0;
+
+            // NOTE: The order here has to be the same as SpawnLootFromSummary()
+            foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
+                dropPositions[i++] = FindDropPosition(itemSpec, recipient, bounds, maxRadius);
+
+            foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
+                dropPositions[i++] = FindDropPosition(agentSpec, recipient, bounds, maxRadius);
+
+            foreach (int credits in lootResultSummary.Credits)
+                dropPositions[i++] = FindDropPosition(_creditsItemProto, recipient, bounds, maxRadius);
+
+            foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
+                dropPositions[i++] = FindDropPosition(currencySpec, recipient, bounds, maxRadius);
+        }
+
+        private Vector3 FindDropPosition(ItemSpec itemSpec, WorldEntity recipient, Bounds bounds, float maxRadius)
+        {
+            ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+            if (itemProto == null)
+                return Logger.WarnReturn(bounds.Center, "FindDropPosition(): itemProto == null");
+
+            return FindDropPosition(itemProto, recipient, bounds, maxRadius);
+        }
+
+        private Vector3 FindDropPosition(in AgentSpec agentSpec, WorldEntity recipient, Bounds bounds, float maxRadius)
+        {
+            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
+            if (agentProto == null)
+                return Logger.WarnReturn(bounds.Center, "FindDropPosition(): agentProto == null");
+
+            return FindDropPosition(agentProto, recipient, bounds, maxRadius);
+        }
+
+        private Vector3 FindDropPosition(in CurrencySpec currencySpec, WorldEntity recipient, Bounds bounds, float maxRadius)
+        {
+            WorldEntityPrototype worldEntityProto = currencySpec.AgentOrItemProtoRef.As<WorldEntityPrototype>();
+            if (worldEntityProto == null)
+                return Logger.WarnReturn(bounds.Center, "FindDropPosition(): worldEntityProto == null");
+
+            return FindDropPosition(worldEntityProto, recipient, bounds, maxRadius);
+        }
+
+        private Vector3 FindDropPosition(WorldEntityPrototype dropEntityProto, WorldEntity recipient, Bounds bounds, float maxRadius)
+        {
+            // Fall back to the center of provided bounds if something goes wrong
+            Vector3 boundsCenter = bounds.Center;
+
+            // TODO: Dropping without a recipient? It seems to be optional for LootLocationTable
+            if (recipient == null) return Logger.WarnReturn(boundsCenter, "FindDropPosition(): recipient == null");
+
+            Region region = recipient.Region;
+            if (region == null) return Logger.WarnReturn(boundsCenter, "FindDropPosition(): region == null");
 
             // Get the loot location table for this drop
             // NOTE: Loot location tables don't work properly with random locations, we need to implement some kind
             // of distribution system that gradually fills space from min radius to max to fully make use of this data.
             PrototypeId lootLocationTableProtoRef = dropEntityProto.Properties[PropertyEnum.LootSpawnPrototype];
-            if (lootLocationTableProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "FindDropPosition(): lootLocationTableProtoRef == PrototypeId.Invalid");
+            if (lootLocationTableProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(boundsCenter, "FindDropPosition(): lootLocationTableProtoRef == PrototypeId.Invalid");
 
             var lootLocationTableProto = lootLocationTableProtoRef.As<LootLocationTablePrototype>();
-            if (lootLocationTableProto == null) return Logger.WarnReturn(false, "FindDropPosition(): lootLocationTable == null");
+            if (lootLocationTableProto == null) return Logger.WarnReturn(boundsCenter, "FindDropPosition(): lootLocationTable == null");
 
             // Roll it
             using LootLocationData lootLocationData = ObjectPoolManager.Instance.Get<LootLocationData>();
-            lootLocationData.Initialize(Game, bounds.Center, sourceEntity);
+            lootLocationData.Initialize(Game, bounds.Center, recipient);
             lootLocationTableProto.Roll(lootLocationData);
 
             if (lootLocationData.DropInPlace)
-            {
-                dropPosition = bounds.Center;
-                return true;
-            }
+                return boundsCenter;
 
             float minRadius = MathF.Max(bounds.Radius, lootLocationData.MinRadius);
 
@@ -325,8 +386,15 @@ namespace MHServerEmu.Games.Loot
             if (minRadius >= maxRadius)
                 maxRadius = minRadius + 10f;
 
-            return sourceEntity.Region.ChooseRandomPositionNearPoint(bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
-                BlockingCheckFlags.CheckSpawns, minRadius, maxRadius, out dropPosition);
+            if (region.ChooseRandomPositionNearPoint(bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+                BlockingCheckFlags.CheckSpawns, minRadius, maxRadius, out Vector3 dropPosition) == false)
+            {
+                return boundsCenter;
+            }
+
+            return dropPosition;
         }
+
+        #endregion
     }
 }
