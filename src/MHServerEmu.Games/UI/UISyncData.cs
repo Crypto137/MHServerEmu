@@ -147,5 +147,6 @@ namespace MHServerEmu.Games.UI
         }
 
         public virtual void OnEntityTracked(WorldEntity worldEntity) { }
+        public virtual void OnEntityLifecycle(WorldEntity worldEntity) { }
     }
 }

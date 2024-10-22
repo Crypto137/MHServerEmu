@@ -273,11 +273,13 @@ namespace MHServerEmu.Games.Entities
                 GiveKillRewards(killer, killFlags, directKiller);
             }
 
+            var region = Region;
+
             // Trigger EntityDead Event
             if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && notMissile)
             {
                 var player = killer?.GetOwnerOfType<Player>();
-                Region?.EntityDeadEvent.Invoke(new(this, killer, player));
+                region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
 
             // Set death state properties
@@ -294,6 +296,11 @@ namespace MHServerEmu.Games.Entities
                 .Build();
 
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            if (worldEntityProto.PostKilledState != null)
+                ApplyStateFromPrototype(worldEntityProto.PostKilledState);
+
+            region?.UIDataProvider.OnEntityLifecycle(this);
 
             // Schedule destruction
             int removeFromWorldTimerMS = worldEntityProto.RemoveFromWorldTimerMS;

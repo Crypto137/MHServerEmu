@@ -13,28 +13,31 @@ using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
-    public class UIWidgetEntityIconsSyncData : UISyncData
+    public class UIWidgetEntityIconsSyncData : UISyncData, IPropertyChangeWatcher
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly List<FilterEntry> _filterList = new();
+        private readonly HashSet<PropertyCollection> _attached = new();
+
+        public UIWidgetEntityIconsPrototype Prototype;
 
         public UIWidgetEntityIconsSyncData(UIDataProvider uiDataProvider, PrototypeId widgetRef, PrototypeId contextRef) : base(uiDataProvider, widgetRef, contextRef)
         {
-            var prototype = GameDatabase.GetPrototype<UIWidgetEntityIconsPrototype>(widgetRef);
-            if (prototype == null)
+            Prototype = GameDatabase.GetPrototype<UIWidgetEntityIconsPrototype>(widgetRef);
+            if (Prototype == null)
             {
                 Logger.Warn($"UIWidgetEntityIconsSyncData(): widgetPrototype == null");
                 return;
             }
 
-            if (prototype.Entities.IsNullOrEmpty()) return;
+            if (Prototype.Entities.IsNullOrEmpty()) return;
 
             var region = uiDataProvider.Region;
             if (region == null) return;
 
             int index = 0;
-            foreach (var entryProto in prototype.Entities)
+            foreach (var entryProto in Prototype.Entities)
             {
                 if (entryProto.Filter == null)
                 {
@@ -49,12 +52,14 @@ namespace MHServerEmu.Games.UI.Widgets
                 foreach(var entity in region.EntityTracker.Iterate(widgetRef, Dialog.EntityTrackingFlag.HUD))
                     if (entryProto.Filter.Evaluate(entity, new()))
                     {
-                        if (entity == null) continue;
                         KnownEntityEntry entityEntry = new();
                         entityEntry.EntityId = entity.Id;
-                        entityEntry.State = entity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;
-                        UpdateKnownEntityTrackedProperties(entity.Id, entityEntry, entryProto, PropertyId.Invalid);
+                        entityEntry.State = entity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;                        
                         filterEntry.KnownEntityDict.Add(entityEntry.EntityId, entityEntry);
+                        // attach for update
+                        if (entity is Agent agent && agent.AIController != null) Attach(agent.AIController.Blackboard.PropertyCollection);
+                        Attach(entity.Properties);
+                        UpdateKnownEntityTrackedProperties(entity.Id, entityEntry, entryProto, PropertyId.Invalid);                       
                     }
 
                 _filterList.Add(filterEntry);
@@ -168,6 +173,95 @@ namespace MHServerEmu.Games.UI.Widgets
 
             for (int i = 0; i < _filterList.Count; i++)
                 sb.AppendLine($"{nameof(_filterList)}[{i}]: {_filterList[i]}");
+        }
+
+        public override void OnEntityLifecycle(WorldEntity worldEntity)
+        {
+            bool update = false;
+            foreach (var filter in _filterList)
+            {
+                var entryProto = GetEntryPrototypeByIndex(filter.Index);
+                if (entryProto == null) continue;
+                if (entryProto.Filter.Evaluate(worldEntity, new()))
+                {
+                    if (filter.KnownEntityDict.TryGetValue(worldEntity.Id, out var entityEntry) == false)
+                    {
+                        entityEntry = new();
+                        filter.KnownEntityDict.Add(worldEntity.Id, entityEntry);
+                    }
+                    entityEntry.State = worldEntity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;                    
+                    update = true;
+                }
+            }
+
+            if (update) UpdateUI();
+        }
+
+        public override void OnEntityTracked(WorldEntity worldEntity)
+        {
+            if (worldEntity == null) return;
+
+            bool update = false;
+            foreach (var filter in _filterList)
+            {
+                var entryProto = GetEntryPrototypeByIndex(filter.Index);
+                if (entryProto == null) continue;
+                if (entryProto.Filter.Evaluate(worldEntity, new()))
+                {
+                    if (filter.KnownEntityDict.TryGetValue(worldEntity.Id, out var entityEntry) == false)
+                    {
+                        entityEntry = new();
+                        filter.KnownEntityDict.Add(worldEntity.Id, entityEntry);
+                    }
+                    entityEntry.State = worldEntity.IsDead ? UIWidgetEntityState.Dead : UIWidgetEntityState.Alive;                    
+                    if (worldEntity is Agent agent && agent.AIController != null) Attach(agent.AIController.Blackboard.PropertyCollection);
+                    Attach(worldEntity.Properties);
+                    update = true;
+                }
+            }
+
+            if (update) UpdateUI();
+        }
+
+        public void Attach(PropertyCollection propertyCollection)
+        {
+            if (_attached.Contains(propertyCollection)) return;
+            propertyCollection.AttachWatcher(this);
+            _attached.Add(propertyCollection);
+        }
+
+        public void Detach(bool removeFromAttachedCollection)
+        {
+            foreach (var collection in _attached)
+                collection?.DetachWatcher(this);
+        }
+
+        public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags) // OnKnownEntityPropertyChanged
+        {
+            UpdateKnownEntitiesTrackedProperties(id);
+        }
+
+        private void UpdateKnownEntitiesTrackedProperties(PropertyId id)
+        {
+            bool update = false;
+            foreach (var filter in _filterList)
+            {
+                var entryProto = GetEntryPrototypeByIndex(filter.Index);
+                if (entryProto == null) continue;
+                if (filter.KnownEntityDict != null)
+                    foreach (var kvp in filter.KnownEntityDict)
+                        if (UpdateKnownEntityTrackedProperties(kvp.Key, kvp.Value, entryProto, id))
+                            update = true;                    
+            }
+
+            if (update) UpdateUI();
+        }
+
+        private UIWidgetEntityIconsEntryPrototype GetEntryPrototypeByIndex(int index)
+        {
+            var entries = Prototype.Entities;
+            if (entries.IsNullOrEmpty() || index < 0 || index >= entries.Length) return null;
+            return entries[index];
         }
 
         public bool UpdateKnownEntityTrackedProperties(ulong entityId, KnownEntityEntry knownEntityEntry, UIWidgetEntityIconsEntryPrototype entryPrototype, PropertyId propertyId)
