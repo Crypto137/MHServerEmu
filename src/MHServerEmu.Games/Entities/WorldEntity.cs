@@ -1981,7 +1981,11 @@ namespace MHServerEmu.Games.Entities
                     PrototypeId lootTableProtoRef = Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
 
                     if (lootTableProtoRef != PrototypeId.Invalid)
-                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, player, this);
+                    {
+                        using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                        inputSettings.Initialize(LootContext.Drop, player, this);
+                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                    }
                 }
 
                 // XP

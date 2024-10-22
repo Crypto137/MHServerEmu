@@ -39,14 +39,14 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Rolls the specified loot table and drops loot from the provided source <see cref="WorldEntity"/>.
         /// </summary>
-        public void SpawnLootFromTable(PrototypeId lootTableProtoRef, Player player, WorldEntity sourceEntity)
+        public void SpawnLootFromTable(PrototypeId lootTableProtoRef, LootInputSettings inputSettings)
         {
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
-            RollLootTable(lootTableProtoRef, player, lootResultSummary);
+            RollLootTable(lootTableProtoRef, inputSettings, lootResultSummary);
 
             if (lootResultSummary.HasAnyResult == false) return;
 
-            SpawnLootFromSummary(lootResultSummary, player, sourceEntity);
+            SpawnLootFromSummary(lootResultSummary, inputSettings);
         }
 
         /// <summary>
@@ -56,8 +56,11 @@ namespace MHServerEmu.Games.Loot
         {
             Logger.Info($"--- Loot Table Test - {lootTableProtoRef.GetName()} ---");
 
+            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            inputSettings.Initialize(LootContext.Drop, player, null);
+
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
-            if (RollLootTable(lootTableProtoRef, player, lootResultSummary) == false)
+            if (RollLootTable(lootTableProtoRef, inputSettings, lootResultSummary) == false)
                 Logger.Warn($"TestLootTable(): Failed to roll loot table {lootTableProtoRef.GetName()}");
 
             if (lootResultSummary.Types != LootType.None)
@@ -69,10 +72,13 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Spawns loot contained in the provided <see cref="LootResultSummary"/> in the game world.
         /// </summary>
-        public void SpawnLootFromSummary(LootResultSummary lootResultSummary, Player player, WorldEntity sourceEntity)
+        public void SpawnLootFromSummary(LootResultSummary lootResultSummary, LootInputSettings inputSettings)
         {
             if (lootResultSummary.Types == LootType.None)
                 return;
+
+            Player player = inputSettings.Player;
+            WorldEntity sourceEntity = inputSettings.SourceEntity;
 
             // Calculate drop radius
             int numDrops = lootResultSummary.ItemSpecs.Count + lootResultSummary.AgentSpecs.Count;
@@ -150,11 +156,14 @@ namespace MHServerEmu.Games.Loot
             if (itemSpec == null)
                 return Logger.WarnReturn(false, $"SpawnItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
+            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            inputSettings.Initialize(LootContext.Drop, player, sourceEntity);
+
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
             LootResult lootResult = new(itemSpec);
             lootResultSummary.Add(lootResult);
 
-            SpawnLootFromSummary(lootResultSummary, player, sourceEntity);
+            SpawnLootFromSummary(lootResultSummary, inputSettings);
             return true;
         }
 
@@ -202,21 +211,14 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Rolls the specified loot table and fills the provided <see cref="LootResultSummary"/> with results.
         /// </summary>
-        private bool RollLootTable(PrototypeId lootTableProtoRef, Player player, LootResultSummary lootResultSummary)
+        private bool RollLootTable(PrototypeId lootTableProtoRef, LootInputSettings inputSettings, LootResultSummary lootResultSummary)
         {
             LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
             if (lootTableProto == null) return Logger.WarnReturn(false, "RollLootTable(): lootTableProto == null");
 
-            using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
-            settings.UsableAvatar = player.CurrentAvatar.AvatarPrototype;
-            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
-            settings.Level = player.CurrentAvatar.CharacterLevel;
-            settings.LevelForRequirementCheck = player.CurrentAvatar.CharacterLevel;
-            settings.DifficultyTier = player.GetRegion().DifficultyTierRef;
+            _resolver.SetContext(inputSettings.LootContext, inputSettings.Player);
 
-            _resolver.SetContext(LootContext.Drop, player);
-
-            LootRollResult result = lootTableProto.RollLootTable(settings, _resolver);
+            LootRollResult result = lootTableProto.RollLootTable(inputSettings.LootRollSettings, _resolver);
             if (result.HasFlag(LootRollResult.Success))
                 _resolver.FillLootResultSummary(lootResultSummary);
 
