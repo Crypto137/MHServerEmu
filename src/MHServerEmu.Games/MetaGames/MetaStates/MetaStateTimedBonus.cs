@@ -54,7 +54,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             var region = Region;
             if (region == null) return;
 
-            var windgetRef = _proto.UIWidget;
+            var windgetRef = _entryProto.UIWidget;
             if (windgetRef != PrototypeId.Invalid)
                 region.UIDataProvider?.DeleteWidget(windgetRef);
         }
@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             region.OpenMissionCompleteEvent.RemoveAction(_openMissionCompleteAction);
 
-            var windgetRef = _proto.UIWidget;
+            var windgetRef = _entryProto.UIWidget;
             if (windgetRef != PrototypeId.Invalid)
                 region.UIDataProvider?.DeleteWidget(windgetRef);
 
