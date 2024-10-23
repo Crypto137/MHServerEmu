@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Entities
             populationManager.SpawnObject(popObject, RegionLocation, properties, spawnFlags, this, out _);
         }
 
-        public void Trigger(EntityTriggerEnum trigger)
+        public override void Trigger(EntityTriggerEnum trigger)
         {
             Logger.Debug($"Trigger(): {this}");
         }

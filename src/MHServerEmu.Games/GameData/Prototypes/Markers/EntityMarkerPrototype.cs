@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
         //    public string Modifier2Text { get; } // has eFlagDontCook set
         public PrototypeGuid Modifier3Guid { get; }
         //    public string Modifier3Text { get; } // has eFlagDontCook set
-        public uint EncounterSpawnPhase { get; }
+        public int EncounterSpawnPhase { get; }
         public bool OverrideSnapToFloor { get; }
         public bool OverrideSnapToFloorValue { get; }
         public PrototypeGuid FilterGuid { get; }
@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             // eFlagDontCook Modifier2Text = reader.ReadFixedString32();
             Modifier3Guid = (PrototypeGuid)reader.ReadUInt64();
             // eFlagDontCook Modifier3Text = reader.ReadFixedString32();
-            EncounterSpawnPhase = reader.ReadUInt32();
+            EncounterSpawnPhase = reader.ReadInt32();
             OverrideSnapToFloor = reader.ReadByte() > 0;
             OverrideSnapToFloorValue = reader.ReadByte() > 0;
             FilterGuid = (PrototypeGuid)reader.ReadUInt64();

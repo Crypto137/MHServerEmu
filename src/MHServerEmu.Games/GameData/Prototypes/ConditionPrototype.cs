@@ -207,6 +207,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // TODO: more stuff
         }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
+        }
     }
 
     public class ConditionEffectPrototype : Prototype

@@ -836,7 +836,7 @@ namespace MHServerEmu.Games.Populations
         public PrototypeId EntityRef { get; private set; }
         public WorldEntityPrototype EntityProto { get; private set; }
         public bool? SnapToFloor { get; set; }
-        public uint EncounterSpawnPhase { get; set; }
+        public int EncounterSpawnPhase { get; set; }
         public Bounds Bounds { get; set; }
         public RankPrototype RankProto { get; set; }
         public HashSet<PrototypeId> Modifiers { get; set; }

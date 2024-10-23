@@ -65,6 +65,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Delay = 1,
     }
 
+    [AssetEnum((int)Invalid)]
+    public enum ScoreTableValueType
+    {
+        Invalid = 0,
+        Int = 1,
+        Float = 2,
+    }
+
+    [AssetEnum((int)Invalid)]
+    public enum ScoreTableValueEvent
+    {
+        Invalid = 0,
+        DamageTaken = 1,
+        DamageDealt = 2,
+        Deaths = 3,
+        PlayerAssists = 4,
+        PlayerDamageDealt = 5,
+        PlayerKills = 6,
+    }
+
     #endregion
 
     public class MetaGamePrototype : EntityPrototype
@@ -466,5 +486,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int LevelLowerBoundsOffset { get; protected set; }
         public int LevelUpperBoundsOffset { get; protected set; }
+    }
+
+    public class ScoreTableSchemaEntryPrototype : Prototype
+    {
+        public ScoreTableValueType Type { get; protected set; }
+        public LocaleStringId Name { get; protected set; }
+        public EvalPrototype EvalOnPlayerAdd { get; protected set; }
+        public EvalPrototype EvalAuto { get; protected set; }
+        public EntityFilterPrototype OnEntityDeathFilter { get; protected set; }
+        public ScoreTableValueEvent Event { get; protected set; }
+
+
+    }
+
+    public class ScoreTableSchemaPrototype : Prototype
+    {
+        public ScoreTableSchemaEntryPrototype[] Schema { get; protected set; }
     }
 }
