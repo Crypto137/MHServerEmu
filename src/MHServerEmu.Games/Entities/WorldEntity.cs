@@ -288,6 +288,8 @@ namespace MHServerEmu.Games.Entities
             if (worldEntityProto.RemoveNavInfluenceOnKilled)
                 Properties[PropertyEnum.NoEntityCollide] = true;
 
+            SpawnSpec?.OnDefeat(killer, false);
+
             // Send kill message to clients
             var killMessage = NetMessageEntityKill.CreateBuilder()
                 .SetIdEntity(Id)
