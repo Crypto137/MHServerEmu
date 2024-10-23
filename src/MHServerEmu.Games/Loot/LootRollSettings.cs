@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -10,6 +11,7 @@ namespace MHServerEmu.Games.Loot
         public LootDropChanceModifiers DropChanceModifiers { get; set; }
         public float NoDropModifier { get; set; } = 1f;         // LootRollModifyDropByDifficultyTierPrototype
 
+        public Player Player { get; set; }                      // LootRollMissionStateRequiredPrototype
         public AvatarPrototype UsableAvatar { get; set; }       // LootRollSetAvatarPrototype
         public AgentPrototype UsableTeamUp { get; set; }        // Team-ups are the only agents other than avatars that have equipment
         public bool UseSecondaryAvatar { get; set; }            // LootNodePrototype::select()
@@ -44,6 +46,7 @@ namespace MHServerEmu.Games.Loot
             DropChanceModifiers = other.DropChanceModifiers;
             NoDropModifier = other.NoDropModifier;
 
+            Player = other.Player;
             UsableAvatar = other.UsableAvatar;
             UsableTeamUp = other.UsableTeamUp;
             UseSecondaryAvatar = other.UseSecondaryAvatar;
@@ -98,6 +101,7 @@ namespace MHServerEmu.Games.Loot
             DropChanceModifiers = default;
             NoDropModifier = 1f;
 
+            Player = default;
             UsableAvatar = default;
             UsableTeamUp = default;
             UseSecondaryAvatar = default;
