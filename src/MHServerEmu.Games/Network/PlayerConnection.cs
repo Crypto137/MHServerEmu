@@ -634,10 +634,11 @@ namespace MHServerEmu.Games.Network
             {
                 Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
 
-                Entity bowlingBall = inventory.GetMatchingEntity((PrototypeId)7835010736274089329); // BowlingBallItem
-                if (bowlingBall is not Item item) return false;
+                // BowlingBallItem
+                if (inventory.GetMatchingEntity((PrototypeId)7835010736274089329) is not Item bowlingBall)
+                    return false;
 
-                item.DecrementStack();
+                bowlingBall.DecrementStack();
             }
 
             return true;
@@ -1055,9 +1056,9 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnNotifyFullscreenMovieFinished(MailboxMessage message)
+        private bool OnNotifyFullscreenMovieFinished(MailboxMessage message)    // 85
         {
-            var movieFinished = message.As<NetMessageNotifyFullscreenMovieFinished>(); 
+            var movieFinished = message.As<NetMessageNotifyFullscreenMovieFinished>();
             if (movieFinished == null) return Logger.WarnReturn(false, $"OnNotifyFullscreenMovieFinished(): Failed to retrieve message");
             Player.OnFullscreenMovieFinished((PrototypeId)movieFinished.MoviePrototypeId, movieFinished.UserCancelled, movieFinished.SyncRequestId);
             return true;
@@ -1079,6 +1080,14 @@ namespace MHServerEmu.Games.Network
         private bool OnGracefulDisconnect(MailboxMessage message)   // 98
         {
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
+            return true;
+        }
+
+        private bool OnSetDialogTarget(MailboxMessage message)  // 100
+        {
+            var setDialogTarget = message.As<NetMessageSetDialogTarget>();
+            if (setDialogTarget == null) return Logger.WarnReturn(false, $"OnSetDialogTarget(): Failed to retrieve message");
+            Player.SetDialogTarget(setDialogTarget.TargetId, setDialogTarget.InteractorId);
             return true;
         }
 
@@ -1117,7 +1126,7 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnHUDTutorialDismissed(MailboxMessage message)
+        private bool OnHUDTutorialDismissed(MailboxMessage message) // 111
         {
             var hudTutorialDismissed = message.As<NetMessageHUDTutorialDismissed>();
             if (hudTutorialDismissed == null) return Logger.WarnReturn(false, $"OnHUDTutorialDismissed(): Failed to retrieve message");
@@ -1326,7 +1335,7 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnUISystemLockState(MailboxMessage message)
+        private bool OnUISystemLockState(MailboxMessage message)    // 150
         {
             var uiSystemLockState = message.As<NetMessageUISystemLockState>();
             if (uiSystemLockState == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): Failed to retrieve message");
@@ -1356,7 +1365,7 @@ namespace MHServerEmu.Games.Network
             return Player.UpdateStashTabOptions(stashTabOptions);
         }
 
-        private bool OnMissionTrackerFiltersUpdate(MailboxMessage message)
+        private bool OnMissionTrackerFiltersUpdate(MailboxMessage message)  // 166
         {
             var filters = message.As<NetMessageMissionTrackerFiltersUpdate>();
             if (filters == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
@@ -1364,11 +1373,11 @@ namespace MHServerEmu.Games.Network
             foreach (var filter in filters.MissionTrackerFilterChangesList)
             {
                 PrototypeId filterPrototypeId = (PrototypeId)filter.FilterPrototypeId;
-                if (filterPrototypeId == PrototypeId.Invalid) continue;                
+                if (filterPrototypeId == PrototypeId.Invalid) continue;
                 Player.Properties[PropertyEnum.MissionTrackerFilter, filterPrototypeId] = filter.IsFiltered;
             }
 
-            return true; ;
+            return true;
         }
 
         #endregion

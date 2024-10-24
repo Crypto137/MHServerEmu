@@ -659,7 +659,7 @@ namespace MHServerEmu.Games.Dialog
             {
                 if (interactionData == null || interactingPlayer.GetRegion() == null) return result;
                 if (interactionData.HasOptionFlags(InteractionOptimizationFlags.Visibility) == false) return result;
-                foreach(var option in interactionData.Options)
+                foreach (var option in interactionData.Options)
                     if (option is MissionVisibilityOption)
                     {
                         TriBool optionResult = EvaluateVisibilityOption(option, interactingPlayer, interactee);
@@ -725,7 +725,7 @@ namespace MHServerEmu.Games.Dialog
             const int startingPriority = int.MaxValue;
             int lastAvailableOptionPriority = startingPriority;
 
-            List<InteractionOption> optionsList = new ();
+            List<InteractionOption> optionsList = new();
             if (optimizationFlags == InteractionOptimizationFlags.None)
             {
                 GetInteractionDataFromWorldEntityPrototype(optionsList, interactee.PrototypeDataRef);
@@ -743,7 +743,7 @@ namespace MHServerEmu.Games.Dialog
 
             if (optionsList.Count > 0 || hasInteractionData || hasKeywords)
             {
-                HashSet<InteractionOption> interactionOptions = new ();
+                HashSet<InteractionOption> interactionOptions = new();
                 if (hasInteractionData)
                     if (optimizationFlags == InteractionOptimizationFlags.None || interactionData.HasOptionFlags(optimizationFlags))
                         foreach (var option in interactionData.Options)
@@ -793,7 +793,6 @@ namespace MHServerEmu.Games.Dialog
 
             return interactionsResult;
         }
-
         private bool EvaluateInteractionOption(WorldEntity interactee, WorldEntity interactor, InteractionOption option, InteractionFlags interactionFlags,
             ref InteractionMethod outInteractions, ref InteractData outInteractData)
         {

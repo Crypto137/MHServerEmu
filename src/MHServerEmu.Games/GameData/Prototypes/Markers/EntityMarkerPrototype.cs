@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
             // eFlagDontCook Modifier2Text = reader.ReadFixedString32();
             Modifier3Guid = (PrototypeGuid)reader.ReadUInt64();
             // eFlagDontCook Modifier3Text = reader.ReadFixedString32();
-            EncounterSpawnPhase = (int)reader.ReadUInt32();
+            EncounterSpawnPhase = reader.ReadInt32();
             OverrideSnapToFloor = reader.ReadByte() > 0;
             OverrideSnapToFloorValue = reader.ReadByte() > 0;
             FilterGuid = (PrototypeGuid)reader.ReadUInt64();

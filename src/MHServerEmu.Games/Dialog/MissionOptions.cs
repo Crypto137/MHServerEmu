@@ -16,7 +16,7 @@ namespace MHServerEmu.Games.Dialog
         public BaseMissionOption Option;
         public PlayerHUDEnum Flags;
 
-        public EntityObjectiveInfo(PrototypeId missionRef, MissionState missionState, MissionObjectiveState objectiveState, byte objectiveIndex, 
+        public EntityObjectiveInfo(PrototypeId missionRef, MissionState missionState, MissionObjectiveState objectiveState, byte objectiveIndex,
             BaseMissionOption option, PlayerHUDEnum flags)
         {
             MissionRef = missionRef;

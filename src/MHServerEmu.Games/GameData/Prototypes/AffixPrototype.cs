@@ -501,6 +501,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public bool IsRankBossOrMiniBoss { get => IsRankBoss || Rank == Rank.MiniBoss; }
+
+        public static PrototypeId DoOverride(PrototypeId rankRef, PrototypeId rankOverride)
+        {
+            var rankProto = rankRef.As<RankPrototype>();
+            var rankOverrideProto = rankOverride.As<RankPrototype>();
+            return DoOverride(rankProto, rankOverrideProto).DataRef;
+        }
+
+        private static RankPrototype DoOverride(RankPrototype rankProto, RankPrototype rankOverrideProto)
+        {
+            if (rankProto == null) return rankOverrideProto;
+            if (rankOverrideProto == null) return rankProto;
+            if (rankProto.Rank < rankOverrideProto.Rank) return rankOverrideProto;
+            return rankProto;
+        }
     }
 
     public class EnemyBoostSetPrototype : Prototype

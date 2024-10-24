@@ -1039,7 +1039,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             var region = Region;
             if (region == null)
-            {   
+            {
                 // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
                 player.MissionInteractRelease(this, missionRef);
                 return false;
@@ -1473,6 +1473,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         public override void OnExitedWorld()
         {
             base.OnExitedWorld();
+
+            // Clear dialog target
+            Player player = GetOwnerOfType<Player>();
+            player?.SetDialogTarget(InvalidId, InvalidId);
 
             DeactivateTeamUpAgent();
 

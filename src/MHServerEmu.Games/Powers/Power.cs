@@ -797,11 +797,11 @@ namespace MHServerEmu.Games.Powers
             List<WorldEntity> targetList = new();
             GetTargets(targetList, payload);
 
-            var powerProto = payload.PowerPrototype;
-            var manager = payload.Game.EntityManager;
-            var ultimateOwner = manager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
-            var avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
-            var player = avatar?.GetOwnerOfType<Player>();
+            PowerPrototype powerProto = payload.PowerPrototype;
+            Game game = payload.Game;
+            WorldEntity ultimateOwner = game.EntityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
+            Avatar avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
+            Player player = avatar?.GetOwnerOfType<Player>();
 
             // Calculate and apply results for each target
             int payloadCombatLevel = payload.CombatLevel;
@@ -825,6 +825,13 @@ namespace MHServerEmu.Games.Powers
                 if (player != null && powerProto.CanCauseTag)
                     if (avatar.IsInWorld && avatar.IsHostileTo(target))
                         target.SetTaggedBy(player, powerProto);
+
+                if (player != null && powerProto.CanCauseTag)
+                {
+                    // NOTE: We don't need to null-check the avatar here because we get the player from it
+                    if (avatar.IsInWorld && avatar.IsHostileTo(target))
+                        target.SetTaggedBy(player, powerProto);
+                }
 
                 target.ApplyPowerResults(results);
             }
