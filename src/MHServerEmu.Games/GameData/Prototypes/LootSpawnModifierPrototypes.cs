@@ -53,11 +53,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             base.Apply(lootLocationData);
 
-            WorldEntity sourceEntity = lootLocationData.SourceEntity;
-            if (sourceEntity == null || sourceEntity.IsInWorld == false)
+            WorldEntity recipient = lootLocationData.Recipient;
+            if (recipient == null || recipient.IsInWorld == false)
                 return;
 
-            Vector3 offset = lootLocationData.Position - sourceEntity.RegionLocation.Position;
+            Vector3 offset = lootLocationData.Position - recipient.RegionLocation.Position;
             if (Vector3.IsNearZero2D(offset))
                 lootLocationData.Offset = Vector3.Zero;
             else

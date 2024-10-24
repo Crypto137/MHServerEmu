@@ -451,6 +451,7 @@ namespace MHServerEmu.Games.Behavior
         {
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler?.CancelAllEvents(_pendingEvents);
+            Blackboard?.PropertyCollection.RemoveAllWatchers();
         }
 
         public void OnAISetSimulated(bool simulated)

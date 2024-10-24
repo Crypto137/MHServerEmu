@@ -273,11 +273,13 @@ namespace MHServerEmu.Games.Entities
                 GiveKillRewards(killer, killFlags, directKiller);
             }
 
+            var region = Region;
+
             // Trigger EntityDead Event
             if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && notMissile)
             {
                 var player = killer?.GetOwnerOfType<Player>();
-                Region?.EntityDeadEvent.Invoke(new(this, killer, player));
+                region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
 
             // Set death state properties
@@ -285,6 +287,8 @@ namespace MHServerEmu.Games.Entities
 
             if (worldEntityProto.RemoveNavInfluenceOnKilled)
                 Properties[PropertyEnum.NoEntityCollide] = true;
+
+            SpawnSpec?.OnDefeat(killer, false);
 
             // Send kill message to clients
             var killMessage = NetMessageEntityKill.CreateBuilder()
@@ -294,6 +298,11 @@ namespace MHServerEmu.Games.Entities
                 .Build();
 
             Game.NetworkManager.SendMessageToInterested(killMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            if (worldEntityProto.PostKilledState != null)
+                ApplyStateFromPrototype(worldEntityProto.PostKilledState);
+
+            region?.UIDataProvider.OnEntityLifecycle(this);
 
             // Schedule destruction
             int removeFromWorldTimerMS = worldEntityProto.RemoveFromWorldTimerMS;
@@ -2097,7 +2106,11 @@ namespace MHServerEmu.Games.Entities
                     PrototypeId lootTableProtoRef = Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
 
                     if (lootTableProtoRef != PrototypeId.Invalid)
-                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, player, this);
+                    {
+                        using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                        inputSettings.Initialize(LootContext.Drop, player, this);
+                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                    }
                 }
 
                 // XP

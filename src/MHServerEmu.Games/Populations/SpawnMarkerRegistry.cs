@@ -111,13 +111,11 @@ namespace MHServerEmu.Games.Populations
                         Vector3 cellPos = entityMarker.Position - cell.Prototype.BoundingBox.Center;
                         Vector3 regionPos = cell.RegionBounds.Center + cellPos;
 
-                        if (!cell.RegionBounds.IntersectsXY(regionPos))
-                        {
+                        if (cell.RegionBounds.IntersectsXY(regionPos) == false)
                             Logger.Warn($"[DESIGN]Trying to add marker outside of cell bounds. " +
                                 $"CELL={GameDatabase.GetFormattedPrototypeName(cell.PrototypeDataRef)}, BOUNDS={cell.RegionBounds}, " +
                                 $"MARKER={GameDatabase.GetFormattedPrototypeName(markerRef)}, REGIONPOS={regionPos}, CELLPOS={marker.Position}");
-                            continue;
-                        }
+
                         //Logger.Debug($"Marker [{GameDatabase.GetFormattedPrototypeName(markerRef)}] {regionPos}");
                         AddSpawnTypeLocation(markerRef, marker.Position, marker.Rotation, cell, ++id);
                     }

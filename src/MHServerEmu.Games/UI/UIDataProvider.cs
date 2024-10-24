@@ -4,6 +4,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -27,6 +28,14 @@ namespace MHServerEmu.Games.UI
         {
             Game = game;
             Owner = owner;
+        }
+
+        public void Deallocate()
+        {
+            foreach (var widget in _dataDict.Values)
+                widget?.Deallocate();
+
+            _dataDict.Clear();
         }
 
         public bool Serialize(Archive archive)
@@ -171,6 +180,17 @@ namespace MHServerEmu.Games.UI
             if (metaGameProto == null) return;
             var uiSyncData = FindWidget(worldEntity, contextRef);
             uiSyncData?.OnEntityTracked(worldEntity);
+        }
+
+        public void OnEntityLifecycle(WorldEntity worldEntity)
+        {
+            foreach (var kvp in worldEntity.TrackingContextMap)
+                if (kvp.Value.HasFlag(EntityTrackingFlag.HUD))
+                {
+                    var widgetRef = kvp.Key;
+                    var uiSyncData = FindWidget(worldEntity, widgetRef);
+                    uiSyncData?.OnEntityLifecycle(worldEntity);
+                }
         }
 
         private UISyncData FindWidget(WorldEntity worldEntity, PrototypeId contextRef)

@@ -397,7 +397,7 @@ namespace MHServerEmu.Games.MetaGames
             RemoveStates(stateProto.SubStates);
             _removeStateStack.Enqueue(stateRef);
             if (_scheduledApplyState.IsValid == false)
-                ScheduleEntityEvent(_scheduledApplyState, TimeSpan.Zero);
+                ScheduleEntityEvent(_scheduledApplyState, TimeSpan.FromMilliseconds(0));
             Properties[PropertyEnum.MetaGameTimeStateRemovedMS, stateRef] = Game.CurrentTime;
         }
 
@@ -413,6 +413,8 @@ namespace MHServerEmu.Games.MetaGames
 
         public bool RemoveSpawnEvent(PrototypeId contextRef)
         {
+            if (_metaStateSpawnEvents.TryGetValue(contextRef, out MetaStateSpawnEvent spawnEvent))
+                spawnEvent.Destroy();
             return _metaStateSpawnEvents.Remove(contextRef);
         }
 

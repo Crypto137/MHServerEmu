@@ -1984,8 +1984,9 @@ namespace MHServerEmu.Games.Missions
                 }
                 else
                 {
-                    // check this
-                    lootManager.SpawnLootFromTable(reward, player, avatar); 
+                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    inputSettings.Initialize(LootContext.Drop, player, avatar);
+                    lootManager.SpawnLootFromTable(reward, inputSettings);
                 }
             }
         }
@@ -2004,7 +2005,9 @@ namespace MHServerEmu.Games.Missions
                 if (missionProto.DropLootOnGround || lootDropper != null)
                 {
                     lootDropper ??= player.CurrentAvatar;
-                    lootManager.SpawnLootFromSummary(lootSummary, player, lootDropper);
+                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    inputSettings.Initialize(LootContext.Drop, player, lootDropper);
+                    lootManager.SpawnLootFromSummary(lootSummary, inputSettings);
                 }
                 else
                 {

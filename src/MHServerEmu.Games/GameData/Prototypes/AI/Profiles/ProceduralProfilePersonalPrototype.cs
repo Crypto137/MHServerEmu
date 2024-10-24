@@ -4873,6 +4873,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (region == null) return;
             ownerController.RegisterForPlayerInteractEvents(region, true);
             agent.Properties[PropertyEnum.Interactable] = true;
+            agent.Properties[PropertyEnum.Health] = 0; // REMOVEME when EMPHealing will work!!!
             var transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
             if (transitionGlobalsProto != null && transitionGlobalsProto.EnabledState != PrototypeId.Invalid)
                 agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.EnabledState;
@@ -4910,6 +4911,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Activated;
                 }
+            }
+            else if (stateVal == (int)State.Activated)
+            {
+                // REMOVEME when EMPHealing will work!!!
+                int maxHealth = agent.Properties[PropertyEnum.HealthMax];
+                int health = agent.Properties[PropertyEnum.Health] + 80; // update 1% of base
+                if (health < maxHealth)
+                {
+                    agent.Properties[PropertyEnum.Health] = health;
+                    // update widget
+                }
+                else
+                {
+                    agent.Properties[PropertyEnum.Health] = maxHealth;
+                    agent.Region.AdjustHealthEvent.Invoke(new(agent, null, null, 0, false));
+                } 
             }
         }
 

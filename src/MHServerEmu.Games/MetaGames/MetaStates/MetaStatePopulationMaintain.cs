@@ -38,5 +38,11 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 _spawnEvent.Schedule();
             }
         }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+            _spawnEvent.Destroy();
+        }
     }
 }

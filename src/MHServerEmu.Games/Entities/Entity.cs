@@ -512,6 +512,7 @@ namespace MHServerEmu.Games.Entities
         {
             Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
             UnbindReplicatedFields();
+            Properties.RemoveAllWatchers();
         }
 
         public virtual void OnChangePlayerAOI(Player player, InterestTrackOperation operation,

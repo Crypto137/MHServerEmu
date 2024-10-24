@@ -36,6 +36,15 @@ namespace MHServerEmu.Games.Populations
             SpawnLocationSchedulers = new();
         }
 
+        public void Destroy()
+        {
+            PopulationManager.RemoveSpawnEvent(this);
+            PopulationManager.DeScheduleSpawnEvent(this);
+            foreach (var spawnGroup in SpawnGroups)
+                PopulationManager.RemoveSpawnGroup(spawnGroup);
+            SpawnGroups.Clear();
+        }
+
         public void SetSpawnData(ulong groupId, List<WorldEntity> entities)
         {
             var group = PopulationManager.GetSpawnGroup(groupId);
