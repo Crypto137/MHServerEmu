@@ -1388,6 +1388,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnExitedWorld();
 
+            // Clear dialog target
+            Player player = GetOwnerOfType<Player>();
+            player?.SetDialogTarget(InvalidId, InvalidId);
+
             DeactivateTeamUpAgent();
 
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);

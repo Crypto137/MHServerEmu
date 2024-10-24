@@ -1452,10 +1452,10 @@ namespace MHServerEmu.Games.Entities
                 var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
                 if (ValidateDialogTarget(target, interactorId) == false)
                     return Logger.WarnReturn(false, $"ValidateDialogTarget false for {target.PrototypeName} with {interactor.PrototypeName}");
-
-                DialogTargetId = targetId;
-                DialogInteractorId = interactorId;
             }
+
+            DialogTargetId = targetId;
+            DialogInteractorId = interactorId;
 
             return true;
         }
