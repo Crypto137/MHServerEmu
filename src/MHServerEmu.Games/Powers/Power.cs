@@ -798,6 +798,12 @@ namespace MHServerEmu.Games.Powers
             List<WorldEntity> targetList = new();
             GetTargets(targetList, payload);
 
+            PowerPrototype powerProto = payload.PowerPrototype;
+            Game game = payload.Game;
+            WorldEntity ultimateOwner = game.EntityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
+            Avatar avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
+            Player player = avatar?.GetOwnerOfType<Player>();
+
             // Calculate and apply results for each target
             int payloadCombatLevel = payload.CombatLevel;
 
@@ -816,6 +822,13 @@ namespace MHServerEmu.Games.Powers
                 PowerResults results = new();
                 payload.InitPowerResultsForTarget(results, target);
                 payload.CalculatePowerResults(results, target);
+
+                if (player != null && powerProto.CanCauseTag)
+                {
+                    // NOTE: We don't need to null-check the avatar here because we get the player from it
+                    if (avatar.IsInWorld && avatar.IsHostileTo(target))
+                        target.SetTaggedBy(player, powerProto);
+                }
 
                 target.ApplyPowerResults(results);
             }
@@ -2462,7 +2475,7 @@ namespace MHServerEmu.Games.Powers
                     if (regionKeywordRef == PrototypeId.Invalid)
                         Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUsePreventInRegionKwd!\n Power Prototype: {powerProto}");
 
-                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()))
+                    if (regionPrototype.HasKeyword(regionKeywordRef))
                         return false;
                 }
 
@@ -2476,7 +2489,7 @@ namespace MHServerEmu.Games.Powers
                     if (regionKeywordRef == PrototypeId.Invalid)
                         Logger.Warn($"CanBeUsedInRegion(): Power has invalid PowerUseRequiresRegionKwd!\n Power Prototype: {powerProto}");
 
-                    if (regionPrototype.HasKeyword(regionKeywordRef.As<KeywordPrototype>()) == false)
+                    if (regionPrototype.HasKeyword(regionKeywordRef) == false)
                         return false;
                 }
             }
@@ -3323,6 +3336,7 @@ namespace MHServerEmu.Games.Powers
                     ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
                     ambientNpcCondition.StartTime = Game.CurrentTime;
                     Owner.ConditionCollection.AddCondition(ambientNpcCondition);
+                    Owner.Properties[PropertyEnum.NPCAmbientLock] = true;
                 }
             }
             else
@@ -3341,6 +3355,7 @@ namespace MHServerEmu.Games.Powers
                     Owner.ConditionCollection.GetCondition(999) != null)
                 {
                     Owner.ConditionCollection.RemoveCondition(999);
+                    Owner.Properties[PropertyEnum.NPCAmbientLock] = false;
                 }
             }
 
