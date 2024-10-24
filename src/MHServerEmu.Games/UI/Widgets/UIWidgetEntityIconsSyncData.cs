@@ -419,6 +419,13 @@ namespace MHServerEmu.Games.UI.Widgets
         public bool HasPropertyEntryEval { get; set; }
         public int PropertyEntryTableIndex { get; set; }
 
+        public KnownEntityEntry()
+        {
+            IconIndexForHealthPercentEval = -1;
+            PropertyEntryTableIndex = -1;
+            EnrageStartTime = TimeSpan.FromMilliseconds(-1);
+        }
+
         public void Destroy()
         {
             if (_properties != null) Detach(true);
