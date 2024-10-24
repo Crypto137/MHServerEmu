@@ -421,7 +421,7 @@ namespace MHServerEmu.Games.UI.Widgets
 
         public KnownEntityEntry()
         {
-            IconIndexForHealthPercentEval = -1;
+            // IconIndexForHealthPercentEval = -1; // Bonus* bug
             PropertyEntryTableIndex = -1;
             EnrageStartTime = TimeSpan.FromMilliseconds(-1);
         }
