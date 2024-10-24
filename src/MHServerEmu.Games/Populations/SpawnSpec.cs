@@ -483,7 +483,7 @@ namespace MHServerEmu.Games.Populations
             Game.GameEventScheduler.CancelEvent(_clearClusterEvent);            
             Region.ClusterEnemiesClearedEvent.Invoke(new(this, killerId));
 
-            if (loot && Killers.Count > 0 && ObjectProto?.OnDefeatLootTable != PrototypeId.Invalid)
+            if (loot && Killers.Count > 0 && ObjectProto != null && ObjectProto.OnDefeatLootTable != PrototypeId.Invalid)
             {
                 var entityManager = Game.EntityManager;
                 var entity = entityManager.GetEntity<WorldEntity>(entityId);
