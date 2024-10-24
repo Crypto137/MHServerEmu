@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.UI.Widgets
                         bool forceRefreshEntityHealthPercent = entityEntry.ForceRefreshEntityHealthPercent;
                         long enrageStartTime = (long)entityEntry.EnrageStartTime.TotalMilliseconds;
                         bool hasPropertyEntryEval = entityEntry.HasPropertyEntryEval;
-                        int propertyEntryIndex = entityEntry.PropertyEntryIndex;
+                        int propertyEntryIndex = entityEntry.PropertyEntryTableIndex;
 
                         success &= Serializer.Transfer(archive, ref entityId);
                         success &= Serializer.Transfer(archive, ref state);
@@ -169,7 +169,7 @@ namespace MHServerEmu.Games.UI.Widgets
                         entityEntry.ForceRefreshEntityHealthPercent = forceRefreshEntityHealthPercent;
                         entityEntry.EnrageStartTime = TimeSpan.FromMilliseconds(enrageStartTime);
                         entityEntry.HasPropertyEntryEval = hasPropertyEntryEval;
-
+                        entityEntry.PropertyEntryTableIndex = propertyEntryIndex;
                         filterEntry.KnownEntityDict.Add(entityId, entityEntry);
                     }
                 }
@@ -290,7 +290,8 @@ namespace MHServerEmu.Games.UI.Widgets
                             int index = 0;
                             foreach (var healthPercentIcon in healthPercentProto.HealthDisplayTable)
                             {
-                                if (healthPercentIcon != null && healthPercent >= healthPercentIcon.HealthPercent)
+                                if (healthPercentIcon == null) continue;
+                                if (healthPercent >= healthPercentIcon.HealthPercent)
                                 {
                                     if (knownEntityEntry.IconIndexForHealthPercentEval != index)
                                     {
@@ -354,21 +355,21 @@ namespace MHServerEmu.Games.UI.Widgets
                                 if (worldEntity is Agent agent && agent.AIController != null)
                                     evalContext.SetVar_PropertyCollectionPtr(EvalContext.EntityBehaviorBlackboard, agent.AIController.Blackboard.PropertyCollection);
 
-                                int iconIndex = -1; 
+                                int tableIndex = -1; 
                                 int index = 0;
                                 foreach (var entry in propertyProto.PropertyEntryTable)
                                 {
                                     if (Eval.RunBool(entry.PropertyEval, evalContext))
                                     {
-                                        iconIndex = index;
+                                        tableIndex = index;
                                         break;
                                     }
                                     index++;
                                 }
 
-                                if (knownEntityEntry.IconIndexForHealthPercentEval != iconIndex)
+                                if (knownEntityEntry.PropertyEntryTableIndex != tableIndex)
                                 {
-                                    knownEntityEntry.IconIndexForHealthPercentEval = iconIndex;
+                                    knownEntityEntry.PropertyEntryTableIndex = tableIndex;
                                     return true;
                                 }
                             }
@@ -416,7 +417,7 @@ namespace MHServerEmu.Games.UI.Widgets
         public bool ForceRefreshEntityHealthPercent { get; set; }
         public TimeSpan EnrageStartTime { get; set; }
         public bool HasPropertyEntryEval { get; set; }
-        public int PropertyEntryIndex { get; set; }
+        public int PropertyEntryTableIndex { get; set; }
 
         public void Destroy()
         {
@@ -460,7 +461,7 @@ namespace MHServerEmu.Games.UI.Widgets
             sb.AppendLine($"{nameof(ForceRefreshEntityHealthPercent)}: {ForceRefreshEntityHealthPercent}");
             sb.AppendLine($"{nameof(EnrageStartTime)}: {EnrageStartTime - Clock.GameTime}");
             sb.AppendLine($"{nameof(HasPropertyEntryEval)}: {HasPropertyEntryEval}");
-            sb.AppendLine($"{nameof(PropertyEntryIndex)}: {PropertyEntryIndex}");
+            sb.AppendLine($"{nameof(PropertyEntryTableIndex)}: {PropertyEntryTableIndex}");
             return sb.ToString();
         }
     }
