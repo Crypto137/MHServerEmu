@@ -1039,7 +1039,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             var region = Region;
             if (region == null)
-            {   
+            {
                 // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
                 player.MissionInteractRelease(this, missionRef);
                 return false;
@@ -1474,13 +1474,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnExitedWorld();
 
+            // Clear dialog target
+            Player player = GetOwnerOfType<Player>();
+            player?.SetDialogTarget(InvalidId, InvalidId);
+
             DeactivateTeamUpAgent();
 
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
             summonedInventory?.DestroyContained();
 
             // Store missions to Avatar
-            Player player = GetOwnerOfType<Player>();
             player?.MissionManager?.StoreAvatarMissions(this);
         }
 

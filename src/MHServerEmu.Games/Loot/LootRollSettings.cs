@@ -101,6 +101,7 @@ namespace MHServerEmu.Games.Loot
             DropChanceModifiers = default;
             NoDropModifier = 1f;
 
+            Player = default;
             UsableAvatar = default;
             UsableTeamUp = default;
             UseSecondaryAvatar = default;

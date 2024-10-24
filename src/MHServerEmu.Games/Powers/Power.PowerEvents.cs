@@ -635,7 +635,7 @@ namespace MHServerEmu.Games.Powers
         // 7
         private bool DoPowerEventActionInteractFinish()
         {
-            if (Owner is not Avatar avatar) 
+            if (Owner is not Avatar avatar)
                 return Logger.WarnReturn(false, $"DoPowerEventActionInteractFinish(): Owner not Avatar");
 
             return avatar.PreInteractPowerEnd();

@@ -13,6 +13,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     /// </summary>
     public class LootRollModifierPrototype : Prototype
     {
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public virtual void Apply(LootRollSettings settings)
@@ -31,6 +33,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int LevelMin { get; protected set; }
         public int LevelMax { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             if (LevelMin > 0 && settings.Level < LevelMin)
@@ -45,6 +49,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int LevelMin { get; protected set; }
         public int LevelMax { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             if ((LevelMin > 0 && settings.LevelForRequirementCheck < LevelMin) || (LevelMax > 0 && settings.LevelForRequirementCheck > LevelMax))
@@ -54,6 +60,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollMarkSpecialPrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers |= LootDropChanceModifiers.SpecialItemFind;
@@ -67,6 +75,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollUnmarkSpecialPrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers &= ~LootDropChanceModifiers.SpecialItemFind;
@@ -80,6 +90,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollMarkRarePrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers |= LootDropChanceModifiers.RareItemFind;
@@ -93,6 +105,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollUnmarkRarePrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers &= ~LootDropChanceModifiers.RareItemFind;
@@ -108,6 +122,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int LevelOffset { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.Level += LevelOffset;
@@ -117,6 +133,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootRollOnceDailyPrototype : LootRollModifierPrototype
     {
         public bool PerAccount { get; protected set; }
+
+        //---
 
         public override void Apply(LootRollSettings settings)
         {
@@ -135,6 +153,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool PerAccount { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             LootDropChanceModifiers modifiers = LootDropChanceModifiers.CooldownOncePerRollover;
@@ -151,6 +171,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootRollCooldownByChannelPrototype : LootRollModifierPrototype
     {
         public bool PerAccount { get; protected set; }
+
+        //---
 
         public override void Apply(LootRollSettings settings)
         {
@@ -169,6 +191,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Avatar { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             if (Avatar != PrototypeId.Invalid)
@@ -183,6 +207,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int Level { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.Level = Level;
@@ -196,6 +222,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short ModifyMinBy { get; protected set; }
         public short ModifyMaxBy { get; protected set; }
         public PrototypeId Category { get; protected set; }
+
+        //---
 
         public override void Apply(LootRollSettings settings)
         {
@@ -219,6 +247,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] Choices { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             if (Choices.IsNullOrEmpty())
@@ -233,6 +263,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootRollSetUsablePrototype : LootRollModifierPrototype
     {
         public float Usable { get; protected set; }
+
+        //---
 
         public override void PostProcess()
         {
@@ -250,6 +282,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool UseLevelVerbatim { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.UseLevelVerbatim = UseLevelVerbatim;
@@ -259,6 +293,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootRollRequireDifficultyTierPrototype : LootRollModifierPrototype
     {
         public PrototypeId[] Choices { get; protected set; }
+
+        //---
 
         public override void Apply(LootRollSettings settings)
         {
@@ -277,6 +313,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootRollModifyDropByDifficultyTierPrototype : LootRollModifierPrototype
     {
         public CurveId ModifierCurve { get; protected set; }
+
+        //---
 
         public override void Apply(LootRollSettings settings)
         {
@@ -305,11 +343,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollRequireConditionKeywordPrototype : LootRollModifierPrototype
     {
+        public PrototypeId[] Choices { get; protected set; }
+
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
-
-        public PrototypeId[] Choices { get; protected set; }
 
         public override void PostProcess()
         {
@@ -332,11 +372,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollForbidConditionKeywordPrototype : LootRollModifierPrototype
     {
+        public PrototypeId[] Choices { get; protected set; }
+
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
-
-        public PrototypeId[] Choices { get; protected set; }
 
         public override void PostProcess()
         {
@@ -358,11 +400,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollRequireDropperKeywordPrototype : LootRollModifierPrototype
     {
+        public PrototypeId[] Choices { get; protected set; }
+
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
-
-        public PrototypeId[] Choices { get; protected set; }
 
         public override void PostProcess()
         {
@@ -385,11 +429,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollForbidDropperKeywordPrototype : LootRollModifierPrototype
     {
+        public PrototypeId[] Choices { get; protected set; }
+
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
-
-        public PrototypeId[] Choices { get; protected set; }
 
         public override void PostProcess()
         {
@@ -411,11 +457,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollRequireRegionKeywordPrototype : LootRollModifierPrototype
     {
+        public PrototypeId[] Choices { get; protected set; }
+
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
-
-        public PrototypeId[] Choices { get; protected set; }
 
         public override void PostProcess()
         {
@@ -438,11 +486,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollForbidRegionKeywordPrototype : LootRollModifierPrototype
     {
+        public PrototypeId[] Choices { get; protected set; }
+
+        //---
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private KeywordsMask _conditionKeywordsMask;
-
-        public PrototypeId[] Choices { get; protected set; }
 
         public override void PostProcess()
         {
@@ -466,6 +516,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] Choices { get; protected set; }
 
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             if (Choices.IsNullOrEmpty() || (settings.RegionScenarioRarity != PrototypeId.Invalid && Choices.Contains(settings.RegionScenarioRarity)))
@@ -482,9 +534,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollRequireKillCountPrototype : LootRollModifierPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public int KillsRequired { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override void Apply(LootRollSettings settings)
         {
@@ -512,9 +566,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollRequireWeekdayPrototype : LootRollModifierPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public Weekday[] Choices { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public override void Apply(LootRollSettings settings)
         {
@@ -541,6 +597,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollIgnoreCooldownPrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers |= LootDropChanceModifiers.IgnoreCooldown;
@@ -549,6 +607,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollIgnoreVendorXPCapPrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers |= LootDropChanceModifiers.IgnoreCap;
@@ -558,6 +618,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootRollSetRegionAffixTablePrototype : LootRollModifierPrototype
     {
         public PrototypeId RegionAffixTable { get; protected set; }
+
+        //---
 
         public override void Apply(LootRollSettings settings)
         {
@@ -570,6 +632,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollIncludeCurrencyBonusPrototype : LootRollModifierPrototype
     {
+        //---
+
         public override void Apply(LootRollSettings settings)
         {
             settings.DropChanceModifiers |= LootDropChanceModifiers.IncludeCurrencyBonus;
@@ -583,31 +647,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootRollMissionStateRequiredPrototype : LootRollModifierPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId[] Missions { get; protected set; }
         public MissionState RequiredState { get; protected set; }
 
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public override void Apply(LootRollSettings settings)
         {
-            var player = settings.Player;
-            if (player == null) 
-            { 
+            if (settings.Player == null)
+            {
                 Logger.Warn("Apply(): player == null");
-                return; 
+                return;
             };
 
-            if (Missions.HasValue())
-                foreach (var missionRef in Missions)
+            if (Missions.IsNullOrEmpty())
+                return;
+
+            foreach (PrototypeId missionProtoRef in Missions)
+            {
+                Mission mission = MissionManager.FindMissionForPlayer(settings.Player, missionProtoRef);
+                MissionState state = mission != null ? mission.State : MissionState.Invalid;
+
+                if (state != RequiredState)
                 {
-                    var mission = MissionManager.FindMissionForPlayer(player, missionRef);
-                    var state = mission != null ? mission.State : MissionState.Invalid;
-                    if (state != RequiredState)
-                    {
-                        settings.DropChanceModifiers |= LootDropChanceModifiers.MissionRestricted;
-                        break;
-                    }
+                    settings.DropChanceModifiers |= LootDropChanceModifiers.MissionRestricted;
+                    break;
                 }
+            }
         }
     }
 }

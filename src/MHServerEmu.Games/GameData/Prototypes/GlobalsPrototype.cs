@@ -277,8 +277,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int AvatarCoopInactiveTimeMS { get; protected set; }
         public int AvatarCoopInactiveOnDeadBufferMS { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public AlliancePrototype PlayerAlliancePrototype { get => PlayerAlliance.As<AlliancePrototype>(); }
+
         [DoNotCopy]
         public PopulationGlobalsPrototype PopulationGlobalsPrototype { get => PopulationGlobals.As<PopulationGlobalsPrototype>(); }
     }
