@@ -2329,6 +2329,41 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public bool DiscoveredForPlayer(Player player)
+        {
+            if (IsDiscoverable == false) return false;
+            var playerRegion = player.GetRegion();
+            if (playerRegion != null && playerRegion == Region && playerRegion.IsEntityDiscovered(this)) return true;
+            if (player.IsEntityDiscovered(this) && WorldEntityPrototype?.ObjectiveInfo?.TrackAfterDiscovery == true) return true;
+            return false;
+        }
+
+        public void OnInteractedWith(WorldEntity other)
+        {
+            int usesLeft = Properties[PropertyEnum.InteractableUsesLeft];
+            bool used = usesLeft == -1 || usesLeft > 0;
+
+            if (usesLeft != -1)
+            {
+                usesLeft--;
+                Properties[PropertyEnum.InteractableUsesLeft] = usesLeft;
+            }
+
+            bool lastUsed = used && usesLeft == 0;
+
+            // TODO InteractableSpawnLootDelayMS
+
+            if (lastUsed)
+            {
+                long destroyDelayMS = Properties[PropertyEnum.InteractableDestroyDelayMS];
+                if (destroyDelayMS > 0)
+                    ScheduleKillEvent(TimeSpan.FromMilliseconds(destroyDelayMS));
+            }
+
+            if (WorldEntityPrototype.PostInteractState != null)
+                ApplyStateFromPrototype(WorldEntityPrototype.PostInteractState);
+        }
+
         #region Scheduled Events
 
         public bool ScheduleKillEvent(TimeSpan delay)

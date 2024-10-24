@@ -10,6 +10,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
@@ -1001,34 +1002,83 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Interaction
 
-        public override bool UseInteractableObject(ulong entityId, PrototypeId missionProtoRef)
+        private bool OLD_HandleBowlingBallItem(Player player)
+        {
+            var bowlingBallProtoRef = (PrototypeId)7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
+            var itemPower = (PrototypeId)18211158277448213692; // BowlingBallItemPower
+                                                               // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
+
+            // Destroy bowling balls that are already present in the player general inventory
+            Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
+
+            // A player can't have more than ten balls
+            if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
+
+            // Give the player a new bowling ball
+            player.Game.LootManager.GiveItem(bowlingBallProtoRef, player);
+
+            // Assign bowling ball power if the player's avatar doesn't have one
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar.HasPowerInPowerCollection(itemPower) == false)
+                avatar.AssignPower(itemPower, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+
+            return true;
+        }
+
+        public override bool UseInteractableObject(ulong entityId, PrototypeId missionRef)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "UseInteractableObject(): player == null");
 
-            if (missionProtoRef != PrototypeId.Invalid)
+            var region = Region;
+            if (region == null)
             {
                 // We need to send NetMessageMissionInteractRelease here, or the client UI will get locked
-                Logger.Debug($"UseInteractableObject(): missionProtoRef={missionProtoRef.GetName()}");
-                player.SendMessage(NetMessageMissionInteractRelease.DefaultInstance);
+                player.MissionInteractRelease(this, missionRef);
+                return false;
+            }
+
+            if (entityId == InvalidId)
+            {
+                //region?.NotificationInteractEvent.Invoke(new(player, missionRef));
+                return true;
             }
 
             var interactableObject = Game.EntityManager.GetEntity<WorldEntity>(entityId);
-            if (interactableObject == null) return Logger.WarnReturn(false, "UseInteractableObject(): interactableObject == null");
+            if (interactableObject == null || CanInteract(player, interactableObject) == false)
+            {
+                player.MissionInteractRelease(this, missionRef);
+                return false;
+            }
 
             Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
+            // old hardcode
+            if (interactableObject.PrototypeDataRef == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
+                return OLD_HandleBowlingBallItem(player);
+            if (PrototypeName.Contains("DangerRoom")) return false;// fix for scenario crashes                
+            // end
+
+            var objectProto = interactableObject.WorldEntityPrototype;
+            if (objectProto.PreInteractPower != PrototypeId.Invalid)
+            {
+                ulong targetId = player.Properties[PropertyEnum.InteractReadyForTargetId];
+                player.Properties.RemoveProperty(PropertyEnum.InteractReadyForTargetId);
+                if (targetId != entityId) return Logger.WarnReturn(false, "UseInteractableObject(): targetId != entityId");
+            }
+
+            if (interactableObject.IsInWorld == false && interactableObject is Item item)
+                item.InteractWithAvatar(this);
+
+            //region.PlayerInteractEvent.Invoke(new(player, interactableObject, missionRef));
+
+            if (interactableObject.Properties[PropertyEnum.EntSelActHasInteractOption])
+                interactableObject.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerInteract);
+
             if (interactableObject is Transition transition)
-            {
                 transition.UseTransition(player);
-            }
-            else
-            {
-                // REMOVEME
-                EventPointer<OLD_UseInteractableObjectEvent> eventPointer = new();
-                Game.GameEventScheduler.ScheduleEvent(eventPointer, TimeSpan.Zero);
-                eventPointer.Get().Initialize(player, interactableObject);
-            }
+
+            interactableObject.OnInteractedWith(this);
 
             return true;
         }

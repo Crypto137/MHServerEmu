@@ -6,7 +6,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Dialog
 {
-    public class InteractionOption : IComparable<InteractionOption>
+    public class InteractionOption
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public int Priority { get; protected set; }
@@ -23,21 +23,21 @@ namespace MHServerEmu.Games.Dialog
 
         public InteractionOption()
         {
-            Priority = 50;            
+            Priority = 50;
             EntityFilterWrapper = new();
-            OptionType = MissionOptionTypeFlags.None; 
+            OptionType = MissionOptionTypeFlags.None;
             MethodEnum = InteractionMethod.None;
             IndicatorType = HUDEntityOverheadIcon.None;
             EntityTrackingFlags = EntityTrackingFlag.None;
             OptimizationFlags = InteractionOptimizationFlags.None;
         }
 
-        public int CompareTo(InteractionOption other)
+        public int SortPriority(InteractionOption other)
         {
             return Priority.CompareTo(other.Priority);
         }
 
-        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, SortedSet<InteractionOption> checkList)
+        public virtual EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, HashSet<InteractionOption> checkList)
         {
             checkList.Add(this);
             return EntityTrackingFlag.None;
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Dialog
             return true;
         }
 
-        public bool Evaluate(EntityDesc interacteeDesc, WorldEntity interactor, InteractionFlags interactionFlags, 
+        public bool Evaluate(EntityDesc interacteeDesc, WorldEntity interactor, InteractionFlags interactionFlags,
             ref InteractionMethod outInteractions, ref InteractData outInteractData)
         {
             if (interactor == null) return false;
@@ -67,7 +67,7 @@ namespace MHServerEmu.Games.Dialog
             if (outInteractData != null)
             {
                 if (isAvailable)
-                    InteractionManager.TrySetIndicatorTypeAndMapOverrideWithPriority(localInteractee, ref outInteractData.IndicatorType, ref outInteractData.MapIconOverrideRef, IndicatorType);                
+                    InteractionManager.TrySetIndicatorTypeAndMapOverrideWithPriority(localInteractee, ref outInteractData.IndicatorType, ref outInteractData.MapIconOverrideRef, IndicatorType);
                 else if (FailureReasonText != LocaleStringId.Blank)
                     outInteractData.FailureReasonText = FailureReasonText;
             }
