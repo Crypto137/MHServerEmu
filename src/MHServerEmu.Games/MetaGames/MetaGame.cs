@@ -413,6 +413,8 @@ namespace MHServerEmu.Games.MetaGames
 
         public bool RemoveSpawnEvent(PrototypeId contextRef)
         {
+            if (_metaStateSpawnEvents.TryGetValue(contextRef, out MetaStateSpawnEvent spawnEvent))
+                spawnEvent.Destroy();
             return _metaStateSpawnEvents.Remove(contextRef);
         }
 

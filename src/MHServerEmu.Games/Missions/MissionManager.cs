@@ -1011,7 +1011,7 @@ namespace MHServerEmu.Games.Missions
         public void RemoveSpawnedMission(PrototypeId missionRef)
         {
             if (_spawnedMissions.ContainsKey(missionRef))
-                _spawnedMissions.Remove(missionRef);
+                _spawnedMissions.Remove(missionRef); //  spawnEvent.Destroy ?
         }
 
         public MissionSpawnState GetSpawnStateForMission(MissionPrototype missionProto)

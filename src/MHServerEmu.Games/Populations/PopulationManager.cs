@@ -85,6 +85,12 @@ namespace MHServerEmu.Games.Populations
                 _spawnEvents.Add(spawnEvent);
         }
 
+        public void RemoveSpawnEvent(SpawnEvent spawnEvent)
+        {
+            if (_spawnEvents.Contains(spawnEvent) == false)
+                _spawnEvents.Remove(spawnEvent);
+        }
+
         public void ScheduleSpawnEvent(SpawnEvent spawnEvent)
         {
             foreach (var kvp in spawnEvent.SpawnMarkerSchedulers)
@@ -102,6 +108,25 @@ namespace MHServerEmu.Games.Populations
                 LocationSchedulers.AddRange(spawnEvent.SpawnLocationSchedulers.Values);
                 LocationSchedule();
             }
+        }
+
+        public void DeScheduleSpawnEvent(SpawnEvent spawnEvent)
+        {
+            foreach (var kvp in spawnEvent.SpawnMarkerSchedulers)
+            {
+                var markerRef = kvp.Key;
+                var markerScheduler = kvp.Value;
+                if (MarkerSchedulers.ContainsKey(markerRef))
+                {
+                    MarkerSchedulers[markerRef].SpawnSchedulers.Remove(markerScheduler);
+                    if (MarkerSchedulers[markerRef].SpawnSchedulers.Count == 0)
+                        MarkerSchedulers.Remove(markerRef);
+                }
+            }
+
+            if (spawnEvent.SpawnLocationSchedulers.Count > 0)
+                foreach (var locationScheduler in spawnEvent.SpawnLocationSchedulers.Values)
+                    LocationSchedulers.Remove(locationScheduler);
         }
 
         private bool GetEventTime(List<SpawnScheduler> schedulers, TimeSpan maxTimeOffset, out TimeSpan eventTime, out TimeSpan timeOffset)
