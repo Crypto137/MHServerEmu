@@ -1996,11 +1996,8 @@ namespace MHServerEmu.Games.Missions
             var lootManager = Game.LootManager;
             var missionProto = Prototype;
 
-            // TODO Rework this!!!
-            var lootType = lootSummary.Types;
-
             // Test for Item only
-            if (lootType.HasFlag(LootType.Item))
+            if (lootSummary.HasAnyResult)
             {
                 if (missionProto.DropLootOnGround || lootDropper != null)
                 {
