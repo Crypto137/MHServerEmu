@@ -1110,14 +1110,6 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnSetDialogTarget(MailboxMessage message)
-        {
-            var setDialogTarget = message.As<NetMessageSetDialogTarget>();
-            if (setDialogTarget == null) return Logger.WarnReturn(false, $"OnSetDialogTarget(): Failed to retrieve message");
-            Player.SetDialogTarget(setDialogTarget.TargetId, setDialogTarget.InteractorId);
-            return true;
-        }
-
         private bool OnSetTipSeen(MailboxMessage message)   // 110
         {
             var setTipSeen = message.As<NetMessageSetTipSeen>();

@@ -1484,7 +1484,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             summonedInventory?.DestroyContained();
 
             // Store missions to Avatar
-            Player player = GetOwnerOfType<Player>();
             player?.MissionManager?.StoreAvatarMissions(this);
         }
 
