@@ -19,6 +19,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -2110,6 +2111,18 @@ namespace MHServerEmu.Games.Entities
                         using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                         inputSettings.Initialize(LootContext.Drop, player, this);
                         Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                    }
+
+                    // TODO: rework this
+                    List<MissionLootTable> lootList = new();
+                    if (MissionManager.GetDropLootsForEnemy(this, player, lootList))
+                    {
+                        foreach (var missionLoot in lootList)
+                        {
+                            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                            inputSettings.Initialize(LootContext.Drop, player, this);
+                            Game.LootManager.SpawnLootFromTable(missionLoot.LootTableRef, inputSettings);
+                        }
                     }
                 }
 
