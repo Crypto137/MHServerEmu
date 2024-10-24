@@ -134,10 +134,10 @@ namespace MHServerEmu.Games.Loot
                 builder.SetEnduranceBonus((uint)EnduranceBonus);
 
             if (Types.HasFlag(LootType.Experience))
-                builder.SetEnduranceBonus((uint)Experience);
+                builder.SetExperience((uint)Experience);
 
             if (Types.HasFlag(LootType.HealthBonus))
-                builder.SetEnduranceBonus((uint)HealthBonus);
+                builder.SetHealthBonus((uint)HealthBonus);
 
             if (Types.HasFlag(LootType.Item))
             {
@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Loot
             }
 
             if (Types.HasFlag(LootType.RealMoney))
-                builder.SetEnduranceBonus((uint)RealMoney);
+                builder.SetRealMoney((uint)RealMoney);
 
             if (Types.HasFlag(LootType.CallbackNode))
             {
