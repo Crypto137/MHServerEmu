@@ -95,7 +95,12 @@ namespace MHServerEmu.Games.UI
 
         public void DeleteWidget(PrototypeId widgetRef, PrototypeId contextRef = PrototypeId.Invalid)
         {
-            if (_dataDict.Remove((widgetRef, contextRef)) == false)
+            if (_dataDict.TryGetValue((widgetRef, contextRef), out UISyncData widget))
+            {
+                _dataDict.Remove((widgetRef, contextRef));
+                widget.Deallocate();
+            }
+            else
                 Logger.Warn($"DeleteWidget(): Widget not found, widgetRef={widgetRef}, contextRef={contextRef}");
 
             var region = Region;
