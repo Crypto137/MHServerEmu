@@ -109,12 +109,11 @@ namespace MHServerEmu.Games.Dialog
 
         internal void SetInteractDataObjectiveFlags(Player interactingPlayer, ref InteractData outInteractData, Mission mission, BaseMissionOption completeOption)
         {
-            throw new NotImplementedException();
         }
 
         internal bool ObjectiveFlagsAllowed()
         {
-            throw new NotImplementedException();
+            return false;
         }
     }
 
