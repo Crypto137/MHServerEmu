@@ -290,7 +290,7 @@ namespace MHServerEmu.Games.Regions
 
             if (MissionManager != null && MissionManager.InitializeForRegion(this) == false) return false;
 
-            if (settings.Affixes != null && settings.Affixes.Any())
+            if (settings.Affixes.Count > 0)
             {
                 RegionAffixTablePrototype affixTableP = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
                 if (affixTableP != null)
@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.Regions
                     return Logger.WarnReturn(false, $"Initialize(): Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
             }
 
-            if (settings.Affixes != null && settings.Affixes.Any())
+            if (settings.Affixes.Count > 0)
             {
                 var affixTableProto = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
                 if (affixTableProto != null)

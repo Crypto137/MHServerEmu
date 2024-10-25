@@ -41,7 +41,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
                     if (endlessState.RegionPOIPicker != PrototypeId.Invalid)
                     {
-                        if (GeneratorPrototype.POIGroups.HasValue()) POIPickerCollection = new(regionGeneratorProto);
+                        POIPickerCollection ??= new(regionGeneratorProto);
                         POIPickerCollection.RegisterPOIGroup(endlessState.RegionPOIPicker);
                     }
                 }
