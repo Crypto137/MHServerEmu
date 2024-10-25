@@ -272,7 +272,7 @@ namespace MHServerEmu.Games.Entities
             // HACK: LOOT AND XP
             if (this is Agent agent && notMissile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
-                GiveKillRewards(killer, killFlags, directKiller);
+                AwardKillLoot(killer, killFlags, directKiller);
             }
 
             // HACK: Schedule respawn in public zones using SpawnSpec
@@ -1955,7 +1955,9 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.GetXPAwarded(CharacterLevel, out xp, out minXP, applyGlobalTuning);
         }
 
-        public bool GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        // Loot TODO: Per-player clones for chests, tag-based awarding
+
+        public bool AwardKillLoot(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             Region region = Region;
             if (region == null) return Logger.WarnReturn(false, "GiveKillRewards(): region == null");
@@ -1963,7 +1965,7 @@ namespace MHServerEmu.Games.Entities
             TuningTable tuningTable = region.TuningTable;
             if (tuningTable == null) return Logger.WarnReturn(false, "GiveKillRewards(): tuningTable == null");
 
-            // TODO: Track kill participation somehow to prevent exploits
+            // TODO: Use the tagging system instead of interest
             foreach (ulong playerId in InterestReferences)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(playerId);
@@ -1978,14 +1980,7 @@ namespace MHServerEmu.Games.Entities
                         ? rankProto.LootTableParam
                         : LootDropEventType.OnKilled;
 
-                    PrototypeId lootTableProtoRef = Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
-
-                    if (lootTableProtoRef != PrototypeId.Invalid)
-                    {
-                        using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                        inputSettings.Initialize(LootContext.Drop, player, this);
-                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
-                    }
+                    AwardLootForDropEvent(lootDropEventType, player);
                 }
 
                 // XP
@@ -2000,6 +1995,77 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        private bool AwardInteractionLoot(ulong interactorEntityId)
+        {
+            WorldEntity interactorEntity = Game.EntityManager.GetEntity<WorldEntity>(interactorEntityId);
+            if (interactorEntity == null) return Logger.WarnReturn(false, "AwardInteractionLoot(): interactorEntity == null");
+
+            // TODO: Use the tagging system instead of interest
+            foreach (ulong playerId in InterestReferences)
+            {
+                Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                if (player == null) continue;
+
+                AwardLootForDropEvent(LootDropEventType.OnInteractedWith, player);
+            }
+
+            return true;
+        }
+
+        private bool AwardLootForDropEvent(LootDropEventType eventType, Player player)
+        {
+            const int MaxTables = 8;    // The maximum we've seen in 1.52 prototypes is 4, double this just in case
+            
+            Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[MaxTables];
+            int numTables = 0;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType))
+            {
+                Property.FromParam(kvp.Key, 2, out int actionTypeInt);
+                LootActionType actionType = (LootActionType)actionTypeInt;
+
+                if (actionType != LootActionType.Spawn)
+                {
+                    Logger.Warn($"AwardLootForDropEvent(): Unimplemented loot action type {actionType} for {this}");
+                    continue;
+                }
+
+                PrototypeId lootTableProtoRef = kvp.Value;
+                if (lootTableProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"AwardLootForDropEvent(): Invalid loot table proto ref for property {kvp.Key} in {this}");
+                    continue;
+                }
+
+                tables[numTables++] = (lootTableProtoRef, actionType);
+            }
+
+            if (numTables == 0)
+                return true;
+
+            tables = tables[..numTables];
+
+            // TODO: Move this part to the LootManager
+            foreach ((PrototypeId, LootActionType) tableEntry in tables)
+            {
+                (PrototypeId lootTableProtoRef, LootActionType actionType) = tableEntry;
+                if (actionType != LootActionType.Spawn)
+                    continue;
+
+                using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                inputSettings.Initialize(LootContext.Drop, player, this);
+                Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+            }
+
+            return true;
+        }
+
+        private bool HasLootDropEventType(LootDropEventType eventType)
+        {
+            PropertyList.Iterator iterator = Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType);
+            return iterator.GetEnumerator().MoveNext();
         }
 
         #endregion
@@ -2338,7 +2404,7 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public void OnInteractedWith(WorldEntity other)
+        public void OnInteractedWith(WorldEntity interactorEntity)
         {
             int usesLeft = Properties[PropertyEnum.InteractableUsesLeft];
             bool used = usesLeft == -1 || usesLeft > 0;
@@ -2351,7 +2417,24 @@ namespace MHServerEmu.Games.Entities
 
             bool lastUsed = used && usesLeft == 0;
 
-            // TODO InteractableSpawnLootDelayMS
+            if (HasLootDropEventType(LootDropEventType.OnInteractedWith))
+            {
+                long interactableSpawnLootDelayMS = Properties[PropertyEnum.InteractableSpawnLootDelayMS];
+
+                if (interactableSpawnLootDelayMS > 0)
+                {
+                    // Award interaction loot after a delay to let the opening animation play
+                    TimeSpan interactableSpawnLootDelay = TimeSpan.FromMilliseconds(interactableSpawnLootDelayMS);
+                    EventPointer<AwardInteractionLootEvent> awardInteractionLootEvent = new();
+                    Game.GameEventScheduler.ScheduleEvent(awardInteractionLootEvent, TimeSpan.FromMilliseconds(interactableSpawnLootDelayMS));
+                    awardInteractionLootEvent.Get().Initialize(this, interactorEntity.Id);
+                }
+                else
+                {
+                    // Award loot immediately if no delay is specified for this world entity
+                    AwardInteractionLoot(interactorEntity.Id);
+                }
+            }
 
             if (lastUsed)
             {
@@ -2427,6 +2510,12 @@ namespace MHServerEmu.Games.Entities
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.Kill();
         }
+
+        private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).AwardInteractionLoot(p1);
+        }
+
 
         #endregion
     }
