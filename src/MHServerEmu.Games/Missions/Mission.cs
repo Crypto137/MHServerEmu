@@ -1743,6 +1743,18 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
+        public IEnumerable<Player> GetSortedContributors()
+        {
+            var manager = Game.EntityManager;
+            var sortedContributors = _contributors.OrderByDescending(kvp => kvp.Value);
+            foreach (var kvp in sortedContributors)
+            {
+                var player = manager.GetEntityByDbGuid<Player>(kvp.Key);
+                if (player != null)
+                    yield return player;
+            }
+        }
+
         public IEnumerable<Player> GetContributors() 
         {
             var manager = Game.EntityManager;
@@ -1927,15 +1939,20 @@ namespace MHServerEmu.Games.Missions
                 _lootSeed = 0;
         }
 
+        public void RewardForPlayer(Player player, LootTablePrototype[] rewards, int seedOffset)
+        {
+            LootResultSummary lootSummary = new();
+            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
+                GiveDropLootForPlayer(lootSummary, player);
+        }
+
         private void GiveRewardForPlayer(Player player, int seedOffset, float contribution = 0.0f)
         {
             var avatar = player.CurrentAvatar;       
             var rewards = GetRewardTables();
             if (rewards.IsNullOrEmpty()) return;
 
-            LootResultSummary lootSummary = new();
-            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
-                GiveDropLootForPlayer(lootSummary, player);
+            RewardForPlayer(player, rewards, seedOffset);
 
             if (Prototype is OpenMissionPrototype openProto && openProto.RewardsByContribution.HasValue())
             {

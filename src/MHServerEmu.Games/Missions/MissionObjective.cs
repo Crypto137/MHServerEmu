@@ -510,7 +510,7 @@ namespace MHServerEmu.Games.Missions
 
             if (reset)
             {
-                // TODO rewards
+                GiveMissionRewards();
 
                 var region = Region;
                 if (region != null && objetiveProto is MissionNamedObjectivePrototype namedProto)
@@ -525,6 +525,26 @@ namespace MHServerEmu.Games.Missions
             }
 
             return true;
+        }
+
+        private void GiveMissionRewards()
+        {
+            var rewards = Prototype.Rewards;
+            if (rewards.IsNullOrEmpty()) return;
+
+            var mission = Mission;
+            int seed = PrototypeIndex + 1;
+
+            if (mission.IsOpenMission)
+            {
+                foreach (var player in mission.GetSortedContributors())
+                    mission.RewardForPlayer(player, rewards, seed);
+            }
+            else
+            {
+                foreach (var player in mission.GetParticipants())
+                    mission.RewardForPlayer(player, rewards, seed);
+            }            
         }
 
         private bool OnUnsetStateCompleted()
