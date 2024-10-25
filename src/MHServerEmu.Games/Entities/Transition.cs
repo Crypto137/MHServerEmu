@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -101,6 +102,12 @@ namespace MHServerEmu.Games.Entities
                     if (destination != null) _destinationList.Add(destination);
                 }
             }
+            else if (transProto.Type == RegionTransitionType.TransitionDirect)
+            {
+                var targetRef = transProto.DirectTarget;
+                var destination = Destination.DestinationFromTargetRef(targetRef);
+                if (destination != null) _destinationList.Add(destination);
+            }
 
             base.OnEnteredWorld(settings);
         }
@@ -150,6 +157,7 @@ namespace MHServerEmu.Games.Entities
 
             switch (TransitionPrototype.Type)
             {
+                case RegionTransitionType.TransitionDirect:
                 case RegionTransitionType.Transition:
                     Region region = player.GetRegion();
                     if (region == null) return Logger.WarnReturn(false, "UseTransition(): region == null");
@@ -166,7 +174,28 @@ namespace MHServerEmu.Games.Entities
                     // Check if our target is outside of the current region and we need to do a remote teleport
                     // TODO: Additional checks if we need to transfer (e.g. when transferring to another instance of the same region proto).
                     if (targetRegionProtoRef != PrototypeId.Invalid && region.PrototypeDataRef != targetRegionProtoRef)
+                    {
+                        if (TransitionPrototype.Type == RegionTransitionType.TransitionDirect)
+                        {
+                            var regionContext = player.PlayerConnection.RegionContext;
+                            var regionProto = GameDatabase.GetPrototype<RegionPrototype>(targetRegionProtoRef);
+
+                            if (regionProto.RegionGenerator is SequenceRegionGeneratorPrototype sequenceRegion && sequenceRegion.EndlessThemes.HasValue())
+                                regionContext.EndlessLevel = 1;
+
+                            if (Properties.HasProperty(PropertyEnum.RegionAffix))
+                            {
+                                regionContext.Affixes.Clear();
+                                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RegionAffix))
+                                {
+                                    Property.FromParam(kvp.Key, 0, out PrototypeId affixRef);
+                                    regionContext.Affixes.Add(affixRef);
+                                }
+                            }
+                        }
+
                         return TeleportToRemoteTarget(player, destination.TargetRef);
+                    }
 
                     // No need to transfer if we are already in the target region
                     return TeleportToLocalTarget(player, destination.TargetRef);

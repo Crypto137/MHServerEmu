@@ -270,7 +270,11 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities = true,
                     GenerateLog = false
                 };
-                
+
+                // clear Endless context
+                regionContext.EndlessLevel = 0;
+                regionContext.Affixes.Clear();
+
                 int tries = 10;
 
                 while (region == null && (--tries > 0))
