@@ -408,7 +408,7 @@ namespace MHServerEmu.Games.Entities.Items
                 }
                 else
                 {
-                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto);
+                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, this);
                     avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = true;
                     avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
                 }

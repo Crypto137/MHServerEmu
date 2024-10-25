@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -98,21 +99,30 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto)
+        public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto, Item item = null)
         {
             AssetId creatorAsset = avatar.GetEntityWorldAsset();
             PrototypeId allianceRef = avatar.Alliance.DataRef;
 
             if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
-            var summonerProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
+            var summonerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(summonerRef);
             if (summonerProto == null) return;
 
-            Agent summoner;
+            WorldEntity summoner;
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
             using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
             {
                 settings.EntityRef = summonerRef;
+
+                // DangerRoomScenario
+                if (summonerProto is TransitionPrototype && item != null)
+                {
+                    properties.CopyProperty(item.Properties, PropertyEnum.DifficultyTier);
+                    properties.CopyPropertyRange(item.Properties, PropertyEnum.RegionAffix);
+                    properties.CopyProperty(item.Properties, PropertyEnum.RegionAffixDifficulty);
+                    properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = item.DatabaseUniqueId; // we need this?
+                }
 
                 properties[PropertyEnum.NoMissileCollide] = true; // EvalOnCreate
                 properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
@@ -123,7 +133,7 @@ namespace MHServerEmu.Games.Entities
                 properties[PropertyEnum.Rank] = summonerProto.Rank;
                 settings.Properties = properties;
 
-                summoner = (Agent)avatar.Game.EntityManager.CreateEntity(settings);
+                summoner = (WorldEntity)avatar.Game.EntityManager.CreateEntity(settings);
             }
 
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
@@ -132,8 +142,8 @@ namespace MHServerEmu.Games.Entities
                 summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, settings);
             }
 
-            if (summonPowerProto.ActionsTriggeredOnPowerEvent.HasValue())
-                summoner.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
+            if (summoner is Agent agent && summonPowerProto.ActionsTriggeredOnPowerEvent.HasValue())
+                agent.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
             summoner.Properties[PropertyEnum.PowerUserOverrideID] = avatar.Id;
 
             Inventory summonedInventory = avatar.GetInventory(InventoryConvenienceLabel.Summoned);
