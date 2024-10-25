@@ -153,6 +153,7 @@ namespace MHServerEmu.Games.Entities
             // Remove death state properties
             Properties[PropertyEnum.IsDead] = false;
             Properties[PropertyEnum.NoEntityCollide] = false;
+            SetState(PrototypeId.Invalid);
 
             // Send resurrection message
             var resurrectMessage = NetMessageOnResurrect.CreateBuilder()
