@@ -24,4 +24,24 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateAreas { get; set; }
         public PrototypeId GameStateId { get; set; }
     }
+
+    public class RegionContext
+    {
+        public PrototypeId RegionDataRef;
+        public PrototypeId DifficultyTierRef;
+        public List<PrototypeId> Affixes;
+        public int EndlessLevel;
+        public int Level;
+
+        public RegionContext() : this(PrototypeId.Invalid, PrototypeId.Invalid) { }
+
+        public RegionContext(PrototypeId regionDataRef, PrototypeId difficultyTierRef)
+        {
+            RegionDataRef = regionDataRef;
+            DifficultyTierRef = difficultyTierRef;
+            Affixes = new();
+            EndlessLevel = 0;
+            Level = 60;
+        }
+    }
 }

@@ -57,13 +57,15 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Game game = playerConnection.Game;
+            RegionContext regionContext = new();
 
             int numRegions = 0;
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             foreach (RegionPrototypeId value in Enum.GetValues<RegionPrototypeId>())
             {
-                game.RegionManager.GetOrGenerateRegionForPlayer((PrototypeId)value, playerConnection);
+                regionContext.RegionDataRef = (PrototypeId)value;
+                game.RegionManager.GetOrGenerateRegionForPlayer(regionContext, playerConnection);
                 numRegions++;
             }
 

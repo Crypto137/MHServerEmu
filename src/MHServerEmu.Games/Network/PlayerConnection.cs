@@ -48,6 +48,7 @@ namespace MHServerEmu.Games.Network
         public AreaOfInterest AOI { get; }
         public WorldView WorldView { get; }
         public TransferParams TransferParams { get; }
+        public RegionContext RegionContext { get; }
         public MigrationData MigrationData { get; }
 
         public Player Player { get; private set; }
@@ -67,6 +68,7 @@ namespace MHServerEmu.Games.Network
             WorldView = new(this);
             TransferParams = new(this);
             MigrationData = new();
+            RegionContext = new();
 
             InitializeFromDBAccount();
 
@@ -323,7 +325,8 @@ namespace MHServerEmu.Games.Network
 
             Player.QueueLoadingScreen(regionProtoRef);
 
-            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
+            RegionContext.RegionDataRef = regionProtoRef;
+            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
             if (region == null)
             {
                 Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
