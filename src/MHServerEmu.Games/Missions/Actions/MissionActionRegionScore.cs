@@ -13,7 +13,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            Region?.Properties.AdjustProperty(_proto.Amount, PropertyEnum.TrackedRegionScore);
+            Region?.Properties.AdjustProperty((float)_proto.Amount, PropertyEnum.TrackedRegionScore);
         }
     }
 }
