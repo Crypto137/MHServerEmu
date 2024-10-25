@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
@@ -166,9 +167,13 @@ namespace MHServerEmu.Games.Regions
 
             if (regionProto.IsPublic)
             {
-                // Currently we have only one instance of each public region, and they all use the default difficulty (normal).
+                // Currently we have only one instance of each public region, and they all use the lowest available difficulty.
+                PrototypeId difficultyProtoRef = regionProto.AccessDifficulties.HasValue()
+                    ? regionProto.AccessDifficulties[0]
+                    : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+
                 if (_publicRegionDict.TryGetValue(regionProtoRef, out region) == false)
-                    region = GenerateAndInitRegion(regionProtoRef, GameDatabase.GlobalsPrototype.DifficultyTierDefault);
+                    region = GenerateAndInitRegion(regionProtoRef, difficultyProtoRef);
             }
             else
             {
