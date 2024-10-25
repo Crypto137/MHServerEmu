@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -37,9 +38,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] AffixRarityRestrictions { get; protected set; }
         public EvalPrototype Eval { get; protected set; }
 
-        internal bool CanApplyToRegion(Region region)
+        [DoNotCopy]
+        public KeywordsMask KeywordsBlackMask { get; protected set; }
+        [DoNotCopy]
+        public KeywordsMask KeywordsWhiteMask { get; protected set; }
+
+        public override void PostProcess()
         {
-            throw new NotImplementedException();
+            base.PostProcess();
+
+            KeywordsBlackMask = KeywordPrototype.GetBitMaskForKeywordList(KeywordsBlacklist);
+            KeywordsWhiteMask = KeywordPrototype.GetBitMaskForKeywordList(KeywordsWhitelist);
+        }
+
+        public bool CanApplyToRegion(Region region)
+        {
+            if (KeywordsBlacklist.HasValue())
+                foreach (var area in region.Areas.Values)
+                    if (area.Prototype.KeywordsMask.TestAny(KeywordsBlackMask))
+                        return false;
+
+            if (KeywordsWhitelist.HasValue())
+            {
+                foreach (var area in region.Areas.Values)
+                    if (area.Prototype.KeywordsMask.TestAny(KeywordsWhiteMask))
+                        return true;
+
+                return false;
+            }
+
+            return true;
         }
     }
 
@@ -64,9 +92,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public RegionAffixTableTierEntryPrototype[] Tiers { get; protected set; }
         public AssetId LootSource { get; protected set; }
 
-        internal RegionAffixTableTierEntryPrototype GetByTier(int affixTier)
+        public RegionAffixTableTierEntryPrototype GetByTier(int affixTier)
         {
-            throw new NotImplementedException();
+            if (Tiers.IsNullOrEmpty()) return null;
+
+            foreach (var entry in Tiers)
+                if (entry == null && entry.Tier == affixTier)
+                    return entry;
+
+            return null;
         }
     }
 
