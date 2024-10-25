@@ -625,6 +625,14 @@ namespace MHServerEmu.Games.Entities
             return Math.Max(0.0f, distance);
         }
 
+        public Vector3 GetPositionNearAvatar(Avatar avatar)
+        {
+            Region region = avatar.Region;
+            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
+                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
+            return position;
+        }
+
         public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
         {
             return OrientToward(point, RegionLocation.Position, ignorePitch, changeFlags);

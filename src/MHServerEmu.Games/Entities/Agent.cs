@@ -115,14 +115,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public Vector3 GetPositionNearAvatar(Avatar avatar)
-        {
-            Region region = avatar.Region;
-            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
-                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
-            return position;
-        }
-
         private bool InitLocomotor(float height = 0.0f)
         {
             if (Locomotor != null)
