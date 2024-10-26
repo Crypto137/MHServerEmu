@@ -97,7 +97,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Tiers.IsNullOrEmpty()) return null;
 
             foreach (var entry in Tiers)
-                if (entry == null && entry.Tier == affixTier)
+                if (entry != null && entry.Tier == affixTier)
                     return entry;
 
             return null;
