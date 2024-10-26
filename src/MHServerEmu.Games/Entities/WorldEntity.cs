@@ -1961,18 +1961,14 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             List<Player> playerList = ListPool<Player>.Instance.Rent();
-
-            // TODO: Use Power::ComputeNearbyPlayers() instead of interest
-            foreach (ulong playerId in InterestReferences)
-            {
-                Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                if (player == null) continue;
-                playerList.Add(player);
-            }
+            // NOTE: Compute nearby players on demand for performance reasons
 
             // Loot Tables
             if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
             {
+                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, true, playerList);
+                // TODO: Manually add faraway mission participants if needed
+
                 // OnKilled loot table is different based on the rank of this entity
                 RankPrototype rankProto = GetRankPrototype();
                 LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
@@ -1985,6 +1981,10 @@ namespace MHServerEmu.Games.Entities
             // XP
             if (killer is Avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
             {
+                // Compute player count if we haven't done so already for loot tables
+                if (playerList.Count == 0)
+                    Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, true, playerList);
+
                 AwardKillXP(playerList);
             }
 
@@ -1999,14 +1999,7 @@ namespace MHServerEmu.Games.Entities
             if (interactorEntity == null) return Logger.WarnReturn(false, "AwardInteractionLoot(): interactorEntity == null");
 
             List<Player> playerList = ListPool<Player>.Instance.Rent();
-
-            // TODO: Use Power::ComputeNearbyPlayers() instead of interest
-            foreach (ulong playerId in InterestReferences)
-            {
-                Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                if (player == null) continue;
-                playerList.Add(player);
-            }
+            Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
 
             AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
 

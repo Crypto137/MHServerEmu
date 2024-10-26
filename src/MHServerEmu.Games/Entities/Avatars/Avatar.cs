@@ -677,6 +677,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             _pendingAction.Clear();
         }
 
+        public bool IsCombatActive()
+        {
+            // TODO: Check PropertyEnum.LastInflictedDamageTime
+            return true;
+        }
+
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
         {
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
