@@ -1051,6 +1051,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
             }
 
+            // HACK: Always send release for mission interactions (remove this when missions are merged)
+            if (missionRef != PrototypeId.Invalid)
+                player.MissionInteractRelease(this, missionRef);
+
             Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             // old hardcode
