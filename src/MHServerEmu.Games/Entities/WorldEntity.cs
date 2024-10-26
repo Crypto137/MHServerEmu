@@ -1955,74 +1955,84 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.GetXPAwarded(CharacterLevel, out xp, out minXP, applyGlobalTuning);
         }
 
-        // Loot TODO: Per-player clones for chests, tag-based awarding
-
         public bool AwardKillLoot(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "GiveKillRewards(): region == null");
+            if (IsInWorld == false)
+                return false;
 
-            TuningTable tuningTable = region.TuningTable;
-            if (tuningTable == null) return Logger.WarnReturn(false, "GiveKillRewards(): tuningTable == null");
+            List<Player> playerList = ListPool<Player>.Instance.Rent();
 
-            // TODO: Use the tagging system instead of interest
+            // TODO: Use Power::ComputeNearbyPlayers() instead of interest
             foreach (ulong playerId in InterestReferences)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(playerId);
                 if (player == null) continue;
-
-                // Loot
-                if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
-                {
-                    // TODO: Other loot drop event / action types?
-                    RankPrototype rankProto = GetRankPrototype();
-                    LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
-                        ? rankProto.LootTableParam
-                        : LootDropEventType.OnKilled;
-
-                    AwardLootForDropEvent(lootDropEventType, player);
-                }
-
-                // XP
-                if (killer is Avatar avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
-                {
-                    if (WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true))
-                    {
-                        xp = avatar.ApplyXPModifiers(xp, tuningTable);
-                        avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
-                    }
-                }
+                playerList.Add(player);
             }
 
+            // Loot Tables
+            if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
+            {
+                // OnKilled loot table is different based on the rank of this entity
+                RankPrototype rankProto = GetRankPrototype();
+                LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
+                    ? rankProto.LootTableParam
+                    : LootDropEventType.OnKilled;
+
+                AwardLootForDropEvent(lootDropEventType, playerList);
+            }
+
+            // XP
+            if (killer is Avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
+            {
+                AwardKillXP(playerList);
+            }
+
+            ListPool<Player>.Instance.Return(playerList);
             return true;
         }
 
         private bool AwardInteractionLoot(ulong interactorEntityId)
         {
+            // TODO: Per-player clones for chests, use interactorEntity for this
             WorldEntity interactorEntity = Game.EntityManager.GetEntity<WorldEntity>(interactorEntityId);
             if (interactorEntity == null) return Logger.WarnReturn(false, "AwardInteractionLoot(): interactorEntity == null");
 
-            // TODO: Use the tagging system instead of interest
+            List<Player> playerList = ListPool<Player>.Instance.Rent();
+
+            // TODO: Use Power::ComputeNearbyPlayers() instead of interest
             foreach (ulong playerId in InterestReferences)
             {
                 Player player = Game.EntityManager.GetEntity<Player>(playerId);
                 if (player == null) continue;
-
-                AwardLootForDropEvent(LootDropEventType.OnInteractedWith, player);
+                playerList.Add(player);
             }
 
+            AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
+
+            ListPool<Player>.Instance.Return(playerList);
             return true;
         }
 
-        private bool AwardLootForDropEvent(LootDropEventType eventType, Player player)
+        private bool AwardLootForDropEvent(LootDropEventType eventType, List<Player> playerList)
         {
             const int MaxTables = 8;    // The maximum we've seen in 1.52 prototypes is 4, double this just in case
-            
+
+            // Check if we have any players to award loot to
+            if (playerList.Count == 0)
+                return true;
+
             Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[MaxTables];
             int numTables = 0;
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType))
             {
+                if (numTables >= MaxTables)
+                {
+                    Logger.Warn($"AwardLootForDropEvent(): Exceeded the maximum number of loot tables in {this}");
+                    break;
+                }
+
                 Property.FromParam(kvp.Key, 2, out int actionTypeInt);
                 LootActionType actionType = (LootActionType)actionTypeInt;
 
@@ -2054,9 +2064,39 @@ namespace MHServerEmu.Games.Entities
                 if (actionType != LootActionType.Spawn)
                     continue;
 
-                using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                inputSettings.Initialize(LootContext.Drop, player, this);
-                Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                foreach (Player player in playerList)
+                {
+                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    inputSettings.Initialize(LootContext.Drop, player, this);
+                    Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                }
+            }
+
+            return true;
+        }
+
+        private bool AwardKillXP(List<Player> playerList)
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "AwardKillXP(): region == null");
+
+            TuningTable tuningTable = region.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(false, "AwardKillXP(): tuningTable == null");
+
+            foreach (Player player in playerList)
+            {
+                Avatar avatar = player.CurrentAvatar;
+                if (avatar == null)
+                {
+                    Logger.Warn("AwardKillXP(): avatar == null");
+                    continue;
+                }
+
+                if (WorldEntityPrototype.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, true))
+                {
+                    xp = avatar.ApplyXPModifiers(xp, tuningTable);
+                    avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                }
             }
 
             return true;
