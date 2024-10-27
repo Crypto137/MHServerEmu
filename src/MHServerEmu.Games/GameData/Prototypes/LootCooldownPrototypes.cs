@@ -65,6 +65,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual bool IsOnCooldown(Game game, PropertyCollection properties)
         {
+            Logger.Warn($"IsOnCooldown(): {this}");
             return false;
         }
 

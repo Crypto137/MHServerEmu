@@ -3,6 +3,8 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
@@ -58,9 +60,23 @@ namespace MHServerEmu.Games.Loot
 
         public bool IsOnCooldown(PrototypeId dropProtoRef, int count)
         {
-            // TODO
-            //Logger.Debug($"CheckDropCooldown(): {dropProtoRef.GetName()} x{amount}");
-            return false;
+            // Check if cooldowns are applicable in this loot context (e.g. crafting should not have any cooldowns)
+            if (LootContext != LootContext.Drop && LootContext != LootContext.MissionReward)
+                return false;
+
+            // Check if this drop has a cooldown channel
+            LootCooldownChannelPrototype cooldownChannelProto = GameDataTables.Instance.LootCooldownTable.GetCooldownChannelForLoot(dropProtoRef);
+            if (cooldownChannelProto == null)
+                return false;
+
+            bool isOnCooldown = cooldownChannelProto.IsOnCooldown(Player.Game, Player.Properties);
+
+            // Set cooldown if this drop wasn't on cooldown
+            if (isOnCooldown == false)
+                cooldownChannelProto.SetCooldown(Player, count);
+
+            //Logger.Debug($"IsOnCooldown(): {dropProtoRef.GetName()} x{count} = {isOnCooldown}");
+            return isOnCooldown;
         }
     }
 }
