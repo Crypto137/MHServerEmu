@@ -33,15 +33,18 @@ namespace MHServerEmu.Games.Loot
             if (settings.IsRestrictedByLootDropChanceModifier())
                 return Logger.WarnReturn(0f, $"GetDropChance(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
 
-            // Do not drop cooldown-based loot for now
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
-                return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerXHours");
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
+            {
+                // Do not drop cooldown-based loot for now
+                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
+                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerXHours");
 
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
-                return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerRollover");
+                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
+                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerRollover");
 
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
-                return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownByChannel");
+                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
+                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownByChannel");
+            }
 
             // Start with a base drop chance based on the specified NoDrop percent
             float dropChance = 1f - noDropPercent;
