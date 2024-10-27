@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public virtual void UpdateCooldown(Player player, PrototypeId lootDropProtoRef)
+        public virtual void UpdateCooldown(Player player, PrototypeId dropProtoRef)
         {
         }
 
