@@ -206,5 +206,14 @@ namespace MHServerEmu.Games.UI
                 if (kvp.Key.Item1 == contextRef) return kvp.Value;
             return null;
         }
+
+        public void OnWidgetButtonResult(NetMessageWidgetButtonResult widgetButtonResult)
+        {
+            PrototypeId widgetRef = (PrototypeId)widgetButtonResult.WidgetRefId;
+            PrototypeId contextRef = (PrototypeId)widgetButtonResult.WidgetContextRefId;
+            var button = GetWidget<UIWidgetButton>(widgetRef, contextRef);
+            button?.DoCallback(widgetButtonResult.PlayerGuid, widgetButtonResult.Result);
+
+        }
     }
 }
