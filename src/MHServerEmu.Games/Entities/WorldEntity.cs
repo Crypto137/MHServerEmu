@@ -2112,8 +2112,9 @@ namespace MHServerEmu.Games.Entities
                 AwardLootForDropEvent(lootDropEventType, playerList);
 
                 // TODO: rework this
-                foreach (var player in playerList)
+                if (killer is Avatar avatar) // this mission loot only for avatar
                 {
+                    var player = avatar.GetOwnerOfType<Player>();
                     List<MissionLootTable> lootList = new();
                     if (MissionManager.GetDropLootsForEnemy(this, player, lootList))
                     {
