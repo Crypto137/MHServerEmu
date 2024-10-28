@@ -82,13 +82,10 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             int score = (int)(float)region.Properties[PropertyEnum.TrackedRegionScore];
             mode.SendPvEInstanceRegionScoreUpdate(score, player);
 
-            var widgetRef = _proto.UIWidget;
-            if (widgetRef == PrototypeId.Invalid) return;
-
             if (score > _proto.ScoreThreshold) 
                 score = _proto.ScoreThreshold;
 
-            var widget = region.UIDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            var widget = MetaGame.GetWidget<UIWidgetGenericFraction>(_proto.UIWidget);
             widget?.SetCount(score, _proto.ScoreThreshold);
         }
 
@@ -100,9 +97,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             region.EntityDeadEvent.RemoveAction(_entityDeadAction);
             region.OrbPickUpEvent.RemoveAction(_orbPickUpAction);
 
-            var windgetRef = _proto.UIWidget;
-            if (windgetRef != PrototypeId.Invalid)
-                region.UIDataProvider?.DeleteWidget(windgetRef);
+            MetaGame.DeleteWidget(_proto.UIWidget);
 
             Detach(true);
 

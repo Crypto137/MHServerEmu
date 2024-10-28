@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             var region = Region;
             if (region == null) return;
 
-            foreach(var player in new PlayerIterator(region))
+            foreach(var player in MetaGame.Players)
             {
                 var avatar = player.CurrentAvatar;
                 if (avatar != null) MetaGame.SaveMetaStateProgress(avatar, region.PrototypeDataRef, region.DifficultyTierRef, stateRef);
@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         private void TeleportPlayersToStart()
         {
-            var players = new PlayerIterator(Region);
+            var players = MetaGame.Players;
             foreach (var player in players.ToArray())
             {
                 var avatar = player.CurrentAvatar;

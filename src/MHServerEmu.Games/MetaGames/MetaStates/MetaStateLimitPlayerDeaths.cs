@@ -40,9 +40,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             if (GetPlayerDeathLimit() > 0 || _proto.FailOnAllPlayersDead)
             {
                 region.PlayerDeathRecordedEvent.RemoveAction(_playerDeathRecordedAction);
-                var windgetRef = _proto.UIWidget;
-                if (windgetRef != PrototypeId.Invalid)
-                    region.UIDataProvider?.DeleteWidget(windgetRef);
+                MetaGame.DeleteWidget(_proto.UIWidget);
             }
 
             base.OnRemove();
@@ -81,13 +79,11 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             if (current < 0) current = 0;
             mode.SendPvEInstanceDeathUpdate(current);
 
-            var widgetRef = _proto.UIWidget;
-            if (widgetRef == PrototypeId.Invalid) return;
+            var widget = MetaGame.GetWidget<UIWidgetGenericFraction>(_proto.UIWidget);
+            if (widget == null) return;
 
-            if (MetaGame.Debug) Logger.Info($"UpdateWidgetCount {widgetRef.GetNameFormatted()}");
-
-            var widget = region.UIDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
-            widget?.SetCount(current, total);
+            widget.SetCount(current, total);
+            if (MetaGame.Debug) Logger.Info($"UpdateWidgetCount {_proto.UIWidget.GetNameFormatted()} [{current}/{total}]");
         }
 
         private void OnPlayerDeathRecorded(PlayerDeathRecordedEvent evt)
@@ -154,7 +150,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             bool isPlayers = false;
             bool allDead = true;
 
-            foreach(var player in new PlayerIterator(region))
+            foreach(var player in MetaGame.Players)
             {
                 var avatar = player.CurrentAvatar;
                 if (avatar == null) continue;

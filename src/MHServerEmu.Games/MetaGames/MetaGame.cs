@@ -19,6 +19,7 @@ using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.UI;
 using MHServerEmu.Games.UI.Widgets;
 using System.Text;
 
@@ -39,6 +40,9 @@ namespace MHServerEmu.Games.MetaGames
         protected List<MetaGameMode> GameModes { get; }
         public GRandom Random { get; }
         public MetaGameMode CurrentMode => (_modeIndex > -1 && _modeIndex < GameModes.Count) ? GameModes[_modeIndex] : null;
+
+        public IEnumerable<Player> Players { get => new PlayerIterator(GetRegion()); }
+        public UIDataProvider UIDataProvider { get => GetRegion()?.UIDataProvider; }
 
         private readonly HashSet<ulong> _discoveredEntities = new();
         private readonly Queue<ApplyStateRecord> _applyStateStack = new();
@@ -237,7 +241,7 @@ namespace MHServerEmu.Games.MetaGames
             // activate new mode
             mode.OnActivate();
 
-            foreach (var player in new PlayerIterator(region))
+            foreach (var player in Players)
                 player.Properties[PropertyEnum.PvPMode] = modeProto.DataRef;
         }
 
@@ -565,7 +569,7 @@ namespace MHServerEmu.Games.MetaGames
 
         private void DiscoverEntityForPlayers(WorldEntity entity)
         {
-            foreach (var player in new PlayerIterator(Game))
+            foreach (var player in Players)
                 player.DiscoverEntity(entity, true);
         }
 
@@ -586,14 +590,14 @@ namespace MHServerEmu.Games.MetaGames
 
         private void UndiscoverEntityForPlayers(WorldEntity entity)
         {
-            foreach (var player in new PlayerIterator(Game))
+            foreach (var player in Players)
                 player.UndiscoverEntity(entity, true);
         }
 
         public void ConsiderInAOI(AreaOfInterest aoi)
         {
             aoi.ConsiderEntity(this);
-            foreach (var player in new PlayerIterator(Region))
+            foreach (var player in Players)
                 aoi.ConsiderEntity(player);
         }
 
@@ -616,9 +620,7 @@ namespace MHServerEmu.Games.MetaGames
 
         public void SetUIWidgetGenericFraction(PrototypeId widgetRef, PropertyId countPropId, TimeSpan timeOffset)
         {
-            if (widgetRef == PrototypeId.Invalid) return;
-
-            var widget = Region?.UIDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            var widget = GetWidget<UIWidgetGenericFraction>(widgetRef);
             if (widget != null)
             {
                 int count = Properties[countPropId];
@@ -627,11 +629,17 @@ namespace MHServerEmu.Games.MetaGames
             }
         }
 
+        public void DeleteWidget(PrototypeId windgetRef)
+        {
+            if (windgetRef != PrototypeId.Invalid)
+                UIDataProvider?.DeleteWidget(windgetRef);
+        }
+
         public void ResetUIWidgetGenericFraction(PrototypeId widgetRef)
         {
             if (widgetRef == PrototypeId.Invalid) return;
 
-            var uiDataProvider = Region?.UIDataProvider;
+            var uiDataProvider = UIDataProvider;
             var widget = uiDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
             if (widget != null)
                 uiDataProvider.DeleteWidget(widgetRef);
@@ -704,6 +712,12 @@ namespace MHServerEmu.Games.MetaGames
             }
 
             return false;
+        }
+
+        public T GetWidget<T>(PrototypeId widgetRef) where T : UISyncData
+        {
+            if (widgetRef == PrototypeId.Invalid) return default;
+            return UIDataProvider?.GetWidget<T>(widgetRef);
         }
 
         protected class ActivateGameModeEvent : CallMethodEventParam1<Entity, int>
