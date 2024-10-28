@@ -5,10 +5,11 @@ using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.UI.Widgets
 {
-    public enum PlayerReadyStateValue
+    public enum PlayerState
     {
         Pending,
-        Ready
+        Ready,
+        Fallback
     }
 
     public class UIWidgetReadyCheck : UISyncData
@@ -36,23 +37,37 @@ namespace MHServerEmu.Games.UI.Widgets
                 sb.AppendLine($"{nameof(_playerReadyStateDict)}[{kvp.Key}]: {kvp.Value}");
         }
 
-        public void SetPlayerReadyState(ulong key, string playerName, PlayerReadyStateValue stateValue)
+        public void SetPlayerState(ulong playerGuid, string playerName, PlayerState state)
         {
-            if (_playerReadyStateDict.TryGetValue(key, out PlayerReadyState playerReadyState) == false)
+            if (_playerReadyStateDict.TryGetValue(playerGuid, out PlayerReadyState playerReadyState) == false)
             {
                 playerReadyState = new();
-                _playerReadyStateDict.Add(key, playerReadyState);
+                _playerReadyStateDict.Add(playerGuid, playerReadyState);
             }
 
             playerReadyState.PlayerName = playerName;
-            playerReadyState.StateValue = stateValue;
+            playerReadyState.State = state;
+            UpdateUI();
+        }
+
+        public void ResetPlayerState(ulong playerGuid)
+        {
+            _playerReadyStateDict.Remove(playerGuid);
+            UpdateUI();
+        }
+
+        public void UpdatePlayerState(ulong playerGuid, PlayerState state)
+        {
+            if (_playerReadyStateDict.TryGetValue(playerGuid, out PlayerReadyState playerReadyState))
+                playerReadyState.State = state;
+
             UpdateUI();
         }
 
         class PlayerReadyState : ISerialize
         {
             public string PlayerName;
-            public PlayerReadyStateValue StateValue;
+            public PlayerState State;
 
             public PlayerReadyState() { }
 
@@ -64,14 +79,14 @@ namespace MHServerEmu.Games.UI.Widgets
 
                 if (archive.IsPacking)
                 {
-                    int stateValue = (int)StateValue;
-                    success &= Serializer.Transfer(archive, ref stateValue);
+                    int state = (int)State;
+                    success &= Serializer.Transfer(archive, ref state);
                 }
                 else
                 {
-                    int stateValue = 0;
-                    success &= Serializer.Transfer(archive, ref stateValue);
-                    StateValue = (PlayerReadyStateValue)stateValue;
+                    int state = 0;
+                    success &= Serializer.Transfer(archive, ref state);
+                    State = (PlayerState)state;
                 }
 
                 return success;
@@ -79,7 +94,7 @@ namespace MHServerEmu.Games.UI.Widgets
 
             public override string ToString()
             {
-                return $"{PlayerName}={StateValue}";
+                return $"{PlayerName}={State}";
             }
         }
     }
