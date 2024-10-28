@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Loot
             LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
             if (lootTableProto == null) return Logger.WarnReturn(false, "RollLootTable(): lootTableProto == null");
 
-            _resolver.SetContext(inputSettings.LootContext, inputSettings.Player);
+            _resolver.SetContext(inputSettings.LootContext, inputSettings.Player, inputSettings.SourceEntity);
 
             LootRollResult result = lootTableProto.RollLootTable(inputSettings.LootRollSettings, _resolver);
             if (result.HasFlag(LootRollResult.Success))
