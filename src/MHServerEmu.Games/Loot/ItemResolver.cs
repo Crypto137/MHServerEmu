@@ -29,10 +29,13 @@ namespace MHServerEmu.Games.Loot
         private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<LootResult> _processedItemList = new();
 
+        private readonly ItemResolverContext _context = new();
+
         public GRandom Random { get; }
-        public LootContext LootContext { get; private set; }
-        public Player Player { get; private set; }
-        public Region Region { get => Player?.GetRegion(); }
+
+        public LootContext LootContext { get => _context.LootContext; }
+        public Player Player { get => _context.Player; }
+        public Region Region { get => _context.Region; }
 
         public ItemResolver(GRandom random)
         {
@@ -65,8 +68,7 @@ namespace MHServerEmu.Games.Loot
             _pendingItemList.Clear();
             _processedItemList.Clear();
 
-            LootContext = lootContext;
-            Player = player;
+            _context.Set(lootContext, player);
         }
 
         #region Push Functions
@@ -297,43 +299,15 @@ namespace MHServerEmu.Games.Loot
             return rarityPicker.Pick();
         }
 
-        public bool CheckDropPercent(LootRollSettings settings, float noDropPercent)
+        public bool CheckDropChance(LootRollSettings settings, float noDropPercent)
         {
-            // Do not drop if there are any hard restrictions (this should have already been handled when selecting the loot table node)
-            if (settings.IsRestrictedByLootDropChanceModifier())
-                return Logger.WarnReturn(false, $"CheckDropPercent(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
-
-            // Do not drop cooldown-based loot for now
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
-                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerXHours");
-
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
-                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownOncePerRollover");
-
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
-                return Logger.WarnReturn(false, "CheckDropPercent(): Unimplemented modifier CooldownByChannel");
-
-            // Start with a base drop chance based on the specified NoDrop percent
-            float dropChance = 1f - noDropPercent;
-
-            // Apply live tuning multiplier
-            dropChance *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
-
-            // Apply difficulty multiplier
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierNoDropModified))
-                dropChance *= settings.NoDropModifier;
-
-            // Add more multipliers here as needed
-
-            // Check the final chance
+            float dropChance = _context.GetDropChance(settings, noDropPercent);
             return Random.NextFloat() < dropChance;
         }
 
-        public bool CheckDropCooldown(PrototypeId dropProtoRef, int amount)
+        public bool CheckDropCooldown(PrototypeId dropProtoRef, int count)
         {
-            // TODO
-            //Logger.Debug($"CheckDropCooldown(): {dropProtoRef.GetName()} x{amount}");
-            return false;
+            return _context.IsOnCooldown(dropProtoRef, count);
         }
 
         public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2, int stackCount = 1)

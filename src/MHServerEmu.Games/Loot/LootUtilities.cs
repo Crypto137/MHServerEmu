@@ -2,10 +2,12 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
@@ -95,6 +97,8 @@ namespace MHServerEmu.Games.Loot
 
             return true;
         }
+
+        #region Affixes
 
         public static MutationResults UpdateAffixes(IItemResolver resolver, DropFilterArguments args, AffixCountBehavior affixCountBehavior,
             ItemSpec itemSpec, LootRollSettings settings)
@@ -318,5 +322,113 @@ namespace MHServerEmu.Games.Loot
             if (numAffixesNeeded != numAffixesAdded)
                 Logger.Warn($"ValidateAddAffixCount(): The pool of affixes is too small for these parameters! numAffixesAdded={numAffixesAdded}, numAffixesNeeded={numAffixesNeeded}");
         }
+
+        #endregion
+
+        #region Time
+
+        public static bool GetLastLootCooldownRolloverWallTime(PropertyCollection properties, TimeSpan currentTime, out TimeSpan lastRolloverTime)
+        {
+            lastRolloverTime = default;
+
+            // Remove the day part from the current time for calculations
+            TimeSpan currentTime24Hr = new(0, currentTime.Hours, currentTime.Minutes, currentTime.Seconds, currentTime.Milliseconds);
+
+            Weekday currentWeekday = GetCurrentWeekday(false);
+            if (currentWeekday == Weekday.All) return Logger.WarnReturn(false, "GetLastLootCooldownRolloverWallTime(): weekday == Weekday.All");
+
+            PropertyList.Iterator itRolloverTimeProp = properties.IteratePropertyRange(PropertyEnum.LootCooldownRolloverWallTime);
+
+            if (itRolloverTimeProp.GetEnumerator().MoveNext() == false)
+                return Logger.WarnReturn(false, "GetLastLootCooldownRolloverWallTime(): No properties to iterate");
+
+            TimeSpan lastRolloverTimeDelta = TimeSpan.FromDays(7 + 1);  // 7 days per week + 1, a rollover must have happened within period
+
+            foreach (var kvp in itRolloverTimeProp)
+            {
+                // Get rollover time and weekday from the property
+                float wallClockTime24HrHours = kvp.Value;
+                wallClockTime24HrHours = Math.Clamp(wallClockTime24HrHours, 0f, 23.99f);
+                TimeSpan wallClockTime24Hr = TimeSpan.FromHours(wallClockTime24HrHours);
+
+                Property.FromParam(kvp.Key, 1, out int wallClockTimeDayInt);
+                Weekday wallClockTimeDay = (Weekday)wallClockTimeDayInt;
+
+                TimeSpan newLastRolloverTimeDelta;
+
+                if (wallClockTimeDay == Weekday.All)
+                {
+                    // Daily loot
+                    if (currentTime24Hr > wallClockTime24Hr)
+                    {
+                        // Daily rollover has already happened
+                        newLastRolloverTimeDelta = currentTime24Hr - wallClockTime24Hr;
+                    }
+                    else
+                    {
+                        // Daily rollover has not happened yet
+                        newLastRolloverTimeDelta = currentTime24Hr + (TimeSpan.FromDays(1) - wallClockTime24Hr);
+                    }
+                }
+                else
+                {
+                    // Weekly loot
+
+                    // Calculate how many days (if any) have passed since the last rollover
+                    int daysDelta = 0;
+
+                    if (wallClockTimeDay < currentWeekday)
+                    {
+                        // Weekly rollover has already happened on a previous day
+                        daysDelta = currentWeekday - wallClockTimeDay;
+                    }
+                    else if (wallClockTimeDay > currentWeekday)
+                    {
+                        // Weekly rollover will happen another day after this one
+                        daysDelta = 7 + (currentWeekday - wallClockTimeDay);    // This will be negative, so we are subtracting from 7
+                    }
+                    else
+                    {
+                        // Weekly rollover is today and has not happened yet
+                        // newLastRolloverTimeDelta will be negative, so we will end up with 6 days + leftovers
+                        if (currentTime24Hr <= wallClockTime24Hr)
+                            daysDelta = 7;
+                    }
+
+                    // Calculate 24 hour delta (this will be negative if the rollover has not happened yet)
+                    newLastRolloverTimeDelta = currentTime24Hr - wallClockTime24Hr;
+
+                    // Add the days part to the delta
+                    if (daysDelta > 0)
+                        newLastRolloverTimeDelta += TimeSpan.FromDays(daysDelta);
+                }
+
+                // Update the most recent rollover time delta if needed
+                if (newLastRolloverTimeDelta < lastRolloverTimeDelta)
+                    lastRolloverTimeDelta = newLastRolloverTimeDelta;
+            }
+
+            // Subtract the delta from the current time to get the time of the most recent rollover
+            lastRolloverTime = currentTime - lastRolloverTimeDelta;
+            return true;
+        }
+
+        public static Weekday GetCurrentWeekday(bool applyTimeZoneOffset)
+        {
+            TimeSpan currentTime = Clock.UnixTime;
+            if (applyTimeZoneOffset)
+                currentTime += TimeSpan.FromHours(GameDatabase.GlobalsPrototype.TimeZone);
+
+            return GetWeekday(currentTime);
+        }
+
+        public static Weekday GetWeekday(TimeSpan unixTime)
+        {
+            // System.DayOfWeek is compatible with Gazillion's Weekday enum, so we can just cast it
+            // instead of implementing Gazillion::DateTime::GetGMTimeInfo().
+            return (Weekday)Clock.UnixTimeToDateTime(unixTime).DayOfWeek;
+        }
+
+        #endregion
     }
 }

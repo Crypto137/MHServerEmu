@@ -1393,10 +1393,57 @@ namespace MHServerEmu.Games.Powers
             };
         }
 
-        public static int ComputeNearbyPlayers(Region region, Vector3 position, int min, bool combatActive, HashSet<ulong> nearbyPlayers = null)
+        public static int ComputeNearbyPlayers(Region region, Vector3 position, int numPlayersMin, bool combatActiveOnly, HashSet<ulong> nearbyPlayerIds = null)
         {
-            // TODO
-            return 0;
+            return ComputeNearbyPlayersInternal(region, position, numPlayersMin, combatActiveOnly, nearbyPlayerIds, null);
+        }
+
+        public static int ComputeNearbyPlayers(Region region, Vector3 position, int numPlayersMin, bool combatActiveOnly, List<Player> nearbyPlayers)
+        {
+            return ComputeNearbyPlayersInternal(region, position, numPlayersMin, combatActiveOnly, null, nearbyPlayers);
+        }
+
+        private static int ComputeNearbyPlayersInternal(Region region, Vector3 position, int numPlayersMin, bool combatActiveOnly, HashSet<ulong> nearbyPlayerIds, List<Player> nearbyPlayers)
+        {
+            if (region == null) return Logger.WarnReturn(numPlayersMin, "ComputeNearbyPlayersInternal(): region == null");
+
+            TuningPrototype difficultyProto = region.TuningTable?.Prototype;
+            if (difficultyProto == null) return Logger.WarnReturn(numPlayersMin, "ComputeNearbyPlayersInternal(): difficultyProto == null");
+
+            // "Nearby" depends on the region: in private regions like terminals this covers the entire region (100000),
+            // while in public regions like Midtown Patrol it's about the size of two screens (1200).
+            float playerNearbyRange = difficultyProto.PlayerNearbyRange;
+            if (playerNearbyRange <= 0f) return Logger.WarnReturn(numPlayersMin, "ComputeNearbyPlayersInternal(): playerNearbyRange <= 0f");
+
+            int numPlayers = 0;
+
+            Sphere sphere = new(position, playerNearbyRange);
+            foreach (Avatar avatar in region.IterateAvatarsInVolume(sphere))
+            {
+                // Skip AFK avatars if needed (e.g. for loot rewards)
+                if (combatActiveOnly && avatar.IsCombatActive() == false)
+                    continue;
+
+                if (nearbyPlayerIds != null)
+                    nearbyPlayerIds.Add(avatar.OwnerId);
+
+                if (nearbyPlayers != null)
+                {
+                    Player player = avatar.GetOwnerOfType<Player>();
+                    if (player == null)
+                    {
+                        Logger.Warn("ComputeNearbyPlayersInternal(): player == null");
+                        continue;
+                    }
+
+                    // NOTE: We are using List instead of Set like the client does here, change this if it causes issues
+                    nearbyPlayers.Add(player);
+                }
+
+                numPlayers++;
+            }
+
+            return Math.Max(numPlayersMin, numPlayers);
         }
 
         #region State Accessors

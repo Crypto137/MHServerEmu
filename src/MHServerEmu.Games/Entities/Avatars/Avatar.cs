@@ -679,6 +679,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             _pendingAction.Clear();
         }
 
+        public bool IsCombatActive()
+        {
+            // TODO: Check PropertyEnum.LastInflictedDamageTime
+            return true;
+        }
+
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
         {
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
@@ -1057,6 +1063,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 player.MissionInteractRelease(this, missionRef);
                 return false;
             }
+
+            // HACK: Always send release for mission interactions (remove this when missions are merged)
+            if (missionRef != PrototypeId.Invalid)
+                player.MissionInteractRelease(this, missionRef);
 
             Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 

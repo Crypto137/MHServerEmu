@@ -78,11 +78,13 @@ namespace MHServerEmu.Games.Loot
                 return true;
 
             Player player = inputSettings.Player;
-            WorldEntity recipient = player?.CurrentAvatar;
             WorldEntity sourceEntity = inputSettings.SourceEntity;
 
-            if (recipient == null)
-                return Logger.WarnReturn(false, "SpawnLootFromSummary(): recipient == null");
+            WorldEntity recipient = player?.CurrentAvatar;
+            if (recipient == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): recipient == null");
+
+            Region region = recipient.Region;
+            if (region == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): region == null");
 
             // Instance the loot if instanced loot is not disabled by server config
             ulong restrictedToPlayerGuid = Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
@@ -117,7 +119,7 @@ namespace MHServerEmu.Games.Loot
             int i = 0;
 
             // Spawn items
-            ulong regionId = recipient.Region.Id;
+            ulong regionId = region.Id;
             ulong sourceEntityId = sourceEntity != null ? sourceEntity.Id : Entity.InvalidId;
 
             if (lootResultSummary.Types.HasFlag(LootType.Item))
