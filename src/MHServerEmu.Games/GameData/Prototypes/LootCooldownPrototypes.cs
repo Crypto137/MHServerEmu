@@ -251,5 +251,73 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootCooldownRolloverTimeEntryPrototype[] RolloverTimeEntries { get; protected set; }
 
         //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override void SetCooldown(Player player, int count)
+        {
+            if (player.IsInGame == false)
+                return;
+
+            player.Properties.AdjustProperty(count, new(PropertyEnum.LootCooldownCount, DataRef));
+        }
+
+        public override void UpdateCooldown(Player player, PrototypeId dropProtoRef)
+        {
+            int count = player.Properties[PropertyEnum.LootCooldownCount, DataRef];
+
+            if (RolloverTimeEntries.IsNullOrEmpty())
+            {
+                Logger.Warn("UpdateCooldown(): RolloverTimeEntries.IsNullOrEmpty()");
+                return;
+            }
+
+            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            for (int i = 0; i < RolloverTimeEntries.Length; i++)
+            {
+                LootCooldownRolloverTimeEntryPrototype entryProto = RolloverTimeEntries[i];
+                if (entryProto == null)
+                {
+                    Logger.Warn("UpdateCooldown(): entryProto == null");
+                    continue;
+                }
+
+                rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, (PropertyParam)i, (PropertyParam)entryProto.WallClockTimeDay] = entryProto.WallClockTime24Hr;
+            }
+
+            if (LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, Clock.UnixTime, out TimeSpan lastActualRolloverTime) == false)
+            {
+                Logger.Warn("UpdateCooldown(): Failed to get last loot cooldown rollover wall time");
+                return;
+            }
+
+            PropertyId cooldownStartProperty = new(PropertyEnum.LootCooldownTimeStartChannel, DataRef);
+            if (count == 0 && player.Properties.HasProperty(cooldownStartProperty) == false)
+            {
+                player.Properties[PropertyEnum.LootCooldownTimeStartChannel, DataRef] = lastActualRolloverTime;
+                return;
+            }
+
+            if (lastActualRolloverTime == TimeSpan.Zero)
+            {
+                Logger.Warn("UpdateCooldown(): lastActualRolloverTime == TimeSpan.Zero");
+                return;
+            }
+
+            TimeSpan cooldownStartTime = player.Properties[PropertyEnum.LootCooldownTimeStartChannel, DataRef];
+            if (cooldownStartTime < lastActualRolloverTime)
+            {
+                // Reset the count if a rollover has happened since the last saved time
+                player.Properties[PropertyEnum.LootCooldownCount, DataRef] = 0;
+                player.Properties[PropertyEnum.LootCooldownTimeStartChannel, DataRef] = lastActualRolloverTime;
+            }
+        }
+
+        public override bool IsOnCooldown(Game game, PropertyCollection properties)
+        {
+            int count = properties[PropertyEnum.LootCooldownCount, DataRef];
+            return count >= MaxDrops;
+        }
     }
 }
