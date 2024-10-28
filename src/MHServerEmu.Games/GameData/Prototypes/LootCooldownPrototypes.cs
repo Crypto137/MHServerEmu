@@ -1,7 +1,11 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -90,6 +94,91 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootCooldownRolloverTimeEntryPrototype[] RolloverTimeEntries { get; protected set; }
 
         //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool IsOnCooldown(Game game, PropertyCollection properties)
+        {
+            if (RolloverTimeEntries.IsNullOrEmpty())
+                return false;
+
+            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            for (int i = 0; i < RolloverTimeEntries.Length; i++)
+            {
+                LootCooldownRolloverTimeEntryPrototype entryProto = RolloverTimeEntries[i];
+                if (entryProto == null)
+                {
+                    Logger.Warn("IsOnCooldown(): entryProto == null");
+                    continue;
+                }
+
+                rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, (PropertyParam)i, (PropertyParam)entryProto.WallClockTimeDay] = entryProto.WallClockTime24Hr;
+            }
+
+            if (LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, Clock.UnixTime, out TimeSpan lastRolloverTime) == false)
+                return Logger.WarnReturn(false, "IsOnCooldown(): Failed to get last loot cooldown rollover wall time");
+
+            return properties[PropertyEnum.LootCooldownTimeStartChannel, DataRef] > lastRolloverTime;
+        }
+
+        public override void GetCooldownSettings(Player player, out PropertyEnum propertyEnum, out bool activeOnPlayer, out bool activeOnAvatar, out TimeSpan cooldownTime)
+        {
+            propertyEnum = PropertyEnum.LootCooldownTimeStartChannel;
+            activeOnPlayer = default;
+            activeOnAvatar = default;
+            cooldownTime = default;
+
+            if (RolloverTimeEntries.IsNullOrEmpty())
+            {
+                Logger.Warn("GetCooldownSettings(): RolloverTimeEntries.IsNullOrEmpty()");
+                return;
+            }
+
+            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            for (int i = 0; i < RolloverTimeEntries.Length; i++)
+            {
+                LootCooldownRolloverTimeEntryPrototype entryProto = RolloverTimeEntries[i];
+                if (entryProto == null)
+                {
+                    Logger.Warn("GetCooldownSettings(): entryProto == null");
+                    continue;
+                }
+
+                rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, (PropertyParam)i, (PropertyParam)entryProto.WallClockTimeDay] = entryProto.WallClockTime24Hr;
+            }
+
+            if (LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, Clock.UnixTime, out TimeSpan lastRolloverTime) == false)
+            {
+                Logger.Warn("GetCooldownSettings(): Failed to get last loot cooldown rollover wall time");
+                return;
+            }
+
+            if (lastRolloverTime <= TimeSpan.Zero)
+                return;
+
+            activeOnPlayer = player.Properties[propertyEnum, DataRef] > lastRolloverTime;
+
+            Avatar avatar = player?.CurrentAvatar;
+            if (avatar != null)
+            {
+                activeOnAvatar = avatar.Properties[propertyEnum, DataRef] > lastRolloverTime;
+            }
+            else
+            {
+                Logger.Warn("GetCooldownSettings(): avatar == null");
+                activeOnAvatar = true;
+            }
+
+            cooldownTime = Clock.UnixTime;
+        }
+
+        public TimeSpan GetTimeUntilNextRollover(TimeSpan currentTime)
+        {
+            // client-only? Gazillion::ClientUIEventManager::UIEvent_DailyMissionsListUpdate()
+            return default;
+        }
     }
 
     public class LootCooldownChannelTimePrototype : LootCooldownChannelPrototype
@@ -112,15 +201,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void GetCooldownSettings(Player player, out PropertyEnum propertyEnum, out bool activeOnPlayer, out bool activeOnAvatar, out TimeSpan cooldownTime)
         {
             propertyEnum = PropertyEnum.LootCooldownTimeStartChannel;
+            activeOnPlayer = default;
+            activeOnAvatar = default;
+            cooldownTime = default;
 
             Game game = player?.Game;
 
             if (game == null)
             {
                 Logger.Warn("GetCooldownSettings(): game == null");
-                activeOnPlayer = default;
-                activeOnAvatar = default;
-                cooldownTime = default;
                 return;
             }
 
