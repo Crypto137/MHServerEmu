@@ -8,6 +8,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.DRAG.Generators.Regions;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -180,8 +181,15 @@ namespace MHServerEmu.Games.Entities
                             var regionContext = player.PlayerConnection.RegionContext;
                             var regionProto = GameDatabase.GetPrototype<RegionPrototype>(targetRegionProtoRef);
 
-                            if (regionProto.RegionGenerator is SequenceRegionGeneratorPrototype sequenceRegion && sequenceRegion.EndlessThemes.HasValue())
+                            if (regionProto.HasEndless())
                                 regionContext.EndlessLevel = 1;
+
+                            var properties = regionContext.Properties;
+                            properties.Clear();
+                            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
+                            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
+                            properties.CopyProperty(Properties, PropertyEnum.DangerRoomScenarioItemDbGuid);
+                            regionContext.PlayerGuidParty = Properties[PropertyEnum.RestrictedToPlayerGuidParty];
 
                             if (Properties.HasProperty(PropertyEnum.RegionAffix))
                             {

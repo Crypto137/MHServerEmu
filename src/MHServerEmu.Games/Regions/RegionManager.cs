@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -163,6 +164,9 @@ namespace MHServerEmu.Games.Regions
             if (regionProto == null)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): {regionProtoRef} is not a valid region prototype ref");
 
+            if (regionProto.HasEndless() && regionContext.EndlessLevel == 0)
+                return Logger.WarnReturn<Region>(null, $"GetRegion(): DangerRoom {regionProtoRef} with EndlessLevel = 0");
+
             //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
             Region region = null;
@@ -187,9 +191,13 @@ namespace MHServerEmu.Games.Regions
                 // Use preferred difficulty for private instances
                 regionContext.DifficultyTierRef = playerConnection.Player.GetDifficultyTierPreference();
 
-                if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false || region.DifficultyTierRef != regionContext.DifficultyTierRef)
+                if (regionId == 0 
+                    || _allRegions.TryGetValue(regionId, out region) == false 
+                    || region.DifficultyTierRef != regionContext.DifficultyTierRef 
+                    || region.Settings.EndlessLevel != regionContext.EndlessLevel) // Danger Room next level
                 {
-                    if (region != null)
+                    // MetaStateShutdown will shutdown old region
+                    if (region != null && region.Settings.EndlessLevel == regionContext.EndlessLevel)
                     {
                         // Destroy existing private instance if it does not match the player's difficulty preference 
                         playerConnection.WorldView.RemoveRegion(region.PrototypeDataRef);
@@ -266,14 +274,22 @@ namespace MHServerEmu.Games.Regions
                     Seed = Game.Random.Next(),
                     Affixes = new(regionContext.Affixes),
                     EndlessLevel = regionContext.EndlessLevel,
+                    PlayerGuidParty = regionContext.PlayerGuidParty,
                     GenerateAreas = true,
                     GenerateEntities = true,
                     GenerateLog = false
                 };
 
+                if (regionContext.Properties.HasProperty(PropertyEnum.RegionAffixDifficulty))
+                {
+                    settings.Properties = new();
+                    settings.Properties.FlattenCopyFrom(regionContext.Properties, false);
+                }
+
                 // clear Endless context
                 regionContext.EndlessLevel = 0;
                 regionContext.Affixes.Clear();
+                regionContext.Properties.Clear();
 
                 int tries = 10;
 

@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.Regions
         public List<PrototypeId> Affixes { get; set; }
         public int PlayerDeaths { get; set; }
         public PropertyCollection Properties { get; set; }
+        public ulong PlayerGuidParty { get; set; }
 
         public bool DebugLevel { get; set; }
         public bool GenerateLog { get; set; }
@@ -30,8 +31,12 @@ namespace MHServerEmu.Games.Regions
         public PrototypeId RegionDataRef;
         public PrototypeId DifficultyTierRef;
         public List<PrototypeId> Affixes;
+        public PropertyCollection Properties;
         public int EndlessLevel;
         public int Level;
+        public ulong PlayerGuidParty;
+        public int Seed;
+        public int PlayerDeaths;
 
         public RegionContext() : this(PrototypeId.Invalid, PrototypeId.Invalid) { }
 
@@ -40,8 +45,10 @@ namespace MHServerEmu.Games.Regions
             RegionDataRef = regionDataRef;
             DifficultyTierRef = difficultyTierRef;
             Affixes = new();
+            Properties = new();
             EndlessLevel = 0;
             Level = 60;
+            PlayerGuidParty = 0;
         }
     }
 }

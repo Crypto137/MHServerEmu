@@ -7,7 +7,6 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -122,6 +121,9 @@ namespace MHServerEmu.Games.Entities
                     properties.CopyPropertyRange(item.Properties, PropertyEnum.RegionAffix);
                     properties.CopyProperty(item.Properties, PropertyEnum.RegionAffixDifficulty);
                     properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = item.DatabaseUniqueId; // we need this?
+
+                    var player = avatar.GetOwnerOfType<Player>();
+                    properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
                 }
 
                 properties[PropertyEnum.NoMissileCollide] = true; // EvalOnCreate
