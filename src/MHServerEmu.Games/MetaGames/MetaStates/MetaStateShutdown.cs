@@ -242,7 +242,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     if (_proto.TeleportIsEndlessDown)
                     {
                         var settings = region.Settings;
-                        regionContext.Properties.FlattenCopyFrom(settings.Properties, true);
+                        if (settings.Properties != null) regionContext.Properties.FlattenCopyFrom(settings.Properties, true);
                         regionContext.Properties.CopyPropertyRange(region.Properties, PropertyEnum.ScoringEventTimerAccumTimeMS);
                         regionContext.DifficultyTierRef = settings.DifficultyTierRef;
                         regionContext.PlayerGuidParty = settings.PlayerGuidParty;

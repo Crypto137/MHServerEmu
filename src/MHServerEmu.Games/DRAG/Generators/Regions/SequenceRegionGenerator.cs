@@ -32,6 +32,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                 MetaStateChallengeTierEnum missionTier = region.RegionAffixGetMissionTier();
                 EndlessStateEntryPrototype endlessState = endlessTheme.GetState(randomSeed, setting.EndlessLevel, missionTier);
 
+                if (endlessState == null) // fix for wrong affix
+                    endlessState = endlessTheme.GetState(randomSeed, setting.EndlessLevel, MetaStateChallengeTierEnum.Tier1);
+
                 if (endlessTheme != null)
                 {
                     if (endlessState.MetaState != PrototypeId.Invalid)
