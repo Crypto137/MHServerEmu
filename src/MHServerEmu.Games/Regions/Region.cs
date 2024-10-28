@@ -1663,6 +1663,16 @@ namespace MHServerEmu.Games.Regions
 
             return false;
         }
+
+        public bool InOwnerParty(Player player)
+        {
+            ulong playerGuid = player.DatabaseUniqueId;
+            if (Settings.PlayerGuidParty == playerGuid) return true;
+
+            // TODO check owner is in party
+
+            return false;
+        }
     }
 
     public class RandomPositionPredicate    // TODO: Change to interface / struct
