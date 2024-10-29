@@ -265,31 +265,18 @@ namespace MHServerEmu.Games.Regions
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
 
-                RegionSettings settings = new()
+                if (regionContext.Seed == 0) regionContext.Seed = Game.Random.Next();
+
+                RegionSettings settings = new(regionContext)
                 {
                     InstanceAddress = _idGenerator.Generate(),
-                    RegionDataRef = regionProtoRef,
-                    Level = regionContext.Level,
-                    DifficultyTierRef = regionContext.DifficultyTierRef,
-                    Seed = Game.Random.Next(),
-                    Affixes = new(regionContext.Affixes),
-                    EndlessLevel = regionContext.EndlessLevel,
-                    PlayerGuidParty = regionContext.PlayerGuidParty,
                     GenerateAreas = true,
                     GenerateEntities = true,
                     GenerateLog = false
                 };
 
-                if (regionContext.Properties.HasProperty(PropertyEnum.RegionAffixDifficulty))
-                {
-                    settings.Properties = new();
-                    settings.Properties.FlattenCopyFrom(regionContext.Properties, false);
-                }
-
                 // clear Endless context
-                regionContext.EndlessLevel = 0;
-                regionContext.Affixes.Clear();
-                regionContext.Properties.Clear();
+                regionContext.Reset();
 
                 int tries = 10;
 

@@ -120,6 +120,7 @@ namespace MHServerEmu.Games.Entities
                     properties.CopyProperty(item.Properties, PropertyEnum.DifficultyTier);
                     properties.CopyPropertyRange(item.Properties, PropertyEnum.RegionAffix);
                     properties.CopyProperty(item.Properties, PropertyEnum.RegionAffixDifficulty);
+                    properties.CopyProperty(item.Properties, PropertyEnum.ItemRarity);
                     properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = item.DatabaseUniqueId; // we need this?
 
                     var player = avatar.GetOwnerOfType<Player>();

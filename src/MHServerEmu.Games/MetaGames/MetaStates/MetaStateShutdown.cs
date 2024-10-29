@@ -235,30 +235,23 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 {
                     var region = Region;
                     if (targetRef == PrototypeId.Invalid || region == null) return;
-                    var targetProto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
 
                     var regionContext = player.PlayerConnection.RegionContext;
 
+                    RegionPrototype regionProto;
                     if (_proto.TeleportIsEndlessDown)
                     {
-                        var settings = region.Settings;
-                        if (settings.Properties != null) regionContext.Properties.FlattenCopyFrom(settings.Properties, true);
-                        regionContext.Properties.CopyPropertyRange(region.Properties, PropertyEnum.ScoringEventTimerAccumTimeMS);
-                        regionContext.DifficultyTierRef = settings.DifficultyTierRef;
-                        regionContext.PlayerGuidParty = settings.PlayerGuidParty;
-                        regionContext.EndlessLevel = settings.EndlessLevel + 1;
-                        regionContext.Affixes = new(settings.Affixes);
-                        regionContext.Seed = settings.Seed;
-
-                        if (region.Prototype.UsePrevRegionPlayerDeathCount)
-                            regionContext.PlayerDeaths = region.PlayerDeaths;
-                    } 
+                        regionContext.FromRegion(region);
+                        regionProto = region.Prototype;
+                    }
                     else
                     {
-                        var newRegion = GameDatabase.GetPrototype<RegionPrototype>(targetProto.Region);
-                        if (newRegion.UsePrevRegionPlayerDeathCount)
-                            regionContext.PlayerDeaths = region.PlayerDeaths;
+                        var targetProto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
+                        regionProto = GameDatabase.GetPrototype<RegionPrototype>(targetProto.Region);
                     }
+
+                    if (regionProto.UsePrevRegionPlayerDeathCount)
+                        regionContext.PlayerDeaths = region.PlayerDeaths;
 
                     player.PlayerConnection.MoveToTarget(targetRef);
                 }

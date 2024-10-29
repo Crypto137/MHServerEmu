@@ -24,6 +24,28 @@ namespace MHServerEmu.Games.Regions
         public bool GenerateEntities { get; set; }
         public bool GenerateAreas { get; set; }
         public PrototypeId GameStateId { get; set; }
+        public PrototypeId ItemRarity { get; set; }
+
+        public RegionSettings() { }
+
+        public RegionSettings(RegionContext regionContext)
+        {
+            RegionDataRef = regionContext.RegionDataRef;
+            Level = regionContext.Level;
+            DifficultyTierRef = regionContext.DifficultyTierRef;
+            Seed = regionContext.Seed;
+            Affixes = new(regionContext.Affixes);
+            ItemRarity = regionContext.ItemRarity;
+            EndlessLevel = regionContext.EndlessLevel;
+            PlayerDeaths = regionContext.PlayerDeaths;
+            PlayerGuidParty = regionContext.PlayerGuidParty;
+
+            if (regionContext.Properties.HasProperty(PropertyEnum.RegionAffixDifficulty))
+            {
+                Properties = new();
+                Properties.FlattenCopyFrom(regionContext.Properties, false);
+            }
+        }
     }
 
     public class RegionContext
@@ -37,6 +59,7 @@ namespace MHServerEmu.Games.Regions
         public ulong PlayerGuidParty;
         public int Seed;
         public int PlayerDeaths;
+        public PrototypeId ItemRarity;
 
         public RegionContext() : this(PrototypeId.Invalid, PrototypeId.Invalid) { }
 
@@ -49,6 +72,27 @@ namespace MHServerEmu.Games.Regions
             EndlessLevel = 0;
             Level = 60;
             PlayerGuidParty = 0;
+        }
+
+        public void FromRegion(Region region)
+        {
+            var settings = region.Settings;
+            if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, true);
+            Properties.CopyPropertyRange(region.Properties, PropertyEnum.ScoringEventTimerAccumTimeMS);
+            DifficultyTierRef = settings.DifficultyTierRef;
+            PlayerGuidParty = settings.PlayerGuidParty;
+            EndlessLevel = settings.EndlessLevel + 1;
+            ItemRarity = settings.ItemRarity;
+            Affixes = new(settings.Affixes);
+            Seed = settings.Seed;
+        }
+
+        public void Reset()
+        {
+            Seed = 0;
+            EndlessLevel = 0;
+            Affixes.Clear();
+            Properties.Clear();
         }
     }
 }

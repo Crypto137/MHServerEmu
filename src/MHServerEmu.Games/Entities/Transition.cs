@@ -189,6 +189,7 @@ namespace MHServerEmu.Games.Entities
                             properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
                             properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
                             properties.CopyProperty(Properties, PropertyEnum.DangerRoomScenarioItemDbGuid);
+                            regionContext.ItemRarity = Properties[PropertyEnum.ItemRarity];
                             regionContext.PlayerGuidParty = Properties[PropertyEnum.RestrictedToPlayerGuidParty];
 
                             if (Properties.HasProperty(PropertyEnum.RegionAffix))
