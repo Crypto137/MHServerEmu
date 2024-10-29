@@ -82,6 +82,11 @@ namespace MHServerEmu.Games.Populations
             {
                 properties = new PropertyCollection();
                 properties[PropertyEnum.MissionPrototype] = missionRef;
+
+                // HardFix for CH04TR05Barber
+                if (missionRef == (PrototypeId)17490825540593458750
+                    && populationMarkerRef == (PrototypeId)4913246059230140017) // MissionSpawnedChestMarker
+                    populationMarkerRef = (PrototypeId)17169140681234780994; // DeadEndChestMarker
             }
 
             if (time == default) 
