@@ -63,12 +63,12 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Resets this <see cref="ItemResolver"/> and sets new rolling context.
         /// </summary>
-        public void SetContext(LootContext lootContext, Player player)
+        public void SetContext(LootContext lootContext, Player player, WorldEntity sourceEntity = null)
         {
             _pendingItemList.Clear();
             _processedItemList.Clear();
 
-            _context.Set(lootContext, player);
+            _context.Set(lootContext, player, sourceEntity);
         }
 
         #region Push Functions
