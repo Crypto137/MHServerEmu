@@ -54,7 +54,10 @@ namespace MHServerEmu.Games.Entities.Items
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
 
-        public Item(Game game) : base(game) { }
+        public Item(Game game) : base(game) 
+        {
+            SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
+        }
 
         public override bool Initialize(EntitySettings settings)
         {

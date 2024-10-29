@@ -287,11 +287,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private KeywordsMask _keywordsMask;
-        private bool _isVacuumable;
+        private KeywordsMask _keywordsMask; 
 
         private object _interactionDataLock;
         private bool _interactionDataCached;
+
+        [DoNotCopy]
+        public bool IsVacuumable { get; protected set; }
 
         [DoNotCopy]
         public bool IsCurrency { get => Properties != null && Properties.HasProperty(PropertyEnum.ItemCurrency); }
@@ -321,7 +323,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             var keywordVacuumable = GameDatabase.KeywordGlobalsPrototype.VacuumableKeyword.As<KeywordPrototype>();
-            _isVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
+            IsVacuumable = keywordVacuumable != null && HasKeyword(keywordVacuumable);
 
             // hack for Mutants CivilianFemaleMutantV01 CivilianMaleMutantV01 CivilianMaleMutantV02
             if (DataRef == (PrototypeId)428108881470233161 || DataRef == (PrototypeId)14971691258158061950 || DataRef == (PrototypeId)6207165219079199103)

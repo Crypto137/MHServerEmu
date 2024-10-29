@@ -162,6 +162,9 @@ namespace MHServerEmu.Games.Entities
 
             WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
 
+            if (worldEntityProto.IsVacuumable)
+                SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
+
             if (settings.IgnoreNavi)
                 SetFlag(EntityFlags.IgnoreNavi, true);
 

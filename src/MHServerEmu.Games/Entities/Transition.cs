@@ -27,7 +27,10 @@ namespace MHServerEmu.Games.Entities
 
         public TransitionPrototype TransitionPrototype { get => Prototype as TransitionPrototype; }
 
-        public Transition(Game game) : base(game) { }
+        public Transition(Game game) : base(game) 
+        {
+            SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
+        }
 
         public override bool Initialize(EntitySettings settings)
         {
