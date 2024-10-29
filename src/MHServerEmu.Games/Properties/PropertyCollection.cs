@@ -34,6 +34,8 @@ namespace MHServerEmu.Games.Properties
         // A collection of registered watchers
         private readonly HashSet<IPropertyChangeWatcher> _watchers = new();
 
+        public bool IsEmpty { get => _baseList.Count == 0 && _aggregateList.Count == 0 && _curveList.Count == 0; }
+
         #region Value Indexers
 
         // Add more indexers for specific param type combinations as needed
