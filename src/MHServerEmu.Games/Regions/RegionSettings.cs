@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Regions
             PlayerDeaths = regionContext.PlayerDeaths;
             PlayerGuidParty = regionContext.PlayerGuidParty;
 
-            if (regionContext.Properties.HasProperty(PropertyEnum.RegionAffixDifficulty))
+            if (regionContext.Properties.IsEmpty == false)
             {
                 Properties = new();
                 Properties.FlattenCopyFrom(regionContext.Properties, false);
