@@ -1684,6 +1684,16 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
+        public void SendUINotification(UINotificationPrototype notification)
+        {
+            if (notification is BannerMessagePrototype banner)
+                SendBannerMessage(banner);
+            else if (notification is StoryNotificationPrototype story)
+                SendStoryNotification(story);
+            else if (notification is HUDTutorialPrototype tutorial)
+                SendHUDTutorial(tutorial);
+        }
+
         private void SendWaypointUnlocked()
         {
             SendOnWaypointUpdated();

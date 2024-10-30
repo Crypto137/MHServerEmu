@@ -26,6 +26,7 @@ namespace MHServerEmu.Games.Entities
 
         private Dictionary<MissionConditionContext, int> _missionConditionEntityCounter;
         private HashSet<ulong> _missionAvatars;
+        private HashSet<ulong> _notifiedPlayers;
         private bool _skipCollide;
         private PropertyCollection _directApplyToMissileProperties;
 
@@ -96,9 +97,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (hotspotProto.UINotificationOnEnter != null)
-            {
-                // TODO UINotification
-            }
+                _notifiedPlayers = new();
 
             if (IsMissionHotspot)
             {
@@ -321,6 +320,13 @@ namespace MHServerEmu.Games.Entities
                 player.Properties[PropertyEnum.RespawnHotspotOverrideInst, targetRespawnRef] = Id;
 
             var hotspotProto = HotspotPrototype;
+
+            if (hotspotProto.UINotificationOnEnter != null && _notifiedPlayers.Contains(player.Id) == false)
+            {
+                player.SendUINotification(hotspotProto.UINotificationOnEnter);
+                _notifiedPlayers.Add(player.Id);
+            }
+
             if (hotspotProto.TutorialTip != PrototypeId.Invalid)
                 player.ShowHUDTutorial(hotspotProto.TutorialTip.As<HUDTutorialPrototype>());
 
