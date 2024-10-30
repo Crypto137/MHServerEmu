@@ -338,12 +338,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             Cell cell = Cell;
             if (cell == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): cell == null");
 
-            // TODO: Add more overrides sources (DividedStartLocations, RegionStartTargetOverride property, etc.)
+            var player = GetOwnerOfType<Player>();
+
+            PrototypeId startTargetRef = region.Properties[PropertyEnum.RegionStartTargetOverride];
+            if (startTargetRef != PrototypeId.Invalid)
+                return startTargetRef;
 
             // Check if there is an area / cell override
             PrototypeId areaRespawnOverride = area.GetRespawnOverride(cell);
             if (areaRespawnOverride != PrototypeId.Invalid)
                 return areaRespawnOverride;
+
+            if (region.GetDividedStartTarget(player, ref startTargetRef))
+                return startTargetRef;
 
             // Check if there is a region-wide override
             if (region.Prototype.RespawnOverride != PrototypeId.Invalid)

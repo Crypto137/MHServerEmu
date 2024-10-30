@@ -1639,7 +1639,7 @@ namespace MHServerEmu.Games.Regions
             return startTargetRef;
         }
 
-        private bool GetDividedStartTarget(Player player, ref PrototypeId startTargetRef)
+        public bool GetDividedStartTarget(Player player, ref PrototypeId startTargetRef)
         {
             if (DividedStartLocations.Count == 0) return false;
 
