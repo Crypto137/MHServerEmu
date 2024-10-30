@@ -10,6 +10,11 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         {
             _proto = prototype as MetaStateScoringEventTimerEndPrototype;
         }
+
+        public override void OnApply()
+        {
+            Region?.ScoringEventTimerEnd(_proto.Timer);
+        }
     }
 }
 
