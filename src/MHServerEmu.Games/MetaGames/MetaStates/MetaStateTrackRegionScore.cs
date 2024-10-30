@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         private PropertyCollection _properties;
         private Curve _scoreLevelCurve;
         private Curve _scoreRankCurve;
+        public static int ScoreBoost = 1;
 
         public MetaStateTrackRegionScore(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -139,6 +140,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     }
                 }
 
+                score *= ScoreBoost;
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
             }
         }
@@ -202,6 +204,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 }
             }
 
+            score *= ScoreBoost;
             if (score > 0.0f) 
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
         }
