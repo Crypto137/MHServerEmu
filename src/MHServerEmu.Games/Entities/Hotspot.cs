@@ -10,8 +10,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.Properties.Evals;
-using MHServerEmu.Games.Behavior;
-using static MHServerEmu.Games.Missions.MissionManager;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Regions;
 
@@ -318,7 +316,9 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // TODO Spawner Respawn
+            PrototypeId targetRespawnRef = Properties[PropertyEnum.RespawnHotspotOverride];
+            if (targetRespawnRef != PrototypeId.Invalid)
+                player.Properties[PropertyEnum.RespawnHotspotOverrideInst, targetRespawnRef] = Id;
 
             var hotspotProto = HotspotPrototype;
             if (hotspotProto.TutorialTip != PrototypeId.Invalid)
@@ -330,7 +330,12 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Player(Avatar avatar)
         {
-            // Logger.Trace($"HandleOverlapEnd_Player {this} {avatar}");
+            var player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            PrototypeId targetRespawnRef = Properties[PropertyEnum.RespawnHotspotOverride];
+            if (targetRespawnRef != PrototypeId.Invalid && player.Properties[PropertyEnum.RespawnHotspotOverrideInst, targetRespawnRef] == Id)
+                player.Properties.RemoveProperty(new(PropertyEnum.RespawnHotspotOverrideInst, targetRespawnRef));
         }
 
         private void HandleOverlapBegin_PowerEvent(WorldEntity whom)

@@ -340,6 +340,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             var player = GetOwnerOfType<Player>();
 
+            // Check if there is a hotspot override
+            if (player != null)
+            {
+                PrototypeId respawnTarget = GetRespawHotspotOverrideTarget(player);
+                if (respawnTarget != PrototypeId.Invalid)
+                    return respawnTarget;
+            }
+
+            // Check if there is RegionStartTargetOverride property
             PrototypeId startTargetRef = region.Properties[PropertyEnum.RegionStartTargetOverride];
             if (startTargetRef != PrototypeId.Invalid)
                 return startTargetRef;
@@ -349,6 +358,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (areaRespawnOverride != PrototypeId.Invalid)
                 return areaRespawnOverride;
 
+            // Check if there is DividedStartTarget
             if (region.GetDividedStartTarget(player, ref startTargetRef))
                 return startTargetRef;
 
@@ -358,6 +368,32 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Fall back to the region's start target as the last resort
             return region.Prototype.StartTarget;
+        }
+
+        public PrototypeId GetRespawHotspotOverrideTarget(Player player)
+        {
+            PrototypeId respawnTarget = PrototypeId.Invalid;
+
+            var manager = Game.EntityManager;
+            var position = RegionLocation.Position;
+            float minDistance = float.MaxValue;
+
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.RespawnHotspotOverrideInst))
+            {
+                if ((ulong)kvp.Value == InvalidId) continue;
+                var hotspot = manager.GetEntity<Hotspot>(kvp.Value);
+                if (hotspot == null || hotspot.IsInWorld == false) continue;
+
+                var center = hotspot.RegionLocation.Position;
+                float distance = Vector3.Distance2D(position, center);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    Property.FromParam(kvp.Key, 0, out respawnTarget);
+                }
+            }
+
+            return respawnTarget;
         }
 
         #endregion
