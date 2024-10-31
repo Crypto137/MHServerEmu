@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Loot
             LootContext = lootContext;
             Player = player;
 
-            //InitializeCooldownData(sourceEntity);
+            InitializeCooldownData(sourceEntity);
         }
 
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
@@ -40,17 +40,24 @@ namespace MHServerEmu.Games.Loot
             if (settings.IsRestrictedByLootDropChanceModifier())
                 return Logger.WarnReturn(0f, $"GetDropChance(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
 
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
+            if (settings.HasCooldownLootDropChanceModifier() &&
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
             {
-                // Do not drop cooldown-based loot for now
-                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
-                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerXHours");
+                // If this roll requires a cooldown, make sure we have a valid cooldown origin
+                if (_cooldownData.OriginProtoRef == PrototypeId.Invalid)
+                    return Logger.WarnReturn(0f, "GetDropChance(): Failed to determine cooldown origin");
 
-                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
-                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerRollover");
+                // Cooldowns can be per-account or per-avatar
+                bool cooldownActive = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PerAccount)
+                    ? _cooldownData.ActiveOnPlayer
+                    : _cooldownData.ActiveOnAvatar;
 
-                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
-                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownByChannel");
+                // Do not drop anything for this roll if the cooldown is active
+                if (cooldownActive)
+                    return 0f;
+
+                // Set the cooldown
+                SetDropChanceCooldown(settings);
             }
 
             // Start with a base drop chance based on the specified NoDrop percent
@@ -188,7 +195,7 @@ namespace MHServerEmu.Games.Loot
             else if (cooldownType == LootCooldownType.TimeHours || cooldownType == LootCooldownType.RolloverWallTime)
             {
                 _cooldownData.OriginProtoRef = sourceEntity.PrototypeDataRef;
-                _cooldownData.DifficultyProtoRef = sourceEntity.Properties[PropertyEnum.DifficultyTier];
+                _cooldownData.DifficultyProtoRef = sourceEntity.Region.DifficultyTierRef;
                 _cooldownData.PropertyEnum = PropertyEnum.LootCooldownTimeStartEntity;
 
                 return true;
@@ -197,23 +204,56 @@ namespace MHServerEmu.Games.Loot
             return false;
         }
 
+        private bool SetDropChanceCooldown(LootRollSettings settings)
+        {
+            //Logger.Debug($"SetDropChanceCooldown(): {_cooldownData.OriginProtoRef.GetName()} for {Player}");
+
+            // No need to set cooldown if we are just doing a preview roll
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
+                return true;
+
+            PropertyCollection properties = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PerAccount)
+                ? Player?.Properties
+                : Player?.CurrentAvatar?.Properties;
+
+            if (properties == null) return Logger.WarnReturn(false, "SetDropChanceCooldown(): properties == null");
+
+            PropertyId cooldownProperty = _cooldownData.GetCooldownProperty();
+            if (cooldownProperty.Enum == PropertyEnum.Invalid) return Logger.WarnReturn(false, "SetDropChanceCooldown(): cooldownProperty.Enum == PropertyEnum.Invalid");
+
+            properties[cooldownProperty] = _cooldownData.Time;
+
+            // NOTE: LootCooldownHierarchyPrototype doesn't seem to have any valid data in version 1.52
+
+            return true;
+        }
+
         private struct CooldownData
         {
+            public PropertyEnum PropertyEnum;
             public PrototypeId OriginProtoRef;
             public PrototypeId DifficultyProtoRef;
-            public PropertyEnum PropertyEnum;
             public bool ActiveOnPlayer;
             public bool ActiveOnAvatar;
             public TimeSpan Time;
 
             public void Clear()
             {
+                PropertyEnum = PropertyEnum.Invalid;
                 OriginProtoRef = default;
                 DifficultyProtoRef = default;
-                PropertyEnum = default;
                 ActiveOnPlayer = default;
                 ActiveOnAvatar = default;
                 Time = default;
+            }
+
+            public PropertyId GetCooldownProperty()
+            {
+                // Channel cooldowns do not have a difficulty param
+                if (PropertyEnum == PropertyEnum.LootCooldownTimeStartChannel)
+                    return new(PropertyEnum, OriginProtoRef);
+
+                return new(PropertyEnum, OriginProtoRef, DifficultyProtoRef);
             }
         }
     }
