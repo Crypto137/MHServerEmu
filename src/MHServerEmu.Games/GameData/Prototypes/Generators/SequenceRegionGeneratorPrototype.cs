@@ -117,10 +117,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public EndlessStateEntryPrototype GetState(int randomSeed, int endlessLevel, MetaStateChallengeTierEnum missionTier)
         {
-            if (Challenges == null) return null;
+            if (Challenges.IsNullOrEmpty()) return null;
 
             GRandom random = new(randomSeed + endlessLevel);
-            Picker<EndlessStateEntryPrototype> picker = new Picker<EndlessStateEntryPrototype>(random);
+            Picker<EndlessStateEntryPrototype> picker = new (random);
 
             foreach (var state in Challenges)
             {
