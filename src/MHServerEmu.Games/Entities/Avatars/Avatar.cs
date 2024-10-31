@@ -311,7 +311,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
-                        Transition.TeleportToLocalTarget(owner, region.Prototype.StartTarget);
+                        Transition.TeleportToLocalTarget(owner, deathReleaseTarget);
                     }
                     else 
                     {
