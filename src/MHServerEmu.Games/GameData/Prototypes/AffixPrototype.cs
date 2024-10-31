@@ -179,7 +179,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return GetFirstCategoryMatch(affixCategoryProtos) != null;
         }
 
-        public bool AllowAttachment(DropFilterArguments args)
+        public virtual bool AllowAttachment(DropFilterArguments args)
         {
             if (DropRestrictions.IsNullOrEmpty())
                 return true;
@@ -246,8 +246,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         [DoNotCopy]
         public override bool HasBonusPropertiesToApply { get => true; }
+
+        public override bool AllowAttachment(DropFilterArguments args)
+        {
+            if (base.AllowAttachment(args) == false)
+                return false;
+
+            if (args.ItemProto == null)
+                return Logger.WarnReturn(false, "AllowAttachment(): args.ItemProto == null");
+
+            if (args.ItemProto is not ItemPrototype itemProto)
+                return false;
+
+            PrototypeId portalTargetProtoRef = itemProto.GetPortalTarget();
+            RegionPrototype portalTargetProto = portalTargetProtoRef.As<RegionPrototype>();
+            return portalTargetProto?.AffixTable == AffixTable;
+        }
     }
 
     public class AffixRegionRestrictedPrototype : AffixPrototype

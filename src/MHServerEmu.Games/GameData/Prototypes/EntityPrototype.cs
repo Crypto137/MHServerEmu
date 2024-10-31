@@ -408,6 +408,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return xp > 0 || minXP > 0;
         }
 
+        public virtual PrototypeId GetPortalTarget()
+        {
+            // Overriden in Item and Transition
+            return PrototypeId.Invalid;
+        }
+
         public InteractionData GetInteractionData()
         {
             if (_interactionDataCached == false)
@@ -668,6 +674,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId ShowConfirmationDialogOverride { get; protected set; }
         public PrototypeId ShowConfirmationDialogTemplate { get; protected set; }
         public PrototypeId ShowConfirmationDialogEnemy { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override PrototypeId GetPortalTarget()
+        {
+            if (DirectTarget == PrototypeId.Invalid)
+                return PrototypeId.Invalid;
+
+            RegionConnectionTargetPrototype connectionTargetProto = DirectTarget.As<RegionConnectionTargetPrototype>();
+            if (connectionTargetProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetPortalTarget(): connectionTargetProto == null");
+
+            return connectionTargetProto.Region;
+        }
 
         public Vector3 CalcSpawnOffset(in Orientation rotation)
         {
