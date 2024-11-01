@@ -406,8 +406,13 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public T GetPrototype<T>(PrototypeId prototypeId) where T: Prototype
         {
-            var record = GetPrototypeDataRefRecord(prototypeId);
-            if (record == null) return default;
+            // Quick early return if something is requesting an invalid prototype
+            if (prototypeId == PrototypeId.Invalid)
+                return null;
+
+            PrototypeDataRefRecord record = GetPrototypeDataRefRecord(prototypeId);
+            if (record == null)
+                return null;
 
             // Lock this for thread safety (e.g. if multiple different game threads attempt to load prototypes)
             lock (_prototypeLock)
