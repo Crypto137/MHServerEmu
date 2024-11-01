@@ -8,6 +8,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -69,6 +70,19 @@ namespace MHServerEmu.Commands.Implementations
 
             stopwatch.Stop();
             return $"Generated {numRegions} regions in {stopwatch.Elapsed.TotalSeconds} sec.";
+        }
+
+        [Command("properties", "Prints properties for the current region.\nUsage: region properties", AccountUserLevel.Admin)]
+        public string Properties(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Region region = playerConnection.Player.GetRegion();
+
+            ChatHelper.SendMetagameMessageSplit(client, region.Properties.ToString());
+
+            return string.Empty;
         }
     }
 }

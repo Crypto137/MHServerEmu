@@ -341,6 +341,8 @@ namespace MHServerEmu.Games.Regions
             // if (regionProto.UITopPanel != PrototypeId.Invalid)
             //     Properties[PropertyEnum.RegionUITopPanel] = regionProto.UITopPanel;
 
+            ApplyDifficultyTierProperties(settings.DifficultyTierRef);
+
             IsGenerated = true;
             CreatedTime = Clock.UnixTime;
             return true;
@@ -760,6 +762,23 @@ namespace MHServerEmu.Games.Regions
                 RegionLevel = regionProto.Level;
             else
                 Logger.Error("RegionLevel <= 0");
+        }
+
+        private void ApplyDifficultyTierProperties(PrototypeId difficultyTierProtoRef)
+        {
+            DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
+            if (difficultyTierProto == null) return;
+
+            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.ExperienceBonusPct);
+            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.LootBonusXPPct);
+            Properties.AdjustProperty(difficultyTierProto.ItemFindCreditsPct, PropertyEnum.LootBonusCreditsPct);
+            Properties.AdjustProperty(difficultyTierProto.ItemFindRarePct, PropertyEnum.LootBonusRarityPct);
+            Properties.AdjustProperty(difficultyTierProto.ItemFindSpecialPct, PropertyEnum.LootBonusSpecialPct);
+
+            Properties.AdjustProperty(difficultyTierProto.BonusItemFindBonusDifficultyMult, PropertyEnum.BonusItemFindBonusDifficultyMult);
+            
+            Properties[PropertyEnum.DamageRegionMobToPlayer] *= difficultyTierProto.DamageMobToPlayerPct;
+            Properties[PropertyEnum.DamageRegionPlayerToMob] *= difficultyTierProto.DamagePlayerToMobPct;
         }
 
         #endregion
