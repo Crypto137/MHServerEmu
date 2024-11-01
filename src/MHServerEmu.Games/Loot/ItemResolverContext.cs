@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private LootBonusData _lootBonusData = new();
         private CooldownData _cooldownData = new();
 
         public LootContext LootContext { get; private set; }
@@ -31,6 +32,7 @@ namespace MHServerEmu.Games.Loot
             LootContext = lootContext;
             Player = player;
 
+            InitializeLootBonusData();
             InitializeCooldownData(sourceEntity);
         }
 
@@ -96,9 +98,18 @@ namespace MHServerEmu.Games.Loot
             return isOnCooldown;
         }
 
+        private bool InitializeLootBonusData()
+        {
+            _lootBonusData.Reset();
+
+            // TODO: apply properties from various sources
+
+            return true;
+        }
+
         private bool InitializeCooldownData(WorldEntity sourceEntity)
         {
-            _cooldownData.Clear();
+            _cooldownData.Reset();
 
             if (FindCooldownOrigin(sourceEntity, out LootCooldownType cooldownType) == false)
                 return false;
@@ -118,7 +129,7 @@ namespace MHServerEmu.Games.Loot
             else if (_cooldownData.PropertyEnum != PropertyEnum.Invalid)
             {
                 // This should be either LootCooldownTimeStartEntity or LootCooldownTimeStartRegion
-                PropertyId cooldownProperty = new(_cooldownData.PropertyEnum, _cooldownData.OriginProtoRef, _cooldownData.DifficultyProtoRef);
+                PropertyId cooldownProperty = _cooldownData.GetCooldownProperty();
 
                 if (cooldownType == LootCooldownType.TimeHours)
                 {
@@ -228,6 +239,49 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
+        private struct LootBonusData
+        {
+            public float XPMult = 1f;
+            public float RarityMult = 1f;
+            public float SpecialMult = 1f;
+            public float CreditsMult = 1f;
+            public int CreditsFlat = 0;
+
+            public readonly Dictionary<PrototypeId, float> CurrencyMultDict = new();
+            public readonly Dictionary<PrototypeId, float> CurrencyFlatDict = new();
+
+            public LootBonusData() { }
+
+            public void Reset()
+            {
+                XPMult = 1f;
+                RarityMult = 1f;
+                SpecialMult = 1f;
+                CreditsMult = 1f;
+                CreditsFlat = 0;
+
+                CurrencyMultDict.Clear();
+                CurrencyFlatDict.Clear();
+
+                foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    CurrencyMultDict[currencyProtoRef] = 1f;
+                    CurrencyFlatDict[currencyProtoRef] = 0;
+                }
+            }
+
+            public void ApplyProperties(PropertyCollection properties)
+            {
+                // TODO: Avatar::GetStacking functions
+
+                XPMult += properties[PropertyEnum.LootBonusXPPct];
+                RarityMult += properties[PropertyEnum.LootBonusRarityPct];
+                SpecialMult += properties[PropertyEnum.LootBonusSpecialPct];
+                CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
+                // TODO: Avatar::GetFlatCreditsBonus()
+            }
+        }
+
         private struct CooldownData
         {
             public PropertyEnum PropertyEnum;
@@ -237,7 +291,7 @@ namespace MHServerEmu.Games.Loot
             public bool ActiveOnAvatar;
             public TimeSpan Time;
 
-            public void Clear()
+            public void Reset()
             {
                 PropertyEnum = PropertyEnum.Invalid;
                 OriginProtoRef = default;
@@ -247,7 +301,7 @@ namespace MHServerEmu.Games.Loot
                 Time = default;
             }
 
-            public PropertyId GetCooldownProperty()
+            public readonly PropertyId GetCooldownProperty()
             {
                 // Channel cooldowns do not have a difficulty param
                 if (PropertyEnum == PropertyEnum.LootCooldownTimeStartChannel)
