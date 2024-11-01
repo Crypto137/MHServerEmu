@@ -795,7 +795,10 @@ namespace MHServerEmu.Games.Entities
                 if (currencyProto.MaxAmount > 0 && currentAmount + delta > currencyProto.MaxAmount)
                     continue;
 
-                Properties.AdjustProperty(delta, new(PropertyEnum.Currency, currencyProtoRef));
+                var propId = new PropertyId (PropertyEnum.Currency, currencyProtoRef);
+                Properties.AdjustProperty(delta, propId);
+                GetRegion()?.CurrencyCollectedEvent.Invoke(new(this, currencyProtoRef, Properties[propId]));
+
                 result = true;
             }
 
