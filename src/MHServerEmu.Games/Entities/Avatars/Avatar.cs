@@ -478,6 +478,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public override PowerUseResult ActivatePower(PrototypeId powerRef, ref PowerActivationSettings settings)
+        {
+            PowerUseResult rusult = base.ActivatePower(powerRef, ref settings);
+
+            var player = GetOwnerOfType<Player>();
+            if (player != null) 
+                Region?.AvatarUsedPowerEvent.Invoke(new(player, this, powerRef, settings.TargetEntityId));
+
+            return rusult;
+        }
+
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
             base.ActivatePostPowerAction(power, flags);
