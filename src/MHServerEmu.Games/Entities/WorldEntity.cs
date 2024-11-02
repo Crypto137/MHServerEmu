@@ -2365,7 +2365,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // Apply mods from boosts and rank
 
-                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost).ToArray())
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId modProtoRef);
                     if (modProtoRef == PrototypeId.Invalid)

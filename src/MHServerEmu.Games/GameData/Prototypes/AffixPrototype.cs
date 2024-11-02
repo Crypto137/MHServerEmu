@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
@@ -91,6 +92,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Player,
         GroupBoss,
         TeamUp,
+        Max
     }
 
     [AssetEnum((int)Default)]
@@ -514,7 +516,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return DoOverride(rankProto, rankOverrideProto).DataRef;
         }
 
-        private static RankPrototype DoOverride(RankPrototype rankProto, RankPrototype rankOverrideProto)
+        public static RankPrototype DoOverride(RankPrototype rankProto, RankPrototype rankOverrideProto)
         {
             if (rankProto == null) return rankOverrideProto;
             if (rankOverrideProto == null) return rankProto;
@@ -548,9 +550,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public EnemyBoostSetPrototype AffixTablePrototype { get => AffixTable.As<EnemyBoostSetPrototype>(); }
 
-        internal PrototypeId RollAffix(GRandom random, HashSet<PrototypeId> affixes, HashSet<PrototypeId> exclude)
+        public PrototypeId RollAffix(GRandom random, HashSet<PrototypeId> affixes, HashSet<PrototypeId> exclude)
         {
-            throw new NotImplementedException();
+            var affixTableProto = AffixTablePrototype;
+            if (affixTableProto != null && random.NextPct(ChancePct))
+            {
+                Picker<PrototypeId> picker = new(random);
+
+                if (affixes.Count > 0)
+                    foreach (var affixRef in affixes)
+                        if (affixTableProto.Contains(affixRef))
+                            picker.Add(affixRef);
+
+                if (picker.Pick(out PrototypeId pickRef))
+                    return pickRef;
+
+                if (affixTableProto.Modifiers.HasValue())
+                    foreach (var affix in affixTableProto.Modifiers)
+                        if (exclude.Contains(affix) == false)
+                            picker.Add(affix);
+
+                if (picker.Pick(out pickRef))
+                    return pickRef;
+            }
+
+            return PrototypeId.Invalid;
         }
     }
 
@@ -562,14 +586,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public AffixTableEntryPrototype GetAffixSlot(int slot)
         {
-            if (Affixes.HasValue() && slot >=0 && slot < Affixes.Length)
+            if (Affixes.HasValue() && slot >= 0 && slot < Affixes.Length)
                 return Affixes[slot];
-            return null; // empty prototype
+            return null;
         }
 
         public int GetMaxAffixes()
         {
-            return (Affixes.HasValue() ? Affixes.Length : 0);
+            return Affixes.HasValue() ? Affixes.Length : 0;
         }
     }
 

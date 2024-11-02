@@ -810,9 +810,23 @@ namespace MHServerEmu.Games.Regions
             return MetaStateChallengeTierEnum.None;
         }
 
-        public void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
+        public void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> affixes)
         {
-            throw new NotImplementedException();
+            foreach (var affix in Settings.Affixes)
+            {
+                var affixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                if (affixProto != null && affixProto.CanApplyToRegion(this))
+                {
+                    if (affixProto.EnemyBoost != PrototypeId.Invalid)
+                        affixes.Add(affixProto.EnemyBoost);
+
+                    if (affixProto.EnemyBoostsFiltered.IsNullOrEmpty()) continue;
+                    foreach (var boostProto in affixProto.EnemyBoostsFiltered)
+                        if ((boostProto.RanksAllowed.IsNullOrEmpty() || boostProto.RanksAllowed.Contains(rankRef))
+                            && (boostProto.RanksPrevented.IsNullOrEmpty() || boostProto.RanksPrevented.Contains(rankRef) == false))
+                            affixes.Add(boostProto.EnemyBoost);
+                }
+            }
         }
 
         private void SetRegionLevel()

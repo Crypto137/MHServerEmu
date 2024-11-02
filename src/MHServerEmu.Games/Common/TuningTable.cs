@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -51,9 +52,17 @@ namespace MHServerEmu.Games.Common
             }
         }
 
-        public RankPrototype RollRank(List<RankPrototype> ranks, HashSet<PrototypeId> overrides)
+        public RankPrototype RollRank(List<RankPrototype> ranks, bool noAffixes)
         {
-            throw new NotImplementedException();
+            var rank = GameDatabase.PopulationGlobalsPrototype.GetRankByEnum(Rank.Popcorn);
+
+            if (ranks.Any(r => r.Rank != Rank.Popcorn) == false)
+            {
+                var picker = _tuningProto.BuildRankPicker(_region.DifficultyTierRef, _region.Game.Random, noAffixes);
+                if (picker.Empty() == false) picker.Pick(out rank);
+            }
+
+            return rank;
         }
 
         public void SetDifficultyIndex(int difficultyIndex, bool broadcast)
