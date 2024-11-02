@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushCredits(int amount)
         {
-            // TODO: Credits bonuses
+            amount = _context.ScaleCredits(amount);
 
             if (amount > 0)
             {
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushXP(CurveId xpCurveRef, int amount)
         {
-            // TODO: XP bonuses
+            amount = _context.ScaleExperience(amount);
 
             if (amount > 0)
             {
@@ -223,8 +223,8 @@ namespace MHServerEmu.Games.Loot
             if (worldEntityProto.GetCurrency(out PrototypeId currencyRef, out int amount) == false)
                 return LootRollResult.Failure;
 
-            // TODO: currency bonuses
-            CurrencySpec currencySpec = new(worldEntityProto.DataRef, currencyRef, amount * stackCount);
+            amount = _context.ScaleCurrency(currencyRef, amount * stackCount);
+            CurrencySpec currencySpec = new(worldEntityProto.DataRef, currencyRef, amount);
             LootResult lootResult = new(currencySpec);
             _pendingItemList.Add(new(lootResult));
 

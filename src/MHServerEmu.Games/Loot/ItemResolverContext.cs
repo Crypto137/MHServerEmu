@@ -77,6 +77,29 @@ namespace MHServerEmu.Games.Loot
             return dropChance;
         }
 
+        public int ScaleExperience(int amount)
+        {
+            float scaledAmount = amount;
+            scaledAmount *= _lootBonusData.XPMult;
+            return (int)scaledAmount;
+        }
+
+        public int ScaleCredits(int amount)
+        {
+            float scaledAmount = amount;
+            scaledAmount *= _lootBonusData.CreditsMult;
+            scaledAmount += _lootBonusData.CreditsFlat;
+            return (int)scaledAmount;
+        }
+
+        public int ScaleCurrency(PrototypeId currencyProtoRef, int amount)
+        {
+            float scaledAmount = amount;
+            scaledAmount *= _lootBonusData.GetCurrencyMult(currencyProtoRef);
+            scaledAmount += _lootBonusData.GetCurrencyFlat(currencyProtoRef);
+            return (int)scaledAmount;
+        }
+
         public bool IsOnCooldown(PrototypeId dropProtoRef, int count)
         {
             // Check if cooldowns are applicable in this loot context (e.g. crafting should not have any cooldowns)
@@ -102,7 +125,21 @@ namespace MHServerEmu.Games.Loot
         {
             _lootBonusData.Reset();
 
-            // TODO: apply properties from various sources
+            if (LootContext == LootContext.Drop)
+            {
+                Region region = Region;
+
+                if (region != null)
+                    _lootBonusData.ApplyProperties(region.Properties);
+
+                Avatar avatar = Player?.CurrentAvatar;
+                if (avatar != null)
+                    _lootBonusData.ApplyProperties(avatar.Properties);
+
+                // TODO: apply properties from more sources
+            }
+
+            // TODO: Other loot contexts? Mission contribution scaling?
 
             return true;
         }
@@ -248,7 +285,7 @@ namespace MHServerEmu.Games.Loot
             public int CreditsFlat = 0;
 
             public readonly Dictionary<PrototypeId, float> CurrencyMultDict = new();
-            public readonly Dictionary<PrototypeId, float> CurrencyFlatDict = new();
+            public readonly Dictionary<PrototypeId, int> CurrencyFlatDict = new();
 
             public LootBonusData() { }
 
@@ -279,6 +316,22 @@ namespace MHServerEmu.Games.Loot
                 SpecialMult += properties[PropertyEnum.LootBonusSpecialPct];
                 CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
                 // TODO: Avatar::GetFlatCreditsBonus()
+            }
+
+            public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)
+            {
+                if (CurrencyMultDict.TryGetValue(currencyProtoRef, out float mult) == false)
+                    return Logger.WarnReturn(1f, $"GetCurrencyMult(): Invalid currency ref {currencyProtoRef.GetName()}");
+
+                return mult;
+            }
+
+            public readonly int GetCurrencyFlat(PrototypeId currencyProtoRef)
+            {
+                if (CurrencyFlatDict.TryGetValue(currencyProtoRef, out int flat) == false)
+                    return Logger.WarnReturn(0, $"GetCurrencyFlat(): Invalid currency ref {currencyProtoRef.GetName()}");
+
+                return flat;
             }
         }
 
