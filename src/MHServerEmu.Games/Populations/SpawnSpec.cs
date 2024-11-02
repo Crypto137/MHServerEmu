@@ -104,16 +104,17 @@ namespace MHServerEmu.Games.Populations
 
             using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             settings.Properties = settingsProperties;
-            settings.Properties.FlattenCopyFrom(Properties, false);
+            settingsProperties.FlattenCopyFrom(Properties, false);
+            settingsProperties.RemovePropertyRange(PropertyEnum.EnemyBoost);
 
             int level = area.GetCharacterLevel(entityProto);
-            settings.Properties[PropertyEnum.CharacterLevel] = level;
-            settings.Properties[PropertyEnum.CombatLevel] = level;
+            settingsProperties[PropertyEnum.CharacterLevel] = level;
+            settingsProperties[PropertyEnum.CombatLevel] = level;
             if (Group != null)
             {
-                settings.Properties[PropertyEnum.SpawnGroupId] = Group.Id;
+                settingsProperties[PropertyEnum.SpawnGroupId] = Group.Id;
                 if (Group.ObjectProto != null)
-                    settings.Properties[PropertyEnum.ClusterPrototype] = Group.ObjectProto.DataRef;
+                    settingsProperties[PropertyEnum.ClusterPrototype] = Group.ObjectProto.DataRef;
 
                 if (Group.SpawnerId != Entity.InvalidId)
                 {
@@ -137,6 +138,19 @@ namespace MHServerEmu.Games.Populations
             settings.IsPopulation = true;
 
             ActiveEntity = manager.CreateEntity(settings) as WorldEntity;
+
+            var twinBoost = GameDatabase.PopulationGlobalsPrototype.TwinEnemyBoost;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost).ToArray())
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId modProtoRef);
+                if (modProtoRef == twinBoost)
+                {
+                    var rank = ActiveEntity.GetRankPrototype();
+                    if (rank != null && rank.IsRankBoss) ActiveEntity.TwinEnemyBoost(cell);
+                    continue;
+                }
+                ActiveEntity.Properties[PropertyEnum.EnemyBoost, modProtoRef] = true;                
+            }
 
             ReserveSlot(cell);
             State = SpawnState.Live;

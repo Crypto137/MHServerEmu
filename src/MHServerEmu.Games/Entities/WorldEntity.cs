@@ -1562,6 +1562,15 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void TwinEnemyBoost(Cell cell)
+        {
+            var popGlobals = GameDatabase.PopulationGlobalsPrototype;
+            // TODO share damage with twin enemy
+            // PropertyEnum.DamageTransferID
+            // popGlobals.TwinEnemyCondition
+            Properties[PropertyEnum.EnemyBoost, popGlobals.TwinEnemyBoost] = true;
+        }
+
         #endregion
 
         #region Alliances
