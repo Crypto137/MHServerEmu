@@ -1,9 +1,12 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -19,6 +22,9 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly HashSet<PrototypeId> _allowedCooldownDrops = new();     // Drops that have already passed cooldown checks for this roll
+
+        private LootBonusData _lootBonusData = new();
         private CooldownData _cooldownData = new();
 
         public LootContext LootContext { get; private set; }
@@ -31,7 +37,9 @@ namespace MHServerEmu.Games.Loot
             LootContext = lootContext;
             Player = player;
 
-            //InitializeCooldownData(sourceEntity);
+            _allowedCooldownDrops.Clear();
+            InitializeLootBonusData(sourceEntity);
+            InitializeCooldownData(sourceEntity);
         }
 
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
@@ -40,38 +48,107 @@ namespace MHServerEmu.Games.Loot
             if (settings.IsRestrictedByLootDropChanceModifier())
                 return Logger.WarnReturn(0f, $"GetDropChance(): Restricted by loot drop chance modifiers [{settings.DropChanceModifiers}]");
 
-            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
+            if (settings.HasCooldownLootDropChanceModifier() &&
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) == false)
             {
-                // Do not drop cooldown-based loot for now
-                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours))
-                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerXHours");
+                // If this roll requires a cooldown, make sure we have a valid cooldown origin
+                if (_cooldownData.OriginProtoRef == PrototypeId.Invalid)
+                    return Logger.WarnReturn(0f, "GetDropChance(): Failed to determine cooldown origin");
 
-                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover))
-                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownOncePerRollover");
+                // Cooldowns can be per-account or per-avatar
+                bool cooldownActive = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PerAccount)
+                    ? _cooldownData.ActiveOnPlayer
+                    : _cooldownData.ActiveOnAvatar;
 
-                if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel))
-                    return Logger.WarnReturn(0f, "GetDropChance(): Unimplemented modifier CooldownByChannel");
+                // Do not drop anything for this roll if the cooldown is active
+                if (cooldownActive)
+                    return 0f;
+
+                // Set the cooldown
+                SetDropChanceCooldown(settings);
             }
 
             // Start with a base drop chance based on the specified NoDrop percent
             float dropChance = 1f - noDropPercent;
 
-            // Apply live tuning multiplier
-            dropChance *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
-
             // Apply difficulty multiplier
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierNoDropModified))
                 dropChance *= settings.NoDropModifier;
+
+            // Apply loot bonus multiplier
+            dropChance *= _lootBonusData.DropChanceMult;
+
+            // Apply magic find
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.RareItemFind))
+                dropChance *= _lootBonusData.RarityMult;
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.SpecialItemFind))
+                dropChance *= _lootBonusData.SpecialMult;
 
             // Add more multipliers here as needed
 
             return dropChance;
         }
 
+        public void FillRarityPicker(Picker<PrototypeId> picker, List<RarityEntry> rarityEntryList, float weightSum)
+        {
+            // Check for division by zero
+            if (weightSum == 0f)
+                return;
+
+            // Apply diminishing returns to lower tier rarities, resulting in higher tier ones
+            // getting larger effect from magic find bonuses and therefore relatively heavier weights.
+
+            // We add rarity bonus to 1f, so maxing it at -1f prevents negative weight multipliers.
+            float rarityBonus = MathF.Max(-1f, _lootBonusData.RarityMult - 1f);
+            float offset = 0f;
+
+            rarityEntryList.Sort();
+            foreach (RarityEntry entry in rarityEntryList)
+            {
+                float weight = entry.Weight;
+
+                // NOTE: Use weight for calculating ratio instead of entry index to increase
+                // the diminishing returns on rarities with very heavy weights (e.g. common).
+                float rarityBonusRatio = (weight * 0.5f + offset) / weightSum;
+                float weightMult = 1f + rarityBonus * rarityBonusRatio;
+                offset += weight;
+
+                picker.Add(entry.Prototype.DataRef, (int)(weight * weightMult));
+            }
+        }
+
+        public int ScaleExperience(int amount)
+        {
+            float scaledAmount = amount;
+            scaledAmount *= _lootBonusData.XPMult;
+            return (int)scaledAmount;
+        }
+
+        public int ScaleCredits(int amount)
+        {
+            float scaledAmount = amount;
+            scaledAmount *= _lootBonusData.CreditsMult;
+            scaledAmount += _lootBonusData.CreditsFlat;
+            return (int)scaledAmount;
+        }
+
+        public int ScaleCurrency(PrototypeId currencyProtoRef, int amount)
+        {
+            float scaledAmount = amount;
+            scaledAmount *= _lootBonusData.GetCurrencyMult(currencyProtoRef);
+            scaledAmount += _lootBonusData.GetCurrencyFlat(currencyProtoRef);
+            return (int)scaledAmount;
+        }
+
         public bool IsOnCooldown(PrototypeId dropProtoRef, int count)
         {
             // Check if cooldowns are applicable in this loot context (e.g. crafting should not have any cooldowns)
             if (LootContext != LootContext.Drop && LootContext != LootContext.MissionReward)
+                return false;
+
+            // Check if this drop has already passed cooldown checks on initial roll
+            if (_allowedCooldownDrops.Contains(dropProtoRef))
                 return false;
 
             // Check if this drop has a cooldown channel
@@ -83,15 +160,74 @@ namespace MHServerEmu.Games.Loot
 
             // Set cooldown if this drop wasn't on cooldown
             if (isOnCooldown == false)
+            {
                 cooldownChannelProto.SetCooldown(Player, count);
+                _allowedCooldownDrops.Add(dropProtoRef);    // Do not check this drop's cooldown again for this context
+            }
 
             //Logger.Debug($"IsOnCooldown(): {dropProtoRef.GetName()} x{count} = {isOnCooldown}");
             return isOnCooldown;
         }
 
+        private bool InitializeLootBonusData(WorldEntity sourceEntity)
+        {
+            _lootBonusData.Reset();
+
+            if (LootContext == LootContext.Drop)
+            {
+                // Region bonuses
+                Region region = Region;
+                if (region != null)
+                {
+                    _lootBonusData.ApplyProperties(region.Properties);
+
+                    // NOTE: Tuning table bonuses seem to exist only for EndGameWave.prototype (X-Defense / Holo-Sim) in 1.52,
+                    TuningTable tuningTable = region.TuningTable;
+                    TuningPrototype tuningProto = tuningTable?.Prototype;
+                    if (tuningProto != null)
+                    {
+                        // NOTE: Level delta curves appear to be unused, most likely as a result of DCL. Implement them for older versions later if needed.
+                        Curve curve = CurveDirectory.Instance.GetCurve(tuningProto.LootFindByDifficultyIndexCurve);
+                        _lootBonusData.RarityMult *= curve.GetAt(tuningTable.DifficultyIndex);
+                    }
+                }
+
+                // Avatar bonuses
+                Avatar avatar = Player?.CurrentAvatar;
+                if (avatar != null)
+                    _lootBonusData.ApplyProperties(avatar.Properties);
+
+                // Mob bonuses
+                if (sourceEntity != null && sourceEntity != avatar)
+                {
+                    _lootBonusData.ApplyProperties(sourceEntity.Properties);
+
+                    // Mob-specific live tuning
+                    WorldEntityPrototype worldEntityProto = sourceEntity.WorldEntityPrototype;
+                    _lootBonusData.DropChanceMult *= LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobDropRate);
+                    _lootBonusData.RarityMult *= LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobDropRarity);
+                    _lootBonusData.SpecialMult *= LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobSpecialDropRate);
+                }
+
+                // Global bonuses
+                bool canUseLiveTuneBonuses = Player.CanUseLiveTuneBonuses();
+                _lootBonusData.DropChanceMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
+
+                if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalRIF) == 0f)
+                    _lootBonusData.RarityMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootRarity);
+
+                if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalSIF) == 0f)
+                    _lootBonusData.SpecialMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootSpecialDropRate);
+            }
+
+            // TODO: Other loot contexts? Mission contribution scaling?
+
+            return true;
+        }
+
         private bool InitializeCooldownData(WorldEntity sourceEntity)
         {
-            _cooldownData.Clear();
+            _cooldownData.Reset();
 
             if (FindCooldownOrigin(sourceEntity, out LootCooldownType cooldownType) == false)
                 return false;
@@ -111,7 +247,7 @@ namespace MHServerEmu.Games.Loot
             else if (_cooldownData.PropertyEnum != PropertyEnum.Invalid)
             {
                 // This should be either LootCooldownTimeStartEntity or LootCooldownTimeStartRegion
-                PropertyId cooldownProperty = new(_cooldownData.PropertyEnum, _cooldownData.OriginProtoRef, _cooldownData.DifficultyProtoRef);
+                PropertyId cooldownProperty = _cooldownData.GetCooldownProperty();
 
                 if (cooldownType == LootCooldownType.TimeHours)
                 {
@@ -188,7 +324,7 @@ namespace MHServerEmu.Games.Loot
             else if (cooldownType == LootCooldownType.TimeHours || cooldownType == LootCooldownType.RolloverWallTime)
             {
                 _cooldownData.OriginProtoRef = sourceEntity.PrototypeDataRef;
-                _cooldownData.DifficultyProtoRef = sourceEntity.Properties[PropertyEnum.DifficultyTier];
+                _cooldownData.DifficultyProtoRef = sourceEntity.Region.DifficultyTierRef;
                 _cooldownData.PropertyEnum = PropertyEnum.LootCooldownTimeStartEntity;
 
                 return true;
@@ -197,23 +333,120 @@ namespace MHServerEmu.Games.Loot
             return false;
         }
 
+        private bool SetDropChanceCooldown(LootRollSettings settings)
+        {
+            //Logger.Debug($"SetDropChanceCooldown(): {_cooldownData.OriginProtoRef.GetName()} for {Player}");
+
+            // No need to set cooldown if we are just doing a preview roll
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
+                return true;
+
+            PropertyCollection properties = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PerAccount)
+                ? Player?.Properties
+                : Player?.CurrentAvatar?.Properties;
+
+            if (properties == null) return Logger.WarnReturn(false, "SetDropChanceCooldown(): properties == null");
+
+            PropertyId cooldownProperty = _cooldownData.GetCooldownProperty();
+            if (cooldownProperty.Enum == PropertyEnum.Invalid) return Logger.WarnReturn(false, "SetDropChanceCooldown(): cooldownProperty.Enum == PropertyEnum.Invalid");
+
+            properties[cooldownProperty] = _cooldownData.Time;
+
+            // NOTE: LootCooldownHierarchyPrototype doesn't seem to have any valid data in version 1.52
+
+            return true;
+        }
+
+        private struct LootBonusData
+        {
+            public float XPMult = 1f;
+            public float DropChanceMult = 1f;
+            public float RarityMult = 1f;
+            public float SpecialMult = 1f;
+            public float CreditsMult = 1f;
+            public int CreditsFlat = 0;
+
+            public readonly Dictionary<PrototypeId, float> CurrencyMultDict = new();
+            public readonly Dictionary<PrototypeId, int> CurrencyFlatDict = new();
+
+            public LootBonusData() { }
+
+            public void Reset()
+            {
+                XPMult = 1f;
+                DropChanceMult = 1f;
+                RarityMult = 1f;
+                SpecialMult = 1f;
+                CreditsMult = 1f;
+                CreditsFlat = 0;
+
+                CurrencyMultDict.Clear();
+                CurrencyFlatDict.Clear();
+
+                foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    CurrencyMultDict[currencyProtoRef] = 1f;
+                    CurrencyFlatDict[currencyProtoRef] = 0;
+                }
+            }
+
+            public void ApplyProperties(PropertyCollection properties)
+            {
+                XPMult += properties[PropertyEnum.LootBonusXPPct];
+
+                RarityMult += properties[PropertyEnum.LootBonusRarityPct];
+                RarityMult += Avatar.GetStackingLootBonusRarityPct(properties);
+
+                SpecialMult += properties[PropertyEnum.LootBonusSpecialPct];
+                SpecialMult += Avatar.GetStackingLootBonusSpecialPct(properties);
+
+                CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
+                CreditsFlat += Avatar.GetFlatCreditsBonus(properties);
+            }
+
+            public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)
+            {
+                if (CurrencyMultDict.TryGetValue(currencyProtoRef, out float mult) == false)
+                    return Logger.WarnReturn(1f, $"GetCurrencyMult(): Invalid currency ref {currencyProtoRef.GetName()}");
+
+                return mult;
+            }
+
+            public readonly int GetCurrencyFlat(PrototypeId currencyProtoRef)
+            {
+                if (CurrencyFlatDict.TryGetValue(currencyProtoRef, out int flat) == false)
+                    return Logger.WarnReturn(0, $"GetCurrencyFlat(): Invalid currency ref {currencyProtoRef.GetName()}");
+
+                return flat;
+            }
+        }
+
         private struct CooldownData
         {
+            public PropertyEnum PropertyEnum;
             public PrototypeId OriginProtoRef;
             public PrototypeId DifficultyProtoRef;
-            public PropertyEnum PropertyEnum;
             public bool ActiveOnPlayer;
             public bool ActiveOnAvatar;
             public TimeSpan Time;
 
-            public void Clear()
+            public void Reset()
             {
+                PropertyEnum = PropertyEnum.Invalid;
                 OriginProtoRef = default;
                 DifficultyProtoRef = default;
-                PropertyEnum = default;
                 ActiveOnPlayer = default;
                 ActiveOnAvatar = default;
                 Time = default;
+            }
+
+            public readonly PropertyId GetCooldownProperty()
+            {
+                // Channel cooldowns do not have a difficulty param
+                if (PropertyEnum == PropertyEnum.LootCooldownTimeStartChannel)
+                    return new(PropertyEnum, OriginProtoRef);
+
+                return new(PropertyEnum, OriginProtoRef, DifficultyProtoRef);
             }
         }
     }
