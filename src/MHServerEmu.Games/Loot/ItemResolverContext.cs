@@ -1,9 +1,11 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
@@ -19,9 +21,10 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly HashSet<PrototypeId> _allowedCooldownDrops = new();     // Drops that have already passed cooldown checks for this roll
+
         private LootBonusData _lootBonusData = new();
         private CooldownData _cooldownData = new();
-        private HashSet<PrototypeId> _allowedCooldownDrops = new();     // Drops that have already passed cooldown checks for this roll
 
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
@@ -33,9 +36,9 @@ namespace MHServerEmu.Games.Loot
             LootContext = lootContext;
             Player = player;
 
-            InitializeLootBonusData();
-            InitializeCooldownData(sourceEntity);
             _allowedCooldownDrops.Clear();
+            InitializeLootBonusData(sourceEntity);
+            InitializeCooldownData(sourceEntity);
         }
 
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
@@ -67,12 +70,19 @@ namespace MHServerEmu.Games.Loot
             // Start with a base drop chance based on the specified NoDrop percent
             float dropChance = 1f - noDropPercent;
 
-            // Apply live tuning multiplier
-            dropChance *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
-
             // Apply difficulty multiplier
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.DifficultyTierNoDropModified))
                 dropChance *= settings.NoDropModifier;
+
+            // Apply loot bonus multiplier
+            dropChance *= _lootBonusData.DropChanceMult;
+
+            // Apply magic find
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.RareItemFind))
+                dropChance *= _lootBonusData.RarityMult;
+
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.SpecialItemFind))
+                dropChance *= _lootBonusData.SpecialMult;
 
             // Add more multipliers here as needed
 
@@ -130,22 +140,55 @@ namespace MHServerEmu.Games.Loot
             return isOnCooldown;
         }
 
-        private bool InitializeLootBonusData()
+        private bool InitializeLootBonusData(WorldEntity sourceEntity)
         {
             _lootBonusData.Reset();
 
             if (LootContext == LootContext.Drop)
             {
+                // Region bonuses
                 Region region = Region;
-
                 if (region != null)
+                {
                     _lootBonusData.ApplyProperties(region.Properties);
 
+                    // NOTE: Tuning table bonuses seem to exist only for EndGameWave.prototype (X-Defense / Holo-Sim) in 1.52,
+                    TuningTable tuningTable = region.TuningTable;
+                    TuningPrototype tuningProto = tuningTable?.Prototype;
+                    if (tuningProto != null)
+                    {
+                        // NOTE: Level delta curves appear to be unused, most likely as a result of DCL. Implement them for older versions later if needed.
+                        Curve curve = CurveDirectory.Instance.GetCurve(tuningProto.LootFindByDifficultyIndexCurve);
+                        _lootBonusData.RarityMult *= curve.GetAt(tuningTable.DifficultyIndex);
+                    }
+                }
+
+                // Avatar bonuses
                 Avatar avatar = Player?.CurrentAvatar;
                 if (avatar != null)
                     _lootBonusData.ApplyProperties(avatar.Properties);
 
-                // TODO: apply properties from more sources
+                // Mob bonuses
+                if (sourceEntity != null && sourceEntity != avatar)
+                {
+                    _lootBonusData.ApplyProperties(sourceEntity.Properties);
+
+                    // Mob-specific live tuning
+                    WorldEntityPrototype worldEntityProto = sourceEntity.WorldEntityPrototype;
+                    _lootBonusData.DropChanceMult *= LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobDropRate);
+                    _lootBonusData.RarityMult *= LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobDropRarity);
+                    _lootBonusData.SpecialMult *= LiveTuningManager.GetLiveWorldEntityTuningVar(worldEntityProto, WorldEntityTuningVar.eWETV_MobSpecialDropRate);
+                }
+
+                // Global bonuses
+                bool canUseLiveTuneBonuses = Player.CanUseLiveTuneBonuses();
+                _lootBonusData.DropChanceMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootDropRate);
+
+                if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalRIF) == 0f)
+                    _lootBonusData.RarityMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootRarity);
+
+                if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalSIF) == 0f)
+                    _lootBonusData.SpecialMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootSpecialDropRate);
             }
 
             // TODO: Other loot contexts? Mission contribution scaling?
@@ -288,6 +331,7 @@ namespace MHServerEmu.Games.Loot
         private struct LootBonusData
         {
             public float XPMult = 1f;
+            public float DropChanceMult = 1f;
             public float RarityMult = 1f;
             public float SpecialMult = 1f;
             public float CreditsMult = 1f;
@@ -301,6 +345,7 @@ namespace MHServerEmu.Games.Loot
             public void Reset()
             {
                 XPMult = 1f;
+                DropChanceMult = 1f;
                 RarityMult = 1f;
                 SpecialMult = 1f;
                 CreditsMult = 1f;

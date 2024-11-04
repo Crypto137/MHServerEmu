@@ -2085,7 +2085,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
                 }
 
-                if (WorldEntityPrototype.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, true))
+                if (WorldEntityPrototype.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
                 {
                     xp = avatar.ApplyXPModifiers(xp, tuningTable);
                     avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);

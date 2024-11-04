@@ -17,6 +17,7 @@ using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
@@ -1075,6 +1076,20 @@ namespace MHServerEmu.Games.Entities
             // Update max avatar level for things like mode unlocks
             if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
                 Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
+        }
+
+        public bool CanUseLiveTuneBonuses()
+        {
+            float serverBonusUnlockLevelOverride = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_ServerBonusUnlockLevelOverride);
+            int playerMaxAvatarLevel = Properties[PropertyEnum.PlayerMaxAvatarLevel];
+
+            if (serverBonusUnlockLevelOverride != LiveTuningData.DefaultTuningVarValue)
+                return playerMaxAvatarLevel >= serverBonusUnlockLevelOverride;
+
+            // NOTE: ServerBonusUnlockLevel is set to 60 in 1.52.
+            // TODO: Uncomment the real check when we no longer need to rely on live tuning for balancing rewards.
+            //return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
+            return true;
         }
 
         public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
