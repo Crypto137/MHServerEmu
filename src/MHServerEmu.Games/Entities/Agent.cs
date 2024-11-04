@@ -896,6 +896,13 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public override void OnCollide(WorldEntity whom, Vector3 whoPos)
+        {
+            // TODO ProcTriggerType.OnCollide
+
+            AIController?.OnAIOnCollide(whom);
+        }
+
         #endregion
 
         #region Event Handlers
