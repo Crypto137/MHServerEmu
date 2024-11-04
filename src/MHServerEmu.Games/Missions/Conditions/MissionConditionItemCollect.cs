@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             var player = evt.Player;
             var item = evt.Item;
             if (EvaluateItem(player, item) == false) return;
-            int count = -evt.Count;
+            int count = evt.Count;
             CollectItem(player, count);
         }
 
