@@ -1,12 +1,10 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Properties;
@@ -264,10 +262,11 @@ namespace MHServerEmu.Games.Loot
 
         public PrototypeId ResolveRarity(HashSet<PrototypeId> rarityFilter, int level, ItemPrototype itemProto)
         {
-            Picker<PrototypeId> rarityPicker = new(Random);
-
             using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
             DropFilterArguments.Initialize(filterArgs, LootContext);
+
+            List<RarityEntry> rarityEntryList = ListPool<RarityEntry>.Instance.Rent();
+            float weightSum = 0f;
 
             foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -290,13 +289,22 @@ namespace MHServerEmu.Games.Loot
                     continue;
                 }
 
-                rarityPicker.Add(rarityProtoRef, (int)rarityProto.GetWeight(level));
+                RarityEntry entry = new(rarityProto, level);
+                weightSum += entry.Weight;
+                rarityEntryList.Add(entry);
             }
 
-            if (rarityPicker.GetNumElements() == 0)
-                return PrototypeId.Invalid;
+            PrototypeId pickedRarityProtoRef = PrototypeId.Invalid;
 
-            return rarityPicker.Pick();
+            if (rarityEntryList.Count > 0)
+            {
+                Picker<PrototypeId> rarityPicker = new(Random);
+                _context.FillRarityPicker(rarityPicker, rarityEntryList, weightSum);
+                pickedRarityProtoRef = rarityPicker.Pick();
+            }
+
+            ListPool<RarityEntry>.Instance.Return(rarityEntryList);
+            return pickedRarityProtoRef;
         }
 
         public bool CheckDropChance(LootRollSettings settings, float noDropPercent)

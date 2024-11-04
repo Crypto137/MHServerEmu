@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
@@ -87,6 +88,34 @@ namespace MHServerEmu.Games.Loot
             // Add more multipliers here as needed
 
             return dropChance;
+        }
+
+        public void FillRarityPicker(Picker<PrototypeId> picker, List<RarityEntry> rarityEntryList, float weightSum)
+        {
+            // Check for division by zero
+            if (weightSum == 0f)
+                return;
+
+            // Apply diminishing returns to lower tier rarities, resulting in higher tier ones
+            // getting larger effect from magic find bonuses and therefore relatively heavier weights.
+
+            // We add rarity bonus to 1f, so maxing it at -1f prevents negative weight multipliers.
+            float rarityBonus = MathF.Max(-1f, _lootBonusData.RarityMult - 1f);
+            float offset = 0f;
+
+            rarityEntryList.Sort();
+            foreach (RarityEntry entry in rarityEntryList)
+            {
+                float weight = entry.Weight;
+
+                // NOTE: Use weight for calculating ratio instead of entry index to increase
+                // the diminishing returns on rarities with very heavy weights (e.g. common).
+                float rarityBonusRatio = (weight * 0.5f + offset) / weightSum;
+                float weightMult = 1f + rarityBonus * rarityBonusRatio;
+                offset += weight;
+
+                picker.Add(entry.Prototype.DataRef, (int)(weight * weightMult));
+            }
         }
 
         public int ScaleExperience(int amount)
