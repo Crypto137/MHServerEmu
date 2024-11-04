@@ -23,9 +23,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Weight = Math.Max((short)0, Weight);
         }
 
-        public virtual bool OnResultsEvaluation(Player player, WorldEntity sourceEntity)
+        public virtual void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            return true;
         }
 
         public virtual void Visit(LootTableNodeVisitor visitor)
