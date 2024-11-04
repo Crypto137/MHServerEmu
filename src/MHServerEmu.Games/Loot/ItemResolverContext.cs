@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Loot
 
         private LootBonusData _lootBonusData = new();
         private CooldownData _cooldownData = new();
+        private HashSet<PrototypeId> _allowedCooldownDrops = new();     // Drops that have already passed cooldown checks for this roll
 
         public LootContext LootContext { get; private set; }
         public Player Player { get; private set; }
@@ -34,6 +35,7 @@ namespace MHServerEmu.Games.Loot
 
             InitializeLootBonusData();
             InitializeCooldownData(sourceEntity);
+            _allowedCooldownDrops.Clear();
         }
 
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
@@ -106,6 +108,10 @@ namespace MHServerEmu.Games.Loot
             if (LootContext != LootContext.Drop && LootContext != LootContext.MissionReward)
                 return false;
 
+            // Check if this drop has already passed cooldown checks on initial roll
+            if (_allowedCooldownDrops.Contains(dropProtoRef))
+                return false;
+
             // Check if this drop has a cooldown channel
             LootCooldownChannelPrototype cooldownChannelProto = GameDataTables.Instance.LootCooldownTable.GetCooldownChannelForLoot(dropProtoRef);
             if (cooldownChannelProto == null)
@@ -115,7 +121,10 @@ namespace MHServerEmu.Games.Loot
 
             // Set cooldown if this drop wasn't on cooldown
             if (isOnCooldown == false)
+            {
                 cooldownChannelProto.SetCooldown(Player, count);
+                _allowedCooldownDrops.Add(dropProtoRef);    // Do not check this drop's cooldown again for this context
+            }
 
             //Logger.Debug($"IsOnCooldown(): {dropProtoRef.GetName()} x{count} = {isOnCooldown}");
             return isOnCooldown;
