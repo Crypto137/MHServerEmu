@@ -450,7 +450,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 return true;
             }
 
-            float damage = damageMap.ContainsKey(entity.Id) ? (float)damageMap[entity.Id] : 0f;
+            damageMap.TryGetValue(entity.Id, out long damage);
 
             if (bestValue < 0)
             {

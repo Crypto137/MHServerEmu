@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
@@ -292,7 +293,7 @@ namespace MHServerEmu.Games.Behavior
         public void ResetCurrentTargetState()
         {
             SetTargetEntity(null);
-            Senses.Interrupt = BehaviorInterruptType.NoTarget;
+            Senses.Interrupt |= BehaviorInterruptType.NoTarget;
             var collection = Blackboard.PropertyCollection;
             collection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
             collection.RemoveProperty(PropertyEnum.AINextHostileSense);
@@ -513,11 +514,58 @@ namespace MHServerEmu.Games.Behavior
         {
             if (attacker != null)
             {
-                // TODO PropertyEnum.AIDefeatedAtHealthPct
+                var properties = Owner.Properties;
+                if (Blackboard.PropertyCollection.HasProperty(PropertyEnum.AITrackIncomingDamage)) // MODOKBase
+                {
+                    ulong attackerId = attacker.Id;
+                    long absDamage = Math.Abs(damage);
+                    Blackboard.OnTrackIncomingDamage(attackerId, absDamage);
+
+                    // schedule event
+                    EventPointer<TrackDamageEvent> trackEvent = new();
+                    TimeSpan trackTime = TimeSpan.FromSeconds((float)Blackboard.PropertyCollection[PropertyEnum.AITrackIncomingDamage]);
+                    ScheduleAIEvent(trackEvent, trackTime, attackerId, absDamage);
+                }
+
+                if (properties[PropertyEnum.AIDefeated] == false 
+                    && properties.HasProperty(PropertyEnum.AIDefeatedAtHealthPct)
+                    && MathHelper.IsBelowOrEqual(
+                        properties[PropertyEnum.Health] - damage, 
+                        properties[PropertyEnum.HealthMax], 
+                        properties[PropertyEnum.AIDefeatedAtHealthPct])
+                    )
+                {
+                    var avatar = attacker.GetMostResponsiblePowerUser<Avatar>();
+                    var player = avatar?.GetOwnerOfType<Player>();
+
+                    Owner.Region?.EntityDeadEvent?.Invoke(new(Owner, attacker, player));
+
+                    properties[PropertyEnum.AIDefeated] = true;
+
+                    Senses.Interrupt |= BehaviorInterruptType.Defeated;
+                }
             }
 
             Brain?.OnOwnerGotDamaged();
         }
+
+        private void OnAITrackIncomingDamage(ulong attackerId, long damage)
+        {
+            if (Owner == null || Owner.IsInWorld == false) return;
+            Blackboard.OnTrackIncomingDamage(attackerId, -damage);
+        }
+
+        public void OnAIOnCollide(WorldEntity whom)
+        {
+            if (whom == null) return;
+
+            var target = TargetEntity;
+            if (target != null && whom.Id == target.Id)
+                Senses.Interrupt |= BehaviorInterruptType.CollisionWithTarget;
+
+            Brain?.OnOwnerCollide(whom);
+        }
+
 
         public void OnAIStartThrowing(WorldEntity throwableEntity, PrototypeId throwablePowerRef, PrototypeId throwableCancelPowerRef)
         {
@@ -636,6 +684,15 @@ namespace MHServerEmu.Games.Behavior
             eventPointer.Get().Initialize(this, param1);
         }
 
+        public void ScheduleAIEvent<TEvent, TParam1, TParam2>(EventPointer<TEvent> eventPointer, TimeSpan timeOffset, TParam1 param1, TParam2 param2)
+            where TEvent : CallMethodEventParam2<AIController, TParam1, TParam2>, new()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(eventPointer, timeOffset, _pendingEvents);
+            eventPointer.Get().Initialize(this, param1, param2);
+        }
+
         public class StartThrowPowerEvent : CallMethodEvent<AIController>
         {
             protected override CallbackDelegate GetCallback() => (controller) => controller.StartThrownPower();
@@ -654,6 +711,11 @@ namespace MHServerEmu.Games.Behavior
         public class AIThinkEvent : CallMethodEvent<AIController>
         {
             protected override CallbackDelegate GetCallback() => (controller) => controller?.Think();
+        }
+
+        public class TrackDamageEvent : CallMethodEventParam2<AIController, ulong, long>
+        {
+            protected override CallbackDelegate GetCallback() => (controller, attackerId, damage) => controller.OnAITrackIncomingDamage(attackerId, damage);
         }
 
         #endregion

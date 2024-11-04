@@ -1292,7 +1292,7 @@ namespace MHServerEmu.Games.Entities
                 region.AdjustHealthEvent.Invoke(new(this, ultimatePowerUser, player, adjustHealth, isDodged));
             }
 
-            if (health <= 0)
+            if (health <= 0 && Properties[PropertyEnum.AIDefeated] == false)
             {
                 if (this is Avatar killedAvatar)
                 {
@@ -1320,7 +1320,7 @@ namespace MHServerEmu.Games.Entities
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
 
-            if (this is Agent agent && adjustHealth < 0)
+            if (this is Agent agent && adjustHealth < 0 && CanBePlayerOwned() == false)
                 agent.AIController?.OnAIGotDamaged(ultimatePowerUser, adjustHealth);
 
             return true;
