@@ -187,23 +187,10 @@ namespace MHServerEmu.Games.Entities
                             if (regionProto.HasEndless())
                                 regionContext.EndlessLevel = 1;
 
-                            var properties = regionContext.Properties;
-                            properties.Clear();
-                            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
-                            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
-                            properties.CopyProperty(Properties, PropertyEnum.DangerRoomScenarioItemDbGuid);
-                            regionContext.ItemRarity = Properties[PropertyEnum.ItemRarity];
-                            regionContext.PlayerGuidParty = Properties[PropertyEnum.RestrictedToPlayerGuidParty];
+                            regionContext.CopyScenarioProperties(Properties);
 
-                            if (Properties.HasProperty(PropertyEnum.RegionAffix))
-                            {
-                                regionContext.Affixes.Clear();
-                                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RegionAffix))
-                                {
-                                    Property.FromParam(kvp.Key, 0, out PrototypeId affixRef);
-                                    regionContext.Affixes.Add(affixRef);
-                                }
-                            }
+                            if (regionProto.UsePrevRegionPlayerDeathCount)
+                                regionContext.PlayerDeaths = region.PlayerDeaths;
                         }
 
                         return TeleportToRemoteTarget(player, destination.TargetRef);

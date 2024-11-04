@@ -94,5 +94,31 @@ namespace MHServerEmu.Games.Regions
             Affixes.Clear();
             Properties.Clear();
         }
+
+        public void CopyScenarioProperties(PropertyCollection properties)
+        {
+            Properties.Clear();
+
+            Properties.CopyProperty(properties, PropertyEnum.DifficultyTier);
+            Properties.CopyProperty(properties, PropertyEnum.RegionAffixDifficulty);
+            Properties.CopyProperty(properties, PropertyEnum.DangerRoomScenarioItemDbGuid);
+
+            Properties.CopyProperty(properties, PropertyEnum.DifficultyIndex);
+            Properties.CopyProperty(properties, PropertyEnum.DamageRegionMobToPlayer);
+            Properties.CopyProperty(properties, PropertyEnum.DamageRegionPlayerToMob);
+
+            ItemRarity = properties[PropertyEnum.ItemRarity];
+            PlayerGuidParty = properties[PropertyEnum.RestrictedToPlayerGuidParty];
+
+            if (properties.HasProperty(PropertyEnum.RegionAffix))
+            {
+                Affixes.Clear();
+                foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.RegionAffix))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId affixRef);
+                    Affixes.Add(affixRef);
+                }
+            }
+        }
     }
 }

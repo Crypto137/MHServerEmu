@@ -13,6 +13,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -833,6 +834,28 @@ namespace MHServerEmu.Games.Entities.Items
         private void RefreshProcPowerIndexProperties()
         {
             // TODO
+        }
+
+        public void SetScenarioProperties(PropertyCollection properties)
+        {
+            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
+            properties.CopyPropertyRange(Properties, PropertyEnum.RegionAffix);
+            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
+
+            PrototypeId itemRarityRef = Properties[PropertyEnum.ItemRarity];
+            var itemRarityProto = itemRarityRef.As<RarityPrototype>();
+            if (itemRarityProto != null)
+                properties[PropertyEnum.ItemRarity] = itemRarityRef;
+
+            var affixLimits = ItemPrototype.GetAffixLimits(itemRarityRef, LootContext.Drop);
+            if (affixLimits != null)
+            {
+                properties[PropertyEnum.DifficultyIndex] = affixLimits.RegionDifficultyIndex;
+                properties[PropertyEnum.DamageRegionMobToPlayer] = affixLimits.DamageRegionMobToPlayer;
+                properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
+            }
+
+            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; // we need this?
         }
     }
 }

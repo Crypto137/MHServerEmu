@@ -117,11 +117,7 @@ namespace MHServerEmu.Games.Entities
                 // DangerRoomScenario
                 if (summonerProto is TransitionPrototype && item != null)
                 {
-                    properties.CopyProperty(item.Properties, PropertyEnum.DifficultyTier);
-                    properties.CopyPropertyRange(item.Properties, PropertyEnum.RegionAffix);
-                    properties.CopyProperty(item.Properties, PropertyEnum.RegionAffixDifficulty);
-                    properties.CopyProperty(item.Properties, PropertyEnum.ItemRarity);
-                    properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = item.DatabaseUniqueId; // we need this?
+                    item.SetScenarioProperties(properties);
 
                     var player = avatar.GetOwnerOfType<Player>();
                     properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
