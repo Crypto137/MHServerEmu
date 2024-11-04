@@ -302,16 +302,30 @@ namespace MHServerEmu.Games.Behavior
 
         public void SetTargetEntity(WorldEntity target)
         {
-            ulong oldTarget = Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID];
-            ulong newTarget = target?.Id ?? 0;
+            var collection = Blackboard.PropertyCollection;
+            ulong oldTarget = collection[PropertyEnum.AIRawTargetEntityID];
+            bool hasTarget = oldTarget != Entity.InvalidId;
+            ulong newTarget = target?.Id ?? Entity.InvalidId;
 
             if (oldTarget != newTarget)
             {
                 Brain?.OnOwnerTargetSwitch(oldTarget, newTarget);
-                Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = newTarget;
+                collection[PropertyEnum.AIRawTargetEntityID] = newTarget;
             }
 
-            // TODO update think event
+            // Update aggro state
+            if (collection[PropertyEnum.AIAlwaysAggroed]) return;
+
+            if (hasTarget && target == null)
+            {
+                collection[PropertyEnum.AIAggroState] = false;
+                ScheduleAIThinkEvent(TimeSpan.FromMilliseconds(50));
+            }
+            else if (hasTarget == false && target != null)
+            {
+                collection[PropertyEnum.AIAggroState] = true;
+                collection[PropertyEnum.AIAggroTime] = (long)Game.CurrentTime.TotalMilliseconds;
+            }
         }
 
         public void Think()
