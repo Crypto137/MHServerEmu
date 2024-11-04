@@ -363,13 +363,16 @@ namespace MHServerEmu.Games.Loot
 
             public void ApplyProperties(PropertyCollection properties)
             {
-                // TODO: Avatar::GetStacking functions
-
                 XPMult += properties[PropertyEnum.LootBonusXPPct];
+
                 RarityMult += properties[PropertyEnum.LootBonusRarityPct];
+                RarityMult += Avatar.GetStackingLootBonusRarityPct(properties);
+
                 SpecialMult += properties[PropertyEnum.LootBonusSpecialPct];
+                SpecialMult += Avatar.GetStackingLootBonusSpecialPct(properties);
+
                 CreditsMult += properties[PropertyEnum.LootBonusCreditsPct];
-                // TODO: Avatar::GetFlatCreditsBonus()
+                CreditsFlat += Avatar.GetFlatCreditsBonus(properties);
             }
 
             public readonly float GetCurrencyMult(PrototypeId currencyProtoRef)

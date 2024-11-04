@@ -1242,6 +1242,92 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Loot
+
+        // Experience
+
+        public static float GetStackingExperienceBonusPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        // Rarity
+
+        public static float GetStackingLootBonusRarityPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        // Special
+
+        public static float GetStackingLootBonusSpecialPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        // Flat Credits
+
+        public static int GetFlatCreditsBonus(PropertyCollection properties)
+        {
+            int flatCreditsBonus = properties[PropertyEnum.LootBonusCreditsFlat];
+            flatCreditsBonus += (int)GetStackingFlatCreditsBonus(properties);
+            return flatCreditsBonus;
+        }
+
+        public static float GetStackingFlatCreditsBonus(PropertyCollection properties)
+        {
+            float stackingFlatCreditsBonus = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCreditsStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingFlatCreditsBonusMultiplier(properties, powerProtoRef);
+
+                stackingFlatCreditsBonus += GetStackingFlatCreditsBonus(stackCount) * multiplier;
+            }
+
+            return stackingFlatCreditsBonus;
+        }
+
+        public static float GetStackingFlatCreditsBonus(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = CurveDirectory.Instance.GetCurve(GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve);
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingFlatCreditsBonusMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCreditsStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
+        }
+
+        // Orb Aggro Range
+
+        public static float GetOrbAggroRangeBonusPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        #endregion
+
         #region Omega and Infinity
 
         public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)
