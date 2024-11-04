@@ -134,11 +134,11 @@ namespace MHServerEmu.Games.Entities.Items
 
                     if (delta > 0)
                     {
-                        // TODO: PlayerCollectedItemGameEvent
+                        region.PlayerCollectedItemEvent.Invoke(new(owner, this, delta));
                     }
                     else if (delta < 0)
                     {
-                        // TODO: PlayerLostItemGameEvent
+                        region.PlayerLostItemEvent.Invoke(new(owner, this, delta));
                     }
 
                     break;
