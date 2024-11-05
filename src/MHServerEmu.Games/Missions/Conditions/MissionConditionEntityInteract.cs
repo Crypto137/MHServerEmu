@@ -87,7 +87,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (avatar != null && Mission.HasRewards(player, avatar))
             {
                 var rewards = Mission.Prototype.Rewards;
-                if (rewards.HasValue()) Mission.RollLootSummaryReward(lootSummary, player, rewards, Mission.LootSeed);
+                if (rewards.HasValue()) Mission.RollLootSummaryReward(lootSummary, player, rewards, Mission.LootSeed, true);
             }
         }
 
@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             lootSummary = new();
 
             if (_proto.GiveItems.HasValue())
-                Mission.RollLootSummaryReward(lootSummary, player, _proto.GiveItems, Mission.LootSeed + _proto.Index + 1);
+                Mission.RollLootSummaryReward(lootSummary, player, _proto.GiveItems, Mission.LootSeed + _proto.Index + 1, true);
 
             if (_proto.IsTurnInNPC)
                 LootMissionReward(player, lootSummary);

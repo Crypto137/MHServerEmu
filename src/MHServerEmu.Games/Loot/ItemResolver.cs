@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot.Specs;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -68,6 +69,14 @@ namespace MHServerEmu.Games.Loot
             _processedItemList.Clear();
 
             _context.Set(lootContext, player, sourceEntity);
+        }
+
+        public void SetContext(Mission mission, Player player)
+        {
+            _pendingItemList.Clear();
+            _processedItemList.Clear();
+
+            _context.Set(mission, player);
         }
 
         public void SetFlags(LootResolverFlags flags, bool value)

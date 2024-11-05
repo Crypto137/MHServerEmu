@@ -148,6 +148,7 @@ namespace MHServerEmu.Games.Missions
         public bool EventsRegistered { get; set; }
         public bool ReSuspended { get; set; }
         public bool HasItemDrops { get => Prototype.HasItemDrops; }
+        public PrototypeId LootCooldownChannelRef { get => Prototype.LootCooldownChannel; }
 
         public Mission(MissionManager missionManager, PrototypeId missionRef)
         {
@@ -1954,7 +1955,7 @@ namespace MHServerEmu.Games.Missions
         public void RewardForPlayer(Player player, LootTablePrototype[] rewards, int seedOffset)
         {
             LootResultSummary lootSummary = new();
-            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
+            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset, false))
                 GiveDropLootForPlayer(lootSummary, player);
         }
 
@@ -2090,7 +2091,7 @@ namespace MHServerEmu.Games.Missions
         {
             lootSummary = new();
             var rewards = GetRewardTables();
-            RollLootSummaryReward(lootSummary, player, rewards, _lootSeed);
+            RollLootSummaryReward(lootSummary, player, rewards, _lootSeed, true);
             return lootSummary.HasAnyResult;
         }
 
@@ -2119,7 +2120,7 @@ namespace MHServerEmu.Games.Missions
             return lootSummary.HasAnyResult;
         }
 
-        public bool RollLootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed)
+        public bool RollLootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed, bool previewOnly)
         {
             if (rewards.IsNullOrEmpty()) return false;
 
@@ -2127,11 +2128,17 @@ namespace MHServerEmu.Games.Missions
             int level = GetAvatarLevel(avatar);
 
             ItemResolver resolver = new(new(lootSeed));
+            resolver.SetContext(this, player);
+            resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
+
             LootRollSettings settings = new();
             settings.UsableAvatar = avatar.AvatarPrototype;
             settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = level;
             settings.LevelForRequirementCheck = level;
+
+            if (previewOnly)
+                settings.DropChanceModifiers |= LootDropChanceModifiers.PreviewOnly;
 
             foreach (var reward in rewards)
                 reward.Roll(settings, resolver);
