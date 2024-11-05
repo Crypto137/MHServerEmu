@@ -223,6 +223,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return contextResult;
         }
 
+        public override void ProcessInterrupts(AIController ownerController, BehaviorInterruptType interrupt)
+        {
+            if (interrupt.HasFlag(BehaviorInterruptType.Alerted))
+            {
+                var proceduralAI = ownerController.Brain;
+                if (proceduralAI == null) return;
+                if (ownerController.Senses.GetCurrentTarget() != null)
+                    proceduralAI.ClearOverrideBehavior(OverrideType.Full);
+            }
+        }
+
         private void UpdateNextAttackThinkTime(BehaviorBlackboard blackboard, GRandom random, long currentTime, StaticBehaviorReturnType contextResult)
         {
             if (contextResult == StaticBehaviorReturnType.Completed)

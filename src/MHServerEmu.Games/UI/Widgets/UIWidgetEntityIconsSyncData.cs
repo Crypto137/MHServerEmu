@@ -107,6 +107,7 @@ namespace MHServerEmu.Games.UI.Widgets
                         int healthPercent = entityEntry.HealthPercent;
                         int iconIndexForHealthPercentEval = entityEntry.IconIndexForHealthPercentEval;
                         bool forceRefreshEntityHealthPercent = entityEntry.ForceRefreshEntityHealthPercent;
+                        entityEntry.ForceRefreshEntityHealthPercent = false;
                         long enrageStartTime = (long)entityEntry.EnrageStartTime.TotalMilliseconds;
                         bool hasPropertyEntryEval = entityEntry.HasPropertyEntryEval;
                         int propertyEntryIndex = entityEntry.PropertyEntryTableIndex;

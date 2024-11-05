@@ -339,6 +339,11 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
             _proceduralPtr.Profile?.OnSetSimulated(_owningController, simulated);
         }
 
+        public void OnOwnerCollide(WorldEntity whom)
+        {
+            _proceduralPtr.Profile?.OnOwnerCollide(_owningController, whom);
+        }
+
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
         {
             switch (id.Enum)

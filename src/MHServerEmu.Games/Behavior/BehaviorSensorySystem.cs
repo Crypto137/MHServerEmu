@@ -217,7 +217,7 @@ namespace MHServerEmu.Games.Behavior
                 if (brain.Blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] == 0)
                 {
                     brain.SetTargetEntity(GetCurrentTarget());
-                    brain.Senses.Interrupt = BehaviorInterruptType.Alerted;
+                    brain.Senses.Interrupt |= BehaviorInterruptType.Alerted;
                 }
             }
         }
@@ -250,7 +250,7 @@ namespace MHServerEmu.Games.Behavior
 
         public void OnLeaderDeath(Agent leader)
         {
-            Interrupt = BehaviorInterruptType.AllyDeath;
+            Interrupt |= BehaviorInterruptType.AllyDeath;
             if (_pAIController == null) return;
             _pAIController.OnAILeaderDeath();
 

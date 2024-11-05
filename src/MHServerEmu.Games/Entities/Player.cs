@@ -18,6 +18,7 @@ using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
@@ -795,7 +796,10 @@ namespace MHServerEmu.Games.Entities
                 if (currencyProto.MaxAmount > 0 && currentAmount + delta > currencyProto.MaxAmount)
                     continue;
 
-                Properties.AdjustProperty(delta, new(PropertyEnum.Currency, currencyProtoRef));
+                var propId = new PropertyId (PropertyEnum.Currency, currencyProtoRef);
+                Properties.AdjustProperty(delta, propId);
+                GetRegion()?.CurrencyCollectedEvent.Invoke(new(this, currencyProtoRef, Properties[propId]));
+
                 result = true;
             }
 
@@ -1072,6 +1076,20 @@ namespace MHServerEmu.Games.Entities
             // Update max avatar level for things like mode unlocks
             if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
                 Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
+        }
+
+        public bool CanUseLiveTuneBonuses()
+        {
+            float serverBonusUnlockLevelOverride = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_ServerBonusUnlockLevelOverride);
+            int playerMaxAvatarLevel = Properties[PropertyEnum.PlayerMaxAvatarLevel];
+
+            if (serverBonusUnlockLevelOverride != LiveTuningData.DefaultTuningVarValue)
+                return playerMaxAvatarLevel >= serverBonusUnlockLevelOverride;
+
+            // NOTE: ServerBonusUnlockLevel is set to 60 in 1.52.
+            // TODO: Uncomment the real check when we no longer need to rely on live tuning for balancing rewards.
+            //return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
+            return true;
         }
 
         public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
@@ -1682,6 +1700,16 @@ namespace MHServerEmu.Games.Entities
         {
             var message = NetMessagePlayStoryBanter.CreateBuilder().SetBanterAssetId((ulong)banterRef).Build();
             SendMessage(message);
+        }
+
+        public void SendUINotification(UINotificationPrototype notification)
+        {
+            if (notification is BannerMessagePrototype banner)
+                SendBannerMessage(banner);
+            else if (notification is StoryNotificationPrototype story)
+                SendStoryNotification(story);
+            else if (notification is HUDTutorialPrototype tutorial)
+                SendHUDTutorial(tutorial);
         }
 
         private void SendWaypointUnlocked()

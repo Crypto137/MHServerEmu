@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Populations
         public virtual bool IsFormationObject() => false;
         public virtual bool Initialize() => false;
         public virtual ulong Spawn(SpawnGroup group, WorldEntity spawner, SpawnHeat spawnHeat, List<WorldEntity> entities) { return SpawnGroup.InvalidId; }
-        public virtual void UpgradeToRank(RankPrototype upgradeRank, int num) { }
+        public virtual void UpgradeToRank(RankPrototype upgradeRank, ref int numUpgrade) { }
         public virtual void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes) { }
         public virtual bool TestLayout() => false;
     }
@@ -451,217 +451,219 @@ namespace MHServerEmu.Games.Populations
         }
 
         private void InitializeRankAndMods()
-        {
-            // TODO affixes system
-            /*      
-                PopulationGlobalsPrototype popGlobals = GameDatabase.GetPopulationGlobalsPrototype();
-                if (popGlobals == null) return;
+        {                  
+            var popGlobals = GameDatabase.PopulationGlobalsPrototype;
+            if (popGlobals == null) return;
 
-                TuningTable difficulty = Region.Difficulty;
-                if (difficulty == null) return;
+            var difficulty = Region.TuningTable;
+            if (difficulty == null) return;
 
-                TuningPrototype tuningProto = difficulty.GetPrototype();
-                if (tuningProto == null) return;
+            var tuningProto = difficulty.Prototype;
+            if (tuningProto == null) return;
 
-                GRandom random = Region.Game.Random; // GetCurrent
+            var random = Region.Game.Random;
 
-                HashSet<PrototypeId> overrides = GetMobAffixesFromProperties();
-                RankPrototype popcornRank = popGlobals.GetRankByEnum(Rank.Popcorn);
-                Region.ApplyRegionAffixesEnemyBoosts(popcornRank.DataRef, overrides);
+            var overrides = GetMobAffixesFromProperties();
+            var popcornRank = popGlobals.GetRankByEnum(Rank.Popcorn);
+            Region.ApplyRegionAffixesEnemyBoosts(popcornRank.DataRef, overrides);
 
-                if (overrides.Count == 0 && HasModifiableEntities() == false) return;
+            if (overrides.Count == 0 && HasModifiableEntities() == false) return;
 
-                HashSet<PrototypeId> exemptOverrides = new();
+            HashSet<PrototypeId> exemptOverrides = new();
+            ShiftExemptFromOverrides(overrides, exemptOverrides);
+
+            List<RankPrototype> ranks = new();
+            GetRanks(ranks);
+
+            var rollRank = difficulty.RollRank(ranks, overrides.Count == 0);
+
+            int numUpgrade = -1;
+            if (rollRank.Rank == Rank.MiniBoss) numUpgrade = 1;
+
+            UpgradeToRank(rollRank, ref numUpgrade);
+
+            ranks.Clear();
+            GetRanks(ranks);
+
+            HashSet<PrototypeId> affixesSet = new();
+            foreach (var rankProto in ranks)
+            {
+                var rankEntryProto = tuningProto.GetDifficultyRankEntry(Region.DifficultyTierRef, rankProto);
+
+                overrides = GetMobAffixesFromProperties();
+                Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
                 ShiftExemptFromOverrides(overrides, exemptOverrides);
+                affixesSet.UnionWith(overrides);
 
-                List<RankPrototype> ranks = new();
-                GetRanks(ranks);
+                int maxAffixes = (rankEntryProto != null) ? rankEntryProto.GetMaxAffixes() : 0;
+                List<PrototypeId> slots = new(maxAffixes);
+                for (int slot = 0; slot < maxAffixes; slot++) slots.Add(PrototypeId.Invalid); 
 
-                RankPrototype rollRank = difficulty.RollRank(ranks, overrides);
-
-                int numUpgrade = -1;
-                if (rollRank.Rank == Rank.MiniBoss) numUpgrade = 1;
-
-                UpgradeToRank(rollRank, numUpgrade);
-
-                ranks.Clear();
-                GetRanks(ranks);
-
-                HashSet<PrototypeId> affixesSet = new();
-                foreach (RankPrototype rankProto in ranks)
-                {
-                    RankAffixEntryPrototype rankEntryProto = tuningProto.GetDifficultyRankEntry(Region.GetDifficultyTierRef(), rankProto);
-
-                    overrides = GetMobAffixesFromProperties();
-                    Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
-                    ShiftExemptFromOverrides(overrides, exemptOverrides);
-                    affixesSet.UnionWith(overrides);
-
-                    int maxAffixes = (rankEntryProto != null) ? rankEntryProto.GetMaxAffixes() : 0;
-                    List<PrototypeId> slots = new (maxAffixes);
-
-                    if (overrides.Count > 0 && rankEntryProto != null)
+                if (overrides.Count > 0 && rankEntryProto != null)
+                    for (int slot = maxAffixes - 1; slot >= 0; slot--)
                     {
-                        for (int slot = maxAffixes - 1; slot >= 0; slot--)
-                        {
-                            AffixTableEntryPrototype affixProto = rankEntryProto.GetAffixSlot(slot);
-                            if (affixProto == null) continue;
+                        var affixProto = rankEntryProto.GetAffixSlot(slot);
+                        if (affixProto == null) continue;
 
-                            if (slots[slot] == PrototypeId.Invalid)
-                            {
-                                foreach (PrototypeId overrideRef in overrides)
+                        if (slots[slot] == PrototypeId.Invalid)
+                            foreach (var overrideRef in overrides)
+                                if (affixProto.AffixTable == PrototypeId.Invalid || affixProto.AffixTablePrototype.Contains(overrideRef))
                                 {
-                                    if (affixProto.AffixTable == PrototypeId.Invalid || affixProto.GetAffixTablePrototype().Contains(overrideRef))
-                                    {
-                                        slots[slot] = overrideRef;
-                                        overrides.Remove(overrideRef);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (overrides.Count > 0)
-                    {
-                        for (int slot = maxAffixes - 1; slot >= 0; slot--)
-                        {
-                            if (slots[slot] == PrototypeId.Invalid)
-                            {
-                                if (overrides.Count > 0)
-                                {
-                                    PrototypeId overrideRef = overrides.First();
                                     slots[slot] = overrideRef;
                                     overrides.Remove(overrideRef);
+                                    break;
                                 }
-                            }
-                        }
                     }
 
-                    if (overrides.Count > 0)
-                    {
-                        slots.AddRange(overrides);
-                        overrides.Clear();
-                    }
-
-                    if (rankEntryProto != null)
-                    {
-                        HashSet<PrototypeId> currentAffixes = new ();
-                        HashSet<PrototypeId> excludeAffixes = new ();
-                        currentAffixes.UnionWith(affixesSet);
-
-                        for (int slot = 0; slot < slots.Count; ++slot)
+                if (overrides.Count > 0)
+                    for (int slot = maxAffixes - 1; slot >= 0; slot--)
+                        if (slots[slot] == PrototypeId.Invalid)
                         {
-                            if (slots[slot] != PrototypeId.Invalid)
-                            {
-                                currentAffixes.Remove(slots[slot]);
-                                excludeAffixes.Add(slots[slot]);
-                            }
+                            var overrideRef = overrides.First();
+                            slots[slot] = overrideRef;
+                            overrides.Remove(overrideRef);
+                            if (overrides.Count == 0) break;
                         }
 
-                        for (int slot = 0; slot < slots.Count; ++slot)
-                        {
-                            if (slots[slot] == PrototypeId.Invalid)
-                            {
-                                AffixTableEntryPrototype affixProto = rankEntryProto.GetAffixSlot(slot);
-                                if (affixProto == null) continue;
-
-                                PrototypeId affixRef = affixProto.RollAffix(random, currentAffixes, excludeAffixes);
-                                if (affixRef != PrototypeId.Invalid)
-                                {
-                                    slots[slot] = affixRef;
-                                    affixesSet.Add(affixRef);
-                                    currentAffixes.Remove(affixRef);
-                                    excludeAffixes.Add(affixRef);
-                                }
-                            }
-                        }
-                    }
-
-                    if (exemptOverrides.Count > 0)
-                    {
-                        for (int slot = 0; slot < slots.Count; ++slot)
-                        {
-                            if (slots[slot] == PrototypeId.Invalid)
-                            {
-                                if (exemptOverrides.Count > 0)
-                                {
-                                    PrototypeId overrideR = exemptOverrides.First();
-                                    slots[slot] = overrideR;
-                                    exemptOverrides.Remove(overrideR);
-                                }
-                            }
-                        }
-                    }
-
-                    if (exemptOverrides.Count > 0)
-                        slots.AddRange(exemptOverrides);
-
-                    exemptOverrides.Clear();
-
-                    AssignAffixes(rankProto, slots);
+                if (overrides.Count > 0)
+                {
+                    slots.AddRange(overrides);
+                    overrides.Clear();
                 }
 
-                foreach (var obj in Objects)
-                {   
-                    if (obj is ClusterEntity entity)
-                    {
-                        bool twinBoost = false;
-                        foreach (var modRef in entity.Modifiers)
+                if (rankEntryProto != null)
+                {
+                    HashSet<PrototypeId> currentAffixes = new(affixesSet);
+                    HashSet<PrototypeId> excludeAffixes = new();
+
+                    foreach (var slot in slots)
+                        if (slot != PrototypeId.Invalid)
                         {
-                            if (modRef == popGlobals.TwinEnemyBoost)
-                            {
-                                twinBoost = true;
-                                break;
-                            }
+                            currentAffixes.Remove(slot);
+                            excludeAffixes.Add(slot);
                         }
 
-                        if (twinBoost)
+                    for (int slot = 0; slot < slots.Count; slot++)
+                        if (slots[slot] == PrototypeId.Invalid)
                         {
-                            if (entity.EntityProto.Rank != PrototypeId.Invalid && entity.EntityProto.GetRankPrototype().IsRankBoss())
+                            var affixProto = rankEntryProto.GetAffixSlot(slot);
+                            if (affixProto == null) continue;
+
+                            var affixRef = affixProto.RollAffix(random, currentAffixes, excludeAffixes);
+                            if (affixRef != PrototypeId.Invalid)
                             {
-                                ClusterEntity newEntity = CreateClusterEntity(entity.EntityRef);
-                                if (newEntity != null)
-                                {
-                                    newEntity.RankProto = popGlobals.TwinEnemyRank; // Prototype <T> operator = (PrototypeId)
-                                    newEntity.Modifiers = entity.Modifiers;
-                                }
-                                break;
+                                slots[slot] = affixRef;
+                                affixesSet.Add(affixRef);
+                                currentAffixes.Remove(affixRef);
+                                excludeAffixes.Add(affixRef);
                             }
                         }
-                    }
                 }
-            */
+
+                if (exemptOverrides.Count > 0)
+                    for (int slot = 0; slot < slots.Count; slot++)
+                        if (slots[slot] == PrototypeId.Invalid)
+                        {
+                            var overrideRef = exemptOverrides.First();
+                            slots[slot] = overrideRef;
+                            exemptOverrides.Remove(overrideRef);
+                            if (exemptOverrides.Count == 0) break;
+                        }
+
+                if (exemptOverrides.Count > 0)
+                    slots.AddRange(exemptOverrides);
+
+                exemptOverrides.Clear();
+
+                AssignAffixes(rankProto, slots);
+            }
+
+            foreach (var obj in Objects)
+                if (obj is ClusterEntity entity)
+                {
+                    bool twinBoss = false;
+                    foreach (var modRef in entity.Modifiers)
+                        if (modRef == popGlobals.TwinEnemyBoost)
+                        {
+                            twinBoss = true;
+                            break;
+                        }
+
+                    if (twinBoss)
+                        if (entity.EntityProto.Rank != PrototypeId.Invalid && entity.EntityProto.RankPrototype.IsRankBoss)
+                        {
+                            var newEntity = CreateClusterEntity(entity.EntityRef);
+                            if (newEntity != null)
+                            {
+                                newEntity.RankProto = popGlobals.TwinEnemyRank.As<RankPrototype>();
+                                newEntity.Modifiers = new(entity.Modifiers);
+                            }
+                            break;
+                        }
+                }            
         }
 
-        public override void UpgradeToRank(RankPrototype upgradeRank, int num)
+        public override void UpgradeToRank(RankPrototype upgradeRank, ref int numUpgrade)
         {
-            throw new NotImplementedException();
+            foreach (var clusterObject in Objects)
+                clusterObject?.UpgradeToRank(upgradeRank, ref numUpgrade);
         }
 
         public override void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes)
         {
-            throw new NotImplementedException();
+            foreach (var clusterObject in Objects)
+                clusterObject?.AssignAffixes(rankProto, affixes);
+        }
+
+        private static void ShiftExemptFromOverrides(HashSet<PrototypeId> overrides, HashSet<PrototypeId> exemptOverrides)
+        {
+            List<PrototypeId> toRemove = new();
+
+            foreach (var overrideRef in overrides)
+            {
+                var overrideProto = overrideRef.As<EnemyBoostPrototype>();
+                if (overrideProto == null || overrideProto.CountsAsAffixSlot == false)
+                {
+                    exemptOverrides.Add(overrideRef);
+                    toRemove.Add(overrideRef);
+                }
+            }
+
+            foreach (var overrideRef in toRemove)
+                overrides.Remove(overrideRef);
         }
 
         private void GetRanks(List<RankPrototype> ranks)
         {
-            throw new NotImplementedException();
-        }
-
-        private void ShiftExemptFromOverrides(HashSet<PrototypeId> overrides, HashSet<PrototypeId> exemptOverrides)
-        {
-            throw new NotImplementedException();
+            foreach (var obj in Objects)
+            {
+                if (obj is ClusterGroup group)
+                    group.GetRanks(ranks);
+                else if (obj is ClusterEntity entity && entity.RankProto != null)
+                    if (ranks.Contains(entity.RankProto) == false)
+                        ranks.Add(entity.RankProto);                    
+            }
         }
 
         private bool HasModifiableEntities()
         {
-            throw new NotImplementedException();
+            foreach (var obj in Objects)
+            {
+                if (obj is ClusterGroup group && group.HasModifiableEntities()) return true;
+                else if (obj is ClusterEntity entity && entity.Flags.HasFlag(ClusterObjectFlag.HasModifiers)) return true;
+            }
+            return false;
         }
 
         private HashSet<PrototypeId> GetMobAffixesFromProperties()
         {
-            throw new NotImplementedException();
+            HashSet<PrototypeId> mobAffixes = new();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId affix);
+                mobAffixes.Add(affix);
+            }
+            return mobAffixes;
         }
 
         public ClusterEntity CreateClusterEntity(PrototypeId entityRef)
@@ -850,6 +852,8 @@ namespace MHServerEmu.Games.Populations
         public HashSet<PrototypeId> Modifiers { get; set; }
         public SpawnFlags SpawnFlags => Parent != null ? Parent.SpawnFlags : SpawnFlags.None;
 
+        public PrototypeId RankRef { get => RankProto != null ? RankProto.DataRef : PrototypeId.Invalid; }
+
         public ClusterEntity(Region region, GRandom random, PrototypeId selectorRef, ClusterGroup parent)
             : base(region, random, parent)
         {
@@ -898,12 +902,12 @@ namespace MHServerEmu.Games.Populations
             PathFlags = Locomotor.GetPathFlags(EntityProto.NaviMethod);
 
             RankProto = EntityProto.RankPrototype;
-            /*
+            
             if (Parent != null)
             {
-                PrototypeId rankRef = Parent.Properties.GetProperty<PrototypeId>(PropertyEnum.Rank);
-                RankProto = RankPrototype.DoOverride(RankProto, rankRef);
-            }*/
+                PrototypeId rankRef = Parent.Properties[PropertyEnum.Rank];
+                RankProto = RankPrototype.DoOverride(RankProto, rankRef.As<RankPrototype>());
+            }
 
             if ((EntityProto.ModifierSetEnable
                 || EntityProto.ModifiersGuaranteed.HasValue())
@@ -992,8 +996,14 @@ namespace MHServerEmu.Games.Populations
             spec.Properties = new();
             spec.Properties.FlattenCopyFrom(Parent.Properties, false);
 
+            spec.Properties[PropertyEnum.Rank] = RankRef;
+
+            foreach (var modRef in Modifiers)
+                spec.Properties[PropertyEnum.EnemyBoost, modRef] = true;
+
             if (EntityProto != null)
                 spec.AppendActions(EntityProto.EntitySelectorActions);
+
             if (EntitySelectorProto != null)
             {
                 Region.EvalRegionProperties(EntitySelectorProto.EvalSpawnProperties, spec.Properties);
@@ -1001,11 +1011,12 @@ namespace MHServerEmu.Games.Populations
                 if (EntitySelectorProto.IgnoreMissionOwnerForTargeting)
                     spec.Properties[PropertyEnum.IgnoreMissionOwnerForTargeting] = true;
             }
+
             spec.MissionRef = Parent.MissionRef;
             spec.EncounterSpawnPhase = EncounterSpawnPhase;
-            // TODO set Rank
             
             spec.Spawn();
+
             if (spec.ActiveEntity != null)
                 entities.Add(spec.ActiveEntity);
 
@@ -1027,14 +1038,24 @@ namespace MHServerEmu.Games.Populations
             Flags &= ~ClusterObjectFlag.ProjectToFloor;
         }
 
-        public override void UpgradeToRank(RankPrototype upgradeRank, int num)
+        public override void UpgradeToRank(RankPrototype upgradeRank, ref int numUpgrade)
         {
-            throw new NotImplementedException();
+            bool upgrade = (numUpgrade < 0) || (numUpgrade > 0);
+            if (numUpgrade > 0) numUpgrade--;
+
+            if (upgrade && Flags.HasFlag(ClusterObjectFlag.HasModifiers))
+                RankProto = RankPrototype.DoOverride(RankProto, upgradeRank);
         }
 
         public override void AssignAffixes(RankPrototype rankProto, List<PrototypeId> affixes)
         {
-            throw new NotImplementedException();
+            if (RankProto == rankProto)
+                foreach (var affixRef in affixes)
+                    if (affixRef != PrototypeId.Invalid)
+                        Modifiers.Add(affixRef);
+
+            if (EntityProto.ModifiersGuaranteed.HasValue())
+                Modifiers.UnionWith(EntityProto.ModifiersGuaranteed);
         }
     }
 }

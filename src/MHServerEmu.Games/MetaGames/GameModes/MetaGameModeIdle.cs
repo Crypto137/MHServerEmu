@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
                 _endTime = Game.CurrentTime + duration;
             }
 
-            foreach(var player in new PlayerIterator(region))
+            foreach(var player in MetaGame.Players)
                 ActivatePlayer(player);
 
             SendPlayKismetSeq(_proto.KismetSequenceOnActivate);
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
             Game.GameEventScheduler.CancelEvent(_nextModeEvent);
 
-            foreach (var player in new PlayerIterator(region))
+            foreach (var player in MetaGame.Players)
                 DeactivatePlayer(player);
 
             if (_proto.ShowTimer)

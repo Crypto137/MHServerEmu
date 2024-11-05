@@ -1,4 +1,7 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -87,9 +90,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public TuningDamageByRankPrototype[] TuningDamageByRankDCL { get; protected set; }
         public RankAffixTableByDifficultyEntryPrototype[] RankAffixTableByDifficulty { get; protected set; }
 
-        internal RankAffixEntryPrototype GetDifficultyRankEntry(PrototypeId difficultyTierRef, RankPrototype rankProto)
+        public Picker<RankPrototype> BuildRankPicker(PrototypeId difficultyTierRef, GRandom random, bool noAffixes)
         {
-            throw new NotImplementedException();
+            Picker<RankPrototype> picker = new(random);
+            var table = GetRankAffixTable(difficultyTierRef);
+
+            if (table != null)
+                foreach (var entry in table)
+                    if (entry.Weight > 0 && (noAffixes || entry.GetMaxAffixes() > 0))
+                        picker.Add(entry.Rank.As<RankPrototype>(), entry.Weight);
+
+            return picker;
+        }
+
+        public RankAffixEntryPrototype[] GetRankAffixTable(PrototypeId difficultyTierRef)
+        {
+            if (RankAffixTableByDifficulty.HasValue())
+                foreach (var entry in RankAffixTableByDifficulty)
+                    if (DifficultyTierPrototype.InRange(difficultyTierRef, entry.DifficultyMin, entry.DifficultyMax))
+                        return entry.RankAffixTable;
+
+            return RankAffixTable;
+        }
+
+        public RankAffixEntryPrototype GetDifficultyRankEntry(PrototypeId difficultyTierRef, RankPrototype rankProto)
+        {
+            var table = GetRankAffixTable(difficultyTierRef);
+            if (table != null)
+                foreach (var entry in table)
+                {
+                    var entryRank = entry.Rank.As<RankPrototype>();
+                    if (entryRank != null && entryRank.Rank == rankProto.Rank)
+                        return entry;
+                }
+            return null;
         }
     }
 

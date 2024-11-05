@@ -8,6 +8,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         public PvEWaveGameMode(MetaGame metaGame, MetaGameModePrototype proto) : base(metaGame, proto)
         {
+            // PvE Wave Battle (Dinos Invade Manhattan)
             _proto = proto as PvEWaveGameModePrototype;
         }
     }

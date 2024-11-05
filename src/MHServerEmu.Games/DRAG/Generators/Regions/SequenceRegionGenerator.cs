@@ -29,10 +29,14 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             {
                 int endlessLevelsTotal = region.Properties[PropertyEnum.EndlessLevelsTotal];
                 EndlessThemeEntryPrototype endlessTheme = regionGeneratorProto.GetEndlessGeneration(randomSeed, setting.EndlessLevel, endlessLevelsTotal);
+                if (endlessTheme == null) return;
                 MetaStateChallengeTierEnum missionTier = region.RegionAffixGetMissionTier();
                 EndlessStateEntryPrototype endlessState = endlessTheme.GetState(randomSeed, setting.EndlessLevel, missionTier);
 
-                if (endlessTheme != null)
+                // REMOVEME when region affixes will fixed
+                endlessState ??= endlessTheme.GetState(randomSeed, setting.EndlessLevel, MetaStateChallengeTierEnum.Tier1);
+
+                if (endlessState != null)
                 {
                     if (endlessState.MetaState != PrototypeId.Invalid)
                     {
@@ -41,7 +45,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
                     if (endlessState.RegionPOIPicker != PrototypeId.Invalid)
                     {
-                        if (GeneratorPrototype.POIGroups.HasValue()) POIPickerCollection = new(regionGeneratorProto);
+                        POIPickerCollection ??= new(regionGeneratorProto);
                         POIPickerCollection.RegisterPOIGroup(endlessState.RegionPOIPicker);
                     }
                 }

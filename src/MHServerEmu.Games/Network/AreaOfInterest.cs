@@ -14,6 +14,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -880,6 +881,10 @@ namespace MHServerEmu.Games.Network
                 if (isInRegion && player.IsEntityDiscovered(worldEntity))
                     newInterestPolicies |= AOINetworkPolicyValues.AOIChannelDiscovery;
             }
+
+            // MetaGame is always in proximity
+            if (entity is MetaGame metaGame && metaGame.GetRegion() == Region)
+                newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
 
             // Ownership
             // NOTE: IsOwnedBy() returns true for itself, so the player entity bound to this AOI effectively owns itself

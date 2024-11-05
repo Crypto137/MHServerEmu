@@ -280,10 +280,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //---
 
         [DoNotCopy]
-        public AlliancePrototype PlayerAlliancePrototype { get => PlayerAlliance.As<AlliancePrototype>(); }
+        public AlliancePrototype PlayerAlliancePrototype { get; protected set; }
 
         [DoNotCopy]
-        public PopulationGlobalsPrototype PopulationGlobalsPrototype { get => PopulationGlobals.As<PopulationGlobalsPrototype>(); }
+        public PopulationGlobalsPrototype PopulationGlobalsPrototype { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            PlayerAlliancePrototype = PlayerAlliance.As<AlliancePrototype>();
+            PopulationGlobalsPrototype = PopulationGlobals.As<PopulationGlobalsPrototype>();
+        }
     }
 
     public class LoginRewardPrototype : Prototype
@@ -869,11 +876,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TwinEnemyRank { get; protected set; }
         public RankDefaultEntryPrototype[] RankDefaults { get; protected set; }
 
-        internal RankPrototype GetRankByEnum(Rank rank)
+        private RankPrototype[] _rankEnumToProto;
+
+        public override void PostProcess()
         {
-            throw new NotImplementedException();
+            base.PostProcess();
+
+            if (RankDefaults.IsNullOrEmpty()) return;
+
+            _rankEnumToProto = new RankPrototype[(int)Rank.Max];
+            foreach (var rankEntry in RankDefaults)
+            {
+                int rankAsIndex = (int)rankEntry.Rank;
+                if (rankAsIndex < 0 || rankAsIndex >= (int)Rank.Max) continue;
+                _rankEnumToProto[rankAsIndex] = rankEntry.Data.As<RankPrototype>();
+            }
         }
 
+        public RankPrototype GetRankByEnum(Rank rank)
+        {
+            int rankAsIndex = (int)rank;
+            if (rankAsIndex < 0 || rankAsIndex >= (int)Rank.Max) return null;
+            return _rankEnumToProto[rankAsIndex];
+        }
     }
 
     public class ClusterConfigurationGlobalsPrototype : Prototype

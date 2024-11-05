@@ -140,6 +140,16 @@
             return Invalid;
         }
 
+        public bool TestAny(GBitArray other)
+        {
+            int size = Math.Min(_size, other._size);
+            for (int i = 0; i < size; i++)
+                if ((_bits[i] & other._bits[i]) != 0)
+                    return true;
+
+            return false;
+        }
+
         public static T And<T>(T left, T right) where T: GBitArray
         {
             left.Reserve(right.Size);

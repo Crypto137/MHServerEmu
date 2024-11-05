@@ -24,6 +24,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games
 {
@@ -71,7 +72,7 @@ namespace MHServerEmu.Games
         public RegionManager RegionManager { get; }
         public AdminCommandManager AdminCommandManager { get; }
         public LootManager LootManager { get; }
-
+        public GameDialogManager GameDialogManager { get; }
         public LiveTuningData LiveTuningData { get; private set; } = new();
 
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
@@ -103,7 +104,7 @@ namespace MHServerEmu.Games
             RegionManager = new();
             EntityManager = new(this);
             LootManager = new(this);
-
+            GameDialogManager = new(this);
             Random = new();
 
             Initialize();

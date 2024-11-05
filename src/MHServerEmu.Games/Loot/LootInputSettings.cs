@@ -30,6 +30,7 @@ namespace MHServerEmu.Games.Loot
             LootRollSettings.Level = avatar.CharacterLevel;
             LootRollSettings.LevelForRequirementCheck = avatar.CharacterLevel;
             LootRollSettings.DifficultyTier = player.GetRegion().DifficultyTierRef;
+            LootRollSettings.RegionScenarioRarity = player.GetRegion().Settings.ItemRarity;
         }
 
         public void ResetForPool()

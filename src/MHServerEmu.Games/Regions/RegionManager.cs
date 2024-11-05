@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
@@ -6,6 +7,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -154,11 +156,16 @@ namespace MHServerEmu.Games.Regions
             return null;
         }
 
-        public Region GetOrGenerateRegionForPlayer(PrototypeId regionProtoRef, PlayerConnection playerConnection)
+        public Region GetOrGenerateRegionForPlayer(RegionContext regionContext, PlayerConnection playerConnection)
         {
+            PrototypeId regionProtoRef = regionContext.RegionDataRef;
+
             RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionProtoRef);
             if (regionProto == null)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): {regionProtoRef} is not a valid region prototype ref");
+
+            if (regionProto.HasEndless() && regionContext.EndlessLevel == 0)
+                return Logger.WarnReturn<Region>(null, $"GetRegion(): DangerRoom {regionProtoRef} with EndlessLevel = 0");
 
             //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
@@ -166,9 +173,13 @@ namespace MHServerEmu.Games.Regions
 
             if (regionProto.IsPublic)
             {
-                // Currently we have only one instance of each public region, and they all use the default difficulty (normal).
+                // Currently we have only one instance of each public region, and they all use the lowest available difficulty.
+                regionContext.DifficultyTierRef = regionProto.AccessDifficulties.HasValue()
+                    ? regionProto.AccessDifficulties[0]
+                    : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+
                 if (_publicRegionDict.TryGetValue(regionProtoRef, out region) == false)
-                    region = GenerateAndInitRegion(regionProtoRef, GameDatabase.GlobalsPrototype.DifficultyTierDefault);
+                    region = GenerateAndInitRegion(regionContext);
             }
             else
             {
@@ -178,18 +189,22 @@ namespace MHServerEmu.Games.Regions
                 ulong regionId = playerConnection.WorldView.GetRegionInstanceId(regionProtoRef);
 
                 // Use preferred difficulty for private instances
-                PrototypeId difficultyTierPreference = playerConnection.Player.GetDifficultyTierPreference();
+                regionContext.DifficultyTierRef = playerConnection.Player.GetDifficultyTierPreference();
 
-                if (regionId == 0 || _allRegions.TryGetValue(regionId, out region) == false || region.DifficultyTierRef != difficultyTierPreference)
+                if (regionId == 0 
+                    || _allRegions.TryGetValue(regionId, out region) == false 
+                    || region.DifficultyTierRef != regionContext.DifficultyTierRef 
+                    || region.Settings.EndlessLevel != regionContext.EndlessLevel) // Danger Room next level
                 {
-                    if (region != null)
+                    // MetaStateShutdown will shutdown old region
+                    if (region != null && region.Settings.EndlessLevel == regionContext.EndlessLevel)
                     {
                         // Destroy existing private instance if it does not match the player's difficulty preference 
                         playerConnection.WorldView.RemoveRegion(region.PrototypeDataRef);
                         DestroyRegion(regionId);
                     }
 
-                    region = GenerateAndInitRegion(regionProtoRef, difficultyTierPreference);
+                    region = GenerateAndInitRegion(regionContext);
                     playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
                 }
             }
@@ -236,9 +251,9 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        private Region GenerateAndInitRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
+        private Region GenerateAndInitRegion(RegionContext regionContext)
         {
-            // TODO: Merge this with GenerateRegion?
+            PrototypeId regionProtoRef = regionContext.RegionDataRef;
 
             Region region = null;
 
@@ -249,7 +264,31 @@ namespace MHServerEmu.Games.Regions
             try
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                region = GenerateRegion(regionProtoRef, difficultyTierProtoRef);
+
+                if (regionContext.Seed == 0) regionContext.Seed = Game.Random.Next();
+
+                RegionSettings settings = new(regionContext)
+                {
+                    InstanceAddress = _idGenerator.Generate(),
+                    GenerateAreas = true,
+                    GenerateEntities = true,
+                    GenerateLog = false
+                };
+
+                // clear Endless context
+                regionContext.Reset();
+
+                int tries = 10;
+
+                while (region == null && (--tries > 0))
+                {
+                    if (tries < 9) settings.Seed = Game.Random.Next(); // random.Next(); 
+                    region = CreateRegion(settings);
+                }
+
+                if (region == null)
+                    Logger.Error($"GenerateRegion failed after {10 - tries} attempts | regionId: {regionProtoRef.GetNameFormatted()} | Last Seed: {settings.Seed}");
+
                 Logger.Info($"Generated region {regionProtoRef.GetNameFormatted()} in {stopwatch.ElapsedMilliseconds} ms");
             }
             catch (Exception e)
@@ -268,36 +307,6 @@ namespace MHServerEmu.Games.Regions
                 if (region.IsPublic)
                     _publicRegionDict.Add(regionProtoRef, region);
             }
-
-            return region;
-        }
-
-        private Region GenerateRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
-        {
-            RegionSettings settings = new()
-            {
-                InstanceAddress = _idGenerator.Generate(),
-                RegionDataRef = regionProtoRef,
-                Level = 60,
-                DifficultyTierRef = difficultyTierProtoRef,
-                Seed = Game.Random.Next(),
-                GenerateAreas = true,
-                GenerateEntities = true,
-                GenerateLog = false
-            };
-
-            // settings.Seed = 1210027349;
-            // GRandom random = new(settings.Seed);//Game.Random.Next()
-            int tries = 10;
-            Region region = null;
-            while (region == null && (--tries > 0))
-            {
-                if (tries < 9) settings.Seed = Game.Random.Next(); // random.Next(); 
-                region = CreateRegion(settings);
-            }
-
-            if (region == null)
-                Logger.Error($"GenerateRegion failed after {10 - tries} attempts | regionId: {regionProtoRef.GetNameFormatted()} | Last Seed: {settings.Seed}");
 
             return region;
         }

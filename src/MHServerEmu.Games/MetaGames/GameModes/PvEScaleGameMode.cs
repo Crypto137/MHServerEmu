@@ -8,6 +8,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         public PvEScaleGameMode(MetaGame metaGame, MetaGameModePrototype proto) : base(metaGame, proto)
         {
+            // UNUSED Limbo for 32-55 lvl
             _proto = proto as PvEScaleGameModePrototype;
         }
     }

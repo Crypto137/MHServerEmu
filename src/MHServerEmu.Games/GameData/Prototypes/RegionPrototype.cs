@@ -436,6 +436,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (MetaGames.HasValue()) return MetaGames[0];
             return PrototypeId.Invalid;
         }
+
+        public bool HasEndless()
+        {
+            return RegionGenerator is SequenceRegionGeneratorPrototype sequenceRegion && sequenceRegion.EndlessThemes.HasValue();
+        }
     }
 
     public class RegionConnectionTargetPrototype : Prototype

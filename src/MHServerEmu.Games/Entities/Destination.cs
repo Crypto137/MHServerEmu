@@ -131,5 +131,25 @@ namespace MHServerEmu.Games.Entities
 
             return destination;
         }
+
+        public static Destination DestinationFromTargetRef(PrototypeId targetRef)
+        {
+            var proto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
+            AssetId cellAssetId = proto.Cell;
+            PrototypeId cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
+
+            Destination destination = new()
+            {
+                _type = RegionTransitionType.TransitionDirect,
+                _regionRef = proto.Region,
+                _areaRef = proto.Area,
+                _cellRef = cellPrototypeId,
+                _entityRef = proto.Entity,
+                _nameId = proto.Name,
+                _targetRef = targetRef
+            };
+
+            return destination;
+        }
     }
 }

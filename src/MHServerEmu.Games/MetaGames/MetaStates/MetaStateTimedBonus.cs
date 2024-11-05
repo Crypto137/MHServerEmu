@@ -50,13 +50,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         public override void OnReset()
         {
             _index = 0;
-
-            var region = Region;
-            if (region == null) return;
-
-            var windgetRef = _entryProto.UIWidget;
-            if (windgetRef != PrototypeId.Invalid)
-                region.UIDataProvider?.DeleteWidget(windgetRef);
+            MetaGame.DeleteWidget(_entryProto.UIWidget);
         }
 
         public override void OnRemove()
@@ -66,9 +60,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             region.OpenMissionCompleteEvent.RemoveAction(_openMissionCompleteAction);
 
-            var windgetRef = _entryProto.UIWidget;
-            if (windgetRef != PrototypeId.Invalid)
-                region.UIDataProvider?.DeleteWidget(windgetRef);
+            MetaGame.DeleteWidget(_entryProto.UIWidget);
 
             if (_length > 0)
             {
@@ -92,11 +84,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             scheduler.ScheduleEvent(_timerEvent, TimeSpan.FromMilliseconds(_entryProto.TimerForEntryMS), _pendingEvents);
             _timerEvent.Get().Initialize(this);
-
-            var widgetRef = _entryProto.UIWidget;
-            if (widgetRef == PrototypeId.Invalid) return;
             
-            var widget = Region?.UIDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            var widget = MetaGame.GetWidget<UIWidgetGenericFraction>(_entryProto.UIWidget);
             widget?.SetTimeRemaining(_entryProto.TimerForEntryMS);
         }
 
@@ -155,9 +144,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             if (remove == false)
             {
-                var windgetRef = _entryProto.UIWidget;
-                if (windgetRef != PrototypeId.Invalid)
-                    region.UIDataProvider?.DeleteWidget(windgetRef);
+                MetaGame.DeleteWidget(_entryProto.UIWidget);
 
                 _index++;
                 if (_index >= _length)

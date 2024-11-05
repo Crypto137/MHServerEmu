@@ -113,6 +113,14 @@ namespace MHServerEmu.Games.Loot
         Skip
     }
 
+    public enum LootCooldownType
+    {
+        Invalid,
+        ByChannel,
+        TimeHours,
+        RolloverWallTime
+    }
+
     [AssetEnum((int)None)]
     [Flags]
     public enum LootContext

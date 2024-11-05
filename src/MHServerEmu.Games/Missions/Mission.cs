@@ -80,6 +80,11 @@ namespace MHServerEmu.Games.Missions
         private EventPointer<IdleTimeoutEvent> _idleTimeoutEvent = new();
         private EventPointer<TimeLimitEvent> _timeLimitEvent = new();
 
+        private Action<PlayerEnteredAreaGameEvent> _playerEnteredAreaAction;
+        private Action<PlayerLeftAreaGameEvent> _playerLeftAreaAction;
+        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
+        private Action<PlayerLeftCellGameEvent> _playerLeftCellAction;
+
         private MissionState _state;
         private float _currentObjectiveSequence;
         private TimeSpan _timeExpireCurrentState;
@@ -158,6 +163,7 @@ namespace MHServerEmu.Games.Missions
 
             _timeExpireCurrentState = TimeSpan.Zero;
             _achievementTime = TimeSpan.Zero;
+
             Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
             if (Prototype != null)
             {
@@ -166,7 +172,13 @@ namespace MHServerEmu.Games.Missions
                 if (Prototype is OpenMissionPrototype openProto) OpenMissionPrototype = openProto;
                 if (Prototype is AdvancedMissionPrototype advancedProto) AdvancedMissionPrototype = advancedProto;
             }
+
             _currentObjectiveSequence = -1;
+
+            _playerEnteredAreaAction = OnAreaEntered;
+            _playerLeftAreaAction = OnAreaLeft;
+            _playerEnteredCellAction = OnCellEntered;
+            _playerLeftCellAction = OnCellLeft;
         }
 
         public void Destroy()
@@ -178,8 +190,8 @@ namespace MHServerEmu.Games.Missions
             if (scheduler != null)
             {
                 scheduler.CancelAllEvents(EventGroup);
-            CancelTimeLimitEvent();
-            CancelIdleTimeoutEvent();
+                CancelTimeLimitEvent();
+                CancelIdleTimeoutEvent();
                 if (_restartMissionEvent.IsValid) scheduler.CancelEvent(_restartMissionEvent);
                 if (_updateObjectivesEvent.IsValid) scheduler.CancelEvent(_updateObjectivesEvent);
             }
@@ -1743,6 +1755,18 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
+        public IEnumerable<Player> GetSortedContributors()
+        {
+            var manager = Game.EntityManager;
+            var sortedContributors = _contributors.OrderByDescending(kvp => kvp.Value);
+            foreach (var kvp in sortedContributors)
+            {
+                var player = manager.GetEntityByDbGuid<Player>(kvp.Key);
+                if (player != null)
+                    yield return player;
+            }
+        }
+
         public IEnumerable<Player> GetContributors() 
         {
             var manager = Game.EntityManager;
@@ -1927,15 +1951,20 @@ namespace MHServerEmu.Games.Missions
                 _lootSeed = 0;
         }
 
+        public void RewardForPlayer(Player player, LootTablePrototype[] rewards, int seedOffset)
+        {
+            LootResultSummary lootSummary = new();
+            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
+                GiveDropLootForPlayer(lootSummary, player);
+        }
+
         private void GiveRewardForPlayer(Player player, int seedOffset, float contribution = 0.0f)
         {
             var avatar = player.CurrentAvatar;       
             var rewards = GetRewardTables();
             if (rewards.IsNullOrEmpty()) return;
 
-            LootResultSummary lootSummary = new();
-            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset))
-                GiveDropLootForPlayer(lootSummary, player);
+            RewardForPlayer(player, rewards, seedOffset);
 
             if (Prototype is OpenMissionPrototype openProto && openProto.RewardsByContribution.HasValue())
             {
@@ -1996,11 +2025,8 @@ namespace MHServerEmu.Games.Missions
             var lootManager = Game.LootManager;
             var missionProto = Prototype;
 
-            // TODO Rework this!!!
-            var lootType = lootSummary.Types;
-
             // Test for Item only
-            if (lootType.HasFlag(LootType.Item))
+            if (lootSummary.HasAnyResult)
             {
                 if (missionProto.DropLootOnGround || lootDropper != null)
                 {
@@ -2012,7 +2038,20 @@ namespace MHServerEmu.Games.Missions
                 else
                 {
                     // TODO give all loot
-                    lootManager.GiveItem(lootSummary.ItemSpecs[0].ItemProtoRef, player);
+                    foreach (var itemSpec in lootSummary.ItemSpecs)
+                        lootManager.GiveItem(itemSpec.ItemProtoRef, player);
+
+                    var avatar = player.CurrentAvatar;
+                    if (lootSummary.Experience > 0)
+                        avatar.AwardXP(lootSummary.Experience, false);
+
+                    if (lootSummary.Credits.Count > 0)
+                    {
+                        int credits = 0;
+                        foreach (int amount in lootSummary.Credits)
+                            credits += amount;
+                        player.Properties.AdjustProperty(credits, new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits));
+                    }
                 }
             }
             return true;
@@ -2352,6 +2391,18 @@ namespace MHServerEmu.Games.Missions
                 scheduler.ScheduleEvent(_delayedUpdateMissionEntitiesEvent, timeOffset, EventGroup);
                 _delayedUpdateMissionEntitiesEvent.Get().Initialize(this);
             }
+        }
+
+        public void RegisterAreaEvents(Area area)
+        {
+            area.PlayerEnteredAreaEvent.AddActionBack(_playerEnteredAreaAction);
+            area.PlayerLeftAreaEvent.AddActionBack(_playerLeftAreaAction);
+        }
+
+        public void RegisterCellEvents(Cell cell)
+        {
+            cell.PlayerEnteredCellEvent.AddActionBack(_playerEnteredCellAction);
+            cell.PlayerLeftCellEvent.AddActionBack(_playerLeftCellAction);
         }
 
         public void OnAreaEntered(PlayerEnteredAreaGameEvent evt)

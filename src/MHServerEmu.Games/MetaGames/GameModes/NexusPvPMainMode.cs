@@ -8,6 +8,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         public NexusPvPMainMode(MetaGame metaGame, MetaGameModePrototype proto) : base(metaGame, proto)
         {
+            // Nexus PvP Region
             _proto = proto as NexusPvPMainModePrototype;
         }
     }

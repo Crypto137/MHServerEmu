@@ -115,14 +115,6 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public Vector3 GetPositionNearAvatar(Avatar avatar)
-        {
-            Region region = avatar.Region;
-            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
-                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
-            return position;
-        }
-
         private bool InitLocomotor(float height = 0.0f)
         {
             if (Locomotor != null)
@@ -153,6 +145,7 @@ namespace MHServerEmu.Games.Entities
             // Remove death state properties
             Properties[PropertyEnum.IsDead] = false;
             Properties[PropertyEnum.NoEntityCollide] = false;
+            SetState(PrototypeId.Invalid);
 
             // Send resurrection message
             var resurrectMessage = NetMessageOnResurrect.CreateBuilder()
@@ -903,6 +896,13 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public override void OnCollide(WorldEntity whom, Vector3 whoPos)
+        {
+            // TODO ProcTriggerType.OnCollide
+
+            AIController?.OnAIOnCollide(whom);
+        }
+
         #endregion
 
         #region Event Handlers
@@ -921,6 +921,17 @@ namespace MHServerEmu.Games.Entities
                 case PropertyEnum.Confused:
                     SetFlag(EntityFlags.Confused, newValue);
                     AllianceChange();
+                    break;
+
+                case PropertyEnum.EnemyBoost:
+
+                    if (IsInWorld)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId enemyBoost);
+                        if (enemyBoost == PrototypeId.Invalid) break;
+                        if (newValue) AssignEnemyBoostActivePower(enemyBoost);
+                    }
+
                     break;
 
                 case PropertyEnum.Knockback:
@@ -1012,6 +1023,13 @@ namespace MHServerEmu.Games.Entities
             if (behaviorProfile != null)
                 EquipPassivePowers(behaviorProfile.EquippedPassivePowers);
 
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId enemyBoost);
+                if (enemyBoost == PrototypeId.Invalid) continue;
+                AssignEnemyBoostActivePower(enemyBoost);
+            }
+
             if (IsSimulated && Properties.HasProperty(PropertyEnum.AIPowerOnSpawn))
             {
                 PrototypeId startPower = Properties[PropertyEnum.AIPowerOnSpawn];
@@ -1028,6 +1046,18 @@ namespace MHServerEmu.Games.Entities
 
             if (AIController == null)
                 EntityActionComponent?.InitActionBrain();
+        }
+
+        private void AssignEnemyBoostActivePower(PrototypeId enemyBoost)
+        {
+            var boostProto = GameDatabase.GetPrototype<EnemyBoostPrototype>(enemyBoost);
+            if (boostProto == null) return;
+            var activePower = boostProto.ActivePower;
+            if (activePower != PrototypeId.Invalid)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                AssignPower(activePower, indexProps);
+            }
         }
 
         private void EquipPassivePowers(PrototypeId[] passivePowers)

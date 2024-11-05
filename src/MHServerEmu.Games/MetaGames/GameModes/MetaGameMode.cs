@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         public void TeleportPlayersToTarget(PrototypeId targetRef)
         {
-            var players = new PlayerIterator(Region);
+            var players = MetaGame.Players;
             foreach (var player in players.ToArray())
                 player.PlayerConnection.MoveToTarget(targetRef);
         }
@@ -287,7 +287,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
             else
             {
-                foreach (var regionPlayer in new PlayerIterator(region))
+                foreach (var regionPlayer in MetaGame.Players)
                     regionPlayer.SendRegionDifficultyChange(dificultyIndex);
             }
         }

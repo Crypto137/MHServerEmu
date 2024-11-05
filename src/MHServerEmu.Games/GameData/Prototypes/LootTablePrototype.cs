@@ -23,9 +23,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Weight = Math.Max((short)0, Weight);
         }
 
-        public virtual bool OnResultsEvaluation(Player player, WorldEntity sourceEntity)
+        public virtual void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            return true;
         }
 
         public virtual void Visit(LootTableNodeVisitor visitor)
@@ -279,7 +278,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 noDropPercent = NoDropPercent;
 
             // Cancel roll if no roll percent check fails
-            if (resolver.CheckDropPercent(settings, noDropPercent) == false)
+            if (resolver.CheckDropChance(settings, noDropPercent) == false)
                 return resolver.ProcessPending(settings) ? LootRollResult.Success : LootRollResult.Failure;
 
             settings.Depth++;

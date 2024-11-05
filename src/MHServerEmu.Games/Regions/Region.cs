@@ -290,7 +290,7 @@ namespace MHServerEmu.Games.Regions
 
             if (MissionManager != null && MissionManager.InitializeForRegion(this) == false) return false;
 
-            if (settings.Affixes != null && settings.Affixes.Any())
+            if (settings.Affixes.Count > 0)
             {
                 RegionAffixTablePrototype affixTableP = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
                 if (affixTableP != null)
@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.Regions
                     return Logger.WarnReturn(false, $"Initialize(): Failed to generate areas for\n  region: {this}\n    seed: {RandomSeed}");
             }
 
-            if (settings.Affixes != null && settings.Affixes.Any())
+            if (settings.Affixes.Count > 0)
             {
                 var affixTableProto = GameDatabase.GetPrototype<RegionAffixTablePrototype>(regionProto.AffixTable);
                 if (affixTableProto != null)
@@ -410,6 +410,8 @@ namespace MHServerEmu.Games.Regions
                     if (metagame == null) Logger.Warn($"Initialize(): metagame [{metaGameRef}] == null");
                 }
             }
+
+            ApplyDifficultyTierProperties(settings.DifficultyTierRef);
 
             IsGenerated = true;
             CreatedTime = Clock.UnixTime;
@@ -810,9 +812,23 @@ namespace MHServerEmu.Games.Regions
             return MetaStateChallengeTierEnum.None;
         }
 
-        public void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> overrides)
+        public void ApplyRegionAffixesEnemyBoosts(PrototypeId rankRef, HashSet<PrototypeId> affixes)
         {
-            throw new NotImplementedException();
+            foreach (var affix in Settings.Affixes)
+            {
+                var affixProto = GameDatabase.GetPrototype<RegionAffixPrototype>(affix);
+                if (affixProto != null && affixProto.CanApplyToRegion(this))
+                {
+                    if (affixProto.EnemyBoost != PrototypeId.Invalid)
+                        affixes.Add(affixProto.EnemyBoost);
+
+                    if (affixProto.EnemyBoostsFiltered.IsNullOrEmpty()) continue;
+                    foreach (var boostProto in affixProto.EnemyBoostsFiltered)
+                        if ((boostProto.RanksAllowed.IsNullOrEmpty() || boostProto.RanksAllowed.Contains(rankRef))
+                            && (boostProto.RanksPrevented.IsNullOrEmpty() || boostProto.RanksPrevented.Contains(rankRef) == false))
+                            affixes.Add(boostProto.EnemyBoost);
+                }
+            }
         }
 
         private void SetRegionLevel()
@@ -827,6 +843,23 @@ namespace MHServerEmu.Games.Regions
                 RegionLevel = regionProto.Level;
             else
                 Logger.Error("RegionLevel <= 0");
+        }
+
+        private void ApplyDifficultyTierProperties(PrototypeId difficultyTierProtoRef)
+        {
+            DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
+            if (difficultyTierProto == null) return;
+
+            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.ExperienceBonusPct);
+            Properties.AdjustProperty(difficultyTierProto.BonusExperiencePct, PropertyEnum.LootBonusXPPct);
+            Properties.AdjustProperty(difficultyTierProto.ItemFindCreditsPct, PropertyEnum.LootBonusCreditsPct);
+            Properties.AdjustProperty(difficultyTierProto.ItemFindRarePct, PropertyEnum.LootBonusRarityPct);
+            Properties.AdjustProperty(difficultyTierProto.ItemFindSpecialPct, PropertyEnum.LootBonusSpecialPct);
+
+            Properties.AdjustProperty(difficultyTierProto.BonusItemFindBonusDifficultyMult, PropertyEnum.BonusItemFindBonusDifficultyMult);
+            
+            Properties[PropertyEnum.DamageRegionMobToPlayer] *= difficultyTierProto.DamageMobToPlayerPct;
+            Properties[PropertyEnum.DamageRegionPlayerToMob] *= difficultyTierProto.DamagePlayerToMobPct;
         }
 
         #endregion
@@ -1553,7 +1586,49 @@ namespace MHServerEmu.Games.Regions
                 return;
             }
 
-            Properties[startPropId] = (int)Clock.GameTime.TotalMilliseconds;
+            Properties[startPropId] = (long)Clock.GameTime.TotalMilliseconds;
+
+            var widget = GetScoringTimerWidget(timerRef);
+            if (widget == null) return;
+
+            widget.SetTimeElapsed(GetScoringEventTimeMS(timerRef));
+            widget.SetTimePaused(false);
+            widget.SetAreaContext(PrototypeDataRef);
+        }
+
+        private long GetScoringEventTimeMS(PrototypeId timerRef)
+        {
+            TimeSpan time = TimeSpan.Zero;
+
+            var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
+            if (Properties.HasProperty(accumPropId))
+                time = TimeSpan.FromMilliseconds(Properties[accumPropId]);
+
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            if (Properties.HasProperty(startPropId))
+            {
+                long startTime = Properties[startPropId];
+                if (startTime > 0)
+                    time += Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
+            }
+
+            return (long)time.TotalMilliseconds;
+        }
+
+        private UISyncData GetScoringTimerWidget(PrototypeId timerRef)
+        {
+            var widgetProto = GameDatabase.GetPrototype<ScoringEventTimerPrototype>(timerRef);
+            var widgetRef = widgetProto.UIWidget;
+            if (widgetRef == PrototypeId.Invalid) return null;
+            return UIDataProvider.GetWidget<UISyncData>(widgetRef, timerRef);
+        }
+
+        public void ScoringEventTimerEnd(PrototypeId timerRef)
+        {
+            if (timerRef == PrototypeId.Invalid) return;
+            var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
+            if (Properties.HasProperty(startPropId) == false) return;
+            ScoringEventTimerStop(timerRef);
         }
 
         public void ScoringEventTimerStop(PrototypeId timerRef)
@@ -1570,6 +1645,12 @@ namespace MHServerEmu.Games.Regions
                 Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
                 Properties.RemoveProperty(startPropId);
             }
+
+            var widget = GetScoringTimerWidget(timerRef);
+            if (widget == null) return;
+
+            widget.SetTimePaused(true);
+            widget.SetAreaContext(PrototypeDataRef);
         }
 
         public void EvalRegionProperties(EvalPrototype evalProto, PropertyCollection properties)
@@ -1639,7 +1720,7 @@ namespace MHServerEmu.Games.Regions
             return startTargetRef;
         }
 
-        private bool GetDividedStartTarget(Player player, ref PrototypeId startTargetRef)
+        public bool GetDividedStartTarget(Player player, ref PrototypeId startTargetRef)
         {
             if (DividedStartLocations.Count == 0) return false;
 
@@ -1660,6 +1741,16 @@ namespace MHServerEmu.Games.Regions
                 startTargetRef = pickLocation.Location.Target;
                 return true;
             }
+
+            return false;
+        }
+
+        public bool InOwnerParty(Player player)
+        {
+            ulong playerGuid = player.DatabaseUniqueId;
+            if (Settings.PlayerGuidParty == playerGuid) return true;
+
+            // TODO check owner is in party
 
             return false;
         }

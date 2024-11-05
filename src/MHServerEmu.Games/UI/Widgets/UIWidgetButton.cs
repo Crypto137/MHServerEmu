@@ -58,24 +58,58 @@ namespace MHServerEmu.Games.UI.Widgets
                 sb.AppendLine($"{nameof(_callbackList)}[{i}]: {_callbackList[i]}");
         }
 
-        public void AddCallback(ulong playerGuid)
+        public void AddCallback(ulong playerGuid, Action<ulong, bool> action)
         {
-            _callbackList.Add(new(playerGuid));
+            CallbackEvent callbackEvent = new(playerGuid, action);
+            _callbackList.Add(callbackEvent);
             UpdateUI();
+        }
+
+        public void DoCallback(ulong playerGuid, bool result)
+        {
+            foreach (var callback in _callbackList)
+                if (callback.PlayerGuid == playerGuid)
+                {
+                    callback.DoCallback(playerGuid, result);
+                    break;
+                }
         }
 
         class CallbackBase
         {
             public ulong PlayerGuid { get; }
+            public bool Result { get; private set; }
 
             public CallbackBase(ulong playerGuid)
             {
                 PlayerGuid = playerGuid;
+                Result = false;
+            }
+
+            public virtual void DoCallback(ulong playerGuid, bool result) 
+            { 
+                Result = result; 
             }
 
             public override string ToString()
             {
                 return $"{nameof(PlayerGuid)}: 0x{PlayerGuid:X16}";
+            }
+        }
+
+        class CallbackEvent : CallbackBase
+        {
+            public Action<ulong, bool> Action { get; }
+
+            public CallbackEvent(ulong playerGuid, Action<ulong, bool> callbackAction) : base(playerGuid)
+            {
+                Action = callbackAction;
+            }
+
+            public override void DoCallback(ulong playerGuid, bool result)
+            {
+                base.DoCallback(playerGuid, result);
+                Action?.Invoke(playerGuid,result);
             }
         }
     }

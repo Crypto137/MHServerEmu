@@ -1,9 +1,14 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -151,20 +156,23 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootDropItemPrototype : LootDropPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public PrototypeId Item { get; protected set; }
         public LootMutationPrototype[] Mutations { get; protected set; }
 
-        public override bool OnResultsEvaluation(Player player, WorldEntity source)
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override void OnResultsEvaluation(Player player, WorldEntity source)
         {
             if (Item == PrototypeId.Invalid || DataDirectory.Instance.PrototypeIsA<CostumePrototype>(Item) == false)
-                return Logger.WarnReturn(false, $"LootDropItemPrototype::OnResultsEvaluation() is only supported for Costumes!");
+            {
+                Logger.Warn($"LootDropItemPrototype::OnResultsEvaluation() is only supported for Costumes!");
+                return;
+            }
 
             // Unlock costume for costume closet (consoles / 1.53)
             // player.UnlockCostume(Item);
-
-            return true;
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
@@ -377,9 +385,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (BannerMessage={BannerMessage.GetName()})");
+            Logger.Debug($"OnResultsEvaluation(): BannerMessage={BannerMessage.GetName()}");
+
+            player.SendBannerMessage(BannerMessage.As<BannerMessagePrototype>());
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
@@ -396,9 +406,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (Power={Power.GetName()})");
+            Logger.Debug($"OnResultsEvaluation(): Power={Power.GetName()}");
+
+            if (dropper == null)
+            {
+                Logger.Warn("OnResultsEvaluation(): dropper == null");
+                return;
+            }
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return;
+
+            Power power = dropper.GetPower(Power);
+            if (power == null)
+            {
+                PowerIndexProperties props = new();
+                if (dropper.AssignPower(Power, props) == null)
+                    Logger.Warn($"OnResultsEvaluation(): Failed to assign power on dropper!\nPower: {Power.GetName()}\nDropper {dropper}:\nNode: {this}");
+            }
+
+            PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, dropper.RegionLocation.Position);
+            settings.Flags |= PowerActivationSettingsFlags.SkipRangeCheck;
+
+            PowerUseResult result = dropper.ActivatePower(Power, ref settings);
+            if (result != PowerUseResult.Success)
+                Logger.Warn($"OnResultsEvaluation(): Failed to activate power!\nPowerUseResult: {result}\nPower: {Power.GetName()}\nDropper: {dropper}\nNode: {this}");
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
@@ -416,9 +450,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()})");
+            Logger.Debug($"OnResultsEvaluation(): RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()}");
+
+            Game game = player?.Game;
+            if (game == null) return;
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return;
+
+            if (RecipientVisualEffect != AssetId.Invalid)
+            {
+                NetMessagePlayPowerVisuals avatarVisualsMessage = NetMessagePlayPowerVisuals.CreateBuilder()
+                    .SetEntityId(avatar.Id)
+                    .SetPowerAssetRef((ulong)RecipientVisualEffect)
+                    .Build();
+
+                game.NetworkManager.SendMessageToInterested(avatarVisualsMessage, avatar, AOINetworkPolicyValues.AOIChannelProximity);
+            }
+
+            if (dropper != null && DropperVisualEffect != AssetId.Invalid)
+            {
+                NetMessagePlayPowerVisuals dropperVisualsMessage = NetMessagePlayPowerVisuals.CreateBuilder()
+                    .SetEntityId(dropper.Id)
+                    .SetPowerAssetRef((ulong)DropperVisualEffect)
+                    .Build();
+
+                game.NetworkManager.SendMessageToInterested(dropperVisualsMessage, dropper, AOINetworkPolicyValues.AOIChannelProximity);
+            }
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
@@ -436,9 +496,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public override bool OnResultsEvaluation(Player player, WorldEntity worldEntity)
+        public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            return Logger.WarnReturn(false, $"OnResultsEvaluation(): Not yet implemented (ChatMessage={ChatMessage}, MessageScope={MessageScope})");
+            Logger.Debug($"OnResultsEvaluation(): ChatMessage={ChatMessage}, MessageScope={MessageScope}");
+
+            // TODO: Use MessageScope
+            NetMessageChatFromGameSystem chatFromGameSystem = NetMessageChatFromGameSystem.CreateBuilder()
+                .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
+                .SetMessageStringId((ulong)ChatMessage)
+                .Build();
+
+            player.SendMessage(chatFromGameSystem);
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)

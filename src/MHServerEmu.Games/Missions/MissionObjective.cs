@@ -10,10 +10,8 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions.Actions;
 using MHServerEmu.Games.Missions.Conditions;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -510,7 +508,7 @@ namespace MHServerEmu.Games.Missions
 
             if (reset)
             {
-                // TODO rewards
+                GiveMissionRewards();
 
                 var region = Region;
                 if (region != null && objetiveProto is MissionNamedObjectivePrototype namedProto)
@@ -525,6 +523,26 @@ namespace MHServerEmu.Games.Missions
             }
 
             return true;
+        }
+
+        private void GiveMissionRewards()
+        {
+            var rewards = Prototype.Rewards;
+            if (rewards.IsNullOrEmpty()) return;
+
+            var mission = Mission;
+            int seed = PrototypeIndex + 1;
+
+            if (mission.IsOpenMission)
+            {
+                foreach (var player in mission.GetSortedContributors())
+                    mission.RewardForPlayer(player, rewards, seed);
+            }
+            else
+            {
+                foreach (var player in mission.GetParticipants())
+                    mission.RewardForPlayer(player, rewards, seed);
+            }            
         }
 
         private bool OnUnsetStateCompleted()
@@ -723,7 +741,11 @@ namespace MHServerEmu.Games.Missions
                 update = true;
             }
 
-            if (update) widget.SetAreaContext(missionRef);
+            if (update)
+            {
+                if (MissionManager.Debug) Logger.Warn($"UpdateMetaGameWidget {Mission.PrototypeName} [{PrototypeIndex}] {widgetRef.GetNameFormatted()}");
+                widget.SetAreaContext(missionRef);
+            }
         }
 
         private void RemoveMetaGameWidgets()
@@ -737,6 +759,7 @@ namespace MHServerEmu.Games.Missions
 
             if (objetiveProto.MetaGameWidget != PrototypeId.Invalid)
             {
+                if (MissionManager.Debug) Logger.Warn($"RemoveMetaGameWidgets {Mission.PrototypeName} [{PrototypeIndex}] {objetiveProto.MetaGameWidget.GetNameFormatted()}");
                 uiDataProvider.DeleteWidget(objetiveProto.MetaGameWidget, missionRef);
                 var metaDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(objetiveProto.MetaGameWidget);
                 if (metaDataProto == null) return;
@@ -745,6 +768,7 @@ namespace MHServerEmu.Games.Missions
 
             if (objetiveProto.MetaGameWidgetFail != PrototypeId.Invalid)
             {
+                if (MissionManager.Debug) Logger.Warn($"RemoveMetaGameWidgets {Mission.PrototypeName} [{PrototypeIndex}] {objetiveProto.MetaGameWidgetFail.GetNameFormatted()}");
                 uiDataProvider.DeleteWidget(objetiveProto.MetaGameWidgetFail, missionRef);
                 var metaDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(objetiveProto.MetaGameWidgetFail);
                 if (metaDataProto == null) return;

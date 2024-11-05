@@ -19,6 +19,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -161,6 +162,9 @@ namespace MHServerEmu.Games.Entities
 
             WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
 
+            if (worldEntityProto.IsVacuumable)
+                SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
+
             if (settings.IgnoreNavi)
                 SetFlag(EntityFlags.IgnoreNavi, true);
 
@@ -270,7 +274,7 @@ namespace MHServerEmu.Games.Entities
             // HACK: LOOT AND XP
             if (this is Agent agent && notMissile && agent is not Avatar && agent.IsTeamUpAgent == false)
             {
-                GiveKillRewards(killer, killFlags, directKiller);
+                AwardKillLoot(killer, killFlags, directKiller);
             }
 
             var region = Region;
@@ -622,6 +626,14 @@ namespace MHServerEmu.Games.Entities
             if (calcRadius)
                 distance -= Bounds.Radius + other.Bounds.Radius;
             return Math.Max(0.0f, distance);
+        }
+
+        public Vector3 GetPositionNearAvatar(Avatar avatar)
+        {
+            Region region = avatar.Region;
+            region.ChooseRandomPositionNearPoint(avatar.Bounds, Region.GetPathFlagsForEntity(WorldEntityPrototype), PositionCheckFlags.PreferNoEntity,
+                    BlockingCheckFlags.CheckSpawns, 50, 200, out Vector3 position);
+            return position;
         }
 
         public bool OrientToward(Vector3 point, bool ignorePitch = false, ChangePositionFlags changeFlags = ChangePositionFlags.None)
@@ -1280,7 +1292,7 @@ namespace MHServerEmu.Games.Entities
                 region.AdjustHealthEvent.Invoke(new(this, ultimatePowerUser, player, adjustHealth, isDodged));
             }
 
-            if (health <= 0)
+            if (health <= 0 && Properties[PropertyEnum.AIDefeated] == false)
             {
                 if (this is Avatar killedAvatar)
                 {
@@ -1308,7 +1320,7 @@ namespace MHServerEmu.Games.Entities
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
 
-            if (this is Agent agent && adjustHealth < 0)
+            if (this is Agent agent && adjustHealth < 0 && CanBePlayerOwned() == false)
                 agent.AIController?.OnAIGotDamaged(ultimatePowerUser, adjustHealth);
 
             return true;
@@ -1548,6 +1560,15 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        public void TwinEnemyBoost(Cell cell)
+        {
+            var popGlobals = GameDatabase.PopulationGlobalsPrototype;
+            // TODO share damage with twin enemy
+            // PropertyEnum.DamageTransferID
+            // popGlobals.TwinEnemyCondition
+            Properties[PropertyEnum.EnemyBoost, popGlobals.TwinEnemyBoost] = true;
         }
 
         #endregion
@@ -2080,51 +2101,166 @@ namespace MHServerEmu.Games.Entities
             return WorldEntityPrototype.GetXPAwarded(CharacterLevel, out xp, out minXP, applyGlobalTuning);
         }
 
-        public bool GiveKillRewards(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        public bool AwardKillLoot(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            Region region = Region;
-            if (region == null) return Logger.WarnReturn(false, "GiveKillRewards(): region == null");
+            if (IsInWorld == false)
+                return false;
 
-            TuningTable tuningTable = region.TuningTable;
-            if (tuningTable == null) return Logger.WarnReturn(false, "GiveKillRewards(): tuningTable == null");
+            List<Player> playerList = ListPool<Player>.Instance.Rent();
+            // NOTE: Compute nearby players on demand for performance reasons
 
-            // TODO: Track kill participation somehow to prevent exploits
-            foreach (ulong playerId in InterestReferences)
+            // Loot Tables
+            if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
             {
-                Player player = Game.EntityManager.GetEntity<Player>(playerId);
-                if (player == null) continue;
+                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, true, playerList);
+                // TODO: Manually add faraway mission participants if needed
 
-                // Loot
-                if (killFlags.HasFlag(KillFlags.NoLoot) == false && Properties[PropertyEnum.NoLootDrop] == false)
+                // OnKilled loot table is different based on the rank of this entity
+                RankPrototype rankProto = GetRankPrototype();
+                LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
+                    ? rankProto.LootTableParam
+                    : LootDropEventType.OnKilled;
+
+                AwardLootForDropEvent(lootDropEventType, playerList);
+
+                // TODO: rework this
+                if (killer is Avatar avatar) // this mission loot only for avatar
                 {
-                    // TODO: Other loot drop event / action types?
-                    RankPrototype rankProto = GetRankPrototype();
-                    LootDropEventType lootDropEventType = rankProto.LootTableParam != LootDropEventType.None
-                        ? rankProto.LootTableParam
-                        : LootDropEventType.OnKilled;
-
-                    PrototypeId lootTableProtoRef = Properties[PropertyEnum.LootTablePrototype, (PropertyParam)lootDropEventType, 0, (PropertyParam)LootActionType.Spawn];
-
-                    if (lootTableProtoRef != PrototypeId.Invalid)
+                    var player = avatar.GetOwnerOfType<Player>();
+                    List<MissionLootTable> lootList = new();
+                    if (MissionManager.GetDropLootsForEnemy(this, player, lootList))
                     {
-                        using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                        inputSettings.Initialize(LootContext.Drop, player, this);
-                        Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
-                    }
-                }
-
-                // XP
-                if (killer is Avatar avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
-                {
-                    if (WorldEntityPrototype.GetXPAwarded(killer.CharacterLevel, out long xp, out long minXP, true))
-                    {
-                        xp = avatar.ApplyXPModifiers(xp, tuningTable);
-                        avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                        foreach (var missionLoot in lootList)
+                        {
+                            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                            inputSettings.Initialize(LootContext.Drop, player, this);
+                            Game.LootManager.SpawnLootFromTable(missionLoot.LootTableRef, inputSettings);
+                        }
                     }
                 }
             }
 
+            // XP
+            if (killer is Avatar && killFlags.HasFlag(KillFlags.NoExp) == false && Properties[PropertyEnum.NoExpOnDeath] == false)
+            {
+                // Compute player count if we haven't done so already for loot tables
+                if (playerList.Count == 0)
+                    Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, true, playerList);
+
+                AwardKillXP(playerList);
+            }
+
+            ListPool<Player>.Instance.Return(playerList);
             return true;
+        }
+
+        private bool AwardInteractionLoot(ulong interactorEntityId)
+        {
+            // TODO: Per-player clones for chests, use interactorEntity for this
+            WorldEntity interactorEntity = Game.EntityManager.GetEntity<WorldEntity>(interactorEntityId);
+            if (interactorEntity == null) return Logger.WarnReturn(false, "AwardInteractionLoot(): interactorEntity == null");
+
+            List<Player> playerList = ListPool<Player>.Instance.Rent();
+            Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
+
+            AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
+
+            ListPool<Player>.Instance.Return(playerList);
+            return true;
+        }
+
+        private bool AwardLootForDropEvent(LootDropEventType eventType, List<Player> playerList)
+        {
+            const int MaxTables = 8;    // The maximum we've seen in 1.52 prototypes is 4, double this just in case
+
+            // Check if we have any players to award loot to
+            if (playerList.Count == 0)
+                return true;
+
+            Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[MaxTables];
+            int numTables = 0;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType))
+            {
+                if (numTables >= MaxTables)
+                {
+                    Logger.Warn($"AwardLootForDropEvent(): Exceeded the maximum number of loot tables in {this}");
+                    break;
+                }
+
+                Property.FromParam(kvp.Key, 2, out int actionTypeInt);
+                LootActionType actionType = (LootActionType)actionTypeInt;
+
+                if (actionType != LootActionType.Spawn)
+                {
+                    Logger.Warn($"AwardLootForDropEvent(): Unimplemented loot action type {actionType} for {this}");
+                    continue;
+                }
+
+                PrototypeId lootTableProtoRef = kvp.Value;
+                if (lootTableProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"AwardLootForDropEvent(): Invalid loot table proto ref for property {kvp.Key} in {this}");
+                    continue;
+                }
+
+                tables[numTables++] = (lootTableProtoRef, actionType);
+            }
+
+            if (numTables == 0)
+                return true;
+
+            tables = tables[..numTables];
+
+            // TODO: Move this part to the LootManager
+            foreach ((PrototypeId, LootActionType) tableEntry in tables)
+            {
+                (PrototypeId lootTableProtoRef, LootActionType actionType) = tableEntry;
+                if (actionType != LootActionType.Spawn)
+                    continue;
+
+                foreach (Player player in playerList)
+                {
+                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    inputSettings.Initialize(LootContext.Drop, player, this);
+                    Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                }
+            }
+
+            return true;
+        }
+
+        private bool AwardKillXP(List<Player> playerList)
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "AwardKillXP(): region == null");
+
+            TuningTable tuningTable = region.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(false, "AwardKillXP(): tuningTable == null");
+
+            foreach (Player player in playerList)
+            {
+                Avatar avatar = player.CurrentAvatar;
+                if (avatar == null)
+                {
+                    Logger.Warn("AwardKillXP(): avatar == null");
+                    continue;
+                }
+
+                if (WorldEntityPrototype.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
+                {
+                    xp = avatar.ApplyXPModifiers(xp, tuningTable);
+                    avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
+                }
+            }
+
+            return true;
+        }
+
+        private bool HasLootDropEventType(LootDropEventType eventType)
+        {
+            PropertyList.Iterator iterator = Properties.IteratePropertyRange(PropertyEnum.LootTablePrototype, (int)eventType);
+            return iterator.GetEnumerator().MoveNext();
         }
 
         #endregion
@@ -2232,14 +2368,13 @@ namespace MHServerEmu.Games.Entities
             SimulateResult result = base.SetSimulated(simulated);
 
             if (result != SimulateResult.None && Locomotor != null)
-            {
                 ModifyCollectionMembership(EntityCollection.Locomotion, IsSimulated);
-            }
+
             if (result == SimulateResult.Set)
             {
                 // Apply mods from boosts and rank
 
-                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost).ToArray())
                 {
                     Property.FromParam(kvp.Key, 0, out PrototypeId modProtoRef);
                     if (modProtoRef == PrototypeId.Invalid)
@@ -2527,7 +2662,7 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public void OnInteractedWith(WorldEntity other)
+        public void OnInteractedWith(WorldEntity interactorEntity)
         {
             int usesLeft = Properties[PropertyEnum.InteractableUsesLeft];
             bool used = usesLeft == -1 || usesLeft > 0;
@@ -2540,7 +2675,24 @@ namespace MHServerEmu.Games.Entities
 
             bool lastUsed = used && usesLeft == 0;
 
-            // TODO InteractableSpawnLootDelayMS
+            if (HasLootDropEventType(LootDropEventType.OnInteractedWith))
+            {
+                long interactableSpawnLootDelayMS = Properties[PropertyEnum.InteractableSpawnLootDelayMS];
+
+                if (interactableSpawnLootDelayMS > 0)
+                {
+                    // Award interaction loot after a delay to let the opening animation play
+                    TimeSpan interactableSpawnLootDelay = TimeSpan.FromMilliseconds(interactableSpawnLootDelayMS);
+                    EventPointer<AwardInteractionLootEvent> awardInteractionLootEvent = new();
+                    Game.GameEventScheduler.ScheduleEvent(awardInteractionLootEvent, TimeSpan.FromMilliseconds(interactableSpawnLootDelayMS));
+                    awardInteractionLootEvent.Get().Initialize(this, interactorEntity.Id);
+                }
+                else
+                {
+                    // Award loot immediately if no delay is specified for this world entity
+                    AwardInteractionLoot(interactorEntity.Id);
+                }
+            }
 
             if (lastUsed)
             {
@@ -2616,6 +2768,12 @@ namespace MHServerEmu.Games.Entities
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.Kill();
         }
+
+        private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).AwardInteractionLoot(p1);
+        }
+
 
         #endregion
     }

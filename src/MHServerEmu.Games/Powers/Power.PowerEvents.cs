@@ -549,7 +549,13 @@ namespace MHServerEmu.Games.Powers
             Player player = Owner.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): player == null");
 
-            player.PlayerConnection.MoveToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
+            var bodySliderTargetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+            var region = player.GetRegion();
+            if (region != null && region.Prototype.BodySliderOneWay)
+                if (region.Prototype.BodySliderTarget != PrototypeId.Invalid)
+                    bodySliderTargetRef = region.Prototype.BodySliderTarget;
+
+            player.PlayerConnection.MoveToTarget(bodySliderTargetRef);
             return true;
         }
 

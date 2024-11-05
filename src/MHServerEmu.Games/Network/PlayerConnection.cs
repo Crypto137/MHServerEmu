@@ -48,6 +48,7 @@ namespace MHServerEmu.Games.Network
         public AreaOfInterest AOI { get; }
         public WorldView WorldView { get; }
         public TransferParams TransferParams { get; }
+        public RegionContext RegionContext { get; }
         public MigrationData MigrationData { get; }
 
         public Player Player { get; private set; }
@@ -67,6 +68,7 @@ namespace MHServerEmu.Games.Network
             WorldView = new(this);
             TransferParams = new(this);
             MigrationData = new();
+            RegionContext = new();
 
             InitializeFromDBAccount();
 
@@ -323,7 +325,8 @@ namespace MHServerEmu.Games.Network
 
             Player.QueueLoadingScreen(regionProtoRef);
 
-            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(regionProtoRef, this);
+            RegionContext.RegionDataRef = regionProtoRef;
+            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
             if (region == null)
             {
                 Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
@@ -424,6 +427,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessagePlayKismetSeqDone:                 OnPlayKismetSeqDone(message); break;                // 96
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
                 case ClientToGameServerMessage.NetMessageSetDialogTarget:                   OnSetDialogTarget(message); break;                  // 100
+                case ClientToGameServerMessage.NetMessageDialogResult:                      OnDialogResult(message); break;                     // 101
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
@@ -441,6 +445,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
+                case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;               // 154
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
                 case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:       OnMissionTrackerFiltersUpdate(message); break;      // 166
@@ -1091,6 +1096,14 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnDialogResult(MailboxMessage message)  // 101
+        {
+            var dialogResult = message.As<NetMessageDialogResult>();
+            if (dialogResult == null) return Logger.WarnReturn(false, $"OnDialogResult(): Failed to retrieve message");
+            Game.GameDialogManager.OnDialogResult(dialogResult, Player);
+            return true;
+        }
+
         private bool OnVendorRequestSellItemTo(MailboxMessage message)  // 103
         {
             var vendorRequestSellItemTo = message.As<NetMessageVendorRequestSellItemTo>();
@@ -1338,6 +1351,15 @@ namespace MHServerEmu.Games.Network
             if (uiSystemLockProto == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): UISystemLockPrototype is null");
             uint state = uiSystemLockState.State;
             Player.Properties[PropertyEnum.UISystemLock, uiSystemRef] = state;
+            return true;
+        }
+
+        private bool OnWidgetButtonResult(MailboxMessage message)    // 154
+        {
+            var widgetButtonResult = message.As<NetMessageWidgetButtonResult>();
+            if (widgetButtonResult == null) return Logger.WarnReturn(false, $"OnWidgetButtonResult(): Failed to retrieve message");
+            var provider = Player?.GetRegion()?.UIDataProvider;
+            provider?.OnWidgetButtonResult(widgetButtonResult);
             return true;
         }
 

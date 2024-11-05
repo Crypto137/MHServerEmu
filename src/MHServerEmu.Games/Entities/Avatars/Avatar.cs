@@ -311,7 +311,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
-                        Transition.TeleportToLocalTarget(owner, region.Prototype.StartTarget);
+                        Transition.TeleportToLocalTarget(owner, deathReleaseTarget);
                     }
                     else 
                     {
@@ -338,12 +338,29 @@ namespace MHServerEmu.Games.Entities.Avatars
             Cell cell = Cell;
             if (cell == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): cell == null");
 
-            // TODO: Add more overrides sources (DividedStartLocations, RegionStartTargetOverride property, etc.)
+            var player = GetOwnerOfType<Player>();
+
+            // Check if there is a hotspot override
+            if (player != null)
+            {
+                PrototypeId respawnTarget = GetRespawHotspotOverrideTarget(player);
+                if (respawnTarget != PrototypeId.Invalid)
+                    return respawnTarget;
+            }
+
+            // Check if there is RegionStartTargetOverride property
+            PrototypeId startTargetRef = region.Properties[PropertyEnum.RegionStartTargetOverride];
+            if (startTargetRef != PrototypeId.Invalid)
+                return startTargetRef;
 
             // Check if there is an area / cell override
             PrototypeId areaRespawnOverride = area.GetRespawnOverride(cell);
             if (areaRespawnOverride != PrototypeId.Invalid)
                 return areaRespawnOverride;
+
+            // Check if there is DividedStartTarget
+            if (region.GetDividedStartTarget(player, ref startTargetRef))
+                return startTargetRef;
 
             // Check if there is a region-wide override
             if (region.Prototype.RespawnOverride != PrototypeId.Invalid)
@@ -351,6 +368,32 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Fall back to the region's start target as the last resort
             return region.Prototype.StartTarget;
+        }
+
+        public PrototypeId GetRespawHotspotOverrideTarget(Player player)
+        {
+            PrototypeId respawnTarget = PrototypeId.Invalid;
+
+            var manager = Game.EntityManager;
+            var position = RegionLocation.Position;
+            float minDistance = float.MaxValue;
+
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.RespawnHotspotOverrideInst))
+            {
+                if ((ulong)kvp.Value == InvalidId) continue;
+                var hotspot = manager.GetEntity<Hotspot>(kvp.Value);
+                if (hotspot == null || hotspot.IsInWorld == false) continue;
+
+                var center = hotspot.RegionLocation.Position;
+                float distance = Vector3.Distance2D(position, center);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    Property.FromParam(kvp.Key, 0, out respawnTarget);
+                }
+            }
+
+            return respawnTarget;
         }
 
         #endregion
@@ -433,6 +476,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        public override PowerUseResult ActivatePower(PrototypeId powerRef, ref PowerActivationSettings settings)
+        {
+            PowerUseResult rusult = base.ActivatePower(powerRef, ref settings);
+
+            var player = GetOwnerOfType<Player>();
+            if (player != null) 
+                Region?.AvatarUsedPowerEvent.Invoke(new(player, this, powerRef, settings.TargetEntityId));
+
+            return rusult;
         }
 
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
@@ -677,6 +731,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             //Logger.Debug("CancelPendingAction()");
             _pendingAction.Clear();
+        }
+
+        public bool IsCombatActive()
+        {
+            // TODO: Check PropertyEnum.LastInflictedDamageTime
+            return true;
         }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
@@ -1235,6 +1295,92 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return success;
+        }
+
+        #endregion
+
+        #region Loot
+
+        // Experience
+
+        public static float GetStackingExperienceBonusPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        // Rarity
+
+        public static float GetStackingLootBonusRarityPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        // Special
+
+        public static float GetStackingLootBonusSpecialPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
+        }
+
+        // Flat Credits
+
+        public static int GetFlatCreditsBonus(PropertyCollection properties)
+        {
+            int flatCreditsBonus = properties[PropertyEnum.LootBonusCreditsFlat];
+            flatCreditsBonus += (int)GetStackingFlatCreditsBonus(properties);
+            return flatCreditsBonus;
+        }
+
+        public static float GetStackingFlatCreditsBonus(PropertyCollection properties)
+        {
+            float stackingFlatCreditsBonus = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCreditsStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingFlatCreditsBonusMultiplier(properties, powerProtoRef);
+
+                stackingFlatCreditsBonus += GetStackingFlatCreditsBonus(stackCount) * multiplier;
+            }
+
+            return stackingFlatCreditsBonus;
+        }
+
+        public static float GetStackingFlatCreditsBonus(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = CurveDirectory.Instance.GetCurve(GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve);
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingFlatCreditsBonusMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusCreditsStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
+        }
+
+        // Orb Aggro Range
+
+        public static float GetOrbAggroRangeBonusPct(PropertyCollection properties)
+        {
+            // TODO
+            return 0f;
         }
 
         #endregion

@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         private PropertyCollection _properties;
         private Curve _scoreLevelCurve;
         private Curve _scoreRankCurve;
+        public static int ScoreBoost = 1;
 
         public MetaStateTrackRegionScore(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -82,13 +83,10 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             int score = (int)(float)region.Properties[PropertyEnum.TrackedRegionScore];
             mode.SendPvEInstanceRegionScoreUpdate(score, player);
 
-            var widgetRef = _proto.UIWidget;
-            if (widgetRef == PrototypeId.Invalid) return;
-
             if (score > _proto.ScoreThreshold) 
                 score = _proto.ScoreThreshold;
 
-            var widget = region.UIDataProvider?.GetWidget<UIWidgetGenericFraction>(widgetRef);
+            var widget = MetaGame.GetWidget<UIWidgetGenericFraction>(_proto.UIWidget);
             widget?.SetCount(score, _proto.ScoreThreshold);
         }
 
@@ -100,9 +98,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             region.EntityDeadEvent.RemoveAction(_entityDeadAction);
             region.OrbPickUpEvent.RemoveAction(_orbPickUpAction);
 
-            var windgetRef = _proto.UIWidget;
-            if (windgetRef != PrototypeId.Invalid)
-                region.UIDataProvider?.DeleteWidget(windgetRef);
+            MetaGame.DeleteWidget(_proto.UIWidget);
 
             Detach(true);
 
@@ -144,6 +140,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     }
                 }
 
+                score *= ScoreBoost;
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
             }
         }
@@ -207,6 +204,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 }
             }
 
+            score *= ScoreBoost;
             if (score > 0.0f) 
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
         }

@@ -120,12 +120,12 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Returns <see langword="true"/> if something should drop.
         /// </summary>
-        public bool CheckDropPercent(LootRollSettings settings, float noDropPercent);
+        public bool CheckDropChance(LootRollSettings settings, float noDropPercent);
 
         /// <summary>
         /// Returns <see langword="true"/> if the specified drop is on cooldown.
         /// </summary>
-        public bool CheckDropCooldown(PrototypeId dropProtoRef, int amount);
+        public bool CheckDropCooldown(PrototypeId dropProtoRef, int count);
 
         /// <summary>
         /// Returns <see langword="true"/> if an item is allowed to drop given the specified filters.

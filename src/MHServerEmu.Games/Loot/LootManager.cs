@@ -72,17 +72,22 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Spawns loot contained in the provided <see cref="LootResultSummary"/> in the game world.
         /// </summary>
-        public void SpawnLootFromSummary(LootResultSummary lootResultSummary, LootInputSettings inputSettings)
+        public bool SpawnLootFromSummary(LootResultSummary lootResultSummary, LootInputSettings inputSettings)
         {
             if (lootResultSummary.Types == LootType.None)
-                return;
+                return true;
 
             Player player = inputSettings.Player;
-            WorldEntity recipient = player.CurrentAvatar;
             WorldEntity sourceEntity = inputSettings.SourceEntity;
 
-            // Instance the loot if we have a player provided and instanced loot is not disabled by server config
-            ulong restrictedToPlayerGuid = player != null && Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
+            WorldEntity recipient = player?.CurrentAvatar;
+            if (recipient == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): recipient == null");
+
+            Region region = recipient.Region;
+            if (region == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): region == null");
+
+            // Instance the loot if instanced loot is not disabled by server config
+            ulong restrictedToPlayerGuid = Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
 
             // Temp property collection for transfering properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
@@ -114,7 +119,7 @@ namespace MHServerEmu.Games.Loot
             int i = 0;
 
             // Spawn items
-            ulong regionId = recipient.Region.Id;
+            ulong regionId = region.Id;
             ulong sourceEntityId = sourceEntity != null ? sourceEntity.Id : Entity.InvalidId;
 
             if (lootResultSummary.Types.HasFlag(LootType.Item))
@@ -166,6 +171,8 @@ namespace MHServerEmu.Games.Loot
                     properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
                 }
             }
+
+            return true;
         }
 
         public bool SpawnItem(PrototypeId itemProtoRef, Player player, WorldEntity sourceEntity)
@@ -234,7 +241,7 @@ namespace MHServerEmu.Games.Loot
             LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
             if (lootTableProto == null) return Logger.WarnReturn(false, "RollLootTable(): lootTableProto == null");
 
-            _resolver.SetContext(inputSettings.LootContext, inputSettings.Player);
+            _resolver.SetContext(inputSettings.LootContext, inputSettings.Player, inputSettings.SourceEntity);
 
             LootRollResult result = lootTableProto.RollLootTable(inputSettings.LootRollSettings, _resolver);
             if (result.HasFlag(LootRollResult.Success))

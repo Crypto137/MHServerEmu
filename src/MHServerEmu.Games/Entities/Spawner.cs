@@ -33,7 +33,10 @@ namespace MHServerEmu.Games.Entities
         public SpawnerPrototype SpawnerPrototype => Prototype as SpawnerPrototype;
         public bool IsActive { get; private set; }
 
-        public Spawner(Game game) : base(game) { }
+        public Spawner(Game game) : base(game) 
+        {
+            SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
+        }
 
         public override void OnExitedWorld()
         {

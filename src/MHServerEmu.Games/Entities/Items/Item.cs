@@ -13,9 +13,11 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities.Items
 {
@@ -54,7 +56,10 @@ namespace MHServerEmu.Games.Entities.Items
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
 
-        public Item(Game game) : base(game) { }
+        public Item(Game game) : base(game) 
+        {
+            SetFlag(EntityFlags.IsNeverAffectedByPowers, true);
+        }
 
         public override bool Initialize(EntitySettings settings)
         {
@@ -63,6 +68,9 @@ namespace MHServerEmu.Games.Entities.Items
             // Apply ItemSpec if one was provided with entity settings
             if (settings.ItemSpec != null)
                 ApplyItemSpec(settings.ItemSpec);
+
+            if (Prototype is RelicPrototype)
+                RunRelicEval();
 
             return true;
         }
@@ -79,6 +87,12 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public override void OnPostInit(EntitySettings settings)
+        {
+            base.OnPostInit(settings);
+            RefreshProcPowerIndexProperties();
+        }
+
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
@@ -92,6 +106,47 @@ namespace MHServerEmu.Games.Entities.Items
             if (itemProto == null) return Logger.WarnReturn(false, "IsAutoStackedWhenAddedToInventory(): itemProto == null");
             if (itemProto.StackSettings == null) return false;
             return itemProto.StackSettings.AutoStackWhenAddedToInventory;
+        }
+
+        public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            base.OnPropertyChange(id, newValue, oldValue, flags);
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+            
+            switch (id.Enum)
+            {
+                case PropertyEnum.InventoryStackCount:
+                    RunRelicEval();
+                    RefreshProcPowerIndexProperties();
+
+                    int delta = (int)newValue - oldValue;
+                    if (delta == 0) return;
+
+                    Player owner = GetOwnerOfType<Player>();
+                    if (owner == null) return;
+
+                    Region region = owner.GetRegion();
+                    if (region == null) return;
+
+                    InventoryPrototype inventoryProto = InventoryLocation?.InventoryPrototype;
+                    if (inventoryProto == null) return;
+                    if (inventoryProto.IsPlayerGeneralInventory == false && inventoryProto.IsEquipmentInventory == false) return;
+
+                    if (delta > 0)
+                    {
+                        region.PlayerCollectedItemEvent.Invoke(new(owner, this, delta));
+                    }
+                    else if (delta < 0)
+                    {
+                        region.PlayerLostItemEvent.Invoke(new(owner, this, delta));
+                    }
+
+                    break;
+
+                case PropertyEnum.PetItemDonationCount:
+                    // TODO
+                    break;
+            }
         }
 
         public bool CanUse(Agent agent, bool powerUse)
@@ -408,7 +463,7 @@ namespace MHServerEmu.Games.Entities.Items
                 }
                 else
                 {
-                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto);
+                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, this);
                     avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = true;
                     avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
                 }
@@ -761,6 +816,46 @@ namespace MHServerEmu.Games.Entities.Items
         {
             //Logger.Warn($"GetTriggeredPower(): Not yet implemented (eventType={eventType}, actionType={actionType})");
             return PrototypeId.Invalid;
+        }
+
+        private bool RunRelicEval()
+        {
+            if (Prototype is not RelicPrototype relicProto)
+                return false;
+
+            if (relicProto.EvalOnStackCountChange == null)
+                return false;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+            return Eval.RunBool(relicProto.EvalOnStackCountChange, evalContext);
+        }
+
+        private void RefreshProcPowerIndexProperties()
+        {
+            // TODO
+        }
+
+        public void SetScenarioProperties(PropertyCollection properties)
+        {
+            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
+            properties.CopyPropertyRange(Properties, PropertyEnum.RegionAffix);
+            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
+
+            PrototypeId itemRarityRef = Properties[PropertyEnum.ItemRarity];
+            var itemRarityProto = itemRarityRef.As<RarityPrototype>();
+            if (itemRarityProto != null)
+                properties[PropertyEnum.ItemRarity] = itemRarityRef;
+
+            var affixLimits = ItemPrototype.GetAffixLimits(itemRarityRef, LootContext.Drop);
+            if (affixLimits != null)
+            {
+                properties[PropertyEnum.DifficultyIndex] = affixLimits.RegionDifficultyIndex;
+                properties[PropertyEnum.DamageRegionMobToPlayer] = affixLimits.DamageRegionMobToPlayer;
+                properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
+            }
+
+            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; // we need this?
         }
     }
 }

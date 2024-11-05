@@ -596,7 +596,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // Experience
             // Scale exp based on avatar level rather than orb level
-            if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, true))
+            if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
             {
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, tuningTable);

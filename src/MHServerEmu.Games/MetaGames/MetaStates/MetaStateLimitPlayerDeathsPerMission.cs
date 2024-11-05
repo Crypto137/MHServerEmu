@@ -8,6 +8,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         public MetaStateLimitPlayerDeathsPerMission(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
+            // SurturDebugDeathLimitPerMisState only
             _proto = prototype as MetaStateLimitPlayerDeathsPerMissionPrototype;
         }
     }
