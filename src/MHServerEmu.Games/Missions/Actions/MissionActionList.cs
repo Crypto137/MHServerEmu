@@ -17,16 +17,17 @@ namespace MHServerEmu.Games.Missions.Actions
         public Region Region { get => Owner.Region; }
         public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public bool IsActive { get; private set; }
-        public Action<EntitySetSimulatedGameEvent> EntitySetSimulatedAction { get; private set; }
-        public Action<EntityLeaveDormantGameEvent> EntityLeaveDormantAction { get; private set; }
+
+        private Action<EntitySetSimulatedGameEvent> _entitySetSimulatedAction;
+        private Action<EntityLeaveDormantGameEvent> _entityLeaveDormantAction;
 
         public MissionActionList(IMissionActionOwner owner)
         {
             Owner = owner;
             Actions = new();
             EntityActions = new();
-            EntitySetSimulatedAction = OnEntitySetSimulated;
-            EntityLeaveDormantAction = OnEntityLeaveDormant;
+            _entitySetSimulatedAction = OnEntitySetSimulated;
+            _entityLeaveDormantAction = OnEntityLeaveDormant;
         }
 
         public void Destroy()
@@ -88,8 +89,8 @@ namespace MHServerEmu.Games.Missions.Actions
                 var region = Region;
                 if (region != null)
                 {
-                    region.EntitySetSimulatedEvent.AddActionBack(EntitySetSimulatedAction);
-                    region.EntityLeaveDormantEvent.AddActionBack(EntityLeaveDormantAction);
+                    region.EntitySetSimulatedEvent.AddActionBack(_entitySetSimulatedAction);
+                    region.EntityLeaveDormantEvent.AddActionBack(_entityLeaveDormantAction);
                 }
             }
             IsActive = true;
@@ -105,8 +106,8 @@ namespace MHServerEmu.Games.Missions.Actions
                 var region = Region;
                 if (region != null)
                 {
-                    region.EntitySetSimulatedEvent.RemoveAction(EntitySetSimulatedAction);
-                    region.EntityLeaveDormantEvent.RemoveAction(EntityLeaveDormantAction);
+                    region.EntitySetSimulatedEvent.RemoveAction(_entitySetSimulatedAction);
+                    region.EntityLeaveDormantEvent.RemoveAction(_entityLeaveDormantAction);
                 }
             }
             IsActive = false;

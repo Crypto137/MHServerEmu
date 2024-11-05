@@ -10,9 +10,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionItemCollect : MissionPlayerCondition
     {
         private MissionConditionItemCollectPrototype _proto;
-        private Action<PlayerPreItemPickupGameEvent> _PlayerPreItemPickupAction;
-        private Action<PlayerCollectedItemGameEvent> _PlayerCollectedItemAction;
-        private Action<PlayerLostItemGameEvent> _PlayerLostItemAction;
+        private Action<PlayerPreItemPickupGameEvent> _playerPreItemPickupAction;
+        private Action<PlayerCollectedItemGameEvent> _playerCollectedItemAction;
+        private Action<PlayerLostItemGameEvent> _playerLostItemAction;
 
         protected override long RequiredCount => _proto.Count;
 
@@ -21,9 +21,9 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             // RaftNPETutorialPurpleOrbController
             _proto = prototype as MissionConditionItemCollectPrototype;
-            _PlayerPreItemPickupAction = OnPlayerPreItemPickup;
-            _PlayerCollectedItemAction = OnPlayerCollectedItem;
-            _PlayerLostItemAction = OnPlayerLostItem;
+            _playerPreItemPickupAction = OnPlayerPreItemPickup;
+            _playerCollectedItemAction = OnPlayerCollectedItem;
+            _playerLostItemAction = OnPlayerLostItem;
         }
 
         public override bool OnReset()
@@ -109,11 +109,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             EventsRegistered = true;
             if (_proto.DestroyOnPickup)
-                region.PlayerPreItemPickupEvent.AddActionBack(_PlayerPreItemPickupAction);
+                region.PlayerPreItemPickupEvent.AddActionBack(_playerPreItemPickupAction);
             else
             {
-                region.PlayerCollectedItemEvent.AddActionBack(_PlayerCollectedItemAction);
-                region.PlayerLostItemEvent.AddActionBack(_PlayerLostItemAction);
+                region.PlayerCollectedItemEvent.AddActionBack(_playerCollectedItemAction);
+                region.PlayerLostItemEvent.AddActionBack(_playerLostItemAction);
             }
         }
 
@@ -121,11 +121,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             EventsRegistered = false;
             if (_proto.DestroyOnPickup)
-                region.PlayerPreItemPickupEvent.RemoveAction(_PlayerPreItemPickupAction);
+                region.PlayerPreItemPickupEvent.RemoveAction(_playerPreItemPickupAction);
             else
             {
-                region.PlayerCollectedItemEvent.RemoveAction(_PlayerCollectedItemAction);
-                region.PlayerLostItemEvent.RemoveAction(_PlayerLostItemAction);
+                region.PlayerCollectedItemEvent.RemoveAction(_playerCollectedItemAction);
+                region.PlayerLostItemEvent.RemoveAction(_playerLostItemAction);
             }
         }
     }

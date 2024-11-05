@@ -80,6 +80,11 @@ namespace MHServerEmu.Games.Missions
         private EventPointer<IdleTimeoutEvent> _idleTimeoutEvent = new();
         private EventPointer<TimeLimitEvent> _timeLimitEvent = new();
 
+        private Action<PlayerEnteredAreaGameEvent> _playerEnteredAreaAction;
+        private Action<PlayerLeftAreaGameEvent> _playerLeftAreaAction;
+        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
+        private Action<PlayerLeftCellGameEvent> _playerLeftCellAction;
+
         private MissionState _state;
         private float _currentObjectiveSequence;
         private TimeSpan _timeExpireCurrentState;
@@ -158,6 +163,7 @@ namespace MHServerEmu.Games.Missions
 
             _timeExpireCurrentState = TimeSpan.Zero;
             _achievementTime = TimeSpan.Zero;
+
             Prototype = GameDatabase.GetPrototype<MissionPrototype>(_prototypeDataRef);
             if (Prototype != null)
             {
@@ -166,7 +172,13 @@ namespace MHServerEmu.Games.Missions
                 if (Prototype is OpenMissionPrototype openProto) OpenMissionPrototype = openProto;
                 if (Prototype is AdvancedMissionPrototype advancedProto) AdvancedMissionPrototype = advancedProto;
             }
+
             _currentObjectiveSequence = -1;
+
+            _playerEnteredAreaAction = OnAreaEntered;
+            _playerLeftAreaAction = OnAreaLeft;
+            _playerEnteredCellAction = OnCellEntered;
+            _playerLeftCellAction = OnCellLeft;
         }
 
         public void Destroy()
@@ -178,8 +190,8 @@ namespace MHServerEmu.Games.Missions
             if (scheduler != null)
             {
                 scheduler.CancelAllEvents(EventGroup);
-            CancelTimeLimitEvent();
-            CancelIdleTimeoutEvent();
+                CancelTimeLimitEvent();
+                CancelIdleTimeoutEvent();
                 if (_restartMissionEvent.IsValid) scheduler.CancelEvent(_restartMissionEvent);
                 if (_updateObjectivesEvent.IsValid) scheduler.CancelEvent(_updateObjectivesEvent);
             }
@@ -2379,6 +2391,18 @@ namespace MHServerEmu.Games.Missions
                 scheduler.ScheduleEvent(_delayedUpdateMissionEntitiesEvent, timeOffset, EventGroup);
                 _delayedUpdateMissionEntitiesEvent.Get().Initialize(this);
             }
+        }
+
+        public void RegisterAreaEvents(Area area)
+        {
+            area.PlayerEnteredAreaEvent.AddActionBack(_playerEnteredAreaAction);
+            area.PlayerLeftAreaEvent.AddActionBack(_playerLeftAreaAction);
+        }
+
+        public void RegisterCellEvents(Cell cell)
+        {
+            cell.PlayerEnteredCellEvent.AddActionBack(_playerEnteredCellAction);
+            cell.PlayerLeftCellEvent.AddActionBack(_playerLeftCellAction);
         }
 
         public void OnAreaEntered(PlayerEnteredAreaGameEvent evt)
