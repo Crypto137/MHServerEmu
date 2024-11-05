@@ -30,6 +30,7 @@ namespace MHServerEmu.Games.Loot
         private readonly ItemResolverContext _context = new();
 
         public GRandom Random { get; }
+        public LootResolverFlags Flags { get; private set; }
 
         public LootContext LootContext { get => _context.LootContext; }
         public Player Player { get => _context.Player; }
@@ -67,6 +68,14 @@ namespace MHServerEmu.Games.Loot
             _processedItemList.Clear();
 
             _context.Set(lootContext, player, sourceEntity);
+        }
+
+        public void SetFlags(LootResolverFlags flags, bool value)
+        {
+            if (value)
+                Flags |= flags;
+            else
+                Flags &= ~flags;
         }
 
         #region Push Functions
