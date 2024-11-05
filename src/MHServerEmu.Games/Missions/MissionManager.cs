@@ -905,7 +905,7 @@ namespace MHServerEmu.Games.Missions
             if (mission == null) return null;
 
             InsertMission(mission);
-            Logger.Debug($"CreateMissionByDataRef {mission.PrototypeName}");
+            if (Debug) Logger.Debug($"CreateMissionByDataRef {mission.PrototypeName}");
 
             mission.SetCreationState(creationState, initialState, objectiveSeq);
             mission.LootSeed = lootSeed;

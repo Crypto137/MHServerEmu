@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Missions.Actions
         public override bool RunEntity(WorldEntity entity)
         {
             var spawner = entity as Spawner;
-            Logger.Trace($"Spawner [{spawner.PrototypeName}] set {_proto.Trigger}");
+            if (MissionManager.Debug) Logger.Debug($"[{Mission.PrototypeName}] Spawner [{spawner.PrototypeName}] set {_proto.Trigger}");
             spawner.Trigger(_proto.Trigger);
             return true;
         }

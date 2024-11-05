@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.MetaGames
     public class MetaGame : Entity
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
-        public static bool Debug = true;
+        public static bool Debug = false;
 
         protected RepString _name;
         protected ulong _regionId;
