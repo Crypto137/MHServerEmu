@@ -2095,29 +2095,25 @@ namespace MHServerEmu.Games.Missions
             return lootSummary.HasAnyResult;
         }
 
-        private static bool RollLootSummaryForPrototype(Player player, MissionPrototype missionProto, int lootSeed, out LootResultSummary lootSummary)
+        private static bool RollLootSummaryForPrototype(Player player, MissionPrototype missionProto, int lootSeed, LootResultSummary lootSummary)
         {
-            lootSummary = new();
-            var rewards = missionProto.Rewards;
+            LootTablePrototype[] rewards = missionProto.Rewards;
             if (rewards.IsNullOrEmpty()) return false;
 
-            var avatar = player.CurrentAvatar;
-            int level = (int)missionProto.Level;
+            Avatar avatar = player.CurrentAvatar;
+            int lootLevel = (int)missionProto.Level;
 
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(null, player);
             resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
 
-            LootRollSettings settings = new();
-            settings.UsableAvatar = avatar.AvatarPrototype;
-            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
-            settings.Level = level;
-            settings.LevelForRequirementCheck = level;
-            settings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
+            using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            settings.Initialize(LootContext.MissionReward, player, player.CurrentAvatar, lootLevel);
+            settings.LootRollSettings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
-            foreach (var reward in rewards)
-                reward.Roll(settings, resolver);
+            foreach (LootTablePrototype reward in rewards)
+                reward.Roll(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
             Logger.Trace($"HasLootRewardsForPrototype [{missionProto}] Rewards {lootSummary}");
@@ -2129,25 +2125,22 @@ namespace MHServerEmu.Games.Missions
         {
             if (rewards.IsNullOrEmpty()) return false;
 
-            var avatar = player.CurrentAvatar;
-            int level = GetAvatarLevel(avatar);
+            Avatar avatar = player.CurrentAvatar;
+            int lootLevel = GetAvatarLevel(avatar);
 
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(this, player);
             resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
 
-            LootRollSettings settings = new();
-            settings.UsableAvatar = avatar.AvatarPrototype;
-            settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
-            settings.Level = level;
-            settings.LevelForRequirementCheck = level;
+            using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            settings.Initialize(LootContext.MissionReward, player, avatar, lootLevel);
 
             if (previewOnly)
-                settings.DropChanceModifiers |= LootDropChanceModifiers.PreviewOnly;
+                settings.LootRollSettings.DropChanceModifiers |= LootDropChanceModifiers.PreviewOnly;
 
-            foreach (var reward in rewards)
-                reward.Roll(settings, resolver);
+            foreach (LootTablePrototype reward in rewards)
+                reward.Roll(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
             Logger.Trace($"RollLootSummaryReward [{PrototypeName}] Rewards {lootSummary}");
@@ -2157,8 +2150,7 @@ namespace MHServerEmu.Games.Missions
 
         private int GetAvatarLevel(Avatar avatar)
         {
-            if (avatar != null) return avatar.CharacterLevel;
-            return (int)Prototype.Level;
+            return avatar != null ? avatar.CharacterLevel : (int)Prototype.Level;
         }
 
         public static void OnRequestRewardsForPrototype(Player player, PrototypeId missionRef, ulong entityId, int lootSeed)
@@ -2172,7 +2164,9 @@ namespace MHServerEmu.Games.Missions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            if (RollLootSummaryForPrototype(player, missionProto, lootSeed, out LootResultSummary lootSummary))
+            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+
+            if (RollLootSummaryForPrototype(player, missionProto, lootSeed, lootSummary))
                 message.SetShowItems(lootSummary.ToProtobuf());
 
             player.SendMessage(message.Build());
