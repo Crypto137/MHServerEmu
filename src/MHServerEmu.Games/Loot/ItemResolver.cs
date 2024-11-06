@@ -16,11 +16,9 @@ namespace MHServerEmu.Games.Loot
     /// <summary>
     /// A general-purpose implementation of <see cref="IItemResolver"/>.
     /// </summary>
-    public class ItemResolver : IItemResolver
+    public class ItemResolver : IItemResolver, IPoolable, IDisposable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private readonly Picker<AvatarPrototype> _avatarPicker;
 
         private readonly int _itemLevelMin;
         private readonly int _itemLevelMax;
@@ -30,18 +28,31 @@ namespace MHServerEmu.Games.Loot
 
         private readonly ItemResolverContext _context = new();
 
-        public GRandom Random { get; }
+        private Picker<AvatarPrototype> _avatarPicker;
+
+        public GRandom Random { get; private set; }
         public LootResolverFlags Flags { get; private set; }
 
         public LootContext LootContext { get => _context.LootContext; }
         public Player Player { get => _context.Player; }
         public Region Region { get => _context.Region; }
 
-        public ItemResolver(GRandom random)
+        public ItemResolver()
+        {
+            // Cache item level limits from the ItemLevel property prototype
+            // For reference, this is 1-75 in 1.52, but it was 1-100 in 1.10
+            PropertyInfoPrototype propertyInfoProto = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ItemLevel).Prototype;
+            _itemLevelMin = (int)propertyInfoProto.Min;
+            _itemLevelMax = (int)propertyInfoProto.Max;
+        }
+
+        public void Initialize(GRandom random)
         {
             Random = random;
 
             // Cache avatar picker for smart loot
+            // NOTE: We have to rebuild the avatar picker on each initialization because it uses the same GRandom as the resolver.
+            // TODO: Move this back to the constructor when we implement poolable pickers with reassignable GRandom instances.
             _avatarPicker = new(random);
             foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -52,12 +63,19 @@ namespace MHServerEmu.Games.Loot
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
                 _avatarPicker.Add(avatarProto);
             }
+        }
 
-            // Cache item level limits from the ItemLevel property prototype
-            // For reference, this is 1-75 in 1.52, but it was 1-100 in 1.10
-            PropertyInfoPrototype propertyInfoProto = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ItemLevel).Prototype;
-            _itemLevelMin = (int)propertyInfoProto.Min;
-            _itemLevelMax = (int)propertyInfoProto.Max;
+        public void ResetForPool()
+        {
+            _avatarPicker = default;
+
+            Random = default;
+            Flags = default;
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
 
         /// <summary>

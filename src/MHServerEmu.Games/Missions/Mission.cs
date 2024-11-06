@@ -2104,12 +2104,17 @@ namespace MHServerEmu.Games.Missions
             var avatar = player.CurrentAvatar;
             int level = (int)missionProto.Level;
 
-            ItemResolver resolver = new(new(lootSeed));
+            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            resolver.Initialize(new(lootSeed));
+            resolver.SetContext(null, player);
+            resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
+
             LootRollSettings settings = new();
             settings.UsableAvatar = avatar.AvatarPrototype;
             settings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             settings.Level = level;
             settings.LevelForRequirementCheck = level;
+            settings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
             foreach (var reward in rewards)
                 reward.Roll(settings, resolver);
@@ -2127,7 +2132,8 @@ namespace MHServerEmu.Games.Missions
             var avatar = player.CurrentAvatar;
             int level = GetAvatarLevel(avatar);
 
-            ItemResolver resolver = new(new(lootSeed));
+            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            resolver.Initialize(new(lootSeed));
             resolver.SetContext(this, player);
             resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
 

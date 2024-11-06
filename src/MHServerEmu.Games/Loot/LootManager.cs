@@ -32,7 +32,9 @@ namespace MHServerEmu.Games.Loot
         {
             Game = game;
 
-            _resolver = new(game.Random);
+            _resolver = new();
+            _resolver.Initialize(game.Random);
+
             _creditsItemProto = GameDatabase.GlobalsPrototype.CreditsItemPrototype.As<WorldEntityPrototype>();
         }
 
