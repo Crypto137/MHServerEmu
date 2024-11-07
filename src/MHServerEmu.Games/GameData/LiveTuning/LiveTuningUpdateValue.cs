@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {
@@ -33,9 +34,18 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 prototypeGuid = GameDatabase.GetPrototypeGuid(prototypeId);
             }
 
-            int tuningVarEnum = ParseTuningVarEnum(Setting);
+            int tuningVarEnum = ParseTuningVarEnum(Setting, out bool isGlobal);
             if (tuningVarEnum == -1)
                 return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Invalid setting {Setting} for prototype {Prototype}");
+
+            if (isGlobal == false)
+            {
+                // Validate prototype for non-global vars
+                PrototypeId prototypeRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)prototypeGuid);
+                Prototype prototype = GameDatabase.GetPrototype<Prototype>(prototypeRef);
+                if (prototype == null)
+                    return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Invalid prototype {Prototype} for setting {Setting}");
+            }
 
             return NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
                 .SetTuningVarProtoId((ulong)prototypeGuid)
@@ -44,8 +54,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 .Build();
         }
 
-        private static int ParseTuningVarEnum(string tuningVarEnum)
+        private static int ParseTuningVarEnum(string tuningVarEnum, out bool isGlobal)
         {
+            isGlobal = false;
             string prefix = tuningVarEnum.Split('_')[0];
 
             switch (prefix)
@@ -54,6 +65,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     if (Enum.TryParse(tuningVarEnum, out GlobalTuningVar globalTuningVar) == false)
                         return -1;
 
+                    isGlobal = true;
                     return (int)globalTuningVar;
 
                 case "eATV":
