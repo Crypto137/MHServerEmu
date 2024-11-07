@@ -348,7 +348,7 @@ namespace MHServerEmu.Games.Network
             region.PlayerEnteredRegionEvent.Invoke(new(Player, region.PrototypeDataRef));
 
             // Load discovered map and entities
-            Player.GetMapDiscoveryData(region.Id)?.LoadDiscovered();
+            Player.GetMapDiscoveryData(region.Id)?.LoadPlayerDiscovered(Player);
         }
 
         public void ExitGame()

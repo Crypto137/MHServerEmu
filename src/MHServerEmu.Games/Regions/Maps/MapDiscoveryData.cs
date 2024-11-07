@@ -10,19 +10,15 @@ namespace MHServerEmu.Games.Regions.Maps
     /// </summary>
     public class MapDiscoveryData
     {
-        // TODO: Serialize on region transfer so that we don't lose minimap / entity discovery data
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
 
-        public Player Player { get; }
         public ulong RegionId { get; }
         public LowResMap LowResMap { get; }
 
-        public MapDiscoveryData(Region region, Player player)
+        public MapDiscoveryData(Region region)
         {
-            Player = player;
             RegionId = region.Id;
             LowResMap = new(region); // InitIfNecessary
         }
@@ -48,27 +44,27 @@ namespace MHServerEmu.Games.Regions.Maps
             return _discoveredEntities.Contains(worldEntity.Id);
         }
 
-        public bool LoadDiscovered()
+        public bool LoadPlayerDiscovered(Player player)
         {
-            var manager = Player?.Game.EntityManager;
+            var manager = player.Game.EntityManager;
             if (manager == null) return Logger.WarnReturn(false, $"Update(): EntityManager == null");
 
-            var aoi = Player.AOI;
+            var aoi = player.AOI;
             foreach (var entityId in _discoveredEntities)
             {
                 var entity = manager.GetEntity<WorldEntity>(entityId);
                 if (entity != null) aoi.ConsiderEntity(entity);
             }
 
-            return LowResMapUpdate();
+            return LowResMapUpdate(player);
         }
 
-        public bool LowResMapUpdate(Vector3? position = default)
+        public bool LowResMapUpdate(Player player, Vector3? position = default)
         {
-            if (Player == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): Player == null");
-            var aoi = Player.AOI;
+            var aoi = player.AOI;
+            if (aoi == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): AOI == null");
 
-            var regionManager = Player.Game.RegionManager;
+            var regionManager = player.Game.RegionManager;
             if (regionManager == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): regionManager == null");
 
             var region = regionManager.GetRegion(RegionId);
@@ -103,7 +99,7 @@ namespace MHServerEmu.Games.Regions.Maps
             }
 
             if (regenNavi) aoi.RegenerateClientNavi();
-            if (update) SendMiniMapUpdate();
+            if (update) SendMiniMapUpdate(player);
 
             if (aoi.RemoveCells(areas, cells)) 
                 aoi.RegenerateClientNavi();
@@ -111,15 +107,15 @@ namespace MHServerEmu.Games.Regions.Maps
             return true;
         }
 
-        private void SendMiniMapUpdate()
+        private void SendMiniMapUpdate(Player player)
         {
-            Logger.Trace($"SendMiniMapUpdate(): {Player}");
-            Player.SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(LowResMap));
+            Logger.Trace($"SendMiniMapUpdate(): {player}");
+            player.SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(LowResMap));
         }
 
-        public bool RevealPosition(Vector3 position)
+        public bool RevealPosition(Player player, Vector3 position)
         {
-            return LowResMap.RevealPosition(position) && LowResMapUpdate(position);
+            return LowResMap.RevealPosition(position) && LowResMapUpdate(player, position);
         }
     }
 }

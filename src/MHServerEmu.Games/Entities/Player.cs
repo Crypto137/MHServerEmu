@@ -1250,14 +1250,21 @@ namespace MHServerEmu.Games.Entities
 
         public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
         {
-            Region region = Game.RegionManager.GetRegion(regionId);
+            var manager = Game.RegionManager;
+            Region region = manager.GetRegion(regionId);
             if (region == null) return Logger.WarnReturn<MapDiscoveryData>(null, "GetMapDiscoveryData(): region == null");
 
             if (_mapDiscoveryDict.TryGetValue(regionId, out MapDiscoveryData mapDiscoveryData) == false)
             {
-                mapDiscoveryData = new(region, this);
+                mapDiscoveryData = new(region);
                 _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
             }
+
+            // clear old regions if limit is reached
+            if (_mapDiscoveryDict.Count > 25)
+                foreach (ulong id in _mapDiscoveryDict.Keys.ToArray())
+                    if (manager.GetRegion(id) == null)
+                        _mapDiscoveryDict.Remove(id);
 
             return mapDiscoveryData;
         }
@@ -1311,7 +1318,7 @@ namespace MHServerEmu.Games.Entities
             MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(CurrentAvatar);
             if (mapDiscoveryData == null) return Logger.WarnReturn(false, "UpdateDiscoveryMap(): mapDiscoveryData == null");
 
-            bool reveal = mapDiscoveryData.RevealPosition(position);
+            bool reveal = mapDiscoveryData.RevealPosition(this, position);
 
             // TODO party reveal
 
