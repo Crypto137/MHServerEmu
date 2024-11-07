@@ -38,14 +38,8 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             if (tuningVarEnum == -1)
                 return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Invalid setting {Setting} for prototype {Prototype}");
 
-            if (isGlobal == false)
-            {
-                // Validate prototype for non-global vars
-                PrototypeId prototypeRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)prototypeGuid);
-                Prototype prototype = GameDatabase.GetPrototype<Prototype>(prototypeRef);
-                if (prototype == null)
-                    return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Invalid prototype {Prototype} for setting {Setting}");
-            }
+            if (isGlobal == false && prototypeGuid == PrototypeGuid.Invalid)
+                return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Setting {Setting} requires a valid prototype");
 
             return NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
                 .SetTuningVarProtoId((ulong)prototypeGuid)
