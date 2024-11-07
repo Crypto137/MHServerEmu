@@ -652,7 +652,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
-        public bool RewardReceived()
+        public bool HasPersistentRewardStatus()
         {
             var rewards = Rewards;
             if (rewards.HasValue())

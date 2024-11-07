@@ -8,6 +8,7 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -1928,22 +1929,23 @@ namespace MHServerEmu.Games.Missions
                 if (Prototype is OpenMissionPrototype openProto)
                 {
                     int index = 0;
-                    var manager = Game.EntityManager;
                     var sortedContributors = _contributors.OrderByDescending(kvp => kvp.Value);
 
-                    foreach (var kvp in sortedContributors)                    
+                    foreach (var kvp in sortedContributors)
+                    {
                         if (kvp.Value >= openProto.MinimumContributionForCredit)
                         {
-                            var player = manager.GetEntityByDbGuid<Player>(kvp.Key);
+                            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(kvp.Key);
                             if (player == null) continue;
                             float contribution = index / _contributors.Count;
                             GiveRewardToPlayer(player, index++, contribution);
-                        }                    
+                        }
+                    }           
                 }
                 else
                 {
                     int index = 0;
-                    foreach (var player in GetParticipants())
+                    foreach (Player player in GetParticipants())
                         GiveRewardToPlayer(player, index++);
                 }
             }
@@ -1954,11 +1956,11 @@ namespace MHServerEmu.Games.Missions
                 _lootSeed = 0;
         }
 
-        public void AwardLootToPlayer(Player player, LootTablePrototype[] rewards, int seedOffset)
+        public void RollSummaryAndAwardLootToPlayer(Player player, LootTablePrototype[] rewards, int seedOffset)
         {
             using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
-            if (RollLootSummaryReward(lootSummary, player, rewards, _lootSeed + seedOffset, false))
-                GiveLootToPlayer(lootSummary, player);
+            if (RollLootSummary(lootSummary, player, rewards, _lootSeed + seedOffset, false))
+                AwardLootToPlayerFromSummary(lootSummary, player);
         }
 
         private void GiveRewardToPlayer(Player player, int seedOffset, float contribution = 0.0f)
@@ -1967,7 +1969,7 @@ namespace MHServerEmu.Games.Missions
             LootTablePrototype[] rewards = GetRewardLootTables();
             if (rewards.IsNullOrEmpty()) return;
 
-            AwardLootToPlayer(player, rewards, seedOffset);
+            RollSummaryAndAwardLootToPlayer(player, rewards, seedOffset);
 
             if (Prototype is OpenMissionPrototype openProto && openProto.RewardsByContribution.HasValue())
             {
@@ -1975,7 +1977,7 @@ namespace MHServerEmu.Games.Missions
                 {
                     if (contribution <= rewardProto.ContributionPercentage)
                     {
-                        GiveChestLootToPlayer(player, rewardProto.ChestEntity, rewardProto.Rewards);
+                        AwardContributionLootToPlayer(player, rewardProto.ChestEntity, rewardProto.Rewards);
                         break;
                     }
                 }
@@ -1984,7 +1986,7 @@ namespace MHServerEmu.Games.Missions
             OnGiveRewards(avatar);
         }
 
-        private void GiveChestLootToPlayer(Player player, PrototypeId chestEntityProtoRef, PrototypeId[] rewards)
+        private void AwardContributionLootToPlayer(Player player, PrototypeId chestEntityProtoRef, PrototypeId[] rewards)
         {
             if (rewards.IsNullOrEmpty()) return;
 
@@ -1992,12 +1994,13 @@ namespace MHServerEmu.Games.Missions
             if (avatar == null) return;
 
             RegionLocation location = avatar.RegionLocation;
+            if (location.IsValid() == false) return;
 
             foreach (PrototypeId rewardProtoRef in rewards)
             {
                 if (chestEntityProtoRef != PrototypeId.Invalid)
                 {
-                    // Create a chest entity
+                    // Create a chest entity if there is one specified
                     using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
                     settings.EntityRef = chestEntityProtoRef;
                     settings.Position = location.Position;
@@ -2016,6 +2019,7 @@ namespace MHServerEmu.Games.Missions
                 }
                 else
                 {
+                    // Spawn loot as is if there is not chest
                     using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                     inputSettings.Initialize(LootContext.Drop, player, avatar);
                     Game.LootManager.SpawnLootFromTable(rewardProtoRef, inputSettings);
@@ -2023,40 +2027,39 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        public bool GiveLootToPlayer(LootResultSummary lootSummary, Player player, WorldEntity lootDropper = null)
+        public bool AwardLootToPlayerFromSummary(LootResultSummary lootSummary, Player player, WorldEntity lootDropper = null)
         {
-            var lootManager = Game.LootManager;
-            var missionProto = Prototype;
+            if (lootSummary.HasAnyResult == false)
+                return true;
 
-            // Test for Item only
-            if (lootSummary.HasAnyResult)
+            LootManager lootManager = Game.LootManager;
+            MissionPrototype missionProto = Prototype;
+
+            if (missionProto.DropLootOnGround || lootDropper != null)
             {
-                if (missionProto.DropLootOnGround || lootDropper != null)
-                {
-                    lootDropper ??= player.CurrentAvatar;
-                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                    inputSettings.Initialize(LootContext.Drop, player, lootDropper);
-                    lootManager.SpawnLootFromSummary(lootSummary, inputSettings);
-                }
-                else
-                {
-                    // TODO give all loot
-                    foreach (var itemSpec in lootSummary.ItemSpecs)
-                        lootManager.GiveItem(itemSpec.ItemProtoRef, player);
+                lootDropper ??= player.CurrentAvatar;
+                using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                inputSettings.Initialize(LootContext.Drop, player, lootDropper);
+                lootManager.SpawnLootFromSummary(lootSummary, inputSettings);
+            }
+            else
+            {
+                foreach (ItemSpec itemSpec in lootSummary.ItemSpecs)
+                    lootManager.GiveItem(itemSpec.ItemProtoRef, player);
 
-                    var avatar = player.CurrentAvatar;
-                    if (lootSummary.Experience > 0)
-                        avatar.AwardXP(lootSummary.Experience, false);
+                Avatar avatar = player.CurrentAvatar;
+                if (lootSummary.Experience > 0)
+                    avatar.AwardXP(lootSummary.Experience, false);
 
-                    if (lootSummary.Credits.Count > 0)
-                    {
-                        int credits = 0;
-                        foreach (int amount in lootSummary.Credits)
-                            credits += amount;
-                        player.Properties.AdjustProperty(credits, new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits));
-                    }
+                if (lootSummary.Credits.Count > 0)
+                {
+                    int credits = 0;
+                    foreach (int amount in lootSummary.Credits)
+                        credits += amount;
+                    player.Properties.AdjustProperty(credits, new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits));
                 }
             }
+
             return true;
         }
 
@@ -2068,7 +2071,7 @@ namespace MHServerEmu.Games.Missions
 
             SendUpdateToPlayer(player, MissionUpdateFlags.Rewards, MissionObjectiveUpdateFlags.None);
 
-            if (missionProto.RewardReceived())
+            if (missionProto.HasPersistentRewardStatus())
             {
                 PropertyId receivedPropId = new PropertyId(PropertyEnum.MissionRewardReceived, PrototypeDataRef);
                 if (missionProto.SaveStatePerAvatar)
@@ -2094,7 +2097,7 @@ namespace MHServerEmu.Games.Missions
         private bool HasLootRewards(Player player, LootResultSummary lootSummary)
         {
             LootTablePrototype[] rewards = GetRewardLootTables();
-            RollLootSummaryReward(lootSummary, player, rewards, _lootSeed, true);
+            RollLootSummary(lootSummary, player, rewards, _lootSeed, true);
             return lootSummary.HasAnyResult;
         }
 
@@ -2119,12 +2122,12 @@ namespace MHServerEmu.Games.Missions
                 reward.Roll(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
-            Logger.Trace($"HasLootRewardsForPrototype [{missionProto}] Rewards {lootSummary}");
+            Logger.Trace($"RollLootSummaryForPrototype [{missionProto}] Rewards {lootSummary}");
 
             return lootSummary.HasAnyResult;
         }
 
-        public bool RollLootSummaryReward(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed, bool previewOnly)
+        public bool RollLootSummary(LootResultSummary lootSummary, Player player, LootTablePrototype[] rewards, int lootSeed, bool previewOnly)
         {
             if (rewards.IsNullOrEmpty())
                 return false;
@@ -2147,7 +2150,7 @@ namespace MHServerEmu.Games.Missions
                 reward.Roll(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
-            Logger.Trace($"RollLootSummaryReward [{PrototypeName}] Rewards {lootSummary}");
+            Logger.Trace($"RollLootSummary [{PrototypeName}] Rewards {lootSummary}");
 
             return lootSummary.HasAnyResult;
         }
