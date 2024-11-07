@@ -1262,9 +1262,9 @@ namespace MHServerEmu.Games.Entities
 
             // clear old regions if limit is reached
             if (_mapDiscoveryDict.Count > 25)
-                foreach (ulong id in _mapDiscoveryDict.Keys.ToArray())
-                    if (manager.GetRegion(id) == null)
-                        _mapDiscoveryDict.Remove(id);
+                foreach (var kvp in _mapDiscoveryDict)
+                    if (manager.GetRegion(kvp.Key) == null)
+                        _mapDiscoveryDict.Remove(kvp.Key);
 
             return mapDiscoveryData;
         }
