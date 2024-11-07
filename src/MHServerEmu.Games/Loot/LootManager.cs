@@ -60,6 +60,7 @@ namespace MHServerEmu.Games.Loot
 
             using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
             inputSettings.Initialize(LootContext.Drop, player, null);
+            inputSettings.LootRollSettings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
             using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
             if (RollLootTable(lootTableProtoRef, inputSettings, lootResultSummary) == false)
