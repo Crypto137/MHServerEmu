@@ -306,6 +306,8 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = base.Serialize(archive);
 
+            if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
+
             // Persistent missions
             success &= Serializer.Transfer(archive, ref _missionManager);
 
@@ -1253,7 +1255,7 @@ namespace MHServerEmu.Games.Entities
 
             if (_mapDiscoveryDict.TryGetValue(regionId, out MapDiscoveryData mapDiscoveryData) == false)
             {
-                mapDiscoveryData = new(region);
+                mapDiscoveryData = new(region, this);
                 _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
             }
 
@@ -1301,21 +1303,19 @@ namespace MHServerEmu.Games.Entities
             return mapDiscoveryData != null && mapDiscoveryData.IsEntityDiscovered(worldEntity);
         }
 
-        public bool SendMiniMapUpdate()
+        public bool RevealDiscoveryMap(Vector3 position)
         {
-            Logger.Trace($"SendMiniMapUpdate(): {this}");
+            var region = CurrentAvatar?.Region;
+            if (region == null) return Logger.WarnReturn(false, "UpdateMapDiscovery(): region == null");
 
-            Region region = GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): region == null");
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(CurrentAvatar);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "UpdateDiscoveryMap(): mapDiscoveryData == null");
 
-            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryData(region.Id);
-            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): mapDiscoveryData == null");
+            bool reveal = mapDiscoveryData.RevealPosition(position);
 
-            LowResMap lowResMap = mapDiscoveryData.LowResMap;
-            if (lowResMap == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): lowResMap == null");
+            // TODO party reveal
 
-            SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
-            return true;
+            return reveal;
         }
 
         #endregion

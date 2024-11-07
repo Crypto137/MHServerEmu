@@ -279,7 +279,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             if (result == ChangePositionResult.PositionChanged)
+            {
+                player.RevealDiscoveryMap(position.Value);
                 player.UpdateSpawnMap(position.Value);
+            }
 
             return result;
         }

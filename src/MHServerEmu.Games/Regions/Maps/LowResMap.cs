@@ -1,6 +1,7 @@
 ﻿using System.Text;
-using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Games.Regions.Maps
@@ -8,45 +9,34 @@ namespace MHServerEmu.Games.Regions.Maps
     public class LowResMap : ISerialize
     {
         private bool _isRevealAll;
-        private byte[] _map = Array.Empty<byte>();  // TODO: BitArray
+        private GBitArray _map;
 
+        public Region Region { get; }
         public bool IsRevealAll { get => _isRevealAll; }
-        public byte[] Map { get => _map; } 
+        public GBitArray Map { get => _map; } 
 
         public LowResMap() { }
 
-        public LowResMap(bool isRevealAll)
+        public LowResMap(Region region)
         {
-            _isRevealAll = isRevealAll;
+            _map = new();
+
+            Region = region; // SetRegion
+
+            int size = region.GetLowResVectorSize();
+            _map.Resize(size);
+
+            _isRevealAll = region.Prototype.AlwaysRevealFullMap;
         }
 
         public bool Serialize(Archive archive)
         {
             bool success = true;
-
             success &= Serializer.Transfer(archive, ref _isRevealAll);
 
             if (_isRevealAll) return success;
 
-            // TODO: BitArray serialization
-            if (archive.IsPacking)
-            {
-                uint numBits = (uint)_map.Length * 8;
-                success &= Serializer.Transfer(archive, ref numBits);
-
-                for (int i = 0; i < _map.Length; i++)
-                    success &= Serializer.Transfer(archive, ref _map[i]);
-            }
-            else
-            {
-                uint numBits = 0;
-                success &= Serializer.Transfer(archive, ref numBits);
-                Array.Resize(ref _map, (int)numBits / 8);
-
-                for (int i = 0; i < _map.Length; i++)
-                    success &= Serializer.Transfer(archive, ref _map[i]);
-            }
-
+            success &= Serializer.Transfer(archive, ref _map);
             return success;
         }
 
@@ -54,8 +44,34 @@ namespace MHServerEmu.Games.Regions.Maps
         {
             StringBuilder sb = new();
             sb.AppendLine($"{nameof(_isRevealAll)}: {_isRevealAll}");
-            sb.AppendLine($"{nameof(_map)}: {_map.ToHexString()}");
+            // sb.AppendLine($"{nameof(_map)}: {_map.ToHexString()}");
             return sb.ToString();
+        }
+
+        public bool RevealPosition(in Vector3 position)
+        {
+            if (_isRevealAll) return false;
+
+            int index = 0;
+            if (Translate(position, ref index) && _map[index] == false)
+            {
+                _map[index] = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool Translate(in Vector3 position, ref int index)
+        {
+            if (Region == null) return false;
+            return Region.TranslateLowResMap(position, ref index) && index < _map.Size;
+        }
+
+        public bool Translate(int index, ref Vector3 position)
+        {
+            if (Region == null) return false;
+            return Region.TranslateLowResMap(index, ref position);
         }
     }
 }

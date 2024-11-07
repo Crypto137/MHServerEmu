@@ -346,7 +346,9 @@ namespace MHServerEmu.Games.Network
 
             AOI.SetRegion(region.Id, false, startPosition, startOrientation);
             region.PlayerEnteredRegionEvent.Invoke(new(Player, region.PrototypeDataRef));
-            Player.SendMiniMapUpdate();
+
+            // Load discovered map and entities
+            Player.GetMapDiscoveryData(region.Id)?.LoadDiscovered();
         }
 
         public void ExitGame()
