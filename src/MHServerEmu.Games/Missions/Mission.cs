@@ -2112,7 +2112,9 @@ namespace MHServerEmu.Games.Missions
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(null, player);
-            resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
+
+            bool firstTime = MissionManager.HasReceivedRewardsForMission(player, avatar, missionProto.DataRef) == false;
+            resolver.SetFlags(LootResolverFlags.FirstTime, firstTime);
 
             using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
             settings.Initialize(LootContext.MissionReward, player, player.CurrentAvatar, lootLevel);
@@ -2138,7 +2140,9 @@ namespace MHServerEmu.Games.Missions
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(lootSeed));
             resolver.SetContext(this, player);
-            resolver.SetFlags(LootResolverFlags.FirstTime, false);  // TODO: Use MissionManager::HasReceivedRewardsForMission() for this
+
+            bool firstTime = MissionManager.HasReceivedRewardsForMission(player, avatar, PrototypeDataRef) == false;
+            resolver.SetFlags(LootResolverFlags.FirstTime, firstTime);
 
             using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
             settings.Initialize(LootContext.MissionReward, player, avatar, lootLevel);
