@@ -80,6 +80,13 @@ namespace MHServerEmu.Games.Loot
     }
 
     [Flags]
+    public enum LootResolverFlags
+    {
+        None        = 0,
+        FirstTime   = 1 << 0
+    }
+
+    [Flags]
     public enum MutationResults
     {
         None                    = 0,

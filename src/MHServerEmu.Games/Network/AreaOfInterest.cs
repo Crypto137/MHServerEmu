@@ -130,9 +130,21 @@ namespace MHServerEmu.Games.Network
 
                 switch (update.Operation)
                 {
-                    case InterestTrackOperation.Remove: RemoveEntity(update.Entity); break;
-                    case InterestTrackOperation.Modify: ModifyEntity(update.Entity, update.InterestPolicies); break;
-                    default: Logger.Warn($"Update(): Invalid pre-environment update: {update}"); break;
+                    case InterestTrackOperation.Remove:
+                        // NOTE: Some entities that were enqueued during proximity scan could have
+                        // already been removed along with their owner, so we need to validate this
+                        // removal here.
+                        if (InterestedInEntity(update.Entity.Id))
+                            RemoveEntity(update.Entity);
+                        break;
+
+                    case InterestTrackOperation.Modify:
+                        ModifyEntity(update.Entity, update.InterestPolicies);
+                        break;
+                    
+                    default:
+                        Logger.Warn($"Update(): Invalid pre-environment update: {update}");
+                        break;
                 }
             }
 

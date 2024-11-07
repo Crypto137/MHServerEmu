@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Loot.Visitors;
 using MHServerEmu.Games.Regions;
 using static MHServerEmu.Games.Missions.MissionManager;
 
@@ -410,7 +411,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             
             HasClientInterest = GetHasClientInterest();
             HasItemDrops = GetHasItemDrops();
-            // HasMissionLogRewards = GetHasMissionLogRewards();
+            HasMissionLogRewards = GetHasMissionLogRewards();
             
             PopulatePopulationForZoneLookups(PopulationRegions, PopulationAreas);
 
@@ -419,7 +420,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private bool GetHasMissionLogRewards()
         {
-            throw new NotImplementedException();
+            if (Rewards.IsNullOrEmpty())
+                return false;
+
+            if (ShowInMissionLog == MissionShowInLog.Never)
+                return false;
+
+            if (this is OpenMissionPrototype)
+                return false;
+
+            if (this is LegendaryMissionPrototype)
+                return false;
+
+            return new LootTableContainsNodeOfType<LootDropItemPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropItemFilterPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropEnduranceBonusPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropHealthBonusPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropPowerPointsPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropRealMoneyPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropVanityTitlePrototype>(Rewards);
         }
 
         private bool GetHasItemDrops()
@@ -652,26 +671,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
-        public bool RewardReceived()
+        public bool HasPersistentRewardStatus()
         {
-            var rewards = Rewards;
-            if (rewards.HasValue())
-            {
-                if (ShowInMissionLog != MissionShowInLog.Never) return true;
-                if (LootTableContainsNodeOfType<LootActionFirstTimePrototype>(rewards)
-                    || LootTableContainsNodeOfType<LootDropEnduranceBonusPrototype>(rewards)
-                    || LootTableContainsNodeOfType<LootDropHealthBonusPrototype>(rewards)
-                    || LootTableContainsNodeOfType<LootDropPowerPointsPrototype>(rewards)) return true;
-            }
-            return false;
-        }
+            if (Rewards.IsNullOrEmpty())
+                return false;
 
-        private bool LootTableContainsNodeOfType<T>(LootTablePrototype[] rewards)
-        {
-            foreach (var lootTable in rewards)
-                if (lootTable is T) return true;
+            if (ShowInMissionLog != MissionShowInLog.Never)
+                return true;
 
-            return false;
+            return new LootTableContainsNodeOfType<LootActionFirstTimePrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropEnduranceBonusPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropHealthBonusPrototype>(Rewards) ||
+                   new LootTableContainsNodeOfType<LootDropPowerPointsPrototype>(Rewards);
         }
     }
 

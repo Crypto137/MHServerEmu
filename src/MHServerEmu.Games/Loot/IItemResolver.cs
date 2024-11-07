@@ -15,6 +15,8 @@ namespace MHServerEmu.Games.Loot
     public interface IItemResolver
     {
         public GRandom Random { get; }
+        public LootResolverFlags Flags { get; }
+
         public LootContext LootContext { get; }
         public Player Player { get; }
         public Region Region { get; }

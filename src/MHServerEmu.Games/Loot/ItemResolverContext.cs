@@ -10,6 +10,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -34,12 +35,12 @@ namespace MHServerEmu.Games.Loot
 
         public void Set(LootContext lootContext, Player player, WorldEntity sourceEntity = null)
         {
-            LootContext = lootContext;
-            Player = player;
+            SetInternal(lootContext, player, sourceEntity, null);
+        }
 
-            _allowedCooldownDrops.Clear();
-            InitializeLootBonusData(sourceEntity);
-            InitializeCooldownData(sourceEntity);
+        public void Set(Mission mission, Player player)
+        {
+            SetInternal(LootContext.MissionReward, player, null, mission);
         }
 
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
@@ -169,6 +170,16 @@ namespace MHServerEmu.Games.Loot
             return isOnCooldown;
         }
 
+        private void SetInternal(LootContext lootContext, Player player, WorldEntity sourceEntity, Mission mission)
+        {
+            LootContext = lootContext;
+            Player = player;
+
+            _allowedCooldownDrops.Clear();
+            InitializeLootBonusData(sourceEntity);
+            InitializeCooldownData(sourceEntity, mission);
+        }
+
         private bool InitializeLootBonusData(WorldEntity sourceEntity)
         {
             _lootBonusData.Reset();
@@ -219,17 +230,23 @@ namespace MHServerEmu.Games.Loot
                 if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForGlobalSIF) == 0f)
                     _lootBonusData.SpecialMult *= LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_LootSpecialDropRate);
             }
-
-            // TODO: Other loot contexts? Mission contribution scaling?
+            else if (LootContext == LootContext.MissionReward)
+            {
+                // TODO: Mission contribution scaling
+            }
 
             return true;
         }
 
-        private bool InitializeCooldownData(WorldEntity sourceEntity)
+        private bool InitializeCooldownData(WorldEntity sourceEntity, Mission mission = null)
         {
             _cooldownData.Reset();
 
-            if (FindCooldownOrigin(sourceEntity, out LootCooldownType cooldownType) == false)
+            // Cooldowns are for drops and mission rewards only
+            if (LootContext != LootContext.Drop && LootContext != LootContext.MissionReward)
+                return true;
+
+            if (FindCooldownOrigin(sourceEntity, mission, out LootCooldownType cooldownType) == false)
                 return false;
 
             Player player = Player;
@@ -293,7 +310,7 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        private bool FindCooldownOrigin(WorldEntity sourceEntity, out LootCooldownType cooldownType)
+        private bool FindCooldownOrigin(WorldEntity sourceEntity, Mission mission, out LootCooldownType cooldownType)
         {
             // Cooldown start time properties for reference:
             // LootCooldownTimeStartChannel, LootCooldownTimeStartEntity, LootCooldownTimeStartRegion, LootCooldownTimeStartSpecial
@@ -302,6 +319,14 @@ namespace MHServerEmu.Games.Loot
             // We may not need special cooldowns since no special table is set in the loot globals prototype in 1.52 (TODO: check other versions)
 
             cooldownType = LootCooldownType.Invalid;
+
+            if (mission != null && mission.LootCooldownChannelRef != PrototypeId.Invalid)
+            {
+                // Mission rewards always use channel cooldowns
+                _cooldownData.OriginProtoRef = mission.LootCooldownChannelRef;
+                cooldownType = LootCooldownType.ByChannel;
+                return true;
+            }
 
             if (sourceEntity == null)
                 return false;
@@ -335,8 +360,6 @@ namespace MHServerEmu.Games.Loot
 
         private bool SetDropChanceCooldown(LootRollSettings settings)
         {
-            //Logger.Debug($"SetDropChanceCooldown(): {_cooldownData.OriginProtoRef.GetName()} for {Player}");
-
             // No need to set cooldown if we are just doing a preview roll
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
                 return true;

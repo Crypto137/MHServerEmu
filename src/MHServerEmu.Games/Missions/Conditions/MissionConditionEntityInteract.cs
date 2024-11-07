@@ -2,6 +2,7 @@ using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -72,44 +73,46 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            if (GetShowItems(player, out LootResultSummary lootSummary))
-                message.SetShowItems(lootSummary.ToProtobuf());
+            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
 
-            if (GetGiveItems(player, out lootSummary))
+            if (GetShowItems(player, lootSummary))
+            {
+                message.SetShowItems(lootSummary.ToProtobuf());
+                lootSummary.ResetForPool();
+            }
+
+            if (GetGiveItems(player, lootSummary, true))
                 message.SetGiveItems(lootSummary.ToProtobuf());
 
             player.SendMessage(message.Build());
         }
 
-        private void LootMissionReward(Player player, LootResultSummary lootSummary)
+        private void RollMissionRewards(Player player, LootResultSummary lootSummary, bool previewOnly)
         {
-            var avatar = player.CurrentAvatar;
+            Avatar avatar = player.CurrentAvatar;
             if (avatar != null && Mission.HasRewards(player, avatar))
             {
-                var rewards = Mission.Prototype.Rewards;
-                if (rewards.HasValue()) Mission.RollLootSummaryReward(lootSummary, player, rewards, Mission.LootSeed);
+                LootTablePrototype[] rewards = Mission.Prototype.Rewards;
+                if (rewards.HasValue())
+                    Mission.RollLootSummary(lootSummary, player, rewards, Mission.LootSeed, previewOnly);
             }
         }
 
-        private bool GetGiveItems(Player player, out LootResultSummary lootSummary)
+        private bool GetGiveItems(Player player, LootResultSummary lootSummary, bool previewOnly)
         {
-            lootSummary = new();
-
             if (_proto.GiveItems.HasValue())
-                Mission.RollLootSummaryReward(lootSummary, player, _proto.GiveItems, Mission.LootSeed + _proto.Index + 1);
+                Mission.RollLootSummary(lootSummary, player, _proto.GiveItems, Mission.LootSeed + _proto.Index + 1, previewOnly);
 
             if (_proto.IsTurnInNPC)
-                LootMissionReward(player, lootSummary);
+                RollMissionRewards(player, lootSummary, previewOnly);
 
             return lootSummary.HasAnyResult;
         }
 
-        private bool GetShowItems(Player player, out LootResultSummary lootSummary)
+        private bool GetShowItems(Player player, LootResultSummary lootSummary)
         {
-            lootSummary = new();
-
             if (Mission.State != MissionState.Active || _proto.ShowRewards)
-                LootMissionReward(player, lootSummary);
+                RollMissionRewards(player, lootSummary, true);
 
             return lootSummary.HasAnyResult;
         }
@@ -248,18 +251,22 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void GiveRewards(Player player, WorldEntity entity)
         {
-            var avatar = player.CurrentAvatar;
+            Avatar avatar = player.CurrentAvatar;
             if (avatar == null) return;
 
-            if (GetGiveItems(player, out LootResultSummary lootSummary))
+            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+
+            if (GetGiveItems(player, lootSummary, false))
             {
-                var lootDropper = _proto.DropLootOnGround ? entity : null;
-                if (Mission.GiveDropLootForPlayer(lootSummary, player, lootDropper) == false) return;
+                WorldEntity lootDropper = _proto.DropLootOnGround ? entity : null;
+                if (Mission.AwardLootToPlayerFromSummary(lootSummary, player, lootDropper) == false)
+                    return;
 
                 if (_proto.IsTurnInNPC)
                 {
                     Mission.OnGiveRewards(avatar);
-                    if (Mission.IsOpenMission == false) Mission.LootSeed = 0;
+                    if (Mission.IsOpenMission == false)
+                        Mission.LootSeed = 0;
                 }
             }
         }

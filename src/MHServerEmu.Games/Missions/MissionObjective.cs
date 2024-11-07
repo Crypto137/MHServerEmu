@@ -535,13 +535,13 @@ namespace MHServerEmu.Games.Missions
 
             if (mission.IsOpenMission)
             {
-                foreach (var player in mission.GetSortedContributors())
-                    mission.RewardForPlayer(player, rewards, seed);
+                foreach (Player player in mission.GetSortedContributors())
+                    mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
             }
             else
             {
-                foreach (var player in mission.GetParticipants())
-                    mission.RewardForPlayer(player, rewards, seed);
+                foreach (Player player in mission.GetParticipants())
+                    mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
             }            
         }
 

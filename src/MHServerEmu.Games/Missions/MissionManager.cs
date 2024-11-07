@@ -669,7 +669,9 @@ namespace MHServerEmu.Games.Missions
 
         public static bool HasReceivedRewardsForMission(Player player, Avatar avatar, PrototypeId missionRef)
         {
-            if (avatar.Properties[PropertyEnum.MissionRewardReceived, missionRef]) return true;
+            if (avatar.Properties[PropertyEnum.MissionRewardReceived, missionRef])
+                return true;
+
             return player.Properties[PropertyEnum.MissionRewardReceived, missionRef];
         }
 
