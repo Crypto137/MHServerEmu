@@ -2,6 +2,7 @@ using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -72,10 +73,15 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (entityId != Entity.InvalidId)
                 message.SetEntityId(entityId);
 
-            if (GetShowItems(player, out LootResultSummary lootSummary))
-                message.SetShowItems(lootSummary.ToProtobuf());
+            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
 
-            if (GetGiveItems(player, out lootSummary))
+            if (GetShowItems(player, lootSummary))
+            {
+                message.SetShowItems(lootSummary.ToProtobuf());
+                lootSummary.ResetForPool();
+            }
+
+            if (GetGiveItems(player, lootSummary))
                 message.SetGiveItems(lootSummary.ToProtobuf());
 
             player.SendMessage(message.Build());
@@ -91,10 +97,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
         }
 
-        private bool GetGiveItems(Player player, out LootResultSummary lootSummary)
+        private bool GetGiveItems(Player player, LootResultSummary lootSummary)
         {
-            lootSummary = new();
-
             if (_proto.GiveItems.HasValue())
                 Mission.RollLootSummaryReward(lootSummary, player, _proto.GiveItems, Mission.LootSeed + _proto.Index + 1, true);
 
@@ -104,10 +108,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             return lootSummary.HasAnyResult;
         }
 
-        private bool GetShowItems(Player player, out LootResultSummary lootSummary)
+        private bool GetShowItems(Player player, LootResultSummary lootSummary)
         {
-            lootSummary = new();
-
             if (Mission.State != MissionState.Active || _proto.ShowRewards)
                 LootMissionReward(player, lootSummary);
 
@@ -248,13 +250,15 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         private void GiveRewards(Player player, WorldEntity entity)
         {
-            var avatar = player.CurrentAvatar;
+            Avatar avatar = player.CurrentAvatar;
             if (avatar == null) return;
 
-            if (GetGiveItems(player, out LootResultSummary lootSummary))
+            using LootResultSummary lootSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+
+            if (GetGiveItems(player, lootSummary))
             {
                 var lootDropper = _proto.DropLootOnGround ? entity : null;
-                if (Mission.GiveDropLootForPlayer(lootSummary, player, lootDropper) == false) return;
+                if (Mission.GiveLootToPlayer(lootSummary, player, lootDropper) == false) return;
 
                 if (_proto.IsTurnInNPC)
                 {
