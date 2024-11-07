@@ -482,7 +482,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
         }
     }
 
-    public class DistanceRangePredicate : RandomPositionPredicate
+    public class DistanceRangePredicate : IRandomPositionPredicate
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         public const float Unbound = -1.0f;
@@ -524,7 +524,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 Logger.Warn("DisplacementRangePredicate's min and max values are both unbound; it's useless!");
         }
 
-        public override bool Test(Vector3 testPosition)
+        public bool Test(Vector3 testPosition)
         {
             float distanceSq = Vector3.DistanceSquared(testPosition, _position);
             return (_minDistanceSq == Unbound || distanceSq >= _minDistanceSq)

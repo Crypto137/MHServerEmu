@@ -1222,8 +1222,8 @@ namespace MHServerEmu.Games.Regions
         }
 
         public bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
-            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null,
-            EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
+            float maxDistance, out Vector3 resultPosition, IRandomPositionPredicate positionPredicate = null,
+            IEntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
         {
             if (IsLocationClear(bounds, pathFlags, posFlags, blockFlags)
                 && (positionPredicate == null || positionPredicate.Test(bounds.Center)))
@@ -1239,8 +1239,8 @@ namespace MHServerEmu.Games.Regions
         }
 
         public bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
-            float minDistanceFromPoint, float maxDistanceFromPoint, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null,
-            EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400, HeightSweepType heightSweep = HeightSweepType.None,
+            float minDistanceFromPoint, float maxDistanceFromPoint, out Vector3 resultPosition, IRandomPositionPredicate positionPredicate = null,
+            IEntityCheckPredicate checkPredicate = null, int maxPositionTests = 400, HeightSweepType heightSweep = HeightSweepType.None,
             int maxSweepHeight = 0)
         {
             resultPosition = Vector3.Zero;
@@ -1822,14 +1822,14 @@ namespace MHServerEmu.Games.Regions
         #endregion
     }
 
-    public class RandomPositionPredicate    // TODO: Change to interface / struct
+    public interface IRandomPositionPredicate
     {
-        public virtual bool Test(Vector3 center) => false;
+        public bool Test(Vector3 center);
     }
 
-    public class EntityCheckPredicate       // TODO: Change to interface / struct
+    public interface IEntityCheckPredicate
     {
-        public virtual bool Test(WorldEntity worldEntity) => false;
+        public bool Test(WorldEntity worldEntity);
     }
 
     public class DividedStartLocation
