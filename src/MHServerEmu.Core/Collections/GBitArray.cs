@@ -1,6 +1,9 @@
-﻿namespace MHServerEmu.Core.Collections
+﻿using MHServerEmu.Core.Serialization;
+using System.Runtime.InteropServices;
+
+namespace MHServerEmu.Core.Collections
 {
-    public class GBitArray
+    public class GBitArray : ISerialize
     {
         public const int Invalid = -1;
         private const int BitsPerWord = 8 * sizeof(ulong); // bits in ulong
@@ -20,6 +23,35 @@
         {
             get => Get(index);
             set => Set(index, value);
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            if (archive.IsPacking)
+            {
+                uint size = (uint)Size;
+                success &= archive.Transfer(ref size);
+
+                byte[] byteArray = new byte[Bytes];
+                Span<byte> buffer = MemoryMarshal.Cast<ulong, byte>(_bits);
+                success &= archive.WriteBytes(buffer);
+            }
+            else
+            {
+                uint size = 0;
+                success &= archive.Transfer(ref size);
+                Resize((int)size);
+
+                Span<byte> buffer = stackalloc byte[Bytes];
+                success &= archive.ReadBytes(buffer);
+
+                Span<ulong> bits = MemoryMarshal.Cast<byte, ulong>(buffer);
+                bits.CopyTo(_bits);
+            }
+
+            return success;
         }
 
         public ulong Test(int index)
