@@ -325,6 +325,7 @@ namespace MHServerEmu.Games.Populations
         public Region Region { get; }
         public SpawnHeat SpawnHeat { get; set; }
         public bool RegionScored { get; set; }
+        public Cell EncounterCell { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
@@ -456,6 +457,12 @@ namespace MHServerEmu.Games.Populations
             {
                 SpawnEvent.SpawnGroups.Remove(Id);
                 SpawnEvent = null;
+            }
+
+            if (EncounterCell != null)
+            {
+                EncounterCell.RemoveEncounter(Reservation.Id);
+                EncounterCell = null;
             }
         }
 

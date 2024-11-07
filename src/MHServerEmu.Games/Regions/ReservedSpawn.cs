@@ -6,10 +6,10 @@ namespace MHServerEmu.Games.Regions
     public class ReservedSpawn
     {
         public AssetId Asset { get; }
-        public uint Id { get; }
+        public int Id { get; }
         public bool UseMarkerOrientation { get; }
 
-        public ReservedSpawn(AssetId asset, uint id, bool useMarkerOrientation)
+        public ReservedSpawn(AssetId asset, int id, bool useMarkerOrientation)
         {
             Asset = asset;
             Id = id;
@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Regions
         {
             return NetStructReservedSpawn.CreateBuilder()
                 .SetAsset((ulong)Asset)
-                .SetId(Id)
+                .SetId((uint)Id)
                 .SetUseMarkerOrientation(UseMarkerOrientation)
                 .Build();
         }

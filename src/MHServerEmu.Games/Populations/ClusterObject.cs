@@ -727,6 +727,16 @@ namespace MHServerEmu.Games.Populations
                     return 0;
                 }
 
+            if (ObjectProto is PopulationEncounterPrototype encounter && Reservation != null)
+            {
+                var cell = Region.GetCellAtPosition(GetAbsolutePosition());
+                if (cell != null && Reservation.Cell == cell && encounter.HasClientData())
+                {
+                    cell.AddEncounter(encounter.EncounterResource, Reservation.Id, encounter.UseMarkerOrientation);
+                    group.EncounterCell = cell;
+                }
+            }
+
             if (ObjectProto.Riders.HasValue())
                 foreach (var rider in ObjectProto.Riders)
                     if (rider is PopulationRiderBlackOutPrototype blackOutProto)

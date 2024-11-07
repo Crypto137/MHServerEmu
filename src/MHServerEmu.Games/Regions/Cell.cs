@@ -67,6 +67,7 @@ namespace MHServerEmu.Games.Regions
         public Transform3 RegionTransform { get; private set; }
 
         public bool HasAnyInterest { get => _numInterestedPlayers > 0; }
+        public bool HasNavigationData { get => Prototype.HasNavigationData; }
 
         public Cell(Area area, uint id)
         {
@@ -189,7 +190,7 @@ namespace MHServerEmu.Games.Regions
              if (naviMesh.StitchProjZ(Prototype.NaviPatchSource.PropPatch, transform) == false) return;
 
              VisitPropSpawns(new NaviPropSpawnVisitor(naviMesh, transform)); 
-            // VisitEncounters(new NaviEncounterVisitor(naviMesh, transform));            
+             VisitEncounters(new NaviEncounterVisitor(naviMesh, transform)); // this code used ?
         }
 
         public void AddCellConnection(uint id)
@@ -427,20 +428,28 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
-        public void AddEncounter(AssetId asset, uint id, bool useMarkerOrientation) => Encounters.Add(new(asset, id, useMarkerOrientation));
+        public void AddEncounter(AssetId asset, int id, bool useMarkerOrientation)
+        {
+            Encounters.Add(new(asset, id, useMarkerOrientation));
+        }
+
+        public void RemoveEncounter(int id)
+        {
+            var reservedSpawn = Encounters.FirstOrDefault(enc => enc.Id == id);
+            if (reservedSpawn != null) Encounters.Remove(reservedSpawn);
+        }
 
         public void VisitEncounters(EncounterVisitor visitor)
         {
-            // TODO: solve problem with encounters
-
-            foreach (ReservedSpawn encounter in Encounters)
+            // server doesn't have Encounters yet
+            foreach (var encounter in Encounters)
             {
                 PrototypeId encounterResourceRef = GameDatabase.GetDataRefByAsset(encounter.Asset);
                 if (encounterResourceRef == PrototypeId.Invalid) continue;
                 var encounterProto = GameDatabase.GetPrototype<EncounterResourcePrototype>(encounterResourceRef);
                 if (encounterProto == null) continue;
 
-                SpawnReservation reservation = null; //GetRegion().SpawnMarkerRegistry.ReserveSpawnTypeLocationById(Id, encounter.Id, encounterResourceRef, null);
+                SpawnReservation reservation = Region.SpawnMarkerRegistry.GetReservationInCell(Id, encounter.Id);
                 PopulationEncounterPrototype popProto = null;
                 PrototypeId missionRef = PrototypeId.Invalid;
                 visitor.Visit(encounterResourceRef, reservation, popProto, missionRef, encounter.UseMarkerOrientation);
