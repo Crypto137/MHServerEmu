@@ -13,6 +13,8 @@ namespace MHServerEmu.Games.Regions.Maps
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
+        private readonly HashSet<Area> _areas = new();
+        private readonly HashSet<Cell> _cells = new();
 
         public ulong RegionId { get; }
         public LowResMap LowResMap { get; }
@@ -70,15 +72,13 @@ namespace MHServerEmu.Games.Regions.Maps
             var region = regionManager.GetRegion(RegionId);
             if (region == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): region == null");
 
-            HashSet<Area> areas = new();
-            HashSet<Cell> cells = new();
             bool regenNavi = false;
             bool update = false;
 
             if (position.HasValue)
             {
                 var volume = region.GetLowResVolume(position.Value);
-                aoi.AddCellsFromVolume(volume, areas, cells, ref regenNavi);
+                aoi.AddCellsFromVolume(volume, _areas, _cells, ref regenNavi);
             }
             else
             {
@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.Regions.Maps
                     {
                         if (LowResMap.Translate(index, ref posAtIndex) == false) continue;
                         var volume = region.GetLowResVolume(posAtIndex);
-                        aoi.AddCellsFromVolume(volume, areas, cells, ref regenNavi);
+                        aoi.AddCellsFromVolume(volume, _areas, _cells, ref regenNavi);
                     }
 
                 update = true;
@@ -101,8 +101,11 @@ namespace MHServerEmu.Games.Regions.Maps
             if (regenNavi) aoi.RegenerateClientNavi();
             if (update) SendMiniMapUpdate(player);
 
-            if (aoi.RemoveCells(areas, cells)) 
+            if (aoi.RemoveCells(_areas, _cells)) 
                 aoi.RegenerateClientNavi();
+
+            _areas.Clear();
+            _cells.Clear();
 
             return true;
         }
