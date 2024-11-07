@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsOffsetInMapFile { get; protected set; }
         public HeightMapPrototype HeightMap { get; protected set; }
         public PrototypeGuid[] HotspotPrototypes { get; protected set; }
+        public bool HasNavigationData { get; private set; }
 
         public void Deserialize(BinaryReader reader)
         {
@@ -41,6 +42,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             HotspotPrototypes = new PrototypeGuid[reader.ReadUInt32()];
             for (int i = 0; i < HotspotPrototypes.Length; i++)
                 HotspotPrototypes[i] = (PrototypeGuid)reader.ReadUInt64();
+
+            HasNavigationData = NaviPatchSource.NaviPatch.Points.HasValue() || NaviPatchSource.PropPatch.Points.HasValue();
         }
     }
 
