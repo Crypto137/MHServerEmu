@@ -22,8 +22,7 @@ namespace MHServerEmu.Games.Regions.Maps
             _map = new();
 
             Region = region; // SetRegion
-
-            int size = region.GetLowResVectorSize();
+            int size = region.CalcLowResSize();
             _map.Resize(size);
 
             _isRevealAll = region.Prototype.AlwaysRevealFullMap;

@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Regions.Maps
                 var map = LowResMap.Map;
                 Vector3 posAtIndex = Vector3.Zero;
                 bool isRevealAll = LowResMap.IsRevealAll;
-                int size = Math.Min(map.Size, region.GetLowResVectorSize());
+                int size = Math.Min(map.Size, region.LowResVectorSize);
 
                 for (int index = 0; index < size; index++)
                     if (isRevealAll || map[index])

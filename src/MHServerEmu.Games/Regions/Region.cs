@@ -73,7 +73,6 @@ namespace MHServerEmu.Games.Regions
         private RegionStatus _statusFlag;
         private int _playerDeaths;
         private PrototypeId _avatarOnKilledInfo = PrototypeId.Invalid;
-        private int _lowResSize;
 
         public Game Game { get; private set; }
         public ulong Id { get; private set; } // InstanceAddress
@@ -131,6 +130,10 @@ namespace MHServerEmu.Games.Regions
         public int PlayerDeaths { get => _playerDeaths; set => SetPlayerDeaths(value); }
 
         public float LowResMapResolution { get; private set; }
+        public int LowResVectorSize { get; private set; }
+        public int LowResMapWidth { get; private set; }
+        public int LowResMapLength { get; private set; }
+        public float LowResMapHeight { get; private set; }
         public float RegionWidth { get => Aabb.Width; }
         public float RegionLength { get => Aabb.Length; }
         public float RegionHeight { get => Aabb.Height; }
@@ -247,7 +250,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             Aabb = settings.Bounds;
             AvatarSwapEnabled = Prototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (Prototype.RestrictedRoster.HasValue());
+            RestrictedRosterEnabled = Prototype.RestrictedRoster.HasValue();
 
             SetRegionLevel();
 
@@ -1765,8 +1768,8 @@ namespace MHServerEmu.Games.Regions
 
         #region LowResMap
 
-        private float GetLowResMapResolution()
-        {
+        private float GetLowResMapResolution() 
+        { 
             var uiGlobals = GameDatabase.UIGlobalsPrototype;
             if (uiGlobals == null) return 1.0f;
             var mapGlobals = GameDatabase.GetPrototype<UIMapGlobalsPrototype>(uiGlobals.UIMapGlobals);
@@ -1774,29 +1777,31 @@ namespace MHServerEmu.Games.Regions
             return mapGlobals.DefaultRevealRadius * 0.5f;
         }
 
-        public int GetLowResVectorSize()
+        public int CalcLowResSize()
         {
-            if (_lowResSize == 0) _lowResSize = GetLowResMapWidth() * GetLowResMapLength();
-            return _lowResSize;
-        }
+            if (LowResVectorSize > 0) return LowResVectorSize;
 
-        private int GetLowResMapWidth() => MathHelper.RoundUpToInt(RegionWidth / LowResMapResolution);
-        private int GetLowResMapLength() => MathHelper.RoundUpToInt(RegionLength / LowResMapResolution);
-        private float GetLowResMapHeight() => RegionHeight * 2.0f;
+            LowResMapWidth = MathHelper.RoundUpToInt(RegionWidth / LowResMapResolution); 
+            LowResMapLength = MathHelper.RoundUpToInt(RegionLength / LowResMapResolution);
+            LowResMapHeight = RegionHeight * 2.0f;
+            LowResVectorSize = LowResMapWidth * LowResMapLength;
+
+            return LowResVectorSize;
+        }
 
         public bool TranslateLowResMap(in Vector3 position, ref int index)
         {
-            int resWidth = GetLowResMapWidth();
+            int resWidth = LowResMapWidth;
             int indexRow = MathHelper.RoundUpToInt((position.Y - RegionMinY) / LowResMapResolution);
             int indexCol = MathHelper.RoundUpToInt((position.X - RegionMinX) / LowResMapResolution);
             index = indexRow * resWidth - resWidth + indexCol;
-            return index < GetLowResVectorSize();
+            return index < LowResVectorSize;
         }
 
         public bool TranslateLowResMap(int index, ref Vector3 position)
         {
-            int resWidth = GetLowResMapWidth();
-            int resLength = GetLowResMapLength();
+            int resWidth = LowResMapWidth;
+            int resLength = LowResMapLength;
 
             float fx = (index % resWidth) / (float)resWidth;
             float fy = MathHelper.RoundUpToInt((float)index / resWidth) / (float)resLength;
@@ -1811,7 +1816,7 @@ namespace MHServerEmu.Games.Regions
 
         public Aabb GetLowResVolume(in Vector3 position)
         {
-            return new Aabb(position, GetLowResMapWidth(), GetLowResMapLength(), GetLowResMapHeight());
+            return new Aabb(position, LowResMapWidth, LowResMapLength, LowResMapHeight);
         }
 
         #endregion
