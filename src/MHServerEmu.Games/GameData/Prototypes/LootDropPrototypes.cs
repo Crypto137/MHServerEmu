@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Loot.Visitors;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -100,6 +101,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //---
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override void Visit<T>(T visitor)
+        {
+            base.Visit(visitor);
+
+            OnTokenUnavailable?.Visit(visitor);
+        }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {

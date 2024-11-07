@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Loot.Visitors;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -27,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
         }
 
-        public virtual void Visit(LootTableNodeVisitor visitor)
+        public virtual void Visit<T>(T visitor) where T: ILootTableNodeVisitor
         {
             visitor.Visit(this);
         }
@@ -226,6 +227,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             NoDropPercent = Math.Clamp(NoDropPercent, 0f, 1f);
 
             LootTablePrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetLootTableBlueprintDataRef());
+        }
+
+        public override void Visit<T>(T visitor)
+        {
+            base.Visit(visitor);
+
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            foreach (LootNodePrototype node in Choices)
+                node.Visit(visitor);
         }
 
         public bool IsLiveTuningEnabled()

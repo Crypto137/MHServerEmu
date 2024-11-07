@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Loot.Visitors;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -11,6 +12,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LootNodePrototype Target { get; protected set; }
 
         //---
+
+        public override void Visit<T>(T visitor)
+        {
+            base.Visit(visitor);
+
+            Target?.Visit(visitor);
+        }
 
         protected LootRollResult SelectTarget(LootRollSettings settings, IItemResolver resolver)
         {
