@@ -73,6 +73,7 @@ namespace MHServerEmu.Games.Regions
         private RegionStatus _statusFlag;
         private int _playerDeaths;
         private PrototypeId _avatarOnKilledInfo = PrototypeId.Invalid;
+        private int _lowResSize;
 
         public Game Game { get; private set; }
         public ulong Id { get; private set; } // InstanceAddress
@@ -128,6 +129,13 @@ namespace MHServerEmu.Games.Regions
         public bool IsFirstLoaded { get; private set; }
         public bool ToShutdown { get; set; }
         public int PlayerDeaths { get => _playerDeaths; set => SetPlayerDeaths(value); }
+
+        public float LowResMapResolution { get; private set; }
+        public float RegionWidth { get => Aabb.Width; }
+        public float RegionLength { get => Aabb.Length; }
+        public float RegionHeight { get => Aabb.Height; }
+        public float RegionMinX { get => Aabb.Min.X; }
+        public float RegionMinY { get => Aabb.Min.Y; }
 
         #region Events
 
@@ -253,7 +261,7 @@ namespace MHServerEmu.Games.Regions
             Properties[PropertyEnum.EndlessLevelsTotal] = sequenceRegionGenerator != null ? sequenceRegionGenerator.EndlessLevelsPerTheme : 0;
 
             EntityTracker = new(this);
-            //LowResMapResolution = GetLowResMapResolution();
+            LowResMapResolution = GetLowResMapResolution();
 
             GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
             if (globals == null)
@@ -1754,6 +1762,59 @@ namespace MHServerEmu.Games.Regions
 
             return false;
         }
+
+        #region LowResMap
+
+        private float GetLowResMapResolution()
+        {
+            var uiGlobals = GameDatabase.UIGlobalsPrototype;
+            if (uiGlobals == null) return 1.0f;
+            var mapGlobals = GameDatabase.GetPrototype<UIMapGlobalsPrototype>(uiGlobals.UIMapGlobals);
+            if (mapGlobals == null || mapGlobals.DefaultRevealRadius == 0.0f) return 1.0f;
+            return mapGlobals.DefaultRevealRadius * 0.5f;
+        }
+
+        public int GetLowResVectorSize()
+        {
+            if (_lowResSize == 0) _lowResSize = GetLowResMapWidth() * GetLowResMapLength();
+            return _lowResSize;
+        }
+
+        private int GetLowResMapWidth() => MathHelper.RoundUpToInt(RegionWidth / LowResMapResolution);
+        private int GetLowResMapLength() => MathHelper.RoundUpToInt(RegionLength / LowResMapResolution);
+        private float GetLowResMapHeight() => RegionHeight * 2.0f;
+
+        public bool TranslateLowResMap(in Vector3 position, ref int index)
+        {
+            int resWidth = GetLowResMapWidth();
+            int indexRow = MathHelper.RoundUpToInt((position.Y - RegionMinY) / LowResMapResolution);
+            int indexCol = MathHelper.RoundUpToInt((position.X - RegionMinX) / LowResMapResolution);
+            index = indexRow * resWidth - resWidth + indexCol;
+            return index < GetLowResVectorSize();
+        }
+
+        public bool TranslateLowResMap(int index, ref Vector3 position)
+        {
+            int resWidth = GetLowResMapWidth();
+            int resLength = GetLowResMapLength();
+
+            float fx = (index % resWidth) / (float)resWidth;
+            float fy = MathHelper.RoundUpToInt((float)index / resWidth) / (float)resLength;
+            float fr = LowResMapResolution * 0.5f;
+
+            position.X = RegionWidth * fx + RegionMinX - fr;
+            position.Y = RegionLength * fy + RegionMinY - fr;
+            position.Z = 0.0f;
+
+            return true;
+        }
+
+        public Aabb GetLowResVolume(in Vector3 position)
+        {
+            return new Aabb(position, GetLowResMapWidth(), GetLowResMapLength(), GetLowResMapHeight());
+        }
+
+        #endregion
     }
 
     public class RandomPositionPredicate    // TODO: Change to interface / struct
