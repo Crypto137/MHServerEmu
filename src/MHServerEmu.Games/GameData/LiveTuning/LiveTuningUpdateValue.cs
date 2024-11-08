@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.GameData.LiveTuning
 {
@@ -33,9 +34,12 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 prototypeGuid = GameDatabase.GetPrototypeGuid(prototypeId);
             }
 
-            int tuningVarEnum = ParseTuningVarEnum(Setting);
+            int tuningVarEnum = ParseTuningVarEnum(Setting, out bool isGlobal);
             if (tuningVarEnum == -1)
                 return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Invalid setting {Setting} for prototype {Prototype}");
+
+            if (isGlobal == false && prototypeGuid == PrototypeGuid.Invalid)
+                return Logger.WarnReturn<NetStructLiveTuningSettingProtoEnumValue>(null, $"ToProtobuf(): Setting {Setting} requires a valid prototype");
 
             return NetStructLiveTuningSettingProtoEnumValue.CreateBuilder()
                 .SetTuningVarProtoId((ulong)prototypeGuid)
@@ -44,8 +48,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                 .Build();
         }
 
-        private static int ParseTuningVarEnum(string tuningVarEnum)
+        private static int ParseTuningVarEnum(string tuningVarEnum, out bool isGlobal)
         {
+            isGlobal = false;
             string prefix = tuningVarEnum.Split('_')[0];
 
             switch (prefix)
@@ -54,6 +59,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
                     if (Enum.TryParse(tuningVarEnum, out GlobalTuningVar globalTuningVar) == false)
                         return -1;
 
+                    isGlobal = true;
                     return (int)globalTuningVar;
 
                 case "eATV":
