@@ -616,7 +616,7 @@ namespace MHServerEmu.Games.Missions
             {
                 if (mission == null) continue;
                 if (mission.IsDailyMission == false && mission.IsLegendaryMission == false)
-                    mission.ResetConditions();
+                    mission.ResetConditions(false);
             }
         }
 
