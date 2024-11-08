@@ -60,8 +60,8 @@ namespace MHServerEmu.Commands.Implementations
             Player player = playerConnection.Player;
 
             LootManager lootGenerator = playerConnection.Game.LootManager;
-            var item = lootGenerator.GiveItem(itemProtoRef, player);
-            Logger.Debug($"GiveItem(): {item} to {player}");
+            lootGenerator.GiveItem(itemProtoRef, player);
+            Logger.Debug($"GiveItem(): {itemProtoRef.GetName()} to {player}");
 
             return string.Empty;
         }

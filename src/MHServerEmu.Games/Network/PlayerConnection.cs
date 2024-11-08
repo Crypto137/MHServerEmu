@@ -431,6 +431,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
+                case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
                 case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
@@ -1140,6 +1141,47 @@ namespace MHServerEmu.Games.Network
             var currentHUDTutorial = Player.CurrentHUDTutorial;
             if (currentHUDTutorial?.DataRef == hudTutorialRef && currentHUDTutorial.CanDismiss)
                 Player.ShowHUDTutorial(null);
+
+            return true;
+        }
+
+        public bool OnTryMoveInventoryContentsToGeneral(MailboxMessage message) // 112
+        {
+            var tryMoveInventoryContentsToGeneral = message.As<NetMessageTryMoveInventoryContentsToGeneral>();
+            if (tryMoveInventoryContentsToGeneral == null) return Logger.WarnReturn(false, $"OnTryMoveInventoryContentsToGeneral(): Failed to retrieve message");
+
+            PrototypeId sourceInventoryProtoRef = (PrototypeId)tryMoveInventoryContentsToGeneral.SourceInventoryPrototype;
+            Logger.Debug($"OnTryMoveInventoryContentsToGeneral(): {sourceInventoryProtoRef.GetName()} for {Player}");
+
+            Inventory sourceInventory = Player.GetInventoryByRef(sourceInventoryProtoRef);
+            if (sourceInventory == null)
+                return Logger.WarnReturn(false, $"OnTryMoveInventoryContentsToGeneral(): Player {Player} does not have source inventory {sourceInventoryProtoRef.GetName()}");
+
+            Inventory generalInventory = Player.GetInventory(InventoryConvenienceLabel.General);
+            if (generalInventory == null)
+                return Logger.WarnReturn(false, $"OnTryMoveInventoryContentsToGeneral(): Player {Player} does not have a general inventory??? How did this even happen???");
+
+            while (sourceInventory.Count > 0)
+            {
+                ulong itemId = sourceInventory.GetAnyEntity();
+                Item item = Game.EntityManager.GetEntity<Item>(itemId);
+                uint freeSlot = generalInventory.GetFreeSlot(item, true);
+
+                // we are full
+                if (freeSlot == Inventory.InvalidSlot)
+                {
+                    SendMessage(NetMessageInventoryFull.CreateBuilder()
+                        .SetPlayerID(Player.Id)
+                        .SetItemID(item.Id)
+                        .Build());
+
+                    return true;
+                }
+
+                InventoryResult result = item.ChangeInventoryLocation(generalInventory, freeSlot);
+                if (result != InventoryResult.Success)
+                    return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
+            }
 
             return true;
         }

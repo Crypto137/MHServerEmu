@@ -178,6 +178,65 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
+        public bool GiveLootFromSummary(LootResultSummary lootResultSummary, Player player, PrototypeId inventoryProtoRef, bool isMissionLoot = false)
+        {
+            if (lootResultSummary.Types == LootType.None)
+                return true;
+
+            bool success = true;
+
+            // Use a list to process ItemSpec + item CurrencySpec loot together
+            List<Item> itemList = ListPool<Item>.Instance.Rent();
+
+            if (lootResultSummary.Types.HasFlag(LootType.Item))
+            {
+                foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
+                {
+                    using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    settings.EntityRef = itemSpec.ItemProtoRef;
+                    settings.ItemSpec = itemSpec;
+
+                    Item item = Game.EntityManager.CreateEntity(settings) as Item;
+                    if (item == null)
+                    {
+                        // Something went terribly terribly wrong, abandon ship
+                        Logger.Warn($"GiveLootFromSummary(): Failed to create item, aborting\nItemSpec: {itemSpec}");
+                        
+                        foreach (Item itemToDestroy in itemList)
+                            itemToDestroy.Destroy();
+
+                        success = false;
+                        goto end;
+                    }
+
+                    itemList.Add(item);
+                }
+            }
+
+            // Give items to the player
+            foreach (Item item in itemList)
+            {
+                InventoryResult result = player.AcquireItem(item, inventoryProtoRef);
+                if (result != InventoryResult.Success)
+                {
+                    // Something went terribly terribly wrong, abandon ship
+                    Logger.Warn($"GiveLootFromSummary(): Failed to give item, aborting\nItem: {item}");
+
+                    foreach (Item itemToDestroy in itemList)
+                        itemToDestroy.Destroy();
+
+                    success = false;
+                    goto end;
+                }
+            }
+
+            // NOTE: We use goto here because returning a list to the pool while it's
+            // being iterated will clear it and cause it to be modified during iteration.
+            end:
+            ListPool<Item>.Instance.Return(itemList);
+            return success;
+        }
+
         public bool SpawnItem(PrototypeId itemProtoRef, Player player, WorldEntity sourceEntity)
         {
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
@@ -191,30 +250,23 @@ namespace MHServerEmu.Games.Loot
             LootResult lootResult = new(itemSpec);
             lootResultSummary.Add(lootResult);
 
-            SpawnLootFromSummary(lootResultSummary, inputSettings);
-            return true;
+            return SpawnLootFromSummary(lootResultSummary, inputSettings); ;
         }
 
         /// <summary>
         /// Creates and gives a new item to the provided <see cref="Player"/>.
         /// </summary>
-        public Item GiveItem(PrototypeId itemProtoRef, Player player)
+        public bool GiveItem(PrototypeId itemProtoRef, Player player)
         {
-            // TODO: Do the itemProtoRef -> LootResultSummary -> Give flow, similar to spawning
-
             ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
             if (itemSpec == null)
-                return Logger.WarnReturn<Item>(null, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
+                return Logger.WarnReturn(false, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
-            Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
-            if (inventory == null) return Logger.WarnReturn<Item>(null, "GiveItem(): inventory == null");
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            LootResult lootResult = new(itemSpec);
+            lootResultSummary.Add(lootResult);
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
-            settings.EntityRef = itemProtoRef;
-            settings.InventoryLocation = new(player.Id, inventory.PrototypeDataRef);
-            settings.ItemSpec = CreateItemSpec(itemProtoRef);
-
-            return Game.EntityManager.CreateEntity(settings) as Item;
+            return GiveLootFromSummary(lootResultSummary, player, PrototypeId.Invalid);
         }
 
         /// <summary>

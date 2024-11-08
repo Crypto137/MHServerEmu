@@ -771,6 +771,52 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public InventoryResult AcquireItem(Item item, PrototypeId inventoryProtoRef)
+        {
+            if (AcquireCurrencyItem(item))
+                return InventoryResult.Success;
+
+            Inventory inventory = inventoryProtoRef != PrototypeId.Invalid
+                ? GetInventoryByRef(inventoryProtoRef)
+                : GetInventory(InventoryConvenienceLabel.General);
+
+            if (inventory == null)
+                return InventoryResult.NoAvailableInventory;
+
+            ulong? stackEntityId = InvalidId;
+            InventoryResult result = item.ChangeInventoryLocation(inventory, Inventory.InvalidSlot, ref stackEntityId, true);
+
+            if (result == InventoryResult.Success)
+            {
+                // Update our item reference if it got stacked and mark it as recently added
+                if (stackEntityId != InvalidId)
+                    item = Game.EntityManager.GetEntity<Item>(stackEntityId.Value);
+
+                item?.SetRecentlyAdded(true);
+            }
+            else
+            {
+                // Handle overflow
+                Inventory deliveryBox = GetInventory(InventoryConvenienceLabel.DeliveryBox);
+                if (deliveryBox == null)
+                    return InventoryResult.NoAvailableInventory;
+
+                result = item.ChangeInventoryLocation(deliveryBox);
+
+                if (result != InventoryResult.Success)
+                {
+                    // Second level of overflow
+                    Inventory errorRecovery = GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+                    if (errorRecovery == null)
+                        return InventoryResult.NoAvailableInventory;
+
+                    result = item.ChangeInventoryLocation(errorRecovery);
+                }
+            }
+
+            return result;
+        }
+
         public bool AcquireCurrencyItem(Entity entity)
         {
             if (entity.IsCurrencyItem() == false)
