@@ -183,6 +183,13 @@ namespace MHServerEmu.Games.Loot
                     player.UnlockVanityTitle(vanityTitleProtoRef);
             }
 
+            // Vendor XP
+            if (lootResultSummary.Types.HasFlag(LootType.VendorXP))
+            {
+                foreach (VendorXPSummary vendorXPSummary in lootResultSummary.VendorXP)
+                    player.AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef);
+            }
+
             return true;
         }
 
@@ -315,6 +322,13 @@ namespace MHServerEmu.Games.Loot
             {
                 foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
                     player.UnlockVanityTitle(vanityTitleProtoRef);
+            }
+
+            // Vendor XP
+            if (lootResultSummary.Types.HasFlag(LootType.VendorXP))
+            {
+                foreach (VendorXPSummary vendorXPSummary in lootResultSummary.VendorXP)
+                    player.AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef);
             }
 
             // Mission-exclusive rewards: experience, endurance / health bonuses, power points

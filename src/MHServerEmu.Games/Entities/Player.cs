@@ -918,6 +918,18 @@ namespace MHServerEmu.Games.Entities
         public void AddTag(WorldEntity entity) => _tagEntities.Add(entity.Id);
         public void RemoveTag(WorldEntity entity) => _tagEntities.Remove(entity.Id);
 
+        #region Vendors
+
+        public bool AwardVendorXP(int amount, PrototypeId vendorProtoRef)
+        {
+            // TODO: Implement this
+            // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
+            Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
+            return true;
+        }
+
+        #endregion
+
         #region Avatar and Team-Up Management
 
         public Avatar GetAvatar(PrototypeId avatarProtoRef, AvatarMode avatarMode = AvatarMode.Normal)
