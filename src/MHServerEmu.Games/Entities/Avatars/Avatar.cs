@@ -1602,6 +1602,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Restore missions from Avatar
             player.MissionManager?.RestoreAvatarMissions(this);
 
+            // update achievement score
+            player.AchievementManager.UpdateScore();
+
             // Update AOI of the owner player
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);

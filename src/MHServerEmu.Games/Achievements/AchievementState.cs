@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -10,6 +12,13 @@ namespace MHServerEmu.Games.Achievements
     /// </summary>
     public class AchievementState : ISerialize
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private bool _scoreCached;
+        private CategoryStats _totalStats;
+        private Dictionary<LocaleStringId, CategoryStats> _categoryStats = new();
+        private Dictionary<(LocaleStringId, LocaleStringId), CategoryStats> _subCategoryStats = new();
+
         public Dictionary<uint, AchievementProgress> AchievementProgressMap { get; } = new();
 
         /// <summary>
@@ -122,6 +131,57 @@ namespace MHServerEmu.Games.Achievements
                 sb.Append(kvp.Value.ToString());
             }
             return sb.ToString();
+        }
+
+        public CategoryStats GetTotalStats()
+        {
+            if (_scoreCached == false) RebuildScoreCache();
+            return _totalStats;
+        }
+
+        public void RebuildScoreCache()
+        {
+            _scoreCached = true;
+            _totalStats = new CategoryStats(); 
+            _categoryStats.Clear();
+            _subCategoryStats.Clear();
+
+            foreach (var kvp in AchievementProgressMap)
+            {
+                if (kvp.Value.IsComplete == false) continue;
+
+                var info = AchievementDatabase.Instance.GetAchievementInfoById(kvp.Key);
+                if (info == null)
+                {
+                    Logger.Warn($"RebuildScoreCache() failed to get AchievementInfo for AchievementId {kvp.Key}");
+                    continue;
+                }
+
+                uint completed = info.IsTopLevelAchievement ? 1u : 0u;
+                _totalStats.Score += info.Score;
+                _totalStats.CompleteCount += completed;
+
+                // check category
+                var key = info.CategoryStr;
+                _categoryStats.TryGetValue(key, out var categoryStats);                
+                categoryStats.Score += info.Score;
+                if (info.SubCategoryStr == LocaleStringId.Blank)
+                    categoryStats.CompleteCount += completed;
+                _categoryStats[key] = categoryStats;
+
+                // check sub category
+                var subKey = (info.CategoryStr, info.SubCategoryStr);
+                _subCategoryStats.TryGetValue(subKey, out var subCategoryStats);
+                subCategoryStats.Score += info.Score;
+                subCategoryStats.CompleteCount += completed;
+                _subCategoryStats[subKey] = subCategoryStats;
+            }
+        }
+
+        public struct CategoryStats
+        {
+            public uint Score;
+            public uint CompleteCount;
         }
     }
 }

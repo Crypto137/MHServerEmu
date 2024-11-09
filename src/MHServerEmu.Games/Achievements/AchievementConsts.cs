@@ -2,13 +2,13 @@
 {
     public enum AchievementVisibleState
     {
-        State0,
-        State1,
-        State2,
-        State3,
-        State4,
-        State5,
-        State6
+        Invalid,
+        Visible,
+        Invisible,
+        ParentComplete,
+        Complete,
+        InProgress,
+        Objective
     }
 
     public enum AchievementEvaluationType

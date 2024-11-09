@@ -67,6 +67,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
 
         private MissionManager _missionManager;
+        private AchievementManager _achievementManager;
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
         private RepString _playerName = new();
@@ -111,6 +112,7 @@ namespace MHServerEmu.Games.Entities
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get => _gameplayOptions; }
         public AchievementState AchievementState { get => _achievementState; }
+        public AchievementManager AchievementManager { get => _achievementManager; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
         public bool IsOnLoadingScreen { get; private set; }
@@ -142,6 +144,7 @@ namespace MHServerEmu.Games.Entities
         public Player(Game game) : base(game)
         {
             _missionManager = new(Game, this);
+            _achievementManager = new(this);
             _gameplayOptions.SetOwner(this);
         }
 
