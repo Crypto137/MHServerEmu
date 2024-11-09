@@ -994,6 +994,8 @@ namespace MHServerEmu.Games.Entities
 
             WorldEntity currentWorldEntity = this;
             T result = null;
+            EntityManager entityManager = Game.EntityManager;
+
             while (currentWorldEntity != null)
             {
                 if (skipPet && currentWorldEntity.IsSummonedPet())
@@ -1006,7 +1008,7 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 ulong powerUserOverrideId = currentWorldEntity.Properties[PropertyEnum.PowerUserOverrideID];
-                currentWorldEntity = Game.EntityManager.GetEntity<WorldEntity>(powerUserOverrideId);
+                currentWorldEntity = entityManager.GetEntity<WorldEntity>(powerUserOverrideId);
 
                 if (currentWorldEntity == this)
                     return Logger.WarnReturn<T>(null, "GetMostResponsiblePowerUser(): Circular reference in PowerUserOverrideID chain!");
@@ -1806,9 +1808,11 @@ namespace MHServerEmu.Games.Entities
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
             {
+                EntityManager entityManager = Game.EntityManager;
+
                 foreach (ulong playerId in InterestReferences)
                 {
-                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                    Player player = entityManager.GetEntity<Player>(playerId);
 
                     if (player == null)
                     {

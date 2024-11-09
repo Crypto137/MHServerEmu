@@ -1229,11 +1229,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return -1;
             }
 
-            List<int> syncAttackIndices = new ();
+            EntityManager entityManager = game.EntityManager;
+            List<int> syncAttackIndices = new();    // TODO: Pool this
+
             for (int i = 0; i < IDPropertiesLength && i < SyncAttacks.Length; i++)
             {
                 ulong targetId = blackboard.PropertyCollection[IDProperties[i]];
-                Agent target = game.EntityManager.GetEntity<Agent>(targetId);
+                Agent target = entityManager.GetEntity<Agent>(targetId);
                 if (target != null && target.IsDead == false)
                     syncAttackIndices.Add(i);
             }

@@ -1618,14 +1618,15 @@ namespace MHServerEmu.Games.Properties.Evals
             Inventory inventory = inventoryOwner.GetInventory(inventoryLabel);
             bool inInventory = false;
             if (inventory != null)
+            {
+                EntityManager entityManager = inventoryOwner.Game.EntityManager;
+
                 foreach (var entry in inventory)
                 {
-                    ulong entityId = entry.Id;
-                    Game game = inventoryOwner.Game;
-                    Entity inventoryEntity = game.EntityManager.GetEntity<WorldEntity>(entityId);
+                    Entity inventoryEntity = entityManager.GetEntity<WorldEntity>(entry.Id);
                     if (inventoryEntity == null) continue;
                     PrototypeId inventoryEntityRef = inventoryEntity.PrototypeDataRef;
-                    if (entityRef == PrototypeId.Invalid 
+                    if (entityRef == PrototypeId.Invalid
                         || inventoryEntityRef == entityRef
                         || (parent != BlueprintId.Invalid && dataDir.PrototypeIsChildOfBlueprint(inventoryEntityRef, parent)))
                     {
@@ -1633,6 +1634,8 @@ namespace MHServerEmu.Games.Properties.Evals
                         break;
                     }
                 }
+            }
+
 
             evalVar.SetBool(inInventory);
             return evalVar;

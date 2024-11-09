@@ -9,6 +9,7 @@ using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.PlayerManagement;
 
@@ -143,7 +144,7 @@ namespace MHServerEmu.Billing
             {
                 case ItemPrototype itemProto:
                     // Give the player the item they are trying to "buy"
-                    player.Game.LootManager.GiveItem(itemProto.DataRef, player);
+                    player.Game.LootManager.GiveItem(itemProto.DataRef, LootContext.CashShop, player);
                     break;
 
                 case PlayerStashInventoryPrototype playerStashInventoryProto:

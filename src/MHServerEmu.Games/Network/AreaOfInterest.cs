@@ -266,9 +266,11 @@ namespace MHServerEmu.Games.Network
             // Clear entities if requested
             if (clearingAllInterest)
             {
+                EntityManager entityManager = _playerConnection.Game.EntityManager;
+
                 foreach (var kvp in _trackedEntities)
                 {
-                    Entity entity = _playerConnection.Game.EntityManager.GetEntity<Entity>(kvp.Key);
+                    Entity entity = entityManager.GetEntity<Entity>(kvp.Key);
                     if (entity != null)
                         SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
                 }
@@ -413,12 +415,13 @@ namespace MHServerEmu.Games.Network
 
         public string DebugPrint()
         {
+            EntityManager entityManager = _game.EntityManager;
             StringBuilder sb = new();
 
             sb.AppendLine($"------ AOI SERVER DEBUG REPORT [{_trackedEntities.Count,3}] ------");
 
             foreach (var kvp in _trackedEntities)
-                sb.AppendLine($"{_game.EntityManager.GetEntity<Entity>(kvp.Key)}, interestPolicies={kvp.Value.InterestPolicies}");
+                sb.AppendLine($"{entityManager.GetEntity<Entity>(kvp.Key)}, interestPolicies={kvp.Value.InterestPolicies}");
 
             return sb.ToString();
         }
@@ -551,6 +554,8 @@ namespace MHServerEmu.Games.Network
             }
 
             // Update existing entities
+            EntityManager entityManager = _game.EntityManager;
+
             foreach (var kvp in _trackedEntities)
             {
                 ulong entityId = kvp.Key;
@@ -560,7 +565,7 @@ namespace MHServerEmu.Games.Network
                 if (interestStatus.LastUpdateFrame >= _currentFrame) continue;
                 interestStatus.LastUpdateFrame = _currentFrame;
 
-                Entity entity = _game.EntityManager.GetEntity<Entity>(entityId);
+                Entity entity = entityManager.GetEntity<Entity>(entityId);
                 if (entity == null)
                 {
                     Logger.Warn("UpdateEntities(): entity == null");
@@ -767,6 +772,8 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         private void ConsiderContainedEntities(Entity owner, InterestTrackOperation operation)
         {
+            EntityManager entityManager = _game.EntityManager;
+
             foreach (Inventory inventory in new InventoryIterator(owner))
             {
                 AOINetworkPolicyValues inventoryInterestPolicies = GetInventoryInterestPolicies(inventory);
@@ -777,7 +784,7 @@ namespace MHServerEmu.Games.Network
 
                 foreach (var inventoryEntry in inventory)
                 {
-                    Entity containedEntity = _game.EntityManager.GetEntity<Entity>(inventoryEntry.Id);
+                    Entity containedEntity = entityManager.GetEntity<Entity>(inventoryEntry.Id);
                     if (containedEntity == null)
                     {
                         Logger.Warn("UpdateEntityInventories(): containedEntity == null");

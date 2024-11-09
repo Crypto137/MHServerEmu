@@ -652,9 +652,11 @@ namespace MHServerEmu.Games.Entities
             inventory.VisibleToOwner = true;
 
             // Update interest for all contained entities
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (var entry in inventory)
             {
-                var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                Entity entity = entityManager.GetEntity<Entity>(entry.Id);
                 if (entity == null)
                 {
                     Logger.Warn("RevealInventory(): entity == null");
@@ -773,6 +775,59 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public InventoryResult AcquireItem(Item item, PrototypeId inventoryProtoRef)
+        {
+            if (item == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "AcquireItem(): item == null");
+
+            if (AcquireCurrencyItem(item))
+            {
+                item.Destroy();
+                return InventoryResult.Success;
+            }
+
+            Inventory inventory = inventoryProtoRef != PrototypeId.Invalid
+                ? GetInventoryByRef(inventoryProtoRef)
+                : GetInventory(InventoryConvenienceLabel.General);
+
+            if (inventory == null)
+                return InventoryResult.NoAvailableInventory;
+
+            ulong? stackEntityId = InvalidId;
+            InventoryResult result = item.ChangeInventoryLocation(inventory, Inventory.InvalidSlot, ref stackEntityId, true);
+
+            if (result == InventoryResult.Success)
+            {
+                // Update our item reference if it got stacked and mark it as recently added
+                if (stackEntityId != InvalidId)
+                    item = Game.EntityManager.GetEntity<Item>(stackEntityId.Value);
+
+                item?.SetRecentlyAdded(true);
+            }
+            else
+            {
+                // Handle overflow
+                Inventory deliveryBox = GetInventory(InventoryConvenienceLabel.DeliveryBox);
+                if (deliveryBox == null)
+                    return InventoryResult.NoAvailableInventory;
+
+                result = item.ChangeInventoryLocation(deliveryBox);
+
+                if (result != InventoryResult.Success)
+                {
+                    // Second level of overflow - this should not happen under normal circumstances
+                    Logger.Warn($"AcquireItem(): Failed to add item {item} to the delivery box for player {this} for reason {result}, moving this item to the error recovery inventory");
+
+                    Inventory errorRecovery = GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+                    if (errorRecovery == null)
+                        return Logger.WarnReturn(InventoryResult.NoAvailableInventory, $"AcquireItem(): Error recovery inventory is not available for item {item}, player {this}");
+
+                    result = item.ChangeInventoryLocation(errorRecovery);
+                }
+            }
+
+            return result;
+        }
+
         public bool AcquireCurrencyItem(Entity entity)
         {
             if (entity.IsCurrencyItem() == false)
@@ -864,6 +919,18 @@ namespace MHServerEmu.Games.Entities
 
         public void AddTag(WorldEntity entity) => _tagEntities.Add(entity.Id);
         public void RemoveTag(WorldEntity entity) => _tagEntities.Remove(entity.Id);
+
+        #region Vendors
+
+        public bool AwardVendorXP(int amount, PrototypeId vendorProtoRef)
+        {
+            // TODO: Implement this
+            // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
+            Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
+            return true;
+        }
+
+        #endregion
 
         #region Avatar and Team-Up Management
 
@@ -1916,6 +1983,16 @@ namespace MHServerEmu.Games.Entities
         public bool ViewedRegion(ulong regionId)
         {
             return PlayerConnection.WorldView.ContainsRegionInstanceId(regionId);
+        }
+
+        public bool UnlockVanityTitle(PrototypeId vanityTitleProtoRef)
+        {
+            VanityTitlePrototype vanityTitleProto = vanityTitleProtoRef.As<VanityTitlePrototype>();
+            if (vanityTitleProto == null) return Logger.WarnReturn(false, "UnlockVanityTitle(): vanityTitleProto == null");
+
+            Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
+            Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
+            return true;
         }
 
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>

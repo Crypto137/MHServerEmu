@@ -62,8 +62,10 @@ namespace MHServerEmu.Games.Entities.Physics
 
         private void ResolveEntitiesOverlapState(PhysicsContext physicsContext)
         {
+            var entityManager = _game.EntityManager;
+
             foreach (var entityId in _entitiesResolving)
-                ResolveEntitiesOverlapState(_game.EntityManager.GetEntity<WorldEntity>(entityId), _overlapEvents);
+                ResolveEntitiesOverlapState(entityManager.GetEntity<WorldEntity>(entityId), _overlapEvents);
 
             foreach (var worldEntity in physicsContext.AttachedEntities)
                 ResolveEntitiesOverlapState(worldEntity, _overlapEvents);
@@ -143,9 +145,11 @@ namespace MHServerEmu.Games.Entities.Physics
                 Vector3 parentEntityPosition = parentEntity.RegionLocation.Position;
                 Orientation parentEntityOrientation = parentEntity.Orientation;
 
+                var entityManager = _game.EntityManager;
+
                 foreach (var attachedEntityId in attachedEntities)
                 {
-                    var attachedEntity = _game.EntityManager.GetEntity<WorldEntity>(attachedEntityId);
+                    var attachedEntity = entityManager.GetEntity<WorldEntity>(attachedEntityId);
                     if (attachedEntity != null && attachedEntity.IsInWorld)
                     {
                         var worldEntityProto = attachedEntity.WorldEntityPrototype;
@@ -177,12 +181,14 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             bool complete = true;
 
+            EntityManager entityManager = _game.EntityManager; 
+
             foreach (var member in forceSystem.Members.Iterate())
             {
                 if (member == null) continue;
                 bool active = false;
 
-                WorldEntity entity = _game.EntityManager.GetEntity<WorldEntity>(member.EntityId);
+                WorldEntity entity = entityManager.GetEntity<WorldEntity>(member.EntityId);
                 if (entity != null && entity.IsInWorld)
                     if (entity.TestStatus(EntityStatus.Destroyed))
                     {
@@ -520,13 +526,15 @@ namespace MHServerEmu.Games.Entities.Physics
             if (entityPhysics != null && entityPhysics.Entity != null)
             {
                 var who = entityPhysics.Entity;
+                var entityManager = _game.EntityManager;
+
                 while (entityPhysics.OverlappedEntities.Count > 0)
                 {
                     var entry = entityPhysics.OverlappedEntities.First();
                     var whomId = entry.Key;
                     bool overlapped = entry.Value.Overlapped;
                     entityPhysics.OverlappedEntities.Remove(whomId);
-                    var whom = _game.EntityManager.GetEntity<WorldEntity>(whomId);
+                    var whom = entityManager.GetEntity<WorldEntity>(whomId);
                     if (whom == null) continue;
                     if (overlapped) NotifyEntityOverlapEnd(who, whom);
 
