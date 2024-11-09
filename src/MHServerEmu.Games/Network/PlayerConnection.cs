@@ -97,6 +97,7 @@ namespace MHServerEmu.Games.Network
         private bool InitializeFromDBAccount()
         {
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
+            EntityManager entityManager = Game.EntityManager;
 
             // Initialize transfer params
             // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
@@ -117,7 +118,7 @@ namespace MHServerEmu.Games.Network
                 playerSettings.ArchiveSerializeType = ArchiveSerializeType.Database;
                 playerSettings.ArchiveData = _dbAccount.Player.ArchiveData;
 
-                Player = Game.EntityManager.CreateEntity(playerSettings) as Player;
+                Player = entityManager.CreateEntity(playerSettings) as Player;
             }
 
             // Crash the instance if we fail to create a player entity. This happens when there is collision
@@ -163,7 +164,7 @@ namespace MHServerEmu.Games.Network
                     avatarSettings.EntityRef = avatarRef;
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
-                    Avatar avatar = Game.EntityManager.CreateEntity(avatarSettings) as Avatar;
+                    Avatar avatar = entityManager.CreateEntity(avatarSettings) as Avatar;
                     avatar?.InitializeLevel(1);
                 }
             }
@@ -183,7 +184,7 @@ namespace MHServerEmu.Games.Network
                         teamUpSettings.EntityRef = teamUpRef;
                         teamUpSettings.InventoryLocation = new(Player.Id, teamUpLibrary.PrototypeDataRef);
 
-                        Agent teamUpAgent = Game.EntityManager.CreateEntity(teamUpSettings) as Agent;
+                        Agent teamUpAgent = entityManager.CreateEntity(teamUpSettings) as Agent;
                         teamUpAgent?.InitializeLevel(1);
                     }
                 }
@@ -1161,10 +1162,11 @@ namespace MHServerEmu.Games.Network
             if (generalInventory == null)
                 return Logger.WarnReturn(false, $"OnTryMoveInventoryContentsToGeneral(): Player {Player} does not have a general inventory??? How did this even happen???");
 
+            EntityManager entityManager = Game.EntityManager;
             while (sourceInventory.Count > 0)
             {
                 ulong itemId = sourceInventory.GetAnyEntity();
-                Item item = Game.EntityManager.GetEntity<Item>(itemId);
+                Item item = entityManager.GetEntity<Item>(itemId);
                 uint freeSlot = generalInventory.GetFreeSlot(item, true);
 
                 // we are full

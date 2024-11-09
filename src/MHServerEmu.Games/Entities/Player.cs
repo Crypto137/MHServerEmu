@@ -650,9 +650,11 @@ namespace MHServerEmu.Games.Entities
             inventory.VisibleToOwner = true;
 
             // Update interest for all contained entities
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (var entry in inventory)
             {
-                var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                Entity entity = entityManager.GetEntity<Entity>(entry.Id);
                 if (entity == null)
                 {
                     Logger.Warn("RevealInventory(): entity == null");

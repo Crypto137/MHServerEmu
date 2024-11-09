@@ -1931,11 +1931,13 @@ namespace MHServerEmu.Games.Missions
                     int index = 0;
                     var sortedContributors = _contributors.OrderByDescending(kvp => kvp.Value);
 
+                    var entityManager = Game.EntityManager;
+
                     foreach (var kvp in sortedContributors)
                     {
                         if (kvp.Value >= openProto.MinimumContributionForCredit)
                         {
-                            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(kvp.Key);
+                            Player player = entityManager.GetEntityByDbGuid<Player>(kvp.Key);
                             if (player == null) continue;
                             float contribution = index / _contributors.Count;
                             GiveRewardToPlayer(player, index++, contribution);
@@ -1996,6 +1998,9 @@ namespace MHServerEmu.Games.Missions
             RegionLocation location = avatar.RegionLocation;
             if (location.IsValid() == false) return;
 
+            EntityManager entityManager = Game.EntityManager;
+            LootManager lootManager = Game.LootManager;
+
             foreach (PrototypeId rewardProtoRef in rewards)
             {
                 if (chestEntityProtoRef != PrototypeId.Invalid)
@@ -2015,14 +2020,14 @@ namespace MHServerEmu.Games.Missions
                     properties[PropertyEnum.CombatLevel] = avatar.CombatLevel;
                     settings.Properties = properties;
 
-                    Game.EntityManager.CreateEntity(settings);
+                    entityManager.CreateEntity(settings);
                 }
                 else
                 {
                     // Spawn loot as is if there is not chest
                     using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                     inputSettings.Initialize(LootContext.Drop, player, avatar);
-                    Game.LootManager.SpawnLootFromTable(rewardProtoRef, inputSettings);
+                    lootManager.SpawnLootFromTable(rewardProtoRef, inputSettings);
                 }
             }
         }

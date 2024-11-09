@@ -98,11 +98,13 @@ namespace MHServerEmu.Games.Entities.Inventories
 
             int numMatches = 0;
 
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (var entry in this)
             {
                 if (entry.ProtoRef == entityRef)
                 {
-                    Entity entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    Entity entity = entityManager.GetEntity<Entity>(entry.Id);
                     if (entity != null)
                     {
                         numMatches += entity.CurrentStackSize;
@@ -140,9 +142,11 @@ namespace MHServerEmu.Games.Entities.Inventories
             foreach (InvEntry entry in _entities.Values)
                 containedIds[i++] = entry.EntityId;
 
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (ulong containedId in containedIds)
             {
-                Entity contained = Game.EntityManager.GetEntity<Entity>(containedId);
+                Entity contained = entityManager.GetEntity<Entity>(containedId);
                 if (contained == null)
                 {
                     Logger.Warn("DestroyContained(): contained == null");
@@ -150,10 +154,10 @@ namespace MHServerEmu.Games.Entities.Inventories
                 }
 
                 bool isDestroyingAllEntities = false;
-                if (Game.EntityManager == null)
+                if (entityManager == null)
                     Logger.Warn("DestroyContained(): Game.EntityManager == null");
                 else
-                    isDestroyingAllEntities = Game.EntityManager.IsDestroyingAllEntities;
+                    isDestroyingAllEntities = entityManager.IsDestroyingAllEntities;
 
                 // Entities that have the DetachOnContainerDestroyed are not destroyed (unless the EntityManager is currently cleaning up all entities)
                 if (contained.Properties[PropertyEnum.DetachOnContainerDestroyed] && isDestroyingAllEntities == false)
@@ -251,11 +255,13 @@ namespace MHServerEmu.Games.Entities.Inventories
         {
             if (entity.CanStack() == false || entity.IsAutoStackedWhenAddedToInventory() == false)
                 return InvalidSlot;
-            
+
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (var entry in this)
             {
                 if (entry.Id == entity.Id) continue;     // Stacking with itself sure sounds like a potential dupe
-                Entity existingEntity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                Entity existingEntity = entityManager.GetEntity<Entity>(entry.Id);
                 
                 if (existingEntity == null)
                 {

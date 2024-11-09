@@ -89,9 +89,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                 var potentialEnemies = senses.PotentialHostileTargetIds;                
                 var averageDirection = Vector3.Zero;
 
+                var entityManager = game.EntityManager;
+
                 foreach (var enemyId in potentialEnemies)
                 {
-                    var enemy = game.EntityManager.GetEntity<WorldEntity>(enemyId);
+                    var enemy = entityManager.GetEntity<WorldEntity>(enemyId);
                     if (enemy != null && enemy.IsInWorld)
                     {
                         var distEnemy = agentPosition - enemy.RegionLocation.Position;
@@ -218,9 +220,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             var allies = new List<FleeEntityRank>();
 
+            var entityManager = game.EntityManager;
+
             foreach (var allyId in potentialAllies)
             {
-                var ally = game.EntityManager.GetEntity<WorldEntity>(allyId);
+                var ally = entityManager.GetEntity<WorldEntity>(allyId);
                 if (ally != null && ally.IsInWorld && !ally.IsDead)
                 {
                     var rankProto = ally.GetRankPrototype();

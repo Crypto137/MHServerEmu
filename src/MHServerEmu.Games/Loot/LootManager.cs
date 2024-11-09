@@ -185,6 +185,8 @@ namespace MHServerEmu.Games.Loot
 
             bool success = true;
 
+            EntityManager entityManager = Game.EntityManager;
+
             // Use a list to process ItemSpec + item CurrencySpec loot together
             List<Item> itemList = ListPool<Item>.Instance.Rent();
 
@@ -196,7 +198,7 @@ namespace MHServerEmu.Games.Loot
                     settings.EntityRef = itemSpec.ItemProtoRef;
                     settings.ItemSpec = itemSpec;
 
-                    Item item = Game.EntityManager.CreateEntity(settings) as Item;
+                    Item item = entityManager.CreateEntity(settings) as Item;
                     if (item == null)
                     {
                         // Something went terribly terribly wrong, abandon ship

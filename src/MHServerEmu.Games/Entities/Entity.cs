@@ -332,11 +332,13 @@ namespace MHServerEmu.Games.Entities
             UpdateInterestPolicies(true);
 
             // Put all inventory entities into the game as well
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (Inventory inventory in new InventoryIterator(this))
             {
                 foreach (var entry in inventory)
                 {
-                    Entity containedEntity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    Entity containedEntity = entityManager.GetEntity<Entity>(entry.Id);
                     if (containedEntity != null) containedEntity.EnterGame();
                 }
             }
@@ -348,11 +350,13 @@ namespace MHServerEmu.Games.Entities
             UpdateInterestPolicies(false);
 
             // Remove contained entities
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (Inventory inventory in new InventoryIterator(this))
             {
                 foreach (var entry in inventory)
                 {
-                    Entity containedEntity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                    Entity containedEntity = entityManager.GetEntity<Entity>(entry.Id);
                     if (containedEntity != null) containedEntity.ExitGame();
                 }
             }
@@ -471,9 +475,11 @@ namespace MHServerEmu.Games.Entities
             {
                 // Update only players who are already interested in this entity.
                 // This is what should be used to remove entities if possible.
+                EntityManager entityManager = Game.EntityManager;
+
                 foreach (ulong playerId in InterestReferences)
                 {
-                    Player player = Game.EntityManager.GetEntity<Player>(playerId);
+                    Player player = entityManager.GetEntity<Player>(playerId);
                     player?.AOI.ConsiderEntity(this, settings);
                 }
             }

@@ -387,6 +387,8 @@ namespace MHServerEmu.Games.Regions
             // MetaGames create
             if (regionProto.MetaGames.HasValue())
             {
+                EntityManager entityManager = Game.EntityManager;
+
                 using PropertyCollection metaCollection = ObjectPoolManager.Instance.Get<PropertyCollection>();
                 var entryProto = regionProto.GetRegionQueueStateEntry(settings.GameStateId);
                 if (entryProto != null && entryProto.State != PrototypeId.Invalid && entryProto.StateParent != PrototypeId.Invalid)
@@ -406,7 +408,7 @@ namespace MHServerEmu.Games.Regions
                     metaSettings.EntityRef = metaGameRef;
                     metaSettings.Properties = metaCollection;
 
-                    var metagame = Game.EntityManager.CreateEntity(metaSettings);
+                    var metagame = entityManager.CreateEntity(metaSettings);
                     if (metagame == null) Logger.Warn($"Initialize(): metagame [{metaGameRef}] == null");
                 }
             }
@@ -464,11 +466,13 @@ namespace MHServerEmu.Games.Regions
             
             if (Game != null)
                 MissionManager?.Shutdown(this);
-            
+
+            EntityManager entityManager = Game.EntityManager;
+
             while (MetaGames.Count > 0)
             {
                 var metaGameId = MetaGames[0];
-                var metaGame = Game.EntityManager.GetEntity<Entity>(metaGameId);
+                var metaGame = entityManager.GetEntity<Entity>(metaGameId);
                 metaGame?.Destroy();
                 MetaGames.Remove(metaGameId);
             }

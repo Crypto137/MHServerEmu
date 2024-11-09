@@ -563,15 +563,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 bool toadSummoned = false;
                 Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
                 if (summonedInventory != null)
+                {
+                    EntityManager entityManager = game.EntityManager;
+
                     foreach (var entry in summonedInventory)
                     {
-                        WorldEntity summoned = game.EntityManager.GetEntity<WorldEntity>(entry.Id);
+                        WorldEntity summoned = entityManager.GetEntity<WorldEntity>(entry.Id);
                         if (summoned != null && summoned.PrototypeDataRef == ToadPrototype)
                         {
                             toadSummoned = true;
                             break;
                         }
                     }
+                }
 
                 if (toadSummoned == false)
                 {
@@ -1468,10 +1472,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 var oldTargetId = blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID];
 
                 if (senses.PotentialHostileTargetIds.Count > 1 && oldTargetId != 0)
+                {
+                    var entityManager = ownerController.Game.EntityManager;
+
                     foreach (var targetId in senses.PotentialHostileTargetIds)
                         if (targetId != oldTargetId)
                         {
-                            var selectedEntity = ownerController.Game.EntityManager.GetEntity<WorldEntity>(targetId);
+                            var selectedEntity = entityManager.GetEntity<WorldEntity>(targetId);
                             if (selectedEntity == null || !selectedEntity.IsInWorld) return false;
 
                             blackboard.PropertyCollection[PropertyEnum.AIRawTargetEntityID] = targetId;
@@ -1479,6 +1486,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                                 return false;
                             break;
                         }
+                }
+
             }
 
             return true;
@@ -2700,13 +2709,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int numTargets = 1;
             var conditions = agent.ConditionCollection;
             if (conditions == null) return;
+
+            var entityManager = game.EntityManager;
+
             foreach (var condition in conditions.IterateConditions(true))
             {
                 if (condition == null) return;
                 var transferId = condition.Properties[PropertyEnum.DamageTransferID];
                 if (transferId != 0)
                 {
-                    var transfer = game.EntityManager.GetEntity<WorldEntity>(transferId);
+                    var transfer = entityManager.GetEntity<WorldEntity>(transferId);
                     if (transfer != null)
                     {
                         ++numTargets;
