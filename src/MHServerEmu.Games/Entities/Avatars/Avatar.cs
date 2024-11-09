@@ -1599,8 +1599,14 @@ namespace MHServerEmu.Games.Entities.Avatars
                         player.UnlockWaypoint(waypointUnlockRef);
             }
 
-            // Restore missions from Avatar
-            player.MissionManager?.RestoreAvatarMissions(this);
+            var missionManager = player.MissionManager;
+            if (missionManager != null)
+            {
+                // Restore missions from Avatar
+                missionManager.RestoreAvatarMissions(this);
+                // Update interest
+                missionManager.UpdateMissionInterest();
+            }
 
             // Update AOI of the owner player
             AreaOfInterest aoi = player.AOI;

@@ -1386,6 +1386,13 @@ namespace MHServerEmu.Games.Missions
             _avatarPrototypeRef = avatar.PrototypeDataRef;
         }
 
+        public void UpdateMissionInterest()
+        {
+            if (Player == null) return;
+            foreach (var mission in _missionDict.Values)
+                UpdateMissionEntitiesForPlayer(mission, Player);
+        }
+
         public void UpdateMissionEntities(Mission mission)
         {
             foreach (var player in mission.GetParticipants())
