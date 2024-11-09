@@ -2050,19 +2050,6 @@ namespace MHServerEmu.Games.Missions
             else
             {
                 lootManager.GiveLootFromSummary(lootSummary, player, PrototypeId.Invalid, true);
-
-                // TODO: Move this to LootManager
-                Avatar avatar = player.CurrentAvatar;
-                if (lootSummary.Experience > 0)
-                    avatar.AwardXP(lootSummary.Experience, false);
-
-                if (lootSummary.Credits.Count > 0)
-                {
-                    int credits = 0;
-                    foreach (int amount in lootSummary.Credits)
-                        credits += amount;
-                    player.Properties.AdjustProperty(credits, new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits));
-                }
             }
 
             return true;

@@ -293,6 +293,54 @@ namespace MHServerEmu.Games.Loot
                     SpawnAgentForPlayer(agentSpec, player, properties);
             }
 
+            // Credits
+            if (lootResultSummary.Types.HasFlag(LootType.Credits))
+            {
+                foreach (int creditsAmount in lootResultSummary.Credits)
+                {
+                    AgentSpec agentSpec = new(_creditsItemProto.DataRef, 1, creditsAmount);
+                    SpawnAgentForPlayer(agentSpec, player, properties);
+                }
+            }
+
+            // Mission-exclusive rewards: experience, endurance / health bonuses, power points
+            if (isMissionLoot)
+            {
+                if (lootResultSummary.Types.HasFlag(LootType.Experience))
+                {
+                    Avatar avatar = player.CurrentAvatar;
+                    avatar?.AwardXP(lootResultSummary.Experience, false);
+                }
+
+                if (lootResultSummary.Types.HasFlag(LootType.HealthBonus))
+                {
+                    // TODO for 1.48
+                    Logger.Warn("GiveLootFromSummary(): HealthBonus rewards are not yet implemented");
+                }
+
+                if (lootResultSummary.Types.HasFlag(LootType.EnduranceBonus))
+                {
+                    // TODO for 1.48
+                    Logger.Warn("GiveLootFromSummary(): EnduranceBonus rewards are not yet implemented");
+                }
+
+                if (lootResultSummary.Types.HasFlag(LootType.PowerPoints))
+                {
+                    // TODO for 1.48
+                    Logger.Warn("GiveLootFromSummary(): PowerPoints rewards are not yet implemented");
+                }
+            }
+            else
+            {
+                if (lootResultSummary.Types.HasFlag(LootType.Experience) ||
+                    lootResultSummary.Types.HasFlag(LootType.HealthBonus) ||
+                    lootResultSummary.Types.HasFlag(LootType.EnduranceBonus) ||
+                    lootResultSummary.Types.HasFlag(LootType.PowerPoints))
+                {
+                    Logger.Warn($"GiveLootFromSummary(): Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
+                }
+            }
+
             // NOTE: We use goto here because returning a list to the pool while it's
             // being iterated will clear it and cause it to be modified during iteration.
             end:
