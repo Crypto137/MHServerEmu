@@ -1966,6 +1966,16 @@ namespace MHServerEmu.Games.Entities
             return PlayerConnection.WorldView.ContainsRegionInstanceId(regionId);
         }
 
+        public bool UnlockVanityTitle(PrototypeId vanityTitleProtoRef)
+        {
+            VanityTitlePrototype vanityTitleProto = vanityTitleProtoRef.As<VanityTitlePrototype>();
+            if (vanityTitleProto == null) return Logger.WarnReturn(false, "UnlockVanityTitle(): vanityTitleProto == null");
+
+            Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
+            Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
+            return true;
+        }
+
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as Player).ResetHUDTutorial();

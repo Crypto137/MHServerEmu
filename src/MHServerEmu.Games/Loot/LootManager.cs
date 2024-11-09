@@ -176,6 +176,13 @@ namespace MHServerEmu.Games.Loot
                 }
             }
 
+            // Vanity titles
+            if (lootResultSummary.Types.HasFlag(LootType.VanityTitle))
+            {
+                foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
+                    player.UnlockVanityTitle(vanityTitleProtoRef);
+            }
+
             return true;
         }
 
@@ -301,6 +308,13 @@ namespace MHServerEmu.Games.Loot
                     AgentSpec agentSpec = new(_creditsItemProto.DataRef, 1, creditsAmount);
                     SpawnAgentForPlayer(agentSpec, player, properties);
                 }
+            }
+
+            // Vanity titles
+            if (lootResultSummary.Types.HasFlag(LootType.VanityTitle))
+            {
+                foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
+                    player.UnlockVanityTitle(vanityTitleProtoRef);
             }
 
             // Mission-exclusive rewards: experience, endurance / health bonuses, power points
