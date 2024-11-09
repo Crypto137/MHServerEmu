@@ -775,8 +775,13 @@ namespace MHServerEmu.Games.Entities
 
         public InventoryResult AcquireItem(Item item, PrototypeId inventoryProtoRef)
         {
+            if (item == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "AcquireItem(): item == null");
+
             if (AcquireCurrencyItem(item))
+            {
+                item.Destroy();
                 return InventoryResult.Success;
+            }
 
             Inventory inventory = inventoryProtoRef != PrototypeId.Invalid
                 ? GetInventoryByRef(inventoryProtoRef)
@@ -807,10 +812,12 @@ namespace MHServerEmu.Games.Entities
 
                 if (result != InventoryResult.Success)
                 {
-                    // Second level of overflow
+                    // Second level of overflow - this should not happen under normal circumstances
+                    Logger.Warn($"AcquireItem(): Failed to add item {item} to the delivery box for player {this} for reason {result}, moving this item to the error recovery inventory");
+
                     Inventory errorRecovery = GetInventory(InventoryConvenienceLabel.ErrorRecovery);
                     if (errorRecovery == null)
-                        return InventoryResult.NoAvailableInventory;
+                        return Logger.WarnReturn(InventoryResult.NoAvailableInventory, $"AcquireItem(): Error recovery inventory is not available for item {item}, player {this}");
 
                     result = item.ChangeInventoryLocation(errorRecovery);
                 }

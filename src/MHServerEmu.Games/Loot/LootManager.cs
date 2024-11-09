@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -178,18 +179,29 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        public bool GiveLootFromSummary(LootResultSummary lootResultSummary, Player player, PrototypeId inventoryProtoRef, bool isMissionLoot = false)
+        public bool GiveLootFromSummary(LootResultSummary lootResultSummary, Player player, PrototypeId inventoryProtoRef = PrototypeId.Invalid, bool isMissionLoot = false)
         {
             if (lootResultSummary.Types == LootType.None)
                 return true;
 
             bool success = true;
 
-            EntityManager entityManager = Game.EntityManager;
-
             // Use a list to process ItemSpec + item CurrencySpec loot together
             List<Item> itemList = ListPool<Item>.Instance.Rent();
 
+            // Reusable property collection for applying extra properties
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            EntityManager entityManager = Game.EntityManager;
+
+            // Trigger callbacks
+            if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
+            {
+                foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
+                    callbackNode.OnResultsEvaluation(player, null);
+            }
+
+            // Create items
             if (lootResultSummary.Types.HasFlag(LootType.Item))
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
@@ -215,7 +227,49 @@ namespace MHServerEmu.Games.Loot
                 }
             }
 
-            // Give items to the player
+            // Create currency
+            if (lootResultSummary.Types.HasFlag(LootType.Currency))
+            {
+                foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
+                {
+                    currencySpec.ApplyCurrency(properties);
+
+                    if (currencySpec.IsItem)
+                    {
+                        // Create currency item
+                        ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
+
+                        using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                        settings.EntityRef = currencySpec.AgentOrItemProtoRef;
+                        settings.ItemSpec = itemSpec;
+                        settings.Properties = properties;
+
+                        Item item = entityManager.CreateEntity(settings) as Item;
+                        if (item == null)
+                        {
+                            // Something went terribly terribly wrong, abandon ship
+                            Logger.Warn($"GiveLootFromSummary(): Failed to create currency item, aborting\nItemSpec: {itemSpec}\nCurrencySpec: {currencySpec}");
+
+                            foreach (Item itemToDestroy in itemList)
+                                itemToDestroy.Destroy();
+
+                            success = false;
+                            goto end;
+                        }
+
+                        itemList.Add(item);
+                    }
+                    else if (currencySpec.IsAgent)
+                    {
+                        // Agents are always spawned and not given (this whole system is such a disaster)
+                        SpawnAgentForPlayer(currencySpec, player, properties);
+                    }
+
+                    properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
+                }
+            }
+
+            // Give regular and items to the player
             foreach (Item item in itemList)
             {
                 InventoryResult result = player.AcquireItem(item, inventoryProtoRef);
@@ -230,6 +284,13 @@ namespace MHServerEmu.Games.Loot
                     success = false;
                     goto end;
                 }
+            }
+
+            // Now spawn regular agents (i.e. orbs)
+            if (lootResultSummary.Types.HasFlag(LootType.Agent))
+            {
+                foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
+                    SpawnAgentForPlayer(agentSpec, player, properties);
             }
 
             // NOTE: We use goto here because returning a list to the pool while it's
@@ -332,6 +393,40 @@ namespace MHServerEmu.Games.Loot
             if (item == null) return Logger.WarnReturn(false, "SpawnItemInternal(): item == null");
 
             return true;
+        }
+
+        private bool SpawnAgentForPlayer(in CurrencySpec currencySpec, Player player, PropertyCollection agentProperties)
+        {
+            // Used when "giving" rewards
+            AgentSpec agentSpec = new(currencySpec.AgentOrItemProtoRef, 1, 0);
+            return SpawnAgentForPlayer(agentSpec, player, agentProperties);
+        }
+
+        private bool SpawnAgentForPlayer(in AgentSpec agentSpec, Player player, PropertyCollection agentProperties)
+        {
+            // Used when "giving" rewards
+            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): agentProto == null");
+
+            // We need a valid avatar that is in the world to spawn something for a player
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): avatar == null");
+
+            Region region = avatar.Region;
+            if (region == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): region == null");
+
+            // Uncomment this check when we have non-instanced orbs working, for now always instance everything
+            //if (agentProto.Properties != null && agentProto.Properties[PropertyEnum.RestrictedToPlayer])
+                agentProperties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
+
+            Vector3 dropPosition = FindDropPosition(agentProto, avatar, avatar.Bounds, 200f);
+
+            bool success = SpawnAgentInternal(agentSpec, region.Id, dropPosition, avatar.Id, avatar.RegionLocation.Position, agentProperties);
+
+            // Clean up instancing
+            agentProperties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
+
+            return success;
         }
 
         private bool SpawnAgentInternal(in AgentSpec agentSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)

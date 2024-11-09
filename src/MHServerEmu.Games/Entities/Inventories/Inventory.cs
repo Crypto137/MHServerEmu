@@ -251,6 +251,11 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InvalidSlot;
         }
 
+        public bool IsSlotAvailableForEntity(Entity entity, bool allowStacking)
+        {
+            return GetFreeSlot(entity, allowStacking, true) != InvalidSlot;
+        }
+
         public uint GetAutoStackSlot(Entity entity, bool isAdding = false)
         {
             if (entity.CanStack() == false || entity.IsAutoStackedWhenAddedToInventory() == false)

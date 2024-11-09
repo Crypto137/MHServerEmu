@@ -2049,9 +2049,9 @@ namespace MHServerEmu.Games.Missions
             }
             else
             {
-                foreach (ItemSpec itemSpec in lootSummary.ItemSpecs)
-                    lootManager.GiveItem(itemSpec.ItemProtoRef, player);
+                lootManager.GiveLootFromSummary(lootSummary, player, PrototypeId.Invalid, true);
 
+                // TODO: Move this to LootManager
                 Avatar avatar = player.CurrentAvatar;
                 if (lootSummary.Experience > 0)
                     avatar.AwardXP(lootSummary.Experience, false);
