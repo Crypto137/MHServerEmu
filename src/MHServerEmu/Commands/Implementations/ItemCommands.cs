@@ -40,7 +40,7 @@ namespace MHServerEmu.Commands.Implementations
             
             for (int i = 0; i < count; i++)
             {
-                lootManager.SpawnItem(itemProtoRef, player, avatar);
+                lootManager.SpawnItem(itemProtoRef, LootContext.Drop, player, avatar);
                 Logger.Debug($"DropItem(): {itemProtoRef.GetName()} from {avatar}");
             }
 
@@ -60,7 +60,7 @@ namespace MHServerEmu.Commands.Implementations
             Player player = playerConnection.Player;
 
             LootManager lootGenerator = playerConnection.Game.LootManager;
-            lootGenerator.GiveItem(itemProtoRef, player);
+            lootGenerator.GiveItem(itemProtoRef, LootContext.Drop, player);
             Logger.Debug($"GiveItem(): {itemProtoRef.GetName()} to {player}");
 
             return string.Empty;

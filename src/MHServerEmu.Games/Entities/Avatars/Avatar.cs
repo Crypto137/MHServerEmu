@@ -19,6 +19,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -1082,7 +1083,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
 
             // Give the player a new bowling ball
-            player.Game.LootManager.GiveItem(bowlingBallProtoRef, player);
+            player.Game.LootManager.GiveItem(bowlingBallProtoRef, LootContext.Drop, player);
 
             // Assign bowling ball power if the player's avatar doesn't have one
             Avatar avatar = player.CurrentAvatar;

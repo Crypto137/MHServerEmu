@@ -376,9 +376,9 @@ namespace MHServerEmu.Games.Loot
             return success;
         }
 
-        public bool SpawnItem(PrototypeId itemProtoRef, Player player, WorldEntity sourceEntity)
+        public bool SpawnItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, WorldEntity sourceEntity)
         {
-            ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
             if (itemSpec == null)
                 return Logger.WarnReturn(false, $"SpawnItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
@@ -395,9 +395,9 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates and gives a new item to the provided <see cref="Player"/>.
         /// </summary>
-        public bool GiveItem(PrototypeId itemProtoRef, Player player)
+        public bool GiveItem(PrototypeId itemProtoRef, LootContext lootContext, Player player)
         {
-            ItemSpec itemSpec = CreateItemSpec(itemProtoRef);
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
             if (itemSpec == null)
                 return Logger.WarnReturn(false, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
@@ -411,20 +411,38 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates an <see cref="ItemSpec"/> for the provided <see cref="PrototypeId"/>.
         /// </summary>
-        public static ItemSpec CreateItemSpec(PrototypeId itemProtoRef)
+        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef, LootContext lootContext, Player player)
         {
-            if (DataDirectory.Instance.PrototypeIsA<ItemPrototype>(itemProtoRef) == false)
-                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): {itemProtoRef.GetName()} [{itemProtoRef}] is not an item prototype ref");
+            ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
+            if (itemProto == null)
+                return Logger.WarnReturn<ItemSpec>(null, "CreateItemSpec(): itemProto == null");
 
-            // Create a dummy item spec for now
-            PrototypeId rarityProtoRef = GameDatabase.LootGlobalsPrototype.RarityDefault;  // R1Common
-            int itemLevel = 1;
-            int creditsAmount = 0;
-            IEnumerable<AffixSpec> affixSpecs = Array.Empty<AffixSpec>();
-            int seed = 1;
-            PrototypeId equippableBy = PrototypeId.Invalid;
+            if (DataDirectory.Instance.PrototypeIsAbstract(itemProtoRef))
+                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): {itemProtoRef.GetName()} is abstract, which is currently not supported for this");
 
-            return new(itemProtoRef, rarityProtoRef, itemLevel, creditsAmount, affixSpecs, seed, equippableBy);
+            _resolver.SetContext(lootContext, player);
+
+            int level = 1;
+            AvatarPrototype avatarProto = player.CurrentAvatar?.AvatarPrototype;
+
+            using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            filterArgs.ItemProto = itemProto;
+            filterArgs.Level = level;
+            filterArgs.RollFor = _resolver.ResolveAvatarPrototype(avatarProto, true, 1f).DataRef;
+            filterArgs.Rarity = _resolver.ResolveRarity(null, level, itemProto);
+            filterArgs.Slot = itemProto.GetInventorySlotForAgent(avatarProto);
+
+            if (itemProto.MakeRestrictionsDroppable(filterArgs, RestrictionTestFlags.All, out _) == false)
+                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): Failed to make item {itemProto} droppable");
+
+            // Finalize spec
+            ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level, 0,
+                Array.Empty<AffixSpec>(), _resolver.Random.Next());
+
+            if (LootUtilities.UpdateAffixes(_resolver, filterArgs, AffixCountBehavior.Roll, itemSpec, null).HasFlag(MutationResults.Error))
+                return Logger.WarnReturn<ItemSpec>(null, $"CreateItemSpec(): Failed to update affixes for {itemProto}");
+
+            return itemSpec;
         }
 
         /// <summary>

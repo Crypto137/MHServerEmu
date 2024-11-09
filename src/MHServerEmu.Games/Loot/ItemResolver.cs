@@ -307,7 +307,7 @@ namespace MHServerEmu.Games.Loot
             foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 // Skip rarities that don't match the provided filter
-                if (rarityFilter.Count > 0 && rarityFilter.Contains(rarityProtoRef) == false)
+                if (rarityFilter != null && rarityFilter.Count > 0 && rarityFilter.Contains(rarityProtoRef) == false)
                     continue;
 
                 // Skip rarities that don't match the provided item prototype
