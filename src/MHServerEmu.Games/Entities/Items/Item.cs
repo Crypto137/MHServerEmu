@@ -21,25 +21,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities.Items
 {
-    public enum ItemActionType
-    {
-        None,
-        AssignPower,
-        DestroySelf,
-        GuildUnlock,
-        PrestigeMode,
-        ReplaceSelfItem,
-        ReplaceSelfLootTable,
-        ResetMissions,
-        Respec,
-        SaveDangerRoomScenario,
-        UnlockPermaBuff,
-        UsePower,
-        AwardTeamUpXP,
-        OpenUIPanel
-    }
-
-    public class Item : WorldEntity
+    public partial class Item : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -428,46 +410,10 @@ namespace MHServerEmu.Games.Entities.Items
                     foreach (var choice in itemProto.ActionsTriggeredOnItemEvent.Choices)
                     {
                         if (choice is not ItemActionPrototype itemActionProto) continue;
-                        TriggerActionEvent(itemActionProto, player, avatar);
+
+                        DoItemAction(itemActionProto, player, avatar);
                     }
                 }
-        }
-
-        private void TriggerActionEvent(ItemActionPrototype itemActionProto, Player player, Avatar avatar)
-        {
-            if (itemActionProto.TriggeringEvent != ItemEventType.OnUse) return;
-
-            // TODO ItemActionPrototype.ActionType
-
-            if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto)
-                TriggerActionUsePower(avatar, itemActionUsePowerProto.Power);
-        }
-
-        private void TriggerActionUsePower(Avatar avatar, PrototypeId powerRef)
-        {
-            if (avatar.HasPowerInPowerCollection(powerRef) == false)
-                avatar.AssignPower(powerRef, new(0, avatar.CharacterLevel, avatar.CombatLevel));
-
-            // TODO move this to powers
-            Power power = avatar.GetPower(powerRef);
-            if (power == null) return;
-
-            if (power.Prototype is SummonPowerPrototype summonPowerProto)
-            {
-                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
-                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
-                {
-                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
-                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
-                }
-                else
-                {
-                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, this);
-                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = true;
-                    avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
-                }
-            }
         }
 
         private bool OnBuiltInPropertyRoll(float randomMult, PropertyPickInRangeEntryPrototype pickInRangeProto)
