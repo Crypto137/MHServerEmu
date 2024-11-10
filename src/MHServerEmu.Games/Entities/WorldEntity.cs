@@ -2164,6 +2164,8 @@ namespace MHServerEmu.Games.Entities
             WorldEntity interactorEntity = Game.EntityManager.GetEntity<WorldEntity>(interactorEntityId);
             if (interactorEntity == null) return Logger.WarnReturn(false, "AwardInteractionLoot(): interactorEntity == null");
 
+            // NOTE: Bowling ball dispenser is not per-player cloned, so interacting
+            // with it will give a ball to all players nearby. This doesn't seem right.
             List<Player> playerList = ListPool<Player>.Instance.Rent();
             Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
 
@@ -2195,12 +2197,6 @@ namespace MHServerEmu.Games.Entities
                 Property.FromParam(kvp.Key, 2, out int actionTypeInt);
                 LootActionType actionType = (LootActionType)actionTypeInt;
 
-                if (actionType != LootActionType.Spawn)
-                {
-                    Logger.Warn($"AwardLootForDropEvent(): Unimplemented loot action type {actionType} for {this}");
-                    continue;
-                }
-
                 PrototypeId lootTableProtoRef = kvp.Value;
                 if (lootTableProtoRef == PrototypeId.Invalid)
                 {
@@ -2216,19 +2212,12 @@ namespace MHServerEmu.Games.Entities
 
             tables = tables[..numTables];
 
-            // TODO: Move this part to the LootManager
-            foreach ((PrototypeId, LootActionType) tableEntry in tables)
+            // Roll and distribute the rewards
+            foreach (Player player in playerList)
             {
-                (PrototypeId lootTableProtoRef, LootActionType actionType) = tableEntry;
-                if (actionType != LootActionType.Spawn)
-                    continue;
-
-                foreach (Player player in playerList)
-                {
-                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                    inputSettings.Initialize(LootContext.Drop, player, this);
-                    Game.LootManager.SpawnLootFromTable(lootTableProtoRef, inputSettings);
-                }
+                using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                inputSettings.Initialize(LootContext.Drop, player, this);
+                Game.LootManager.AwardLootFromTables(tables, inputSettings);
             }
 
             return true;
@@ -2677,7 +2666,7 @@ namespace MHServerEmu.Games.Entities
                 Properties[PropertyEnum.InteractableUsesLeft] = usesLeft;
             }
 
-            bool lastUsed = used && usesLeft == 0;
+            bool lastUse = used && usesLeft == 0;
 
             if (HasLootDropEventType(LootDropEventType.OnInteractedWith))
             {
@@ -2688,7 +2677,7 @@ namespace MHServerEmu.Games.Entities
                     // Award interaction loot after a delay to let the opening animation play
                     TimeSpan interactableSpawnLootDelay = TimeSpan.FromMilliseconds(interactableSpawnLootDelayMS);
                     EventPointer<AwardInteractionLootEvent> awardInteractionLootEvent = new();
-                    Game.GameEventScheduler.ScheduleEvent(awardInteractionLootEvent, TimeSpan.FromMilliseconds(interactableSpawnLootDelayMS));
+                    Game.GameEventScheduler.ScheduleEvent(awardInteractionLootEvent, interactableSpawnLootDelay);
                     awardInteractionLootEvent.Get().Initialize(this, interactorEntity.Id);
                 }
                 else
@@ -2698,7 +2687,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            if (lastUsed)
+            if (lastUse)
             {
                 long destroyDelayMS = Properties[PropertyEnum.InteractableDestroyDelayMS];
                 if (destroyDelayMS > 0)

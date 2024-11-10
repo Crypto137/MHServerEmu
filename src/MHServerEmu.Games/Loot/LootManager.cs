@@ -52,6 +52,35 @@ namespace MHServerEmu.Games.Loot
             SpawnLootFromSummary(lootResultSummary, inputSettings);
         }
 
+        public void GiveLootFromTable(PrototypeId lootTableProtoRef, LootInputSettings inputSettings)
+        {
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            RollLootTable(lootTableProtoRef, inputSettings, lootResultSummary);
+
+            if (lootResultSummary.HasAnyResult == false) return;
+
+            GiveLootFromSummary(lootResultSummary, inputSettings.Player);
+        }
+
+        public void AwardLootFromTables(Span<(PrototypeId, LootActionType)> tables, LootInputSettings inputSettings)
+        {
+            foreach ((PrototypeId, LootActionType) tableEntry in tables)
+            {
+                (PrototypeId lootTableProtoRef, LootActionType actionType) = tableEntry;
+
+                if (actionType == LootActionType.Spawn)
+                {
+                    SpawnLootFromTable(lootTableProtoRef, inputSettings);
+                }
+                else if (actionType == LootActionType.Give)
+                {
+                    GiveLootFromTable(lootTableProtoRef, inputSettings);
+                }
+            }
+
+            // TODO: Mission-specific drops (e.g. brood biomass)
+        }
+
         /// <summary>
         /// Does a test roll of the specified loot table for the provided <see cref="Player"/>.
         /// </summary>

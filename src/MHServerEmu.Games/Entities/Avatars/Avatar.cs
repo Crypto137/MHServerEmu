@@ -1070,29 +1070,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Interaction
 
-        private bool OLD_HandleBowlingBallItem(Player player)
-        {
-            var bowlingBallProtoRef = (PrototypeId)7835010736274089329; // Entity/Items/Consumables/Prototypes/AchievementRewards/ItemRewards/BowlingBallItem
-            var itemPower = (PrototypeId)18211158277448213692; // BowlingBallItemPower
-                                                               // itemPower = bowlingBallItem.Item.ActionsTriggeredOnItemEvent.ItemActionSet.Choices.ItemActionUsePower.Power
-
-            // Destroy bowling balls that are already present in the player general inventory
-            Inventory inventory = player.GetInventory(InventoryConvenienceLabel.General);
-
-            // A player can't have more than ten balls
-            if (inventory.GetMatchingEntities(bowlingBallProtoRef) >= 10) return false;
-
-            // Give the player a new bowling ball
-            player.Game.LootManager.GiveItem(bowlingBallProtoRef, LootContext.Drop, player);
-
-            // Assign bowling ball power if the player's avatar doesn't have one
-            Avatar avatar = player.CurrentAvatar;
-            if (avatar.HasPowerInPowerCollection(itemPower) == false)
-                avatar.AssignPower(itemPower, new(0, avatar.CharacterLevel, avatar.CombatLevel));
-
-            return true;
-        }
-
         public override bool UseInteractableObject(ulong entityId, PrototypeId missionRef)
         {
             Player player = GetOwnerOfType<Player>();
@@ -1120,12 +1097,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
-
-            // old hardcode
-            if (interactableObject.PrototypeDataRef == (PrototypeId)16537916167475500124) // BowlingBallReturnDispenser
-                return OLD_HandleBowlingBallItem(player);
-            if (PrototypeName.Contains("DangerRoom")) return false;// fix for scenario crashes                
-            // end
 
             var objectProto = interactableObject.WorldEntityPrototype;
             if (objectProto.PreInteractPower != PrototypeId.Invalid)
