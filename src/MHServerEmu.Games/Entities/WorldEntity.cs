@@ -2126,22 +2126,6 @@ namespace MHServerEmu.Games.Entities
                     : LootDropEventType.OnKilled;
 
                 AwardLootForDropEvent(lootDropEventType, playerList);
-
-                // TODO: rework this
-                if (killer is Avatar avatar) // this mission loot only for avatar
-                {
-                    var player = avatar.GetOwnerOfType<Player>();
-                    List<MissionLootTable> lootList = new();
-                    if (MissionManager.GetDropLootsForEnemy(this, player, lootList))
-                    {
-                        foreach (var missionLoot in lootList)
-                        {
-                            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                            inputSettings.Initialize(LootContext.Drop, player, this);
-                            Game.LootManager.SpawnLootFromTable(missionLoot.LootTableRef, inputSettings);
-                        }
-                    }
-                }
             }
 
             // XP
@@ -2217,6 +2201,7 @@ namespace MHServerEmu.Games.Entities
             {
                 using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                 inputSettings.Initialize(LootContext.Drop, player, this);
+                inputSettings.EventType = eventType;
                 Game.LootManager.AwardLootFromTables(tables, inputSettings);
             }
 

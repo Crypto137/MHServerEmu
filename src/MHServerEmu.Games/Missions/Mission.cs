@@ -2486,13 +2486,20 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
-        public bool GetDropLootsForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
+        public bool GetMissionLootTablesForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
         {
             bool hasLoot = false;
-            if (HasItemDrops == false) return false;
-            foreach (var objective in _objectiveDict.Values)
-                if (objective.State == MissionObjectiveState.Active)
-                    hasLoot |= objective.GetDropLootsForEnemy(enemy, dropLoots);
+
+            if (HasItemDrops)
+            {
+                foreach (MissionObjective objective in _objectiveDict.Values)
+                {
+                    if (objective.State != MissionObjectiveState.Active)
+                        continue;
+
+                    hasLoot |= objective.GetMissionLootTablesForEnemy(enemy, dropLoots);
+                }
+            }
 
             return hasLoot;
         }

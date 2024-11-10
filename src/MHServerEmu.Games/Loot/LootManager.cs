@@ -8,6 +8,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot.Specs;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -64,6 +65,8 @@ namespace MHServerEmu.Games.Loot
 
         public void AwardLootFromTables(Span<(PrototypeId, LootActionType)> tables, LootInputSettings inputSettings)
         {
+            // TODO: Combine loot summaries from multiple spawn / drop events
+
             foreach ((PrototypeId, LootActionType) tableEntry in tables)
             {
                 (PrototypeId lootTableProtoRef, LootActionType actionType) = tableEntry;
@@ -77,8 +80,28 @@ namespace MHServerEmu.Games.Loot
                     GiveLootFromTable(lootTableProtoRef, inputSettings);
                 }
             }
+            
+            // Spawn mission-specific loot (e.g. brood biomass in chapter 7)
+            if (inputSettings.LootContext == LootContext.Drop &&
+                inputSettings.EventType >= LootDropEventType.OnKilled &&
+                inputSettings.EventType <= LootDropEventType.OnKilledMiniBoss)
+            {
+                List<MissionLootTable> missionLootTableList = ListPool<MissionLootTable>.Instance.Rent();
 
-            // TODO: Mission-specific drops (e.g. brood biomass)
+                if (MissionManager.GetMissionLootTablesForEnemy(inputSettings.SourceEntity, inputSettings.Player, missionLootTableList))
+                {
+                    foreach (MissionLootTable missionLootTable in missionLootTableList)
+                    {
+                        inputSettings.MissionProtoRef = missionLootTable.MissionRef;
+                        SpawnLootFromTable(missionLootTable.LootTableRef, inputSettings);
+                    }
+
+                    // We are not using these settings anymore, but let's clear the mission prototype ref just in case something changes
+                    inputSettings.MissionProtoRef = PrototypeId.Invalid;
+                }
+
+                ListPool<MissionLootTable>.Instance.Return(missionLootTableList);
+            }
         }
 
         /// <summary>
@@ -125,6 +148,9 @@ namespace MHServerEmu.Games.Loot
             // Temp property collection for transfering properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
+
+            if (inputSettings.MissionProtoRef != PrototypeId.Invalid)
+                properties[PropertyEnum.MissionPrototype] = inputSettings.MissionProtoRef;
 
             // Trigger callbacks
             if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))

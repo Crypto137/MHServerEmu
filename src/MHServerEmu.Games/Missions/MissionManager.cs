@@ -1516,27 +1516,32 @@ namespace MHServerEmu.Games.Missions
             player.SendMissionInteract(targetId);
         }
 
-        public static bool GetDropLootsForEnemy(WorldEntity enemy, Player player, List<MissionLootTable> dropLoots)
+        public static bool GetMissionLootTablesForEnemy(WorldEntity enemy, Player player, List<MissionLootTable> dropLoots)
         {
-            var missionManager = player.MissionManager;
-            bool hasLoot = missionManager.GetDropLootsForEnemy(enemy, dropLoots);
+            // Player missions
+            MissionManager missionManager = player.MissionManager;
+            bool hasLoot = missionManager.GetMissionLootTablesForEnemyHelper(enemy, dropLoots);
+
+            // Region missions
             missionManager = player.CurrentAvatar?.Region?.MissionManager;
             if (missionManager != null)
-                hasLoot |= missionManager.GetDropLootsForEnemy(enemy, dropLoots);
+                hasLoot |= missionManager.GetMissionLootTablesForEnemyHelper(enemy, dropLoots);
 
             return hasLoot;
         }
 
-        private bool GetDropLootsForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
+        private bool GetMissionLootTablesForEnemyHelper(WorldEntity enemy, List<MissionLootTable> dropLoots)
         {
             bool hasLoot = false;
-            foreach (var missionRef in ActiveMissions)
+
+            foreach (PrototypeId missionRef in ActiveMissions)
             {
-                var mission = FindMissionByDataRef(missionRef);
+                Mission mission = FindMissionByDataRef(missionRef);
                 if (mission == null || mission.HasItemDrops == false) continue;
                 if (mission.State == MissionState.Active)
-                    hasLoot |= mission.GetDropLootsForEnemy(enemy, dropLoots);
+                    hasLoot |= mission.GetMissionLootTablesForEnemy(enemy, dropLoots);
             }
+
             return hasLoot;
         }
 
