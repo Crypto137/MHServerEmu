@@ -21,6 +21,11 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities.Items
 {
+    public enum InteractionValidateResult
+    {
+        Success
+    }
+
     public partial class Item : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -397,23 +402,79 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
-        public void InteractWithAvatar(Avatar avatar)
+        public bool InteractWithAvatar(Avatar avatar)
         {
-            var player = avatar.GetOwnerOfType<Player>();
-            if (player == null) return;
+            Player player = avatar?.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "InteractWithAvatar(): player == null");
 
-            var itemProto = ItemPrototype;
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "InteractWithAvatar(): itemProto == null");
+
+            if (PlayerCanUse(player, avatar) != InteractionValidateResult.Success)
+                return false;
 
             if (itemProto.ActionsTriggeredOnItemEvent != null && itemProto.ActionsTriggeredOnItemEvent.Choices.HasValue())
-                if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll) // TODO : other pick method
+            {
+                if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickWeight)
                 {
-                    foreach (var choice in itemProto.ActionsTriggeredOnItemEvent.Choices)
-                    {
-                        if (choice is not ItemActionPrototype itemActionProto) continue;
+                    // Do just the action that was picked when this item was rolled
+                    ItemActionBasePrototype[] choices = itemProto.ActionsTriggeredOnItemEvent.Choices;
 
-                        DoItemAction(itemActionProto, player, avatar);
+                    int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
+                    if (actionIndex < 0 || actionIndex >= choices.Length)
+                        return Logger.WarnReturn(false, "InteractWithAvatar(): actionIndex < 0 || actionIndex >= choices.Length");
+
+                    Prototype choiceProto = choices[actionIndex];
+                    if (choiceProto == null) return Logger.WarnReturn(false, "InteractWithAvatar(): choiceProto == null");
+
+                    // Action entries can be single actions or action sets
+
+                    // First check if the picked action is a set
+                    if (choiceProto is ItemActionSetPrototype actionSetProto)
+                    {
+                        // Only the top level action index is rolled, so we can't have any RNG in action sets
+                        if (actionSetProto.PickMethod != PickMethod.PickAll)
+                            return Logger.WarnReturn(false, "InteractWithAvatar(): actionSetProto.PickMethod != PickMethod.PickAll");
+
+                        if (actionSetProto.Choices == null)
+                            return Logger.WarnReturn(false, "InteractWithAvatar(): actionSetProto.Choices == null");
+
+                        foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
+                        {
+                            if (actionBaseProto is not ItemActionPrototype itemActionProto)
+                            {
+                                // Nesting of action sets is not supported by this system
+                                Logger.Warn("InteractWithAvatar(): actionBaseProto is not ItemActionPrototype itemActionProto");
+                                continue;
+                            }
+
+                            TriggerItemActionOnUse(itemActionProto, player, avatar);
+                        }
+                    }
+                    else if (choiceProto is ItemActionPrototype actionProto)
+                    {
+                        // If this is not a set, handle it as a single action
+                        TriggerItemActionOnUse(actionProto, player, avatar);
                     }
                 }
+                else if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll)
+                {
+                    // Do all actions OnUse actions if this item doesn't use random actions
+
+                    foreach (ItemActionBasePrototype choice in itemProto.ActionsTriggeredOnItemEvent.Choices)
+                    {
+                        // PickAll is not compatible with action sets
+                        if (choice is not ItemActionPrototype itemActionProto)
+                            continue;
+
+                        TriggerItemActionOnUse(itemActionProto, player, avatar);
+                    }
+                }
+            }
+
+            // TODO: Special interactions (e.g. character tokens)
+
+            return true;
         }
 
         private bool OnBuiltInPropertyRoll(float randomMult, PropertyPickInRangeEntryPrototype pickInRangeProto)
@@ -780,6 +841,68 @@ namespace MHServerEmu.Games.Entities.Items
         private void RefreshProcPowerIndexProperties()
         {
             // TODO
+        }
+
+        private bool HasItemActionType(ItemActionType actionType)
+        {
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "HasItemActionType(): itemProto == null");
+
+            if (itemProto.ActionsTriggeredOnItemEvent == null || itemProto.ActionsTriggeredOnItemEvent.Choices.IsNullOrEmpty())
+                return false;
+
+            ItemActionBasePrototype[] choices = itemProto.ActionsTriggeredOnItemEvent.Choices;
+
+            if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickWeight)
+            {
+                // Check just the action that was picked when this item was rolled
+                int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
+                if (actionIndex < 0 || actionIndex >= choices.Length)
+                    return Logger.WarnReturn(false, "HasItemActionType(): actionIndex < 0 || actionIndex >= choices.Length");
+
+                Prototype choiceProto = choices[actionIndex];
+                if (choiceProto == null) return Logger.WarnReturn(false, "HasItemActionType(): choiceProto == null");
+
+                // Action entries can be single actions or action sets
+
+                // First check if the picked action is a set
+                if (choiceProto is ItemActionSetPrototype actionSetProto)
+                {
+                    if (actionSetProto.Choices.IsNullOrEmpty())
+                        return false;
+
+                    return HasItemAction(actionSetProto.Choices, actionType);
+                }
+
+                // If this is not a set, handle it as a single action
+                if (choiceProto is ItemActionPrototype actionProto)
+                    return actionProto.ActionType == actionType;
+
+            }
+            else if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll)
+            {
+                // Check all actions if this item doesn't use random actions
+                return HasItemAction(itemProto.ActionsTriggeredOnItemEvent.Choices, actionType);
+            }
+
+            return false;
+        }
+
+        private static bool HasItemAction(ItemActionBasePrototype[] actions, ItemActionType actionType)
+        {
+            foreach (ItemActionBasePrototype actionBase in actions)
+            {
+                if (actionBase is ItemActionPrototype action && action.ActionType == actionType)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private InteractionValidateResult PlayerCanUse(Player player, Avatar avatar)
+        {
+            // TODO: Validation
+            return InteractionValidateResult.Success;
         }
 
         public void SetScenarioProperties(PropertyCollection properties)

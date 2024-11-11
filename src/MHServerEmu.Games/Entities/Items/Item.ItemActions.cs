@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Items
 
     public partial class Item
     {
-        private void DoItemAction(ItemActionPrototype itemActionProto, Player player, Avatar avatar)
+        private void TriggerItemActionOnUse(ItemActionPrototype itemActionProto, Player player, Avatar avatar)
         {
             if (itemActionProto.TriggeringEvent != ItemEventType.OnUse)
                 return;
