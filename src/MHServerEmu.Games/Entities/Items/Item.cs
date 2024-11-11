@@ -21,9 +21,28 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities.Items
 {
-    public enum InteractionValidateResult
+    public enum InteractionValidateResult       // Result names from CItem::AttemptInteractionBy()
     {
-        Success
+        Success,
+        ItemNotOwned,
+        Error2,
+        Error3,
+        ItemNotUsable,
+        Error5,
+        Error6,
+        ItemRequirementsNotMet,
+        Error8,
+        InventoryAlreadyUnlocked,
+        CharacterAlreadyUnlocked,
+        CharacterNotYetUnlocked,
+        AvatarUltimateNotUnlocked,
+        AvatarUltimateAlreadyMaxedOut,
+        AvatarUltimateUpgradeCurrentOnly,
+        PlayerAlreadyHasCraftingRecipe,
+        Error16,
+        ItemNotEquipped,
+        DownloadRequired,
+        UnknownFailure
     }
 
     public partial class Item : WorldEntity
@@ -39,9 +58,15 @@ namespace MHServerEmu.Games.Entities.Items
         public PrototypeId OnUsePower { get; private set; }
         public PrototypeId OnEquipPower { get; private set; }
 
+        public bool IsEquipped { get => InventoryLocation.InventoryPrototype?.IsEquipmentInventory == true; }
         public bool IsBoundToAccount { get => _itemSpec.GetBindingState(); }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
+
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
+        public bool IsCraftingRecipe { get => Prototype is CraftingRecipePrototype; }
+        public bool IsRelic { get => Prototype is RelicPrototype; }
+        public bool IsTeamUpGear { get => Prototype is TeamUpGearPrototype; }
+        public bool IsGem { get => ItemPrototype?.IsGem == true; }
 
         public Item(Game game) : base(game) 
         {
@@ -966,10 +991,186 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private InteractionValidateResult PlayerCanUse(Player player, Avatar avatar)
+        private InteractionValidateResult PlayerCanUse(Player player, Avatar avatar, bool checkPower = true, bool checkInventory = true)
         {
-            // TODO: Validation
+            if (player == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): player == null");
+
+            int currentStackSize = CurrentStackSize;
+            if (currentStackSize < 1)
+                return InteractionValidateResult.UnknownFailure;
+
+            if (player.Owns(this) == false)
+                return InteractionValidateResult.ItemNotOwned;
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): itemProto == null");
+
+
+            if (itemProto.IsUsable == false)
+                return InteractionValidateResult.ItemNotUsable;
+
+            //
+            // Inventory validation
+            //
+
+            if (checkInventory)
+            {
+                InventoryLocation invLoc = InventoryLocation;
+                InventoryCategory category = invLoc.InventoryCategory;
+                InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+                if (category != InventoryCategory.PlayerGeneral &&
+                    category != InventoryCategory.PlayerGeneralExtra &&
+                    convenienceLabel != InventoryConvenienceLabel.PvP)
+                {
+                    // Additional validation for non-general inventories
+                    if (category == InventoryCategory.PlayerStashGeneral ||
+                        category == InventoryCategory.PlayerStashAvatarSpecific)
+                    {
+                        // Validate that the player is near a STASH
+                        WorldEntity dialogTarget = player.GetDialogTarget(true);
+                        if (dialogTarget == null || dialogTarget.Properties[PropertyEnum.OpenPlayerStash] == false)
+                            return InteractionValidateResult.UnknownFailure;
+                    }
+                    else if (category == InventoryCategory.AvatarEquipment)
+                    {
+                        // Do not allow items equipped on library avatars to be used
+                        Avatar containerAvatar = Game.EntityManager.GetEntity<Avatar>(invLoc.ContainerId);
+                        if (containerAvatar?.IsInWorld != true)
+                            return InteractionValidateResult.UnknownFailure;
+                    }
+                    else if (convenienceLabel == InventoryConvenienceLabel.DeliveryBox)
+                    {
+                        // Only containers can be used from the delivery box
+                        if (itemProto.IsContainer == false)
+                            return InteractionValidateResult.UnknownFailure;
+                    }
+                    else
+                    {
+                        // Using items from other inventory types is not allowed
+                        return InteractionValidateResult.UnknownFailure;
+                    }
+                }
+
+                if (itemProto.AbilitySettings?.OnlySlottableWhileEquipped == true && IsEquipped == false)
+                    return InteractionValidateResult.ItemNotEquipped;
+            }
+            
+            //
+            // Level validation
+            //
+
+            int characterLevel = avatar.CharacterLevel;
+            int characterLevelRequirement = (int)(float)Properties[PropertyEnum.Requirement, PropertyEnum.CharacterLevel];
+            
+            // Character level requirement for use is always equal at least to the item's level
+            if (characterLevelRequirement <= 0)
+                characterLevelRequirement = Properties[PropertyEnum.ItemLevel];
+
+            if (characterLevel < characterLevelRequirement)
+                return InteractionValidateResult.ItemRequirementsNotMet;
+
+            int prestigeLevel = avatar.PrestigeLevel;
+            int prestigeLevelRequirement = (int)(float)Properties[PropertyEnum.Requirement, PropertyEnum.AvatarPrestigeLevel];
+            if (prestigeLevel < prestigeLevelRequirement)
+                return InteractionValidateResult.ItemRequirementsNotMet;
+
+            //
+            // Eval-based validation
+            //
+
+            if (itemProto.EvalCanUse != null)
+            {
+                EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, avatar);
+                evalContext.SetVar_Int(EvalContext.Var1, player.GetLevelCapForCharacter(avatar.PrototypeDataRef));
+
+                if (Eval.RunBool(itemProto.EvalCanUse, evalContext) == false)
+                    return InteractionValidateResult.ItemRequirementsNotMet;
+            }
+
+            //
+            // Subtype-specific validation
+            //
+
+            if (itemProto is CharacterTokenPrototype characterTokenProto)
+                return PlayerCanUseCharacterToken(player, avatar, characterTokenProto);
+
+            if (itemProto is InventoryStashTokenPrototype inventoryStashTokenProto)
+                return PlayerCanUseInventoryStashToken(player, inventoryStashTokenProto);
+
+            if (itemProto is EmoteTokenPrototype emoteTokenProto)
+                return PlayerCanUseEmoteToken(player, emoteTokenProto);
+
+            if (IsCraftingRecipe)
+                return PlayerCanUseCraftingRecipe(player);
+
+            if (HasItemActionType(ItemActionType.PrestigeMode))
+                return PlayerCanUsePrestigeMode(player, avatar);
+
+            if (HasItemActionType(ItemActionType.AwardTeamUpXP))
+                return PlayerCanUseAwardTeamUpXP(player, avatar);
+
+            AvatarPrototype avatarProto = avatar.AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): avatarProto == null");
+
+            if (itemProto.IsUsableByAgent(avatarProto) == false)
+                return InteractionValidateResult.ItemRequirementsNotMet;
+
+            if (checkPower && HasItemActionType(ItemActionType.UsePower))
+                return PlayerCanUsePowerAction(player, avatar);
+
             return InteractionValidateResult.Success;
+        }
+
+        private InteractionValidateResult PlayerCanUseCharacterToken(Player player, Avatar avatar, CharacterTokenPrototype characterTokenProto)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUseCharacterToken(): {characterTokenProto}");
+            return InteractionValidateResult.UnknownFailure;
+        }
+
+        private InteractionValidateResult PlayerCanUseInventoryStashToken(Player player, InventoryStashTokenPrototype inventoryStashTokenProto)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUseInventoryStashToken(): {inventoryStashTokenProto}");
+            return InteractionValidateResult.UnknownFailure;
+        }
+
+        private InteractionValidateResult PlayerCanUseEmoteToken(Player player, EmoteTokenPrototype emoteTokenProto)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUseEmoteToken(): {emoteTokenProto}");
+            return InteractionValidateResult.UnknownFailure;
+        }
+
+        private InteractionValidateResult PlayerCanUseCraftingRecipe(Player player)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUseCraftingRecipe()");
+            return InteractionValidateResult.UnknownFailure;
+        }
+
+        private InteractionValidateResult PlayerCanUsePrestigeMode(Player player, Avatar avatar)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUsePrestigeMode(): {avatar}");
+            return InteractionValidateResult.UnknownFailure;
+        }
+
+        private InteractionValidateResult PlayerCanUseAwardTeamUpXP(Player player, Avatar avatar)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUseAwardTeamUpXP(): {avatar}");
+            return InteractionValidateResult.UnknownFailure;
+        }
+
+        private InteractionValidateResult PlayerCanUsePowerAction(Player player, Avatar avatar)
+        {
+            // TODO
+            Logger.Debug($"PlayerCanUsePowerAction(): {avatar}");
+            return InteractionValidateResult.Success;       // success to make our power hacks work
         }
 
         public void SetScenarioProperties(PropertyCollection properties)
