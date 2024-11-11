@@ -819,12 +819,6 @@ namespace MHServerEmu.Games.Entities.Items
             return (int)GenerateTruncatedFloatWithinRange(randomMult, min, max);
         }
 
-        private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
-        {
-            //Logger.Warn($"GetTriggeredPower(): Not yet implemented (eventType={eventType}, actionType={actionType})");
-            return PrototypeId.Invalid;
-        }
-
         private bool RunRelicEval()
         {
             if (Prototype is not RelicPrototype relicProto)
@@ -841,6 +835,79 @@ namespace MHServerEmu.Games.Entities.Items
         private void RefreshProcPowerIndexProperties()
         {
             // TODO
+        }
+
+        private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
+        {
+            // This has similar overall structure to HasItemActionType()
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTriggeredPower(): itemProto == null");
+
+            if (itemProto.ActionsTriggeredOnItemEvent == null || itemProto.ActionsTriggeredOnItemEvent.Choices.IsNullOrEmpty())
+                return PrototypeId.Invalid;
+
+            ItemActionBasePrototype[] choices = itemProto.ActionsTriggeredOnItemEvent.Choices;
+
+            if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickWeight)
+            {
+                // Check just the action that was picked when this item was rolled
+                int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
+                if (actionIndex < 0 || actionIndex >= choices.Length)
+                    return Logger.WarnReturn(PrototypeId.Invalid, "GetTriggeredPower(): actionIndex < 0 || actionIndex >= choices.Length");
+
+                Prototype choiceProto = choices[actionIndex];
+                if (choiceProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTriggeredPower(): choiceProto == null");
+
+                // Action entries can be single actions or action sets
+
+                // First check if the picked action is a set
+                if (choiceProto is ItemActionSetPrototype actionSetProto)
+                {
+                    if (actionSetProto.Choices.IsNullOrEmpty())
+                        return PrototypeId.Invalid;
+
+                    return GetTriggeredPowerFromActionSet(actionSetProto.Choices, eventType, actionType);
+                }
+
+                // If this is not a set, handle it as a single action
+                if (actionType == ItemActionType.AssignPower && choiceProto is ItemActionAssignPowerPrototype assignPowerProto)
+                    return assignPowerProto.Power;
+
+                if (actionType == ItemActionType.UsePower && choiceProto is ItemActionUsePowerPrototype usePowerProto)
+                    return usePowerProto.Power;
+            }
+            else if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll)
+            {
+                // Check all actions if this item doesn't use random actions
+                return GetTriggeredPowerFromActionSet(choices, eventType, actionType);
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        private static PrototypeId GetTriggeredPowerFromActionSet(ItemActionBasePrototype[] actions, ItemEventType eventType, ItemActionType actionType)
+        {
+            foreach (ItemActionBasePrototype actionBaseProto in actions)
+            {
+                // There should be no nested action sets
+                if (actionBaseProto is not ItemActionPrototype actionProto)
+                {
+                    Logger.Warn("GetTriggeredPowerFromActionSet(): itemActionBaseProto is not ItemActionPrototype itemActionProto");
+                    continue;
+                }
+
+                if (actionProto.TriggeringEvent != eventType)
+                    continue;
+
+                if (actionType == ItemActionType.AssignPower && actionProto is ItemActionAssignPowerPrototype assignPowerProto)
+                    return assignPowerProto.Power;
+
+                if (actionType == ItemActionType.UsePower && actionProto is ItemActionUsePowerPrototype usePowerProto)
+                    return usePowerProto.Power;
+            }
+
+            return PrototypeId.Invalid;
         }
 
         private bool HasItemActionType(ItemActionType actionType)
@@ -890,9 +957,9 @@ namespace MHServerEmu.Games.Entities.Items
 
         private static bool HasItemAction(ItemActionBasePrototype[] actions, ItemActionType actionType)
         {
-            foreach (ItemActionBasePrototype actionBase in actions)
+            foreach (ItemActionBasePrototype actionBaseProto in actions)
             {
-                if (actionBase is ItemActionPrototype action && action.ActionType == actionType)
+                if (actionBaseProto is ItemActionPrototype action && action.ActionType == actionType)
                     return true;
             }
 
