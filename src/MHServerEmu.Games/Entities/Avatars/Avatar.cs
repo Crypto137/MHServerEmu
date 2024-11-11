@@ -866,6 +866,61 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return IsHostileTo(target);
         }
 
+        public ulong FindAbilityItem(ItemPrototype itemProto, ulong skipItemId = InvalidId)
+        {
+            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Rent();
+
+            try
+            {
+                // Add equipment inventories
+                foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+                    inventoryList.Add(inventory);
+
+                // Add general inventories if needed
+                if (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false)
+                {
+                    Player playerOwner = GetOwnerOfType<Player>();
+                    if (playerOwner == null) return Logger.WarnReturn(InvalidId, "FindAbilityItem(): playerOwner == null");
+
+                    foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
+                        inventoryList.Add(inventory);
+                }
+
+                // Do the search
+                EntityManager entityManager = Game.EntityManager;
+
+                foreach (Inventory inventory in inventoryList)
+                {
+                    foreach (var entry in inventory)
+                    {
+                        ulong itemId = entry.Id;
+
+                        Item item = entityManager.GetEntity<Item>(itemId);
+                        if (item == null)
+                        {
+                            Logger.Warn("FindAbilityItem(): item == null");
+                            continue;
+                        }
+
+                        if (item.PrototypeDataRef != itemProto.DataRef)
+                            continue;
+
+                        if (skipItemId != InvalidId && itemId == skipItemId)
+                            continue;
+
+                        return itemId;
+                    }
+                }
+
+                return InvalidId;
+            }
+            finally
+            {
+                // Make sure our inventory list is returned to the pool for reuse when we are done
+                ListPool<Inventory>.Instance.Return(inventoryList);
+            }
+        }
+
         private bool AssignDefaultAvatarPowers()
         {
             Player player = GetOwnerOfType<Player>();
@@ -887,6 +942,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(avatarPrototype.ResurrectOtherEntityPower, indexProps);
             AssignPower(avatarPrototype.StatsPower, indexProps);
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
+
+            AssignItemPowers();
 
             // Progression table powers
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
@@ -953,6 +1010,91 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private bool AssignItemPowers()
+        {
+            // This has similar structure to FindAbilityItem()
+            Player playerOwner = GetOwnerOfType<Player>();
+            if (playerOwner == null) return Logger.WarnReturn(false, "AssignItemPowers(): playerOwner == null");
+
+            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Rent();
+
+            try
+            {
+                // Add equipment inventories
+                foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+                    inventoryList.Add(inventory);
+
+                // Add general inventories
+                foreach (Inventory inventory in new InventoryIterator(playerOwner, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
+                    inventoryList.Add(inventory);
+
+                EntityManager entityManager = Game.EntityManager;
+                int characterLevel = CharacterLevel;
+                int combatLevel = CombatLevel;
+
+                foreach (Inventory inventory in inventoryList)
+                {
+                    foreach (var entry in inventory)
+                    {
+                        ulong itemId = entry.Id;
+
+                        Item item = entityManager.GetEntity<Item>(itemId);
+                        if (item == null)
+                        {
+                            Logger.Warn("AssignItemPowers(): item == null");
+                            continue;
+                        }
+
+                        ItemPrototype itemProto = item.ItemPrototype;
+                        if (itemProto == null)
+                        {
+                            Logger.Warn("AssignItemPowers(): itemProto == null");
+                            continue;
+                        }
+
+                        PrototypeId itemPowerProtoRef = PrototypeId.Invalid;
+
+                        PrototypeId onUsePowerProtoRef = item.OnUsePower;
+                        PrototypeId onEquipPowerProtoRef = item.OnEquipPower;
+
+                        if (onUsePowerProtoRef != PrototypeId.Invalid)
+                        {
+                            if (itemProto.AbilitySettings == null ||
+                                itemProto.AbilitySettings.OnlySlottableWhileEquipped == false ||
+                                inventory.IsEquipment)
+                            {
+                                itemPowerProtoRef = onUsePowerProtoRef;
+                            }
+                        }
+                        else if (onEquipPowerProtoRef != PrototypeId.Invalid)
+                        {
+                            if (inventory.IsEquipment)
+                                itemPowerProtoRef = onEquipPowerProtoRef;
+                        }
+
+                        if (itemPowerProtoRef != PrototypeId.Invalid && GetPower(itemPowerProtoRef) == null)
+                        {
+                            int itemLevel = item.Properties[PropertyEnum.ItemLevel];
+                            float itemVariation = item.Properties[PropertyEnum.ItemVariation];
+                            PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
+
+                            if (AssignPower(itemPowerProtoRef, indexProps) == null)
+                                Logger.Warn($"AssignItemPowers(): Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
+                            else
+                                Logger.Debug($"AssignItemPowers(): Assigned item power {itemPowerProtoRef.GetName()} to {this}");
+                        }
+                    }
+                }
+
+                return true;
+            }
+            finally
+            {
+                // Make sure our inventory list is returned to the pool for reuse when we are done
+                ListPool<Inventory>.Instance.Return(inventoryList);
+            }
         }
 
         #endregion
@@ -1216,16 +1358,71 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);
 
-            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Costume)
+            if (entity is not Item item)
+                return;
+
+            InventoryCategory category = invLoc.InventoryCategory;
+            InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+            // Costume can be changed for library avatars
+            if (convenienceLabel == InventoryConvenienceLabel.Costume)
                 ChangeCostume(entity.PrototypeDataRef);
+
+            if (IsInWorld == false)
+                return;
+
+            // Do things that require the avatar to be in play
+
+            if (invLoc.InventoryPrototype?.IsEquipmentInventory != true)
+                return;
+
+            // Assign powers granted by equipped items
+            if (item.GetPowerGranted(out PrototypeId powerProtoRef) && GetPower(powerProtoRef) == null)
+            {
+                int characterLevel = CharacterLevel;
+                int combatLevel = CombatLevel;
+                int itemLevel = item.Properties[PropertyEnum.ItemLevel];
+                float itemVariation = item.Properties[PropertyEnum.ItemVariation];
+                PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
+
+                if (AssignPower(powerProtoRef, indexProps) == null)
+                {
+                    Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {this}");
+                    return;
+                }
+
+                Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {this}");
+            }
         }
 
         public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
         {
             base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
 
-            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Costume)
+            if (entity is not Item item)
+                return;
+
+            InventoryCategory category = invLoc.InventoryCategory;
+            InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+            // Costume can be changed for library avatars
+            if (convenienceLabel == InventoryConvenienceLabel.Costume)
                 ChangeCostume(PrototypeId.Invalid);
+
+            if (IsInWorld == false)
+                return;
+
+            // Do things that require the avatar to be in play
+
+            if (invLoc.InventoryPrototype?.IsEquipmentInventory != true)
+                return;
+
+            // Unassign powers granted by equipped items
+            if (item.GetPowerGranted(out PrototypeId powerProtoRef) && GetPower(powerProtoRef) != null)
+            {
+                UnassignPower(powerProtoRef);
+                Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {this}");
+            }
         }
 
         public bool ChangeCostume(PrototypeId costumeProtoRef)

@@ -33,19 +33,57 @@ namespace MHServerEmu.Games.Entities.Items
 
             switch (itemActionProto.ActionType)
             {
-                case ItemActionType.AssignPower:            DoItemActionAssignPower(); break;
-                case ItemActionType.DestroySelf:            DoItemActionDestroySelf(); break;
-                case ItemActionType.GuildUnlock:            DoItemActionGuildUnlock(); break;
-                case ItemActionType.PrestigeMode:           DoItemActionPrestigeMode(); break;
-                case ItemActionType.ReplaceSelfItem:        DoItemActionReplaceSelfItem(); break;
-                case ItemActionType.ReplaceSelfLootTable:   DoItemActionReplaceSelfLootTable(); break;
-                case ItemActionType.ResetMissions:          DoItemActionResetMissions(); break;
-                case ItemActionType.Respec:                 DoItemActionRespec(); break;
-                case ItemActionType.SaveDangerRoomScenario: DoItemActionSaveDangerRoomScenario(); break;
-                case ItemActionType.UnlockPermaBuff:        DoItemActionUnlockPermaBuff(); break;
-                case ItemActionType.UsePower:               DoItemActionUsePower((ItemActionUsePowerPrototype)itemActionProto, avatar); break;
-                case ItemActionType.AwardTeamUpXP:          DoItemActionAwardTeamUpXP(); break;
-                case ItemActionType.OpenUIPanel:            DoItemActionOpenUIPanel(); break;
+                case ItemActionType.AssignPower:
+                    DoItemActionAssignPower();
+                    break;
+
+                case ItemActionType.DestroySelf:
+                    DoItemActionDestroySelf();
+                    break;
+
+                case ItemActionType.GuildUnlock:
+                    DoItemActionGuildUnlock();
+                    break;
+                case ItemActionType.PrestigeMode:
+                    DoItemActionPrestigeMode();
+                    break;
+
+                case ItemActionType.ReplaceSelfItem:
+                    DoItemActionReplaceSelfItem();
+                    break;
+
+                case ItemActionType.ReplaceSelfLootTable:
+                    DoItemActionReplaceSelfLootTable();
+                    break;
+
+                case ItemActionType.ResetMissions:
+                    DoItemActionResetMissions();
+                    break;
+
+                case ItemActionType.Respec:
+                    DoItemActionRespec();
+                    break;
+
+                case ItemActionType.SaveDangerRoomScenario:
+                    DoItemActionSaveDangerRoomScenario();
+                    break;
+
+                case ItemActionType.UnlockPermaBuff:
+                    DoItemActionUnlockPermaBuff();
+                    break;
+
+                case ItemActionType.UsePower:
+                    ItemActionUsePowerPrototype usePowerProto = (ItemActionUsePowerPrototype)itemActionProto;
+                    DoItemActionUsePower(usePowerProto.Power, avatar);
+                    break;
+
+                case ItemActionType.AwardTeamUpXP:
+                    DoItemActionAwardTeamUpXP();
+                    break;
+
+                case ItemActionType.OpenUIPanel:
+                    DoItemActionOpenUIPanel();
+                    break;
             }
         }
 
@@ -99,36 +137,42 @@ namespace MHServerEmu.Games.Entities.Items
             Logger.Debug($"DoItemActionUnlockPermaBuff(): {this}");
         }
         
-        private void DoItemActionUsePower(ItemActionUsePowerPrototype usePowerProto, Avatar avatar)
+        private bool DoItemActionUsePower(PrototypeId powerProtoRef, Avatar avatar)
         {
-            Logger.Debug($"DoItemActionUsePower(): {this}");
+            Logger.Debug($"DoItemActionUsePower(): item=[{this}], powerProtoRef={powerProtoRef.GetName()}");
 
-            // Old implementation, TODO: check and clean this up
-            PrototypeId powerRef = usePowerProto.Power;
-            
-            if (avatar.HasPowerInPowerCollection(powerRef) == false)
-                avatar.AssignPower(powerRef, new(0, avatar.CharacterLevel, avatar.CombatLevel));
+            Power power = avatar.GetPower(powerProtoRef);
+            if (power == null) return Logger.WarnReturn(false, "DoItemActionUsePower(): power == null");
 
-            // TODO move this to powers
-            Power power = avatar.GetPower(powerRef);
-            if (power == null) return;
-
+            // HACK/REMOVEME: Remove these hacks when we get summon powers working properly
             if (power.Prototype is SummonPowerPrototype summonPowerProto)
             {
-                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
-                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
+                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerProtoRef);
+                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef])
                 {
                     EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
+
+                    if (power.IsToggled())  // Check for Danger Room scenarios that are not toggled
+                        avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef] = false;
+
                     avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
                 }
                 else
                 {
                     EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, this);
-                    avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = true;
+
+                    if (power.IsToggled())  // Check for Danger Room scenarios that are not toggled
+                        avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef] = true;
+
                     avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
                 }
+
+                return true;
             }
+
+            // TODO: normal implementation
+
+            return true;
         }
 
         private void DoItemActionAwardTeamUpXP()

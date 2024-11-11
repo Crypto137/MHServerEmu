@@ -15,6 +15,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -677,6 +678,83 @@ namespace MHServerEmu.Games.Entities
 
                 if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay && invLoc.Slot == 0)
                     CurrentAvatar = avatar;
+            }
+
+            if (IsInGame == false || entity is not Item item)
+                return;
+
+            InventoryCategory category = invLoc.InventoryCategory;
+            InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+            if (convenienceLabel == InventoryConvenienceLabel.General ||
+                convenienceLabel == InventoryConvenienceLabel.TeamUpGeneral ||
+                convenienceLabel == InventoryConvenienceLabel.PvP)
+            {
+                // Assign the item's OnUse power to the current avatar
+                Avatar currentAvatar = CurrentAvatar;
+                if (currentAvatar?.IsInWorld == true)
+                {
+                    ItemPrototype itemProto = item.ItemPrototype;
+                    if (itemProto == null) return;
+
+                    PrototypeId powerProtoRef = item.OnUsePower;
+
+                    if (powerProtoRef != PrototypeId.Invalid &&
+                        currentAvatar.HasPowerInPowerCollection(powerProtoRef) == false &&
+                        (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false))
+                    {
+                        int characterLevel = currentAvatar.CharacterLevel;
+                        int combatLevel = currentAvatar.CombatLevel;
+                        int itemLevel = item.Properties[PropertyEnum.ItemLevel];
+                        float itemVariation = item.Properties[PropertyEnum.ItemVariation];
+                        PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
+
+                        if (currentAvatar.AssignPower(powerProtoRef, indexProps) == null)
+                        {
+                            Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {currentAvatar}");
+                            return;
+                        }
+
+                        Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {currentAvatar}");
+                    }
+                }
+            }
+        }
+
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+
+            if (IsInGame == false || entity is not Item item)
+                return;
+
+            InventoryCategory category = invLoc.InventoryCategory;
+            InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+            if (convenienceLabel == InventoryConvenienceLabel.General ||
+                convenienceLabel == InventoryConvenienceLabel.TeamUpGeneral ||
+                convenienceLabel == InventoryConvenienceLabel.PvP)
+            {
+                // Unassign the item's OnUse power from the current avatar as long as there are no other item that grant it
+                Avatar currentAvatar = CurrentAvatar;
+                if (currentAvatar?.IsInWorld == true)
+                {
+                    ItemPrototype itemProto = item.ItemPrototype;
+                    if (itemProto == null) return;
+
+                    PrototypeId powerProtoRef = item.OnUsePower;
+
+                    if (powerProtoRef != PrototypeId.Invalid &&
+                        currentAvatar.HasPowerInPowerCollection(powerProtoRef) &&
+                        (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false))
+                    {
+                        if (currentAvatar.FindAbilityItem(itemProto, item.Id) == InvalidId)
+                        {
+                            currentAvatar.UnassignPower(powerProtoRef);
+                            Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {currentAvatar}");
+                        }
+                    }
+                }
             }
         }
 

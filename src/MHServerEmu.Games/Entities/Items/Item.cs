@@ -39,7 +39,7 @@ namespace MHServerEmu.Games.Entities.Items
         AvatarUltimateAlreadyMaxedOut,
         AvatarUltimateUpgradeCurrentOnly,
         PlayerAlreadyHasCraftingRecipe,
-        Error16,
+        CannotTriggerPower,
         ItemNotEquipped,
         DownloadRequired,
         UnknownFailure
@@ -182,6 +182,27 @@ namespace MHServerEmu.Games.Entities.Items
             // TODO: Avatar::ValidateEquipmentChange
 
             return true;
+        }
+
+        public bool GetPowerGranted(out PrototypeId powerProtoRef)
+        {
+            powerProtoRef = PrototypeId.Invalid;
+
+            PrototypeId onUsePower = OnUsePower;
+            if (onUsePower != PrototypeId.Invalid)
+            {
+                powerProtoRef = onUsePower;
+                return true;
+            }
+
+            PrototypeId onEquipPower = OnEquipPower;
+            if (onEquipPower != PrototypeId.Invalid)
+            {
+                powerProtoRef = onEquipPower;
+                return true;
+            }
+
+            return false;
         }
 
         public uint GetVendorBaseXPGain(Player player)
@@ -1168,9 +1189,15 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUsePowerAction(Player player, Avatar avatar)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUsePowerAction(): {avatar}");
-            return InteractionValidateResult.Success;       // success to make our power hacks work
+            PowerPrototype powerProto = OnUsePower.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUsePowerAction(): powerProto == null");
+
+            // Run the usual power validation check if it is assigned already
+            Power power = avatar.GetPower(powerProto.DataRef);
+            if (power != null && power.CanTrigger(PowerActivationSettingsFlags.Item) != PowerUseResult.Success)
+                return InteractionValidateResult.CannotTriggerPower;
+
+            return InteractionValidateResult.Success;
         }
 
         public void SetScenarioProperties(PropertyCollection properties)
