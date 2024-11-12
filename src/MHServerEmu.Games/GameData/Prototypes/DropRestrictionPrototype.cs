@@ -120,6 +120,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (UsableFor.IsNullOrEmpty())
                 return;
 
+            // Always allow cash shop items
+            _lootContextFlags = LootContext.CashShop;
+
             foreach (LootContext context in UsableFor)
                 _lootContextFlags |= context;
         }
