@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Locales;
 
@@ -58,7 +59,7 @@ namespace MHServerEmu.Games.Achievements
             DisplayOrder = info.DisplayOrder;
             VisibleState = (AchievementVisibleState)info.VisibleState;
             EvaluationType = (AchievementEvaluationType)info.EvaluationType;
-            EventType = (ScoringEventType)info.Eventtype;
+            EventType = ScoringEvents.GetScoringEventTypeFromInt(info.Eventtype);
             Threshold = info.Threshold;
             DependentAchievementId = info.DependentAchievementId;
             UIProgressDisplayOption = (AchievementUIProgressDisplayOption)info.UiProgressDisplayOption;
