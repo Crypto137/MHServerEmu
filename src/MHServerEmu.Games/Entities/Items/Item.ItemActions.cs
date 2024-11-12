@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Items
 
     public partial class Item
     {
-        private void TriggerItemActionOnUse(ItemActionPrototype itemActionProto, Player player, Avatar avatar)
+        private void TriggerItemActionOnUse(ItemActionPrototype itemActionProto, Player player, Avatar avatar, ref bool wasUsed, ref bool isConsumable)
         {
             if (itemActionProto.TriggeringEvent != ItemEventType.OnUse)
                 return;
@@ -34,107 +34,134 @@ namespace MHServerEmu.Games.Entities.Items
             switch (itemActionProto.ActionType)
             {
                 case ItemActionType.AssignPower:
-                    DoItemActionAssignPower();
+                    wasUsed |= DoItemActionAssignPower();
                     break;
 
                 case ItemActionType.DestroySelf:
-                    DoItemActionDestroySelf();
+                    DoItemActionDestroySelf(ref isConsumable);    // This simply flags the item to be destroyed, so we don't need to update wasUsed here
                     break;
 
                 case ItemActionType.GuildUnlock:
-                    DoItemActionGuildUnlock();
+                    wasUsed |= DoItemActionGuildUnlock();
                     break;
+
                 case ItemActionType.PrestigeMode:
-                    DoItemActionPrestigeMode();
+                    wasUsed |= DoItemActionPrestigeMode();
                     break;
 
                 case ItemActionType.ReplaceSelfItem:
-                    DoItemActionReplaceSelfItem();
+                    wasUsed |= DoItemActionReplaceSelfItem();
                     break;
 
                 case ItemActionType.ReplaceSelfLootTable:
-                    DoItemActionReplaceSelfLootTable();
+                    wasUsed |= DoItemActionReplaceSelfLootTable();
                     break;
 
                 case ItemActionType.ResetMissions:
-                    DoItemActionResetMissions();
+                    wasUsed |= DoItemActionResetMissions();
                     break;
 
                 case ItemActionType.Respec:
-                    DoItemActionRespec();
+                    wasUsed |= DoItemActionRespec();
                     break;
 
                 case ItemActionType.SaveDangerRoomScenario:
-                    DoItemActionSaveDangerRoomScenario();
+                    wasUsed |= DoItemActionSaveDangerRoomScenario();
                     break;
 
                 case ItemActionType.UnlockPermaBuff:
-                    DoItemActionUnlockPermaBuff();
+                    wasUsed |= DoItemActionUnlockPermaBuff();
                     break;
 
                 case ItemActionType.UsePower:
                     ItemActionUsePowerPrototype usePowerProto = (ItemActionUsePowerPrototype)itemActionProto;
-                    DoItemActionUsePower(usePowerProto.Power, avatar);
+                    wasUsed |= DoItemActionUsePower(usePowerProto.Power, avatar);
                     break;
 
                 case ItemActionType.AwardTeamUpXP:
-                    DoItemActionAwardTeamUpXP();
+                    wasUsed |= DoItemActionAwardTeamUpXP();
                     break;
 
                 case ItemActionType.OpenUIPanel:
-                    DoItemActionOpenUIPanel();
+                    wasUsed |= DoItemActionOpenUIPanel();
                     break;
             }
         }
 
-        private void DoItemActionAssignPower()
+        private bool TriggerItemActionOnUsePowerActivated(ItemActionPrototype itemActionProto)
+        {
+            if (itemActionProto.TriggeringEvent != ItemEventType.OnUsePowerActivated)
+                return false;
+
+            switch (itemActionProto.ActionType)
+            {
+                case ItemActionType.DestroySelf:
+                    DecrementStack();
+                    return true;
+
+                default:
+                    return Logger.WarnReturn(false, $"TriggerItemActionOnUsePowerActivated(): Unhandled action type {itemActionProto.ActionType}");
+            }
+        }
+
+        private bool DoItemActionAssignPower()
         {
             Logger.Debug($"DoItemActionAssignPower(): {this}");
+            return false;
         }
 
-        private void DoItemActionDestroySelf()
+        private void DoItemActionDestroySelf(ref bool isConsumable)
         {
-            Logger.Debug($"DoItemActionDestroySelf(): {this}");
+            // This "action" flags this item's effect as consumable (i.e. it needs to be destroyed on use)
+            isConsumable = true;
         }
 
-        private void DoItemActionGuildUnlock()
+        private bool DoItemActionGuildUnlock()
         {
             Logger.Debug($"DoItemActionGuildUnlock(): {this}");
+            return false;
         }
 
-        private void DoItemActionPrestigeMode()
+        private bool DoItemActionPrestigeMode()
         {
             Logger.Debug($"DoItemActionPrestigeMode(): {this}");
+            return false;
         }
 
-        private void DoItemActionReplaceSelfItem()
+        private bool DoItemActionReplaceSelfItem()
         {
             Logger.Debug($"DoItemActionReplaceSelfItem(): {this}");
+            return false;
         }
 
-        private void DoItemActionReplaceSelfLootTable()
+        private bool DoItemActionReplaceSelfLootTable()
         {
             Logger.Debug($"DoItemActionReplaceSelfLootTable(): {this}");
+            return false;
         }
 
-        private void DoItemActionResetMissions()
+        private bool DoItemActionResetMissions()
         {
             Logger.Debug($"DoItemActionResetMissions(): {this}");
+            return false;
         }
 
-        private void DoItemActionRespec()
+        private bool DoItemActionRespec()
         {
             Logger.Debug($"DoItemActionRespec(): {this}");
+            return false;
         }
 
-        private void DoItemActionSaveDangerRoomScenario()
+        private bool DoItemActionSaveDangerRoomScenario()
         {
             Logger.Debug($"DoItemActionSaveDangerRoomScenario(): {this}");
+            return false;
         }
 
-        private void DoItemActionUnlockPermaBuff()
+        private bool DoItemActionUnlockPermaBuff()
         {
             Logger.Debug($"DoItemActionUnlockPermaBuff(): {this}");
+            return false;
         }
         
         private bool DoItemActionUsePower(PrototypeId powerProtoRef, Avatar avatar)
@@ -167,22 +194,25 @@ namespace MHServerEmu.Games.Entities.Items
                     avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
                 }
 
+                OnUsePowerActivated();
                 return true;
             }
 
             // TODO: normal implementation
 
-            return true;
+            return false;
         }
 
-        private void DoItemActionAwardTeamUpXP()
+        private bool DoItemActionAwardTeamUpXP()
         {
             Logger.Debug($"DoItemActionAwardTeamUpXP(): {this}");
+            return false;
         }
 
-        private void DoItemActionOpenUIPanel()
+        private bool DoItemActionOpenUIPanel()
         {
             Logger.Debug($"DoItemActionOpenUIPanel(): {this}");
+            return false;
         }
 
     }

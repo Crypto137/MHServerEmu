@@ -459,6 +459,9 @@ namespace MHServerEmu.Games.Entities.Items
             if (PlayerCanUse(player, avatar) != InteractionValidateResult.Success)
                 return false;
 
+            bool wasUsed = false;
+            bool isConsumable = false;
+
             if (itemProto.ActionsTriggeredOnItemEvent != null && itemProto.ActionsTriggeredOnItemEvent.Choices.HasValue())
             {
                 if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickWeight)
@@ -487,38 +490,115 @@ namespace MHServerEmu.Games.Entities.Items
 
                         foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
                         {
-                            if (actionBaseProto is not ItemActionPrototype itemActionProto)
+                            if (actionBaseProto is not ItemActionPrototype actionProto)
                             {
                                 // Nesting of action sets is not supported by this system
                                 Logger.Warn("InteractWithAvatar(): actionBaseProto is not ItemActionPrototype itemActionProto");
                                 continue;
                             }
 
-                            TriggerItemActionOnUse(itemActionProto, player, avatar);
+                            TriggerItemActionOnUse(actionProto, player, avatar, ref wasUsed, ref isConsumable);
                         }
                     }
                     else if (choiceProto is ItemActionPrototype actionProto)
                     {
                         // If this is not a set, handle it as a single action
-                        TriggerItemActionOnUse(actionProto, player, avatar);
+                        TriggerItemActionOnUse(actionProto, player, avatar, ref wasUsed, ref isConsumable);
                     }
                 }
                 else if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll)
                 {
                     // Do all actions OnUse actions if this item doesn't use random actions
 
-                    foreach (ItemActionBasePrototype choice in itemProto.ActionsTriggeredOnItemEvent.Choices)
+                    foreach (ItemActionBasePrototype actionBaseProto in itemProto.ActionsTriggeredOnItemEvent.Choices)
                     {
                         // PickAll is not compatible with action sets
-                        if (choice is not ItemActionPrototype itemActionProto)
+                        if (actionBaseProto is not ItemActionPrototype actionProto)
+                        {
+                            Logger.Warn("InteractWithAvatar(): actionBaseProto is not ItemActionPrototype itemActionProto");
                             continue;
+                        }
 
-                        TriggerItemActionOnUse(itemActionProto, player, avatar);
+                        TriggerItemActionOnUse(actionProto, player, avatar, ref wasUsed, ref isConsumable);
                     }
                 }
             }
 
             // TODO: Special interactions (e.g. character tokens)
+
+            // Consume if this is a consumable item that was successfully used
+            // NOTE: Power-based consumable items get consumed when their power is activated in OnUsePowerActivated().
+            if (isConsumable && wasUsed)
+                DecrementStack();
+
+            return true;
+        }
+
+        public bool OnUsePowerActivated()
+        {
+            // This method mostly mirrors InteractWithAvatar, but for the OnUsePowerActivated event
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "OnUsePowerActivated(): itemProto == null");
+
+            if (itemProto.ActionsTriggeredOnItemEvent == null || itemProto.ActionsTriggeredOnItemEvent.Choices.IsNullOrEmpty())
+                return true;
+
+            if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickWeight)
+            {
+                // Do just the action that was picked when this item was rolled
+                ItemActionBasePrototype[] choices = itemProto.ActionsTriggeredOnItemEvent.Choices;
+
+                int actionIndex = Properties[PropertyEnum.ItemEventActionIndex];
+                if (actionIndex < 0 || actionIndex >= choices.Length)
+                    return Logger.WarnReturn(false, "OnUsePowerActivated(): actionIndex < 0 || actionIndex >= choices.Length");
+
+                Prototype choiceProto = choices[actionIndex];
+                if (choiceProto == null) return Logger.WarnReturn(false, "OnUsePowerActivated(): choiceProto == null");
+
+                // Action entries can be single actions or action sets
+
+                // First check if the picked action is a set
+                if (choiceProto is ItemActionSetPrototype actionSetProto)
+                {
+                    if (actionSetProto.Choices == null)
+                        return Logger.WarnReturn(false, "OnUsePowerActivated(): actionSetProto.Choices == null");
+
+                    foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
+                    {
+                        if (actionBaseProto is not ItemActionPrototype actionProto)
+                        {
+                            // Nesting of action sets is not supported by this system
+                            Logger.Warn("OnUsePowerActivated(): actionBaseProto is not ItemActionPrototype actionProto");
+                            continue;
+                        }
+
+                        if (TriggerItemActionOnUsePowerActivated(actionProto))
+                            return true;
+                    }
+                }
+                else if (choiceProto is ItemActionPrototype actionProto)
+                {
+                    // If this is not a set, handle it as a single action
+                    if (TriggerItemActionOnUsePowerActivated(actionProto))
+                        return true;
+                }
+            }
+            else if (itemProto.ActionsTriggeredOnItemEvent.PickMethod == PickMethod.PickAll)
+            {
+                foreach (ItemActionBasePrototype actionBaseProto in itemProto.ActionsTriggeredOnItemEvent.Choices)
+                {
+                    // PickAll is not compatible with action sets
+                    if (actionBaseProto is not ItemActionPrototype actionProto)
+                    {
+                        Logger.Warn("OnUsePowerActivated(): actionBaseProto is not ItemActionPrototype actionProto");
+                        continue;
+                    }
+
+                    if (TriggerItemActionOnUsePowerActivated(actionProto))
+                        return true;
+                }
+            }
 
             return true;
         }
