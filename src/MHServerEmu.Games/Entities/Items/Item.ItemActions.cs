@@ -1,6 +1,9 @@
-﻿using MHServerEmu.Games.Entities.Avatars;
+﻿using Gazillion;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -26,12 +29,12 @@ namespace MHServerEmu.Games.Entities.Items
 
     public partial class Item
     {
-        private void TriggerItemActionOnUse(ItemActionPrototype itemActionProto, Player player, Avatar avatar, ref bool wasUsed, ref bool isConsumable)
+        private void TriggerItemActionOnUse(ItemActionPrototype actionProto, Player player, Avatar avatar, ref bool wasUsed, ref bool isConsumable)
         {
-            if (itemActionProto.TriggeringEvent != ItemEventType.OnUse)
+            if (actionProto.TriggeringEvent != ItemEventType.OnUse)
                 return;
 
-            switch (itemActionProto.ActionType)
+            switch (actionProto.ActionType)
             {
                 case ItemActionType.AssignPower:
                     wasUsed |= DoItemActionAssignPower();
@@ -54,7 +57,13 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.ReplaceSelfLootTable:
-                    wasUsed |= DoItemActionReplaceSelfLootTable();
+                    if (actionProto is not ItemActionReplaceSelfLootTablePrototype replaceSelfLootTableProto)
+                    {
+                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionReplaceSelfLootTablePrototype replaceSelfLootTableProto");
+                        return;
+                    }
+
+                    wasUsed |= DoItemActionReplaceSelfLootTable(replaceSelfLootTableProto.LootTable, replaceSelfLootTableProto.UseCurrentAvatarLevelForRoll, player, avatar);
                     break;
 
                 case ItemActionType.ResetMissions:
@@ -74,7 +83,12 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.UsePower:
-                    ItemActionUsePowerPrototype usePowerProto = (ItemActionUsePowerPrototype)itemActionProto;
+                    if (actionProto is not ItemActionUsePowerPrototype usePowerProto)
+                    {
+                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionUsePowerPrototype usePowerProto");
+                        return;
+                    }
+
                     wasUsed |= DoItemActionUsePower(usePowerProto.Power, avatar);
                     break;
 
@@ -134,9 +148,37 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool DoItemActionReplaceSelfLootTable()
+        private bool DoItemActionReplaceSelfLootTable(LootTablePrototype lootTableProto, bool useAvatarLevel, Player player, Avatar avatar)
         {
             Logger.Debug($"DoItemActionReplaceSelfLootTable(): {this}");
+
+            using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            inputSettings.Initialize(LootContext.MysteryChest, player, null);
+            inputSettings.LootRollSettings.Level = useAvatarLevel ? avatar.CharacterLevel : Properties[PropertyEnum.ItemLevel];
+
+            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            resolver.Initialize(Game.Random);
+            resolver.SetContext(LootContext.MysteryChest, player);
+
+            LootRollResult result = lootTableProto.Roll(inputSettings.LootRollSettings, resolver);
+            if (result != LootRollResult.Success)
+            {
+                player.SendMessage(NetMessageLootRollFailed.DefaultInstance);
+                return Logger.WarnReturn(false, $"DoItemActionReplaceSelfLootTable(): Failed to roll loot table for {this}");
+            }
+
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            resolver.FillLootResultSummary(lootResultSummary);
+
+            NetMessageLootRewardReport.Builder reportBuilder = NetMessageLootRewardReport.CreateBuilder();
+
+            if (ReplaceSelfInternal(lootResultSummary, player, reportBuilder))
+            {
+                reportBuilder.SetSource(_itemSpec.ToProtobuf());
+                player.SendMessage(reportBuilder.Build());
+                return true;
+            }
+            
             return false;
         }
 
@@ -215,5 +257,10 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
+        private bool ReplaceSelfInternal(LootResultSummary lootResultSummary, Player player, NetMessageLootRewardReport.Builder reportBuilder)
+        {
+            Logger.Debug($"ReplaceSelfInternal(): [{lootResultSummary.Types}]");
+            return false;
+        }
     }
 }
