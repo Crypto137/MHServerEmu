@@ -100,6 +100,7 @@ namespace MHServerEmu.Games.Entities
 
         private TeleportData _teleportData;
         private SpawnGimbal _spawnGimbal;
+        private bool _uiSystemUnlocked;
 
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
@@ -186,9 +187,6 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
 
-            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<UISystemLockPrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
-
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
@@ -260,6 +258,18 @@ namespace MHServerEmu.Games.Entities
             // TODO: Clean up gameplay options init for new players
             if (settings.ArchiveData.IsNullOrEmpty())
                 _gameplayOptions.ResetToDefaults();
+        }
+
+        public void UnlockUISystem()
+        {
+            if (_uiSystemUnlocked) return;
+            foreach (PrototypeId uiSystemLockRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
+            {
+                var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
+                if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
+                    Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
+            }
+            _uiSystemUnlocked = true;
         }
 
         public override void OnUnpackComplete(Archive archive)

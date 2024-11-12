@@ -1618,10 +1618,16 @@ namespace MHServerEmu.Games.Entities.Avatars
                 LinkTeamUpAgent(CurrentTeamUpAgent);
                 if (Properties[PropertyEnum.AvatarTeamUpIsSummoned])
                     ActivateTeamUpAgent(true);  // We may want to disable the intro animation in some cases
-            }        
+            }
 
-            if (regionProto?.Chapter != PrototypeId.Invalid)
-                player.SetActiveChapter(regionProto.Chapter);
+            if (regionProto != null)
+            {
+                if (regionProto.Chapter != PrototypeId.Invalid)
+                    player.SetActiveChapter(regionProto.Chapter);
+
+                if (regionProto.IsNPE == false)
+                    player.UnlockUISystem();
+            }
 
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
         }
