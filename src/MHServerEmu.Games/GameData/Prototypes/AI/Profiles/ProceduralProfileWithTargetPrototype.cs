@@ -483,6 +483,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (blackboard == null) return;
 
             // Delay AI activation to let the drop animation finish before an avatar can pick up this orb
+            // NOTE: For some reason AIStartsEnabled is not set to false for some orb prototypes, so we force set it here.
+            blackboard.PropertyCollection[PropertyEnum.AIStartsEnabled] = false;
             EventPointer<AIController.EnableAIEvent> enableEvent = new();
             aiController.ScheduleAIEvent(enableEvent, TimeSpan.FromMilliseconds(InitialMoveToDelayMS));
 
