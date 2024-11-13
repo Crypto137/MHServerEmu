@@ -466,7 +466,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates an <see cref="ItemSpec"/> for the provided <see cref="PrototypeId"/>.
         /// </summary>
-        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef, LootContext lootContext, Player player)
+        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef, LootContext lootContext, Player player, int level = 1)
         {
             ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
             if (itemProto == null)
@@ -477,7 +477,6 @@ namespace MHServerEmu.Games.Loot
 
             _resolver.SetContext(lootContext, player);
 
-            int level = 1;
             AvatarPrototype avatarProto = player.CurrentAvatar?.AvatarPrototype;
 
             using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();

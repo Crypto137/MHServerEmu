@@ -55,7 +55,13 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.ReplaceSelfItem:
-                    wasUsed |= DoItemActionReplaceSelfItem();
+                    if (actionProto is not ItemActionReplaceSelfItemPrototype replaceSelfItemProto)
+                    {
+                        Logger.Warn("TriggerItemActionOnUse(): actionProto is not ItemActionReplaceSelfItemPrototype replaceSelfItemProto");
+                        return;
+                    }
+
+                    wasUsed |= DoItemActionReplaceSelfItem(replaceSelfItemProto.Item, player, avatar);
                     break;
 
                 case ItemActionType.ReplaceSelfLootTable:
@@ -144,9 +150,40 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool DoItemActionReplaceSelfItem()
+        private bool DoItemActionReplaceSelfItem(PrototypeId itemProtoRef, Player player, Avatar avatar)
         {
             Logger.Debug($"DoItemActionReplaceSelfItem(): {this}");
+
+            ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(false, "DoItemActionReplaceSelfItem(): itemProto == null");
+
+            using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            LootResult lootResult;
+
+            if (itemProto.IsCurrency)
+            {
+                itemProto.GetCurrency(out PrototypeId currencyRef, out int amount);
+                CurrencySpec currencySpec = new(itemProto.DataRef, currencyRef, amount);
+                lootResult = new(currencySpec);
+            }
+            else
+            {
+                ItemSpec itemSpec = Game.LootManager.CreateItemSpec(itemProtoRef, LootContext.CashShop, player, Properties[PropertyEnum.ItemLevel]);
+                if (itemSpec == null) return Logger.WarnReturn(false, "DoItemActionReplaceSelfItem(): itemSpec == null");
+                lootResult = new(itemSpec);
+            }
+
+            lootResultSummary.Add(lootResult);
+
+            NetMessageLootRewardReport.Builder reportBuilder = NetMessageLootRewardReport.CreateBuilder();
+
+            if (ReplaceSelfHelper(lootResultSummary, player, reportBuilder))
+            {
+                reportBuilder.SetSource(_itemSpec.ToProtobuf());
+                player.SendMessage(reportBuilder.Build());
+                return true;
+            }
+
             return false;
         }
 
