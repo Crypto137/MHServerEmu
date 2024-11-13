@@ -8,6 +8,39 @@ using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements
 {
+    #region Enum
+    public enum AchievementVisibleState
+    {
+        Invalid,
+        Visible,
+        Invisible,
+        ParentComplete,
+        Complete,
+        InProgress,
+        Objective
+    }
+
+    public enum AchievementEvaluationType
+    {
+        Invalid,
+        Available,
+        Children,
+        Disabled,
+        Parent
+    }
+
+    public enum AchievementUIProgressDisplayOption
+    {
+        Invalid = -1,
+        Threshold,
+        Hidden,
+        Checkbox,
+        ProgressBar,
+        Max
+    }
+
+    #endregion
+
     public class AchievementInfo
     {
         public uint Id { get; set; }
@@ -57,17 +90,38 @@ namespace MHServerEmu.Games.Achievements
             CategoryStr = (LocaleStringId)info.CategoryStr;
             SubCategoryStr = (LocaleStringId)info.SubCategoryStr;
             DisplayOrder = info.DisplayOrder;
-            VisibleState = (AchievementVisibleState)info.VisibleState;
-            EvaluationType = (AchievementEvaluationType)info.EvaluationType;
+            VisibleState = GetAchievementVisibleStateFromInt(info.VisibleState);
+            EvaluationType = GetAchievementEvaluationTypeFromInt(info.EvaluationType);
             EventType = ScoringEvents.GetScoringEventTypeFromInt(info.Eventtype);
             Threshold = info.Threshold;
             DependentAchievementId = info.DependentAchievementId;
-            UIProgressDisplayOption = (AchievementUIProgressDisplayOption)info.UiProgressDisplayOption;
+            UIProgressDisplayOption = GetAchievementUIProgressDisplayOptionFromInt(info.UiProgressDisplayOption);
             PublishedDateUS = new((long)info.PublishedDateUS * TimeSpan.TicksPerSecond);
             IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;
             OrbisTrophyShared = info.OrbisTrophyShared;
+        }
+
+        public static AchievementVisibleState GetAchievementVisibleStateFromInt(uint state)
+        {
+            return state > (uint)AchievementVisibleState.Invalid && state <= (uint)AchievementVisibleState.Objective
+                ? (AchievementVisibleState)state
+                : AchievementVisibleState.Invalid;
+        }
+
+        public static AchievementEvaluationType GetAchievementEvaluationTypeFromInt(uint evaluationType)
+        {
+            return evaluationType > (uint)AchievementEvaluationType.Invalid && evaluationType <= (uint)AchievementEvaluationType.Parent
+                ? (AchievementEvaluationType)evaluationType
+                : AchievementEvaluationType.Invalid;
+        }
+
+        public static AchievementUIProgressDisplayOption GetAchievementUIProgressDisplayOptionFromInt(uint option)
+        {
+            return option < (uint)AchievementUIProgressDisplayOption.Max
+                ? (AchievementUIProgressDisplayOption)option
+                : AchievementUIProgressDisplayOption.Invalid;
         }
 
         public AchievementDatabaseDump.Types.AchievementInfo ToNetStruct()

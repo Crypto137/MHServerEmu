@@ -65,7 +65,9 @@ namespace MHServerEmu.Games.Events
 
         public static ScoringEventType GetScoringEventTypeFromInt(uint eventType)
         {
-            return eventType >= 0 && eventType < (uint)ScoringEventType.Max ? (ScoringEventType)eventType : ScoringEventType.Invalid;
+            return eventType < (uint)ScoringEventType.Max 
+                ? (ScoringEventType)eventType 
+                : ScoringEventType.Invalid;
         }
     }
 }
