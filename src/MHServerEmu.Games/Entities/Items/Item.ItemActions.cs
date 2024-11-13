@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -172,7 +173,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             NetMessageLootRewardReport.Builder reportBuilder = NetMessageLootRewardReport.CreateBuilder();
 
-            if (ReplaceSelfInternal(lootResultSummary, player, reportBuilder))
+            if (ReplaceSelfHelper(lootResultSummary, player, reportBuilder))
             {
                 reportBuilder.SetSource(_itemSpec.ToProtobuf());
                 player.SendMessage(reportBuilder.Build());
@@ -257,10 +258,171 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool ReplaceSelfInternal(LootResultSummary lootResultSummary, Player player, NetMessageLootRewardReport.Builder reportBuilder)
+        private bool ReplaceSelfHelper(LootResultSummary lootResultSummary, Player player, NetMessageLootRewardReport.Builder reportBuilder)
         {
-            Logger.Debug($"ReplaceSelfInternal(): [{lootResultSummary.Types}]");
-            return false;
+            Logger.Debug($"ReplaceSelfHelper(): [{lootResultSummary.Types}]");
+
+            // Validation
+
+            // Loot types not defined here cannot be used as MysteryChest replacements
+            const LootType LootTypeFilter = LootType.Item | LootType.Currency | LootType.VanityTitle | LootType.CallbackNode;
+
+            LootType unsupportedTypes = lootResultSummary.Types & ~LootTypeFilter;
+            if (unsupportedTypes != LootType.None)
+                return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Summary contains unsupported loot types {unsupportedTypes}");
+
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): itemProto == null");
+
+            if (InventoryLocation.ContainerId != player.Id) return Logger.WarnReturn(false, "ReplaceSelfHelper(): InventoryLocation.ContainerId != player.Id");
+
+            Inventory inventory = player.GetInventoryByRef(InventoryLocation.InventoryRef);
+            if (inventory == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): inventory == null");
+
+            Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (deliveryBox == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): deliveryBox == null");
+
+            // If this is the last item in the stack, move it out of the inventory while we try to replace it
+            InventoryLocation oldInvLoc = new(InventoryLocation);
+
+            if (CurrentStackSize <= 1 && ChangeInventoryLocation(null) != InventoryResult.Success)
+                return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Failed to remove the last item in the stack from its inventory\nItem=[{this}]\nInvLoc=[{InventoryLocation}]");
+
+            // We need to keep track of everything we are doing so we can roll back if something goes wrong
+            List<(ulong, int)> replacementItemList = ListPool<(ulong, int)>.Instance.Rent();
+
+            using PropertyCollection oldCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            oldCurrencyProperties.CopyPropertyRange(player.Properties, PropertyEnum.Currency);
+
+            try
+            {
+                EntityManager entityManager = Game.EntityManager;
+
+                foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
+                {
+                    // Create an item
+                    using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    settings.EntityRef = itemSpec.ItemProtoRef;
+                    settings.ItemSpec = itemSpec;
+
+                    Item replacementItem = entityManager.CreateEntity(settings) as Item;
+                    if (replacementItem == null)
+                    {
+                        Logger.Warn("ReplaceSelfHelper(): replacementItem == null");
+                        CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                        return false;
+                    }
+
+                    replacementItem.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
+
+                    // Check if this item can be put into this inventory
+                    if (replacementItem.CanChangeInventoryLocation(inventory) != InventoryResult.Success)
+                    {
+                        Logger.Warn($"ReplaceSelfHelper(): Replacement item [{replacementItem}] cannot be put into inventory {inventory}");
+                        replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
+                        CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                        return false;
+                    }
+
+                    // Add this item to the inventory
+                    bool wasAdded = false;
+                    ulong? stackEntityId = 0;
+
+                    // Try to stack it
+                    uint slot = inventory.GetAutoStackSlot(replacementItem, true);
+                    if (slot != Inventory.InvalidSlot && replacementItem.ChangeInventoryLocation(inventory, slot, ref stackEntityId, true) == InventoryResult.Success)
+                        wasAdded = true;
+
+                    // Try to put it into the original item's slot
+                    if (wasAdded == false && replacementItem.ChangeInventoryLocation(inventory, oldInvLoc.Slot, ref stackEntityId, true) == InventoryResult.Success)
+                        wasAdded = true;
+
+                    // Try to put it into a free slot
+                    if (wasAdded == false && replacementItem.ChangeInventoryLocation(inventory, Inventory.InvalidSlot, ref stackEntityId, true) == InventoryResult.Success)
+                        wasAdded = true;
+
+                    // Try the delivery box as a fallback
+                    if (wasAdded == false && replacementItem.ChangeInventoryLocation(deliveryBox, Inventory.InvalidSlot, ref stackEntityId, true) == InventoryResult.Success)
+                        wasAdded = true;
+
+                    // Everything failed
+                    if (wasAdded == false)
+                    {
+                        replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
+                        Logger.Warn($"ReplaceSelfHelper(): Failed to put replacement item [{replacementItem}] anywhere");
+                        CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                        return false;
+                    }
+
+                    // Finalize this item
+                    if (stackEntityId.Value == InvalidId)
+                    {
+                        // The replacement was added as a new item
+                        replacementItemList.Add((replacementItem.Id, replacementItem.CurrentStackSize));
+
+                        reportBuilder.AddItemSpecs(NetMessageLootEntity.CreateBuilder()
+                            .SetItemSpec(itemSpec.ToProtobuf())
+                            .SetItemId(replacementItem.Id));
+
+                        replacementItem.SetRecentlyAdded(true);
+                    }
+                    else
+                    {
+                        // The replacement got stacked
+                        replacementItemList.Add((replacementItem.Id, itemSpec.StackCount));
+
+                        reportBuilder.AddItemSpecs(NetMessageLootEntity.CreateBuilder()
+                            .SetItemSpec(itemSpec.ToProtobuf())
+                            .SetItemId(stackEntityId.Value));
+
+                        Item stackEntity = entityManager.GetEntity<Item>(stackEntityId.Value);
+                        stackEntity?.SetRecentlyAdded(true);
+                    }
+
+                }
+
+                // TODO: Currency
+
+                // TODO: Vanity titles
+
+                // TODO: Callbacks
+
+                return true;
+            }
+            finally
+            {
+                // Return our cleanup list to the pool
+                ListPool<(ulong, int)>.Instance.Return(replacementItemList);
+            }
+        }
+
+        private void CleanUpReplaceSelfError(Player player, List<(ulong, int)> replacementItemList, PropertyCollection propertiesToRestore, InventoryLocation invLoc)
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            // Clean up partial item replacement
+            foreach (var entry in replacementItemList)
+            {
+                (ulong itemId, int count) = entry;
+                Item item = entityManager.GetEntity<Item>(itemId);
+                if (item == null)
+                {
+                    Logger.Warn("CleanUpReplaceSelfError(): item == null");
+                    continue;
+                }
+
+                item.DecrementStack(count);
+            }
+
+            // Restore currency
+            player.Properties.CopyPropertyRange(propertiesToRestore, PropertyEnum.Currency);
+
+            // Return this item to its original location
+            if (InventoryLocation != invLoc && ChangeInventoryLocation(invLoc.GetInventory(), invLoc.Slot) != InventoryResult.Success)
+            {
+                Logger.Warn($"CleanUpReplaceSelfError(): Failed to return item [{this}] to its original inventory location {invLoc}");
+                Destroy();
+            }
         }
     }
 }

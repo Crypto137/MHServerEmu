@@ -31,6 +31,8 @@ namespace MHServerEmu.Games.Entities.Items
         public int Seed { get => _seed; }
         public PrototypeId EquippableBy { get => _equippableBy; }
 
+        public int StackCount { get; set; } = 1;    // TODO: Use this for creating stacks of items
+
         public bool IsValid { get => _itemProtoRef != PrototypeId.Invalid && _rarityProtoRef != PrototypeId.Invalid; }
 
         public ItemSpec() { }
