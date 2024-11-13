@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 
@@ -265,7 +266,7 @@ namespace MHServerEmu.Games.Entities.Items
             // Validation
 
             // Loot types not defined here cannot be used as MysteryChest replacements
-            const LootType LootTypeFilter = LootType.Item | LootType.Currency | LootType.VanityTitle | LootType.CallbackNode;
+            const LootType LootTypeFilter = LootType.Item | LootType.Currency | LootType.CallbackNode;
 
             LootType unsupportedTypes = lootResultSummary.Types & ~LootTypeFilter;
             if (unsupportedTypes != LootType.None)
@@ -381,11 +382,50 @@ namespace MHServerEmu.Games.Entities.Items
 
                 }
 
-                // TODO: Currency
+                using PropertyCollection replacementCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
 
-                // TODO: Vanity titles
+                foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
+                {
+                    if (currencySpec.IsItem == false)
+                    {
+                        Logger.Warn($"ReplaceSelfHelper(): Attempted to replace item [{this}] with a non-item currency {currencySpec.AgentOrItemProtoRef.GetName()}");
+                        CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                        return false;
+                    }
 
-                // TODO: Callbacks
+                    currencySpec.ApplyCurrency(replacementCurrencyProperties);
+
+                    using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                    settings.EntityRef = currencySpec.AgentOrItemProtoRef;
+                    settings.ItemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
+                    settings.Properties = replacementCurrencyProperties;
+
+                    Item currencyItem = entityManager.CreateEntity(settings) as Item;
+                    if (currencyItem == null)
+                    {
+                        Logger.Warn("ReplaceSelfHelper(): currencyItem == null");
+                        CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                        return false;
+                    }
+
+                    replacementCurrencyProperties.RemovePropertyRange(PropertyEnum.ItemCurrency);
+
+                    bool acquired = player.AcquireCurrencyItem(currencyItem);
+                    currencyItem.Destroy();
+
+                    if (acquired == false)
+                    {
+                        Logger.Warn($"ReplaceSelfHelper(): Failed to acquire replacement currency from item [{currencyItem}]");
+                        CleanUpReplaceSelfError(player, replacementItemList, oldCurrencyProperties, oldInvLoc);
+                        return false;
+                    }
+
+                    reportBuilder.AddCurrencySpecs(currencySpec.ToProtobuf());
+                }
+
+                // Do callbacks
+                foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
+                    callbackNode.OnResultsEvaluation(player, null);
 
                 return true;
             }
