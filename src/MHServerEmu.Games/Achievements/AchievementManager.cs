@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Achievements
@@ -21,6 +22,11 @@ namespace MHServerEmu.Games.Achievements
             var avatar = Owner.CurrentAvatar;
             if (avatar == null) return;
             avatar.Properties[PropertyEnum.AchievementScore] = score;
+        }
+
+        public void OnScoringEvent(in ScoringEvent scoringEvent)
+        {
+            // TODO update
         }
     }
 }

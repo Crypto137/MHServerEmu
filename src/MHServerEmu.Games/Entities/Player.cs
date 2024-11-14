@@ -1524,6 +1524,15 @@ namespace MHServerEmu.Games.Entities
             return level == 0 ? levelCap : level;
         }
 
+        public int GetPrestigeLevelForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            if (levelCap <= 0) return 0;
+            int level = Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef];
+            if (level <= 0) return 0;
+            return (level - 1) / levelCap;
+        }
+
         public void SetActiveChapter(PrototypeId chapterRef)
         {
             Properties[PropertyEnum.ActiveMissionChapter] = chapterRef;
@@ -1802,6 +1811,52 @@ namespace MHServerEmu.Games.Entities
         }
 
         #endregion
+
+        public void OnScoringEvent(in ScoringEvent scoringEvent)
+        {
+            AchievementManager.OnScoringEvent(scoringEvent);
+        }
+
+        public int CountAvatarsAtLevelCap()
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            HashSet<PrototypeId> avatars = new();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (GetMaxCharacterLevelAttainedForAvatar(avatarRef, (AvatarMode)avatarMode) >= levelCap)
+                    avatars.Add(avatarRef);
+            }
+            return avatars.Count;
+        }
+
+        public int CountAvatarsAtPrestigeLevelCap()
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            var advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return 0;
+            int maxPrestigeLevel = advancementProto.MaxPrestigeLevel;
+
+            HashSet<PrototypeId> avatars = new();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (GetCharacterLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= levelCap 
+                    && GetPrestigeLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= maxPrestigeLevel)
+                    avatars.Add(avatarRef);
+            }
+            return avatars.Count;
+        }
+
+        private int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        {
+            var propId = new PropertyId(PropertyEnum.AvatarLibraryLevel, (PropertyParam)avatarMode, avatarRef);
+            return Math.Min(Properties[propId], Avatar.GetAvatarLevelCap());
+        }
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {

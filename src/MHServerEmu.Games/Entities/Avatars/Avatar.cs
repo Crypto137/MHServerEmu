@@ -977,6 +977,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto != null ? advancementProto.GetAvatarLevelCap() : 0;
         }
 
+        public bool IsAtMaxPrestigeLevel()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return false;
+            return PrestigeLevel >= advancementProto.MaxPrestigeLevel;
+        }
+
         public override long GetLevelUpXPRequirement(int level)
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
@@ -1055,8 +1062,23 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.SetCharacterLevel(characterLevel);
 
-            Player owner = GetOwnerOfType<Player>();
-            owner?.OnAvatarCharacterLevelChanged(this);
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            player.OnAvatarCharacterLevelChanged(this);
+            player.OnScoringEvent(new(ScoringEventType.AvatarLevel, characterLevel));
+
+            if (IsAtLevelCap)
+            {
+                int count = player.CountAvatarsAtLevelCap();
+                player.OnScoringEvent(new(ScoringEventType.AvatarsAtLevelCap, count));
+
+                if (IsAtMaxPrestigeLevel())
+                {
+                    count = player.CountAvatarsAtPrestigeLevelCap();
+                    player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevelCap, count));
+                }
+            }
         }
 
         protected override void SetCombatLevel(int combatLevel)
@@ -1537,11 +1559,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (newArea != null)
             {
-                // TODO Achievement?
                 PlayerEnteredAreaGameEvent evt = new(player, newArea.PrototypeDataRef);
                 newArea.PopulationArea?.OnPlayerEntered();
                 newArea.PlayerEnteredAreaEvent.Invoke(evt);
                 newArea.Region.PlayerEnteredAreaEvent.Invoke(evt);
+                player.OnScoringEvent(new(ScoringEventType.AreaEnter, newArea.PrototypeDataRef));
             }
         }
 
@@ -1679,6 +1701,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             var region = Region;
             region?.AvatarEnteredRegionEvent.Invoke(new(player, region.PrototypeDataRef));
+            player.OnScoringEvent(new(ScoringEventType.RegionEnter));
         }
 
         public void ScheduleSwapInPower()
