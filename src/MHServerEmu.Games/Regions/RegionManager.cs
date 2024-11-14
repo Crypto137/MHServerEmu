@@ -1,10 +1,14 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.MetaGames.GameModes;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
@@ -22,6 +26,7 @@ namespace MHServerEmu.Games.Regions
 
         private uint _areaId = 1;
         private uint _cellId = 1;
+        private ulong _matchNumber = 1;
 
         private TimeSpan _lastCleanupTime;
         private readonly Stack<ulong> _regionsToDestroy = new();
@@ -106,8 +111,10 @@ namespace MHServerEmu.Games.Regions
                 return null;
             }
 
-            if (region.MatchNumber != 0)
+            if (region.MatchNumber != 0)    // Matches are not stored in the public region dict
                 _matches[region.MatchNumber] = region;
+            else if (region.IsPublic)
+                _publicRegionDict.Add(region.PrototypeDataRef, region);
 
             return region;
         }
@@ -123,10 +130,9 @@ namespace MHServerEmu.Games.Regions
             if (_allRegions.TryGetValue(regionId, out Region region) == false)
                 return Logger.WarnReturn(false, $"DestroyRegion(): Failed to retrieve region for id 0x{regionId:X}");
 
-            if (region.MatchNumber != 0)
-                _matches.Remove(regionId);
-
-            if (region.IsPublic)
+            if (region.MatchNumber != 0)    // Matches are not stored in the public region dict
+                _matches.Remove(region.MatchNumber);
+            else if (region.IsPublic)
                 _publicRegionDict.Remove(region.PrototypeDataRef);
 
             TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
@@ -177,13 +183,22 @@ namespace MHServerEmu.Games.Regions
 
             if (regionProto.IsPublic)
             {
-                // Currently we have only one instance of each public region, and they all use the lowest available difficulty.
-                regionContext.DifficultyTierRef = regionProto.AccessDifficulties.HasValue()
-                    ? regionProto.AccessDifficulties[0]
-                    : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+                if (regionProto.Behavior == RegionBehavior.MatchPlay)
+                {
+                    // Use preferred difficulty for matches
+                    regionContext.DifficultyTierRef = playerConnection.Player.GetDifficultyTierPreference();
+                    region = GetMatchRegion(regionContext);
+                }
+                else
+                {
+                    // Currently we have only one instance of each non-match public region, and they all use the lowest available difficulty.
+                    regionContext.DifficultyTierRef = regionProto.AccessDifficulties.HasValue()
+                        ? regionProto.AccessDifficulties[0]
+                        : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
 
-                if (_publicRegionDict.TryGetValue(regionProtoRef, out region) == false)
-                    region = GenerateAndInitRegion(regionContext);
+                    if (_publicRegionDict.TryGetValue(regionProtoRef, out region) == false)
+                        region = GenerateAndInitRegion(regionContext);
+                }
             }
             else
             {
@@ -260,7 +275,7 @@ namespace MHServerEmu.Games.Regions
             return _allRegions.Values.GetEnumerator();
         }
 
-        private Region GenerateAndInitRegion(RegionContext regionContext)
+        private Region GenerateAndInitRegion(RegionContext regionContext, bool isMatchRegion = false)
         {
             PrototypeId regionProtoRef = regionContext.RegionDataRef;
 
@@ -283,6 +298,9 @@ namespace MHServerEmu.Games.Regions
                     GenerateEntities = true,
                     GenerateLog = false
                 };
+
+                if (isMatchRegion)
+                    settings.MatchNumber = _matchNumber++;
 
                 // clear Endless context
                 regionContext.Reset();
@@ -308,16 +326,89 @@ namespace MHServerEmu.Games.Regions
             // region = EmptyRegion(prototype);
             if (region != null)
             {
-                // Off Region Mission info // RegionHelper.TEMP_InitializeHardcodedRegionData(region);
-                // EntityHelper.SetUpHardcodedEntities(region);
                 ulong entities = Game.EntityManager.PeekNextEntityId() - numEntities;
                 Logger.Info($"Entities generated = {entities} [{region.EntitySpatialPartition.TotalElements}]");
-
-                if (region.IsPublic)
-                    _publicRegionDict.Add(regionProtoRef, region);
             }
 
             return region;
+        }
+
+        private Region GetMatchRegion(RegionContext regionContext)
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            List<Region> regionList = ListPool<Region>.Instance.Rent();
+
+            foreach (Region region in _matches.Values)
+            {
+                if (region.PrototypeDataRef != regionContext.RegionDataRef)
+                    continue;
+
+                if (region.DifficultyTierRef != regionContext.DifficultyTierRef)
+                    continue;
+
+                if (region.PlayerCount >= region.Prototype.PlayerLimit)
+                    continue;
+
+                // Check if this region's metastate is about to be shut down
+                if (region.MetaGames.Count == 0)
+                {
+                    Logger.Warn($"GetMatchRegion(): Match region {region} does not contain any metagames");
+                    continue;
+                }
+
+                ulong metaGameId = region.MetaGames[0];
+                MetaGame metaGame = entityManager.GetEntity<MetaGame>(metaGameId);
+                if (metaGame == null)
+                {
+                    Logger.Warn("GetMatchRegion(): metaGame == null");
+                    continue;
+                }
+
+                if (metaGame.CurrentMode is MetaGameModeIdle idleMode)
+                {
+                    var idleModeProto = idleMode.Prototype as MetaGameModeIdlePrototype;
+                    if (idleModeProto == null)
+                    {
+                        Logger.Warn("GetMatchRegion(): idleModeProto == null");
+                        continue;
+                    }
+
+                    if (idleModeProto.DurationMS > 0)
+                        continue;
+                }
+
+                // Everything seems okay, add this region for consideration
+                regionList.Add(region);
+            }
+
+            try
+            {
+                // No candidates, generate a new region
+                if (regionList.Count == 0)
+                    return GenerateAndInitRegion(regionContext, true);
+
+                // Find the region with the lowest number of players in it
+                int minPlayerCount = int.MaxValue;
+                int index = -1;
+
+                for (int i = 0; i < regionList.Count; i++)
+                {
+                    Region region = regionList[i];
+                    if (region.PlayerCount < minPlayerCount)
+                    {
+                        minPlayerCount = region.PlayerCount;
+                        index = i;
+                    }
+                }
+
+                return regionList[index];
+            }
+            finally
+            {
+                // Return the temp list to the pool for reuse
+                ListPool<Region>.Instance.Return(regionList);
+            }
         }
     }
 }
