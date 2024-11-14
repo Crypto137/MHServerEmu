@@ -112,11 +112,13 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
         {
-            if (CheckItem(filterArgs, restrictionFlags, false) == false)
+            if (CheckItem(filterArgs, restrictionFlags, false, stackCount) == false)
                 return LootRollResult.Failure;
 
             ItemSpec itemSpec = new(filterArgs.ItemProto.DataRef, filterArgs.Rarity, filterArgs.Level,
                 0, Array.Empty<AffixSpec>(), Random.Next(), PrototypeId.Invalid);
+
+            itemSpec.StackCount = stackCount;
 
             LootResult lootResult = new(itemSpec);
             PendingItem pendingItem = new(lootResult, filterArgs.RollFor);
@@ -246,7 +248,7 @@ namespace MHServerEmu.Games.Loot
             }
             else if (worldEntityProto is ItemPrototype)
             {
-                if (CheckItem(filterArgs, restrictionFlags, false) == false)
+                if (CheckItem(filterArgs, restrictionFlags, false, stackCount) == false)
                     return LootRollResult.Failure;
             }
             else

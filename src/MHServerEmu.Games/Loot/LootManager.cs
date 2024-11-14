@@ -313,6 +313,9 @@ namespace MHServerEmu.Games.Loot
                         settings.ItemSpec = itemSpec;
                         settings.Properties = properties;
 
+                        if (player.IsInGame == false)
+                            settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
+
                         Item item = entityManager.CreateEntity(settings) as Item;
                         if (item == null)
                         {
@@ -326,6 +329,7 @@ namespace MHServerEmu.Games.Loot
                             goto end;
                         }
 
+                        item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
                         itemList.Add(item);
                     }
                     else if (currencySpec.IsAgent)
@@ -533,11 +537,16 @@ namespace MHServerEmu.Games.Loot
             settings.SourceEntityId = sourceEntityId;
             settings.SourcePosition = sourcePosition;
             settings.Properties = properties;
+            settings.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
 
             settings.ItemSpec = itemSpec;
             settings.Lifespan = itemProto.GetExpirationTime(itemSpec.RarityProtoRef);
 
             Item item = Game.EntityManager.CreateEntity(settings) as Item;
+
+            // Clean up properties (even if we failed to create the item for some reason)
+            settings.Properties.RemoveProperty(PropertyEnum.InventoryStackCount);
+
             if (item == null) return Logger.WarnReturn(false, "SpawnItemInternal(): item == null");
 
             return true;
