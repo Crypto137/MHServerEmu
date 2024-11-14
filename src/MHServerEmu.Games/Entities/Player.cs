@@ -804,6 +804,7 @@ namespace MHServerEmu.Games.Entities
                 var propId = new PropertyId (PropertyEnum.Currency, currencyProtoRef);
                 Properties.AdjustProperty(delta, propId);
                 GetRegion()?.CurrencyCollectedEvent.Invoke(new(this, currencyProtoRef, Properties[propId]));
+                OnScoringEvent(new(ScoringEventType.CurrencyCollected, currencyProtoRef, delta));
 
                 result = true;
             }
@@ -1075,8 +1076,17 @@ namespace MHServerEmu.Games.Entities
         public void OnAvatarCharacterLevelChanged(Avatar avatar)
         {
             int characterLevel = avatar.CharacterLevel;
+            int prestigeLevel = avatar.PrestigeLevel;
+            int levelCap = Avatar.GetAvatarLevelCap();
+            int totalLevel = prestigeLevel * levelCap + characterLevel;
 
-            Properties[PropertyEnum.AvatarLibraryLevel, 0, avatar.PrototypeDataRef] = characterLevel;
+            Properties[PropertyEnum.AvatarLibraryLevel, (int)avatar.AvatarMode, avatar.PrototypeDataRef] = totalLevel;
+
+            if (avatar.AvatarMode == AvatarMode.Normal)
+            {
+                OnScoringEvent(new(ScoringEventType.AvatarLevelTotal, totalLevel));
+                OnScoringEvent(new(ScoringEventType.AvatarLevelTotalAllAvatars, CountAvatarsTotalLevels()));
+            }
 
             // Update max avatar level for things like mode unlocks
             if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
@@ -1597,6 +1607,8 @@ namespace MHServerEmu.Games.Entities
             {
                 SendWaypointUnlocked();
                 collection[propId] = true;
+
+                OnScoringEvent(new(ScoringEventType.WaypointUnlocked, waypointRef));
             }
         }
 
@@ -1817,6 +1829,18 @@ namespace MHServerEmu.Games.Entities
             AchievementManager.OnScoringEvent(scoringEvent);
         }
 
+        public int CountAvatarsTotalLevels()
+        {
+            int totalLevels = 0;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if ((AvatarMode)avatarMode == AvatarMode.Normal)
+                    totalLevels += kvp.Value;
+            }
+            return totalLevels;
+        }
+
         public int CountAvatarsAtLevelCap()
         {
             int levelCap = Avatar.GetAvatarLevelCap();
@@ -1854,8 +1878,7 @@ namespace MHServerEmu.Games.Entities
 
         private int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
         {
-            var propId = new PropertyId(PropertyEnum.AvatarLibraryLevel, (PropertyParam)avatarMode, avatarRef);
-            return Math.Min(Properties[propId], Avatar.GetAvatarLevelCap());
+            return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());
         }
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)

@@ -100,6 +100,13 @@ namespace MHServerEmu.Games.Events
             Type = eventType;
             Proto0 = prototypeDataRef;
         }
+
+        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, int count) : this()
+        {
+            Type = eventType;
+            Proto0 = prototypeDataRef;
+            Count = count;
+        }
     }
 
     public class ScoringEvents
