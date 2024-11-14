@@ -73,6 +73,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
         public PrototypeId UltimatePowerRef { get => AvatarPrototype.UltimatePowerRef; }
 
+        public AvatarModePrototype AvatarModePrototype { get => GameDatabase.GetPrototype<AvatarModePrototype>(Properties[PropertyEnum.AvatarMode]); }
+        public AvatarMode AvatarMode { get => AvatarModePrototype?.AvatarModeEnum ?? AvatarMode.Invalid; }
+
         public Avatar(Game game) : base(game) { }
 
         public override bool Initialize(EntitySettings settings)
@@ -1166,6 +1169,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (interactableObject.Properties[PropertyEnum.EntSelActHasInteractOption])
                 interactableObject.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerInteract);
+
+            player.OnScoringEvent(new(ScoringEventType.EntityInteract, interactableObject.PrototypeDataRef));
 
             if (interactableObject is Transition transition)
                 transition.UseTransition(player);
