@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -458,6 +459,16 @@ namespace MHServerEmu.Games.Entities.Items
                     }
 
                     reportBuilder.AddCurrencySpecs(currencySpec.ToProtobuf());
+                }
+
+                // Scoring ItemCollected
+                foreach (var pair in replacementItemList)
+                {
+                    var item = entityManager.GetEntity<Item>(pair.Item1);
+                    if (item == null) continue;
+                    int count = pair.Item2;
+                    PrototypeId rarityRef = item.Properties[PropertyEnum.ItemRarity];
+                    player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.PrototypeDataRef, rarityRef, count));
                 }
 
                 // Do callbacks

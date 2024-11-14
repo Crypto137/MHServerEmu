@@ -16,6 +16,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Persistence;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -797,6 +798,13 @@ namespace MHServerEmu.Games.Network
 
             // Flag the item as recently added
             item.SetRecentlyAdded(true);
+
+            // Scoring ItemCollected
+            if (item.Properties.HasProperty(PropertyEnum.RestrictedToPlayerGuid))
+            {
+                PrototypeId rarityRef = item.Properties[PropertyEnum.ItemRarity];
+                Player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.PrototypeDataRef, rarityRef, item.CurrentStackSize));
+            }
 
             // Cancel lifespan expiration for the picked up item
             item.CancelScheduledLifespanExpireEvent();
