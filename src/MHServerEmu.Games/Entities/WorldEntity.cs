@@ -1300,6 +1300,17 @@ namespace MHServerEmu.Games.Entities
                 {
                     var killedPlayer = GetOwnerOfType<Player>();
                     region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimatePowerUser);
+
+                    killedPlayer.OnScoringEvent(new(ScoringEventType.AvatarDeath));
+                    var killer = avatar.GetOwnerOfType<Player>();
+                    if (killer != null)
+                        foreach (var tagPlayer in TagPlayers.GetPlayers())
+                        {
+                            if (tagPlayer == killer)
+                                tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKill));
+                            else
+                                tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKillAssist));
+                        }
                 }
 
                 if (powerResults.PowerOwnerId != powerResults.TargetId)
