@@ -1,4 +1,5 @@
-﻿
+﻿using MHServerEmu.Games.GameData;
+
 namespace MHServerEmu.Games.Events
 {
     #region Enum
@@ -59,6 +60,47 @@ namespace MHServerEmu.Games.Events
     }
 
     #endregion
+
+    public readonly struct ScoringEvent
+    {
+        public ScoringEventType Type { get; }
+        public PrototypeId Proto0 { get; }
+        public PrototypeId Proto1 { get; }
+        public PrototypeId Proto2 { get; }
+        public bool Proto0IncludeChildren { get; }
+        public bool Proto1IncludeChildren { get; }
+        public bool Proto2IncludeChildren { get; }
+        public int Count { get; }
+
+        public ScoringEvent()
+        {
+            Type = ScoringEventType.Invalid;
+            Proto0 = PrototypeId.Invalid;
+            Proto1 = PrototypeId.Invalid;
+            Proto2 = PrototypeId.Invalid;
+            Proto0IncludeChildren = false;
+            Proto1IncludeChildren = false;
+            Proto2IncludeChildren = false;
+            Count = 1;
+        }
+
+        public ScoringEvent(ScoringEventType eventType) : this()
+        {
+            Type = eventType;
+        }
+
+        public ScoringEvent(ScoringEventType eventType, int count) : this()
+        {
+            Type = eventType;
+            Count = count;
+        }
+
+        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef) : this()
+        {
+            Type = eventType;
+            Proto0 = prototypeDataRef;
+        }
+    }
 
     public class ScoringEvents
     {
