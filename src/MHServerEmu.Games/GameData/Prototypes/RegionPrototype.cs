@@ -156,7 +156,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public HashSet<PrototypeId> AreasInGenerator { get; private set; }
         [DoNotCopy]
-        public bool IsPublic { get => Behavior == RegionBehavior.Town || Behavior == RegionBehavior.PublicCombatZone || Behavior == RegionBehavior.MatchPlay; }
+        public bool IsPublic { get => Behavior == RegionBehavior.Town || Behavior == RegionBehavior.PublicCombatZone /*|| Behavior == RegionBehavior.MatchPlay*/; }
+        // TODO: Handle match regions as public when we get the match system working properly.
         [DoNotCopy]
         public bool IsPrivate { get => IsPublic == false; }
 
