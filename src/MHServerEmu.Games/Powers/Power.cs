@@ -2797,6 +2797,15 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            // ScoringEvent AvatarUsedPower
+            if (Owner is Avatar avatar)
+            {
+                var player = avatar.GetOwnerOfType<Player>();
+                var target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                var targetRef = target?.PrototypeDataRef ?? PrototypeId.Invalid;
+                player.OnScoringEvent(new(ScoringEventType.AvatarUsedPower, Prototype.DataRef, targetRef));
+            }
+
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): powerProto == null");
 
