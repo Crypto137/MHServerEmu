@@ -1099,6 +1099,13 @@ namespace MHServerEmu.Games.Entities
             if (teamUpOwner != null)
                 teamUpOwner.ClearSummonedTeamUpAgent(this);
 
+            if (Prototype is OrbPrototype && Properties.HasProperty(PropertyEnum.ItemCurrency) == false)
+            {
+                var avatar = killer as Avatar;
+                var player = avatar?.GetOwnerOfType<Player>();
+                player?.OnScoringEvent(new(ScoringEventType.OrbsCollected, PrototypeDataRef));
+            }
+
             if (AIController != null)
             {
                 AIController.OnAIKilled();
