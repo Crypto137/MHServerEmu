@@ -517,7 +517,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Type = ScoringEventType.GameModeComplete;
+            Type = ScoringEventType.MetaGameModeComplete;
             Proto0 = MetaGameMode;
         }
     }
@@ -544,7 +544,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Type = ScoringEventType.MetaGameStateCompleteDif;
+            Type = ScoringEventType.MetaGameStateCompleteDifficulty;
             Proto0 = MetaGameState;
             Proto1 = ItemRarity;
         }

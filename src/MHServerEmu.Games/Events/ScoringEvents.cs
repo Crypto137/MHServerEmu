@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Events
         VendorLevel,
         WaypointUnlocked,
         ChildrenComplete,
-        GameModeComplete,
+        MetaGameModeComplete,
         MetaGameStateComplete,
         MetaGameWaveComplete,
         ItemSpent,
@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.Events
         PowerRank,
         PowerRankUltimate,
         Count, // Legendary
-        MetaGameStateCompleteDif,
+        MetaGameStateCompleteDifficulty,
         MetaGameStateCompleteAffix,
         AvatarDeath,
         AvatarKill,
@@ -114,6 +114,21 @@ namespace MHServerEmu.Games.Events
             Proto0 = prototypeDataRef;
             Proto1 = prototype1DataRef;
             Count = count;
+        }
+
+        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, PrototypeId prototype1DataRef) : this()
+        {
+            Type = eventType;
+            Proto0 = prototypeDataRef;
+            Proto1 = prototype1DataRef;
+        }
+
+        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, PrototypeId prototype1DataRef, PrototypeId prototype2DataRef) : this()
+        {
+            Type = eventType;
+            Proto0 = prototypeDataRef;
+            Proto1 = prototype1DataRef;
+            Proto2 = prototype2DataRef;
         }
     }
 
