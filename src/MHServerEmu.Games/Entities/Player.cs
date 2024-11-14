@@ -101,6 +101,7 @@ namespace MHServerEmu.Games.Entities
 
         private TeleportData _teleportData;
         private SpawnGimbal _spawnGimbal;
+        private bool _uiSystemUnlocked;
 
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
@@ -187,9 +188,6 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
 
-            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<UISystemLockPrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
-
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
@@ -263,6 +261,18 @@ namespace MHServerEmu.Games.Entities
                 _gameplayOptions.ResetToDefaults();
         }
 
+        public void UnlockUISystem()
+        {
+            if (_uiSystemUnlocked) return;
+            foreach (PrototypeId uiSystemLockRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
+            {
+                var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
+                if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
+                    Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
+            }
+            _uiSystemUnlocked = true;
+        }
+
         public override void OnUnpackComplete(Archive archive)
         {
             base.OnUnpackComplete(archive);
@@ -306,6 +316,8 @@ namespace MHServerEmu.Games.Entities
         public override bool Serialize(Archive archive)
         {
             bool success = base.Serialize(archive);
+
+            if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
 
             // Persistent missions
             success &= Serializer.Transfer(archive, ref _missionManager);
@@ -1393,7 +1405,8 @@ namespace MHServerEmu.Games.Entities
 
         public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
         {
-            Region region = Game.RegionManager.GetRegion(regionId);
+            var manager = Game.RegionManager;
+            Region region = manager.GetRegion(regionId);
             if (region == null) return Logger.WarnReturn<MapDiscoveryData>(null, "GetMapDiscoveryData(): region == null");
 
             if (_mapDiscoveryDict.TryGetValue(regionId, out MapDiscoveryData mapDiscoveryData) == false)
@@ -1401,6 +1414,12 @@ namespace MHServerEmu.Games.Entities
                 mapDiscoveryData = new(region);
                 _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
             }
+
+            // clear old regions if limit is reached
+            if (_mapDiscoveryDict.Count > 25)
+                foreach (var kvp in _mapDiscoveryDict)
+                    if (manager.GetRegion(kvp.Key) == null)
+                        _mapDiscoveryDict.Remove(kvp.Key);
 
             return mapDiscoveryData;
         }
@@ -1446,21 +1465,19 @@ namespace MHServerEmu.Games.Entities
             return mapDiscoveryData != null && mapDiscoveryData.IsEntityDiscovered(worldEntity);
         }
 
-        public bool SendMiniMapUpdate()
+        public bool RevealDiscoveryMap(Vector3 position)
         {
-            Logger.Trace($"SendMiniMapUpdate(): {this}");
+            var region = CurrentAvatar?.Region;
+            if (region == null) return Logger.WarnReturn(false, "UpdateMapDiscovery(): region == null");
 
-            Region region = GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): region == null");
+            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryDataForEntity(CurrentAvatar);
+            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "UpdateDiscoveryMap(): mapDiscoveryData == null");
 
-            MapDiscoveryData mapDiscoveryData = GetMapDiscoveryData(region.Id);
-            if (mapDiscoveryData == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): mapDiscoveryData == null");
+            bool reveal = mapDiscoveryData.RevealPosition(this, position);
 
-            LowResMap lowResMap = mapDiscoveryData.LowResMap;
-            if (lowResMap == null) return Logger.WarnReturn(false, "SendMiniMapUpdate(): lowResMap == null");
+            // TODO party reveal
 
-            SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(lowResMap));
-            return true;
+            return reveal;
         }
 
         #endregion

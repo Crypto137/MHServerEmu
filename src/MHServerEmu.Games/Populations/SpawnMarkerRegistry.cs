@@ -358,6 +358,15 @@ namespace MHServerEmu.Games.Populations
             return null;
         }
 
+        public SpawnReservation GetReservationInCell(uint cellId, int id)
+        {
+            List<SpawnReservation> reservations = new();
+            GetReservationsInCell(cellId, reservations);
+            foreach (var reservation in reservations)
+                if (reservation.Id == id) return reservation;
+            return null;
+        }
+
         public static bool TestReservation(SpawnReservation reservation, SpawnFlags flag)
         {
             if (reservation.State != MarkerState.Free) return false;

@@ -616,7 +616,7 @@ namespace MHServerEmu.Games.Missions
             {
                 if (mission == null) continue;
                 if (mission.IsDailyMission == false && mission.IsLegendaryMission == false)
-                    mission.ResetConditions();
+                    mission.ResetConditions(false);
             }
         }
 
@@ -907,7 +907,7 @@ namespace MHServerEmu.Games.Missions
             if (mission == null) return null;
 
             InsertMission(mission);
-            Logger.Debug($"CreateMissionByDataRef {mission.PrototypeName}");
+            if (Debug) Logger.Debug($"CreateMissionByDataRef {mission.PrototypeName}");
 
             mission.SetCreationState(creationState, initialState, objectiveSeq);
             mission.LootSeed = lootSeed;
@@ -1384,6 +1384,13 @@ namespace MHServerEmu.Games.Missions
                 }
 
             _avatarPrototypeRef = avatar.PrototypeDataRef;
+        }
+
+        public void UpdateMissionInterest()
+        {
+            if (Player == null) return;
+            foreach (var mission in _missionDict.Values)
+                UpdateMissionEntitiesForPlayer(mission, Player);
         }
 
         public void UpdateMissionEntities(Mission mission)

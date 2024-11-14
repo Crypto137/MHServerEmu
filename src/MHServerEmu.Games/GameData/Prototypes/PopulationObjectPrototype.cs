@@ -442,6 +442,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return encounterProtoRef;
         }
 
+        public bool HasClientData()
+        {
+            var encounter = GetEncounterResource();
+            if (encounter == null) return false;
+            return encounter.HasEdges || encounter.ClientMap != null;
+        }
+
         public override void GetContainedEntities(HashSet<PrototypeId> entities, bool unwrapEntitySelectors = false)
         {
             base.GetContainedEntities(entities, unwrapEntitySelectors);

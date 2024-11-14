@@ -325,6 +325,7 @@ namespace MHServerEmu.Games.Populations
         public Region Region { get; }
         public SpawnHeat SpawnHeat { get; set; }
         public bool RegionScored { get; set; }
+        public Cell EncounterCell { get; set; }
 
         public SpawnGroup(ulong id, PopulationManager populationManager)
         {
@@ -457,6 +458,12 @@ namespace MHServerEmu.Games.Populations
                 SpawnEvent.SpawnGroups.Remove(Id);
                 SpawnEvent = null;
             }
+
+            if (EncounterCell != null)
+            {
+                EncounterCell.RemoveEncounter(Reservation.Id);
+                EncounterCell = null;
+            }
         }
 
         private void ReleaseRespawn()
@@ -563,19 +570,21 @@ namespace MHServerEmu.Games.Populations
             Defeat(true, entityId, killerId);
             if (State != SpawnState.Defeated) return;
 
+            bool alive = false;
             foreach (var spec in Specs.ToArray())
             {
                 if (spec == null) continue;
-                bool alive = false;
+                
                 if ((spec.State == SpawnState.Live || spec.State == SpawnState.Pending) && spec.ActiveEntity != null)
                 {
                     if (spec.ActiveEntity is Agent agent)
                         agent.TriggerEntityActionEvent(EntitySelectorActionEventType.OnClusterEnemiesCleared);
                     alive |= spec.PreventsSpawnCleanup();
                 }
-                if (alive == false && SpawnCleanup)
-                    PopulationManager.RemoveSpawnGroup(Id);
             }
+
+            if (alive == false && SpawnCleanup)
+                PopulationManager.RemoveSpawnGroup(Id);
         }
 
         public class ClearClusterEvent : CallMethodEventParam2<SpawnGroup, ulong, ulong>

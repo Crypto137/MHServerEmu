@@ -451,7 +451,7 @@ namespace MHServerEmu.Games.Network
 
             RegionManager manager = _game.RegionManager;
             Stack<Cell> invisibleCells = new();
-            bool environmentUpdate = false;
+            bool regenNavi = false;
 
             // search invisible cells
             foreach (var cellStatus in _trackedCells)
@@ -467,8 +467,7 @@ namespace MHServerEmu.Games.Network
             {
                 Cell cell = invisibleCells.Pop();
                 RemoveCell(cell);
-                // EnvironmentUpdate
-                environmentUpdate |= cell.Area.IsDynamicArea == false;
+                regenNavi |= cell.HasNavigationData;
             }
 
             // Add new cells
@@ -480,12 +479,49 @@ namespace MHServerEmu.Games.Network
                 if (cell.RegionBounds.Intersects(_visibleVolume))
                 {
                     AddCell(cell);
-                    // EnvironmentUpdate
-                    environmentUpdate |= cell.Area.IsDynamicArea == false;
+                    regenNavi |= cell.HasNavigationData;
                 }
             }
 
-            return environmentUpdate;
+            return regenNavi;
+        }
+
+        public bool RemoveCells(HashSet<Area> areas, HashSet<Cell> cells)
+        {
+            bool regenNavi = false;
+
+            foreach (var cell in cells)
+            {
+                RemoveCell(cell);
+                regenNavi |= cell.HasNavigationData;
+            }
+
+            foreach (var area in areas)
+                RemoveArea(area);
+
+            return regenNavi;
+        }
+
+        public void AddCellsFromVolume(Aabb volume, HashSet<Area> areas, HashSet<Cell> cells, ref bool regenNavi)
+        {
+            foreach (var cell in Region.IterateCellsInVolume(volume))
+            {
+                uint cellId = cell.Id;
+                if (_trackedCells.ContainsKey(cellId)) continue;
+
+                Area area = cell.Area;
+                uint areaId = area.Id;
+                if (_trackedAreas.ContainsKey(areaId) == false)
+                {
+                    AddArea(area, false);
+                    areas.Add(area);
+                }
+
+                AddCell(cell);
+                cells.Add(cell);
+
+                regenNavi |= cell.HasNavigationData;
+            }
         }
 
         private void ScanEntities()
@@ -620,7 +656,7 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        private void RegenerateClientNavi()
+        public void RegenerateClientNavi()
         {
             SendMessage(NetMessageEnvironmentUpdate.CreateBuilder().SetFlags(1).Build());
         }

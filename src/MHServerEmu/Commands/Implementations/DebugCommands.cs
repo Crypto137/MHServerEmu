@@ -11,6 +11,8 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
@@ -91,9 +93,36 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Current region: {playerConnection.AOI.Region.PrototypeName}";
         }
-        
 
-        [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].", AccountUserLevel.User)]
+        public enum Switch
+        {
+            Off,
+            On
+        }
+
+        [Command("mission", "Usage: debug mission [on|off].", AccountUserLevel.Admin)]
+        public string Mission(string[] @params, FrontendClient client)
+        {
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
+                flags = Switch.Off;   // Default Off
+
+            MissionManager.Debug = (flags == Switch.On) ? true : false;
+
+            return $"Mission Log [{flags}]";
+        }
+
+        [Command("metagame", "Usage: debug metagame [on|off].", AccountUserLevel.Admin)]
+        public string Metagame(string[] @params, FrontendClient client)
+        {
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
+                flags = Switch.Off;   // Default Off
+
+            MetaGame.Debug = (flags == Switch.On) ? true : false;
+
+            return $"Metagame Log [{flags}]";
+        }
+
+        [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].", AccountUserLevel.Admin)]
         public string Navi2Obj(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -102,7 +131,7 @@ namespace MHServerEmu.Commands.Implementations
 
             var region = playerConnection.AOI.Region;
 
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], out PathFlags flags)) == false)
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PathFlags flags)) == false)
                 flags = PathFlags.Walk;   // Default Walk
 
             string filename = $"{region.PrototypeName}[{flags}].obj";

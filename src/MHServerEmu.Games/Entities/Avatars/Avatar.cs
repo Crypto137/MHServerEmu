@@ -280,7 +280,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             if (result == ChangePositionResult.PositionChanged)
+            {
+                player.RevealDiscoveryMap(position.Value);
                 player.UpdateSpawnMap(position.Value);
+            }
 
             return result;
         }
@@ -1765,8 +1768,14 @@ namespace MHServerEmu.Games.Entities.Avatars
                         player.UnlockWaypoint(waypointUnlockRef);
             }
 
-            // Restore missions from Avatar
-            player.MissionManager?.RestoreAvatarMissions(this);
+            var missionManager = player.MissionManager;
+            if (missionManager != null)
+            {
+                // Restore missions from Avatar
+                missionManager.RestoreAvatarMissions(this);
+                // Update interest
+                missionManager.UpdateMissionInterest();
+            }
 
             // Update AOI of the owner player
             AreaOfInterest aoi = player.AOI;
@@ -1777,10 +1786,16 @@ namespace MHServerEmu.Games.Entities.Avatars
                 LinkTeamUpAgent(CurrentTeamUpAgent);
                 if (Properties[PropertyEnum.AvatarTeamUpIsSummoned])
                     ActivateTeamUpAgent(true);  // We may want to disable the intro animation in some cases
-            }        
+            }
 
-            if (regionProto?.Chapter != PrototypeId.Invalid)
-                player.SetActiveChapter(regionProto.Chapter);
+            if (regionProto != null)
+            {
+                if (regionProto.Chapter != PrototypeId.Invalid)
+                    player.SetActiveChapter(regionProto.Chapter);
+
+                if (regionProto.IsNPE == false)
+                    player.UnlockUISystem();
+            }
 
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
         }

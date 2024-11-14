@@ -20,6 +20,7 @@
         public static float SquareRoot(float f) => f > 0.0f ? MathF.Sqrt(f) : 0.0f;
         public static float Square(float v) => v * v;
         public static int RoundDownToInt(float v) => (int)MathF.Floor(v);
+        public static int RoundUpToInt(float v) => (int)MathF.Ceiling(v);
 
         /// <summary>
         /// Determines the index of the highest bit set in a <see cref="ulong"/> value.

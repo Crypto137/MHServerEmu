@@ -1,11 +1,14 @@
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
     public class MissionActionTimedAction : MissionAction
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private MissionActionTimedActionPrototype _proto;
         private MissionActionList _actionsToPerform;
         private EventGroup _pendingEvents = new();
@@ -14,6 +17,10 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             // JuggernautEmergenceController
             _proto = prototype as MissionActionTimedActionPrototype;
+
+            // FIXME hardfix for AgeOfUltronKismetController
+            if (Mission.PrototypeDataRef == (PrototypeId)16958226890670743812)
+                _proto.SetDelayInSeconds(12.5);
         }
 
         public override void Destroy()
@@ -24,6 +31,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
+            if (MissionManager.Debug) Logger.Trace($"Run timer {Mission.PrototypeName} {_proto.DelayInSeconds} sec");
             var time = TimeSpan.FromSeconds(_proto.DelayInSeconds);
             EventPointer<TimedActionsEvent> timedActionsEvent = new();
             Mission.GameEventScheduler.ScheduleEvent(timedActionsEvent, time, _pendingEvents);
@@ -32,6 +40,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
         private void OnTimedActions()
         {
+            if (MissionManager.Debug) Logger.Trace($"OnTimedActions timer {Mission.PrototypeName} {_proto.DelayInSeconds} sec");
             MissionActionList.CreateActionList(ref _actionsToPerform, _proto.ActionsToPerform, Mission);
             if (_proto.Repeat) Run();
             else _actionsToPerform?.Destroy();

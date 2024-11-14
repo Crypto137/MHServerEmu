@@ -129,6 +129,17 @@ namespace MHServerEmu.Games.Regions
         public bool ToShutdown { get; set; }
         public int PlayerDeaths { get => _playerDeaths; set => SetPlayerDeaths(value); }
 
+        public float LowResMapResolution { get; private set; }
+        public int LowResVectorSize { get; private set; }
+        public int LowResMapWidth { get; private set; }
+        public int LowResMapLength { get; private set; }
+        public float LowResMapHeight { get; private set; }
+        public float RegionWidth { get => Aabb.Width; }
+        public float RegionLength { get => Aabb.Length; }
+        public float RegionHeight { get => Aabb.Height; }
+        public float RegionMinX { get => Aabb.Min.X; }
+        public float RegionMinY { get => Aabb.Min.Y; }
+
         #region Events
 
         public Event<EntityDeadGameEvent> EntityDeadEvent = new();
@@ -239,7 +250,7 @@ namespace MHServerEmu.Games.Regions
             RandomSeed = settings.Seed;
             Aabb = settings.Bounds;
             AvatarSwapEnabled = Prototype.EnableAvatarSwap;
-            RestrictedRosterEnabled = (Prototype.RestrictedRoster.HasValue());
+            RestrictedRosterEnabled = Prototype.RestrictedRoster.HasValue();
 
             SetRegionLevel();
 
@@ -253,7 +264,7 @@ namespace MHServerEmu.Games.Regions
             Properties[PropertyEnum.EndlessLevelsTotal] = sequenceRegionGenerator != null ? sequenceRegionGenerator.EndlessLevelsPerTheme : 0;
 
             EntityTracker = new(this);
-            //LowResMapResolution = GetLowResMapResolution();
+            LowResMapResolution = GetLowResMapResolution();
 
             GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
             if (globals == null)
@@ -1215,8 +1226,8 @@ namespace MHServerEmu.Games.Regions
         }
 
         public bool ChoosePositionAtOrNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
-            float maxDistance, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null,
-            EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
+            float maxDistance, out Vector3 resultPosition, IRandomPositionPredicate positionPredicate = null,
+            IEntityCheckPredicate checkPredicate = null, int maxPositionTests = 400)
         {
             if (IsLocationClear(bounds, pathFlags, posFlags, blockFlags)
                 && (positionPredicate == null || positionPredicate.Test(bounds.Center)))
@@ -1232,8 +1243,8 @@ namespace MHServerEmu.Games.Regions
         }
 
         public bool ChooseRandomPositionNearPoint(Bounds bounds, PathFlags pathFlags, PositionCheckFlags posFlags, BlockingCheckFlags blockFlags,
-            float minDistanceFromPoint, float maxDistanceFromPoint, out Vector3 resultPosition, RandomPositionPredicate positionPredicate = null,
-            EntityCheckPredicate checkPredicate = null, int maxPositionTests = 400, HeightSweepType heightSweep = HeightSweepType.None,
+            float minDistanceFromPoint, float maxDistanceFromPoint, out Vector3 resultPosition, IRandomPositionPredicate positionPredicate = null,
+            IEntityCheckPredicate checkPredicate = null, int maxPositionTests = 400, HeightSweepType heightSweep = HeightSweepType.None,
             int maxSweepHeight = 0)
         {
             resultPosition = Vector3.Zero;
@@ -1758,16 +1769,71 @@ namespace MHServerEmu.Games.Regions
 
             return false;
         }
+
+        #region LowResMap
+
+        private float GetLowResMapResolution() 
+        { 
+            var uiGlobals = GameDatabase.UIGlobalsPrototype;
+            if (uiGlobals == null) return 1.0f;
+            var mapGlobals = GameDatabase.GetPrototype<UIMapGlobalsPrototype>(uiGlobals.UIMapGlobals);
+            if (mapGlobals == null || mapGlobals.DefaultRevealRadius == 0.0f) return 1.0f;
+            return mapGlobals.DefaultRevealRadius * 0.5f;
+        }
+
+        public int CalcLowResSize()
+        {
+            if (LowResVectorSize > 0) return LowResVectorSize;
+
+            LowResMapWidth = MathHelper.RoundUpToInt(RegionWidth / LowResMapResolution); 
+            LowResMapLength = MathHelper.RoundUpToInt(RegionLength / LowResMapResolution);
+            LowResMapHeight = RegionHeight * 2.0f;
+            LowResVectorSize = LowResMapWidth * LowResMapLength;
+
+            return LowResVectorSize;
+        }
+
+        public bool TranslateLowResMap(in Vector3 position, ref int index)
+        {
+            int resWidth = LowResMapWidth;
+            int indexRow = MathHelper.RoundUpToInt((position.Y - RegionMinY) / LowResMapResolution);
+            int indexCol = MathHelper.RoundUpToInt((position.X - RegionMinX) / LowResMapResolution);
+            index = indexRow * resWidth - resWidth + indexCol;
+            return index < LowResVectorSize;
+        }
+
+        public bool TranslateLowResMap(int index, ref Vector3 position)
+        {
+            int resWidth = LowResMapWidth;
+            int resLength = LowResMapLength;
+
+            float fx = (index % resWidth) / (float)resWidth;
+            float fy = MathHelper.RoundUpToInt((float)index / resWidth) / (float)resLength;
+            float fr = LowResMapResolution * 0.5f;
+
+            position.X = RegionWidth * fx + RegionMinX - fr;
+            position.Y = RegionLength * fy + RegionMinY - fr;
+            position.Z = 0.0f;
+
+            return true;
+        }
+
+        public Aabb GetLowResVolume(in Vector3 position)
+        {
+            return new Aabb(position, LowResMapWidth, LowResMapLength, LowResMapHeight);
+        }
+
+        #endregion
     }
 
-    public class RandomPositionPredicate    // TODO: Change to interface / struct
+    public interface IRandomPositionPredicate
     {
-        public virtual bool Test(Vector3 center) => false;
+        public bool Test(Vector3 center);
     }
 
-    public class EntityCheckPredicate       // TODO: Change to interface / struct
+    public interface IEntityCheckPredicate
     {
-        public virtual bool Test(WorldEntity worldEntity) => false;
+        public bool Test(WorldEntity worldEntity);
     }
 
     public class DividedStartLocation

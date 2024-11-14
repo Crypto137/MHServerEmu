@@ -10,6 +10,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public string ClientMap { get; private set; }
         public MarkerSetPrototype MarkerSet { get; private set; }
         public NaviPatchSourcePrototype NaviPatchSource { get; private set; }
+        public bool HasEdges { get; private set; }
 
         public void Deserialize(BinaryReader reader)
         {
@@ -18,6 +19,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             MarkerSet = new(reader);
             NaviPatchSource = new(reader);
+            
+            HasEdges = NaviPatchSource.NaviPatch.Edges.HasValue() || NaviPatchSource.PropPatch.Edges.HasValue();
         }
     }
 }
