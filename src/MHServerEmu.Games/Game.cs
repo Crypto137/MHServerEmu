@@ -262,12 +262,6 @@ namespace MHServerEmu.Games
                 return new Power(this, powerProtoRef);
         }
 
-        public IEnumerable<Region> RegionIterator()
-        {            
-            foreach (Region region in RegionManager.AllRegions) 
-                yield return region;
-        }
-
         // StartTime is always a TimeSpan of 1 ms, so we can make both Game::GetTimeFromStart() and Game::GetTimeFromDelta() static
 
         public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
@@ -433,7 +427,7 @@ namespace MHServerEmu.Games
                 writer.WriteLine($"Exception:\n{exception}\n");
 
                 writer.WriteLine("Active Regions:");
-                foreach (Region region in RegionIterator())
+                foreach (Region region in RegionManager)
                     writer.WriteLine(region.ToString());
                 writer.WriteLine();
 

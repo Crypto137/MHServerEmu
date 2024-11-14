@@ -3,11 +3,9 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -27,10 +25,9 @@ namespace MHServerEmu.Games.Regions
 
         private TimeSpan _lastCleanupTime;
         private readonly Stack<ulong> _regionsToDestroy = new();
-        private readonly HashSet<ulong> _activeRegions = new();
+        private readonly HashSet<ulong> _regionsPendingShutdown = new();
 
         public Game Game { get; private set; }
-        public IEnumerable<Region> AllRegions { get => _allRegions.Values; }
 
         public RegionManager()
         {
@@ -117,6 +114,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool DestroyRegion(ulong regionId)
         {
+            // NOTE: This is dangerous to call from outside the RegionManager.
+            // Use RegionManager.RequestRegionShutdown() or Region.RequestShutdown() when possible.
+
             // NOTE: We merged Region::DestroyRegion() with Region::destroyRegionFromIterator() from the client
             // because we don't use C++ style iterators here.
 
@@ -134,16 +134,20 @@ namespace MHServerEmu.Games.Regions
             region.Shutdown();
 
             _allRegions.Remove(regionId);
+            _regionsPendingShutdown.Remove(regionId);
 
             return true;
         }
 
+        public bool RequestRegionShutdown(ulong regionId)
+        {
+            return _regionsPendingShutdown.Add(regionId);
+        }
+
         public void DestroyAllRegions()
         {
-            while (_allRegions.Count > 0)
-            {
-                DestroyRegion(_allRegions.Keys.First());
-            }
+            foreach (var kvp in _allRegions)
+                DestroyRegion(kvp.Key);
         }
 
         public Region GetRegion(ulong id)
@@ -215,33 +219,33 @@ namespace MHServerEmu.Games.Regions
         public void Update()
         {
             TimeSpan now = Clock.UnixTime;
+            TimeSpan timeSinceLastCleanup = now - _lastCleanupTime;
 
-            if ((now - _lastCleanupTime) < Game.CustomGameOptions.RegionCleanupInterval)
-                return;
+            if (_regionsPendingShutdown.Count == 0)
+            {
+                if (timeSinceLastCleanup < Game.CustomGameOptions.RegionCleanupInterval)
+                    return;
+
+                Logger.Trace($"Running region cleanup...");
+            }
+            else
+            {
+                // Do more frequent silent cleanups when we have pending shutdowns.
+                if (timeSinceLastCleanup < TimeSpan.FromMilliseconds(1000))
+                    return;
+            }
 
             _lastCleanupTime = now;
 
-            Logger.Trace($"Running region cleanup...");
-
-            _activeRegions.Clear();
-            foreach (Player player in new PlayerIterator(Game))
+            foreach (Region region in _allRegions.Values)
             {
-                Region region = player.GetRegion();
-                if (region != null) _activeRegions.Add(region.Id);
-            }                
+                // TODO: force remove players from the region?
+                if (region.PlayerCount > 0)
+                    continue;
 
-            foreach (Region region in AllRegions)
-            {
-                if (_activeRegions.Contains(region.Id))
-                {
-                    // TODO: force remove players from the region
-                }
-                else
-                {
-                    // TODO: check world views of players this region is relevant to
-                    if (region.ToShutdown || now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
-                        _regionsToDestroy.Push(region.Id);
-                }
+                // TODO: check world views of players this region is relevant to
+                if (_regionsPendingShutdown.Contains(region.Id) || now - region.LastVisitedTime >= Game.CustomGameOptions.RegionUnvisitedThreshold)
+                    _regionsToDestroy.Push(region.Id);
             }
 
             while (_regionsToDestroy.Count > 0)
@@ -249,6 +253,11 @@ namespace MHServerEmu.Games.Regions
                 ulong regionId = _regionsToDestroy.Pop();
                 DestroyRegion(regionId);
             }
+        }
+
+        public Dictionary<ulong, Region>.ValueCollection.Enumerator GetEnumerator()
+        {
+            return _allRegions.Values.GetEnumerator();
         }
 
         private Region GenerateAndInitRegion(RegionContext regionContext)

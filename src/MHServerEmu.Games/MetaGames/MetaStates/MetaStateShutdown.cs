@@ -277,7 +277,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             MetaGame.CurrentMode?.TeleportPlayersToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
             // TODO Shutdown Region event
-            Region.ToShutdown = true;
+            Region.RequestShutdown();
         }
 
         private void RemoveWidgets()

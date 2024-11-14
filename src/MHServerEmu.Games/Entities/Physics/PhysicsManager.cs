@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
             _entitiesResolving.Clear();
 
-            foreach (Region region in _game.RegionIterator())
+            foreach (Region region in _game.RegionManager)
                 region.ClearCollidedEntities();
         }
 

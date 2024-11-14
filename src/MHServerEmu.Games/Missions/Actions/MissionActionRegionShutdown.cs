@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.Missions.Actions
             if (RegionPrototype.Equivalent(regionProto, region.Prototype) == false) return;
 
             // TODO add event for shutdown
-            region.ToShutdown = true;
+            region.RequestShutdown();
         }
     }
 }

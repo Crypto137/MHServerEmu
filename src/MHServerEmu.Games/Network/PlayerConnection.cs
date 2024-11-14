@@ -281,7 +281,7 @@ namespace MHServerEmu.Games.Network
                     continue;
                 }
 
-                Game.RegionManager.DestroyRegion(kvp.Value);
+                region.RequestShutdown();
             }
         }
 
