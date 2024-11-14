@@ -2041,6 +2041,13 @@ namespace MHServerEmu.Games.Entities
             if (newArea != null)
             {
                 newArea.Region.EntityEnteredAreaEvent.Invoke(new(this, newArea));
+
+                if (this is Avatar avatar)
+                {
+                    var player = avatar.GetOwnerOfType<Player>();
+                    player?.OnScoringEvent(new(ScoringEventType.AreaEnter, newArea.PrototypeDataRef));
+                }
+
                 Properties[PropertyEnum.MapAreaId] = newArea.Id;
                 Properties[PropertyEnum.ContextAreaRef] = newArea.PrototypeDataRef;
             }
