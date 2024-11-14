@@ -107,6 +107,7 @@ namespace MHServerEmu.Games.Entities
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
             var summonerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(summonerRef);
             if (summonerProto == null) return;
+            if (summonerProto is not AgentPrototype && summonerProto is not TransitionPrototype) return;
 
             WorldEntity summoner;
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
