@@ -6,9 +6,11 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.PlayerManagement;
 
@@ -75,18 +77,20 @@ namespace MHServerEmu.Billing
 
         public void Handle(ITcpClient tcpClient, MailboxMessage message)
         {
-            var client = (FrontendClient)tcpClient;
+            FrontendClient client = (FrontendClient)tcpClient;
 
             // This is pretty rough, we need a better way of handling this
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            var game = playerManager.GetGameByPlayer(client);
-            var playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            // TODO: Move this to Games, use BillingService just as a source for catalog data
+            PlayerManagerService playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            Game game = playerManager.GetGameByPlayer(client);
+            PlayerConnection playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            Player player = playerConnection.Player;
 
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageGetCatalog:            OnGetCatalog(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:    OnGetCurrencyBalance(playerConnection, message); break;
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:    OnBuyItemFromCatalog(playerConnection, message); break;
+                case ClientToGameServerMessage.NetMessageGetCatalog:            OnGetCatalog(player, message); break;           // 68
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:    OnGetCurrencyBalance(player, message); break;   // 69
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:    OnBuyItemFromCatalog(player, message); break;   // 70
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -99,7 +103,7 @@ namespace MHServerEmu.Billing
 
         #endregion
 
-        private bool OnGetCatalog(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnGetCatalog(Player player, MailboxMessage message)
         {
             var getCatalog = message.As<NetMessageGetCatalog>();
             if (getCatalog == null) return Logger.WarnReturn(false, $"OnGetCatalog(): Failed to retrieve message");
@@ -109,18 +113,18 @@ namespace MHServerEmu.Billing
                 return true;
 
             // Send the current catalog
-            playerConnection.SendMessage(_catalog.ToNetMessageCatalogItems(false));
+            player.SendMessage(_catalog.ToNetMessageCatalogItems(false));
             return true;
         }
 
-        private void OnGetCurrencyBalance(PlayerConnection playerConnection, MailboxMessage message)
+        private void OnGetCurrencyBalance(Player player, MailboxMessage message)
         {
-            playerConnection.SendMessage(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+            player.SendMessage(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
                 .SetCurrencyBalance(_currencyBalance)
                 .Build());
         }
 
-        private bool OnBuyItemFromCatalog(PlayerConnection playerConnection, MailboxMessage message)
+        private bool OnBuyItemFromCatalog(Player player, MailboxMessage message)
         {
             var buyItemFromCatalog = message.As<NetMessageBuyItemFromCatalog>();
             if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
@@ -128,45 +132,43 @@ namespace MHServerEmu.Billing
             Logger.Info($"Received NetMessageBuyItemFromCatalog");
             Logger.Trace(buyItemFromCatalog.ToString());
 
-            Player player = playerConnection.Player;
+            BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
             CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
-            if (entry == null || entry.GuidItems.Length == 0)
+            if (entry != null && entry.GuidItems.Length > 0)
             {
-                SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                return true;
-            }
+                Prototype catalogItemProto = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<Prototype>();
 
-            Prototype catalogItemProto = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<Prototype>();
+                switch (catalogItemProto)
+                {
+                    case ItemPrototype itemProto:
+                        // Give the player the item they are trying to "buy"
+                        if (player.Game.LootManager.GiveItem(itemProto.DataRef, LootContext.CashShop, player))
+                            result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+                        break;
 
-            switch (catalogItemProto)
-            {
-                case ItemPrototype itemProto:
-                    // Give the player the item they are trying to "buy"
-                    player.Game.LootManager.GiveItem(itemProto.DataRef, player);
-                    break;
+                    case PlayerStashInventoryPrototype playerStashInventoryProto:
+                        // Unlock the stash tab
+                        if (player.UnlockInventory(playerStashInventoryProto.DataRef))
+                            result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+                        break;
 
-                case PlayerStashInventoryPrototype playerStashInventoryProto:
-                    // Unlock the stash tab
-                    player.UnlockInventory(playerStashInventoryProto.DataRef);
-                    break;
-
-                default:
-                    // Return error for unhandled SKU types
-                    Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}");
-                    SendBuyItemResponse(playerConnection, false, BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN, buyItemFromCatalog.SkuId);
-                    return true;
+                    default:
+                        // Return error for unhandled SKU types
+                        Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}");
+                        break;
+                }
             }
 
             // Send buy response
-            SendBuyItemResponse(playerConnection, true, BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS, buyItemFromCatalog.SkuId);
+            SendBuyItemResponse(player, result, buyItemFromCatalog.SkuId);
             return true;
         }
 
-        private void SendBuyItemResponse(PlayerConnection playerConnection, bool didSucceed, BuyItemResultErrorCodes errorCode, long skuId)
+        private void SendBuyItemResponse(Player player, BuyItemResultErrorCodes errorCode, long skuId)
         {
-            playerConnection.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
-                .SetDidSucceed(didSucceed)
+            player.SendMessage(NetMessageBuyItemFromCatalogResponse.CreateBuilder()
+                .SetDidSucceed(errorCode == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
                 .SetCurrentCurrencyBalance(_currencyBalance)
                 .SetErrorcode(errorCode)
                 .SetSkuId(skuId)

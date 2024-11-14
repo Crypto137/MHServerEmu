@@ -39,6 +39,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public IEnumerator<Avatar> GetEnumerator()
         {
+            EntityManager entityManager = _game.EntityManager;
+
             foreach (Inventory inventory in _inventoryIterator)
             {
                 if (inventory.ConvenienceLabel != InventoryConvenienceLabel.AvatarInPlay && inventory.ConvenienceLabel != InventoryConvenienceLabel.AvatarLibrary)
@@ -49,12 +51,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (_avatarProtoRef != PrototypeId.Invalid && entry.ProtoRef != _avatarProtoRef)
                         continue;
 
-                    if (_iteratorMode == AvatarIteratorMode.ExcludeArchived && _game.EntityManager.IsEntityArchived(entry.Id))
+                    if (_iteratorMode == AvatarIteratorMode.ExcludeArchived && entityManager.IsEntityArchived(entry.Id))
                         continue;
 
                     // we are skipping avatar mode check here
 
-                    Avatar avatar = _game.EntityManager.GetEntity<Avatar>(entry.Id);
+                    Avatar avatar = entityManager.GetEntity<Avatar>(entry.Id);
                     if (avatar == null)
                     {
                         Logger.Warn("GetEnumerator(): avatar == null");

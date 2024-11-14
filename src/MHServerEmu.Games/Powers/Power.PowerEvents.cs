@@ -1004,7 +1004,7 @@ namespace MHServerEmu.Games.Powers
             BlueprintId donationBlueprint = dataDirectory.GetPrototypeBlueprintDataRef(GameDatabase.AdvancementGlobalsPrototype.PetTechDonationItemPrototype);
             RarityPrototype rarityThresholdProto = itemDonateContext.RarityThreshold.As<RarityPrototype>();
 
-            foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new(EntityRegionSPContextFlags.ActivePartition)))
+            foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new()))
             {
                 // Skip non-item world entities
                 if (worldEntity is not Item item)

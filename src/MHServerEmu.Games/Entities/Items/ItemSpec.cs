@@ -21,7 +21,6 @@ namespace MHServerEmu.Games.Entities.Items
         private List<AffixSpec> _affixSpecList = new();
         private int _seed;
         private PrototypeId _equippableBy;
-        private int _count = 1;
 
         public PrototypeId ItemProtoRef { get => _itemProtoRef; }
         public PrototypeId RarityProtoRef { get => _rarityProtoRef; set => _rarityProtoRef = value; }
@@ -30,6 +29,8 @@ namespace MHServerEmu.Games.Entities.Items
         public IEnumerable<AffixSpec> AffixSpecs { get => _affixSpecList; }
         public int Seed { get => _seed; }
         public PrototypeId EquippableBy { get => _equippableBy; }
+
+        public int StackCount { get; set; } = 1;
 
         public bool IsValid { get => _itemProtoRef != PrototypeId.Invalid && _rarityProtoRef != PrototypeId.Invalid; }
 
@@ -76,6 +77,7 @@ namespace MHServerEmu.Games.Entities.Items
             success &= Serializer.Transfer(archive, ref _affixSpecList);
             success &= Serializer.Transfer(archive, ref _seed);
             success &= Serializer.Transfer(archive, ref _equippableBy);
+            // StackCount is serialized as a property
             return success;
         }
 
@@ -96,7 +98,7 @@ namespace MHServerEmu.Games.Entities.Items
         {
             return NetStructItemSpecStack.CreateBuilder()
                 .SetSpec(ToProtobuf())
-                .SetCount((uint)_count)
+                .SetCount((uint)StackCount)
                 .Build();
         }
 

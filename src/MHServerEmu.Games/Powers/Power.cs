@@ -3708,9 +3708,11 @@ namespace MHServerEmu.Games.Powers
                 return true;
 
             // Now we look for targets in the inventory
+            EntityManager entityManager = game.EntityManager;
+
             foreach (var entry in inventory)
             {
-                WorldEntity entity = game.EntityManager.GetEntity<WorldEntity>(entry.Id);
+                WorldEntity entity = entityManager.GetEntity<WorldEntity>(entry.Id);
                 if (entity == null)
                 {
                     Logger.Warn("GetTargetsFromInventory(): entity == null");

@@ -19,6 +19,10 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollSettings LootRollSettings { get; private set; }
 
+        // Settings for mission-specific drops
+        public LootDropEventType EventType { get; set; } = LootDropEventType.None;
+        public PrototypeId MissionProtoRef { get; set; } = PrototypeId.Invalid;
+
         public void Initialize(LootContext lootContext, Player player, WorldEntity sourceEntity, int level, Vector3? positionOverride = null)
         {
             LootContext = lootContext;

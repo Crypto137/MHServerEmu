@@ -24,9 +24,11 @@ namespace MHServerEmu.Games.Entities.Persistence
                 StoreContainer(avatar, dbAccount);
             }
 
+            EntityManager entityManager = player.Game.EntityManager;
+
             foreach (var entry in player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
             {
-                Agent teamUp = player.Game.EntityManager.GetEntity<Agent>(entry.Id);
+                Agent teamUp = entityManager.GetEntity<Agent>(entry.Id);
                 if (teamUp == null)
                 {
                     Logger.Warn("StoreInventoryEntities(): teamUp == null");
@@ -49,9 +51,11 @@ namespace MHServerEmu.Games.Entities.Persistence
                 RestoreContainer(avatar, dbAccount.ControlledEntities);
             }
 
+            EntityManager entityManager = player.Game.EntityManager;
+
             foreach (var entry in player.GetInventory(InventoryConvenienceLabel.TeamUpLibrary))
             {
-                Agent teamUp = player.Game.EntityManager.GetEntity<Agent>(entry.Id);
+                Agent teamUp = entityManager.GetEntity<Agent>(entry.Id);
                 if (teamUp == null)
                 {
                     Logger.Warn("RestoreInventoryEntities(): teamUp == null");
@@ -102,9 +106,11 @@ namespace MHServerEmu.Games.Entities.Persistence
             long containerDbGuid = (long)inventory.Owner.DatabaseUniqueId;
             long inventoryProtoGuid = (long)GameDatabase.GetPrototypeGuid(inventory.PrototypeDataRef);
 
+            EntityManager entityManager = inventory.Game.EntityManager;
+
             foreach (var entry in inventory)
             {
-                Entity entity = inventory.Game.EntityManager.GetEntity<Entity>(entry.Id);
+                Entity entity = entityManager.GetEntity<Entity>(entry.Id);
                 
                 if (entity == null)
                 {
@@ -140,7 +146,7 @@ namespace MHServerEmu.Games.Entities.Persistence
 
         private static bool RestoreContainer(Entity container, DBEntityCollection entities)
         {
-            Game game = container.Game;
+            EntityManager entityManager = container.Game.EntityManager;
 
             long containerDbGuid = (long)container.DatabaseUniqueId;
             ulong containerEntityId = container.Id;
@@ -180,7 +186,7 @@ namespace MHServerEmu.Games.Entities.Persistence
                 settings.ArchiveSerializeType = ArchiveSerializeType.Database;
                 settings.ArchiveData = dbEntity.ArchiveData;
 
-                game.EntityManager.CreateEntity(settings);
+                entityManager.CreateEntity(settings);
             }
 
             return true;

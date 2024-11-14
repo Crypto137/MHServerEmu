@@ -886,17 +886,20 @@ namespace MHServerEmu.Games.Missions
             return true;
         }
 
-        public bool GetDropLootsForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
+        public bool GetMissionLootTablesForEnemy(WorldEntity enemy, List<MissionLootTable> dropLoots)
         {
-            var objectiveProto = Prototype;
-            if (objectiveProto.ItemDrops.IsNullOrEmpty()) return false;
+            MissionObjectivePrototype objectiveProto = Prototype;
+            if (objectiveProto.ItemDrops.IsNullOrEmpty())
+                return false;
 
-            var missionRef = Mission.PrototypeDataRef;
+            PrototypeId missionRef = Mission.PrototypeDataRef;
             bool hasLoot = false;
 
-            foreach (var itemDrop in objectiveProto.ItemDrops)
+            foreach (MissionItemDropEntryPrototype itemDrop in objectiveProto.ItemDrops)
             {
-                if (itemDrop.EntityFilter == null) continue;
+                if (itemDrop.EntityFilter == null)
+                    continue;
+
                 if (itemDrop.EntityFilter.Evaluate(enemy, new(missionRef)) && itemDrop.LootTablePrototype != PrototypeId.Invalid)
                 {
                     dropLoots.Add(new(missionRef, itemDrop.LootTablePrototype));

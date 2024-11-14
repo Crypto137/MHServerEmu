@@ -15,6 +15,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -101,6 +102,7 @@ namespace MHServerEmu.Games.Entities
 
         private TeleportData _teleportData;
         private SpawnGimbal _spawnGimbal;
+        private bool _uiSystemUnlocked;
 
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
@@ -189,9 +191,6 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
                 Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
 
-            foreach (PrototypeId uiSystemLockRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<UISystemLockPrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = true;
-
             // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
             //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
@@ -263,6 +262,18 @@ namespace MHServerEmu.Games.Entities
             // TODO: Clean up gameplay options init for new players
             if (settings.ArchiveData.IsNullOrEmpty())
                 _gameplayOptions.ResetToDefaults();
+        }
+
+        public void UnlockUISystem()
+        {
+            if (_uiSystemUnlocked) return;
+            foreach (PrototypeId uiSystemLockRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
+            {
+                var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
+                if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
+                    Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
+            }
+            _uiSystemUnlocked = true;
         }
 
         public override void OnUnpackComplete(Archive archive)
@@ -655,9 +666,11 @@ namespace MHServerEmu.Games.Entities
             inventory.VisibleToOwner = true;
 
             // Update interest for all contained entities
+            EntityManager entityManager = Game.EntityManager;
+
             foreach (var entry in inventory)
             {
-                var entity = Game.EntityManager.GetEntity<Entity>(entry.Id);
+                Entity entity = entityManager.GetEntity<Entity>(entry.Id);
                 if (entity == null)
                 {
                     Logger.Warn("RevealInventory(): entity == null");
@@ -680,6 +693,83 @@ namespace MHServerEmu.Games.Entities
 
                 if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.AvatarInPlay && invLoc.Slot == 0)
                     CurrentAvatar = avatar;
+            }
+
+            if (IsInGame == false || entity is not Item item)
+                return;
+
+            InventoryCategory category = invLoc.InventoryCategory;
+            InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+            if (convenienceLabel == InventoryConvenienceLabel.General ||
+                convenienceLabel == InventoryConvenienceLabel.TeamUpGeneral ||
+                convenienceLabel == InventoryConvenienceLabel.PvP)
+            {
+                // Assign the item's OnUse power to the current avatar
+                Avatar currentAvatar = CurrentAvatar;
+                if (currentAvatar?.IsInWorld == true)
+                {
+                    ItemPrototype itemProto = item.ItemPrototype;
+                    if (itemProto == null) return;
+
+                    PrototypeId powerProtoRef = item.OnUsePower;
+
+                    if (powerProtoRef != PrototypeId.Invalid &&
+                        currentAvatar.HasPowerInPowerCollection(powerProtoRef) == false &&
+                        (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false))
+                    {
+                        int characterLevel = currentAvatar.CharacterLevel;
+                        int combatLevel = currentAvatar.CombatLevel;
+                        int itemLevel = item.Properties[PropertyEnum.ItemLevel];
+                        float itemVariation = item.Properties[PropertyEnum.ItemVariation];
+                        PowerIndexProperties indexProps = new(0, characterLevel, combatLevel, itemLevel, itemVariation);
+
+                        if (currentAvatar.AssignPower(powerProtoRef, indexProps) == null)
+                        {
+                            Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {currentAvatar}");
+                            return;
+                        }
+
+                        Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {currentAvatar}");
+                    }
+                }
+            }
+        }
+
+        public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
+        {
+            base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);
+
+            if (IsInGame == false || entity is not Item item)
+                return;
+
+            InventoryCategory category = invLoc.InventoryCategory;
+            InventoryConvenienceLabel convenienceLabel = invLoc.InventoryConvenienceLabel;
+
+            if (convenienceLabel == InventoryConvenienceLabel.General ||
+                convenienceLabel == InventoryConvenienceLabel.TeamUpGeneral ||
+                convenienceLabel == InventoryConvenienceLabel.PvP)
+            {
+                // Unassign the item's OnUse power from the current avatar as long as there are no other item that grant it
+                Avatar currentAvatar = CurrentAvatar;
+                if (currentAvatar?.IsInWorld == true)
+                {
+                    ItemPrototype itemProto = item.ItemPrototype;
+                    if (itemProto == null) return;
+
+                    PrototypeId powerProtoRef = item.OnUsePower;
+
+                    if (powerProtoRef != PrototypeId.Invalid &&
+                        currentAvatar.HasPowerInPowerCollection(powerProtoRef) &&
+                        (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false))
+                    {
+                        if (currentAvatar.FindAbilityItem(itemProto, item.Id) == InvalidId)
+                        {
+                            currentAvatar.UnassignPower(powerProtoRef);
+                            Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {currentAvatar}");
+                        }
+                    }
+                }
             }
         }
 
@@ -776,6 +866,59 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public InventoryResult AcquireItem(Item item, PrototypeId inventoryProtoRef)
+        {
+            if (item == null) return Logger.WarnReturn(InventoryResult.InvalidSourceEntity, "AcquireItem(): item == null");
+
+            if (AcquireCurrencyItem(item))
+            {
+                item.Destroy();
+                return InventoryResult.Success;
+            }
+
+            Inventory inventory = inventoryProtoRef != PrototypeId.Invalid
+                ? GetInventoryByRef(inventoryProtoRef)
+                : GetInventory(InventoryConvenienceLabel.General);
+
+            if (inventory == null)
+                return InventoryResult.NoAvailableInventory;
+
+            ulong? stackEntityId = InvalidId;
+            InventoryResult result = item.ChangeInventoryLocation(inventory, Inventory.InvalidSlot, ref stackEntityId, true);
+
+            if (result == InventoryResult.Success)
+            {
+                // Update our item reference if it got stacked and mark it as recently added
+                if (stackEntityId != InvalidId)
+                    item = Game.EntityManager.GetEntity<Item>(stackEntityId.Value);
+
+                item?.SetRecentlyAdded(true);
+            }
+            else
+            {
+                // Handle overflow
+                Inventory deliveryBox = GetInventory(InventoryConvenienceLabel.DeliveryBox);
+                if (deliveryBox == null)
+                    return InventoryResult.NoAvailableInventory;
+
+                result = item.ChangeInventoryLocation(deliveryBox);
+
+                if (result != InventoryResult.Success)
+                {
+                    // Second level of overflow - this should not happen under normal circumstances
+                    Logger.Warn($"AcquireItem(): Failed to add item {item} to the delivery box for player {this} for reason {result}, moving this item to the error recovery inventory");
+
+                    Inventory errorRecovery = GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+                    if (errorRecovery == null)
+                        return Logger.WarnReturn(InventoryResult.NoAvailableInventory, $"AcquireItem(): Error recovery inventory is not available for item {item}, player {this}");
+
+                    result = item.ChangeInventoryLocation(errorRecovery);
+                }
+            }
+
+            return result;
+        }
+
         public bool AcquireCurrencyItem(Entity entity)
         {
             if (entity.IsCurrencyItem() == false)
@@ -868,6 +1011,18 @@ namespace MHServerEmu.Games.Entities
 
         public void AddTag(WorldEntity entity) => _tagEntities.Add(entity.Id);
         public void RemoveTag(WorldEntity entity) => _tagEntities.Remove(entity.Id);
+
+        #region Vendors
+
+        public bool AwardVendorXP(int amount, PrototypeId vendorProtoRef)
+        {
+            // TODO: Implement this
+            // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
+            Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
+            return true;
+        }
+
+        #endregion
 
         #region Avatar and Team-Up Management
 
@@ -1997,6 +2152,16 @@ namespace MHServerEmu.Games.Entities
         public bool ViewedRegion(ulong regionId)
         {
             return PlayerConnection.WorldView.ContainsRegionInstanceId(regionId);
+        }
+
+        public bool UnlockVanityTitle(PrototypeId vanityTitleProtoRef)
+        {
+            VanityTitlePrototype vanityTitleProto = vanityTitleProtoRef.As<VanityTitlePrototype>();
+            if (vanityTitleProto == null) return Logger.WarnReturn(false, "UnlockVanityTitle(): vanityTitleProto == null");
+
+            Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
+            Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
+            return true;
         }
 
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>

@@ -443,61 +443,107 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ItemActionPrototype : ItemActionBasePrototype
     {
         public ItemEventType TriggeringEvent { get; protected set; }
+
+        //---
+
+        public virtual ItemActionType ActionType { get => ItemActionType.None; }
     }
 
     public class ItemActionAssignPowerPrototype : ItemActionPrototype
     {
         public PrototypeId Power { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.AssignPower; }
     }
 
     public class ItemActionDestroySelfPrototype : ItemActionPrototype
     {
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.DestroySelf; }
     }
 
     public class ItemActionGuildsUnlockPrototype : ItemActionPrototype
     {
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.GuildUnlock; }
     }
 
     public class ItemActionReplaceSelfItemPrototype : ItemActionPrototype
     {
         public PrototypeId Item { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.ReplaceSelfItem; }
     }
 
     public class ItemActionReplaceSelfLootTablePrototype : ItemActionPrototype
     {
         public LootTablePrototype LootTable { get; protected set; }
         public bool UseCurrentAvatarLevelForRoll { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.ReplaceSelfLootTable; }
     }
 
     public class ItemActionSaveDangerRoomScenarioPrototype : ItemActionPrototype
     {
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.SaveDangerRoomScenario; }
     }
 
     public class ItemActionRespecPrototype : ItemActionPrototype
     {
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.Respec; }
     }
 
     public class ItemActionResetMissionsPrototype : ItemActionPrototype
     {
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.ResetMissions; }
     }
 
     public class ItemActionPrestigeModePrototype : ItemActionPrototype
     {
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.PrestigeMode; }
     }
 
     public class ItemActionUsePowerPrototype : ItemActionPrototype
     {
         public PrototypeId Power { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.UsePower; }
     }
 
     public class ItemActionUnlockPermaBuffPrototype : ItemActionPrototype
     {
         public PrototypeId PermaBuff { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.UnlockPermaBuff; }
     }
 
     public class ItemActionAwardTeamUpXPPrototype : ItemActionPrototype
     {
         public int XP { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.AwardTeamUpXP; }
     }
 
     public class ItemActionSetPrototype : ItemActionBasePrototype
