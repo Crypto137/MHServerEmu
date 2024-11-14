@@ -152,7 +152,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
         {
             if (sharedConnections.Count == 1)
             {
-                Area.CreateConnection(areaA, areaB, sharedConnections.First(), ConnectPosition.One);
+                Area.CreateConnection(areaA, areaB, sharedConnections[0], ConnectPosition.One);
             }
             else
             {

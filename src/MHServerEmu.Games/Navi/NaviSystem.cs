@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Navi
             bool hasErrors = HasErrors();
             if (Log && hasErrors)
             {
-                var error = ErrorLog.First();
+                var error = ErrorLog[0];
 
                 Cell cell = null;
                 if (Region != null)
@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Navi
 
         public bool HasErrors()
         {
-            return ErrorLog.Any();
+            return ErrorLog.Count > 0;
         }
 
     }

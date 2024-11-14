@@ -448,7 +448,7 @@ namespace MHServerEmu.Games.Missions
                         evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
                         if (region.MetaGames.Count > 0)
                         {
-                            ulong metaGemeId = region.MetaGames.First();
+                            ulong metaGemeId = region.MetaGames[0];
                             var metaGame = Game.EntityManager.GetEntity<Entity>(metaGemeId);
                             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, metaGame);
                         }
