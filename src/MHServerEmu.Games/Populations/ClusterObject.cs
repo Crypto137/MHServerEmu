@@ -33,8 +33,8 @@ namespace MHServerEmu.Games.Populations
     {
         None            = 0,
         IgnoreSimulated = 1 << 0,
-        flag2           = 1 << 1,
-        flag4           = 1 << 2,
+        RetryIgnoringBlackout           = 1 << 1,
+        RetryForce           = 1 << 2,
         flag8           = 1 << 3,
         IgnoreBlackout  = 1 << 4,
         IgnoreSpawned   = 1 << 5,
@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Populations
 
         public Vector3 GetParentRelativePosition() => Position;
 
-        public void SetParentRelativePosition(Vector3 position)
+        public void SetParentRelativePosition(in Vector3 position)
         {
             Position = position;
             Transform = Transform3.BuildTransform(Position, Orientation);
@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Populations
             SetLocationDirty();
         }
 
-        public void SetParentRelativeOrientation(Orientation orientation)
+        public void SetParentRelativeOrientation(in Orientation orientation)
         {
             Orientation = orientation;
             Transform = Transform3.BuildTransform(Position, Orientation);
@@ -748,15 +748,16 @@ namespace MHServerEmu.Games.Populations
             return group.Id;
         }
 
-        public bool PickPositionInSector(Vector3 position, Orientation orientation, int minDistance, int maxDistance)
+        public bool PickPositionInSector(in Vector3 position, in Orientation orientation, int minDistance, int maxDistance)
         {
             if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
             {
-                SetParentRelativePosition(position);
-                SetParentRelativeOrientation(orientation);
-                if (TestLayout()) return false;
-                minDistance = (int)Radius;
-                maxDistance = (int)Radius * 4;
+                if (SpawnFlags.HasFlag(SpawnFlags.RetryForce))
+                {
+                    SetParentRelative(position, orientation);
+                    return true;
+                }
+                return false;
             }
 
             const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
@@ -772,7 +773,7 @@ namespace MHServerEmu.Games.Populations
             float distance = minClusterDistance;
             for (int sector = 0; sector < MaxSectors; sector++)
             {
-                int numClusters = (int)Math.Floor(clusterPI * distance);
+                int numClusters = MathHelper.RoundDownToInt(clusterPI * distance);
                 sectorPicker.Add(sector, numClusters);
 
                 distance += clusterSize;
@@ -784,7 +785,7 @@ namespace MHServerEmu.Games.Populations
             {
                 if (sectorPicker.PickRemove(out int sector) == false) return false;
                 distance = minClusterDistance + sector * clusterSize;
-                int numClusters = (int)MathF.Floor(clusterPI * distance);
+                int numClusters = MathHelper.RoundDownToInt(clusterPI * distance);
                 int startCluster = Random.Next(numClusters);
                 float clusterAngle = MathHelper.TwoPi / numClusters;
 
@@ -795,14 +796,17 @@ namespace MHServerEmu.Games.Populations
                     (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(angle));
                     Vector3 testPosition = new(position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
-                    SetParentRelativePosition(testPosition);
-                    if (DebugLog) Logger.Debug($"testPostions = {testPosition}");
-                    SetParentRandomOrientation(orientation);
-                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
-                    if (TestLayout()) return true;
+                    if (SetParentRelative(testPosition, orientation)) return true;
                 }
             }
             return false;
+        }
+
+        public bool SetParentRelative(in Vector3 position, in Orientation orientation)
+        {
+            SetParentRelativePosition(position);
+            SetParentRelativeOrientation(orientation);
+            return TestLayout();
         }
 
         public bool PickPositionInBounds(in Aabb bound)
@@ -826,10 +830,8 @@ namespace MHServerEmu.Games.Populations
             {
                 var point = points[i];
                 Vector3 testPosition = new(point.X, point.Y, center.Z);
-                SetParentRelativePosition(testPosition);
-                Orientation orientation = new(-MathHelper.PiOver2, 0.0f, 0.0f);
-                SetParentRandomOrientation(orientation);
-                if (TestLayout()) return true;
+                Orientation orientation = Orientation.Player;
+                if (SetParentRelative(testPosition, orientation)) return true;
             }
 
             return false;
