@@ -4,6 +4,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -279,6 +280,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private DifficultyTierPrototype[] _difficultyTierProtos;
+
         [DoNotCopy]
         public AlliancePrototype PlayerAlliancePrototype { get; protected set; }
 
@@ -288,8 +293,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
+
+            if (DifficultyTiers.HasValue())
+            {
+                _difficultyTierProtos = new DifficultyTierPrototype[(int)DifficultyTier.NumTiers];
+
+                foreach (PrototypeId difficultyTierProtoRef in DifficultyTiers)
+                {
+                    DifficultyTierPrototype tierPtr = difficultyTierProtoRef.As<DifficultyTierPrototype>();
+                    if (tierPtr == null)
+                    {
+                        Logger.Warn("PostProcess(): tierPtr == null");
+                        continue;
+                    }
+
+                    int tierAsIndex = (int)tierPtr.Tier;
+                    if (tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length)
+                    {
+                        Logger.Warn("PostProcess(): tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length");
+                        continue;
+                    }
+
+                    _difficultyTierProtos[tierAsIndex] = tierPtr;
+                }
+            }
+
             PlayerAlliancePrototype = PlayerAlliance.As<AlliancePrototype>();
             PopulationGlobalsPrototype = PopulationGlobals.As<PopulationGlobalsPrototype>();
+        }
+
+        public DifficultyTierPrototype GetDifficultyTierByEnum(DifficultyTier tierEnum)
+        {
+            int tierAsIndex = (int)tierEnum;
+            if (tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length)
+                Logger.WarnReturn<DifficultyTierPrototype>(null, "PostProcess(): tierAsIndex < 0 || tierAsIndex >= _difficultyTierProtos.Length");
+
+            return _difficultyTierProtos[tierAsIndex];
         }
     }
 

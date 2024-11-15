@@ -1249,6 +1249,10 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        #endregion
+
+        #region Difficulty
+
         public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
         {
             DifficultyTierPrototype difficultyTierProto = difficultyTierProtoRef.As<DifficultyTierPrototype>();
@@ -1269,6 +1273,21 @@ namespace MHServerEmu.Games.Entities
                 return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
 
             return GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+        }
+
+        public PrototypeId GetDifficultyTierForRegion(PrototypeId regionProtoRef, PrototypeId preferenceProtoRef = PrototypeId.Invalid)
+        {
+            if (preferenceProtoRef == PrototypeId.Invalid)
+                preferenceProtoRef = GetDifficultyTierPreference();
+
+            PrototypeId difficultyTierProtoRef = RegionPrototype.ConstrainDifficulty(regionProtoRef, preferenceProtoRef);
+            if (difficultyTierProtoRef == preferenceProtoRef)
+                return preferenceProtoRef;
+
+            if (CanChangeDifficulty(difficultyTierProtoRef))
+                return difficultyTierProtoRef;
+
+            return PrototypeId.Invalid;
         }
 
         #endregion

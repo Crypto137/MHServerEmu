@@ -280,6 +280,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // ClientMapOverrides client only
         }
 
+        public static PrototypeId ConstrainDifficulty(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef)
+        {
+            return ConstrainDifficulty(regionProtoRef.As<RegionPrototype>(), difficultyTierProtoRef.As<DifficultyTierPrototype>());
+        }
+
+        public static PrototypeId ConstrainDifficulty(RegionPrototype regionProto, DifficultyTierPrototype difficultyTierProto)
+        {
+            if (regionProto == null || difficultyTierProto == null)
+                return PrototypeId.Invalid;
+
+            DifficultyTierMask mask = regionProto.DifficultyTierMask;
+            DifficultyTier tier = difficultyTierProto.Tier;
+
+            // First try to downgrade
+            for (DifficultyTier i = tier; i >= 0; i--)
+            {
+                if (mask.HasFlag((DifficultyTierMask)(1 << (int)i)))
+                {
+                    DifficultyTierPrototype constrainedDifficultyProto = GameDatabase.GlobalsPrototype.GetDifficultyTierByEnum(i);
+                    return constrainedDifficultyProto.DataRef;
+                }
+            }
+
+            // Now upgrade
+            for (DifficultyTier i = tier + 1; i < DifficultyTier.NumTiers; i++)
+            {
+                if (mask.HasFlag((DifficultyTierMask)(1 << (int)i)))
+                {
+                    DifficultyTierPrototype constrainedDifficultyProto = GameDatabase.GlobalsPrototype.GetDifficultyTierByEnum(i);
+                    return constrainedDifficultyProto.DataRef;
+                }
+            }
+
+            // No available difficulty
+            return PrototypeId.Invalid;
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);

@@ -9,7 +9,8 @@ namespace MHServerEmu.Games.Regions
     {
         Green,
         Red,
-        Cosmic
+        Cosmic,
+        NumTiers
     }
 
     public enum DifficultyTierMask
