@@ -335,6 +335,12 @@ namespace MHServerEmu.Games.Network
             if (_dbIdConnectionDict.TryAdd(connection.PlayerDbId, connection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add player id 0x{connection.PlayerDbId}");
 
+            if (connection.Initialize() == false)
+            {
+                connection.Disconnect();
+                return false;
+            }
+
             //SetPlayerConnectionPending(connection);   // This will be set when we receive region availability query response
 
             Logger.Info($"Accepted and registered client [{client}] to game [{_game}]");

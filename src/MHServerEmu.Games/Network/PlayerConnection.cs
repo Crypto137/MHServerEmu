@@ -42,6 +42,7 @@ namespace MHServerEmu.Games.Network
         private readonly List<IMessage> _pendingMessageList = new();
 
         private bool _waitingForRegionIsAvailableResponse = false;
+        private bool _doNotUpdateDBAccount = false;
 
         public Game Game { get; }
 
@@ -69,8 +70,16 @@ namespace MHServerEmu.Games.Network
             TransferParams = new(this);
             MigrationData = new();
             RegionContext = new();
+        }
 
-            InitializeFromDBAccount();
+        public bool Initialize()
+        {
+            if (LoadFromDBAccount() == false)
+            {
+                // Do not update DBAccount when we fail to load to avoid corrupting data
+                _doNotUpdateDBAccount = true;
+                return Logger.WarnReturn(false, $"Initialize(): Failed to load player data from DBAccount {_dbAccount}");
+            }
 
             // Send achievement database
             SendMessage(AchievementDatabase.Instance.GetDump());
@@ -82,6 +91,7 @@ namespace MHServerEmu.Games.Network
                 .Build());
 
             _waitingForRegionIsAvailableResponse = true;
+            return true;
         }
 
         public override string ToString()
@@ -94,8 +104,10 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
-        private bool InitializeFromDBAccount()
+        private bool LoadFromDBAccount()
         {
+            _doNotUpdateDBAccount = false;
+
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
             EntityManager entityManager = Game.EntityManager;
 
@@ -201,6 +213,9 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         private bool UpdateDBAccount()
         {
+            if (_doNotUpdateDBAccount)
+                return true;
+
             if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
 
             // NOTE: We are locking on the account instance to prevent account data from being modified while
@@ -372,7 +387,7 @@ namespace MHServerEmu.Games.Network
             Game.EntityManager.ProcessDeferredLists();
 
             // Recreate player
-            InitializeFromDBAccount();
+            LoadFromDBAccount();
         }
 
         #endregion
