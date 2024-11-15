@@ -1786,7 +1786,7 @@ namespace MHServerEmu.Games.Missions
         public IEnumerable<Player> GetRegionPlayers()
         {
             if (IsOpenMission)
-                foreach (var player in new PlayerIterator(Region))
+                foreach (var player in new PlayerIterator(Region).ToArray())
                     yield return player;
         }
 
