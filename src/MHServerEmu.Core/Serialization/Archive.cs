@@ -24,6 +24,7 @@ namespace MHServerEmu.Core.Serialization
     {
         Invalid,
         Initial,
+        AddedMissions,
         // Add more versions here as needed and don't forget to update Archive.CurrentVersion below
     }
 
@@ -32,7 +33,7 @@ namespace MHServerEmu.Core.Serialization
     /// </summary>
     public class Archive : IDisposable
     {
-        private const ArchiveVersion CurrentVersion = ArchiveVersion.Initial;       // <-- Update this if you add a new version
+        private const ArchiveVersion CurrentVersion = ArchiveVersion.AddedMissions;       // <-- Update this if you add a new version
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 

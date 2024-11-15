@@ -319,8 +319,8 @@ namespace MHServerEmu.Games.Entities
 
             if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
 
-            // Persistent missions
-            success &= Serializer.Transfer(archive, ref _missionManager);
+            if (archive.Version >= ArchiveVersion.AddedMissions)
+                success &= Serializer.Transfer(archive, ref _missionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
