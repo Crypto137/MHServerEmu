@@ -228,7 +228,7 @@ namespace MHServerEmu.Games.Populations
                 case SpawnTargetType.Spawner:
                     position = Location.Position;
                     orientation = Location.Orientation;
-                    success = clusterGroup.PickPositionInSector(position, orientation, SpawnerProto.SpawnDistanceMin, SpawnerProto.SpawnDistanceMax);
+                    success = clusterGroup.PickPositionInSector(position, orientation, SpawnerProto.SpawnDistanceMin, SpawnerProto.SpawnDistanceMax, SpawnerProto.SpawnFacing);
                     break;
             }
 

@@ -429,14 +429,25 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        private static Orientation DoFacing(FormationFacing facing, Vector3 pos)
+        private static Orientation DoFacing(FormationFacing facing, in Vector3 delta)
         {
             return facing switch
             {
                 FormationFacing.FaceParentInverse => Orientation.FromDeltaVector2D(Vector3.Back),
-                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(-pos),
-                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(pos),
+                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(-delta),
+                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(delta),
                 _ => Orientation.Zero
+            };
+        }
+
+        private static Orientation DoTestFacing(FormationFacing facing, in Vector3 delta, in Orientation orientation)
+        {
+            return facing switch
+            {
+                FormationFacing.FaceParentInverse => new(orientation.Yaw + MathHelper.Pi, orientation.Pitch, orientation.Roll),
+                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(delta),
+                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(-delta),
+                _ => orientation
             };
         }
 
@@ -748,7 +759,7 @@ namespace MHServerEmu.Games.Populations
             return group.Id;
         }
 
-        public bool PickPositionInSector(in Vector3 position, in Orientation orientation, int minDistance, int maxDistance)
+        public bool PickPositionInSector(in Vector3 position, in Orientation orientation, int minDistance, int maxDistance, FormationFacing spawnFacing = FormationFacing.FaceParent)
         {
             if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
             {
@@ -796,7 +807,8 @@ namespace MHServerEmu.Games.Populations
                     (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(angle));
                     Vector3 testPosition = new(position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
-                    if (SetParentRelative(testPosition, orientation)) return true;
+                    Orientation testOrientation = DoTestFacing(spawnFacing, position - testPosition, orientation);
+                    if (SetParentRelative(testPosition, testOrientation)) return true;
                 }
             }
             return false;
