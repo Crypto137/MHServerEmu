@@ -101,6 +101,17 @@ namespace MHServerEmu.Games.Network
 
         #region Data Management
 
+        public void WipePlayerData()
+        {
+            Logger.Info($"Player {this} requested account data wipe.");
+
+            _dbAccount.Player.Reset();
+            _dbAccount.ClearEntities();
+            _doNotUpdateDBAccount = true;
+
+            Disconnect();
+        }
+
         /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
