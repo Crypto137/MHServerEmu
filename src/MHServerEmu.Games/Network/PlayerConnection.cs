@@ -137,8 +137,7 @@ namespace MHServerEmu.Games.Network
                     Player.AddBadge(badge);
             }
 
-            // REMOVEME: Set default mission tracker filters for new players
-            // Remove this when we merge missions
+            // TODO: Improve new player detection
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
                 TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion);
@@ -189,6 +188,10 @@ namespace MHServerEmu.Games.Network
                     }
                 }
             }
+
+            // Apply versioning if needed
+            if (PlayerVersioning.Apply(Player) == false)
+                return false;
 
             return true;
         }

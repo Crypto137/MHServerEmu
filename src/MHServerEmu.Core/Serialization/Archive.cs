@@ -22,10 +22,12 @@ namespace MHServerEmu.Core.Serialization
     // things get more stable we may want to clear this and force a wipe of everything.
     public enum ArchiveVersion : uint
     {
-        Invalid,
-        Initial,
-        AddedMissions,
-        // Add more versions here as needed and don't forget to update Archive.CurrentVersion below
+        Invalid = 0,
+        Initial = 1,
+        AddedMissions = 2,
+
+        // Update the current version if you add any    <---------
+        Current = AddedMissions
     }
 
     /// <summary>
@@ -33,8 +35,6 @@ namespace MHServerEmu.Core.Serialization
     /// </summary>
     public class Archive : IDisposable
     {
-        private const ArchiveVersion CurrentVersion = ArchiveVersion.AddedMissions;       // <-- Update this if you add a new version
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // Reuse the same buffers for all archives on the same thread. In practice this means one buffer instance of each type per game.
@@ -81,7 +81,7 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool FavorSpeed { get => IsDisk; }
 
-        public ArchiveVersion Version { get; private set; } = CurrentVersion;
+        public ArchiveVersion Version { get; private set; } = ArchiveVersion.Current;
         public ulong ReplicationPolicy { get; private set; } = 0;
 
         public bool IsPacking { get; }
