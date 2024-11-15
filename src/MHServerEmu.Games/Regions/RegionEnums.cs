@@ -2,8 +2,6 @@
 
 namespace MHServerEmu.Games.Regions
 {
-    // TODO: remove hardcoded prototype ids and combine these two enums
-
     [AssetEnum((int)Green)]
     public enum DifficultyTier
     {
@@ -15,19 +13,10 @@ namespace MHServerEmu.Games.Regions
 
     public enum DifficultyTierMask
     {
-        None = 0,
-        Green =     1 << 0,
-        Red =       1 << 1,
-        Cosmic =    1 << 2,
-    }
-
-    public enum DifficultyTierPrototypeId : ulong
-    {
-        Normal = 18016845980090109785,
-        Heroic = 7540373722300157771,
-        Superheroic = 586640101754933627,   // interpreted as Cosmic by the 1.52 client
-        Cosmic = 1087474643293441873,
-        Omega1 = 424700179461639950
+        None    = 0,
+        Green   = 1 << 0,
+        Red     = 1 << 1,
+        Cosmic  = 1 << 2,
     }
 
     public enum RegionPrototypeId : ulong
@@ -180,7 +169,7 @@ namespace MHServerEmu.Games.Regions
         HoloSimARegion1to60 = 1851384890999315356,              // S.H.I.E.L.D. Holo-Sim
         XmansionNWSRegionUnbanded = 17669583277812293411,       // X-Defense
         SurturRaidRegionGreen = 943404224811899020,             // Muspelheim Raid
-        AxisRaidRegionGreen = 10186536050085467400,              // Axis Raid
+        AxisRaidRegionGreen = 10186536050085467400,             // Axis Raid
 
         // Treasure Rooms
         TRGameCenterRegion = 16693804270797857925,              // Game Center
@@ -191,22 +180,5 @@ namespace MHServerEmu.Games.Regions
         LimboRegionL60 = 4742357611317369027,
         AsgardCowLevelRegion = 17913362697985334451,
         ClassifiedBovineSectorRegion = 12735255224807267622,
-    }
-
-    public enum AreaPrototypeId : ulong
-    {
-        AvengersTowerHubArea = 11587794710165067927,
-        NPEAvengersTowerHubArea = 11135337283876558073,
-        TrainingRoomSHIELDArea = 5570532918023034911,
-        XaviersMansionArea = 10707862600903825135,
-        HelicarrierArea = 13861225053224309781,
-        AsgardiaArea = 227371792232157880,
-        GenoshaHUBArea = 1688916684898308937,
-        GenoshaHUBEntryArea = 13803213742814074235,
-        DangerRoomHubArea = 12475690031293798605,
-        InvasionSafeAbodeArea1 = 14355026965969443149,
-        InvasionSafeAbodeArea2 = 6833415259207637326,
-        DailyGSubwayFactoryGen1Area = 9662974537569346456,
-        XManhattanArea1 = 307100709842327667
     }
 }

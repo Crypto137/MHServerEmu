@@ -199,13 +199,13 @@ namespace MHServerEmu.Games.Entities
             #region Hardcoded social tab easter eggs
             _community.AddMember(1, "DavidBrevik", CircleId.__Friends);
             _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(1).SetIsOnline(1)
-                .SetCurrentRegionRefId(12735255224807267622).SetCurrentDifficultyRefId((ulong)DifficultyTierPrototypeId.Normal)
+                .SetCurrentRegionRefId(12735255224807267622).SetCurrentDifficultyRefId(18016845980090109785)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(15769648016960461069).SetCostumeRefId(4881398219179434365).SetLevel(60).SetPrestigeLevel(6))
                 .Build());
 
             _community.AddMember(2, "TonyStark", CircleId.__Friends);
             _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(2).SetIsOnline(1)
-                .SetCurrentRegionRefId((ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion).SetCurrentDifficultyRefId((ulong)DifficultyTierPrototypeId.Normal)
+                .SetCurrentRegionRefId((ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion).SetCurrentDifficultyRefId(18016845980090109785)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(421791326977791218).SetCostumeRefId(7150542631074405762).SetLevel(60).SetPrestigeLevel(5))
                 .Build());
 
