@@ -763,12 +763,9 @@ namespace MHServerEmu.Games.Populations
         {
             if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
             {
-                if (SpawnFlags.HasFlag(SpawnFlags.RetryForce))
-                {
-                    SetParentRelative(position, orientation);
-                    return true;
-                }
-                return false;
+                if (SpawnFlags.HasFlag(SpawnFlags.RetryForce) == false) return false;                
+                SetParentRelative(position, orientation);
+                return true;                
             }
 
             const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
@@ -791,7 +788,6 @@ namespace MHServerEmu.Games.Populations
                 maxClusterDistance += clusterSize;
                 if (maxClusterDistance > maxDistance) break;
             }
-            float shiftAngle = Random.NextFloat() * 2;
             while (sectorPicker.Empty() == false)
             {
                 if (sectorPicker.PickRemove(out int sector) == false) return false;
@@ -802,12 +798,13 @@ namespace MHServerEmu.Games.Populations
 
                 for (int cluster = 0; cluster < numClusters; cluster++)
                 {
-                    int div = startCluster + cluster;
-                    float angle = clusterAngle * div + shiftAngle;
-                    (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(angle));
+                    int angle = (startCluster + cluster) % numClusters;
+                    (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(clusterAngle * angle));
                     Vector3 testPosition = new(position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
-                    Orientation testOrientation = DoTestFacing(spawnFacing, position - testPosition, orientation);
+                    Orientation testOrientation = orientation;
+                    if (spawnFacing != FormationFacing.FaceParent)
+                        testOrientation = DoTestFacing(spawnFacing, position - testPosition, orientation);
                     if (SetParentRelative(testPosition, testOrientation)) return true;
                 }
             }
