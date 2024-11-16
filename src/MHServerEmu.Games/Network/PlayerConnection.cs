@@ -235,7 +235,8 @@ namespace MHServerEmu.Games.Network
             {
                 using (Archive archive = new(ArchiveSerializeType.Database))
                 {
-                    Player.Serialize(archive);
+                    // NOTE: Use Transfer() and NOT Player.Serialize() to make sure we pack the size of the player
+                    Serializer.Transfer(archive, Player);
                     _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
