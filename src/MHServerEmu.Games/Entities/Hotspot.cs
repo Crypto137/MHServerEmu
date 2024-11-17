@@ -295,7 +295,7 @@ namespace MHServerEmu.Games.Entities
             var player = avatar.GetOwnerOfType<Player>();
             if (player == null) return;
 
-            player.OnScoringEvent(new(ScoringEventType.HotspotEnter, PrototypeDataRef));
+            player.OnScoringEvent(new(ScoringEventType.HotspotEnter, Prototype));
 
             PrototypeId waypointRef = Properties[PropertyEnum.WaypointHotspotUnlock];
             if (waypointRef != PrototypeId.Invalid)

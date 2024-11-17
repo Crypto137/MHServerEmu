@@ -803,7 +803,8 @@ namespace MHServerEmu.Games.Network
             if (item.Properties.HasProperty(PropertyEnum.RestrictedToPlayerGuid))
             {
                 PrototypeId rarityRef = item.Properties[PropertyEnum.ItemRarity];
-                Player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.PrototypeDataRef, rarityRef, item.CurrentStackSize));
+                Prototype rarityProto = GameDatabase.GetPrototype<Prototype>(rarityRef);
+                Player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProto, item.CurrentStackSize));
             }
 
             // Cancel lifespan expiration for the picked up item
