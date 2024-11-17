@@ -98,7 +98,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Setting all Infinity points to {value}.";
         }
 
-        [Command("wipe", "Wipes all progress associated with the current account.\nUsage: player wipe [playerName]", AccountUserLevel.Admin)]
+        [Command("wipe", "Wipes all progress associated with the current account.\nUsage: player wipe [playerName]")]
         public string Wipe(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
