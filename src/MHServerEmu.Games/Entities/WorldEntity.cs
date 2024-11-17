@@ -1250,6 +1250,11 @@ namespace MHServerEmu.Games.Entities
             NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
             Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
+            if (IsInWorld == false)
+                return false;
+
+            Region region = Region;
+
             // Apply the results to this entity
             // TODO: More stuff
 
@@ -1280,7 +1285,7 @@ namespace MHServerEmu.Games.Entities
             // HACK: Avatars should be invulnerable during the tutorial via a region-wide passive power that sets HealthMin
             // (see Powers/Player/Passive/TutorialHealthMin.prototype).
             // We don't have this working yet, so we need a temporary hack here to avoid breaking the tutorial.
-            if (Region.PrototypeDataRef == (PrototypeId)13422564811632352998 && this is Avatar && health < 1)
+            if (region.PrototypeDataRef == (PrototypeId)13422564811632352998 && this is Avatar && health < 1)
                 health = 1;
 
             // Change health to the new value
@@ -1290,8 +1295,6 @@ namespace MHServerEmu.Games.Entities
             long adjustHealth = health - startHealth;
 
             var avatar = ultimatePowerUser?.GetMostResponsiblePowerUser<Avatar>();
-
-            var region = Region;
 
             if (region != null)
             {
