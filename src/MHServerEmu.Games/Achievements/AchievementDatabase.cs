@@ -25,7 +25,7 @@ namespace MHServerEmu.Games.Achievements
         private NetMessageAchievementDatabaseDump _cachedDump = NetMessageAchievementDatabaseDump.DefaultInstance;
 
         public static AchievementDatabase Instance { get; } = new();
-
+        public Dictionary<uint, AchievementInfo>.ValueCollection AchievementInfoMap { get => _achievementInfoMap.Values; }
         public TimeSpan AchievementNewThresholdUS { get; private set; }     // Unix timestamp in seconds
 
         private AchievementDatabase() { }
