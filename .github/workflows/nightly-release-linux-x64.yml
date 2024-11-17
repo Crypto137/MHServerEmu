@@ -14,7 +14,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
     - name: Restore dependencies
       run: dotnet restore MHServerEmu.sln
     - name: Build
@@ -28,6 +28,6 @@ jobs:
       with:
         name: MHServerEmu-nightly-${{ env.DATE }}-Release-linux-x64
         path: |
-          ./src/MHServerEmu/bin/x64/Release/net6.0
-          !./src/MHServerEmu/bin/x64/Release/net6.0/*.pdb
-          !./src/MHServerEmu/bin/x64/Release/net6.0/*.xml
+          ./src/MHServerEmu/bin/x64/Release/net8.0
+          !./src/MHServerEmu/bin/x64/Release/net8.0/*.pdb
+          !./src/MHServerEmu/bin/x64/Release/net8.0/*.xml
