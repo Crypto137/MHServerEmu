@@ -394,7 +394,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, indexProperties);
 
                     PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propEntryProto.Prop.Enum);
-                    
+
                     switch (propertyInfo.DataType)
                     {
                         case PropertyDataType.Boolean:
@@ -509,6 +509,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool IsRankBossOrMiniBoss { get => IsRankBoss || Rank == Rank.MiniBoss; }
 
+        private KeywordsMask _keywordsMask;
+
         public static PrototypeId DoOverride(PrototypeId rankRef, PrototypeId rankOverride)
         {
             var rankProto = rankRef.As<RankPrototype>();
@@ -522,6 +524,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (rankOverrideProto == null) return rankProto;
             if (rankProto.Rank < rankOverrideProto.Rank) return rankOverrideProto;
             return rankProto;
+        }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
     }
 

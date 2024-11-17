@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Events
 {
@@ -137,9 +138,32 @@ namespace MHServerEmu.Games.Events
 
         public static ScoringEventType GetScoringEventTypeFromInt(uint eventType)
         {
-            return eventType < (uint)ScoringEventType.Max 
-                ? (ScoringEventType)eventType 
+            return eventType < (uint)ScoringEventType.Max
+                ? (ScoringEventType)eventType
                 : ScoringEventType.Invalid;
+        }
+
+        public static bool FilterPrototype(Prototype prototype, Prototype eventPrototype, bool includeChildren)
+        {
+            if (eventPrototype == null) return false;
+            if (prototype == null || prototype == eventPrototype) return true;
+
+            if (prototype is KeywordPrototype keywordPrototype)
+            {
+                return eventPrototype switch
+                {
+                    MissionPrototype missionPrototype => missionPrototype.HasKeyword(keywordPrototype),
+                    PowerPrototype powerPrototype => powerPrototype.HasKeyword(keywordPrototype),
+                    RankPrototype rankPrototype => rankPrototype.HasKeyword(keywordPrototype),
+                    RegionPrototype regionPrototype => regionPrototype.HasKeyword(keywordPrototype),
+                    WorldEntityPrototype worldEntityPrototype => worldEntityPrototype.HasKeyword(keywordPrototype),
+                    _ => false,
+                };
+            }
+
+            if (includeChildren == false) return false;
+
+            return GameDatabase.DataDirectory.PrototypeIsAPrototype(eventPrototype.DataRef, prototype.DataRef);
         }
     }
 }
