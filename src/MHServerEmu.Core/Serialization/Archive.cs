@@ -22,9 +22,12 @@ namespace MHServerEmu.Core.Serialization
     // things get more stable we may want to clear this and force a wipe of everything.
     public enum ArchiveVersion : uint
     {
-        Invalid,
-        Initial,
-        // Add more versions here as needed and don't forget to update Archive.CurrentVersion below
+        Invalid = 0,
+        Initial = 1,
+        AddedMissions = 2,
+
+        // Update the current version if you add any    <---------
+        Current = AddedMissions
     }
 
     /// <summary>
@@ -32,8 +35,6 @@ namespace MHServerEmu.Core.Serialization
     /// </summary>
     public class Archive : IDisposable
     {
-        private const ArchiveVersion CurrentVersion = ArchiveVersion.Initial;       // <-- Update this if you add a new version
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // Reuse the same buffers for all archives on the same thread. In practice this means one buffer instance of each type per game.
@@ -80,13 +81,14 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool FavorSpeed { get => IsDisk; }
 
-        public ArchiveVersion Version { get; private set; } = CurrentVersion;
+        public ArchiveVersion Version { get; private set; } = ArchiveVersion.Current;
         public ulong ReplicationPolicy { get; private set; } = 0;
 
         public bool IsPacking { get; }
         public bool IsUnpacking { get => IsPacking == false; }
 
-        public long CurrentOffset { get => _bufferStream.Position; }
+        // NOTE: COS/CIS are buffered, so we need to use their position, and not the one from the underlying stream.
+        public long CurrentOffset { get => IsPacking ? _cos.Position : _cis.Position; }
 
         /// <summary>
         /// Constructs a new <see cref="Archive"/> instance for packing.
@@ -379,7 +381,14 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool Transfer<T>(ref T ioData) where T: ISerialize
         {
-            return ioData.Serialize(this);
+            long startPosition = 0;
+            uint size = 0;
+
+            bool success = StartSizeChecking(ref startPosition, ref size);
+            success |= ioData.Serialize(this);
+            success |= EndSizeChecking(ref startPosition, ref size, false);
+
+            return success;
         }
 
         /// <summary>
@@ -595,6 +604,84 @@ namespace MHServerEmu.Core.Serialization
 
         #endregion
 
+        #region Size Checking
+
+        /// <summary>
+        /// Skips the <see cref="ISerialize"/> object at the current position.
+        /// </summary>
+        public bool Skip()
+        {
+            long startPosition = 0;
+            uint size = 0;
+
+            bool success = StartSizeChecking(ref startPosition, ref size);
+            success |= EndSizeChecking(ref startPosition, ref size, true);
+
+            return success;
+        }
+
+        /// <summary>
+        /// Updates the start position for the current <see cref="ISerialize"/> object and its size.
+        /// When packing: writes a dummy value for the size of the current <see cref="ISerialize"/> object.
+        /// </summary>
+        private bool StartSizeChecking(ref long startPosition, ref uint size)
+        {
+            if (IsPersistent == false || Version < ArchiveVersion.AddedMissions)
+                return true;
+
+            // NOTE: COS/CIS are buffered, so we need to use their position, and not the one from the underlying stream.
+
+            if (IsPacking)
+            {
+                startPosition = _cos.Position;
+                WriteUnencodedStream(0u);   // Write a dummy value that will be overwritten once we finish packing the current ISerialize object
+            }
+            else
+            {
+                startPosition = _cis.Position;
+                ReadUnencodedStream(ref size);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates the size of the current <see cref="ISerialize"/> object.
+        /// When packing: updates the dummy size value written in <see cref="StartSizeChecking(ref long, ref uint)"/>.
+        /// When unpacking: can be used to skip the current <see cref="ISerialize"/> object entirely.
+        /// </summary>
+        private bool EndSizeChecking(ref long startPosition, ref uint size, bool skip)
+        {
+            if (IsPersistent == false || Version < ArchiveVersion.AddedMissions)
+                return true;
+
+            if (IsPacking)
+            {
+                if (skip)
+                    return Logger.WarnReturn(false, "EndSizeChecking(): Skipping not supported while packing!");
+
+                // Update the dummy value written in StartSizeChecking() with actual size
+                WriteUnencodedStream((uint)(_cos.Position - startPosition), startPosition);
+            }
+            else
+            {
+                long endPosition = startPosition + size;
+                long currentPosition = _cis.Position;
+
+                if (currentPosition != endPosition)
+                {
+                    if (skip == false)
+                        return Logger.WarnReturn(false, "EndSizeChecking(): Size inconsistency!");
+
+                    _cis.SkipRawBytes((int)(endPosition - currentPosition));
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
         #region Stream IO
 
         /// <summary>
@@ -668,9 +755,9 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool WriteUnencodedStream(uint value, long position)
         {
-            // NOTE: PropertyCollection::serializeWithDefault() does a weird thing where it manipulates the archive buffer directly.
-            // First it allocates 4 bytes for the number of properties, than it writes all the properties, and then it goes back
-            // and updates the number.
+            // NOTE: PropertyCollection::serializeWithDefault() manipulates the archive buffer directly. First it allocates 4 bytes
+            // for the number of properties, than it writes all the properties, and then it goes back and updates the number.
+            // NOTE2: Persistent archives also do this for all ISerialize objects, except it writes the number of bytes written.
             return _bufferStream.WriteUInt32At(position, value);
         }
 

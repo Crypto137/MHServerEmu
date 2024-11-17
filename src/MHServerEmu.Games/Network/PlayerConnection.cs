@@ -42,6 +42,7 @@ namespace MHServerEmu.Games.Network
         private readonly List<IMessage> _pendingMessageList = new();
 
         private bool _waitingForRegionIsAvailableResponse = false;
+        private bool _doNotUpdateDBAccount = false;
 
         public Game Game { get; }
 
@@ -69,8 +70,16 @@ namespace MHServerEmu.Games.Network
             TransferParams = new(this);
             MigrationData = new();
             RegionContext = new();
+        }
 
-            InitializeFromDBAccount();
+        public bool Initialize()
+        {
+            if (LoadFromDBAccount() == false)
+            {
+                // Do not update DBAccount when we fail to load to avoid corrupting data
+                _doNotUpdateDBAccount = true;
+                return Logger.WarnReturn(false, $"Initialize(): Failed to load player data from DBAccount {_dbAccount}");
+            }
 
             // Send achievement database
             SendMessage(AchievementDatabase.Instance.GetDump());
@@ -82,6 +91,7 @@ namespace MHServerEmu.Games.Network
                 .Build());
 
             _waitingForRegionIsAvailableResponse = true;
+            return true;
         }
 
         public override string ToString()
@@ -91,11 +101,24 @@ namespace MHServerEmu.Games.Network
 
         #region Data Management
 
+        public void WipePlayerData()
+        {
+            Logger.Info($"Player {this} requested account data wipe.");
+
+            _dbAccount.Player.Reset();
+            _dbAccount.ClearEntities();
+            _doNotUpdateDBAccount = true;
+
+            Disconnect();
+        }
+
         /// <summary>
         /// Initializes this <see cref="PlayerConnection"/> from the bound <see cref="DBAccount"/>.
         /// </summary>
-        private bool InitializeFromDBAccount()
+        private bool LoadFromDBAccount()
         {
+            _doNotUpdateDBAccount = false;
+
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
             EntityManager entityManager = Game.EntityManager;
 
@@ -137,8 +160,7 @@ namespace MHServerEmu.Games.Network
                     Player.AddBadge(badge);
             }
 
-            // REMOVEME: Set default mission tracker filters for new players
-            // Remove this when we merge missions
+            // TODO: Improve new player detection
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
                 TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion);
@@ -190,6 +212,10 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
+            // Apply versioning if needed
+            if (PlayerVersioning.Apply(Player) == false)
+                return false;
+
             return true;
         }
 
@@ -198,6 +224,9 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         private bool UpdateDBAccount()
         {
+            if (_doNotUpdateDBAccount)
+                return true;
+
             if (Player == null) return Logger.WarnReturn(false, "UpdateDBAccount(): Player == null");
 
             // NOTE: We are locking on the account instance to prevent account data from being modified while
@@ -206,7 +235,8 @@ namespace MHServerEmu.Games.Network
             {
                 using (Archive archive = new(ArchiveSerializeType.Database))
                 {
-                    Player.Serialize(archive);
+                    // NOTE: Use Transfer() and NOT Player.Serialize() to make sure we pack the size of the player
+                    Serializer.Transfer(archive, Player);
                     _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
@@ -369,7 +399,7 @@ namespace MHServerEmu.Games.Network
             Game.EntityManager.ProcessDeferredLists();
 
             // Recreate player
-            InitializeFromDBAccount();
+            LoadFromDBAccount();
         }
 
         #endregion

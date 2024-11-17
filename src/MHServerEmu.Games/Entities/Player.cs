@@ -103,6 +103,8 @@ namespace MHServerEmu.Games.Entities
         private SpawnGimbal _spawnGimbal;
         private bool _uiSystemUnlocked;
 
+        public ArchiveVersion LastSerializedArchiveVersion { get; private set; } = ArchiveVersion.Current;    // Updated on serialization
+
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
         public ulong ShardId { get => _shardId; }
@@ -315,12 +317,14 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Serialize(Archive archive)
         {
+            LastSerializedArchiveVersion = archive.Version;
+
             bool success = base.Serialize(archive);
 
             if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
 
-            // Persistent missions
-            success &= Serializer.Transfer(archive, ref _missionManager);
+            if (archive.Version >= ArchiveVersion.AddedMissions)
+                success &= Serializer.Transfer(archive, ref _missionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
