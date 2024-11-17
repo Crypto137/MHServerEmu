@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Entities
 
         private TeleportData _teleportData;
         private SpawnGimbal _spawnGimbal;
-        private bool _uiSystemUnlocked;
+        private bool _newPlayerUISystemsUnlocked;
 
         public ArchiveVersion LastSerializedArchiveVersion { get; private set; } = ArchiveVersion.Current;    // Updated on serialization
 
@@ -263,16 +263,30 @@ namespace MHServerEmu.Games.Entities
                 _gameplayOptions.ResetToDefaults();
         }
 
-        public void UnlockUISystem()
+        public void UnlockNewPlayerUISystems()
         {
-            if (_uiSystemUnlocked) return;
+            if (_newPlayerUISystemsUnlocked)
+                return;
+
             foreach (PrototypeId uiSystemLockRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
             {
                 var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
                 if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
                     Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
             }
-            _uiSystemUnlocked = true;
+
+            _newPlayerUISystemsUnlocked = true;
+        }
+
+        public void UpdateUISystemLocks()
+        {
+            foreach (PrototypeId uiSystemLockProtoRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
+            {
+                UISystemLockPrototype uiSystemLockProto = uiSystemLockProtoRef.As<UISystemLockPrototype>();
+                int currentState = Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef];
+                if (currentState == 0 && Properties[PropertyEnum.PlayerMaxAvatarLevel] >= uiSystemLockProto.UnlockLevel)
+                    Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef] = 1;
+            }
         }
 
         public override void OnUnpackComplete(Archive archive)
@@ -408,6 +422,8 @@ namespace MHServerEmu.Games.Entities
 
             // Enter game to become added to the AOI
             base.EnterGame(settings);
+
+            UpdateUISystemLocks();
         }
 
         public override void ExitGame()
@@ -1237,6 +1253,8 @@ namespace MHServerEmu.Games.Entities
             // Update max avatar level for things like mode unlocks
             if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
                 Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
+
+            UpdateUISystemLocks();
         }
 
         public bool CanUseLiveTuneBonuses()

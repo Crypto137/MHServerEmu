@@ -1794,7 +1794,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     player.SetActiveChapter(regionProto.Chapter);
 
                 if (regionProto.IsNPE == false)
-                    player.UnlockUISystem();
+                    player.UnlockNewPlayerUISystems();
             }
 
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
