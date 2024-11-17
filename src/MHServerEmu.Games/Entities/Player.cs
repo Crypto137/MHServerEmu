@@ -283,8 +283,13 @@ namespace MHServerEmu.Games.Entities
             foreach (PrototypeId uiSystemLockProtoRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
             {
                 UISystemLockPrototype uiSystemLockProto = uiSystemLockProtoRef.As<UISystemLockPrototype>();
+                if (uiSystemLockProto.UnlockLevel == -1)
+                    continue;
+
                 int currentState = Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef];
-                if (currentState == 0 && Properties[PropertyEnum.PlayerMaxAvatarLevel] >= uiSystemLockProto.UnlockLevel)
+                int maxAvatarLevel = Properties[PropertyEnum.PlayerMaxAvatarLevel];
+
+                if (currentState == 0 && maxAvatarLevel >= uiSystemLockProto.UnlockLevel)
                     Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef] = 1;
             }
         }
