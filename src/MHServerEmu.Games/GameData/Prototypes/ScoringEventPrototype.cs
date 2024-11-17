@@ -16,6 +16,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId ContextDifficultyTierMax { get; protected set; }
         public PrototypeId ContextTeamUp { get; protected set; }
         public PrototypeId ContextPublicEventTeam { get; protected set; }
+
+        [DoNotCopy]
+        public ScoringEventContext Context { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            Context = new(this);
+        }
     }
 
     public class ScoringEventTimerPrototype : Prototype
