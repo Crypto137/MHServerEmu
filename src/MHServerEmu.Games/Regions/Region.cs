@@ -1647,8 +1647,9 @@ namespace MHServerEmu.Games.Regions
 
             long time = GetScoringEventTimeMS(timerRef);
             if (time == 0) return;
+            Prototype timerProto = GameDatabase.GetPrototype<Prototype>(timerRef);
             foreach (var player in new PlayerIterator(this))
-                player?.OnScoringEvent(new(ScoringEventType.CompletionTime, timerRef, (int)time));
+                player?.OnScoringEvent(new(ScoringEventType.CompletionTime, timerProto, (int)time));
         }
 
         public void ScoringEventTimerStop(PrototypeId timerRef)

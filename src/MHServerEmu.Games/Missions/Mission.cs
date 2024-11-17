@@ -1002,7 +1002,7 @@ namespace MHServerEmu.Games.Missions
                         region.PlayerCompletedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
 
                         if (isAchievement)
-                            activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, PrototypeDataRef));
+                            activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, Prototype));
                     }
                 }
 

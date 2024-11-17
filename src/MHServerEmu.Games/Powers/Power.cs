@@ -2802,8 +2802,7 @@ namespace MHServerEmu.Games.Powers
             {
                 var player = avatar.GetOwnerOfType<Player>();
                 var target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
-                var targetRef = target?.PrototypeDataRef ?? PrototypeId.Invalid;
-                player.OnScoringEvent(new(ScoringEventType.AvatarUsedPower, Prototype.DataRef, targetRef));
+                player.OnScoringEvent(new(ScoringEventType.AvatarUsedPower, Prototype, target?.Prototype));
             }
 
             PowerPrototype powerProto = Prototype;

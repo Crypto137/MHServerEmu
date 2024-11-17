@@ -947,7 +947,7 @@ namespace MHServerEmu.Games.Entities
                 var propId = new PropertyId (PropertyEnum.Currency, currencyProtoRef);
                 Properties.AdjustProperty(delta, propId);
                 GetRegion()?.CurrencyCollectedEvent.Invoke(new(this, currencyProtoRef, Properties[propId]));
-                OnScoringEvent(new(ScoringEventType.CurrencyCollected, currencyProtoRef, delta));
+                OnScoringEvent(new(ScoringEventType.CurrencyCollected, currencyProto, delta));
 
                 result = true;
             }
@@ -1763,7 +1763,7 @@ namespace MHServerEmu.Games.Entities
                 SendWaypointUnlocked();
                 collection[propId] = true;
 
-                OnScoringEvent(new(ScoringEventType.WaypointUnlocked, waypointRef));
+                OnScoringEvent(new(ScoringEventType.WaypointUnlocked, waypointProto));
             }
         }
 

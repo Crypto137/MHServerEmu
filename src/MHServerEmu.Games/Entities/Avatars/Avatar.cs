@@ -1284,7 +1284,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (interactableObject.Properties[PropertyEnum.EntSelActHasInteractOption])
                 interactableObject.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerInteract);
 
-            player.OnScoringEvent(new(ScoringEventType.EntityInteract, interactableObject.PrototypeDataRef));
+            player.OnScoringEvent(new(ScoringEventType.EntityInteract, interactableObject.Prototype));
 
             if (interactableObject is Transition transition)
                 transition.UseTransition(player);
@@ -1737,7 +1737,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 newArea.PopulationArea?.OnPlayerEntered();
                 newArea.PlayerEnteredAreaEvent.Invoke(evt);
                 newArea.Region.PlayerEnteredAreaEvent.Invoke(evt);
-                player.OnScoringEvent(new(ScoringEventType.AreaEnter, newArea.PrototypeDataRef));
+                player.OnScoringEvent(new(ScoringEventType.AreaEnter, newArea.Prototype));
             }
         }
 

@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             if (region == null) return;
 
             foreach (var player in new PlayerIterator(Region))
-                player.OnScoringEvent(new(ScoringEventType.MetaGameModeComplete, PrototypeDataRef));
+                player.OnScoringEvent(new(ScoringEventType.MetaGameModeComplete, Prototype));
 
             if (proto.PlayerEnterNotifications.HasValue())
                 SendClearMetaGameInfoNotification();

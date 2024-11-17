@@ -1103,7 +1103,7 @@ namespace MHServerEmu.Games.Entities
             {
                 var avatar = killer as Avatar;
                 var player = avatar?.GetOwnerOfType<Player>();
-                player?.OnScoringEvent(new(ScoringEventType.OrbsCollected, PrototypeDataRef));
+                player?.OnScoringEvent(new(ScoringEventType.OrbsCollected, Prototype));
             }
 
             if (AIController != null)

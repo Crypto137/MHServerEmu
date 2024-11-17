@@ -65,9 +65,9 @@ namespace MHServerEmu.Games.Events
     public readonly struct ScoringEvent
     {
         public ScoringEventType Type { get; }
-        public PrototypeId Proto0 { get; }
-        public PrototypeId Proto1 { get; }
-        public PrototypeId Proto2 { get; }
+        public Prototype Proto0 { get; }
+        public Prototype Proto1 { get; }
+        public Prototype Proto2 { get; }
         public bool Proto0IncludeChildren { get; }
         public bool Proto1IncludeChildren { get; }
         public bool Proto2IncludeChildren { get; }
@@ -76,9 +76,9 @@ namespace MHServerEmu.Games.Events
         public ScoringEvent()
         {
             Type = ScoringEventType.Invalid;
-            Proto0 = PrototypeId.Invalid;
-            Proto1 = PrototypeId.Invalid;
-            Proto2 = PrototypeId.Invalid;
+            Proto0 = null;
+            Proto1 = null;
+            Proto2 = null;
             Proto0IncludeChildren = false;
             Proto1IncludeChildren = false;
             Proto2IncludeChildren = false;
@@ -96,40 +96,40 @@ namespace MHServerEmu.Games.Events
             Count = count;
         }
 
-        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef) : this()
+        public ScoringEvent(ScoringEventType eventType, Prototype prototype) : this()
         {
             Type = eventType;
-            Proto0 = prototypeDataRef;
+            Proto0 = prototype;
         }
 
-        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, int count) : this()
+        public ScoringEvent(ScoringEventType eventType, Prototype prototype, int count) : this()
         {
             Type = eventType;
-            Proto0 = prototypeDataRef;
+            Proto0 = prototype;
             Count = count;
         }
 
-        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, PrototypeId prototype1DataRef, int count) : this()
+        public ScoringEvent(ScoringEventType eventType, Prototype prototype, Prototype prototype1, int count) : this()
         {
             Type = eventType;
-            Proto0 = prototypeDataRef;
-            Proto1 = prototype1DataRef;
+            Proto0 = prototype;
+            Proto1 = prototype1;
             Count = count;
         }
 
-        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, PrototypeId prototype1DataRef) : this()
+        public ScoringEvent(ScoringEventType eventType, Prototype prototype, Prototype prototype1) : this()
         {
             Type = eventType;
-            Proto0 = prototypeDataRef;
-            Proto1 = prototype1DataRef;
+            Proto0 = prototype;
+            Proto1 = prototype1;
         }
 
-        public ScoringEvent(ScoringEventType eventType, PrototypeId prototypeDataRef, PrototypeId prototype1DataRef, PrototypeId prototype2DataRef) : this()
+        public ScoringEvent(ScoringEventType eventType, Prototype prototype, Prototype prototype1, Prototype prototype2) : this()
         {
             Type = eventType;
-            Proto0 = prototypeDataRef;
-            Proto1 = prototype1DataRef;
-            Proto2 = prototype2DataRef;
+            Proto0 = prototype;
+            Proto1 = prototype1;
+            Proto2 = prototype2;
         }
     }
 
