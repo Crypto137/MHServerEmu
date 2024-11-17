@@ -83,13 +83,7 @@ namespace MHServerEmu.Games.Populations
                 else return false;
             }
 
-            bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
-
-            if (success == false && SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false && SpawnFlags.HasFlag(SpawnFlags.RetryIgnoringBlackout))
-            { 
-                clusterGroup.SpawnFlags |= SpawnFlags.IgnoreBlackout;
-                success = spawnTarget.PlaceClusterGroup(clusterGroup);
-            }
+            bool success = spawnTarget.TryPlaceClusterGroup(clusterGroup);
 
             if (success)
             {
@@ -202,6 +196,25 @@ namespace MHServerEmu.Games.Populations
         public SpawnTarget(Region region)
         {
             Region = region;
+        }
+
+        public bool TryPlaceClusterGroup(ClusterGroup clusterGroup)
+        {
+            bool success = PlaceClusterGroup(clusterGroup);
+
+            if (success == false && clusterGroup.SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false && clusterGroup.SpawnFlags.HasFlag(SpawnFlags.RetryIgnoringBlackout))
+            {
+                clusterGroup.SpawnFlags |= SpawnFlags.IgnoreBlackout;
+                success = PlaceClusterGroup(clusterGroup);
+            }
+
+            if (success == false && Type == SpawnTargetType.Spawner && clusterGroup.SpawnFlags.HasFlag(SpawnFlags.RetryForce))
+            {
+                clusterGroup.SetParentRelative(Location.Position, Location.Orientation);
+                success = true;
+            }
+
+            return success;
         }
 
         public bool PlaceClusterGroup(ClusterGroup clusterGroup)
