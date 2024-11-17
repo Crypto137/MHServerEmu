@@ -473,7 +473,7 @@ namespace MHServerEmu.Games.Missions
 
             PrototypeId pickedMissionRef = PickAdvancedMissionForCategory(categoryProto, blacklist);
 
-            if (pickedMissionRef == PrototypeId.Invalid)
+            if (pickedMissionRef == PrototypeId.Invalid && blacklist != null)
             {
                 while (blacklist.Count > 0)
                 {
