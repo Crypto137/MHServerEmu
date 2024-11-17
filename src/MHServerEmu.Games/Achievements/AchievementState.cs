@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Achievements
@@ -176,6 +177,74 @@ namespace MHServerEmu.Games.Achievements
                 subCategoryStats.CompleteCount += completed;
                 _subCategoryStats[subKey] = subCategoryStats;
             }
+        }
+
+        public bool IsAvailable(AchievementInfo info)
+        {
+            if (info.Enabled == false) return false;
+
+            switch (info.EvaluationType)
+            {
+                case AchievementEvaluationType.Available: return true;
+                case AchievementEvaluationType.Disabled:  return false;
+                case AchievementEvaluationType.Children:
+
+                    foreach(var child in info.Children)
+                        if (GetAchievementProgress(child.Id).IsComplete == false) 
+                            return false;
+
+                    return true;
+
+                case AchievementEvaluationType.Parent:
+
+                    if (info.ParentId == 0) return Logger.WarnReturn(false, $"Achievement[{info.Id}] ParentId = 0");
+                    return GetAchievementProgress(info.ParentId).IsComplete;
+
+                default:
+                    return Logger.WarnReturn(false, $"Achievement[{info.Id}] EvaluationType = {info.EvaluationType}");
+            }
+        }
+
+        public bool UpdateAchievement(AchievementInfo info, int count, ref bool changes)
+        {
+            bool isProgress = false;
+            int oldCount = 0;
+            TimeSpan completedDate = TimeSpan.Zero;
+
+            if (AchievementProgressMap.TryGetValue(info.Id, out var progress)) 
+            {
+                oldCount = (int)progress.Count;
+                completedDate = progress.CompletedDate;
+                isProgress = true;
+            }
+
+            bool isMinMethod = false;
+            int newCount = 0;
+
+            switch (ScoringEvents.GetMethod(info.EventType))
+            {
+                case ScoringMethod.Update:
+                    newCount = count;
+                    break;
+
+                case ScoringMethod.Add:
+                    newCount = oldCount + count;
+                    break;
+
+                case ScoringMethod.Max:
+                    newCount = Math.Max(oldCount, count);
+                    break;
+
+                case ScoringMethod.Min:
+                    newCount = oldCount > 0 ? Math.Min(oldCount, count) : count;
+                    isMinMethod = true;
+                    break;
+            }
+
+            if (isMinMethod == false)
+                newCount = Math.Min(newCount, (int)info.Threshold);
+
+            
         }
 
         public struct CategoryStats

@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Events
         OrbsCollected,
         PowerRank,
         PowerRankUltimate,
-        Count, // Legendary
+        Dependent, // Legendary
         MetaGameStateCompleteDifficulty,
         MetaGameStateCompleteAffix,
         AvatarDeath,
@@ -61,7 +61,25 @@ namespace MHServerEmu.Games.Events
         Max
     }
 
+    public enum ScoringMethod
+    {
+        Update,
+        Add,
+        Min,
+        Max
+    }
+
     #endregion
+
+    public struct ScoringEventData
+    {
+        public Prototype Proto0 { get; }
+        public Prototype Proto1 { get; }
+        public Prototype Proto2 { get; }
+        public bool Proto0IncludeChildren { get; }
+        public bool Proto1IncludeChildren { get; }
+        public bool Proto2IncludeChildren { get; }
+    }
 
     public readonly struct ScoringEvent
     {
@@ -69,9 +87,6 @@ namespace MHServerEmu.Games.Events
         public Prototype Proto0 { get; }
         public Prototype Proto1 { get; }
         public Prototype Proto2 { get; }
-        public bool Proto0IncludeChildren { get; }
-        public bool Proto1IncludeChildren { get; }
-        public bool Proto2IncludeChildren { get; }
         public int Count { get; }
 
         public ScoringEvent()
@@ -80,9 +95,6 @@ namespace MHServerEmu.Games.Events
             Proto0 = null;
             Proto1 = null;
             Proto2 = null;
-            Proto0IncludeChildren = false;
-            Proto1IncludeChildren = false;
-            Proto2IncludeChildren = false;
             Count = 1;
         }
 
@@ -206,8 +218,8 @@ namespace MHServerEmu.Games.Events
 
         public static bool FilterPrototype(Prototype prototype, Prototype eventPrototype, bool includeChildren)
         {
-            if (eventPrototype == null) return false;
             if (prototype == null || prototype == eventPrototype) return true;
+            if (eventPrototype == null) return false;
 
             if (prototype is KeywordPrototype keywordPrototype)
             {
@@ -225,6 +237,70 @@ namespace MHServerEmu.Games.Events
             if (includeChildren == false) return false;
 
             return GameDatabase.DataDirectory.PrototypeIsAPrototype(eventPrototype.DataRef, prototype.DataRef);
+        }
+
+        public static ScoringMethod GetMethod(ScoringEventType eventType)
+        {
+            switch (eventType)
+            {
+                case ScoringEventType.AreaEnter:
+                case ScoringEventType.AvatarsUnlocked:
+                case ScoringEventType.AvatarUsedPower:
+                case ScoringEventType.CompleteMission:
+                case ScoringEventType.CurrencySpent:
+                case ScoringEventType.CurrencyCollected:
+                case ScoringEventType.EntityDeath:
+                case ScoringEventType.EntityInteract:
+                case ScoringEventType.HotspotEnter:
+                case ScoringEventType.ItemBought:
+                case ScoringEventType.ItemCollected:
+                case ScoringEventType.ItemCrafted:
+                case ScoringEventType.ItemDonated:
+                case ScoringEventType.RegionEnter:
+                case ScoringEventType.MetaGameModeComplete:
+                case ScoringEventType.MetaGameStateComplete:
+                case ScoringEventType.ItemSpent:
+                case ScoringEventType.IsComplete:
+                case ScoringEventType.EntityDeathViaPower:
+                case ScoringEventType.PvPMatchWon:
+                case ScoringEventType.PvPMatchLost:
+                case ScoringEventType.FullyUpgradedLgndrys:
+                case ScoringEventType.OrbsCollected:
+                case ScoringEventType.MetaGameStateCompleteAffix:
+                case ScoringEventType.AvatarDeath:
+                case ScoringEventType.AvatarKill:
+                    return ScoringMethod.Add;
+
+                case ScoringEventType.AvatarPrestigeLevel:
+                case ScoringEventType.VendorLevel:
+                case ScoringEventType.MetaGameWaveComplete:
+                case ScoringEventType.AvatarsAtPrestigeLevel:
+                case ScoringEventType.AvatarsAtPrestigeLevelCap:
+                case ScoringEventType.AvatarsAtLevelCap:
+                case ScoringEventType.HoursPlayed:
+                case ScoringEventType.HoursPlayedByAvatar:
+                case ScoringEventType.MetaGameStateCompleteDifficulty:
+                case ScoringEventType.AvatarLevelTotal:
+                case ScoringEventType.AvatarLevelTotalAllAvatars:
+                    return ScoringMethod.Max;
+
+                case ScoringEventType.AvatarLevel:
+                case ScoringEventType.DifficultyUnlocked:
+                case ScoringEventType.WaypointUnlocked:
+                case ScoringEventType.ChildrenComplete:
+                case ScoringEventType.AchievementScore:
+                case ScoringEventType.FullyUpgradedPetTech:
+                case ScoringEventType.MinGearLevel:
+                case ScoringEventType.PowerRank:
+                case ScoringEventType.PowerRankUltimate:
+                case ScoringEventType.Dependent:
+                    return ScoringMethod.Update;
+
+                case ScoringEventType.CompletionTime:
+                    return ScoringMethod.Min;
+            }
+
+            return ScoringMethod.Update;
         }
     }
 }
