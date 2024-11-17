@@ -33,8 +33,8 @@ namespace MHServerEmu.Games.Populations
     {
         None            = 0,
         IgnoreSimulated = 1 << 0,
-        flag2           = 1 << 1,
-        flag4           = 1 << 2,
+        RetryIgnoringBlackout           = 1 << 1,
+        RetryForce           = 1 << 2,
         flag8           = 1 << 3,
         IgnoreBlackout  = 1 << 4,
         IgnoreSpawned   = 1 << 5,
@@ -74,7 +74,7 @@ namespace MHServerEmu.Games.Populations
 
         public Vector3 GetParentRelativePosition() => Position;
 
-        public void SetParentRelativePosition(Vector3 position)
+        public void SetParentRelativePosition(in Vector3 position)
         {
             Position = position;
             Transform = Transform3.BuildTransform(Position, Orientation);
@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Populations
             SetLocationDirty();
         }
 
-        public void SetParentRelativeOrientation(Orientation orientation)
+        public void SetParentRelativeOrientation(in Orientation orientation)
         {
             Orientation = orientation;
             Transform = Transform3.BuildTransform(Position, Orientation);
@@ -429,14 +429,25 @@ namespace MHServerEmu.Games.Populations
             }
         }
 
-        private static Orientation DoFacing(FormationFacing facing, Vector3 pos)
+        private static Orientation DoFacing(FormationFacing facing, in Vector3 delta)
         {
             return facing switch
             {
                 FormationFacing.FaceParentInverse => Orientation.FromDeltaVector2D(Vector3.Back),
-                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(-pos),
-                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(pos),
+                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(-delta),
+                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(delta),
                 _ => Orientation.Zero
+            };
+        }
+
+        private static Orientation DoTestFacing(FormationFacing facing, in Vector3 delta, in Orientation orientation)
+        {
+            return facing switch
+            {
+                FormationFacing.FaceParentInverse => new(orientation.Yaw + MathHelper.Pi, orientation.Pitch, orientation.Roll),
+                FormationFacing.FaceOrigin => Orientation.FromDeltaVector2D(delta),
+                FormationFacing.FaceOriginInverse => Orientation.FromDeltaVector2D(-delta),
+                _ => orientation
             };
         }
 
@@ -748,15 +759,13 @@ namespace MHServerEmu.Games.Populations
             return group.Id;
         }
 
-        public bool PickPositionInSector(Vector3 position, Orientation orientation, int minDistance, int maxDistance)
+        public bool PickPositionInSector(in Vector3 position, in Orientation orientation, int minDistance, int maxDistance, FormationFacing spawnFacing = FormationFacing.FaceParent)
         {
             if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
             {
-                SetParentRelativePosition(position);
-                SetParentRelativeOrientation(orientation);
-                if (TestLayout()) return false;
-                minDistance = (int)Radius;
-                maxDistance = (int)Radius * 4;
+                if (SpawnFlags.HasFlag(SpawnFlags.RetryForce) == false) return false;                
+                SetParentRelative(position, orientation);
+                return true;                
             }
 
             const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
@@ -772,37 +781,41 @@ namespace MHServerEmu.Games.Populations
             float distance = minClusterDistance;
             for (int sector = 0; sector < MaxSectors; sector++)
             {
-                int numClusters = (int)Math.Floor(clusterPI * distance);
+                int numClusters = MathHelper.RoundDownToInt(clusterPI * distance);
                 sectorPicker.Add(sector, numClusters);
 
                 distance += clusterSize;
                 maxClusterDistance += clusterSize;
                 if (maxClusterDistance > maxDistance) break;
             }
-            float shiftAngle = Random.NextFloat() * 2;
             while (sectorPicker.Empty() == false)
             {
                 if (sectorPicker.PickRemove(out int sector) == false) return false;
                 distance = minClusterDistance + sector * clusterSize;
-                int numClusters = (int)MathF.Floor(clusterPI * distance);
+                int numClusters = MathHelper.RoundDownToInt(clusterPI * distance);
                 int startCluster = Random.Next(numClusters);
                 float clusterAngle = MathHelper.TwoPi / numClusters;
 
                 for (int cluster = 0; cluster < numClusters; cluster++)
                 {
-                    int div = startCluster + cluster;
-                    float angle = clusterAngle * div + shiftAngle;
-                    (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(angle));
+                    int angle = (startCluster + cluster) % numClusters;
+                    (float rotSin, float rotCos) = MathF.SinCos(Orientation.WrapAngleRadians(clusterAngle * angle));
                     Vector3 testPosition = new(position.X + distance * rotCos, position.Y + distance * rotSin, position.Z);
                     if (Region.GetCellAtPosition(testPosition) == null) continue;
-                    SetParentRelativePosition(testPosition);
-                    if (DebugLog) Logger.Debug($"testPostions = {testPosition}");
-                    SetParentRandomOrientation(orientation);
-                    // Logger.Debug($"AbsolutePostions = {GetAbsolutePosition().ToStringFloat()}");
-                    if (TestLayout()) return true;
+                    Orientation testOrientation = orientation;
+                    if (spawnFacing != FormationFacing.FaceParent)
+                        testOrientation = DoTestFacing(spawnFacing, position - testPosition, orientation);
+                    if (SetParentRelative(testPosition, testOrientation)) return true;
                 }
             }
             return false;
+        }
+
+        public bool SetParentRelative(in Vector3 position, in Orientation orientation)
+        {
+            SetParentRelativePosition(position);
+            SetParentRelativeOrientation(orientation);
+            return TestLayout();
         }
 
         public bool PickPositionInBounds(in Aabb bound)
@@ -826,10 +839,8 @@ namespace MHServerEmu.Games.Populations
             {
                 var point = points[i];
                 Vector3 testPosition = new(point.X, point.Y, center.Z);
-                SetParentRelativePosition(testPosition);
-                Orientation orientation = new(-MathHelper.PiOver2, 0.0f, 0.0f);
-                SetParentRandomOrientation(orientation);
-                if (TestLayout()) return true;
+                Orientation orientation = Orientation.Player;
+                if (SetParentRelative(testPosition, orientation)) return true;
             }
 
             return false;

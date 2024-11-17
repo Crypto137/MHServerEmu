@@ -332,6 +332,7 @@ namespace MHServerEmu.Games.Populations
         {
             Picker<SpawnReservation> picker = new(random);
             bool canPick = PickReservation(picker, markerRef, spawnLocation, flag);
+
             if (canPick == false && flag.HasFlag(SpawnFlags.IgnoreBlackout) == false)
             {
                 flag |= SpawnFlags.IgnoreBlackout;

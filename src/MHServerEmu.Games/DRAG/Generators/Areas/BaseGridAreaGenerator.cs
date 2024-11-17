@@ -910,7 +910,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             int gridSize = CellContainer.Width * CellContainer.Height;
             RoadInfo[] roadGrid = new RoadInfo[gridSize];
-            PrototypeId firstCellRef = GameDatabase.GetDataRefByAsset(roadGeneratorProto.Cells.First());
+            PrototypeId firstCellRef = GameDatabase.GetDataRefByAsset(roadGeneratorProto.Cells[0]);
             for (int x = 0; x < CellContainer.Width; ++x)
             {
                 for (int y = 0; y < CellContainer.Height; ++y)
@@ -1196,9 +1196,9 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 }
             }
 
-            while (visitedNodes.Any())
+            while (visitedNodes.Count > 0)
             {
-                var currentNode = visitedNodes.First();
+                var currentNode = visitedNodes[0];
                 var currentInfo = buildGrid[CellContainer.GetIndex(currentNode.X, currentNode.Y)];
 
                 visitedNodes.RemoveAt(0);
