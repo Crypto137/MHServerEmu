@@ -1068,6 +1068,9 @@ namespace MHServerEmu.Games.Missions
             ulong numMissions = (ulong)_missionDict.Count;
             success &= Serializer.Transfer(archive, ref numMissions);
 
+            // NOTE: Missions need to be packed with Serializer.Transfer() and NOT mission.Serialize()
+            // for us to be able to skip invalid / deprecated / disabled missions.
+
             if (archive.IsPacking)
             {
                 foreach (var kvp in _missionDict)
@@ -1372,7 +1375,6 @@ namespace MHServerEmu.Games.Missions
             player.SetActiveChapter(PrototypeId.Invalid);
 
             // Save suspend state and reset mission state
-            player.PlayerConnection.MigrationData.ResetObjective();
             foreach(var mission in _missionDict.Values)
                 if (mission.Prototype.SaveStatePerAvatar)
                 {

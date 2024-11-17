@@ -220,28 +220,39 @@ namespace MHServerEmu.Games.Missions
 
             success &= Serializer.Transfer(archive, ref _timeExpireCurrentState);
             success &= Serializer.Transfer(archive, ref _prototypeDataRef);
-            // old versions contain an ItemSpec map here
+
+            // Old versions have an ItemSpec map instead of a loot seed here
             success &= Serializer.Transfer(archive, ref _lootSeed);
 
             if (archive.IsReplication)
             {
-                // Objectives, participants, and suspension status are serialized only for replication
+                // Participants and suspension status are serialized only for replication
                 success &= SerializeObjectives(archive);
                 success &= Serializer.Transfer(archive, ref _participants);
                 success &= Serializer.Transfer(archive, ref _isSuspended);
             }
-
-            if (archive.IsReplication == false)
+            else
+            {
+                // Serialize objectives if needed + additional data for server-side usage
                 success &= SerializeConditions(archive);
+            }
 
             return success;
         }
 
-        public bool SerializeConditions(Archive archive)
+        private bool SerializeConditions(Archive archive)
         {
             bool success = true;
 
             var missionProto = Prototype;
+
+            if (missionProto.ResetsWithRegion != PrototypeId.Invalid)
+            {
+                ulong resetsWithRegionId = ResetsWithRegionId;
+                success &= Serializer.Transfer(archive, ref resetsWithRegionId);
+                ResetsWithRegionId = resetsWithRegionId;
+            }
+
             switch (_state)
             {
                 case MissionState.Inactive:
@@ -251,16 +262,19 @@ namespace MHServerEmu.Games.Missions
                         || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, false) == false)
                         return false;
 
-                    if (_prereqConditions != null) success &= Serializer.Transfer(archive, ref _prereqConditions);
-                    if (_activateNowConditions != null) success &= Serializer.Transfer(archive, ref _activateNowConditions);
-                    if (_completeNowConditions != null) success &= Serializer.Transfer(archive, ref _completeNowConditions);
+                    if (_prereqConditions != null)
+                        success &= Serializer.Transfer(archive, ref _prereqConditions);
+                    if (_activateNowConditions != null)
+                        success &= Serializer.Transfer(archive, ref _activateNowConditions);
+                    if (_completeNowConditions != null)
+                        success &= Serializer.Transfer(archive, ref _completeNowConditions);
 
                     break;
 
                 case MissionState.Completed:
                 case MissionState.Failed:
-
-                    if (missionProto.Repeatable) goto case MissionState.Available;
+                    if (missionProto.Repeatable)
+                        goto case MissionState.Available;
                     break;
 
                 case MissionState.Available:
@@ -270,9 +284,12 @@ namespace MHServerEmu.Games.Missions
                         || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, false) == false)
                         return false;
 
-                    if (_activateConditions != null) success &= Serializer.Transfer(archive, ref _activateConditions);
-                    if (_activateNowConditions != null) success &= Serializer.Transfer(archive, ref _activateNowConditions);
-                    if (_completeNowConditions != null) success &= Serializer.Transfer(archive, ref _completeNowConditions);
+                    if (_activateConditions != null)
+                        success &= Serializer.Transfer(archive, ref _activateConditions);
+                    if (_activateNowConditions != null)
+                        success &= Serializer.Transfer(archive, ref _activateNowConditions);
+                    if (_completeNowConditions != null)
+                        success &= Serializer.Transfer(archive, ref _completeNowConditions);
 
                     break;
 
@@ -282,8 +299,10 @@ namespace MHServerEmu.Games.Missions
                         || MissionConditionList.CreateConditionList(ref _completeNowConditions, missionProto.CompleteNowConditions, this, this, false) == false)
                         return false;
 
-                    if (_failureConditions != null) success &= Serializer.Transfer(archive, ref _failureConditions);
-                    if (_completeNowConditions != null) success &= Serializer.Transfer(archive, ref _completeNowConditions);
+                    if (_failureConditions != null)
+                        success &= Serializer.Transfer(archive, ref _failureConditions);
+                    if (_completeNowConditions != null)
+                        success &= Serializer.Transfer(archive, ref _completeNowConditions);
 
                     success &= SerializeObjectives(archive);
                     break;
