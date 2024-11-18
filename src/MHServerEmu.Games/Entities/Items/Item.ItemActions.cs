@@ -464,6 +464,9 @@ namespace MHServerEmu.Games.Entities.Items
                 foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
                     callbackNode.OnResultsEvaluation(player, null);
 
+                // Consume a stack of this item
+                DecrementStack();
+
                 return true;
             }
             finally
