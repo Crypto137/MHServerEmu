@@ -20,7 +20,8 @@ namespace MHServerEmu.Games.Missions.Actions
             {
                 if (teleportRegion)
                 {
-                    if (Mission.PrototypeDataRef == (PrototypeId)2356138960907149996) // TimesBehaviorController
+                    if (Mission.PrototypeDataRef == (PrototypeId)2356138960907149996 // TimesBehaviorController
+                        || Mission.PrototypeDataRef == (PrototypeId)3656606685775927811) // RaidSurturFinalPhase
                         Transition.TeleportToLocalTarget(player, _proto.TeleportRegionTarget);
                     else
                         Transition.TeleportToRemoteTarget(player, _proto.TeleportRegionTarget);

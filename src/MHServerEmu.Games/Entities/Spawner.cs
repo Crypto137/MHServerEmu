@@ -178,7 +178,7 @@ namespace MHServerEmu.Games.Entities
             var populationManager = Region.PopulationManager;
             var spawnerProto = SpawnerPrototype;
 
-            SpawnFlags spawnFlags = SpawnFlags.None;
+            SpawnFlags spawnFlags = SpawnFlags.IgnoreSpawned;
 
             if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout))
                 spawnFlags |= SpawnFlags.RetryIgnoringBlackout;

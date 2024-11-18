@@ -762,11 +762,7 @@ namespace MHServerEmu.Games.Populations
         public bool PickPositionInSector(in Vector3 position, in Orientation orientation, int minDistance, int maxDistance, FormationFacing spawnFacing = FormationFacing.FaceParent)
         {
             if (minDistance < 0.0f || maxDistance <= 0.0f || minDistance > maxDistance || Radius == 0)
-            {
-                if (SpawnFlags.HasFlag(SpawnFlags.RetryForce) == false) return false;                
-                SetParentRelative(position, orientation);
-                return true;                
-            }
+                return false;
 
             const int MaxSectors = 5; // DistanceMax 250 / 50 (Average Cluster) = 5 sectors
             float clusterSize = Radius * 2.0f;
