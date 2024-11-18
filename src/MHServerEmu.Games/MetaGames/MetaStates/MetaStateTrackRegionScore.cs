@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     }
                 }
 
-                score *= 3;
+                score *= _scoreBoost;
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
             }
         }
