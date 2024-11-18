@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Populations
             var populationObject = Pop(critical);
             if (populationObject != null)
             {
-                if (populationObject.SpawnByMarker()) // cell.SpawnPopulation(population);
+                if (populationObject.SpawnByMarker())
                     OnSpawnedPopulation(populationObject);
                 else if (populationObject.RemoveOnSpawnFail == false)
                     PushFailedObject(populationObject);
@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Populations
                 {
                     bool spawned;
                     if (populationObject.Position == null)
-                        spawned = populationObject.SpawnInCell(cell); // PopulationArea.SpawnPopulation(PopulationObjects);
+                        spawned = populationObject.SpawnInCell(cell);
                     else 
                         spawned = populationObject.SpawnInPosition(populationObject.Position.Value);
 
