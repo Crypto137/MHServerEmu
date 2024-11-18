@@ -43,20 +43,6 @@ namespace MHServerEmu.Commands.Implementations
             avatar.Properties[PropertyEnum.DamagePctBonusVsBosses] = (float)vsboss;
 
             return $"Damage vs Bosses x{vsboss}";
-        }
-
-        [Command("score", "Increase Score Points for Region Score.\nUsage: boost score [1-10]")]
-        public string Score(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            if (int.TryParse(@params[0], out int score) == false)
-                return $"Failed to parse value {@params[0]}";
-
-            score = Math.Clamp(score, 1, 10);
-            MetaStateTrackRegionScore.ScoreBoost = score;
-
-            return $"Score x{score}";
-        }
+        }        
     }
 }
