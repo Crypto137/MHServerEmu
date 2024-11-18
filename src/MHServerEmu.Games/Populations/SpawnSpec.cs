@@ -513,6 +513,8 @@ namespace MHServerEmu.Games.Populations
                 foreach (ulong playerId in Killers)
                 {
                     var killer = entityManager.GetEntity<Player>(playerId);
+                    if (killer == null) continue;
+
                     var positionOverride = _killPosition;
                     if (positionOverride == Vector3.Zero) positionOverride = Transform.Translation;
                     using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
