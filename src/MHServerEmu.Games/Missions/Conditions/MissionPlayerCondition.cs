@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -9,6 +10,8 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionPlayerCondition : MissionCondition
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private MissionPlayerConditionPrototype _proto;
         protected virtual PrototypeId MissionProtoRef => PrototypeId.Invalid;
         protected Player Player => Mission.MissionManager.Player;
@@ -63,6 +66,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             var missionPlayer = Player;
             if (missionPlayer == null || player == missionPlayer) return true;
+            if (_proto == null) return Logger.ErrorReturn(false, $"IsMissionPlayer [{Mission.PrototypeName}] [{Prototype}]: _proto = null");
             if (_proto.PartyMembersGetCredit)
             {
                 var party = missionPlayer.Party;
