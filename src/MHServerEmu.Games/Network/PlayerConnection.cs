@@ -1289,10 +1289,15 @@ namespace MHServerEmu.Games.Network
                 requestInterestInInventory.LoadState));
 
             // Validate inventory prototype
-            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
-            if (inventoryPrototype == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
+            var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
+            if (inventoryProto == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
 
-            if (Player.RevealInventory(inventoryProtoRef) == false)
+            // Initialize vendor inventory if needed
+            if (inventoryProto.IsPlayerVendorInventory || inventoryProto.IsPlayerCraftingRecipeInventory)
+                Player.InitializeVendorInventory(inventoryProtoRef);
+
+            // Reveal the inventory to the player
+            if (Player.RevealInventory(inventoryProto) == false)
                 return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to reveal inventory {GameDatabase.GetPrototypeName(inventoryProtoRef)}");
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
