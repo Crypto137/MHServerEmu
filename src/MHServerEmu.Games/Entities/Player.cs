@@ -21,6 +21,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -1041,6 +1042,36 @@ namespace MHServerEmu.Games.Entities
             // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
             Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
             return true;
+        }
+
+        private VendorResult CanBuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId)
+        {
+            // TODO
+            return VendorResult.BuySuccess;
+        }
+
+        private VendorResult CanSellItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
+        {
+            // TODO
+            return VendorResult.SellSuccess;
+        }
+
+        private VendorResult CanDonateItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
+        {
+            // TODO
+            return VendorResult.DonateSuccess;
+        }
+
+        private VendorResult CanRefreshVendor(ulong arg0)
+        {
+            // TODO
+            return VendorResult.RefreshSuccess;
+        }
+
+        private VendorResult CanPerformVendorOpAtVendor(int avatarIndex, ulong itemId, ulong vendorId, InteractionMethod interactionMethod)
+        {
+            // TODO
+            return VendorResult.OpSuccess;
         }
 
         #endregion

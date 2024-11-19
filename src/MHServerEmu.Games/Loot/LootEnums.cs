@@ -128,6 +128,43 @@ namespace MHServerEmu.Games.Loot
         RolloverWallTime
     }
 
+    public enum VendorResult    // Names from CPlayer::BuyItemFromVendor(), CPlayer::SellItemToVendor(), CPlayer::DonateItemToVendor()
+    {
+        BuySuccess,
+        BuyResult1,
+        BuyOutOfRange2,
+        BuyInsufficientCredits,
+        BuyInsufficientPrestige,
+        BuyCannotAffordItem,
+        BuyInventoryFull,
+        BuyResult7,
+        BuyOutOfRange8,
+        BuyAvatarUltimateAlreadyMaxedOut,
+        BuyAvatarUltimateUpgradeCurrentOnly,
+        BuyCharacterAlreadyUnlocked,
+        BuyPlayerAlreadyHasCraftingRecipe,
+        BuyItemDisabledByLiveTuning,
+
+        SellSuccess,
+        SellNotAllowed,
+
+        DonateSuccess,
+        DonateResult17,
+        DonateNotAcceptingDonations,
+        DonateNotAcceptingItem,
+
+        RefreshSuccess,
+        RefreshResult21,
+        RefreshResult22,
+        RefreshResult23,
+
+        UnkResult24,
+        UnkResult25,
+
+        OpSuccess,
+        OpResult27,
+    }
+
     [AssetEnum((int)None)]
     [Flags]
     public enum LootContext
