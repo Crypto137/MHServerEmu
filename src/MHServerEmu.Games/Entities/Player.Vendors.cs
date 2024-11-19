@@ -80,6 +80,20 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool RefreshVendor(ulong vendorId)
+        {
+            if (CanRefreshVendor(vendorId) != VendorResult.RefreshSuccess)
+                return false;
+
+            WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(false, "RefreshVendor(): vendor == null");
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendor(): vendorTypeProtoRef == PrototypeId.Invalid");
+
+            return RefreshVendorInternal(vendorTypeProtoRef);
+        }
+
         private void InitializeVendors()
         {
             foreach (PrototypeId vendorTypeProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
@@ -417,6 +431,18 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private bool RefreshVendorInternal(PrototypeId vendorTypeProtoRef)
+        {
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(false, "RefreshVendorInternal(): vendorTypeProto == null");
+
+            UpdateVendorLootProperties(vendorTypeProto);
+            RollVendorInventory(vendorTypeProto, false);
+            SetVendorEnergyPct(vendorTypeProtoRef, 1f);     // TODO: GetCurrentVendorEnergyPct()
+
+            return true;
+        }
+
         private VendorResult CanBuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
             // TODO
@@ -435,7 +461,7 @@ namespace MHServerEmu.Games.Entities
             return VendorResult.DonateSuccess;
         }
 
-        private VendorResult CanRefreshVendor(ulong arg0)
+        private VendorResult CanRefreshVendor(ulong vendorId)
         {
             // TODO
             return VendorResult.RefreshSuccess;

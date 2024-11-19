@@ -462,6 +462,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageSetDialogTarget:                   OnSetDialogTarget(message); break;                  // 100
                 case ClientToGameServerMessage.NetMessageDialogResult:                      OnDialogResult(message); break;                     // 101
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
+                case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
@@ -1157,6 +1158,15 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnVendorRequestRefresh(MailboxMessage message) // 105
+        {
+            var vendorRequestRefresh = message.As<NetMessageVendorRequestRefresh>();
+            if (vendorRequestRefresh == null) return Logger.WarnReturn(false, $"OnVendorRequestRefresh(): Failed to retrieve message");
+
+            Player?.RefreshVendor(vendorRequestRefresh.VendorId);
+            return true;
+        }
+
         private bool OnSetTipSeen(MailboxMessage message)   // 110
         {
             var setTipSeen = message.As<NetMessageSetTipSeen>();
@@ -1292,10 +1302,6 @@ namespace MHServerEmu.Games.Network
             var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
             if (inventoryProto == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
 
-            // Initialize vendor inventory if needed
-            if (inventoryProto.IsPlayerVendorInventory || inventoryProto.IsPlayerCraftingRecipeInventory)
-                Player.InitializeVendorInventory(inventoryProtoRef);
-
             // Reveal the inventory to the player
             if (Player.RevealInventory(inventoryProto) == false)
                 return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to reveal inventory {GameDatabase.GetPrototypeName(inventoryProtoRef)}");
@@ -1304,6 +1310,11 @@ namespace MHServerEmu.Games.Network
                 .SetInventoryProtoId(requestInterestInInventory.InventoryProtoId)
                 .SetLoadState(requestInterestInInventory.LoadState)
                 .Build());
+
+            // Initialize vendor inventory if needed
+            // (NOTE: when we do this before revealing the inventory, the client UI bugs out for some reason, why?)
+            if (inventoryProto.IsPlayerVendorInventory || inventoryProto.IsPlayerCraftingRecipeInventory)
+                Player.InitializeVendorInventory(inventoryProtoRef);
 
             return true;
         }
