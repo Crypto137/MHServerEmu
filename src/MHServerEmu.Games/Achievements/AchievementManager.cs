@@ -147,7 +147,7 @@ namespace MHServerEmu.Games.Achievements
 
         private bool FilterPlayerContext(AchievementInfo info)
         {
-            throw new NotImplementedException();
+            return info.ScoringEventContext.FilterContext(Owner.ScoringEventContext);
         }
 
         private void UpdateAchievement(AchievementInfo info, int count, bool showPopups = true, bool fromEvent = false, ActiveAchievement active = null)

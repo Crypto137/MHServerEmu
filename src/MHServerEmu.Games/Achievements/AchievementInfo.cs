@@ -68,6 +68,7 @@ namespace MHServerEmu.Games.Achievements
         public bool OrbisTrophyShared { get; set; } = false;
         public bool IsTopLevelAchievement { get => VisibleState == AchievementVisibleState.Visible || VisibleState == AchievementVisibleState.ParentComplete; }
         public ScoringEventData EventData { get; set; }
+        public ScoringEventContext ScoringEventContext { get; set; }
 
         [JsonIgnore]
         public AchievementInfo Parent { get; set; }
