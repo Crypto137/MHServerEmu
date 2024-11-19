@@ -1,12 +1,17 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -273,15 +278,141 @@ namespace MHServerEmu.Games.Entities
 
         private bool RollVendorInventory(VendorTypePrototype vendorTypeProto, bool isInitializing)
         {
-            Logger.Debug($"RollVendorInventory(): {vendorTypeProto}");
-
             if (vendorTypeProto == null) return Logger.WarnReturn(false, "RollVendorInventory(): vendorTypeProto == null");
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
             if (isInitializing && _initializedVendorProtoRefs.Add(vendorTypeProtoRef) == false)
                 return true;
 
-            // TODO: roll inventory contents here
+            Logger.Debug($"RollVendorInventory(): {vendorTypeProto}");
+
+            // Early return if there are no inventories to roll (TODO: pooling? This doesn't happen that frequently I think)
+            List<PrototypeId> inventoryList = new();
+            if (vendorTypeProto.GetInventories(inventoryList) == false)
+                return true;
+
+            // Get roll settings from properties
+            int rollSeed = Properties[PropertyEnum.VendorRollSeed, vendorTypeProtoRef];
+            if (rollSeed == 0) return Logger.WarnReturn(false, "RollVendorInventory(): rollSeed == 0");
+
+            int rollTableLevel = Properties[PropertyEnum.VendorRollTableLevel, vendorTypeProtoRef];
+
+            // Fill inventories
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (PrototypeId inventoryProtoRef in inventoryList)
+            {
+                // Get the inventory
+                Inventory inventory = GetInventoryByRef(inventoryProtoRef);
+                if (inventory == null)
+                {
+                    Logger.Warn("RollVendorInventory(): inventory == null");
+                    continue;
+                }
+
+                // Destroy whatever was in it
+                inventory.DestroyContained();
+
+                // Find a loot table to roll replacement contents
+                int highestUsableLevel = -1;
+                PrototypeId lootTableProtoRef = PrototypeId.Invalid;
+
+                if (vendorTypeProto.Inventories != null)
+                {
+                    foreach (VendorInventoryEntryPrototype inventoryEntry in vendorTypeProto.Inventories)
+                    {
+                        if (rollTableLevel >= inventoryEntry.UseStartingAtVendorLevel && inventoryEntry.UseStartingAtVendorLevel > highestUsableLevel)
+                        {
+                            highestUsableLevel = inventoryEntry.UseStartingAtVendorLevel;
+                            lootTableProtoRef = inventoryEntry.LootTable;
+                        }
+                    }
+                }
+
+                // Roll new contents
+                if (lootTableProtoRef != PrototypeId.Invalid)
+                {
+                    LootTablePrototype lootTableProto = lootTableProtoRef.As<LootTablePrototype>();
+                    if (lootTableProto == null)
+                    {
+                        Logger.Warn("RollVendorInventory(): lootTableProto == null");
+                        continue;
+                    }
+
+                    // Initialize settings
+                    using LootRollSettings rollSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                    rollSettings.Player = this;
+                    rollSettings.UsableAvatar = ((PrototypeId)Properties[PropertyEnum.VendorRollAvatar, vendorTypeProtoRef]).As<AvatarPrototype>();
+                    rollSettings.Level = Properties[PropertyEnum.VendorRollLevel, vendorTypeProtoRef];
+
+                    // TODO: region keywords
+                    Region region = GetRegion();
+                    if (region != null)
+                        rollSettings.RegionScenarioRarity = region.Settings.ItemRarity;
+
+                    // Initialize resolver and roll
+                    using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+                    resolver.Initialize(new(rollSeed));
+                    resolver.SetContext(LootContext.Vendor, this);
+
+                    LootRollResult rollResult = lootTableProto.Roll(rollSettings, resolver);
+                    if (rollResult != LootRollResult.Success)
+                    {
+                        Logger.Warn($"RollVendorInventory(): Loot roll failed for loot table {lootTableProto}, vendor type {vendorTypeProto}");
+                        continue;
+                    }
+
+                    // Create the rolled items
+                    using LootResultSummary lootResultSummary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+                    resolver.FillLootResultSummary(lootResultSummary);
+
+                    if (lootResultSummary.Types != LootType.Item)
+                    {
+                        Logger.Warn($"RollVendorInventory(): Rolled non-item loot for loot table {lootTableProto}, vendor type {vendorTypeProto}");
+                        continue;
+                    }
+
+                    foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
+                    {
+                        Logger.Trace($"RollVendorInventory(): {itemSpec.ItemProtoRef.GetName()}");
+                        using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                        entitySettings.EntityRef = itemSpec.ItemProtoRef;
+                        entitySettings.ItemSpec = itemSpec;
+
+                        if (IsInGame == false)
+                            entitySettings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
+
+                        Item item = entityManager.CreateEntity(entitySettings) as Item;
+                        if (item == null)
+                        {
+                            Logger.Warn("RollVendorInventory(): item == null");
+                            continue;
+                        }
+
+                        InventoryResult inventoryResult = item.ChangeInventoryLocation(inventory);
+                        if (inventoryResult != InventoryResult.Success)
+                        {
+                            Logger.Warn($"RollVendorInventory(): Failed to put item {item} into inventory {inventory} for reason {inventoryResult}");
+                            item.Destroy();
+                            continue;
+                        }
+
+                        item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
+                    }
+                }
+
+                // TODO: Populate crafter tabs
+                if (vendorTypeProto.IsCrafter && vendorTypeProto.CraftingRecipeCategories.HasValue())
+                {
+
+                }
+            }
+
+            // TODO: Set PropertyEnum.CraftingIngredientAvailable
+
+            // Notify the client if needed
+            if (isInitializing == false)
+                SendMessage(NetMessageVendorRefresh.CreateBuilder().SetVendorTypeProtoId((ulong)vendorTypeProtoRef).Build());
 
             return true;
         }

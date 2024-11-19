@@ -61,5 +61,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return false;
         }
+
+        public bool GetInventories(List<PrototypeId> inventoryList)
+        {
+            inventoryList.Clear();
+
+            if (Inventories.IsNullOrEmpty())
+                return false;
+
+            foreach (VendorInventoryEntryPrototype inventoryEntry in Inventories)
+            {
+                PrototypeId inventoryProtoRef = inventoryEntry.PlayerInventory;
+                if (inventoryProtoRef != PrototypeId.Invalid && inventoryList.Contains(inventoryProtoRef) == false)
+                    inventoryList.Add(inventoryProtoRef);
+            }
+
+            return inventoryList.Count > 0;
+        }
     }
 }
