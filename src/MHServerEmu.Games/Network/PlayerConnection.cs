@@ -1294,13 +1294,13 @@ namespace MHServerEmu.Games.Network
 
             PrototypeId inventoryProtoRef = (PrototypeId)requestInterestInInventory.InventoryProtoId;
 
-            Logger.Trace(string.Format("OnRequestInterestInInventory(): inventoryProtoId={0}, loadState={1}",
-                GameDatabase.GetPrototypeName(inventoryProtoRef),
-                requestInterestInInventory.LoadState));
-
             // Validate inventory prototype
             var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
-            if (inventoryProto == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
+            if (inventoryProto == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryProto == null");
+
+            // Initialize vendor inventory if needed
+            if (inventoryProto.IsPlayerVendorInventory || inventoryProto.IsPlayerCraftingRecipeInventory)
+                Player.InitializeVendorInventory(inventoryProtoRef);
 
             // Reveal the inventory to the player
             if (Player.RevealInventory(inventoryProto) == false)
@@ -1311,11 +1311,6 @@ namespace MHServerEmu.Games.Network
                 .SetLoadState(requestInterestInInventory.LoadState)
                 .Build());
 
-            // Initialize vendor inventory if needed
-            // (NOTE: when we do this before revealing the inventory, the client UI bugs out for some reason, why?)
-            if (inventoryProto.IsPlayerVendorInventory || inventoryProto.IsPlayerCraftingRecipeInventory)
-                Player.InitializeVendorInventory(inventoryProtoRef);
-
             return true;
         }
 
@@ -1325,10 +1320,6 @@ namespace MHServerEmu.Games.Network
             if (requestInterestInAvatarEquipment == null) return Logger.WarnReturn(false, $"OnRequestInterestInAvatarEquipment(): Failed to retrieve message");
 
             PrototypeId avatarProtoId = (PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId;
-
-            Logger.Trace(string.Format("OnRequestInterestInAvatarEquipment(): avatarProtoId={0}, avatarModeEnum={1}",
-                GameDatabase.GetPrototypeName(avatarProtoId),
-                (AvatarMode)requestInterestInAvatarEquipment.AvatarModeEnum));
 
             Avatar avatar = Player.GetAvatar(avatarProtoId);
             if (avatar == null) return Logger.WarnReturn(false, "OnRequestInterestInAvatarEquipment(): avatar == null");
@@ -1344,9 +1335,6 @@ namespace MHServerEmu.Games.Network
             if (requestInterestInTeamUpEquipment == null) return Logger.WarnReturn(false, $"OnRequestRequestInterestInTeamUpEquipment(): Failed to retrieve message");
 
             PrototypeId teamUpProtoId = (PrototypeId)requestInterestInTeamUpEquipment.TeamUpProtoId;
-
-            Logger.Trace(string.Format("OnRequestRequestInterestInTeamUpEquipment(): teamUpProtoId={0}",
-                GameDatabase.GetPrototypeName(teamUpProtoId)));
 
             Agent teamUpAgent = Player.GetTeamUpAgent(teamUpProtoId);
             if (teamUpAgent == null) return Logger.WarnReturn(false, "OnRequestRequestInterestInTeamUpEquipment(): teamUpAgent == null");
