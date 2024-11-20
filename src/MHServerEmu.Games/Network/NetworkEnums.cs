@@ -18,7 +18,10 @@
         // From the constructor for ArchiveMessageHandler, 0xEF (all channels except 4)
         // Appears in AddConditionArchive and MiniMapArchive
         AllChannels             = AOIChannelProximity | AOIChannelParty | AOIChannelOwner | AOIChannelTrader
-                                | AOIChannelDiscovery | AOIChannelClientOnly | AOIChannelClientIndependent
+                                | AOIChannelDiscovery | AOIChannelClientOnly | AOIChannelClientIndependent,
+
+        // Channels that allow an entity to exist outside of proximity as map icons
+        MapChannels             = AOIChannelParty | AOIChannelDiscovery
     }
 
     public enum InterestTrackOperation

@@ -485,7 +485,7 @@ namespace MHServerEmu.Games.Populations
             if (SpawnEvent != null && SpawnEvent.RespawnObject)
             {
                 var game = manager.Game;
-                int spawnTimeMS = game.Random.Next(SpawnEvent.RespawnDelayMS, 1000);
+                int spawnTimeMS = SpawnEvent.RespawnDelayMS + game.Random.Next(1000);
                 PopulationObject.Time = game.CurrentTime + TimeSpan.FromMilliseconds(spawnTimeMS);
                 SpawnEvent.AddToScheduler(PopulationObject);
 

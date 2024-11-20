@@ -44,6 +44,15 @@ namespace MHServerEmu.Games.Entities.Persistence
         {
             player.Properties.RemovePropertyRange(PropertyEnum.Waypoint);
             player.Properties.RemovePropertyRange(PropertyEnum.UISystemLock);
+
+            // Team-ups seem to be invisible if they are summoned before the tutorial starts, so just unsummon them for all avatars
+            foreach (Avatar avatar in new AvatarIterator(player))
+            {
+                avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
+                avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
+                avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
+            }
+
             return true;
         }
 

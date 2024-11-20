@@ -19,7 +19,6 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -49,7 +48,7 @@ namespace MHServerEmu.Games.Entities
     public enum ChangePositionFlags
     {
         None                = 0,
-        Update              = 1 << 0,
+        ForceUpdate         = 1 << 0,
         DoNotSendToOwner    = 1 << 1,
         DoNotSendToServer   = 1 << 2,
         DoNotSendToClients  = 1 << 3,
@@ -81,7 +80,11 @@ namespace MHServerEmu.Games.Entities
         private Transform3 _transform = Transform3.Identity();
 
         // We keep track of the last interest update position to avoid updating interest too often when moving around.
-        private Vector3 _lastInterestUpdatePosition = Vector3.Zero;     
+        private Vector3 _lastInterestUpdatePosition = Vector3.Zero;
+
+        // Same with map location
+        private Vector3 _lastMapPosition = Vector3.Zero;
+        private float _lastMapOrientation = 0f;
 
         protected EntityTrackingContextMap _trackingContextMap;
         protected ConditionCollection _conditionCollection;
@@ -390,7 +393,7 @@ namespace MHServerEmu.Games.Entities
             Physics.AcquireCollisionId();
 
             ChangePositionResult result = ChangeRegionPosition(position, orientation,
-                ChangePositionFlags.Update | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.SkipInterestUpdate | ChangePositionFlags.EnterWorld);
+                ChangePositionFlags.ForceUpdate | ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.SkipInterestUpdate | ChangePositionFlags.EnterWorld);
 
             if (result == ChangePositionResult.PositionChanged)
             {
@@ -486,7 +489,7 @@ namespace MHServerEmu.Games.Entities
             Region region = Game.RegionManager.GetRegion(preChangeLocation.RegionId);
             if (region == null) return ChangePositionResult.NotChanged;
 
-            if (position.HasValue && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Position != position))
+            if (position.HasValue && (flags.HasFlag(ChangePositionFlags.ForceUpdate) || preChangeLocation.Position != position))
             {
                 var result = RegionLocation.SetPosition(position.Value);
 
@@ -504,11 +507,9 @@ namespace MHServerEmu.Games.Entities
                     RegisterForPendingPhysicsResolve();
 
                 positionChanged = true;
-                // Old
-                Properties[PropertyEnum.MapPosition] = position.Value;
             }
 
-            if (orientation.HasValue && (flags.HasFlag(ChangePositionFlags.Update) || preChangeLocation.Orientation != orientation))
+            if (orientation.HasValue && (flags.HasFlag(ChangePositionFlags.ForceUpdate) || preChangeLocation.Orientation != orientation))
             {
                 RegionLocation.Orientation = orientation.Value;
 
@@ -517,8 +518,6 @@ namespace MHServerEmu.Games.Entities
                 if (Physics.HasAttachedEntities())
                     RegisterForPendingPhysicsResolve();
                 orientationChanged = true;
-                // Old
-                Properties[PropertyEnum.MapOrientation] = orientation.Value.GetYawNormalized();
             }
 
             if (Locomotor != null && flags.HasFlag(ChangePositionFlags.PhysicsResolve) == false)
@@ -566,6 +565,13 @@ namespace MHServerEmu.Games.Entities
 
                     networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
                 }
+            }
+
+            // Update map location if needed
+            if (((CompatibleReplicationChannels & AOINetworkPolicyValues.MapChannels) != 0) &&
+                (flags.HasFlag(ChangePositionFlags.ForceUpdate) || ((InterestedPoliciesUnion & AOINetworkPolicyValues.MapChannels) != 0)))
+            {
+                UpdateMapLocation();
             }
 
             return ChangePositionResult.PositionChanged;
@@ -671,7 +677,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (flags.HasFlag(ChangePositionFlags.EnterWorld))
                 OnRegionChanged(null, newLocation.Region);
-            else
+            else if (oldLocation.Region != newLocation.Region)
                 OnRegionChanged(oldLocation.Region, newLocation.Region);
 
             if (oldLocation.Area != newLocation.Area)
@@ -679,6 +685,36 @@ namespace MHServerEmu.Games.Entities
 
             if (oldLocation.Cell != newLocation.Cell)
                 OnCellChanged(oldLocation, newLocation, flags);
+        }
+
+        private void UpdateMapLocation()
+        {
+            const float MapPositionThreshold = 64f * 64f;
+            const float MapOrientationThreshold = 0.1f;
+
+            // Remove from the map if no longer in the world
+            if (RegionLocation.IsValid() == false)
+            {
+                Properties.RemoveProperty(PropertyEnum.MapPosition);
+                Properties.RemoveProperty(PropertyEnum.MapOrientation);
+                return;
+            }
+
+            if (Properties.HasProperty(PropertyEnum.MapPosition) == false ||
+                Vector3.DistanceSquared2D(RegionLocation.Position, _lastMapPosition) > MapPositionThreshold)
+            {
+                _lastMapPosition = RegionLocation.Position;
+                Properties[PropertyEnum.MapPosition] = _lastMapPosition;
+            }
+
+            if (Properties.HasProperty(PropertyEnum.MapOrientation) == false ||
+                Segment.EpsilonTest(RegionLocation.Orientation.Yaw, _lastMapOrientation, MapOrientationThreshold) == false)
+            {
+                // NOTE: The MapOrientation property has an interval of [0;65535], so it can't store negative values.
+                // To work around this, we use WrapAngleRadians() instead of GetYawNormalized() to get a [0:2PI] value instead of [-PI:PI].
+                _lastMapOrientation = RegionLocation.Orientation.Yaw;
+                Properties[PropertyEnum.MapOrientation] = Orientation.WrapAngleRadians(_lastMapOrientation);
+            }
         }
 
         #endregion
@@ -1769,11 +1805,17 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
 
+            AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
+            AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
+
             // We need to update our simulation state when we lose proximity because when a player's AOI is cleared,
             // cells are removed before entities, and at that point entities still have the proximity policy.
-            AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
             if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
                 UpdateSimulationState();
+
+            // Update map location if we gained a policy that allows us to exist outside of proximity (Party / Discovery)
+            if ((gainedPolicies & AOINetworkPolicyValues.MapChannels) != 0)
+                UpdateMapLocation();
         }
 
         public virtual void OnEnteredWorld(EntitySettings settings)
@@ -2046,8 +2088,10 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnRegionChanged(Region oldRegion, Region newRegion)
         {
-            if (newRegion != null)
-                Properties[PropertyEnum.MapRegionId] = newRegion.Id;
+            if (oldRegion == newRegion)
+                return;
+
+            Properties[PropertyEnum.MapRegionId] = newRegion != null ? newRegion.Id : 0;
 
             // TODO other events
         }
