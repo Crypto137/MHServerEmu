@@ -133,6 +133,7 @@ namespace MHServerEmu.Games.Entities
 
         public virtual AOINetworkPolicyValues CompatibleReplicationChannels { get => Prototype.RepNetwork; }
         public InterestReferences InterestReferences { get; } = new();
+        public AOINetworkPolicyValues InterestedPoliciesUnion { get; private set; }
         public bool CanSendArchiveMessages { get => IsInGame; }
 
         public InventoryCollection InventoryCollection { get; } = new();
@@ -530,6 +531,9 @@ namespace MHServerEmu.Games.Entities
             AOINetworkPolicyValues gainedPolicies = newInterestPolicies & ~previousInterestPolicies;
             AOINetworkPolicyValues lostPolicies = previousInterestPolicies & ~newInterestPolicies;
             InterestReferences.Track(this, player.Id, operation, gainedPolicies, lostPolicies);
+
+            // Cache current policies for map location updates
+            InterestedPoliciesUnion = InterestReferences.GetInterestedPoliciesUnion();
         }
 
         public virtual void OnPostAOIAddOrRemove(Player player, InterestTrackOperation operation,
