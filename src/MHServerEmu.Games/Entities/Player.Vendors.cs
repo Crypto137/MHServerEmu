@@ -80,18 +80,91 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool RefreshVendor(ulong vendorId)
+        public bool SellItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
+        {
+            if (CanSellItemToVendor(avatarIndex, itemId, vendorId) != VendorResult.SellSuccess)
+                return false;
+
+            Item item = Game?.EntityManager.GetEntity<Item>(itemId);
+            if (item == null) return Logger.WarnReturn(false, "SellItemToVendor(): item == null");
+
+            int sellPrice = (int)item.GetSellPrice(this);
+            if (ValidateItemSellPrice(item, sellPrice) == false)
+                return false;
+
+            Inventory buybackInventory = GetInventoryByRef(GameDatabase.GlobalsPrototype.VendorBuybackInventory);
+            if (buybackInventory == null) return Logger.WarnReturn(false, "SellItemToVendor(): buybackInventory == false");
+
+            // Find a free slot in the buyback inventory to put this item in
+            uint lastSlot = (uint)buybackInventory.GetCapacity() - 1;
+            uint freeSlot = Inventory.InvalidSlot;
+            for (uint i = 0; i <= lastSlot; i++)
+            {
+                if (buybackInventory.IsSlotFree(i))
+                {
+                    freeSlot = i;
+                    break;
+                }
+            }
+
+            // If no free slot is found, free space for the item we are selling
+            if (freeSlot == Inventory.InvalidSlot)
+            {
+                ulong lastEntityId = buybackInventory.GetEntityInSlot(lastSlot);
+                Entity lastEntity = Game.EntityManager.GetEntity<Entity>(lastEntityId);
+                if (lastEntity == null)
+                    Logger.Warn("SellItemToVendor(): lastEntity == null");
+                else
+                    lastEntity.Destroy();
+
+                freeSlot = lastSlot;
+            }
+
+            // Shift all items by 1 slot so that our newly sold item appears at the top of the list
+            ulong? stackEntityId = null;
+
+            for (uint i = freeSlot; i > 0; i--)
+            {
+                ulong entityToShiftId = buybackInventory.GetEntityInSlot(i - 1);
+                Entity entityToShift = Game.EntityManager.GetEntity<Entity>(entityToShiftId);
+                if (entityToShift == null)
+                {
+                    Logger.Warn("SellItemToVendor(): entityToShift == null");
+                    continue;
+                }
+
+                Inventory.ChangeEntityInventoryLocation(entityToShift, buybackInventory, i, ref stackEntityId, false);
+            }
+
+            // Put our newly sold item in the first slot
+            if (buybackInventory.IsSlotFree(0) == false)
+                return Logger.WarnReturn(false, "SellItemToVendor(): buybackInventory.IsSlotFree(0) == false");
+
+            stackEntityId = null;
+            if (Inventory.ChangeEntityInventoryLocation(item, buybackInventory, 0, ref stackEntityId, false) != InventoryResult.Success)
+                return Logger.WarnReturn(false, $"SellItemToVendor(): Failed to add item {item} to the buyback inventory");
+
+            // Sell successful, record sell price and add credits
+            item.Properties[PropertyEnum.ItemSoldPrice] = sellPrice;
+
+            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            Properties.AdjustProperty(sellPrice, new(PropertyEnum.Currency, creditsProtoRef));
+
+            return true;
+        }
+
+        public bool RefreshVendorInventory(ulong vendorId)
         {
             if (CanRefreshVendorInventory(vendorId) != VendorResult.RefreshSuccess)
                 return false;
 
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
-            if (vendor == null) return Logger.WarnReturn(false, "RefreshVendor(): vendor == null");
+            if (vendor == null) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendor == null");
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
-            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendor(): vendorTypeProtoRef == PrototypeId.Invalid");
+            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
 
-            return RefreshVendorInternal(vendorTypeProtoRef);
+            return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
         private void InitializeVendors()
@@ -443,13 +516,13 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private bool RefreshVendorInternal(PrototypeId vendorTypeProtoRef)
+        private bool RefreshVendorInventoryInternal(PrototypeId vendorTypeProtoRef)
         {
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
-            if (vendorTypeProto == null) return Logger.WarnReturn(false, "RefreshVendorInternal(): vendorTypeProto == null");
+            if (vendorTypeProto == null) return Logger.WarnReturn(false, "RefreshVendorInventoryInternal(): vendorTypeProto == null");
 
             float newVendorEnergyPct = GetCurrentVendorEnergyPct(vendorTypeProto) - vendorTypeProto.VendorEnergyPctPerRefresh;
-            if (newVendorEnergyPct < 0f) return Logger.WarnReturn(false, "RefreshVendorInternal(): newVendorEnergyPct < 0f");
+            if (newVendorEnergyPct < 0f) return Logger.WarnReturn(false, "RefreshVendorInventoryInternal(): newVendorEnergyPct < 0f");
 
             UpdateVendorLootProperties(vendorTypeProto);
             RollVendorInventory(vendorTypeProto, false);
@@ -466,8 +539,44 @@ namespace MHServerEmu.Games.Entities
 
         private VendorResult CanSellItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
-            // TODO
+            WorldEntity vendor = Game?.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(VendorResult.SellFailure, "CanSellItemToVendor(): vendor == null");
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.SellFailure, "CanSellItemToVendor(): vendorTypeProto == null");
+
+            if (vendorTypeProto.AllowActionSell == false)
+                return VendorResult.SellFailure;
+
+            if (CanPerformVendorOpAtVendor(avatarIndex, itemId, vendorId, InteractionMethod.Sell) != VendorResult.OpSuccess)
+                return VendorResult.SellFailure;
+
             return VendorResult.SellSuccess;
+        }
+
+        private bool ValidateItemSellPrice(Item item, int sellPrice)
+        {
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            // Check if this price can fit into the ItemSoldPrice property
+            PropertyInfoPrototype itemSoldPriceInfoProto = propertyInfoTable.LookupPropertyInfo(PropertyEnum.ItemSoldPrice).Prototype;
+            if (itemSoldPriceInfoProto == null) return Logger.WarnReturn(false, "ValidateItemSellPrice(): itemSoldPriceInfoProto == null");
+
+            if (sellPrice > itemSoldPriceInfoProto.Max)
+                return Logger.WarnReturn(false, $"ValidateItemSellPrice(): sellPrice [{sellPrice}] exceeds ItemSoldPrice Property Max of [{itemSoldPriceInfoProto.Max}]! item=[{item}] player=[{this}]");
+
+            // Check if this price is within the credits cap
+            PropertyInfoPrototype currencyPropInfoProto = propertyInfoTable.LookupPropertyInfo(PropertyEnum.Currency).Prototype;
+            if (currencyPropInfoProto == null) return Logger.WarnReturn(false, "ValidateItemSellPrice(): currencyPropInfoProto == null");
+
+            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            int currentCredits = Properties[PropertyEnum.Currency, creditsProtoRef];
+
+            if (currentCredits + sellPrice > (int)currencyPropInfoProto.Max)
+                return false;
+
+            return true;
         }
 
         private VendorResult CanDonateItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
@@ -501,9 +610,52 @@ namespace MHServerEmu.Games.Entities
             return VendorResult.RefreshSuccess;
         }
 
+        /// <summary>
+        /// Performs common checks for selling and donating items to vendors.
+        /// </summary>
         private VendorResult CanPerformVendorOpAtVendor(int avatarIndex, ulong itemId, ulong vendorId, InteractionMethod interactionMethod)
         {
-            // TODO
+            Game game = Game;
+            if (game == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): game == null");
+
+            // Validate the item
+            Item item = game.EntityManager.GetEntity<Item>(itemId);
+            if (item == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): item == null");
+
+            ItemPrototype itemProto = item.ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): itemProto == null");
+
+            // Check if this item can be sold
+            if (itemProto.CanBeSoldToVendor == false)
+                return VendorResult.OpFailure;
+
+            // Check if this player owns this item
+            InventoryLocation invLoc = item.InventoryLocation;
+            if (invLoc.ContainerId != Id)
+                return VendorResult.OpFailure;
+
+            // Check if this item is in a player general or a stash inventory
+            InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
+            if (inventoryProto == null || (inventoryProto.IsPlayerGeneralInventory == false && inventoryProto is not PlayerStashInventoryPrototype))
+                return VendorResult.OpFailure;
+
+            // Validate the vendor
+            WorldEntity vendor = game.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): vendor == null");
+            if (vendor.IsVendor == false) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): vendor.IsVendor == false");
+
+            // Validate the avatar
+            Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
+            if (avatar == null) return Logger.WarnReturn(VendorResult.OpFailure, "CanPerformVendorOpAtVendor(): avatar == null");
+
+            // Check if this avatar is within interaction range of the vendor
+            if (avatar.InInteractRange(vendor, interactionMethod) == false)
+                return VendorResult.OpFailure;
+
+            // Check if this player is currently interacting with the vendor
+            if (vendor.Id != DialogTargetId)
+                return VendorResult.OpFailure;
+
             return VendorResult.OpSuccess;
         }
     }

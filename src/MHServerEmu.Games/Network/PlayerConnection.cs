@@ -1150,11 +1150,7 @@ namespace MHServerEmu.Games.Network
             if (item.GetOwnerOfType<Player>() != Player)
                 return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): {this} is attempting to sell item {item} that does not belong to it!");
 
-            // TODO: Sell this item to the specified vendor with the ability to buy back
-            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
-            Player.Properties[PropertyEnum.Currency, creditsProtoRef] += item.GetSellPrice(Player);
-            item.Destroy();
-
+            Player?.SellItemToVendor(vendorRequestSellItemTo.AvatarIndex, vendorRequestSellItemTo.ItemId, vendorRequestSellItemTo.VendorId);
             return true;
         }
 
@@ -1163,7 +1159,7 @@ namespace MHServerEmu.Games.Network
             var vendorRequestRefresh = message.As<NetMessageVendorRequestRefresh>();
             if (vendorRequestRefresh == null) return Logger.WarnReturn(false, $"OnVendorRequestRefresh(): Failed to retrieve message");
 
-            Player?.RefreshVendor(vendorRequestRefresh.VendorId);
+            Player?.RefreshVendorInventory(vendorRequestRefresh.VendorId);
             return true;
         }
 
