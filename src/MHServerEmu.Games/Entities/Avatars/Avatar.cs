@@ -1328,6 +1328,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             return false;
         }
 
+        public InteractionValidateResult CanUpgradeUltimate()
+        {
+            // TODO
+            return InteractionValidateResult.AvatarUltimateAlreadyMaxedOut;
+        }
+
         #endregion
 
         #region Inventories

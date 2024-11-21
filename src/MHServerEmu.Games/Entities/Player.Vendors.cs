@@ -586,7 +586,22 @@ namespace MHServerEmu.Games.Entities
             // Token validation
             if (itemProto is CharacterTokenPrototype characterTokenProto)
             {
-                // TODO
+                if (characterTokenProto.IsForTeamUp && IsTeamUpAgentUnlocked(characterTokenProto.Character))
+                    return VendorResult.BuyCharacterAlreadyUnlocked;
+
+                if (characterTokenProto.IsForAvatar && HasAvatarFullyUnlocked(characterTokenProto.Character))
+                {
+                    // Players can still buy avatar tokens to upgrade the current avatar's ultimate
+                    if (avatar.PrototypeDataRef == characterTokenProto.Character)
+                    {
+                        if (avatar.CanUpgradeUltimate() == InteractionValidateResult.AvatarUltimateAlreadyMaxedOut)
+                            return VendorResult.BuyAvatarUltimateAlreadyMaxedOut;
+                    }
+                    else
+                    {
+                        return VendorResult.BuyAvatarUltimateUpgradeCurrentOnly;
+                    }
+                }
             }
 
             // Crafting recipe validation
