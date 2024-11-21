@@ -353,6 +353,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public bool IsLiveTuningVendorEnabled()
+        {
+            if (IsLiveTuningEnabled() == false)
+                return false;
+
+            int tuningVar = (int)Math.Floor(LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_VendorEnabled));
+            return tuningVar != 0;
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);

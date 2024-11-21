@@ -59,6 +59,7 @@ namespace MHServerEmu.Games.Entities.Items
         public PrototypeId OnEquipPower { get; private set; }
 
         public bool IsEquipped { get => InventoryLocation.InventoryPrototype?.IsEquipmentInventory == true; }
+        public bool IsInBuybackInventory { get => InventoryLocation.InventoryRef == GameDatabase.GlobalsPrototype.VendorBuybackInventory; }
         public bool IsBoundToAccount { get => _itemSpec.GetBindingState(); }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
 

@@ -461,6 +461,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
                 case ClientToGameServerMessage.NetMessageSetDialogTarget:                   OnSetDialogTarget(message); break;                  // 100
                 case ClientToGameServerMessage.NetMessageDialogResult:                      OnDialogResult(message); break;                     // 101
+                case ClientToGameServerMessage.NetMessageVendorRequestBuyItemFrom:          OnVendorRequestBuyItemFrom(message); break;         // 102
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
@@ -1136,6 +1137,15 @@ namespace MHServerEmu.Games.Network
             var dialogResult = message.As<NetMessageDialogResult>();
             if (dialogResult == null) return Logger.WarnReturn(false, $"OnDialogResult(): Failed to retrieve message");
             Game.GameDialogManager.OnDialogResult(dialogResult, Player);
+            return true;
+        }
+
+        private bool OnVendorRequestBuyItemFrom(MailboxMessage message)  // 102
+        {
+            var vendorRequestBuyItemFrom = message.As<NetMessageVendorRequestBuyItemFrom>();
+            if (vendorRequestBuyItemFrom == null) return Logger.WarnReturn(false, $"OnVendorRequestBuyItemFrom(): Failed to retrieve message");
+
+            Player?.BuyItemFromVendor(vendorRequestBuyItemFrom.AvatarIndex, vendorRequestBuyItemFrom.ItemId, vendorRequestBuyItemFrom.VendorId, vendorRequestBuyItemFrom.InventorySlot);
             return true;
         }
 

@@ -29,14 +29,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class ItemCostComponentPrototype : Prototype
     {
+        //---
+
+        public virtual bool CanAffordItem(Player player, Item item)
+        {
+            return true;
+        }
+
+        public virtual bool PayItemCost(Player player, Item item)
+        {
+            return true;
+        }
     }
 
     public class ItemCostCreditsPrototype : ItemCostComponentPrototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public EvalPrototype Number { get; protected set; }
         public PrototypeId Currency { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         public int GetNoStackSellPrice(Player player, ItemSpec itemSpec, Item item)
         {
@@ -114,6 +127,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ItemCostComponentPrototype[] Components { get; protected set; }
         public EvalPrototype Credits { get; protected set; }
         public EvalPrototype Runestones { get; protected set; }
+
+        //---
+
+        public bool CanAffordItem(Player player, Item item)
+        {
+            // it's free real estate
+            if (Components.IsNullOrEmpty())
+                return true;
+
+            foreach (ItemCostComponentPrototype componentProto in Components)
+            {
+                if (componentProto.CanAffordItem(player, item) == false)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool PayItemCost(Player player, Item item)
+        {
+            if (Components.IsNullOrEmpty())
+                return true;
+
+            if (CanAffordItem(player, item) == false)
+                return false;
+
+            bool success = true;
+
+            foreach (ItemCostComponentPrototype componentProto in Components)
+                success &= componentProto.PayItemCost(player, item);
+
+            return success;
+        }
 
         public int GetSellPriceInCredits(Player player, Item item)
         {

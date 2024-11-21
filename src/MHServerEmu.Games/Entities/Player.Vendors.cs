@@ -19,13 +19,13 @@ namespace MHServerEmu.Games.Entities
     {
         BuySuccess,
         BuyFailure,
-        BuyOutOfRange2,
+        BuyOutOfRange,
         BuyInsufficientCredits,
         BuyInsufficientPrestige,
         BuyCannotAffordItem,
         BuyInventoryFull,
-        BuyResult7,
-        BuyOutOfRange8,
+        BuyNotInVendorInventory,
+        BuyDialogTargetIdMismatch,
         BuyAvatarUltimateAlreadyMaxedOut,
         BuyAvatarUltimateUpgradeCurrentOnly,
         BuyCharacterAlreadyUnlocked,
@@ -77,6 +77,18 @@ namespace MHServerEmu.Games.Entities
             // TODO: Implement this
             // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
             Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
+            return true;
+        }
+
+        public bool BuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId, uint inventorySlot)
+        {
+            Logger.Debug($"BuyItemFromVendor(): avatarIndex={avatarIndex}, itemId={itemId}, vendorId={vendorId}, inventorySlot={inventorySlot}");
+
+            if (CanBuyItemFromVendor(avatarIndex, itemId, vendorId) != VendorResult.BuySuccess)
+                return false;
+
+            Logger.Debug("BuyItemFromVendor(): CanBuyItemFromVendor = true");
+
             return true;
         }
 
@@ -165,6 +177,12 @@ namespace MHServerEmu.Games.Entities
             if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "RefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
 
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
+        }
+
+        public bool HasLearnedCraftingRecipe(PrototypeId craftingRecipeProtoRef)
+        {
+            // Assume all recipes are learned for now
+            return true;
         }
 
         private void InitializeVendors()
@@ -533,7 +551,67 @@ namespace MHServerEmu.Games.Entities
 
         private VendorResult CanBuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
-            // TODO
+            // Validate the item
+            Item item = Game?.EntityManager.GetEntity<Item>(itemId);
+            if (item == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): item == null");
+
+            ItemPrototype itemProto = item.ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): itemProto == null");
+
+            if (itemProto.IsLiveTuningVendorEnabled() == false)
+                return VendorResult.BuyItemDisabledByLiveTuning;
+
+            // Validate the avatar
+            Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
+            if (avatar == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): avatar == null");
+
+            // Validate the inventory
+            Inventory inventory = GetInventory(itemProto.DestinationFromVendor);
+            if (inventory == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): inventory == null");
+
+            uint freeSlot = inventory.GetFreeSlot(item, true);
+            if (freeSlot == Inventory.InvalidSlot)
+                return VendorResult.BuyInventoryFull;
+
+            // Check if the player has enough stuff to afford this item
+            if (itemProto.Cost != null && itemProto.Cost.CanAffordItem(this, item) == false)
+                return VendorResult.BuyCannotAffordItem;
+
+            // Check if the player is a cool enough person to have this item
+            int prestigeLevel = avatar.PrestigeLevel;
+            int prestigeLevelRequirement = (int)(float)item.Properties[PropertyEnum.Requirement, PropertyEnum.AvatarPrestigeLevel];
+            if (prestigeLevel < prestigeLevelRequirement)
+                return VendorResult.BuyInsufficientPrestige;
+
+            // Token validation
+            if (itemProto is CharacterTokenPrototype characterTokenProto)
+            {
+                // TODO
+            }
+
+            // Crafting recipe validation
+            if (item.IsCraftingRecipe && HasLearnedCraftingRecipe(itemProto.DataRef))
+                return VendorResult.BuyPlayerAlreadyHasCraftingRecipe;
+
+            // Validate the vendor
+            WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): vendor == null");
+            if (vendor.IsVendor == false) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): vendor.IsVendor == false");
+
+            if (avatar.InInteractRange(vendor, InteractionMethod.Buy) == false)
+                return VendorResult.BuyOutOfRange;
+
+            if (vendor.Id != DialogTargetId)
+                return VendorResult.BuyDialogTargetIdMismatch;
+
+            // Make sure this item is in one of this vendor's inventories
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.BuyFailure, "CanBuyItemFromVendor(): vendorTypeProto == null");
+
+            if (vendorTypeProto.ContainsInventory(item.InventoryLocation.InventoryRef) == false && item.IsInBuybackInventory == false)
+                return VendorResult.BuyNotInVendorInventory;
+
             return VendorResult.BuySuccess;
         }
 
