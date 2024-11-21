@@ -2,6 +2,7 @@
 using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -123,6 +124,17 @@ namespace MHServerEmu.Games.Achievements
             return builder.Build();
         }
 
+        public NetMessageAchievementStateUpdate.Types.AchievementState ToProtobuf(uint id)
+        {
+            var progress = AchievementProgressMap[id];
+            return NetMessageAchievementStateUpdate.Types.AchievementState
+                    .CreateBuilder()
+                    .SetId(id)
+                    .SetCount(progress.Count)
+                    .SetCompleteddate((ulong)(progress.CompletedDate.Ticks / 10))
+                    .Build();
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();
@@ -207,7 +219,6 @@ namespace MHServerEmu.Games.Achievements
 
         public bool UpdateAchievement(AchievementInfo info, int count, ref bool changes)
         {
-            bool isProgress = false;
             int oldCount = 0;
             TimeSpan completedDate = TimeSpan.Zero;
 
@@ -215,7 +226,6 @@ namespace MHServerEmu.Games.Achievements
             {
                 oldCount = (int)progress.Count;
                 completedDate = progress.CompletedDate;
-                isProgress = true;
             }
 
             bool isMinMethod = false;
@@ -244,8 +254,26 @@ namespace MHServerEmu.Games.Achievements
             if (isMinMethod == false)
                 newCount = Math.Min(newCount, (int)info.Threshold);
 
-            
+            if (completedDate == TimeSpan.Zero)
+            {
+                int threshold = (int)info.Threshold;
+                bool updateDate = isMinMethod ? (newCount != 0 && newCount <= threshold) : newCount >= threshold; 
+                if (updateDate)
+                {
+                    completedDate = Clock.UnixTime;
+                    changes = true;
+                }
+            }
+
+            if (changes == false && newCount == oldCount) 
+                return false;
+
+            AchievementProgressMap[info.Id] = new((uint)newCount, completedDate, true);
+
+            if (changes) _scoreCached = false;
+            return true;
         }
+
 
         public struct CategoryStats
         {

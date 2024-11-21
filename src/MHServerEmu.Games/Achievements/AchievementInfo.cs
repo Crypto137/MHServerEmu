@@ -4,6 +4,7 @@ using Gazillion;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements
@@ -50,6 +51,7 @@ namespace MHServerEmu.Games.Achievements
         public LocaleStringId InProgressStr { get; set; }
         public LocaleStringId CompletedStr { get; set; }
         public LocaleStringId RewardStr { get; set; }
+        public Prototype RewardProto { get; set; }
         public AssetId IconPathAssetId { get; set; }
         public uint Score { get; set; }
         public LocaleStringId CategoryStr { get; set; }

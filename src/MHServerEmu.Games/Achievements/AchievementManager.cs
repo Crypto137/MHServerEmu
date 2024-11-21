@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using Gazillion;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Properties;
 
@@ -152,19 +153,121 @@ namespace MHServerEmu.Games.Achievements
 
         private void UpdateAchievement(AchievementInfo info, int count, bool showPopups = true, bool fromEvent = false, ActiveAchievement active = null)
         {
-            uint oldScore = AchievementState.GetTotalStats().Score;
+            var state = AchievementState;
+            uint oldScore = state.GetTotalStats().Score;
             bool changes = false;
-            if (fromEvent && Owner.AchievementState.UpdateAchievement(info, count, ref changes))
-            {
 
+            if (fromEvent && state.UpdateAchievement(info, count, ref changes))
+            {
+                if (active != null)
+                {
+                    active.Updated = true;
+                    ScheduleUpdateActiveStateEvent();
+                }
+                else
+                {
+                    SendAchievementStateUpdate(info.Id, showPopups);
+                }
+
+                foreach (var dependentInfo in AchievementDatabase.Instance.GetAchievementsByEventType(ScoringEventType.Dependent))
+                {
+                    if (dependentInfo.DependentAchievementId == info.Id 
+                        && state.GetAchievementProgress(dependentInfo.Id).IsComplete == false 
+                        && state.IsAvailable(dependentInfo))
+                    {
+                        int progressCount = (int)state.GetAchievementProgress(info.Id).Count;
+                        UpdateAchievement(dependentInfo, progressCount, showPopups, fromEvent);
+                    }                    
+                }
             }
 
-            uint newScore = AchievementState.GetTotalStats().Score;
-            if (oldScore != newScore && _cachingActives == false)
-                ScheduleUpdateScoreEvent();
+            if (changes)
+            {
+                if (info.RewardProto != null)
+                {
+                    ScheduleRewardEvent(info);
+                }
+
+                if (info.ParentId != 0)
+                {
+                    var parentInfo = AchievementDatabase.Instance.GetAchievementInfoById(info.ParentId);
+                    bool recount = parentInfo.EvaluationType == AchievementEvaluationType.Children;
+                    UpdateAchievementInfo(parentInfo, recount, showPopups, fromEvent);
+                }
+
+                foreach (var childInfo in info.Children)
+                {
+                    bool recount = childInfo.EvaluationType == AchievementEvaluationType.Parent;
+                    UpdateAchievementInfo(childInfo, recount, showPopups, fromEvent);
+                }
+
+                foreach (var completeInfo in AchievementDatabase.Instance.GetAchievementsByEventType(ScoringEventType.IsComplete))
+                {
+                    if (completeInfo.DependentAchievementId == info.Id
+                        && state.GetAchievementProgress(completeInfo.Id).IsComplete == false
+                        && state.IsAvailable(completeInfo))
+                        UpdateAchievement(completeInfo, 1, showPopups, fromEvent);
+                }
+
+                UpdateScore();
+
+                if (info.VisibleState != AchievementVisibleState.Invisible && info.VisibleState != AchievementVisibleState.Objective)
+                {
+                    // TODO NetMessagePlayPowerVisuals
+                }
+
+                uint newScore = state.GetTotalStats().Score;
+                if (oldScore != newScore && _cachingActives == false)
+                    ScheduleUpdateScoreEvent();
+            }
+        }
+
+        private void UpdateAchievementInfo(AchievementInfo info, bool recount, bool showPopups, bool fromEvent)
+        {
+            var state = AchievementState;
+
+            if (recount && state.IsAvailable(info))
+                _cachedActives = false;
+
+            if (state.GetAchievementProgress(info.Id).IsComplete == false && state.IsAvailable(info) && FilterPlayerContext(info))
+            {
+                if (recount) RecountAchievement(info);
+                if (info.EventType == ScoringEventType.ChildrenComplete)
+                {
+                    int count = info.Threshold > 0 ? CountChildrenComplete(info) : 0;
+                    UpdateAchievement(info, count, showPopups, fromEvent);
+                }
+            }
+        }
+
+        private void RecountAchievement(AchievementInfo parent)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void SendAchievementStateUpdate(uint id, bool showPopups)
+        {
+            if (Owner.IsInGame == false) return;
+
+            var message = NetMessageAchievementStateUpdate.CreateBuilder()
+                .AddAchievementStates(AchievementState.ToProtobuf(id))
+                .SetShowpopups(showPopups)
+                .Build();
+
+            Owner.SendMessage(message);
         }
 
         private void ActiveAchievementStateUpdate()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ScheduleRewardEvent(AchievementInfo info)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ScheduleUpdateActiveStateEvent()
         {
             throw new NotImplementedException();
         }
