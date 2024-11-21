@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Entities
     public enum VendorResult    // Names from CPlayer::BuyItemFromVendor(), CPlayer::SellItemToVendor(), CPlayer::DonateItemToVendor()
     {
         BuySuccess,
-        BuyResult1,
+        BuyFailure,
         BuyOutOfRange2,
         BuyInsufficientCredits,
         BuyInsufficientPrestige,
@@ -33,23 +33,23 @@ namespace MHServerEmu.Games.Entities
         BuyItemDisabledByLiveTuning,
 
         SellSuccess,
-        SellNotAllowed,
+        SellFailure,
 
         DonateSuccess,
-        DonateResult17,
+        DonateFailure,
         DonateNotAcceptingDonations,
         DonateNotAcceptingItem,
 
         RefreshSuccess,
-        RefreshResult21,
-        RefreshResult22,
-        RefreshResult23,
+        RefreshFailure,
+        RefreshInsufficientEnergy,
+        RefreshNotAllowed,
 
         UnkResult24,
         UnkResult25,
 
         OpSuccess,
-        OpResult27,
+        OpFailure,
     }
 
     public partial class Player
@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Entities
 
         public bool RefreshVendor(ulong vendorId)
         {
-            if (CanRefreshVendor(vendorId) != VendorResult.RefreshSuccess)
+            if (CanRefreshVendorInventory(vendorId) != VendorResult.RefreshSuccess)
                 return false;
 
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
@@ -280,6 +280,18 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private float GetCurrentVendorEnergyPct(VendorTypePrototype vendorTypeProto)
+        {
+            if (vendorTypeProto == null) return Logger.WarnReturn(0f, "GetCurrentVendorEnergyPct(): vendorTypeProto == null");
+            PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
+
+            float lastRefreshPctEngAfter = Properties[PropertyEnum.VendorLastRefreshPctEngAfter, vendorTypeProtoRef];
+            float minutesSinceLastRefresh = (float)(Game.CurrentTime - Properties[PropertyEnum.VendorLastRefreshTime, vendorTypeProtoRef]).TotalMinutes;
+
+            float currentVendorEnergyPct = lastRefreshPctEngAfter + (minutesSinceLastRefresh / vendorTypeProto.VendorEnergyFullRechargeTimeMins);
+            return Math.Clamp(currentVendorEnergyPct, 0f, 1f);
+        }
+
         private bool SetVendorEnergyPct(PrototypeId vendorTypeProtoRef, float energyPct)
         {
             if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SetVendorEnergyPct(): vendorTypeProtoRef == PrototypeId.Invalid");
@@ -436,9 +448,12 @@ namespace MHServerEmu.Games.Entities
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
             if (vendorTypeProto == null) return Logger.WarnReturn(false, "RefreshVendorInternal(): vendorTypeProto == null");
 
+            float newVendorEnergyPct = GetCurrentVendorEnergyPct(vendorTypeProto) - vendorTypeProto.VendorEnergyPctPerRefresh;
+            if (newVendorEnergyPct < 0f) return Logger.WarnReturn(false, "RefreshVendorInternal(): newVendorEnergyPct < 0f");
+
             UpdateVendorLootProperties(vendorTypeProto);
             RollVendorInventory(vendorTypeProto, false);
-            SetVendorEnergyPct(vendorTypeProtoRef, 1f);     // TODO: GetCurrentVendorEnergyPct()
+            SetVendorEnergyPct(vendorTypeProtoRef, newVendorEnergyPct);
 
             return true;
         }
@@ -461,9 +476,28 @@ namespace MHServerEmu.Games.Entities
             return VendorResult.DonateSuccess;
         }
 
-        private VendorResult CanRefreshVendor(ulong vendorId)
+        private VendorResult CanRefreshVendorInventory(ulong vendorId)
         {
-            // TODO
+            WorldEntity vendor = Game?.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(VendorResult.RefreshFailure, "CanRefreshVendorInventory(): vendor == null");
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(VendorResult.RefreshFailure, "CanRefreshVendorInventory(): vendorTypeProtoRef == PrototypeId.Invalid");
+
+            return CanRefreshVendorInventory(vendorTypeProtoRef, true);
+        }
+
+        private VendorResult CanRefreshVendorInventory(PrototypeId vendorTypeProtoRef, bool isPlayerRequest)
+        {
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.RefreshFailure, "CanRefreshVendorInventory(): vendorTypeProto == null");
+
+            if (isPlayerRequest && vendorTypeProto.AllowActionRefresh == false)
+                return VendorResult.RefreshNotAllowed;
+
+            if (GetCurrentVendorEnergyPct(vendorTypeProto) < vendorTypeProto.VendorEnergyPctPerRefresh)
+                return VendorResult.RefreshInsufficientEnergy;
+
             return VendorResult.RefreshSuccess;
         }
 
