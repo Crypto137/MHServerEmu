@@ -36,6 +36,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public virtual int GetBuyPrice(Player player, Item item)
+        {
+            return 0;
+        }
+
         public virtual bool PayItemCost(Player player, Item item)
         {
             return true;
@@ -51,10 +56,68 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public override bool CanAffordItem(Player player, Item item)
+        {
+            int price = GetBuyPrice(player, item);
+            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            return player.Properties[PropertyEnum.Currency, creditsProtoRef] >= price;
+        }
+
+        public override int GetBuyPrice(Player player, Item item)
+        {
+            if (item.IsInBuybackInventory)
+            {
+                if (item.Properties.HasProperty(PropertyEnum.ItemSoldPrice))
+                    return item.Properties[PropertyEnum.ItemSoldPrice];
+
+                return GetSellPrice(player, item);
+            }
+
+            int price = GetNoStackBasePrice(player, item.ItemSpec, item) * item.CurrentStackSize;
+            if (price <= 0)
+                return price;
+
+            float floatPrice = price;
+
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+            if (globalsProto?.ItemPriceMultiplierBuyFromVendor == null)
+                return Logger.WarnReturn(price, "GetBuyPrice(): globalsProto?.ItemPriceMultiplierBuyFromVendor == null");
+
+            EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, item.Properties);
+            float globalItemBuyPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierBuyFromVendor, evalContext);
+
+            if (globalItemBuyPriceMultiplier >= 0f)
+                floatPrice *= globalItemBuyPriceMultiplier;
+            else
+                Logger.Warn("GetBuyPrice(): globalItemBuyPriceMultiplier < 0f");
+
+            floatPrice *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorBuyPrice);
+
+            return (int)floatPrice;
+        }
+
+        public override bool PayItemCost(Player player, Item item)
+        {
+            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+
+            int price = GetBuyPrice(player, item);
+            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
+            player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, creditsProtoRef));
+
+            return true;
+        }
+
+        public int GetSellPrice(Player player, Item item)
+        {
+            return GetNoStackSellPrice(player, item.ItemSpec, item) * item.CurrentStackSize;
+        }
+
         public int GetNoStackSellPrice(Player player, ItemSpec itemSpec, Item item)
         {
             int price = GetNoStackBasePrice(player, itemSpec, item);
-            if (price <= 0) return price;
+            if (price <= 0)
+                return price;
 
             float floatPrice = price;
             int itemLevel = item != null ? item.Properties[PropertyEnum.ItemLevel] : itemSpec.ItemLevel;
@@ -67,14 +130,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
             evalContext.SetVar_Int(EvalContext.Var1, itemLevel);
             float globalItemSellPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierSellToVendor, evalContext);
 
-            if (globalItemSellPriceMultiplier > 0f)
-            {
+            if (globalItemSellPriceMultiplier >= 0f)
                 floatPrice *= globalItemSellPriceMultiplier;
-            }
             else
-            {
                 Logger.Warn("GetNoStackSellPrice(): globalItemSellPriceMultiplier < 0f");
-            }
 
             floatPrice *= LiveTuningManager.GetLiveGlobalTuningVar(Gazillion.GlobalTuningVar.eGTV_VendorSellPrice);
 
