@@ -66,8 +66,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             var missionPlayer = Player;
             if (missionPlayer == null || player == missionPlayer) return true;
-            if (_proto == null) return Logger.ErrorReturn(false, $"IsMissionPlayer [{Mission.PrototypeName}] [{Prototype}]: _proto = null");
-            if (_proto.PartyMembersGetCredit)
+            if (_proto != null && _proto.PartyMembersGetCredit)
             {
                 var party = missionPlayer.Party;
                 if (party != null && party.IsMember(player.DatabaseUniqueId)) return true;
@@ -80,7 +79,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (count == 0) return;
             if (Mission.IsOpenMission)
             {
-                if (_proto.OpenMissionContributionValue != 0.0f)
+                if (_proto != null && _proto.OpenMissionContributionValue != 0.0f)
                     SetPlayerContribution(player, (float)_proto.OpenMissionContributionValue * count);
             }
         }
