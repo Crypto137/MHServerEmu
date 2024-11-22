@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
@@ -161,6 +162,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Number { get; protected set; }
         public EvalPrototype NumberExt { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool CanAffordItem(Player player, Item item)
+        {
+            int count = GetCount(player, item);
+            PrototypeId legendaryMarksProtoRef = GameDatabase.CurrencyGlobalsPrototype.LegendaryMarks;
+            return player.Properties[PropertyEnum.Currency, legendaryMarksProtoRef] >= count;
+        }
+
+        public override int GetBuyPrice(Player player, Item item)
+        {
+            return GetCount(player, item);
+        }
+
+        public override bool PayItemCost(Player player, Item item)
+        {
+            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+
+            int price = GetCount(player, item);
+            PrototypeId legendaryMarksProtoRef = GameDatabase.CurrencyGlobalsPrototype.LegendaryMarks;
+            player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, legendaryMarksProtoRef));
+
+            return true;
+        }
+
+        public int GetCount(Player player, Item item)
+        {
+            ItemSpec itemSpec = item.ItemSpec;
+            RarityPrototype rarityProto = itemSpec.RarityProtoRef.As<RarityPrototype>();
+            int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
+            int numAffixes = itemSpec.AffixSpecs.Count;
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null)
+                return 0;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, avatar.Properties);
+            evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
+            evalContext.SetVar_Int(EvalContext.Var2, numAffixes);
+
+            int count = NumberExt != null
+                ? Eval.RunInt(NumberExt, evalContext)
+                : Eval.RunInt(Number, evalContext);
+
+            return count * item.CurrentStackSize;
+        }
     }
 
     public class ItemCostRunestonesPrototype : ItemCostComponentPrototype
