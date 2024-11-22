@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -16,6 +17,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
@@ -1580,6 +1582,13 @@ namespace MHServerEmu.Games.Regions
             _avatarOnKilledInfo = avatarOnKilledInfo == PrototypeId.Invalid
                 ? GameDatabase.GlobalsPrototype.ResurrectionDefaultInfo
                 : avatarOnKilledInfo;
+        }
+
+        public int GetBonusItemFindMultiplier()
+        {
+            int difficultyMult = Properties[PropertyEnum.BonusItemFindBonusDifficultyMult];
+            int liveTuningMult = (int)LiveTuningManager.GetLiveRegionTuningVar(Prototype, RegionTuningVar.eRT_BonusItemFindMultiplier);
+            return Prototype.BonusItemFindMultiplier * difficultyMult * liveTuningMult;
         }
 
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)

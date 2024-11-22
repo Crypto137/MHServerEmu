@@ -19,8 +19,10 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -2126,6 +2128,39 @@ namespace MHServerEmu.Games.Entities
 
             Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
             Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
+            return true;
+        }
+
+        public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)
+        {
+            if (amount <= 0)
+                return true;
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "AwardBonusItemFindPoints(): avatar == null");
+
+            int bonusItemFindRating = avatar.Properties[PropertyEnum.BonusItemFindRating];
+            if (bonusItemFindRating <= 0)
+                return true;
+
+            LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
+            Curve bonusItemFindCurve = GameDatabase.LootGlobalsPrototype.BonusItemFindCurve.AsCurve();
+            if (bonusItemFindCurve == null) return Logger.WarnReturn(false, "AwardBonusItemFindPoints(): bonusItemFindCurve == null");
+
+            amount = (int)(amount * bonusItemFindCurve.GetAt(bonusItemFindRating));
+            if (amount <= 0)
+                return true;
+
+            Logger.Debug($"AwardBonusItemFindPoints(): amount={amount} to [{this}]");
+
+            int points = Properties[PropertyEnum.BonusItemFindPoints] + amount;
+            if (points >= lootGlobalsProto.BonusItemFindNumPointsForBonus)
+            {
+                Game.LootManager.GiveLootFromTable(lootGlobalsProto.BonusItemFindLootTable, settings);
+                points -= lootGlobalsProto.BonusItemFindNumPointsForBonus;
+            }
+
+            Properties[PropertyEnum.BonusItemFindPoints] = points;
             return true;
         }
 
