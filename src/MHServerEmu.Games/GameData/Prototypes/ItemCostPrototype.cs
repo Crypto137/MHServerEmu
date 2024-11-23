@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (globalsProto?.ItemPriceMultiplierBuyFromVendor == null)
                 return Logger.WarnReturn(price, "GetBuyPrice(): globalsProto?.ItemPriceMultiplierBuyFromVendor == null");
 
-            EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, item.Properties);
             float globalItemBuyPriceMultiplier = Eval.RunFloat(globalsProto.ItemPriceMultiplierBuyFromVendor, evalContext);
 
@@ -257,7 +257,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (avatar == null)
                 return 0;
 
-            EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, avatar.Properties);
@@ -297,7 +297,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
             int numAffixes = itemSpec.AffixSpecs.Count;
 
-            EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
             evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
