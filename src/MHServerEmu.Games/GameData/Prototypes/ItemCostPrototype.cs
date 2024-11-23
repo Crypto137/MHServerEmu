@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
@@ -220,12 +221,96 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public EvalPrototype Number { get; protected set; }
         public EvalPrototype NumberExt { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool CanAffordItem(Player player, Item item)
+        {
+            // NOTE: This seems to be used only for the PvP mode?
+            return Logger.WarnReturn(false, $"CanAffordItem(): {item}");
+        }
+
+        public override int GetBuyPrice(Player player, Item item)
+        {
+            return 0;
+        }
+
+        public override bool PayItemCost(Player player, Item item)
+        {
+            return false;
+        }
     }
 
     public class ItemCostItemStackPrototype : ItemCostComponentPrototype
     {
         public PrototypeId CurrencyItem { get; protected set; }
         public EvalPrototype Number { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool CanAffordItem(Player player, Item item)
+        {
+            int price = GetBuyPrice(player, item);
+
+            InventoryIterationFlags flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra | InventoryIterationFlags.PlayerStashGeneral;
+            int numContained = InventoryIterator.GetMatchingContained(player, CurrencyItem, flags);
+            return numContained >= price;
+        }
+
+        public override int GetBuyPrice(Player player, Item item)
+        {
+            ItemSpec itemSpec = item.ItemSpec;
+            RarityPrototype rarityProto = itemSpec.RarityProtoRef.As<RarityPrototype>();
+            int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
+            int numAffixes = itemSpec.AffixSpecs.Count;
+
+            EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
+            evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
+            evalContext.SetVar_Int(EvalContext.Var2, numAffixes);
+
+            return Eval.RunInt(Number, evalContext) * item.CurrentStackSize;
+        }
+
+        public override bool PayItemCost(Player player, Item item)
+        {
+            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+
+            int price = GetBuyPrice(player, item);
+
+            List<ulong> currencyItemList = ListPool<ulong>.Instance.Rent();
+            InventoryIterationFlags flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra | InventoryIterationFlags.PlayerStashGeneral;
+            InventoryIterator.GetMatchingContained(player, CurrencyItem, flags, currencyItemList);
+
+            EntityManager entityManager = player.Game.EntityManager;
+            int remaining = price;
+
+            foreach (ulong currencyItemId in currencyItemList)
+            {
+                Item currencyItem = entityManager.GetEntity<Item>(currencyItemId);
+                if (currencyItem == null)
+                {
+                    Logger.Warn("PayItemCost(): currencyItem == null");
+                    continue;
+                }
+
+                int numToSpend = Math.Min(remaining, item.CurrentStackSize);
+                remaining -= numToSpend;
+                item.DecrementStack(numToSpend);
+            }
+
+            ListPool<ulong>.Instance.Return(currencyItemList);
+
+            if (remaining != 0)
+                return Logger.WarnReturn(false, $"PayItemCost(): Player [{player}] was not able to spend enough currency item {CurrencyItem.GetName()} to pay for [{item}]");
+
+            return true;
+        }
     }
 
     public class ItemCostCurrencyPrototype : ItemCostComponentPrototype
