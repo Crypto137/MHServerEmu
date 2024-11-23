@@ -473,8 +473,9 @@ namespace MHServerEmu.Games.Entities
                     resolver.SetContext(LootContext.Vendor, this);
 
                     LootRollResult rollResult = lootTableProto.Roll(rollSettings, resolver);
-                    if (rollResult != LootRollResult.Success)
+                    if (rollResult == LootRollResult.Failure)
                     {
+                        // Skip the rest of this table if nothing rolled at all
                         Logger.Warn($"RollVendorInventory(): Loot roll failed for loot table {lootTableProto}, vendor type {vendorTypeProto}");
                         continue;
                     }

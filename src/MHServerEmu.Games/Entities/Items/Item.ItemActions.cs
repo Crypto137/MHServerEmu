@@ -200,7 +200,7 @@ namespace MHServerEmu.Games.Entities.Items
             resolver.SetContext(LootContext.MysteryChest, player);
 
             LootRollResult result = lootTableProto.Roll(inputSettings.LootRollSettings, resolver);
-            if (result != LootRollResult.Success)
+            if (result == LootRollResult.NoRoll || result == LootRollResult.Failure)
             {
                 player.SendMessage(NetMessageLootRollFailed.DefaultInstance);
                 return Logger.WarnReturn(false, $"DoItemActionReplaceSelfLootTable(): Failed to roll loot table for {this}");
