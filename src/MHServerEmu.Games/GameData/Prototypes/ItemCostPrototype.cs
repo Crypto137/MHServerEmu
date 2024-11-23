@@ -145,7 +145,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             RarityPrototype rarityProto = GameDatabase.GetPrototype<RarityPrototype>(itemSpec.RarityProtoRef);
             int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
-            int numAffixes = itemSpec.AffixSpecs.Count();
+            int numAffixes = itemSpec.AffixSpecs.Count;
             int itemLevel = item != null ? item.Properties[PropertyEnum.ItemLevel] : itemSpec.ItemLevel;
 
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -232,6 +232,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Currency { get; protected set; }
         public EvalPrototype Amount { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool CanAffordItem(Player player, Item item)
+        {
+            if (Currency == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanAffordItem(): Currency == PrototypeId.Invalid");
+
+            int price = GetBuyPrice(player, item);
+            return player.Properties[PropertyEnum.Currency, Currency] >= price;
+        }
+
+        public override int GetBuyPrice(Player player, Item item)
+        {
+            ItemSpec itemSpec = item.ItemSpec;
+            RarityPrototype rarityProto = itemSpec.RarityProtoRef.As<RarityPrototype>();
+            int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
+            int numAffixes = itemSpec.AffixSpecs.Count;
+
+            // Check for live tuning price override
+            if (Currency == GameDatabase.CurrencyGlobalsPrototype.EternitySplinters)
+            {
+                int liveTuneCost = item.ItemPrototype.LiveTuneEternitySplinterCost;
+                if (liveTuneCost != 1)
+                    return liveTuneCost;
+            }
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
+            evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
+            evalContext.SetVar_Int(EvalContext.Var2, numAffixes);
+
+            return Eval.RunInt(Amount, evalContext) * item.CurrentStackSize;
+        }
+
+        public override bool PayItemCost(Player player, Item item)
+        {
+            if (Currency == PrototypeId.Invalid) return Logger.WarnReturn(false, "PayItemCost(): Currency == PrototypeId.Invalid");
+            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+
+            int price = GetBuyPrice(player, item);
+            player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, Currency));
+
+            return true;
+        }
     }
 
     public class ItemCostPrototype : Prototype

@@ -309,6 +309,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public int WorldEntityPrototypeEnumValue { get; private set; }
+        [DoNotCopy]
+        public virtual int LiveTuneEternitySplinterCost { get => (int)LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_EternitySplinterPrice); }
 
         [DoNotCopy]
         public bool DiscoverInRegion { get => ObjectiveInfo?.EdgeEnabled == true || HACKDiscoverInRegion; }
