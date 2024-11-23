@@ -445,13 +445,53 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (Components.HasValue())
             {
-                foreach (ItemCostComponentPrototype costComponentProto in Components)
+                foreach (ItemCostComponentPrototype componentProto in Components)
                 {
-                    if (costComponentProto is not ItemCostCreditsPrototype creditsCostComponentProto)
+                    if (componentProto is not ItemCostCreditsPrototype creditsComponentProto)
                         continue;
 
-                    price += creditsCostComponentProto.GetNoStackSellPrice(player, itemSpec, item);
+                    price += creditsComponentProto.GetNoStackSellPrice(player, itemSpec, item);
                 }
+            }
+
+            return price;
+        }
+
+        public bool HasEternitySplintersComponent()
+        {
+            if (Components.IsNullOrEmpty())
+                return false;
+
+            PrototypeId eternitySplintersProtoRef = GameDatabase.CurrencyGlobalsPrototype.EternitySplinters;
+
+            foreach (ItemCostComponentPrototype componentProto in Components)
+            {
+                if (componentProto is not ItemCostCurrencyPrototype currencyComponentProto)
+                    continue;
+
+                if (currencyComponentProto.Currency == eternitySplintersProtoRef)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public int GetBuyPriceInEternitySplinters(Player player, Item item)
+        {
+            int price = 0;
+
+            if (Components.IsNullOrEmpty())
+                return price;
+
+            PrototypeId eternitySplintersProtoRef = GameDatabase.CurrencyGlobalsPrototype.EternitySplinters;
+
+            foreach (ItemCostComponentPrototype componentProto in Components)
+            {
+                if (componentProto is not ItemCostCurrencyPrototype currencyComponentProto)
+                    continue;
+
+                if (currencyComponentProto.Currency == eternitySplintersProtoRef)
+                    price += currencyComponentProto.GetBuyPrice(player, item);
             }
 
             return price;
