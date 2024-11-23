@@ -228,18 +228,47 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool CanAffordItem(Player player, Item item)
         {
-            // NOTE: This seems to be used only for the PvP mode?
-            return Logger.WarnReturn(false, $"CanAffordItem(): {item}");
+            int count = GetCount(player, item);
+            return player.Properties[PropertyEnum.RunestonesAmount] >= count;
         }
 
         public override int GetBuyPrice(Player player, Item item)
         {
-            return 0;
+            return GetCount(player, item);
         }
 
         public override bool PayItemCost(Player player, Item item)
         {
-            return false;
+            if (CanAffordItem(player, item) == false) return Logger.WarnReturn(false, "PayItemCost(): CanAffordItem(player, item) == false");
+
+            int count = GetCount(player, item);
+            player.Properties.AdjustProperty(-count, PropertyEnum.RunestonesAmount);
+            return true;
+        }
+
+        public int GetCount(Player player, Item item)
+        {
+            ItemSpec itemSpec = item.ItemSpec;
+            RarityPrototype rarityProto = itemSpec.RarityProtoRef.As<RarityPrototype>();
+            int rarityTier = rarityProto != null ? rarityProto.Tier : 0;
+            int numAffixes = itemSpec.AffixSpecs.Count;
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null)
+                return 0;
+
+            EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, player.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, item.Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, avatar.Properties);
+            evalContext.SetVar_Int(EvalContext.Var1, rarityTier);
+            evalContext.SetVar_Int(EvalContext.Var2, numAffixes);
+
+            int count = NumberExt != null
+                ? Eval.RunInt(NumberExt, evalContext)
+                : Eval.RunInt(Number, evalContext);
+
+            return count * item.CurrentStackSize;
         }
     }
 
