@@ -67,6 +67,22 @@ namespace MHServerEmu.Games.Entities.Items
                 _equippableBy = (PrototypeId)protobuf.EquippableBy;
         }
 
+        public ItemSpec(ItemSpec other)
+        {
+            _itemProtoRef = other._itemProtoRef;
+            _rarityProtoRef = other._rarityProtoRef;
+            _itemLevel = other._itemLevel;
+            _creditsAmount = other._creditsAmount;
+
+            foreach (AffixSpec affixSpec in other._affixSpecList)
+                _affixSpecList.Add(new(affixSpec));
+
+            _seed = other._seed;
+            _equippableBy = other._equippableBy;
+
+            StackCount = other.StackCount;
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;

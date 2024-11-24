@@ -57,8 +57,8 @@ namespace MHServerEmu.Games.Entities
         private const int VendorMinLevel = 1;
         private const int VendorInvalidXP = -1;
 
-        private readonly HashSet<PrototypeId> _initializedVendorProtoRefs = new();
-        private readonly Dictionary<PrototypeId, VendorPurchaseData> _vendorPurchaseDataDict = new();
+        private readonly HashSet<PrototypeId> _initializedVendorTypeProtoRefs = new();
+        private readonly Dictionary<PrototypeId, VendorPurchaseData> _vendorPurchaseDataDict = new();   // InventoryPrototype key
 
         public void InitializeVendorInventory(PrototypeId inventoryProtoRef)
         {
@@ -81,10 +81,81 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool BuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId, uint inventorySlot)
+        public bool BuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId, uint destinationSlot)
         {
             if (CanBuyItemFromVendor(avatarIndex, itemId, vendorId) != VendorResult.BuySuccess)
                 return false;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            Item item = entityManager.GetEntity<Item>(itemId);
+            if (item == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): item == null");
+
+            ItemPrototype itemProto = item.ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): itemProto == null");
+
+            WorldEntity vendor = entityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): vendor == null");
+
+            // Find the inventory slot to put the purchased item in
+            uint vendorSlot = Inventory.InvalidSlot;
+            bool isInBuybackInventory = item.IsInBuybackInventory;
+            VendorPurchaseData purchaseData = null;
+
+            if (isInBuybackInventory == false)
+            {
+                // Get purchase data for non-buyback items
+                purchaseData = GetVendorPurchaseData(item.InventoryLocation.InventoryRef, false);
+                if (purchaseData == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): purchaseData == null");
+
+                vendorSlot = item.InventoryLocation.Slot;
+                if (purchaseData.HasItemBeenPurchased(vendorSlot)) return Logger.WarnReturn(false, "BuyItemFromVendor(): purchaseData.HasItemBeenPurchased(vendorSlot)");
+            }
+
+            Inventory destinationInventory = GetInventory(itemProto.DestinationFromVendor);
+            if (destinationInventory == null) return Logger.WarnReturn(false, "BuyItemFromVendor(): destinationInventory == null");
+
+            if (destinationSlot == Inventory.InvalidSlot)
+                destinationSlot = destinationInventory.GetFreeSlot(item, true);
+
+            if (destinationSlot == Inventory.InvalidSlot) return Logger.WarnReturn(false, "BuyItemFromVendor(): destinationSlot == Inventory.InvalidSlot");
+
+            // Some items are cloned when they are purchased
+            bool isCloning = item.IsClonedWhenPurchasedFromVendor && isInBuybackInventory == false;
+            if (isCloning)
+            {
+                // Create a clone
+                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                settings.EntityRef = item.PrototypeDataRef;
+                settings.ItemSpec = new(item.ItemSpec);
+                settings.InventoryLocation = new(Id, destinationInventory.PrototypeDataRef, destinationSlot);
+
+                if (IsInGame == false)
+                    settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
+
+                item = entityManager.CreateEntity(settings) as Item;
+            }
+
+            // Pay the cost of the item. We need to do this before we move the item because
+            // item sold prices are cleared when items are removed from the buyback inventory.
+            itemProto.Cost?.PayItemCost(this, item);
+
+            if (isCloning == false)
+            {
+                // Move the item to the player's inventory and record the purchase if we are not cloning
+                if (item.ChangeInventoryLocation(destinationInventory, destinationSlot) != InventoryResult.Success)
+                    return Logger.WarnReturn(false, $"BuyItemFromVendor(): Failed to put purchased item [{item}] into inventory of player [{this}]");
+
+                if (isInBuybackInventory == false && purchaseData != null)
+                    purchaseData.RecordItemPurchase(vendorSlot);
+            }
+
+            // Use the item if needed
+            if (item.Properties[PropertyEnum.ItemAutoUseOnPurchase])
+            {
+                Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
+                avatar?.UseInteractableObject(item.Id, PrototypeId.Invalid);
+            }
 
             return true;
         }
@@ -393,7 +464,7 @@ namespace MHServerEmu.Games.Entities
             List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Rent();
             vendorTypeProto.GetInventories(inventoryList);
 
-            foreach (PrototypeId inventoryProtoRef in _initializedVendorProtoRefs)
+            foreach (PrototypeId inventoryProtoRef in inventoryList)
             {
                 VendorPurchaseData purchaseData = GetVendorPurchaseData(inventoryProtoRef, true);
                 purchaseData.Clear();
@@ -430,7 +501,7 @@ namespace MHServerEmu.Games.Entities
             if (vendorTypeProto == null) return Logger.WarnReturn(false, "RollVendorInventory(): vendorTypeProto == null");
             PrototypeId vendorTypeProtoRef = vendorTypeProto.DataRef;
 
-            if (isInitializing && _initializedVendorProtoRefs.Add(vendorTypeProtoRef) == false)
+            if (isInitializing && _initializedVendorTypeProtoRefs.Add(vendorTypeProtoRef) == false)
                 return true;
 
             Logger.Trace($"RollVendorInventory(): {vendorTypeProto}");

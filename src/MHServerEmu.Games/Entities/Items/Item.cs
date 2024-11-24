@@ -68,6 +68,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool IsRelic { get => Prototype is RelicPrototype; }
         public bool IsTeamUpGear { get => Prototype is TeamUpGearPrototype; }
         public bool IsGem { get => ItemPrototype?.IsGem == true; }
+        public bool IsClonedWhenPurchasedFromVendor { get => ItemPrototype?.ClonedWhenPurchasedFromVendor == true; }
 
         public Item(Game game) : base(game) 
         {
@@ -119,6 +120,18 @@ namespace MHServerEmu.Games.Entities.Items
             if (itemProto == null) return Logger.WarnReturn(false, "IsAutoStackedWhenAddedToInventory(): itemProto == null");
             if (itemProto.StackSettings == null) return false;
             return itemProto.StackSettings.AutoStackWhenAddedToInventory;
+        }
+
+        public override void OnSelfAddedToOtherInventory()
+        {
+            if (InventoryLocation.IsValid)
+            {
+                // Remove sold price after buyback
+                if (IsInBuybackInventory == false)
+                    Properties.RemoveProperty(PropertyEnum.ItemSoldPrice);
+            }
+
+            base.OnSelfAddedToOtherInventory();
         }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)

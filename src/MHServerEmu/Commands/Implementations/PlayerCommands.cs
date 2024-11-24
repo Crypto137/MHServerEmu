@@ -3,6 +3,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -114,6 +115,24 @@ namespace MHServerEmu.Commands.Implementations
 
             playerConnection.WipePlayerData();
             return string.Empty;
+        }
+
+        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]", AccountUserLevel.Admin)]
+        public string GiveCurrency(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help player givecurrency' to get help.";
+
+            if (int.TryParse(@params[0], out int amount) == false)
+                return $"Failed to parse amount from {@params[0]}.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                player.Properties.AdjustProperty(amount, new(PropertyEnum.Currency, currencyProtoRef));
+
+            return $"Successfully given {amount} of all currencies.";
         }
     }
 }
