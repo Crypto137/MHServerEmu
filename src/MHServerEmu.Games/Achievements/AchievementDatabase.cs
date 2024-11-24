@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.Achievements
         private static readonly string AchievementsDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Achievements");
 
         private readonly Dictionary<uint, AchievementInfo> _achievementInfoMap = new();
+        private Dictionary<ScoringEventType, List<AchievementInfo>> _scoringEventTypeToAchievementInfo = new();
         private byte[] _localizedAchievementStringBuffer = Array.Empty<byte>();
         private NetMessageAchievementDatabaseDump _cachedDump = NetMessageAchievementDatabaseDump.DefaultInstance;
 
@@ -45,7 +46,7 @@ namespace MHServerEmu.Games.Achievements
                 return Logger.WarnReturn(false, $"Initialize(): Achievement info map not found at {achievementInfoMapPath}");
 
             string achievementInfoMapJson = File.ReadAllText(achievementInfoMapPath);
-            
+
             try
             {
                 JsonSerializerOptions options = new();
@@ -116,14 +117,20 @@ namespace MHServerEmu.Games.Achievements
         /// <summary>
         /// Returns all <see cref="AchievementInfo"/> instances that use the specified <see cref="ScoringEventType"/>.
         /// </summary>
-        public IEnumerable<AchievementInfo> GetAchievementsByEventType(ScoringEventType eventType)
+        public List<AchievementInfo> GetAchievementsByEventType(ScoringEventType eventType)
         {
-            // TODO: Optimize this if needed
+            // Is already a result in cache?
+            if (_scoringEventTypeToAchievementInfo.ContainsKey(eventType))
+                return _scoringEventTypeToAchievementInfo[eventType];
+
+            List<AchievementInfo> achievementInfosFound = new();
             foreach (AchievementInfo info in _achievementInfoMap.Values)
             {
                 if (info.EventType == eventType)
-                    yield return info;
+                    achievementInfosFound.Add(info);
             }
+            _scoringEventTypeToAchievementInfo[eventType] = achievementInfosFound;
+            return achievementInfosFound;
         }
 
         /// <summary>
