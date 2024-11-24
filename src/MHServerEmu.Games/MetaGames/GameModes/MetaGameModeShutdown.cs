@@ -48,7 +48,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             TeleportPlayersToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
 
             // TODO Shutdown Region event
-            Region.ToShutdown = true;
+            Region.RequestShutdown();
         }
 
         public class ShutdownEvent : CallMethodEvent<MetaGameModeShutdown>

@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
         private PropertyCollection _properties;
         private Curve _scoreLevelCurve;
         private Curve _scoreRankCurve;
-        public static int ScoreBoost = 1;
+        private int _scoreBoost;
 
         public MetaStateTrackRegionScore(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -30,6 +30,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             _scoreLevelCurve = GameDatabase.GetCurve(_proto.ScoreCurveForMobLevel);
             _scoreRankCurve = GameDatabase.GetCurve(_proto.ScoreCurveForMobRank);
+
+            _scoreBoost = 1;
+            if (_proto.ScoreThreshold == 30000) _scoreBoost = 3; // BoostFix for AgeOfUltronTrackRegionScore
         }
 
         public override void OnApply()
@@ -140,7 +143,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     }
                 }
 
-                score *= ScoreBoost;
+                score *= _scoreBoost;
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
             }
         }
@@ -204,7 +207,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 }
             }
 
-            score *= ScoreBoost;
+            score *= _scoreBoost;
             if (score > 0.0f) 
                 region.Properties.AdjustProperty(score, PropertyEnum.TrackedRegionScore);
         }

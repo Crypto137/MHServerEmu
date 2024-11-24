@@ -333,12 +333,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (flagsToAdjust.HasFlag(RestrictionTestFlags.Rank))
             {
-                adjustResultFlags |= RestrictionTestFlags.OutputLevel;
+                adjustResultFlags |= RestrictionTestFlags.OutputRank;
 
-                if (filterArgs.Level != Value)
+                if (filterArgs.Rank != Value)
                 {
-                    adjustResultFlags |= RestrictionTestFlags.Level;
-                    filterArgs.Level = Value;
+                    adjustResultFlags |= RestrictionTestFlags.Rank;
+                    filterArgs.Rank = Value;
                 }
             }
 

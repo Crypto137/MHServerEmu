@@ -13,7 +13,13 @@
         public DBPlayer(long dbGuid)
         {
             DbGuid = dbGuid;
-            StartTarget = unchecked((long)11334277059865941394);    // Regions/HUBRevamp/NPEAvengersTowerHubEntry.prototype
+            Reset();
+        }
+
+        public void Reset()
+        {
+            ArchiveData = Array.Empty<byte>();
+            StartTarget = unchecked((long)15338215617681369199);    // Regions/StoryRevamp/CH00Raft/TimesSquare/ConnectionTargets/TimesSquareTutorialStartTarget.prototype
             StartTargetRegionOverride = 0;
             AOIVolume = 3200;
         }

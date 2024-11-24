@@ -155,17 +155,12 @@ namespace MHServerEmu.Games.Missions
                 success &= Serializer.Transfer(archive, ref _failCurrentCount);
                 success &= Serializer.Transfer(archive, ref _failRequiredCount);
             }
-
-            // Save migration data
-            if (archive.IsReplication == false)
-                if (Mission.MissionManager.Owner is Player player)
-                {
-                    var key = (Mission.PrototypeDataRef, _prototypeIndex);
-                    player.PlayerConnection.MigrationData.MigrationObjectiveData(key, archive.IsPacking, ref _activeRegionId);
-                }
-
-            if (archive.IsReplication == false)
+            else
+            {
+                // Save extra data for server-side archives
+                success &= Serializer.Transfer(archive, ref _activeRegionId);
                 success &= SerializeConditions(archive);
+            }
 
             return success;
         }
@@ -173,27 +168,33 @@ namespace MHServerEmu.Games.Missions
         public bool SerializeConditions(Archive archive)
         {
             bool success = true;
-            var objetiveProto = Prototype;
+            var objectiveProto = Prototype;
+
+            // NOTE: We use Serialize() instead of Serializer.Transfer() here to skip packing size for every single condition
 
             switch (_objectiveState)
             {
                 case MissionObjectiveState.Available:
 
-                    if (MissionConditionList.CreateConditionList(ref _activateConditions, objetiveProto.ActivateConditions, Mission, this, false) == false)
+                    if (MissionConditionList.CreateConditionList(ref _activateConditions, objectiveProto.ActivateConditions, Mission, this, false) == false)
                         return false;
 
-                    if (_activateConditions != null) success &= Serializer.Transfer(archive, ref _activateConditions);
+                    if (_activateConditions != null)
+                        success &= _activateConditions.Serialize(archive);
 
                     break;
 
                 case MissionObjectiveState.Active:
 
-                    if (MissionConditionList.CreateConditionList(ref _successConditions, objetiveProto.SuccessConditions, Mission, this, false) == false
-                        || MissionConditionList.CreateConditionList(ref _failureConditions, objetiveProto.FailureConditions, Mission, this, false) == false)
+                    if (MissionConditionList.CreateConditionList(ref _successConditions, objectiveProto.SuccessConditions, Mission, this, false) == false
+                        || MissionConditionList.CreateConditionList(ref _failureConditions, objectiveProto.FailureConditions, Mission, this, false) == false)
                         return false;
 
-                    if (_successConditions != null) success &= Serializer.Transfer(archive, ref _successConditions);
-                    if (_failureConditions != null) success &= Serializer.Transfer(archive, ref _failureConditions);
+                    if (_successConditions != null)
+                        success &= _successConditions.Serialize(archive);
+
+                    if (_failureConditions != null)
+                        success &= _failureConditions.Serialize(archive);
 
                     break;
             }
@@ -448,7 +449,7 @@ namespace MHServerEmu.Games.Missions
                         evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, region.Properties);
                         if (region.MetaGames.Count > 0)
                         {
-                            ulong metaGemeId = region.MetaGames.First();
+                            ulong metaGemeId = region.MetaGames[0];
                             var metaGame = Game.EntityManager.GetEntity<Entity>(metaGemeId);
                             evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, metaGame);
                         }

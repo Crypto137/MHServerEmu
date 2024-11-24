@@ -81,6 +81,15 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn("FindStartLocation(): Teleport by EntityDbId is not yet implemented");
             }
 
+            // Get start target from match region
+            if (region.Prototype.Behavior == RegionBehavior.MatchPlay)
+            {
+                var player = PlayerConnection.Player;
+                var startTarget = region.GetStartTarget(player);
+                if (startTarget != PrototypeId.Invalid)
+                    SetTarget(startTarget);
+            }
+
             // Fall back to default start target for the region if we don't have one
             if (DestTargetProtoRef == PrototypeId.Invalid)
             {

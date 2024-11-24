@@ -19,8 +19,10 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -103,7 +105,9 @@ namespace MHServerEmu.Games.Entities
 
         private TeleportData _teleportData;
         private SpawnGimbal _spawnGimbal;
-        private bool _uiSystemUnlocked;
+        private bool _newPlayerUISystemsUnlocked;
+
+        public ArchiveVersion LastSerializedArchiveVersion { get; private set; } = ArchiveVersion.Current;    // Updated on serialization
 
         // Accessors
         public MissionManager MissionManager { get => _missionManager; }
@@ -206,13 +210,13 @@ namespace MHServerEmu.Games.Entities
             #region Hardcoded social tab easter eggs
             _community.AddMember(1, "DavidBrevik", CircleId.__Friends);
             _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(1).SetIsOnline(1)
-                .SetCurrentRegionRefId(12735255224807267622).SetCurrentDifficultyRefId((ulong)DifficultyTierPrototypeId.Normal)
+                .SetCurrentRegionRefId(12735255224807267622).SetCurrentDifficultyRefId(18016845980090109785)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(15769648016960461069).SetCostumeRefId(4881398219179434365).SetLevel(60).SetPrestigeLevel(6))
                 .Build());
 
             _community.AddMember(2, "TonyStark", CircleId.__Friends);
             _community.ReceiveMemberBroadcast(CommunityMemberBroadcast.CreateBuilder().SetMemberPlayerDbId(2).SetIsOnline(1)
-                .SetCurrentRegionRefId((ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion).SetCurrentDifficultyRefId((ulong)DifficultyTierPrototypeId.Normal)
+                .SetCurrentRegionRefId((ulong)RegionPrototypeId.NPEAvengersTowerHUBRegion).SetCurrentDifficultyRefId(18016845980090109785)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder().SetAvatarRefId(421791326977791218).SetCostumeRefId(7150542631074405762).SetLevel(60).SetPrestigeLevel(5))
                 .Build());
 
@@ -268,16 +272,35 @@ namespace MHServerEmu.Games.Entities
                 _gameplayOptions.ResetToDefaults();
         }
 
-        public void UnlockUISystem()
+        public void UnlockNewPlayerUISystems()
         {
-            if (_uiSystemUnlocked) return;
+            if (_newPlayerUISystemsUnlocked)
+                return;
+
             foreach (PrototypeId uiSystemLockRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
             {
                 var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
                 if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
                     Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
             }
-            _uiSystemUnlocked = true;
+
+            _newPlayerUISystemsUnlocked = true;
+        }
+
+        public void UpdateUISystemLocks()
+        {
+            foreach (PrototypeId uiSystemLockProtoRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)
+            {
+                UISystemLockPrototype uiSystemLockProto = uiSystemLockProtoRef.As<UISystemLockPrototype>();
+                if (uiSystemLockProto.UnlockLevel == -1)
+                    continue;
+
+                int currentState = Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef];
+                int maxAvatarLevel = Properties[PropertyEnum.PlayerMaxAvatarLevel];
+
+                if (currentState == 0 && maxAvatarLevel >= uiSystemLockProto.UnlockLevel)
+                    Properties[PropertyEnum.UISystemLock, uiSystemLockProtoRef] = 1;
+            }
         }
 
         public override void OnUnpackComplete(Archive archive)
@@ -322,12 +345,14 @@ namespace MHServerEmu.Games.Entities
 
         public override bool Serialize(Archive archive)
         {
+            LastSerializedArchiveVersion = archive.Version;
+
             bool success = base.Serialize(archive);
 
             if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
 
-            // Persistent missions
-            success &= Serializer.Transfer(archive, ref _missionManager);
+            if (archive.Version >= ArchiveVersion.AddedMissions)
+                success &= Serializer.Transfer(archive, ref _missionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
@@ -411,6 +436,8 @@ namespace MHServerEmu.Games.Entities
 
             // Enter game to become added to the AOI
             base.EnterGame(settings);
+
+            UpdateUISystemLocks();
         }
 
         public override void ExitGame()
@@ -1250,6 +1277,8 @@ namespace MHServerEmu.Games.Entities
             // Update max avatar level for things like mode unlocks
             if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
                 Properties[PropertyEnum.PlayerMaxAvatarLevel] = characterLevel;
+
+            UpdateUISystemLocks();
         }
 
         public bool CanUseLiveTuneBonuses()
@@ -1265,6 +1294,10 @@ namespace MHServerEmu.Games.Entities
             //return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
             return true;
         }
+
+        #endregion
+
+        #region Difficulty
 
         public bool CanChangeDifficulty(PrototypeId difficultyTierProtoRef)
         {
@@ -1286,6 +1319,21 @@ namespace MHServerEmu.Games.Entities
                 return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
 
             return GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+        }
+
+        public PrototypeId GetDifficultyTierForRegion(PrototypeId regionProtoRef, PrototypeId preferenceProtoRef = PrototypeId.Invalid)
+        {
+            if (preferenceProtoRef == PrototypeId.Invalid)
+                preferenceProtoRef = GetDifficultyTierPreference();
+
+            PrototypeId difficultyTierProtoRef = RegionPrototype.ConstrainDifficulty(regionProtoRef, preferenceProtoRef);
+            if (difficultyTierProtoRef == preferenceProtoRef)
+                return preferenceProtoRef;
+
+            if (CanChangeDifficulty(difficultyTierProtoRef))
+                return difficultyTierProtoRef;
+
+            return PrototypeId.Invalid;
         }
 
         #endregion
@@ -2165,6 +2213,39 @@ namespace MHServerEmu.Games.Entities
 
             Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
             Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
+            return true;
+        }
+
+        public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)
+        {
+            if (amount <= 0)
+                return true;
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "AwardBonusItemFindPoints(): avatar == null");
+
+            int bonusItemFindRating = avatar.Properties[PropertyEnum.BonusItemFindRating];
+            if (bonusItemFindRating <= 0)
+                return true;
+
+            LootGlobalsPrototype lootGlobalsProto = GameDatabase.LootGlobalsPrototype;
+            Curve bonusItemFindCurve = GameDatabase.LootGlobalsPrototype.BonusItemFindCurve.AsCurve();
+            if (bonusItemFindCurve == null) return Logger.WarnReturn(false, "AwardBonusItemFindPoints(): bonusItemFindCurve == null");
+
+            amount = (int)(amount * bonusItemFindCurve.GetAt(bonusItemFindRating));
+            if (amount <= 0)
+                return true;
+
+            Logger.Debug($"AwardBonusItemFindPoints(): amount={amount} to [{this}]");
+
+            int points = Properties[PropertyEnum.BonusItemFindPoints] + amount;
+            if (points >= lootGlobalsProto.BonusItemFindNumPointsForBonus)
+            {
+                Game.LootManager.GiveLootFromTable(lootGlobalsProto.BonusItemFindLootTable, settings);
+                points -= lootGlobalsProto.BonusItemFindNumPointsForBonus;
+            }
+
+            Properties[PropertyEnum.BonusItemFindPoints] = points;
             return true;
         }
 

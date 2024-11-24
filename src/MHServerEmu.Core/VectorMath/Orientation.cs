@@ -24,6 +24,7 @@ namespace MHServerEmu.Core.VectorMath
         }
 
         public static Orientation Zero { get; } = new(0.0f, 0.0f, 0.0f);
+        public static Orientation Player { get; } = new(-2.356194f, 0f, 0f);
 
         public float this[int index]
         {

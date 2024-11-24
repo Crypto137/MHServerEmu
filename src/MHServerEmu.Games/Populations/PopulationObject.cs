@@ -83,7 +83,8 @@ namespace MHServerEmu.Games.Populations
                 else return false;
             }
 
-            bool success = spawnTarget.PlaceClusterGroup(clusterGroup);
+            bool success = spawnTarget.TryPlaceClusterGroup(clusterGroup);
+
             if (success)
             {
                 SpawnGroupId = clusterGroup.Spawn(null, Spawner, SpawnHeat, entities);
@@ -197,6 +198,25 @@ namespace MHServerEmu.Games.Populations
             Region = region;
         }
 
+        public bool TryPlaceClusterGroup(ClusterGroup clusterGroup)
+        {
+            bool success = PlaceClusterGroup(clusterGroup);
+
+            if (success == false && clusterGroup.SpawnFlags.HasFlag(SpawnFlags.IgnoreBlackout) == false && clusterGroup.SpawnFlags.HasFlag(SpawnFlags.RetryIgnoringBlackout))
+            {
+                clusterGroup.SpawnFlags |= SpawnFlags.IgnoreBlackout;
+                success = PlaceClusterGroup(clusterGroup);
+            }
+
+            if (success == false && Type == SpawnTargetType.Spawner && clusterGroup.SpawnFlags.HasFlag(SpawnFlags.RetryForce))
+            {
+                clusterGroup.SetParentRelative(Location.Position, Location.Orientation);
+                success = true;
+            }
+
+            return success;
+        }
+
         public bool PlaceClusterGroup(ClusterGroup clusterGroup)
         {
             bool success = false;
@@ -204,9 +224,9 @@ namespace MHServerEmu.Games.Populations
             {
                 case SpawnTargetType.Marker:
                     clusterGroup.Reservation = Reservation;
-                    clusterGroup.SetParentRelativePosition(Reservation.GetRegionPosition());
-                    clusterGroup.SetParentRelativeOrientation(Reservation.MarkerRot); // can be random?
-                    clusterGroup.TestLayout();
+                    Vector3 position = Reservation.GetRegionPosition();
+                    Orientation orientation = clusterGroup.ObjectProto.UseMarkerOrientation ? Reservation.MarkerRot : Orientation.Player;
+                    clusterGroup.SetParentRelative(position, orientation);
                     success = true;
                     break;
 
@@ -215,19 +235,13 @@ namespace MHServerEmu.Games.Populations
                     break;
 
                 case SpawnTargetType.Position:
-                    success = clusterGroup.PickPositionInSector(Position, Orientation.Zero, 0, SpawnMap.Resolution);
+                    success = clusterGroup.PickPositionInSector(Position, Orientation.Player, 0, SpawnMap.Resolution);
                     break;
 
                 case SpawnTargetType.Spawner:
-                    Vector3 pos = Location.Position;
-                    Orientation rot = Location.Orientation;
-
-                    success = clusterGroup.PickPositionInSector(pos, rot, SpawnerProto.SpawnDistanceMin, SpawnerProto.SpawnDistanceMax);
-                    if (success == false && SpawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
-                    {
-                        clusterGroup.SetParentRelativePosition(pos);
-                        success = true;
-                    }
+                    position = Location.Position;
+                    orientation = Location.Orientation;
+                    success = clusterGroup.PickPositionInSector(position, orientation, SpawnerProto.SpawnDistanceMin, SpawnerProto.SpawnDistanceMax, SpawnerProto.SpawnFacing);
                     break;
             }
 

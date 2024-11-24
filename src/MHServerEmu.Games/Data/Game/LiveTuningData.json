@@ -138,5 +138,15 @@
     "Prototype": "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/Anniversary/BirthdayCakeSlice2016.prototype",
     "Setting": "eWETV_Enabled",
     "Value": 0
+  },
+  {
+    "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/LivingLaserSweepBeam.prototype",
+    "Setting": "ePTV_PowerEnabled",
+    "Value": 0
+  },
+  {
+    "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/BigLaser.prototype",
+    "Setting": "ePTV_PowerEnabled",
+    "Value": 0
   }
 ]

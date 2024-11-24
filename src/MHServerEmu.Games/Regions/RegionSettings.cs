@@ -74,6 +74,11 @@ namespace MHServerEmu.Games.Regions
             PlayerGuidParty = 0;
         }
 
+        public override string ToString()
+        {
+            return $"{RegionDataRef.GetNameFormatted()} (Level={Level} Difficulty={DifficultyTierRef.GetNameFormatted()})";
+        }
+
         public void FromRegion(Region region)
         {
             var settings = region.Settings;
@@ -87,7 +92,7 @@ namespace MHServerEmu.Games.Regions
             Seed = settings.Seed;
         }
 
-        public void Reset()
+        public void ResetEndless()
         {
             Seed = 0;
             EndlessLevel = 0;

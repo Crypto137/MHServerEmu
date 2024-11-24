@@ -68,7 +68,7 @@ namespace MHServerEmu.Commands.Implementations
                     continue;
                 }
 
-                regionManager.DestroyRegion(region.Id);
+                region.RequestShutdown();
                 playerConnection.WorldView.RemoveRegion(kvp.Key);
                 numReset++;
             }

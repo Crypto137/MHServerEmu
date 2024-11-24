@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -16,6 +17,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
@@ -69,6 +71,8 @@ namespace MHServerEmu.Games.Regions
 
         private readonly HashSet<ulong> _discoveredEntities = new();
 
+        private readonly HashSet<ulong> _players = new();
+
         private Area _startArea;
         private RegionStatus _statusFlag;
         private int _playerDeaths;
@@ -100,6 +104,8 @@ namespace MHServerEmu.Games.Regions
 
         public TimeSpan CreatedTime { get; private set; }
         public TimeSpan LastVisitedTime { get; private set; }
+        public bool ShutdownRequested { get; private set; }
+        public int PlayerCount { get => _players.Count; }
 
         public Dictionary<uint, Area> Areas { get; } = new();
         public IEnumerable<Cell> Cells { get => IterateCellsInVolume(Aabb); }
@@ -126,7 +132,6 @@ namespace MHServerEmu.Games.Regions
         public EntityTracker EntityTracker { get; private set; }
         public TuningTable TuningTable { get; private set; }    // Difficulty table
         public bool IsFirstLoaded { get; private set; }
-        public bool ToShutdown { get; set; }
         public int PlayerDeaths { get => _playerDeaths; set => SetPlayerDeaths(value); }
 
         public float LowResMapResolution { get; private set; }
@@ -505,6 +510,16 @@ namespace MHServerEmu.Games.Regions
             MissionManager.Deallocate();
             UIDataProvider.Deallocate();
             Properties.Unbind();
+        }
+
+        public void RequestShutdown()
+        {
+            if (ShutdownRequested)
+                return;
+
+            Game.RegionManager.RequestRegionShutdown(Id);
+            ShutdownRequested = true;
+            Logger.Trace($"Shutdown requested for region [{this}]");
         }
 
         public bool Serialize(Archive archive)
@@ -1492,6 +1507,10 @@ namespace MHServerEmu.Games.Regions
 
                 player.DiscoverEntity(discoveredEntity, true);
             }
+
+            // Track this player
+            if (_players.Add(player.Id) == false)
+                Logger.Warn($"OnAddedToAOI(): Failed to add player id {player.Id}");
         }
 
         public void OnRemovedFromAOI(Player player)
@@ -1520,6 +1539,10 @@ namespace MHServerEmu.Games.Regions
 
             // Destroy player Missions
             player.MissionManager.Shutdown(this);
+
+            // Untrack this player
+            if (_players.Remove(player.Id) == false)
+                Logger.Warn($"OnRemovedFromAOI(): Failed to remove player id {player.Id}");
         }
 
         public void OnLoadingFinished()
@@ -1559,6 +1582,13 @@ namespace MHServerEmu.Games.Regions
             _avatarOnKilledInfo = avatarOnKilledInfo == PrototypeId.Invalid
                 ? GameDatabase.GlobalsPrototype.ResurrectionDefaultInfo
                 : avatarOnKilledInfo;
+        }
+
+        public int GetBonusItemFindMultiplier()
+        {
+            int difficultyMult = Properties[PropertyEnum.BonusItemFindBonusDifficultyMult];
+            int liveTuningMult = (int)LiveTuningManager.GetLiveRegionTuningVar(Prototype, RegionTuningVar.eRT_BonusItemFindMultiplier);
+            return Prototype.BonusItemFindMultiplier * difficultyMult * liveTuningMult;
         }
 
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)

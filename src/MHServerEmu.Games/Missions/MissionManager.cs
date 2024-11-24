@@ -473,7 +473,7 @@ namespace MHServerEmu.Games.Missions
 
             PrototypeId pickedMissionRef = PickAdvancedMissionForCategory(categoryProto, blacklist);
 
-            if (pickedMissionRef == PrototypeId.Invalid)
+            if (pickedMissionRef == PrototypeId.Invalid && blacklist != null)
             {
                 while (blacklist.Count > 0)
                 {
@@ -1068,14 +1068,34 @@ namespace MHServerEmu.Games.Missions
             ulong numMissions = (ulong)_missionDict.Count;
             success &= Serializer.Transfer(archive, ref numMissions);
 
+            // NOTE: Missions need to be packed with Serializer.Transfer() and NOT mission.Serialize()
+            // for us to be able to skip invalid / deprecated / disabled missions.
+
             if (archive.IsPacking)
             {
                 foreach (var kvp in _missionDict)
                 {
+                    Mission mission = kvp.Value;
+
                     ulong guid = (ulong)GameDatabase.GetPrototypeGuid(kvp.Key);
                     success &= Serializer.Transfer(archive, ref guid);
 
-                    Mission mission = kvp.Value;
+                    if (archive.IsPersistent)
+                    {
+                        // Additional to check if a mission changed, and reset it if it did
+                        MissionPrototype missionProto = mission.Prototype;
+                        int version = missionProto != null ? missionProto.Version : 0;
+                        success &= Serializer.Transfer(archive, ref version);
+
+                        uint missionState = (uint)mission.State;
+                        success &= Serializer.Transfer(archive, ref missionState);
+
+                        // NOTE: In the client there is additional metadata written here that can
+                        // be used to transfer mission progress when the mission's prototype changes.
+                        // Because our mission data is going to remain unchanged for the foreseeable
+                        // future, we are not going to implement this right now.
+                    }
+
                     success &= Serializer.Transfer(archive, ref mission);
                 }
 
@@ -1099,18 +1119,52 @@ namespace MHServerEmu.Games.Missions
 
                     PrototypeId missionRef = GameDatabase.GetDataRefByPrototypeGuid((PrototypeGuid)guid);
                     var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-                    // if (ShouldCreateMission(missionProto))
-                    {
-                        Mission mission = CreateMission(missionRef);
-                        success &= Serializer.Transfer(archive, ref mission);
-                        if (ShouldCreateMission(missionProto)) // REMOVEME
-                            InsertMission(mission);
-                        else mission.Destroy(); // REMOVEME
 
-                        if (archive.IsReplication == false)
-                            mission.SetCreationState(MissionCreationState.Loaded);
+                    // NOTE: Add filters to ShouldCreateMission() as needed.
+                    bool shouldCreateMission = ShouldCreateMission(missionProto);
+                    bool versionMismatch = false;
+
+                    int version = 0;
+                    uint missionState = (uint)MissionState.Inactive;
+
+                    if (archive.IsPersistent)
+                    {
+                        success &= Serializer.Transfer(archive, ref version);
+                        versionMismatch = success && shouldCreateMission && version != missionProto.Version;
+
+                        success &= Serializer.Transfer(archive, ref missionState);
                     }
-                    // else archive.Skip(); // TODO add Archive.Skip
+
+                    // Missions never change in transfer, so they are skipped only in persistent archives
+                    if (archive.IsTransient || shouldCreateMission)
+                    {
+                        if (archive.IsPersistent && versionMismatch)
+                        {
+                            // Reset the mission if its version has changed
+                            if (CreateMissionByDataRef(missionRef, MissionCreationState.Reset, (MissionState)missionState) == null)
+                                Logger.Warn($"SerializeMissions(): Failed to reset version mismatched mission {missionRef.GetName()}");
+
+                            archive.Skip();
+
+                            // TODO: Mission CRC checks and progress transfer
+                        }
+                        else
+                        {
+                            // Restore the mission if nothing is wrong with it
+                            Mission mission = CreateMission(missionRef);
+                            success &= Serializer.Transfer(archive, ref mission);
+
+                            InsertMission(mission);
+
+                            if (archive.IsReplication == false)
+                                mission.SetCreationState(MissionCreationState.Loaded);
+                        }
+                    }
+                    else
+                    {
+                        // Skip missions that are no longer valid
+                        archive.Skip();
+                    }
                 }
 
                 int numBlacklistCategories = 0;
@@ -1321,7 +1375,6 @@ namespace MHServerEmu.Games.Missions
             player.SetActiveChapter(PrototypeId.Invalid);
 
             // Save suspend state and reset mission state
-            player.PlayerConnection.MigrationData.ResetObjective();
             foreach(var mission in _missionDict.Values)
                 if (mission.Prototype.SaveStatePerAvatar)
                 {

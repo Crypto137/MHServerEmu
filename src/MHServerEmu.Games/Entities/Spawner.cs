@@ -178,10 +178,13 @@ namespace MHServerEmu.Games.Entities
             var populationManager = Region.PopulationManager;
             var spawnerProto = SpawnerPrototype;
 
-            SpawnFlags spawnFlags = SpawnFlags.None;
-            if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout)
-                || spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
-                spawnFlags |= SpawnFlags.IgnoreBlackout;
+            SpawnFlags spawnFlags = SpawnFlags.IgnoreSpawned;
+
+            if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryIgnoringBlackout))
+                spawnFlags |= SpawnFlags.RetryIgnoringBlackout;
+
+            if (spawnerProto.SpawnFailBehavior.HasFlag(SpawnFailBehavior.RetryForce))
+                spawnFlags |= SpawnFlags.RetryForce | SpawnFlags.RetryIgnoringBlackout;
 
             if (spawnerProto.OnDestroyCleanupSpawnedEntities == false)
                 properties[PropertyEnum.DetachOnContainerDestroyed] = true;
