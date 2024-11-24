@@ -61,6 +61,27 @@ namespace MHServerEmu.Games.Achievements
                 return Logger.WarnReturn(false, $"Initialize(): Achievement info map deserialization failed - {e.Message}");
             }
 
+            // Load achievement contexts map
+            string achievementContextMapPath = Path.Combine(AchievementsDirectory, "AchievementContextMap.json");
+            if (File.Exists(achievementContextMapPath) == false)
+                return Logger.WarnReturn(false, $"Initialize(): Achievement context map not found at {achievementContextMapPath}");
+
+            string achievementContextMapJson = File.ReadAllText(achievementContextMapPath);
+
+            try
+            {
+                JsonSerializerOptions options = new();
+                var contexts = JsonSerializer.Deserialize<IEnumerable<AchievementContext>>(achievementContextMapJson, options);
+
+                foreach (AchievementContext context in contexts)
+                    if (_achievementInfoMap.TryGetValue(context.Id, out var info))
+                        info.SetContext(context);
+            }
+            catch (Exception e)
+            {
+                return Logger.WarnReturn(false, $"Initialize(): Achievement context map deserialization failed - {e.Message}");
+            }
+
             // Load string buffer
             string stringBufferPath = Path.Combine(AchievementsDirectory, "eng.achievements.string");
             if (File.Exists(stringBufferPath) == false)

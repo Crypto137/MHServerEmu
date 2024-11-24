@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Achievements
 
         private bool FilterPlayerContext(AchievementInfo info)
         {
-            return info.ScoringEventContext.FilterContext(Owner.ScoringEventContext);
+            return info.EventContext.FilterContext(Owner.ScoringEventContext);
         }
 
         private void UpdateAchievement(AchievementInfo info, int count, bool showPopups = true, bool fromEvent = false, ActiveAchievement active = null)
@@ -183,7 +183,7 @@ namespace MHServerEmu.Games.Achievements
 
             if (changes)
             {
-                if (info.RewardProto != null)
+                if (info.RewardPrototype != null)
                 {
                     ScheduleRewardEvent(info);
                 }

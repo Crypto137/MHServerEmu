@@ -73,12 +73,12 @@ namespace MHServerEmu.Games.Events
 
     public struct ScoringEventData
     {
-        public Prototype Proto0 { get; }
-        public Prototype Proto1 { get; }
-        public Prototype Proto2 { get; }
-        public bool Proto0IncludeChildren { get; }
-        public bool Proto1IncludeChildren { get; }
-        public bool Proto2IncludeChildren { get; }
+        public Prototype Proto0 { get; set; }
+        public Prototype Proto1 { get; set; }
+        public Prototype Proto2 { get; set; }
+        public bool Proto0IncludeChildren { get; set; }
+        public bool Proto1IncludeChildren { get; set; }
+        public bool Proto2IncludeChildren { get; set; }
     }
 
     public readonly struct ScoringEvent
@@ -173,7 +173,6 @@ namespace MHServerEmu.Games.Events
             DifficultyTierMax = prototype.ContextDifficultyTierMax != PrototypeId.Invalid ? prototype.ContextDifficultyTierMax.As<Prototype>() : null;
             TeamUp = prototype.ContextTeamUp != PrototypeId.Invalid ? prototype.ContextTeamUp.As<Prototype>() : null;
             PublicEventTeam = prototype.ContextPublicEventTeam != PrototypeId.Invalid ? prototype.ContextPublicEventTeam.As<Prototype>() : null;
-
         }
 
         public void FromPlayer(Player player)

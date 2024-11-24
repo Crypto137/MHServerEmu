@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -44,6 +45,7 @@ namespace MHServerEmu.Games.Achievements
 
     public class AchievementInfo
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public uint Id { get; set; }
         public bool Enabled { get; set; }
         public uint ParentId { get; set; }
@@ -51,7 +53,6 @@ namespace MHServerEmu.Games.Achievements
         public LocaleStringId InProgressStr { get; set; }
         public LocaleStringId CompletedStr { get; set; }
         public LocaleStringId RewardStr { get; set; }
-        public Prototype RewardProto { get; set; }
         public AssetId IconPathAssetId { get; set; }
         public uint Score { get; set; }
         public LocaleStringId CategoryStr { get; set; }
@@ -68,9 +69,15 @@ namespace MHServerEmu.Games.Achievements
         public bool OrbisTrophy { get; set; } = false;
         public int OrbisTrophyId { get; set; } = -1;
         public bool OrbisTrophyShared { get; set; } = false;
+
+        [JsonIgnore]
+        public Prototype RewardPrototype { get; set; }
+        [JsonIgnore]
         public bool IsTopLevelAchievement { get => VisibleState == AchievementVisibleState.Visible || VisibleState == AchievementVisibleState.ParentComplete; }
+        [JsonIgnore]
         public ScoringEventData EventData { get; set; }
-        public ScoringEventContext ScoringEventContext { get; set; }
+        [JsonIgnore]
+        public ScoringEventContext EventContext { get; set; }
 
         [JsonIgnore]
         public AchievementInfo Parent { get; set; }
@@ -105,6 +112,15 @@ namespace MHServerEmu.Games.Achievements
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;
             OrbisTrophyShared = info.OrbisTrophyShared;
+        }
+
+        public bool SetContext(AchievementContext context)
+        {
+            if (EventType != context.EventType) return Logger.WarnReturn(false, $"SetContext [{context.Id}] {EventType} != {context.EventType}");
+            RewardPrototype = AchievementContext.GetPrototype(context.RewardPrototype);
+            EventData = context.GetScoringEventData();
+            EventContext = context.GetScoringEventContext();
+            return true;
         }
 
         public static AchievementVisibleState GetAchievementVisibleStateFromInt(uint state)
