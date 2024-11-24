@@ -8,7 +8,7 @@ namespace MHServerEmu.Core.Collections
         public const int Invalid = -1;
         private const int BitsPerWord = 8 * sizeof(ulong); // bits in ulong
 
-        protected ulong[] _bits; // ulong array of words
+        protected ulong[] _bits = Array.Empty<ulong>(); // ulong array of words
         private int _size; // size in words
 
         public int Size => _size * BitsPerWord;
@@ -34,7 +34,6 @@ namespace MHServerEmu.Core.Collections
                 uint size = (uint)Size;
                 success &= archive.Transfer(ref size);
 
-                byte[] byteArray = new byte[Bytes];
                 Span<byte> buffer = MemoryMarshal.Cast<ulong, byte>(_bits);
                 success &= archive.WriteBytes(buffer);
             }
@@ -129,7 +128,7 @@ namespace MHServerEmu.Core.Collections
 
         private void Free()
         {
-            _bits = null;
+            _bits = Array.Empty<ulong>();
             _size = 0;
         }
 
