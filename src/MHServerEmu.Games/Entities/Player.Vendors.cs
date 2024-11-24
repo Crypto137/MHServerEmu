@@ -58,6 +58,7 @@ namespace MHServerEmu.Games.Entities
         private const int VendorInvalidXP = -1;
 
         private readonly HashSet<PrototypeId> _initializedVendorProtoRefs = new();
+        private readonly Dictionary<PrototypeId, VendorPurchaseData> _vendorPurchaseDataDict = new();
 
         public void InitializeVendorInventory(PrototypeId inventoryProtoRef)
         {
@@ -82,12 +83,8 @@ namespace MHServerEmu.Games.Entities
 
         public bool BuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId, uint inventorySlot)
         {
-            Logger.Debug($"BuyItemFromVendor(): avatarIndex={avatarIndex}, itemId={itemId}, vendorId={vendorId}, inventorySlot={inventorySlot}");
-
             if (CanBuyItemFromVendor(avatarIndex, itemId, vendorId) != VendorResult.BuySuccess)
                 return false;
-
-            Logger.Debug("BuyItemFromVendor(): CanBuyItemFromVendor = true");
 
             return true;
         }
@@ -368,6 +365,41 @@ namespace MHServerEmu.Games.Entities
 
             Properties[PropertyEnum.VendorRollTableLevel, vendorTypeProtoRef] = tableLevel;
 
+            // Reset purchase data, since it's no longer valid with new roll properties
+            ClearVendorPurchaseData(vendorTypeProto);
+
+            return true;
+        }
+        
+        private VendorPurchaseData GetVendorPurchaseData(PrototypeId inventoryProtoRef, bool createNewData)
+        {
+            if (_vendorPurchaseDataDict.TryGetValue(inventoryProtoRef, out VendorPurchaseData purchaseData) == false && createNewData)
+            {
+                purchaseData = new(inventoryProtoRef);
+                _vendorPurchaseDataDict.Add(inventoryProtoRef, purchaseData);
+            }
+
+            return purchaseData;
+        }
+
+        private bool ClearVendorPurchaseData(VendorTypePrototype vendorTypeProto)
+        {
+            if (vendorTypeProto == null) return Logger.WarnReturn(false, "ClearVendorPurchaseData(): vendorTypeProto == null");
+
+            // Crafters do not have purchase data
+            if (vendorTypeProto.IsCrafter)
+                return true;
+
+            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Rent();
+            vendorTypeProto.GetInventories(inventoryList);
+
+            foreach (PrototypeId inventoryProtoRef in _initializedVendorProtoRefs)
+            {
+                VendorPurchaseData purchaseData = GetVendorPurchaseData(inventoryProtoRef, true);
+                purchaseData.Clear();
+            }
+
+            ListPool<PrototypeId>.Instance.Return(inventoryList);
             return true;
         }
 
@@ -401,12 +433,12 @@ namespace MHServerEmu.Games.Entities
             if (isInitializing && _initializedVendorProtoRefs.Add(vendorTypeProtoRef) == false)
                 return true;
 
-            Logger.Debug($"RollVendorInventory(): {vendorTypeProto}");
+            Logger.Trace($"RollVendorInventory(): {vendorTypeProto}");
 
-            // Early return if there are no inventories to roll (TODO: pooling? This doesn't happen that frequently I think)
-            List<PrototypeId> inventoryList = new();
+            // Early return if there are no inventories to roll
+            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Rent();
             if (vendorTypeProto.GetInventories(inventoryList) == false)
-                return true;
+                goto end;
 
             // Get roll settings from properties
             int rollSeed = Properties[PropertyEnum.VendorRollSeed, vendorTypeProtoRef];
@@ -425,6 +457,15 @@ namespace MHServerEmu.Games.Entities
                 {
                     Logger.Warn("RollVendorInventory(): inventory == null");
                     continue;
+                }
+
+                // Find the purchase data for it to filter out items that have already been bought before
+                VendorPurchaseData purchaseData = GetVendorPurchaseData(inventoryProtoRef, false);
+                if (purchaseData == null && vendorTypeProto.IsCrafter == false)
+                {
+                    // This should have already been initialized for non-crafter vendors
+                    Logger.Warn("RollVendorInventory(): purchaseData == null");
+                    purchaseData = GetVendorPurchaseData(inventoryProtoRef, true);
                 }
 
                 // Destroy whatever was in it
@@ -490,9 +531,31 @@ namespace MHServerEmu.Games.Entities
                         continue;
                     }
 
-                    foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
+                    // Initialize purchase data for the roll (this will do nothing if we are restoring old purchases)
+                    purchaseData?.Initialize((uint)lootResultSummary.ItemSpecs.Count);
+
+                    for (int i = 0; i < lootResultSummary.ItemSpecs.Count; i++)
                     {
+                        ItemSpec itemSpec = lootResultSummary.ItemSpecs[i];
+                        uint slot = (uint)i;
+
                         Logger.Trace($"RollVendorInventory(): {itemSpec.ItemProtoRef.GetName()}");
+
+                        if (inventory.IsSlotFree(slot) == false)
+                        {
+                            Logger.Warn("RollVendorInventory(): inventory.IsSlotFree(slot) == false");
+                            continue;
+                        }
+
+                        // Skip purchased items
+                        if (purchaseData?.HasItemBeenPurchased(slot) == true)
+                            continue;
+
+                        // Skip owned stash tokens
+                        InventoryStashTokenPrototype stashTokenProto = itemSpec.ItemProtoRef.As<InventoryStashTokenPrototype>();
+                        if (stashTokenProto != null && stashTokenProto.Inventory != PrototypeId.Invalid && IsInventoryUnlocked(stashTokenProto.Inventory))
+                            continue;
+
                         using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
                         entitySettings.EntityRef = itemSpec.ItemProtoRef;
                         entitySettings.ItemSpec = itemSpec;
@@ -507,7 +570,7 @@ namespace MHServerEmu.Games.Entities
                             continue;
                         }
 
-                        InventoryResult inventoryResult = item.ChangeInventoryLocation(inventory);
+                        InventoryResult inventoryResult = item.ChangeInventoryLocation(inventory, slot);
                         if (inventoryResult != InventoryResult.Success)
                         {
                             Logger.Warn($"RollVendorInventory(): Failed to put item {item} into inventory {inventory} for reason {inventoryResult}");
@@ -516,10 +579,16 @@ namespace MHServerEmu.Games.Entities
                         }
 
                         item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
+
+                        // TODO: Initialize crafting recipe
+                        if (vendorTypeProto.IsCrafter)
+                        {
+
+                        }
                     }
                 }
 
-                // TODO: Populate crafter tabs
+                // TODO: Add learned crafting recipes
                 if (vendorTypeProto.IsCrafter && vendorTypeProto.CraftingRecipeCategories.HasValue())
                 {
 
@@ -532,6 +601,8 @@ namespace MHServerEmu.Games.Entities
             if (isInitializing == false)
                 SendMessage(NetMessageVendorRefresh.CreateBuilder().SetVendorTypeProtoId((ulong)vendorTypeProtoRef).Build());
 
+            end:
+            ListPool<PrototypeId>.Instance.Return(inventoryList);
             return true;
         }
 
