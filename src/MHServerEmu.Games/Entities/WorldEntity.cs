@@ -1280,6 +1280,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool UpdateProcEffectPowers(PropertyCollection properties, bool assignPowers)
+        {
+            return true;
+        }
+
         public bool ApplyPowerResults(PowerResults powerResults)
         {
             // Send power results to clients

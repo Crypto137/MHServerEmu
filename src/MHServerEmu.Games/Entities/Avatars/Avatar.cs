@@ -1108,6 +1108,21 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             long awardedAmount = base.AwardXP(amount, showXPAwardedText);
 
+            // Award XP to the equipped legendary item if there is one
+            Inventory legendaryInventory = GetInventory(InventoryConvenienceLabel.AvatarLegendary);
+            if (legendaryInventory != null)
+            {
+                ulong legendaryItemId = legendaryInventory.GetEntityInSlot(0);
+                if (legendaryItemId != InvalidId)
+                {
+                    Item legendaryItem = Game.EntityManager.GetEntity<Item>(legendaryItemId);
+                    if (legendaryItem != null)
+                        legendaryItem.AwardAffixXP(amount);
+                    else
+                        Logger.Warn("AwardXP(): legendaryItem == null");
+                }
+            }
+
             // Award XP to the current team-up as well if there is one
             CurrentTeamUpAgent?.AwardXP(amount, showXPAwardedText);
 

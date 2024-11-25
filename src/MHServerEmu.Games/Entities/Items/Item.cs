@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -14,6 +15,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -81,7 +83,13 @@ namespace MHServerEmu.Games.Entities.Items
 
             // Apply ItemSpec if one was provided with entity settings
             if (settings.ItemSpec != null)
+            {
                 ApplyItemSpec(settings.ItemSpec);
+
+                // Initialize experience requiremenet for legendary items
+                if (Prototype is LegendaryPrototype)
+                    Properties[PropertyEnum.ExperiencePointsNeeded] = GetAffixLevelUpXPRequirement(0);
+            }
 
             if (Prototype is RelicPrototype)
                 RunRelicEval();
@@ -94,9 +102,14 @@ namespace MHServerEmu.Games.Entities.Items
             if (base.ApplyInitialReplicationState(ref settings) == false)
                 return false;
 
-            // Serialized entities get their ItemSpec from serialized data rather than as a settings field
             if (settings.ArchiveData != null)
+            {
+                // Serialized entities get their ItemSpec from serialized data rather than as a settings field
                 ApplyItemSpec(ItemSpec);
+
+                // Restore affix level from XP for legendary items
+                TryLevelUpAffix(true);
+            }
 
             return true;
         }
@@ -629,6 +642,144 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             return true;
+        }
+
+        public int GetAffixLevelCap()
+        {
+            return GameDatabase.AdvancementGlobalsPrototype.GetItemAffixLevelCap();
+        }
+
+        public void AwardAffixXP(long amount)
+        {
+            if (Properties[PropertyEnum.ItemAffixLevel] >= GetAffixLevelCap())
+                return;
+
+            Properties.AdjustProperty((int)amount, PropertyEnum.ExperiencePoints);
+            TryLevelUpAffix(false);
+        }
+
+        private long GetAffixLevelUpXPRequirement(int level)
+        {
+            return GameDatabase.AdvancementGlobalsPrototype.GetItemAffixLevelUpXPRequirement(level);
+        }
+
+        private bool TryLevelUpAffix(bool isDeserializing)
+        {
+            if (Prototype is not LegendaryPrototype)
+                return false;
+
+            int affixLevelCap = GetAffixLevelCap();
+
+            int oldAffixLevel = Properties[PropertyEnum.ItemAffixLevel];
+            long experiencePoints = Properties[PropertyEnum.ExperiencePoints];
+            long experiencePointsNeeded = Properties[PropertyEnum.ExperiencePointsNeeded];
+
+            // Validate loaded experience numbers if we are deserializing
+            if (isDeserializing)
+            {
+                long affixLevelUpXPRequirement = GetAffixLevelUpXPRequirement(oldAffixLevel);
+                if (affixLevelUpXPRequirement != experiencePointsNeeded)
+                {
+                    // Rescale experience for the current cap
+                    double ratio = (double)experiencePoints / experiencePointsNeeded;
+                    experiencePoints = (long)(affixLevelUpXPRequirement * ratio);
+                    experiencePointsNeeded = affixLevelUpXPRequirement;
+
+                    Properties[PropertyEnum.ExperiencePoints] = experiencePoints;
+                    Properties[PropertyEnum.ExperiencePointsNeeded] = experiencePointsNeeded;
+                }
+                else if (oldAffixLevel == affixLevelCap && experiencePoints > 0)
+                {
+                    // Capped legendaries should not have any experience
+                    experiencePoints = 0;
+                    Properties[PropertyEnum.ExperiencePoints] = 0;
+                }
+            }
+
+            // Level up
+            int newAffixLevel = oldAffixLevel;
+            while (newAffixLevel < affixLevelCap && experiencePoints >= experiencePointsNeeded)
+            {
+                experiencePoints -= experiencePointsNeeded;
+                experiencePointsNeeded = GetAffixLevelUpXPRequirement(++newAffixLevel);
+
+                // Check for infinite loops with bad data
+                if (experiencePointsNeeded <= 0)
+                {
+                    Logger.Warn("TryLevelUpAffix(): experiencePointsNeeded <= 0");
+                    break;
+                }
+            }
+
+            // Remove overcapped experience
+            if (newAffixLevel == affixLevelCap)
+                experiencePoints = 0;
+
+            // Update properties
+            if (newAffixLevel != oldAffixLevel)
+            {
+                Properties[PropertyEnum.ItemAffixLevel] = newAffixLevel;
+                Properties[PropertyEnum.ExperiencePoints] = experiencePoints;
+                Properties[PropertyEnum.ExperiencePointsNeeded] = experiencePointsNeeded;
+
+                if (isDeserializing == false)
+                    AwardLevelUpAffixes(oldAffixLevel, newAffixLevel);
+            }
+
+            if (isDeserializing || oldAffixLevel != newAffixLevel)
+            {
+                OnAffixLevelUp();
+                return true;
+            }
+
+            return false;
+        }
+
+        private void AwardLevelUpAffixes(int oldAffixLevel, int newAffixLevel)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("AwardLevelUpAffixes(): copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.LevelRequirement > oldAffixLevel && copyEntry.LevelRequirement <= newAffixLevel)
+                {
+                    // Attach affix properties if we now match the level requirement
+                    WorldEntity owner = GetOwnerOfType<WorldEntity>();
+                    if (owner != null && IsEquipped)
+                    {
+                        if (owner.UpdateProcEffectPowers(copyEntry.Properties, true) == false)
+                            Logger.Warn($"AwardLevelUpAffixes(): UpdateProcEffectPowers failed for affixLevel=[{copyEntry.LevelRequirement}] affix=[{copyEntry.AffixProto}] item=[{this}] owner=[{owner}]");
+                    }
+
+                    Properties.AddChildCollection(copyEntry.Properties);
+                }
+                else if (copyEntry.LevelRequirement <= oldAffixLevel && copyEntry.LevelRequirement > newAffixLevel)
+                {
+                    // Detach affix properties if we no longer match the level requirement
+                    if (copyEntry.Properties == null)
+                    {
+                        Logger.Warn("AwardLevelUpAffixes(): copyEntry.Properties == null");
+                        continue;
+                    }
+
+                    if (copyEntry.Properties.RemoveFromParent(Properties))
+                    {
+                        WorldEntity owner = GetOwnerOfType<WorldEntity>();
+                        if (owner != null && IsEquipped)
+                            owner.UpdateProcEffectPowers(copyEntry.Properties, false);
+                    }
+                }
+            }
+        }
+
+        private void OnAffixLevelUp()
+        {
+            NetMessageLevelUp levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
+            Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
         }
 
         private bool OnBuiltInPropertyRoll(float randomMult, PropertyPickInRangeEntryPrototype pickInRangeProto)
