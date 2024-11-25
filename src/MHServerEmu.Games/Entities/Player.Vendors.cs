@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -79,6 +80,36 @@ namespace MHServerEmu.Games.Entities
             // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
             Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
             return true;
+        }
+
+        public bool TryDoVendorXPCapRollover(VendorXPCapInfoPrototype vendorXPCapInfoProto)
+        {
+            if (vendorXPCapInfoProto == null) return Logger.WarnReturn(false, "TryDoVendorXPCapRollover(): vendorXPCapInfoProto == null");
+            PrototypeId vendorTypeProtoRef = vendorXPCapInfoProto.Vendor;
+
+            // Find out when the current rollover happened
+            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, 0, (PropertyParam)vendorXPCapInfoProto.WallClockTimeDay] = vendorXPCapInfoProto.WallClockTime24Hr;
+            LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, Clock.UnixTime + TimeSpan.FromDays(7), out TimeSpan lastRolloverTime);
+
+            // Reset the cap if the current rollover happened after the last recorded one
+            if (lastRolloverTime > Properties[PropertyEnum.VendorXPCapRollOverTime, vendorTypeProtoRef])
+            {
+                Properties[PropertyEnum.VendorXPCapCounter, vendorTypeProtoRef] = 0;
+                Properties[PropertyEnum.VendorXPCapRollOverTime, vendorTypeProtoRef] = lastRolloverTime;
+            }
+
+            // Still the same rollover, no changes needed
+            return false;
+        }
+
+        public void TryDoVendorXPCapRollover()
+        {
+            VendorXPCapInfoPrototype[] infos = GameDatabase.LootGlobalsPrototype.VendorXPCapInfo;
+            if (infos.IsNullOrEmpty()) return;
+
+            foreach (VendorXPCapInfoPrototype vendorXPCapInfoProto in GameDatabase.LootGlobalsPrototype.VendorXPCapInfo)
+                TryDoVendorXPCapRollover(vendorXPCapInfoProto);
         }
 
         public bool BuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId, uint destinationSlot)
@@ -504,8 +535,6 @@ namespace MHServerEmu.Games.Entities
             if (isInitializing && _initializedVendorTypeProtoRefs.Add(vendorTypeProtoRef) == false)
                 return true;
 
-            Logger.Trace($"RollVendorInventory(): {vendorTypeProto}");
-
             // Early return if there are no inventories to roll
             List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Rent();
             if (vendorTypeProto.GetInventories(inventoryList) == false)
@@ -609,8 +638,6 @@ namespace MHServerEmu.Games.Entities
                     {
                         ItemSpec itemSpec = lootResultSummary.ItemSpecs[i];
                         uint slot = (uint)i;
-
-                        Logger.Trace($"RollVendorInventory(): {itemSpec.ItemProtoRef.GetName()}");
 
                         if (inventory.IsSlotFree(slot) == false)
                         {

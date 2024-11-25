@@ -577,7 +577,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             VendorXPCapInfoPrototype vendorXPCapInfoProto = null;
             foreach (VendorXPCapInfoPrototype currentInfoProto in GameDatabase.LootGlobalsPrototype.VendorXPCapInfo)
             {
-                if (currentInfoProto.DataRef == Vendor)
+                if (currentInfoProto.Vendor == Vendor)
                 {
                     vendorXPCapInfoProto = currentInfoProto;
                     break;
@@ -589,16 +589,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (vendorXPCapInfoProto != null && settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCap) == false)
             {
-                // NOTE: This loot drop type can modify the player's VendorXPCapCounter property while it is being rolled.
-                // The only vendor this can theoretically happen with in 1.52 is Entity/Characters/Vendors/VendorTypes/VendorRaidGenosha.prototype.
-                Logger.Debug($"Roll(): Vendor={Vendor.GetName()}, XP={XP}");
-
+                // This code handles weekly caps for Entity/Characters/Vendors/VendorTypes/VendorRaidGenosha.prototype.
                 Player player = resolver.Player;
                 if (player == null)
                     return Logger.WarnReturn(LootRollResult.NoRoll, "Roll(): Unable to get player when rewarding VendorXP");
 
                 int vendorXPCapCounter = player.Properties[PropertyEnum.VendorXPCapCounter, Vendor];
                 bool shouldAdjustCounter = settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) == false && player.IsInGame;
+                if (shouldAdjustCounter)
+                {
+                    // Reset the counter if a rollover has happened
+                    if (player.TryDoVendorXPCapRollover(vendorXPCapInfoProto))
+                        vendorXPCapCounter = 0;
+                }
 
                 if (vendorXPCapCounter + xpAmount > vendorXPCapInfoProto.Cap)
                     xpAmount = Math.Max(0, vendorXPCapInfoProto.Cap - vendorXPCapCounter);

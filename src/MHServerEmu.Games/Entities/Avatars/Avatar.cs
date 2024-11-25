@@ -1804,6 +1804,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
+
+            player.TryDoVendorXPCapRollover();
         }
 
         public override void OnExitedWorld()
