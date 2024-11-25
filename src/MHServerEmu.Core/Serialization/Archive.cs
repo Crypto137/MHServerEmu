@@ -26,9 +26,10 @@ namespace MHServerEmu.Core.Serialization
         Invalid = 0,
         Initial = 1,
         AddedMissions = 2,
+        AddedVendorPurchaseData = 3,
 
         // Update the current version if you add any    <---------
-        Current = AddedMissions
+        Current = AddedVendorPurchaseData
     }
 
     /// <summary>

@@ -390,6 +390,36 @@ namespace MHServerEmu.Games.Entities
 
             success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
 
+            if (archive.InvolvesClient == false)
+            {
+                // TODO: Serialize map discovery data
+
+                if (archive.Version >= ArchiveVersion.AddedVendorPurchaseData)
+                {
+                    uint numVendorPurchaseData = (uint)_vendorPurchaseDataDict.Count;
+                    success &= Serializer.Transfer(archive, ref numVendorPurchaseData);
+
+                    if (archive.IsPacking)
+                    {
+                        foreach (VendorPurchaseData purchaseData in _vendorPurchaseDataDict.Values)
+                            success &= Serializer.Transfer(archive, purchaseData);
+                    }
+                    else
+                    {
+                        _vendorPurchaseDataDict.Clear();
+
+                        for (uint i = 0; i < numVendorPurchaseData; i++)
+                        {
+                            VendorPurchaseData purchaseData = new(PrototypeId.Invalid);
+                            success &= Serializer.Transfer(archive, ref purchaseData);
+
+                            if (_vendorPurchaseDataDict.TryAdd(purchaseData.InventoryProtoRef, purchaseData) == false)
+                                Logger.Warn($"Serialize(): Failed to add deserialized vendor purchase data {purchaseData}");
+                        }
+                    }
+                }
+            }
+
             return success;
         }
 

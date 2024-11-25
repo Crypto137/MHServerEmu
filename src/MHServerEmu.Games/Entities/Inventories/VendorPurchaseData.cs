@@ -29,6 +29,11 @@ namespace MHServerEmu.Games.Entities.Inventories
             _itemBits.Resize((int)InitialCapacity);
         }
 
+        public override string ToString()
+        {
+            return $"{_inventoryProtoRef.GetName()} ({_numItems} items)";
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;
