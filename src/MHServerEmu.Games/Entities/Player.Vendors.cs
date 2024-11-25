@@ -74,11 +74,15 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public bool AwardVendorXP(int amount, PrototypeId vendorProtoRef)
+        public bool AwardVendorXP(int amount, PrototypeId vendorTypeProtoRef, ulong vendorId = InvalidId)
         {
-            // TODO: Implement this
-            // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
-            Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
+            if (amount <= 0) return Logger.WarnReturn(false, "AwardVendorXP(): amount <= 0");
+
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(false, "AwardVendorXP(): vendorTypeProto == null");
+
+            Properties.AdjustProperty(amount, new(PropertyEnum.VendorXP, vendorTypeProtoRef));
+            TryLevelUpVendor(vendorTypeProto, vendorId, false);
             return true;
         }
 
@@ -266,12 +270,34 @@ namespace MHServerEmu.Games.Entities
 
         public bool DonateItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
-            Logger.Debug("DonateItemToVendor()");
-
             if (CanDonateItemToVendor(avatarIndex, itemId, vendorId) != VendorResult.DonateSuccess)
                 return false;
 
-            // TODO
+            Item item = Game?.EntityManager.GetEntity<Item>(itemId);
+            if (item == null) return Logger.WarnReturn(false, "DonateItemToVendor(): item == null");
+
+            WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(false, "DonateItemToVendor(): vendor == null");
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(false, "DonateItemToVendor(): vendorTypeProto == null");
+
+            // TODO: vendor.IsGlobalEventVendor for Events/GlobalEvents/Events/BiFrostUnlock/BifrostUnlock.prototype
+
+            if (IsVendorMaxLevel(vendorTypeProto) == false)
+            {
+                uint vendorXPGain = item.GetVendorXPGain(vendor, this);
+                item.Destroy();
+                AwardVendorXP((int)vendorXPGain, vendorTypeProtoRef, vendorId);
+            }
+            else
+            {
+                // Convert item to credits if this vendor is already at max level
+                uint sellPrice = item.GetSellPrice(this);
+                item.Destroy();
+                Properties.AdjustProperty((int)sellPrice, new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits));
+            }
 
             return true;
         }
@@ -398,6 +424,11 @@ namespace MHServerEmu.Games.Entities
                 return currentLevel;
 
             return levelingCurve.MaxPosition;
+        }
+
+        private bool IsVendorMaxLevel(VendorTypePrototype vendorTypeProto)
+        {
+            return GetVendorMaxLevel(vendorTypeProto) == Properties[PropertyEnum.VendorLevel, vendorTypeProto.DataRef];
         }
 
         private int GetVendorXPRequirement(VendorTypePrototype vendorTypeProto, int level)

@@ -227,6 +227,20 @@ namespace MHServerEmu.Games.Entities.Items
             return (uint)xpGain;
         }
 
+        public uint GetVendorXPGain(WorldEntity vendor, Player player)
+        {
+            if (player == null) return Logger.WarnReturn(0u, "GetVendorXPGain(): player == null");
+
+            // This eval simply returns 1 even back in 1.10
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, vendor?.Properties);
+            float xpMult = Eval.RunFloat(GameDatabase.AdvancementGlobalsPrototype.VendorLevelingEval, evalContext);
+
+            uint baseXPGain = GetVendorBaseXPGain(player);
+            return (uint)(baseXPGain * xpMult);
+        }
+
         public uint GetSellPrice(Player player)
         {
             if (player == null) return Logger.WarnReturn(0u, "GetSellPrice(): player == null");
