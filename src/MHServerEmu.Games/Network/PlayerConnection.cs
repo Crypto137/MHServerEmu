@@ -463,6 +463,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageDialogResult:                      OnDialogResult(message); break;                     // 101
                 case ClientToGameServerMessage.NetMessageVendorRequestBuyItemFrom:          OnVendorRequestBuyItemFrom(message); break;         // 102
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
+                case ClientToGameServerMessage.NetMessageVendorRequestDonateItemTo:         OnVendorRequestDonateItemTo(message); break;        // 104
                 case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
@@ -1158,9 +1159,24 @@ namespace MHServerEmu.Games.Network
             if (item == null) return false;     // Multiple request may arrive due to lag
 
             if (item.GetOwnerOfType<Player>() != Player)
-                return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): {this} is attempting to sell item {item} that does not belong to it!");
+                return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): [{this}] is attempting to sell item [{item}] that does not belong to them!");
 
             Player?.SellItemToVendor(vendorRequestSellItemTo.AvatarIndex, vendorRequestSellItemTo.ItemId, vendorRequestSellItemTo.VendorId);
+            return true;
+        }
+
+        private bool OnVendorRequestDonateItemTo(MailboxMessage message)  // 104
+        {
+            var vendorRequestDonateItemTo = message.As<NetMessageVendorRequestDonateItemTo>();
+            if (vendorRequestDonateItemTo == null) return Logger.WarnReturn(false, $"OnVendorRequestDonateItemTo(): Failed to retrieve message");
+
+            Item item = Game.EntityManager.GetEntity<Item>(vendorRequestDonateItemTo.ItemId);
+            if (item == null) return false;     // Multiple request may arrive due to lag
+
+            if (item.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnVendorRequestDonateItemTo(): [{this}] is attempting to donate item [{item}] that does not belong to them!");
+
+            Player?.DonateItemToVendor(vendorRequestDonateItemTo.AvatarIndex, vendorRequestDonateItemTo.ItemId, vendorRequestDonateItemTo.VendorId);
             return true;
         }
 

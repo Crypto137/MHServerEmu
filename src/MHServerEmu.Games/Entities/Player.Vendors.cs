@@ -264,6 +264,18 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool DonateItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
+        {
+            Logger.Debug("DonateItemToVendor()");
+
+            if (CanDonateItemToVendor(avatarIndex, itemId, vendorId) != VendorResult.DonateSuccess)
+                return false;
+
+            // TODO
+
+            return true;
+        }
+
         public bool RefreshVendorInventory(ulong vendorId)
         {
             if (CanRefreshVendorInventory(vendorId) != VendorResult.RefreshSuccess)
@@ -719,6 +731,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private PrototypeId GetGlobalEventCriteriaForVendorItemDonate(ulong itemId, ulong vendorId)
+        {
+            // TODO: This is used for Events/GlobalEvents/Events/BiFrostUnlock/BifrostUnlock.prototype
+            return PrototypeId.Invalid;
+        }
+
         private VendorResult CanBuyItemFromVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
             // Validate the item
@@ -844,7 +862,32 @@ namespace MHServerEmu.Games.Entities
 
         private VendorResult CanDonateItemToVendor(int avatarIndex, ulong itemId, ulong vendorId)
         {
-            // TODO
+            WorldEntity vendor = Game?.EntityManager.GetEntity<WorldEntity>(vendorId);
+            if (vendor == null) return Logger.WarnReturn(VendorResult.DonateFailure, "CanDonateItemToVendor(): vendor == null");
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(VendorResult.DonateFailure, "CanDonateItemToVendor(): vendorTypeProto == null");
+
+            if (vendorTypeProto.AllowActionDonate == false)
+                return VendorResult.DonateFailure;
+
+            if (CanPerformVendorOpAtVendor(avatarIndex, itemId, vendorId, InteractionMethod.Donate) != VendorResult.OpSuccess)
+                return VendorResult.DonateFailure;
+
+            if (vendor.IsGlobalEventVendor)
+            {
+                PrototypeId globalEventProtoRef = vendor.GetVendorGlobalEvent();
+                GlobalEventPrototype globalEventProto = globalEventProtoRef.As<GlobalEventPrototype>();
+                if (globalEventProto == null) return Logger.WarnReturn(VendorResult.DonateNotAcceptingDonations, "CanDonateItemToVendor(): globalEventProto == null");
+
+                if (globalEventProto.Active == false)
+                    return VendorResult.DonateNotAcceptingDonations;
+
+                if (GetGlobalEventCriteriaForVendorItemDonate(itemId, vendorId) == PrototypeId.Invalid)
+                    return VendorResult.DonateNotAcceptingItem;
+            }
+
             return VendorResult.DonateSuccess;
         }
 
