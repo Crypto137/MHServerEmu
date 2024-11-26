@@ -1495,6 +1495,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Loot
 
+        // NOTE: All these stacking functions are very copy-pasted, but that's client-accurate
+
         // Experience
 
         public static float GetStackingExperienceBonusPct(PropertyCollection properties)
@@ -1552,8 +1554,45 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static float GetStackingLootBonusSpecialPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float stackingLootBonusSpecialPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusSpecialStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingLootBonusSpecialMultiplier(properties, powerProtoRef);
+
+                stackingLootBonusSpecialPct += GetStackingLootBonusSpecialPct(stackCount) * multiplier;
+            }
+
+            return stackingLootBonusSpecialPct;
+        }
+
+        public static float GetStackingLootBonusSpecialPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusSpecialCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingLootBonusSpecialPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingLootBonusSpecialMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusSpecialStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         // Flat Credits
