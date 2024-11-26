@@ -1548,7 +1548,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (stackCount <= 0)
                 return 0f;
 
-            Curve curve = CurveDirectory.Instance.GetCurve(GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve);
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingFlatCreditsBonus(): curve == null");
+
             return curve.GetAt(stackCount);
         }
 
@@ -1572,8 +1574,52 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static float GetOrbAggroRangeBonusPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float orbAggroRangePctBonus = properties[PropertyEnum.OrbAggroRangePctBonus];
+            orbAggroRangePctBonus += GetStackingOrbAggroRangeBonusPct(properties);
+            return MathF.Max(-1f, orbAggroRangePctBonus);
+        }
+
+        public static float GetStackingOrbAggroRangeBonusPct(PropertyCollection properties)
+        {
+            float stackingOrbAggroRangeBonus = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.OrbAggroRangeBonusStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingOrbAggroRangeBonusMultiplier(properties, powerProtoRef);
+
+                stackingOrbAggroRangeBonus += GetStackingOrbAggroRangeBonusPct(stackCount) * multiplier;
+            }
+
+            return stackingOrbAggroRangeBonus;
+        }
+
+        public static float GetStackingOrbAggroRangeBonusPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.AIGlobalsPrototype.OrbAggroRangeBonusCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingFlatCreditsBonus(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingOrbAggroRangeBonusMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.OrbAggroRangeBonusStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         #endregion
