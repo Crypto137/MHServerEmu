@@ -166,6 +166,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return true;
         }
+
+        public static bool InRange(DifficultyTierPrototype valueProto, DifficultyTierPrototype minProto, DifficultyTierPrototype maxProto)
+        {
+            if (valueProto == null) return false;
+            if (minProto == null && maxProto == null) return true;
+            if (minProto != null && valueProto.Tier < minProto.Tier) return false;
+            if (maxProto != null && valueProto.Tier > maxProto.Tier) return false;
+            return true;
+        }
     }
 
     public class DifficultyGlobalsPrototype : Prototype
