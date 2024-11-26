@@ -19,7 +19,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
-using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -52,6 +51,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }   // TODO: Save reference
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
+        public Agent CurrentVanityPet { get => GetCurrentVanityPet(); }
+
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
         public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
@@ -1682,6 +1683,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (teamUpProtoRef == PrototypeId.Invalid) return null;
             Player player = GetOwnerOfType<Player>();
             return player?.GetTeamUpAgent(teamUpProtoRef);
+        }
+
+        private Agent GetCurrentVanityPet()
+        {
+            var keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (keywordGlobals == null) return Logger.WarnReturn((Agent)null, "GetCurrentVanityPet(): keywordGlobals == null");
+
+            var manager = Game.EntityManager;
+            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
+            {
+                var summoned = manager.GetEntity<Agent>(inventory.Id);
+                if (summoned != null && summoned.HasKeyword(keywordGlobals.VanityPetKeyword))
+                    return summoned;
+            }
+            return null;
         }
 
         private void ActivateTeamUpAgent(bool playIntro)
