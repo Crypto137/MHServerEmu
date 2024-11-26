@@ -1,4 +1,6 @@
 ﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -149,59 +151,125 @@ namespace MHServerEmu.Games.Events
     public struct ScoringEventContext
     {
         public Prototype Avatar { get; set; }
-        public Prototype ItemEquipped { get; set; }
+        public Prototype Item { get; set; }
         public Prototype Party { get; set; }
         public Prototype Pet { get; set; }
         public Prototype Region { get; set; }
         public bool RegionIncludeChildren { get; set; }
-        public Prototype RegionKeyword { get; set; }
-        public Prototype DifficultyTierMin { get; set; }
-        public Prototype DifficultyTierMax { get; set; }
+        public DifficultyTierPrototype DifficultyTier { get; set; }
+        public DifficultyTierPrototype DifficultyTierMin { get; set; }
+        public DifficultyTierPrototype DifficultyTierMax { get; set; }
         public Prototype TeamUp { get; set; }
         public Prototype PublicEventTeam { get; set; }
 
         public ScoringEventContext(ScoringEventContextPrototype prototype)
         {
+            if (prototype.ContextRegion != PrototypeId.Invalid)
+                Region = prototype.ContextRegion.As<Prototype>();
+            else if (prototype.ContextRegionKeyword != PrototypeId.Invalid)
+                Region = prototype.ContextRegionKeyword.As<Prototype>();
+
             RegionIncludeChildren = prototype.ContextRegionIncludeChildren;
+
             Avatar = prototype.ContextAvatar != PrototypeId.Invalid ? prototype.ContextAvatar.As<Prototype>() : null;
-            ItemEquipped = prototype.ContextItemEquipped != PrototypeId.Invalid ? prototype.ContextItemEquipped.As<Prototype>() : null;
+            Item = prototype.ContextItemEquipped != PrototypeId.Invalid ? prototype.ContextItemEquipped.As<Prototype>() : null;
             Party = prototype.ContextParty != PrototypeId.Invalid ? prototype.ContextParty.As<Prototype>() : null;
             Pet = prototype.ContextPet != PrototypeId.Invalid ? prototype.ContextPet.As<Prototype>() : null;
-            Region = prototype.ContextRegion != PrototypeId.Invalid ? prototype.ContextRegion.As<Prototype>() : null;
-            RegionKeyword = prototype.ContextRegionKeyword != PrototypeId.Invalid ? prototype.ContextRegionKeyword.As<Prototype>() : null;
-            DifficultyTierMin = prototype.ContextDifficultyTierMin != PrototypeId.Invalid ? prototype.ContextDifficultyTierMin.As<Prototype>() : null;
-            DifficultyTierMax = prototype.ContextDifficultyTierMax != PrototypeId.Invalid ? prototype.ContextDifficultyTierMax.As<Prototype>() : null;
+            DifficultyTierMin = prototype.ContextDifficultyTierMin != PrototypeId.Invalid ? prototype.ContextDifficultyTierMin.As<DifficultyTierPrototype>() : null;
+            DifficultyTierMax = prototype.ContextDifficultyTierMax != PrototypeId.Invalid ? prototype.ContextDifficultyTierMax.As<DifficultyTierPrototype>() : null;
             TeamUp = prototype.ContextTeamUp != PrototypeId.Invalid ? prototype.ContextTeamUp.As<Prototype>() : null;
             PublicEventTeam = prototype.ContextPublicEventTeam != PrototypeId.Invalid ? prototype.ContextPublicEventTeam.As<Prototype>() : null;
         }
 
         public void FromPlayer(Player player)
         {
-            Avatar = player.CurrentAvatar?.Prototype;
-            // TODO: ItemEquipped
+            ClearForPlayer();
+
+            var avatar = player.CurrentAvatar;
+            if (avatar != null)
+            {
+                Avatar = avatar.Prototype;
+
+                var teamUp = avatar.CurrentTeamUpAgent;
+                if (teamUp != null && teamUp.IsInWorld && teamUp.IsDead == false && teamUp.TestStatus(EntityStatus.ExitingWorld) == false)
+                    TeamUp = teamUp.Prototype;
+
+                var pet = avatar.CurrentVanityPet;
+                if (pet != null && pet.IsInWorld && pet.IsDead == false && pet.TestStatus(EntityStatus.ExitingWorld) == false)
+                    Pet = pet.Prototype;
+            }
+
+            var region = player.GetRegion();
+            if (region != null)
+            {
+                Region = region.Prototype;
+                DifficultyTier = region.DifficultyTierRef.As<DifficultyTierPrototype>();
+            }
+
             // TODO: Party
-            // TODO: Pet
-            Region = player.GetRegion()?.Prototype;
-            // TODO: RegionKeyword
-            // TODO: DifficultyTierMin
-            // TODO: DifficultyTierMax
-            Agent teamUp = player.CurrentAvatar?.CurrentTeamUpAgent;
-            bool isTeamUpValid = teamUp != null && teamUp.IsInWorld && !teamUp.TestStatus(EntityStatus.ExitingWorld) && !teamUp.IsDead;
-            TeamUp = isTeamUpValid ? teamUp.Prototype : null;
             // TODO: PublicEventTeam
         }
 
-        public bool FilterContext(ScoringEventContext other)
+        private void ClearForPlayer()
         {
-            bool avaterTest = ScoringEvents.FilterPrototype(Avatar, other.Avatar, false);
-            bool regionTest = ScoringEvents.FilterPrototype(Region, other.Region, RegionIncludeChildren);
-            bool petTest = ScoringEvents.FilterPrototype(Pet, other.Pet, false);
-            bool teamUpTest = ScoringEvents.FilterPrototype(TeamUp, other.TeamUp, false);
-            // TODO: Item test
-            // TODO: Party test
-            // TODO: DifficultyTier test
+            Avatar = null;
+            TeamUp = null;
+            Pet = null;
+            Region = null;
+            DifficultyTier = null;
+        }
+
+        public bool FilterOwnerContext(Player owner, in ScoringEventContext ownerContext)
+        {
+            return ScoringEvents.FilterPrototype(Avatar, ownerContext.Avatar, false)
+                && ScoringEvents.FilterPrototype(Region, ownerContext.Region, RegionIncludeChildren)
+                && ScoringEvents.FilterPrototype(Pet, ownerContext.Pet, false)
+                && ScoringEvents.FilterPrototype(TeamUp, ownerContext.TeamUp, false)
+                && FilterOwnerItem(owner)
+                && FilterDifficultyTier(ownerContext.DifficultyTier)
+                && FilterParty(owner);
+
             // TODO: PublicEventTeam test
-            return regionTest && avaterTest && petTest && teamUpTest;
+        }
+
+        private bool FilterParty(Player owner)
+        {
+            if (Party == null) return true;
+
+            // TODO: Party
+
+            return false;
+        }
+
+        private bool FilterDifficultyTier(DifficultyTierPrototype difficultyTier)
+        {
+            if (DifficultyTierMin == null && DifficultyTierMax == null) return true;
+            return DifficultyTierPrototype.InRange(difficultyTier, DifficultyTierMin, DifficultyTierMax);
+        }
+
+        private bool FilterOwnerItem(Player owner)
+        {
+            if (Item == null) return true;
+
+            var avatar = owner.CurrentAvatar;
+            if (avatar == null) return false;
+
+            var manager = owner.Game?.EntityManager;
+            if (manager == null) return false;
+
+            var itemPrototype = Item as ItemPrototype;
+            var keywordPrototype = Item as KeywordPrototype;
+
+            foreach (Inventory inventory in new InventoryIterator(avatar, InventoryIterationFlags.Equipment))
+                foreach (var entry in inventory)
+                {
+                    var item = manager.GetEntity<Item>(entry.Id);
+                    if (item == null) continue;
+                    if (keywordPrototype != null && item.HasKeyword(keywordPrototype)) return true;
+                    else if (itemPrototype != null && item.Prototype == itemPrototype) return true;
+                }
+
+            return false;
         }
     }
 

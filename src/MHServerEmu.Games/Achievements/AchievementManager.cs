@@ -66,7 +66,7 @@ namespace MHServerEmu.Games.Achievements
             _scoring = false;
         }
 
-        private static bool FilterEventData(ScoringEvent scoringEvent, ScoringEventData data)
+        private static bool FilterEventData(in ScoringEvent scoringEvent, in ScoringEventData data)
         {
             return ScoringEvents.FilterPrototype(data.Proto0, scoringEvent.Proto0, data.Proto0IncludeChildren)
                 && ScoringEvents.FilterPrototype(data.Proto1, scoringEvent.Proto1, data.Proto1IncludeChildren)
@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Achievements
 
         private bool FilterPlayerContext(AchievementInfo info)
         {
-            return info.EventContext.FilterContext(Owner.ScoringEventContext);
+            return info.EventContext.FilterOwnerContext(Owner, Owner.ScoringEventContext);
         }
 
         private void UpdateAchievement(AchievementInfo info, int count, bool showPopups = true, bool fromEvent = false, ActiveAchievement active = null)

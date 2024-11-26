@@ -12,7 +12,6 @@ namespace MHServerEmu.Games.Achievements
         Party,
         Pet,
         Region,
-        RegionKeyword,
         DifficultyTierMin,
         DifficultyTierMax,
         TeamUp,
@@ -63,34 +62,35 @@ namespace MHServerEmu.Games.Achievements
             ScoringEventContext eventContext = new();
             foreach (var context in EventContext)
             {
+                var prototype = GetPrototype(context.Prototype);
                 switch (context.ContextType) {
-                    case EventContextType.Region:                    
-                        eventContext.Region = GetPrototype(context.Prototype);
+                    case EventContextType.Region:
+                        eventContext.Region = prototype;
                         eventContext.RegionIncludeChildren = context.IncludeChildren;
                         break;
                     case EventContextType.Avatar:
-                        eventContext.Avatar = GetPrototype(context.Prototype);
+                        eventContext.Avatar = prototype;
                         break;
                     case EventContextType.Item:
-                        eventContext.ItemEquipped = GetPrototype(context.Prototype);
+                        eventContext.Item = prototype;
                         break;
                     case EventContextType.Party:
-                        eventContext.Party = GetPrototype(context.Prototype);
+                        eventContext.Party = prototype;
                         break;
                     case EventContextType.Pet:
-                        eventContext.Pet = GetPrototype(context.Prototype);
+                        eventContext.Pet = prototype;
                         break;
                     case EventContextType.DifficultyTierMin:
-                        eventContext.DifficultyTierMin = GetPrototype(context.Prototype);
+                        eventContext.DifficultyTierMin = prototype as DifficultyTierPrototype;
                         break;
                     case EventContextType.DifficultyTierMax:
-                        eventContext.DifficultyTierMax = GetPrototype(context.Prototype);
+                        eventContext.DifficultyTierMax = prototype as DifficultyTierPrototype;
                         break;
                     case EventContextType.TeamUp:
-                        eventContext.TeamUp = GetPrototype(context.Prototype);
+                        eventContext.TeamUp = prototype;
                         break;
                     case EventContextType.PublicEventTeam:
-                        eventContext.PublicEventTeam = GetPrototype(context.Prototype);
+                        eventContext.PublicEventTeam = prototype;
                         break;
                 }
             }
