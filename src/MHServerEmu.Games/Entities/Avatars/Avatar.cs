@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Metrics.Trackers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -1506,8 +1507,45 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static float GetStackingLootBonusRarityPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float stackingLootBonusRarityPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusRarityStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingLootBonusRarityMultiplier(properties, powerProtoRef);
+
+                stackingLootBonusRarityPct += GetStackingLootBonusRarityPct(stackCount) * multiplier;
+            }
+
+            return stackingLootBonusRarityPct;
+        }
+
+        public static float GetStackingLootBonusRarityPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusRarityCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingLootBonusRarityPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingLootBonusRarityMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusRarityStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         // Special
