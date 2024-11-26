@@ -636,7 +636,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
             {
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
-                xp = avatar.ApplyXPModifiers(xp, tuningTable);
+                xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
                 avatar.AwardXP(xp, agent.Properties[PropertyEnum.ShowXPRewardText]);
             }
 
