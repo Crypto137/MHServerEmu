@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -780,6 +781,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Character { get; protected set; }
         public CharacterTokenType TokenType { get; protected set; }
+
+        //--
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        [DoNotCopy]
+        public bool IsForAvatar { get => Character.As<AvatarPrototype>() != null; }
+        [DoNotCopy]
+        public bool IsForTeamUp { get => Character.As<AgentTeamUpPrototype>() != null; }
+
+        public override bool ApprovedForUse()
+        {
+            if (base.ApprovedForUse() == false)
+                return false;
+
+            AgentPrototype agentProto = Character.As<AgentPrototype>();
+            return agentProto?.ApprovedForUse() == true;
+        }
+
+        public bool HasUnlockedCharacter(Player player)
+        {
+            Prototype characterProto = Character.As<Prototype>();
+            if (characterProto == null) return Logger.WarnReturn(false, "HasUnlockedCharacter(): characterProto == null");
+
+            if (characterProto is AvatarPrototype)
+                return player.HasAvatarFullyUnlocked(Character);
+
+            return player.IsTeamUpAgentUnlocked(Character);
+        }
+
     }
 
     public class InventoryStashTokenPrototype : ItemPrototype

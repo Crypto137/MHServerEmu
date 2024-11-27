@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class VendorXPBarTooltipPrototype : Prototype
     {
@@ -38,5 +41,42 @@
         public PrototypeId[] CraftingRecipeCategories { get; protected set; }
         public bool IsEnchanter { get; protected set; }
         public LocaleStringId VendorRankTooltip { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public bool ContainsInventory(PrototypeId inventoryProtoRef)
+        {
+            if (inventoryProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "ContainsInventory(): inventoryProtoRef == PrototypeId.Invalid");
+
+            if (Inventories.IsNullOrEmpty())
+                return false;
+
+            foreach (VendorInventoryEntryPrototype inventoryEntry in Inventories)
+            {
+                if (inventoryEntry.PlayerInventory == inventoryProtoRef)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool GetInventories(List<PrototypeId> inventoryList)
+        {
+            inventoryList.Clear();
+
+            if (Inventories.IsNullOrEmpty())
+                return false;
+
+            foreach (VendorInventoryEntryPrototype inventoryEntry in Inventories)
+            {
+                PrototypeId inventoryProtoRef = inventoryEntry.PlayerInventory;
+                if (inventoryProtoRef != PrototypeId.Invalid && inventoryList.Contains(inventoryProtoRef) == false)
+                    inventoryList.Add(inventoryProtoRef);
+            }
+
+            return inventoryList.Count > 0;
+        }
     }
 }

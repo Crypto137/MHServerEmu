@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool InventoryRequiresFlaggedVisibility()
         {
-            return IsEquipmentInventory || IsPlayerStashInventory || IsPlayerCraftingRecipeInventory || IsPlayerVendorInventory || IsPlayerVendorInventory;
+            return IsEquipmentInventory || IsPlayerStashInventory || IsPlayerCraftingRecipeInventory || IsPlayerVendorInventory || IsPlayerVendorBuybackInventory;
         }
     }
 

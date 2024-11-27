@@ -942,8 +942,9 @@ namespace MHServerEmu.Games.Network
                 newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
 
             // Ownership
-            // NOTE: IsOwnedBy() returns true for itself, so the player entity bound to this AOI effectively owns itself
-            if (entity.IsOwnedBy(player.Id))
+            // NOTE: IsOwnedBy() returns true for itself, so the player entity bound to this AOI effectively owns itself without being in an inventory.
+            // Non-player entities need to be in an inventory that has been revealed to the player, or the UI will break when the client requests interest (e.g. vendors).
+            if (entity.IsOwnedBy(player.Id) && (inventory == null || inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
                 newInterestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
 
             // TODO: Party, Trade

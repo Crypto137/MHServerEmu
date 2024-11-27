@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Entities
         NumberOfBadges
     }
 
-    public class Player : Entity, IMissionManagerOwner
+    public partial class Player : Entity, IMissionManagerOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -195,12 +195,6 @@ namespace MHServerEmu.Games.Entities
                 if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
                 Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
             }
-
-            foreach (PrototypeId vendorRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
-                Properties[PropertyEnum.VendorLevel, vendorRef] = 1;
-
-            // TODO: Set this after creating all avatar entities via a NetMessageSetProperty in the same packet
-            //Properties[PropertyEnum.PlayerMaxAvatarLevel] = 60;
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -403,6 +397,36 @@ namespace MHServerEmu.Games.Entities
 
             success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
 
+            if (archive.InvolvesClient == false)
+            {
+                // TODO: Serialize map discovery data
+
+                if (archive.Version >= ArchiveVersion.AddedVendorPurchaseData)
+                {
+                    uint numVendorPurchaseData = (uint)_vendorPurchaseDataDict.Count;
+                    success &= Serializer.Transfer(archive, ref numVendorPurchaseData);
+
+                    if (archive.IsPacking)
+                    {
+                        foreach (VendorPurchaseData purchaseData in _vendorPurchaseDataDict.Values)
+                            success &= Serializer.Transfer(archive, purchaseData);
+                    }
+                    else
+                    {
+                        _vendorPurchaseDataDict.Clear();
+
+                        for (uint i = 0; i < numVendorPurchaseData; i++)
+                        {
+                            VendorPurchaseData purchaseData = new(PrototypeId.Invalid);
+                            success &= Serializer.Transfer(archive, ref purchaseData);
+
+                            if (_vendorPurchaseDataDict.TryAdd(purchaseData.InventoryProtoRef, purchaseData) == false)
+                                Logger.Warn($"Serialize(): Failed to add deserialized vendor purchase data {purchaseData}");
+                        }
+                    }
+                }
+            }
+
             return success;
         }
 
@@ -437,6 +461,7 @@ namespace MHServerEmu.Games.Entities
             // Enter game to become added to the AOI
             base.EnterGame(settings);
 
+            InitializeVendors();
             UpdateUISystemLocks();
         }
 
@@ -676,18 +701,17 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool RevealInventory(PrototypeId inventoryProtoRef)
+        public bool RevealInventory(InventoryPrototype inventoryProto)
         {
             // Validate inventory prototype
-            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>(inventoryProtoRef);
-            if (inventoryPrototype == null) return Logger.WarnReturn(false, "RevealInventory(): inventoryPrototype == null");
+            if (inventoryProto == null) return Logger.WarnReturn(false, "RevealInventory(): inventoryPrototype == null");
 
             // Skip reveal if this inventory does not require flagged visibility
-            if (inventoryPrototype.InventoryRequiresFlaggedVisibility() == false)
+            if (inventoryProto.InventoryRequiresFlaggedVisibility() == false)
                 return true;
 
             // Validate inventory
-            Inventory inventory = GetInventoryByRef(inventoryPrototype.DataRef);
+            Inventory inventory = GetInventoryByRef(inventoryProto.DataRef);
             if (inventory == null) return Logger.WarnReturn(false, "RevealInventory(): inventory == null");
 
             // Skip reveal if already visible
@@ -1042,18 +1066,6 @@ namespace MHServerEmu.Games.Entities
 
         public void AddTag(WorldEntity entity) => _tagEntities.Add(entity.Id);
         public void RemoveTag(WorldEntity entity) => _tagEntities.Remove(entity.Id);
-
-        #region Vendors
-
-        public bool AwardVendorXP(int amount, PrototypeId vendorProtoRef)
-        {
-            // TODO: Implement this
-            // NOTE: Do weekly rollover checks and reset ePID_VendorXPCapCounter when rolling LootDropVendorXP
-            Logger.Debug($"AwardVendorXP(): amount=[{amount}], vendorProtoRef=[{vendorProtoRef}], player=[{this}]");
-            return true;
-        }
-
-        #endregion
 
         #region Avatar and Team-Up Management
 

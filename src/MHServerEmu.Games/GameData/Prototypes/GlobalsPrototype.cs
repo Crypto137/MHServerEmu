@@ -356,8 +356,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class AdvancementGlobalsPrototype : Prototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public CurveId LevelingCurve { get; protected set; }
         public CurveId DeathPenaltyCost { get; protected set; }
         public CurveId ItemEquipRequirementOffset { get; protected set; }
@@ -397,6 +395,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         // ---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public const long InvalidXPRequirement = -1;
 
         [DoNotCopy]
@@ -414,6 +414,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             Curve levelingCurve = GetTeamUpLevelingCurve();
             if (levelingCurve == null) return Logger.WarnReturn(0, "GetTeamUpLevelCap(): levelingCurve == null");
+
+            return levelingCurve.MaxPosition;
+        }
+
+        public int GetItemAffixLevelCap()
+        {
+            Curve levelingCurve = GetItemAffixLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(0, "GetItemAffixLevelCap(): levelingCurve == null");
 
             return levelingCurve.MaxPosition;
         }
@@ -438,7 +446,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public long GetAvatarLevelUpXPRequirement(int level)
         {
-            if (level < 1) return InvalidXPRequirement;
+            if (level < 1)
+                return InvalidXPRequirement;
 
             Curve levelingCurve = GetAvatarLevelingCurve();
             if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetAvatarLevelUpXPRequirement(): levelingCurve == null");
@@ -448,10 +457,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public long GetTeamUpLevelUpXPRequirement(int level)
         {
-            if (level < 1) return InvalidXPRequirement;
+            if (level < 1)
+                return InvalidXPRequirement;
 
             Curve levelingCurve = GetTeamUpLevelingCurve();
             if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetTeamUpLevelUpXPRequirement(): levelingCurve == null");
+
+            return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
+        }
+
+        public long GetItemAffixLevelUpXPRequirement(int level)
+        {
+            if (level < 0)
+                return InvalidXPRequirement;
+
+            Curve levelingCurve = GetItemAffixLevelingCurve();
+            if (levelingCurve == null) return Logger.WarnReturn(InvalidXPRequirement, "GetItemAffixLevelUpXPRequirement(): levelingCurve == null");
 
             return GetLevelUpXPRequirementFromCurve(level, levelingCurve);
         }
@@ -472,6 +493,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private Curve GetTeamUpLevelingCurve()
         {
             return CurveDirectory.Instance.GetCurve(TeamUpLevelingCurve);
+        }
+
+        private Curve GetItemAffixLevelingCurve()
+        {
+            return CurveDirectory.Instance.GetCurve(ItemAffixLevelingCurve);
         }
     }
 

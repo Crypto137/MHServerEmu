@@ -309,6 +309,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public int WorldEntityPrototypeEnumValue { get; private set; }
+        [DoNotCopy]
+        public virtual int LiveTuneEternitySplinterCost { get => (int)LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_EternitySplinterPrice); }
 
         [DoNotCopy]
         public bool DiscoverInRegion { get => ObjectiveInfo?.EdgeEnabled == true || HACKDiscoverInRegion; }
@@ -351,6 +353,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return LiveTuningDefaultEnabled;
 
             return true;
+        }
+
+        public bool IsLiveTuningVendorEnabled()
+        {
+            if (IsLiveTuningEnabled() == false)
+                return false;
+
+            int tuningVar = (int)Math.Floor(LiveTuningManager.GetLiveWorldEntityTuningVar(this, WorldEntityTuningVar.eWETV_VendorEnabled));
+            return tuningVar != 0;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

@@ -141,7 +141,7 @@ namespace MHServerEmu.Games.Entities
         public virtual int InteractRange { get => GameDatabase.GlobalsPrototype?.InteractRange ?? 0; }
         public int InteractFallbackRange { get => GameDatabase.GlobalsPrototype?.InteractFallbackRange ?? 0; }
         public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
-        public bool IsGlobalEventVendor { get; internal set; }
+        public bool IsGlobalEventVendor { get => GetVendorGlobalEvent() != PrototypeId.Invalid; }
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
         public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
@@ -1280,6 +1280,11 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool UpdateProcEffectPowers(PropertyCollection properties, bool assignPowers)
+        {
+            return true;
+        }
+
         public bool ApplyPowerResults(PowerResults powerResults)
         {
             // Send power results to clients
@@ -2301,7 +2306,7 @@ namespace MHServerEmu.Games.Entities
 
                 if (WorldEntityPrototype.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
                 {
-                    xp = avatar.ApplyXPModifiers(xp, tuningTable);
+                    xp = avatar.ApplyXPModifiers(xp, true, tuningTable);
                     avatar.AwardXP(xp, Properties[PropertyEnum.ShowXPRewardText]);
                 }
             }
@@ -2780,6 +2785,18 @@ namespace MHServerEmu.Games.Entities
 
             if (WorldEntityPrototype.PostInteractState != null)
                 ApplyStateFromPrototype(WorldEntityPrototype.PostInteractState);
+        }
+
+        public PrototypeId GetVendorGlobalEvent()
+        {
+            if (IsVendor == false)
+                return PrototypeId.Invalid;
+
+            PrototypeId vendorTypeProtoRef = Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetVendorGlobalEvent(): vendorTypeProto == null");
+
+            return vendorTypeProto.GlobalEvent;
         }
 
         #region Scheduled Events

@@ -331,6 +331,9 @@ namespace MHServerEmu.Games.Loot
         {
             lastRolloverTime = default;
 
+            // NOTE: Properties store time with millisecond precision, so we need to reduce the precision here.
+            currentTime = TimeSpan.FromMilliseconds((long)currentTime.TotalMilliseconds);
+
             // Remove the day part from the current time for calculations
             TimeSpan currentTime24Hr = new(0, currentTime.Hours, currentTime.Minutes, currentTime.Seconds, currentTime.Milliseconds);
 

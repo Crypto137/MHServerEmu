@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Metrics.Trackers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -17,11 +18,13 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
 
@@ -1112,6 +1115,21 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             long awardedAmount = base.AwardXP(amount, showXPAwardedText);
 
+            // Award XP to the equipped legendary item if there is one
+            Inventory legendaryInventory = GetInventory(InventoryConvenienceLabel.AvatarLegendary);
+            if (legendaryInventory != null)
+            {
+                ulong legendaryItemId = legendaryInventory.GetEntityInSlot(0);
+                if (legendaryItemId != InvalidId)
+                {
+                    Item legendaryItem = Game.EntityManager.GetEntity<Item>(legendaryItemId);
+                    if (legendaryItem != null)
+                        legendaryItem.AwardAffixXP(amount);
+                    else
+                        Logger.Warn("AwardXP(): legendaryItem == null");
+                }
+            }
+
             // Award XP to the current team-up as well if there is one
             CurrentTeamUpAgent?.AwardXP(amount, showXPAwardedText);
 
@@ -1149,14 +1167,28 @@ namespace MHServerEmu.Games.Entities.Avatars
             return levelDelta;
         }
 
-        public long ApplyXPModifiers(long xp, TuningTable tuningTable = null)
+        public long ApplyXPModifiers(long xp, bool applyKillBonus, TuningTable tuningTable = null)
         {
-            // TODO: live tuning
-
             if (IsInWorld == false)
                 return 0;
 
-            float xpMult = 1f;
+            // TODO: Prestige multiplier
+            // TODO: Party bonus
+
+            // Flat per kill bonus (optionally capped by a percentage)
+            if (applyKillBonus)
+            {
+                long killBonus = Properties[PropertyEnum.ExperienceBonusPerKill];
+
+                long killBonusMax = (long)(xp * (float)Properties[PropertyEnum.ExperienceBonusPerKillMaxPct]);
+                if (killBonusMax > 0)
+                    killBonus = Math.Min(killBonus, killBonusMax);
+
+                xp += killBonus;
+            }
+
+            // Calculate the multiplier
+            float xpMult = GetAvatarXPMultiplier();
 
             // Region bonus
             Region region = Region;
@@ -1178,7 +1210,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 xpMult *= tuningProto.PctXPMultiplier;
             }
 
-            return xpMult != 1f ? (long)MathF.Round(xp * xpMult) : xp;
+            // Live tuning
+            xpMult *= GetLiveTuningXPMultiplier();
+
+            return (long)MathF.Round(xp * xpMult);
         }
 
         protected override bool OnLevelUp(int oldLevel, int newLevel)
@@ -1356,6 +1391,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             return false;
         }
 
+        public InteractionValidateResult CanUpgradeUltimate()
+        {
+            // TODO
+            return InteractionValidateResult.AvatarUltimateAlreadyMaxedOut;
+        }
+
         #endregion
 
         #region Inventories
@@ -1501,28 +1542,173 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Loot
 
+        // NOTE: All these stacking functions are very copy-pasted, but that's client-accurate
+
         // Experience
+
+        public float GetAvatarXPMultiplier()
+        {
+            float multiplier = 1f;
+
+            multiplier += Properties[PropertyEnum.ExperienceBonusPct];
+            multiplier += Properties[PropertyEnum.ExperienceBonusAvatarSynergy];
+            multiplier += GetStackingExperienceBonusPct(Properties);
+
+            return MathF.Max(-1f, multiplier);
+        }
+
+        public float GetLiveTuningXPMultiplier()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(0f, "GetLiveTuningXPMultiplier(): player == null");
+
+            RegionPrototype regionProto = Region?.Prototype;
+            if (regionProto == null) return Logger.WarnReturn(0f, "GetLiveTuningXPMultiplier(): regionProto == null");
+
+            bool canUseLiveTuneBonuses = player.CanUseLiveTuneBonuses();
+
+            float avatarMultiplier = 1f;
+            if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForAvatarXP) == 0f)
+                avatarMultiplier = LiveTuningManager.GetLiveAvatarTuningVar(AvatarPrototype, AvatarEntityTuningVar.eAETV_BonusXPPct);
+
+            float regionMultiplier = 1f;
+            if (canUseLiveTuneBonuses || LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForRegionXP) == 0f)
+                regionMultiplier = LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRT_BonusXPPct);
+
+            return avatarMultiplier * regionMultiplier;
+        }
 
         public static float GetStackingExperienceBonusPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float stackingExperienceBonusPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusRarityStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingExperienceBonusMultiplier(properties, powerProtoRef);
+
+                stackingExperienceBonusPct += GetStackingExperienceBonusPct(stackCount) * multiplier;
+            }
+
+            return stackingExperienceBonusPct;
+        }
+
+        public static float GetStackingExperienceBonusPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.GlobalsPrototype.ExperienceBonusCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingExperienceBonusPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingExperienceBonusMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.ExperienceBonusStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         // Rarity
 
         public static float GetStackingLootBonusRarityPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float stackingLootBonusRarityPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusRarityStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingLootBonusRarityMultiplier(properties, powerProtoRef);
+
+                stackingLootBonusRarityPct += GetStackingLootBonusRarityPct(stackCount) * multiplier;
+            }
+
+            return stackingLootBonusRarityPct;
+        }
+
+        public static float GetStackingLootBonusRarityPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusRarityCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingLootBonusRarityPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingLootBonusRarityMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusRarityStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         // Special
 
         public static float GetStackingLootBonusSpecialPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float stackingLootBonusSpecialPct = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusSpecialStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingLootBonusSpecialMultiplier(properties, powerProtoRef);
+
+                stackingLootBonusSpecialPct += GetStackingLootBonusSpecialPct(stackCount) * multiplier;
+            }
+
+            return stackingLootBonusSpecialPct;
+        }
+
+        public static float GetStackingLootBonusSpecialPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusSpecialCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingLootBonusSpecialPct(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingLootBonusSpecialMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusSpecialStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         // Flat Credits
@@ -1555,7 +1741,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (stackCount <= 0)
                 return 0f;
 
-            Curve curve = CurveDirectory.Instance.GetCurve(GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve);
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootBonusFlatCreditsCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingFlatCreditsBonus(): curve == null");
+
             return curve.GetAt(stackCount);
         }
 
@@ -1579,8 +1767,52 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static float GetOrbAggroRangeBonusPct(PropertyCollection properties)
         {
-            // TODO
-            return 0f;
+            float orbAggroRangePctBonus = properties[PropertyEnum.OrbAggroRangePctBonus];
+            orbAggroRangePctBonus += GetStackingOrbAggroRangeBonusPct(properties);
+            return MathF.Max(-1f, orbAggroRangePctBonus);
+        }
+
+        public static float GetStackingOrbAggroRangeBonusPct(PropertyCollection properties)
+        {
+            float stackingOrbAggroRangeBonus = 0f;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.OrbAggroRangeBonusStackCount))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                int stackCount = kvp.Value;
+                float multiplier = GetStackingOrbAggroRangeBonusMultiplier(properties, powerProtoRef);
+
+                stackingOrbAggroRangeBonus += GetStackingOrbAggroRangeBonusPct(stackCount) * multiplier;
+            }
+
+            return stackingOrbAggroRangeBonus;
+        }
+
+        public static float GetStackingOrbAggroRangeBonusPct(int stackCount)
+        {
+            if (stackCount <= 0)
+                return 0f;
+
+            Curve curve = GameDatabase.AIGlobalsPrototype.OrbAggroRangeBonusCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0f, "GetStackingFlatCreditsBonus(): curve == null");
+
+            return curve.GetAt(stackCount);
+        }
+
+        public static float GetStackingOrbAggroRangeBonusMultiplier(PropertyCollection properties, PrototypeId powerProtoRef)
+        {
+            float multiplier = 1f;
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return multiplier;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.OrbAggroRangeBonusStackingMult, powerProtoRef))
+            {
+                multiplier = kvp.Value;
+                break;
+            }
+
+            return multiplier;
         }
 
         #endregion
@@ -1844,6 +2076,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             ScheduleEntityEvent(_avatarEnteredRegionEvent, TimeSpan.Zero);
+
+            player.TryDoVendorXPCapRollover();
         }
 
         public override void OnExitedWorld()

@@ -462,7 +462,10 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGracefulDisconnect:                OnGracefulDisconnect(message); break;               // 98
                 case ClientToGameServerMessage.NetMessageSetDialogTarget:                   OnSetDialogTarget(message); break;                  // 100
                 case ClientToGameServerMessage.NetMessageDialogResult:                      OnDialogResult(message); break;                     // 101
+                case ClientToGameServerMessage.NetMessageVendorRequestBuyItemFrom:          OnVendorRequestBuyItemFrom(message); break;         // 102
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
+                case ClientToGameServerMessage.NetMessageVendorRequestDonateItemTo:         OnVendorRequestDonateItemTo(message); break;        // 104
+                case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
@@ -1147,6 +1150,15 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnVendorRequestBuyItemFrom(MailboxMessage message)  // 102
+        {
+            var vendorRequestBuyItemFrom = message.As<NetMessageVendorRequestBuyItemFrom>();
+            if (vendorRequestBuyItemFrom == null) return Logger.WarnReturn(false, $"OnVendorRequestBuyItemFrom(): Failed to retrieve message");
+
+            Player?.BuyItemFromVendor(vendorRequestBuyItemFrom.AvatarIndex, vendorRequestBuyItemFrom.ItemId, vendorRequestBuyItemFrom.VendorId, vendorRequestBuyItemFrom.InventorySlot);
+            return true;
+        }
+
         private bool OnVendorRequestSellItemTo(MailboxMessage message)  // 103
         {
             var vendorRequestSellItemTo = message.As<NetMessageVendorRequestSellItemTo>();
@@ -1156,13 +1168,33 @@ namespace MHServerEmu.Games.Network
             if (item == null) return false;     // Multiple request may arrive due to lag
 
             if (item.GetOwnerOfType<Player>() != Player)
-                return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): {this} is attempting to sell item {item} that does not belong to it!");
+                return Logger.WarnReturn(false, $"OnVendorRequestSellItemTo(): [{this}] is attempting to sell item [{item}] that does not belong to them!");
 
-            // TODO: Sell this item to the specified vendor with the ability to buy back
-            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
-            Player.Properties[PropertyEnum.Currency, creditsProtoRef] += item.GetSellPrice(Player);
-            item.Destroy();
+            Player?.SellItemToVendor(vendorRequestSellItemTo.AvatarIndex, vendorRequestSellItemTo.ItemId, vendorRequestSellItemTo.VendorId);
+            return true;
+        }
 
+        private bool OnVendorRequestDonateItemTo(MailboxMessage message)  // 104
+        {
+            var vendorRequestDonateItemTo = message.As<NetMessageVendorRequestDonateItemTo>();
+            if (vendorRequestDonateItemTo == null) return Logger.WarnReturn(false, $"OnVendorRequestDonateItemTo(): Failed to retrieve message");
+
+            Item item = Game.EntityManager.GetEntity<Item>(vendorRequestDonateItemTo.ItemId);
+            if (item == null) return false;     // Multiple request may arrive due to lag
+
+            if (item.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnVendorRequestDonateItemTo(): [{this}] is attempting to donate item [{item}] that does not belong to them!");
+
+            Player?.DonateItemToVendor(vendorRequestDonateItemTo.AvatarIndex, vendorRequestDonateItemTo.ItemId, vendorRequestDonateItemTo.VendorId);
+            return true;
+        }
+
+        private bool OnVendorRequestRefresh(MailboxMessage message) // 105
+        {
+            var vendorRequestRefresh = message.As<NetMessageVendorRequestRefresh>();
+            if (vendorRequestRefresh == null) return Logger.WarnReturn(false, $"OnVendorRequestRefresh(): Failed to retrieve message");
+
+            Player?.RefreshVendorInventory(vendorRequestRefresh.VendorId);
             return true;
         }
 
@@ -1293,15 +1325,16 @@ namespace MHServerEmu.Games.Network
 
             PrototypeId inventoryProtoRef = (PrototypeId)requestInterestInInventory.InventoryProtoId;
 
-            Logger.Trace(string.Format("OnRequestInterestInInventory(): inventoryProtoId={0}, loadState={1}",
-                GameDatabase.GetPrototypeName(inventoryProtoRef),
-                requestInterestInInventory.LoadState));
-
             // Validate inventory prototype
-            var inventoryPrototype = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
-            if (inventoryPrototype == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryPrototype == null");
+            var inventoryProto = GameDatabase.GetPrototype<InventoryPrototype>((PrototypeId)requestInterestInInventory.InventoryProtoId);
+            if (inventoryProto == null) return Logger.WarnReturn(false, "OnRequestInterestInInventory(): inventoryProto == null");
 
-            if (Player.RevealInventory(inventoryProtoRef) == false)
+            // Initialize vendor inventory if needed
+            if (inventoryProto.IsPlayerVendorInventory || inventoryProto.IsPlayerCraftingRecipeInventory)
+                Player.InitializeVendorInventory(inventoryProtoRef);
+
+            // Reveal the inventory to the player
+            if (Player.RevealInventory(inventoryProto) == false)
                 return Logger.WarnReturn(false, $"OnRequestInterestInInventory(): Failed to reveal inventory {GameDatabase.GetPrototypeName(inventoryProtoRef)}");
 
             SendMessage(NetMessageInventoryLoaded.CreateBuilder()
@@ -1319,10 +1352,6 @@ namespace MHServerEmu.Games.Network
 
             PrototypeId avatarProtoId = (PrototypeId)requestInterestInAvatarEquipment.AvatarProtoId;
 
-            Logger.Trace(string.Format("OnRequestInterestInAvatarEquipment(): avatarProtoId={0}, avatarModeEnum={1}",
-                GameDatabase.GetPrototypeName(avatarProtoId),
-                (AvatarMode)requestInterestInAvatarEquipment.AvatarModeEnum));
-
             Avatar avatar = Player.GetAvatar(avatarProtoId);
             if (avatar == null) return Logger.WarnReturn(false, "OnRequestInterestInAvatarEquipment(): avatar == null");
 
@@ -1337,9 +1366,6 @@ namespace MHServerEmu.Games.Network
             if (requestInterestInTeamUpEquipment == null) return Logger.WarnReturn(false, $"OnRequestRequestInterestInTeamUpEquipment(): Failed to retrieve message");
 
             PrototypeId teamUpProtoId = (PrototypeId)requestInterestInTeamUpEquipment.TeamUpProtoId;
-
-            Logger.Trace(string.Format("OnRequestRequestInterestInTeamUpEquipment(): teamUpProtoId={0}",
-                GameDatabase.GetPrototypeName(teamUpProtoId)));
 
             Agent teamUpAgent = Player.GetTeamUpAgent(teamUpProtoId);
             if (teamUpAgent == null) return Logger.WarnReturn(false, "OnRequestRequestInterestInTeamUpEquipment(): teamUpAgent == null");

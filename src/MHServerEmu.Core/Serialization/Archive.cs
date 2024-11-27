@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
@@ -25,9 +26,10 @@ namespace MHServerEmu.Core.Serialization
         Invalid = 0,
         Initial = 1,
         AddedMissions = 2,
+        AddedVendorPurchaseData = 3,
 
         // Update the current version if you add any    <---------
-        Current = AddedMissions
+        Current = AddedVendorPurchaseData
     }
 
     /// <summary>
@@ -86,6 +88,9 @@ namespace MHServerEmu.Core.Serialization
 
         public bool IsPacking { get; }
         public bool IsUnpacking { get => IsPacking == false; }
+
+        public string Error { get; private set; } = null;
+        public bool HasError { get => Error != null; }
 
         // NOTE: COS/CIS are buffered, so we need to use their position, and not the one from the underlying stream.
         public long CurrentOffset { get => IsPacking ? _cos.Position : _cis.Position; }
@@ -208,6 +213,13 @@ namespace MHServerEmu.Core.Serialization
             return success;
         }
 
+        private void SetError(string error)
+        {
+            int lineNumber = new StackFrame(1, true).GetFileLineNumber();
+            Logger.Error($"Archive ERROR at line {lineNumber}: {error}");
+            Error ??= error;
+        }
+
         #region Transfer
 
         /// <summary>
@@ -224,7 +236,10 @@ namespace MHServerEmu.Core.Serialization
 
                 byte numEncodedBits = EncodeBoolIntoByte(ref bitBuffer, ioData);
                 if (numEncodedBits == 0)
-                    return Logger.ErrorReturn(false, "Transfer(): Bool encoding failed");
+                {
+                    SetError("Bool encoding failed");
+                    return false;
+                }
 
                 if (lastBitEncoded == null)
                 {
@@ -244,7 +259,10 @@ namespace MHServerEmu.Core.Serialization
                     ReadSingleByte(ref _encodedBitBuffer);
 
                 if (DecodeBoolFromByte(ref _encodedBitBuffer, ref ioData, out byte numRemainingBits) == false)
-                    return Logger.ErrorReturn(false, "Transfer(): Bool decoding failed");
+                {
+                    SetError("Bool decoding failed");
+                    return false;
+                }
 
                 if (numRemainingBits == 0)
                 {
@@ -579,13 +597,26 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         private bool Transfer_(ref uint ioData)
         {
-            // TODO: Archive::HasError()
             // TODO: FavorSpeed
 
             if (IsPacking)
+            {
                 return WriteVarint(ioData);
+            }
             else
-                return ReadVarint(ref ioData);
+            {
+                // Stop reading after the first error
+                if (HasError)
+                    return false;
+
+                if (ReadVarint(ref ioData) == false)
+                {
+                    SetError($"Exception reading archive!");
+                    return false;
+                }
+            }
+
+            return HasError == false;
         }
 
         /// <summary>
@@ -593,13 +624,26 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         private bool Transfer_(ref ulong ioData)
         {
-            // TODO: Archive::HasError()
             // TODO: FavorSpeed
 
             if (IsPacking)
+            {
                 return WriteVarint(ioData);
+            }
             else
-                return ReadVarint(ref ioData);
+            {
+                // Stop reading after the first error
+                if (HasError)
+                    return false;
+
+                if (ReadVarint(ref ioData) == false)
+                {
+                    SetError($"Exception reading archive!");
+                    return false;
+                }
+            }
+
+            return HasError == false;
         }
 
         #endregion
@@ -841,7 +885,7 @@ namespace MHServerEmu.Core.Serialization
             }
             catch (Exception e)
             {
-                Logger.ErrorException(e, nameof(ReadVarint));
+                Logger.ErrorException(e, $"ReadVarint(): Failed to read varint32 at offset {CurrentOffset}");
                 return false;
             }
         }
@@ -858,7 +902,7 @@ namespace MHServerEmu.Core.Serialization
             }
             catch (Exception e)
             {
-                Logger.ErrorException(e, nameof(ReadVarint));
+                Logger.ErrorException(e, $"ReadVarint(): Failed to read varint64 at offset {CurrentOffset}");
                 return false;
             }
         }
@@ -875,7 +919,10 @@ namespace MHServerEmu.Core.Serialization
             if (_lastBitEncodedOffset == 0) return null;
 
             if (_bufferStream.ReadByteAt(_lastBitEncodedOffset, out byte lastBitEncoded) == false)
-                return Logger.ErrorReturn<byte?>(null, $"GetLastBitEncoded(): Failed to get last bit encoded");
+            {
+                SetError("Failed getting last bit encoded!");
+                return null;
+            }
                 
             return lastBitEncoded;
         }

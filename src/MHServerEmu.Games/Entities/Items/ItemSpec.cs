@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Entities.Items
         public PrototypeId RarityProtoRef { get => _rarityProtoRef; set => _rarityProtoRef = value; }
         public int ItemLevel { get => _itemLevel; set => _itemLevel = value; }
         public int CreditsAmount { get => _creditsAmount; }
-        public IEnumerable<AffixSpec> AffixSpecs { get => _affixSpecList; }
+        public IReadOnlyList<AffixSpec> AffixSpecs { get => _affixSpecList; }
         public int Seed { get => _seed; }
         public PrototypeId EquippableBy { get => _equippableBy; }
 
@@ -65,6 +65,22 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (protobuf.HasEquippableBy)
                 _equippableBy = (PrototypeId)protobuf.EquippableBy;
+        }
+
+        public ItemSpec(ItemSpec other)
+        {
+            _itemProtoRef = other._itemProtoRef;
+            _rarityProtoRef = other._rarityProtoRef;
+            _itemLevel = other._itemLevel;
+            _creditsAmount = other._creditsAmount;
+
+            foreach (AffixSpec affixSpec in other._affixSpecList)
+                _affixSpecList.Add(new(affixSpec));
+
+            _seed = other._seed;
+            _equippableBy = other._equippableBy;
+
+            StackCount = other.StackCount;
         }
 
         public bool Serialize(Archive archive)
