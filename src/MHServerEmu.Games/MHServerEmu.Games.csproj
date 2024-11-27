@@ -32,6 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
+	<None Update="Data\Game\Achievements\AchievementContextMap.json">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
     <None Update="Data\Game\Achievements\AchievementInfoMap.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
