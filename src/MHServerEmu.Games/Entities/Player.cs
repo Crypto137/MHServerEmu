@@ -2174,9 +2174,14 @@ namespace MHServerEmu.Games.Entities
             VanityTitlePrototype vanityTitleProto = vanityTitleProtoRef.As<VanityTitlePrototype>();
             if (vanityTitleProto == null) return Logger.WarnReturn(false, "UnlockVanityTitle(): vanityTitleProto == null");
 
-            Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
             Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
             return true;
+        }
+
+        public bool IsVanityTitleUnlocked(PrototypeId vanityTitleProtoRef)
+        {
+            if (vanityTitleProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsVanityTitleUnlocked(): vanityTitleProtoRef == PrototypeId.Invalid");
+            return Properties.HasProperty(new PropertyId(PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef));
         }
 
         public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)

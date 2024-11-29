@@ -232,6 +232,18 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties.RemoveProperty(PropertyEnum.TutorialInvulnerable);
         }
 
+        public bool SelectVanityTitle(PrototypeId vanityTitleProtoRef)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "SelectVanityTitle(): player == null");
+
+            if (player.IsVanityTitleUnlocked(vanityTitleProtoRef) == false)
+                return false;
+
+            Properties[PropertyEnum.AvatarVanityTitle] = vanityTitleProtoRef;
+            return true;
+        }
+
         #region World and Positioning
 
         public override bool CanMove()
