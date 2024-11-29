@@ -481,6 +481,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;          // 136
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;                // 140
+                case ClientToGameServerMessage.NetMessagePlayerTradeCancel:                 OnPlayerTradeCancel(message); break;                // 144
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
                 case ClientToGameServerMessage.NetMessageStashInventoryViewed:              OnStashInventoryViewed(message); break;             // 152
@@ -1452,6 +1453,15 @@ namespace MHServerEmu.Games.Network
             else
                 avatar.Properties.RemoveProperty(PropertyEnum.AvatarVanityTitle);
 
+            return true;
+        }
+
+        private bool OnPlayerTradeCancel(MailboxMessage message)    // 144
+        {
+            var playerTradeCancel = message.As<NetMessagePlayerTradeCancel>();
+            if (playerTradeCancel == null) return Logger.WarnReturn(false, $"OnPlayerTradeCancel(): Failed to retrieve message");
+
+            Player?.CancelPlayerTrade();
             return true;
         }
 

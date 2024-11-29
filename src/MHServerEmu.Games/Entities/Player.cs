@@ -461,6 +461,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void ExitGame()
         {
+            CancelPlayerTrade();
+
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
             AOI.SetRegion(0, true);
 
@@ -1574,6 +1576,15 @@ namespace MHServerEmu.Games.Entities
             // TODO party reveal
 
             return reveal;
+        }
+
+        #endregion
+
+        #region Trading
+
+        public void CancelPlayerTrade()
+        {
+            // TODO
         }
 
         #endregion
