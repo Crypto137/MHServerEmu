@@ -144,6 +144,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId Faction { get => Properties[PropertyEnum.Faction]; }
         public ulong DialogTargetId { get; private set; }
         public ulong DialogInteractorId { get; private set; }
+        public PrototypeId CurrentOpenStashPagePrototypeRef { get; set; }
 
         public Player(Game game) : base(game)
         {
