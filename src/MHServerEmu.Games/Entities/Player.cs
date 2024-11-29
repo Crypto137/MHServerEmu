@@ -695,6 +695,36 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool OnStashInventoryViewed(PrototypeId stashInventoryProtoRef)
+        {
+            if (stashInventoryProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnStashInventoryViewed(): stashInventoryProtoRef == PrototypeId.Invalid");
+
+            int newItemCount = Properties[PropertyEnum.StashNewItemCount, stashInventoryProtoRef];
+            if (newItemCount == 0)
+                return true;
+
+            Properties.RemoveProperty(new(PropertyEnum.StashNewItemCount, stashInventoryProtoRef));
+
+            Inventory inventory = GetInventoryByRef(stashInventoryProtoRef);
+            if (inventory == null) return Logger.WarnReturn(false, "OnStashInventoryViewed(): inventory == null");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var entry in inventory)
+            {
+                Item item = entityManager.GetEntity<Item>(entry.Id);
+                if (item == null)
+                {
+                    Logger.Warn("OnStashInventoryViewed(): item == null");
+                    continue;
+                }
+
+                item.Properties[PropertyEnum.ItemRecentlyAddedGlint] = false;
+            }
+
+            return true;
+        }
+
         public bool RevealInventory(InventoryPrototype inventoryProto)
         {
             // Validate inventory prototype
@@ -778,10 +808,18 @@ namespace MHServerEmu.Games.Entities
                             Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {currentAvatar}");
                             return;
                         }
-
-                        Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {currentAvatar}");
                     }
                 }
+            }
+
+            // Highlight items that get put into stash tabs different from the current one
+            if (invLoc.InventoryRef != CurrentOpenStashPagePrototypeRef &&
+                (category == InventoryCategory.PlayerStashGeneral ||
+                category == InventoryCategory.PlayerStashAvatarSpecific ||
+                category == InventoryCategory.PlayerStashTeamUpGear))
+            {
+                item.Properties[PropertyEnum.ItemRecentlyAddedGlint] = true;
+                Properties.AdjustProperty(1, new(PropertyEnum.StashNewItemCount, invLoc.InventoryRef));
             }
         }
 
@@ -813,10 +851,7 @@ namespace MHServerEmu.Games.Entities
                         (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false))
                     {
                         if (currentAvatar.FindAbilityItem(itemProto, item.Id) == InvalidId)
-                        {
                             currentAvatar.UnassignPower(powerProtoRef);
-                            Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {currentAvatar}");
-                        }
                     }
                 }
             }

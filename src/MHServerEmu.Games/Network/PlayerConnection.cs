@@ -482,6 +482,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
+                case ClientToGameServerMessage.NetMessageStashInventoryViewed:              OnStashInventoryViewed(message); break;             // 152
                 case ClientToGameServerMessage.NetMessageStashCurrentlyOpen:                OnStashCurrentlyOpen(message); break;               // 153
                 case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;               // 154
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
@@ -1454,6 +1455,17 @@ namespace MHServerEmu.Games.Network
             if (uiSystemLockProto == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): UISystemLockPrototype is null");
             uint state = uiSystemLockState.State;
             Player.Properties[PropertyEnum.UISystemLock, uiSystemRef] = state;
+            return true;
+        }
+
+        private bool OnStashInventoryViewed(MailboxMessage message)   // 152
+        {
+            var stashInventoryViewed = message.As<NetMessageStashInventoryViewed>();
+            if (stashInventoryViewed == null) return Logger.WarnReturn(false, $"OnStashInventoryViewed(): Failed to retrieve message");
+
+            if (Player == null) return Logger.WarnReturn(false, "OnStashInventoryViewed(): Player == null");
+
+            Player.OnStashInventoryViewed((PrototypeId)stashInventoryViewed.PrototypeId);
             return true;
         }
 
