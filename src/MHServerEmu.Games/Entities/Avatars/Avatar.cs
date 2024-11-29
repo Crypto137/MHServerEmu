@@ -326,7 +326,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     {
                         // Find the target for our respawn teleport
                         PrototypeId deathReleaseTarget = FindDeathReleaseTarget();
-                        Logger.Debug($"DoDeathRelease(): {deathReleaseTarget.GetName()}");
+                        Logger.Trace($"DoDeathRelease(): {deathReleaseTarget.GetName()}");
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 

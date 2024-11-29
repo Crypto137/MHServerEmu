@@ -57,7 +57,6 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 case LootType.Experience:
-                    Logger.Debug($"Add(): experience=[{lootResult.Amount}]");
                     Experience += lootResult.Amount;
                     Types |= LootType.Experience;
                     break;
@@ -105,7 +104,6 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 case LootType.Currency:
-                    Logger.Debug($"Add(): currencySpec=[{lootResult.CurrencySpec}]");
                     Currencies.Add(lootResult.CurrencySpec);
                     Types |= LootType.Currency;
                     break;

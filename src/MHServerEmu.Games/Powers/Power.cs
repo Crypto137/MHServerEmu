@@ -178,9 +178,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            if (IsRecurring())
-                Logger.Debug($"IsRecurring - {Prototype}");
-
             return true;
         }
 

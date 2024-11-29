@@ -1239,7 +1239,7 @@ namespace MHServerEmu.Games.Entities
             if (region == null)
                 return Logger.WarnReturn(false, "EnableCurrentAvtar(): region == null");
 
-            Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
+            Logger.Trace($"EnableCurrentAvatar(): [{CurrentAvatar}] entering world in region [{region}]");
 
             // Disable initial visibility and schedule swap-in power if requested
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
