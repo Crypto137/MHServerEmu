@@ -1642,6 +1642,9 @@ namespace MHServerEmu.Games.Missions
         public static readonly MissionPrototypeId[] EnabledMissions = new MissionPrototypeId[]
         {
             MissionPrototypeId.PlayOpening,
+            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV1,
+            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV2,
+            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV3,
         };
 
         // TODO replace this mission to MetaStates
