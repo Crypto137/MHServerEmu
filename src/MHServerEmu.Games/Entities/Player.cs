@@ -1323,9 +1323,7 @@ namespace MHServerEmu.Games.Entities
                 return playerMaxAvatarLevel >= serverBonusUnlockLevelOverride;
 
             // NOTE: ServerBonusUnlockLevel is set to 60 in 1.52.
-            // TODO: Uncomment the real check when we no longer need to rely on live tuning for balancing rewards.
-            //return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
-            return true;
+            return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
         }
 
         #endregion

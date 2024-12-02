@@ -1,8 +1,23 @@
 [
   {
     "Prototype": "",
+    "Setting": "eGTV_VendorBuyPrice",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_VendorSellPrice",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_VendorXPGain",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
     "Setting": "eGTV_PVPEnabled",
-    "Value": 2
+    "Value": 2.0
   },
   {
     "Prototype": "",
@@ -15,6 +30,116 @@
     "Value": 1.5
   },
   {
+    "Prototype": "",
+    "Setting": "eGTV_LootSpecialDropRate",
+    "Value": 1.5
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_LootRarity",
+    "Value": 1.5
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_PartyXPBonusPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_PlayerTradeEnabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_CosmicPrestigeXPPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_LootVaporizationEnabled",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_XPBuffDisplay",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_SIFBuffDisplay",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RIFBuffDisplay",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_OmegaXPPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForGlobalXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForGlobalRIF",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForGlobalSIF",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForOmegaXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForAvatarXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForRegionXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_ServerBonusUnlockLevelOverride",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_BoostTimersRunning",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_InfinityXPPct",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "",
+    "Setting": "eGTV_RespectLevelForInfinityXP",
+    "Value": 1.0
+  },
+  {
+    "Prototype": "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/Anniversary/BirthdayCakeSlice2016.prototype",
+    "Setting": "eWETV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Entity/Items/Orbs/PowerUps/Items/Event/WinterEvent/BirthdayEventPowerUpParent.prototype",
+    "Setting": "eWETV_Enabled",
+    "Value": 0.0
+  },
+  {
     "Prototype": "Powers/EnemyPowers/Boss/MindlessOneBoss/GroundStomp.prototype",
     "Setting": "ePTV_PowerDamagePVE",
     "Value": 0.3
@@ -22,22 +147,22 @@
   {
     "Prototype": "Powers/EnemyPowers/AffixPowers/Boss/Inferno/InfernoSummon.prototype",
     "Setting": "ePTV_PowerEnabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/LaserFromAbove.prototype",
     "Setting": "ePTV_PowerEnabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Powers/EnemyPowers/MobPowers/SpiderClones/SonicBarrier.prototype",
     "Setting": "ePTV_PowerEnabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Powers/EnemyPowers/Boss/OnslaughtRaid/StarktechSentinelBlueThreewayBlastHARDMODE.prototype",
     "Setting": "ePTV_PowerEnabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Powers/EnemyPowers/Boss/SurturRaid/MistressOfMagma/SurturMoMBombDanceExplosion.prototype",
@@ -47,7 +172,7 @@
   {
     "Prototype": "Powers/ItemPowers/ConsumablePowers/LunarEnvelopeDrop.prototype",
     "Setting": "ePTV_PowerDamagePVE",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Powers/EnemyPowers/Boss/MindlessOneBoss/ChargedLaserHotspotEffect.prototype",
@@ -57,42 +182,47 @@
   {
     "Prototype": "Powers/EnemyPowers/Boss/GreenGoblin/PumpkinBarrage.prototype",
     "Setting": "ePTV_PowerEnabled",
-    "Value": 0
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/LivingLaserBlastStart.prototype",
+    "Setting": "ePTV_PowerEnabled",
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/CivilWarAirportCaptainAmericaRegionBand.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/HUBS/CivilWarHUBs/CivilWarHubCaptainAmericaWarehouseRegion.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Bazaar/AltRegions/CivilWarBazaarRegion60Cosmic.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/TierX/Limbo/AltRegions/LimboRegionL60.prototype",
     "Setting": "eRT_BonusItemFindMultiplier",
-    "Value": 10
+    "Value": 10.0
   },
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/AltRegions/AirportCap/CivilWarAirportCaptainAmericaRegion60Cosmic.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Bazaar/CivilWarBazaarRegionBand.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/HUBS/CivilWarHUBs/CivilWarHubIronManAvengersRoofRegion.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/Story/CH03Madripoor/LowTown/Safehouse/SafehouseRegion.prototype",
@@ -102,51 +232,36 @@
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/CivilWarAirportIronManRegionBand.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/DangerRoomMode/UniqueScenarios/Tutorial/DRRegionUniqueTutorialFight.prototype",
     "Setting": "eRT_BonusItemFindMultiplier",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/TierX/UltronGameMode/UltronRaidRegionCosmic.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/AltRegions/AirportIronMan/CivilWarAirportIronManRegion60Cosmic.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Regions/RAIDS/AxisRaid/AxisRaidRegionRed.prototype",
     "Setting": "eRTV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
     "Setting": "ePETV_Enabled",
-    "Value": 0
+    "Value": 0.0
   },
   {
     "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
     "Setting": "ePETV_EventInstance",
-    "Value": 14
-  },
-  {
-    "Prototype": "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/Anniversary/BirthdayCakeSlice2016.prototype",
-    "Setting": "eWETV_Enabled",
-    "Value": 0
-  },
-  {
-    "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/LivingLaserSweepBeam.prototype",
-    "Setting": "ePTV_PowerEnabled",
-    "Value": 0
-  },
-  {
-    "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/BigLaser.prototype",
-    "Setting": "ePTV_PowerEnabled",
-    "Value": 0
+    "Value": 14.0
   }
 ]

@@ -533,8 +533,10 @@ namespace MHServerEmu.Games.Loot
         private bool SpawnItemInternal(ItemSpec itemSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
-            if (itemProto == null)
-                return Logger.WarnReturn(false, "SpawnItemInternal(): itemProto == null");
+            if (itemProto == null) return Logger.WarnReturn(false, "SpawnItemInternal(): itemProto == null");
+
+            if (itemProto.IsLiveTuningEnabled() == false)
+                return false;
 
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
@@ -596,6 +598,12 @@ namespace MHServerEmu.Games.Loot
         private bool SpawnAgentInternal(in AgentSpec agentSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
         {
             // TODO: figure out a way to move functionality shared with SpawnItemInternal to a separate method?
+
+            WorldEntityPrototype agentProto = agentSpec.AgentProtoRef.As<WorldEntityPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(false, "SpawnAgentInternal(): agentProto == null");
+
+            if (agentProto.IsLiveTuningEnabled() == false)
+                return false;
 
             // Create entity
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
