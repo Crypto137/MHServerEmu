@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Loot
             return true;
         }
 
-        public bool TryGetDropPosition(Vector3 offset, WorldEntityPrototype dropEntityProto, int recipientId, out Vector3 dropPosition)
+        public bool TryGetDropPosition(Vector3 offset, WorldEntityPrototype dropEntityProto, int recipientId, float height, out Vector3 dropPosition)
         {
             dropPosition = default;
 
@@ -130,6 +130,17 @@ namespace MHServerEmu.Games.Loot
             if (_context.Region.NaviMesh.Contains(dropPosition, CellRadius, new DefaultContainsPathFlagsCheck(PathFlags.Walk)) == false)
             {
                 // Cache blocked state for future checks
+                SetGridCellState(gridPosition, CellState.Blocked);
+                return false;
+            }
+
+            // Snap the position to the floor using the cached value from context
+            dropPosition.Z = _context.FloorHeight;
+
+            // Do a line of sight check to make sure this position is reachable
+            if (_context.Region.LineOfSightTo(_context.Position, null, dropPosition, Entity.InvalidId, 0f, 0f, height) == false)
+            {
+                // Cache blocked state again
                 SetGridCellState(gridPosition, CellState.Blocked);
                 return false;
             }
@@ -186,6 +197,7 @@ namespace MHServerEmu.Games.Loot
             public readonly Vector3 Position;
             public readonly WorldEntity SourceEntity;
             public readonly TimeSpan? Time;
+            public readonly float FloorHeight;
         
             public Context(Region region, Vector3 position, WorldEntity sourceEntity)
             {
@@ -194,6 +206,7 @@ namespace MHServerEmu.Games.Loot
                 SourceEntity = sourceEntity;
 
                 Time = Game.Current?.CurrentTime;
+                FloorHeight = RegionLocation.ProjectToFloor(region, position).Z;
             }
 
             public override int GetHashCode()

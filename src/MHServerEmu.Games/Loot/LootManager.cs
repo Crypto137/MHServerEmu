@@ -702,6 +702,8 @@ namespace MHServerEmu.Games.Loot
             // Use the loot grid to put the item in a spiral with the rolled location settings
             GRandom rng = Game.Random;
 
+            float boundsHeight = bounds.HalfHeight * 2f;
+
             float startOrientation = rng.NextFloat(MathHelper.TwoPi);
             float orientation = startOrientation;
 
@@ -714,7 +716,7 @@ namespace MHServerEmu.Games.Loot
                 Vector3 spiralOffset = lootLocationData.Offset * (1f - radius / LootSpawnGrid.MaxSpiralRadius);
                 Vector3 dropPositionWithinSpiral = spiralDirection * radius + spiralOffset;
 
-                if (_lootSpawnGrid.TryGetDropPosition(dropPositionWithinSpiral, dropEntityProto, recipientId, out Vector3 dropPosition))
+                if (_lootSpawnGrid.TryGetDropPosition(dropPositionWithinSpiral, dropEntityProto, recipientId, boundsHeight, out Vector3 dropPosition))
                     return dropPosition;
 
                 // Move further along the circumference of the current radius randomly
