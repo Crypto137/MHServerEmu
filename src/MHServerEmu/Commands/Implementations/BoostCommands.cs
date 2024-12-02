@@ -2,7 +2,6 @@
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 

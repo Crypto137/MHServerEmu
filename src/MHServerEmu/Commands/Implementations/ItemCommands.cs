@@ -20,7 +20,7 @@ namespace MHServerEmu.Commands.Implementations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]")]
+        [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]", AccountUserLevel.Admin)]
         public string Drop(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -47,7 +47,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern]")]
+        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern]", AccountUserLevel.Admin)]
         public string Give(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

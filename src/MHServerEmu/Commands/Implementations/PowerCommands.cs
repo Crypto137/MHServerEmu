@@ -6,16 +6,14 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("power", "Provides commands for interacting with the power collection.", AccountUserLevel.Admin)]
     public class PowerCommands : CommandGroup
     {
-        [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print", AccountUserLevel.Admin)]
+        [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print")]
         public string Print(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -33,7 +31,7 @@ namespace MHServerEmu.Commands.Implementations
             return "Power collection information printed to the console.";
         }
 
-        [Command("assign", "Assigns the specified power to the current avatar.\nUsage: power assign [pattern]", AccountUserLevel.Admin)]
+        [Command("assign", "Assigns the specified power to the current avatar.\nUsage: power assign [pattern]")]
         public string Assign(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -54,7 +52,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} assigned to the current avatar";
         }
 
-        [Command("unassign", "Unassigns the specified power from the current avatar.\nUsage: power unassign [pattern]", AccountUserLevel.Admin)]
+        [Command("unassign", "Unassigns the specified power from the current avatar.\nUsage: power unassign [pattern]")]
         public string Unassign(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -75,7 +73,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} unassigned from the current avatar";
         }
 
-        [Command("status", "Returns power status for the current avatar.\nUsage: power status", AccountUserLevel.Admin)]
+        [Command("status", "Returns power status for the current avatar.\nUsage: power status")]
         public string Status(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

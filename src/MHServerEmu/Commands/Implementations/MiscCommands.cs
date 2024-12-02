@@ -28,7 +28,7 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("jail", "Travel to East Side: Detention Facility (old).", AccountUserLevel.User)]
+    [CommandGroup("jail", "Travel to East Side: Detention Facility (old).", AccountUserLevel.Admin)]
     public class JailCommand : CommandGroup
     {
         [DefaultCommand(AccountUserLevel.User)]
@@ -104,7 +104,7 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)", AccountUserLevel.User)]
+    [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)", AccountUserLevel.Admin)]
     public class TeleportCommand : CommandGroup
     {
         [DefaultCommand(AccountUserLevel.User)]

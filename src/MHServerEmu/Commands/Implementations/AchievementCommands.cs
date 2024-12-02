@@ -8,10 +8,10 @@ using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("achievement", "Manages achievements.", AccountUserLevel.User)]
+    [CommandGroup("achievement", "Manages achievements.", AccountUserLevel.Admin)]
     public class AchievementCommands : CommandGroup
     {
-        [Command("unlock", "Unlocks an achievement.\nUsage: achievement unlock [id]", AccountUserLevel.User)]
+        [Command("unlock", "Unlocks an achievement.\nUsage: achievement unlock [id]")]
         public string Unlock(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -36,7 +36,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]", AccountUserLevel.User)]
+        [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]")]
         public string Info(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help achievement unlock' to get help.";
