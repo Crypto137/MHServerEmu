@@ -3743,8 +3743,6 @@ namespace MHServerEmu.Games.Powers
         private static bool GetValidMeleeTarget(List<WorldEntity> targetList, PowerPrototype powerProto, AlliancePrototype userAllianceProto,
             WorldEntity user, in Vector3 targetPosition)
         {
-            Logger.Debug("GetValidMeleeTarget()");
-
             if (user == null)
                 return false;
 

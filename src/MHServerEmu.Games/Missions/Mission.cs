@@ -2165,7 +2165,9 @@ namespace MHServerEmu.Games.Missions
                 reward.Roll(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
-            Logger.Trace($"RollLootSummary [{PrototypeName}] Rewards {lootSummary}");
+            
+            if (MissionManager.Debug)
+                Logger.Debug($"RollLootSummary [{PrototypeName}] Rewards {lootSummary}");
 
             return lootSummary.HasAnyResult;
         }

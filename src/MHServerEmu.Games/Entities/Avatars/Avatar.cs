@@ -1100,8 +1100,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                             if (AssignPower(itemPowerProtoRef, indexProps) == null)
                                 Logger.Warn($"AssignItemPowers(): Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
-                            else
-                                Logger.Debug($"AssignItemPowers(): Assigned item power {itemPowerProtoRef.GetName()} to {this}");
                         }
                     }
                 }
@@ -1288,7 +1286,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
             }
 
-            Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
+            //Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             var objectProto = interactableObject.WorldEntityPrototype;
             if (objectProto.PreInteractPower != PrototypeId.Invalid)

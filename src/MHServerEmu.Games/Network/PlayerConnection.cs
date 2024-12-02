@@ -849,12 +849,15 @@ namespace MHServerEmu.Games.Network
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
             if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
 
+            // TODO: Log inventory movements to a separate file
+            /*
             Logger.Trace(string.Format("OnTryInventoryMove(): {0} to containerId={1}, inventoryRef={2}, slot={3}, isStackSplit={4}",
                 tryInventoryMove.ItemId,
                 tryInventoryMove.ToInventoryOwnerId,
                 GameDatabase.GetPrototypeName((PrototypeId)tryInventoryMove.ToInventoryPrototype),
                 tryInventoryMove.ToSlot,
                 tryInventoryMove.IsStackSplit));
+            */
 
             Entity entity = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ItemId);
             if (entity == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): entity == null");

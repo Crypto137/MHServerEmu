@@ -1642,7 +1642,7 @@ namespace MHServerEmu.Games.Entities
 
         public override string ToString()
         {
-            return $"{base.ToString()}, dbGuid=0x{DatabaseUniqueId:X}";
+            return $"{GetName()} (entityId={Id}, dbGuid=0x{DatabaseUniqueId:X})";
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -1703,8 +1703,6 @@ namespace MHServerEmu.Games.Entities
         public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
         {
             GameplayOptions newOptions = new(clientOptions.OptionsData);
-            Logger.Debug(newOptions.ToString());
-
             _gameplayOptions = newOptions;
 
             // TODO: Process new options
