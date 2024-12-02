@@ -2043,10 +2043,10 @@ namespace MHServerEmu.Games.Missions
                 }
                 else
                 {
-                    // Spawn loot as is if there is not chest
+                    // If there is no chest, spawn the loot as is
                     using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                     inputSettings.Initialize(LootContext.Drop, player, avatar);
-                    lootManager.SpawnLootFromTable(rewardProtoRef, inputSettings);
+                    lootManager.SpawnLootFromTable(rewardProtoRef, inputSettings, 1);
                 }
             }
         }

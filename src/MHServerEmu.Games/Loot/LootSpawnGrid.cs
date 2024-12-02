@@ -4,6 +4,8 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Loot
@@ -107,6 +109,35 @@ namespace MHServerEmu.Games.Loot
             }
 
             ListPool<WorldEntity>.Instance.Return(entityList);
+            return true;
+        }
+
+        public bool TryGetDropPosition(Vector3 offset, WorldEntityPrototype dropEntityProto, int recipientId, out Vector3 dropPosition)
+        {
+            dropPosition = default;
+
+            Point2 gridPosition = GetGridPositionFromWorldOffset(offset);
+
+            // Make sure this cell is unoccipied
+            CellState cellState = GetGridCellState(gridPosition);
+            if (cellState == CellState.Blocked || cellState == (CellState)recipientId)
+                return false;
+
+            // Convert grid position back to world position to snap it to the grid
+            dropPosition = GetWorldPositionFromGridPosition(gridPosition);
+
+            // Make sure the position is walkable
+            if (_context.Region.NaviMesh.Contains(dropPosition, CellRadius, new DefaultContainsPathFlagsCheck(PathFlags.Walk)) == false)
+            {
+                // Cache blocked state for future checks
+                SetGridCellState(gridPosition, CellState.Blocked);
+                return false;
+            }
+
+            // Mark the cell is occupied
+            CellState newState = dropEntityProto.Properties[PropertyEnum.RestrictedToPlayer] ? (CellState)recipientId : CellState.Blocked;
+            SetGridCellState(gridPosition, newState);
+
             return true;
         }
 

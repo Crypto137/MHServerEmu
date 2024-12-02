@@ -2258,12 +2258,13 @@ namespace MHServerEmu.Games.Entities
             tables = tables[..numTables];
 
             // Roll and distribute the rewards
+            int recipientId = 1;
             foreach (Player player in playerList)
             {
                 using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                 inputSettings.Initialize(LootContext.Drop, player, this);
                 inputSettings.EventType = eventType;
-                Game.LootManager.AwardLootFromTables(tables, inputSettings);
+                Game.LootManager.AwardLootFromTables(tables, inputSettings, recipientId++);
             }
 
             return true;

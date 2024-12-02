@@ -510,6 +510,7 @@ namespace MHServerEmu.Games.Populations
                 var entity = entityManager.GetEntity<WorldEntity>(entityId);
                 var lootManager = Game.LootManager;
 
+                int recipientId = 1;
                 foreach (ulong playerId in Killers)
                 {
                     var killer = entityManager.GetEntity<Player>(playerId);
@@ -519,7 +520,7 @@ namespace MHServerEmu.Games.Populations
                     if (positionOverride == Vector3.Zero) positionOverride = Transform.Translation;
                     using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                     inputSettings.Initialize(LootContext.Drop, killer, entity, positionOverride);
-                    lootManager.SpawnLootFromTable(ObjectProto.OnDefeatLootTable, inputSettings);
+                    lootManager.SpawnLootFromTable(ObjectProto.OnDefeatLootTable, inputSettings, recipientId++);
                 }
             }
 
