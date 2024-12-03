@@ -1000,6 +1000,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, TeleportToEntityPower);
             InitPowers(agent, SummonProceduralPowers);
+
+            // REMOVEME: Disabled state change until we fix desync issues
+            agent.AIController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.GenericProcedural;
         }
 
         public override void Think(AIController ownerController)
@@ -1080,6 +1083,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     PopulatePowerPicker(ownerController, powerPicker);
                     if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
 
+                    break;  // REMOVEME: Disabled state change until we fix desync issues
                     if (currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1])
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TeleportToEntity;
                     break;

@@ -734,7 +734,10 @@ namespace MHServerEmu.Games.Missions
             }
             else if (widget is UIWidgetMissionText missionText)
             {
-                missionText.SetText(LocaleStringId.Blank, objetiveProto.Name);
+                var name = objetiveProto.Name;
+                if (name == (LocaleStringId)8450716633619629313) // Hardfix long name for MGForgottenPyre
+                    name = (LocaleStringId)6053780125440214290;
+                missionText.SetText(LocaleStringId.Blank, name);
                 update = true;
             }
             else if (widget is UIWidgetEntityIconsSyncData)

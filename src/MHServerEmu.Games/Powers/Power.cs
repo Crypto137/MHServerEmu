@@ -178,9 +178,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            if (IsRecurring())
-                Logger.Debug($"IsRecurring - {Prototype}");
-
             return true;
         }
 
@@ -3754,8 +3751,6 @@ namespace MHServerEmu.Games.Powers
         private static bool GetValidMeleeTarget(List<WorldEntity> targetList, PowerPrototype powerProto, AlliancePrototype userAllianceProto,
             WorldEntity user, in Vector3 targetPosition)
         {
-            Logger.Debug("GetValidMeleeTarget()");
-
             if (user == null)
                 return false;
 

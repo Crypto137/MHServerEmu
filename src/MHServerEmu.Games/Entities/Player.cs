@@ -148,6 +148,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId Faction { get => Properties[PropertyEnum.Faction]; }
         public ulong DialogTargetId { get; private set; }
         public ulong DialogInteractorId { get; private set; }
+        public PrototypeId CurrentOpenStashPagePrototypeRef { get; set; }
 
         public Player(Game game) : base(game)
         {
@@ -467,6 +468,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void ExitGame()
         {
+            CancelPlayerTrade();
+
             SendMessage(NetMessageBeginExitGame.DefaultInstance);
             AOI.SetRegion(0, true);
 
@@ -701,6 +704,36 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool OnStashInventoryViewed(PrototypeId stashInventoryProtoRef)
+        {
+            if (stashInventoryProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnStashInventoryViewed(): stashInventoryProtoRef == PrototypeId.Invalid");
+
+            int newItemCount = Properties[PropertyEnum.StashNewItemCount, stashInventoryProtoRef];
+            if (newItemCount == 0)
+                return true;
+
+            Properties.RemoveProperty(new(PropertyEnum.StashNewItemCount, stashInventoryProtoRef));
+
+            Inventory inventory = GetInventoryByRef(stashInventoryProtoRef);
+            if (inventory == null) return Logger.WarnReturn(false, "OnStashInventoryViewed(): inventory == null");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var entry in inventory)
+            {
+                Item item = entityManager.GetEntity<Item>(entry.Id);
+                if (item == null)
+                {
+                    Logger.Warn("OnStashInventoryViewed(): item == null");
+                    continue;
+                }
+
+                item.Properties[PropertyEnum.ItemRecentlyAddedGlint] = false;
+            }
+
+            return true;
+        }
+
         public bool RevealInventory(InventoryPrototype inventoryProto)
         {
             // Validate inventory prototype
@@ -784,10 +817,18 @@ namespace MHServerEmu.Games.Entities
                             Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {currentAvatar}");
                             return;
                         }
-
-                        Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {currentAvatar}");
                     }
                 }
+            }
+
+            // Highlight items that get put into stash tabs different from the current one
+            if (invLoc.InventoryRef != CurrentOpenStashPagePrototypeRef &&
+                (category == InventoryCategory.PlayerStashGeneral ||
+                category == InventoryCategory.PlayerStashAvatarSpecific ||
+                category == InventoryCategory.PlayerStashTeamUpGear))
+            {
+                item.Properties[PropertyEnum.ItemRecentlyAddedGlint] = true;
+                Properties.AdjustProperty(1, new(PropertyEnum.StashNewItemCount, invLoc.InventoryRef));
             }
         }
 
@@ -819,10 +860,7 @@ namespace MHServerEmu.Games.Entities
                         (itemProto.AbilitySettings == null || itemProto.AbilitySettings.OnlySlottableWhileEquipped == false))
                     {
                         if (currentAvatar.FindAbilityItem(itemProto, item.Id) == InvalidId)
-                        {
                             currentAvatar.UnassignPower(powerProtoRef);
-                            Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {currentAvatar}");
-                        }
                     }
                 }
             }
@@ -1209,7 +1247,7 @@ namespace MHServerEmu.Games.Entities
             if (region == null)
                 return Logger.WarnReturn(false, "EnableCurrentAvtar(): region == null");
 
-            Logger.Info($"EnableCurrentAvatar(): {CurrentAvatar} entering world");
+            Logger.Trace($"EnableCurrentAvatar(): [{CurrentAvatar}] entering world in region [{region}]");
 
             // Disable initial visibility and schedule swap-in power if requested
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
@@ -1302,9 +1340,7 @@ namespace MHServerEmu.Games.Entities
                 return playerMaxAvatarLevel >= serverBonusUnlockLevelOverride;
 
             // NOTE: ServerBonusUnlockLevel is set to 60 in 1.52.
-            // TODO: Uncomment the real check when we no longer need to rely on live tuning for balancing rewards.
-            //return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
-            return true;
+            return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
         }
 
         #endregion
@@ -1559,6 +1595,15 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Trading
+
+        public void CancelPlayerTrade()
+        {
+            // TODO
+        }
+
+        #endregion
+
         public override void Destroy()
         {
             var region = GetRegion();
@@ -1614,7 +1659,7 @@ namespace MHServerEmu.Games.Entities
 
         public override string ToString()
         {
-            return $"{base.ToString()}, dbGuid=0x{DatabaseUniqueId:X}";
+            return $"{GetName()} (entityId={Id}, dbGuid=0x{DatabaseUniqueId:X})";
         }
 
         protected override void BuildString(StringBuilder sb)
@@ -1675,8 +1720,6 @@ namespace MHServerEmu.Games.Entities
         public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
         {
             GameplayOptions newOptions = new(clientOptions.OptionsData);
-            Logger.Debug(newOptions.ToString());
-
             _gameplayOptions = newOptions;
 
             // TODO: Process new options
@@ -2176,9 +2219,14 @@ namespace MHServerEmu.Games.Entities
             VanityTitlePrototype vanityTitleProto = vanityTitleProtoRef.As<VanityTitlePrototype>();
             if (vanityTitleProto == null) return Logger.WarnReturn(false, "UnlockVanityTitle(): vanityTitleProto == null");
 
-            Logger.Trace($"UnlockVanityTitle(): {vanityTitleProto} for {this}");
             Properties[PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef] = true;
             return true;
+        }
+
+        public bool IsVanityTitleUnlocked(PrototypeId vanityTitleProtoRef)
+        {
+            if (vanityTitleProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsVanityTitleUnlocked(): vanityTitleProtoRef == PrototypeId.Invalid");
+            return Properties.HasProperty(new PropertyId(PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef));
         }
 
         public bool AwardBonusItemFindPoints(int amount, LootInputSettings settings)

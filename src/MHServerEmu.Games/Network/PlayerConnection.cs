@@ -485,8 +485,12 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageNewItemGlintPlayed:                OnNewItemGlintPlayed(message); break;               // 135
                 case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;          // 136
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
+                case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;                // 140
+                case ClientToGameServerMessage.NetMessagePlayerTradeCancel:                 OnPlayerTradeCancel(message); break;                // 144
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
+                case ClientToGameServerMessage.NetMessageStashInventoryViewed:              OnStashInventoryViewed(message); break;             // 152
+                case ClientToGameServerMessage.NetMessageStashCurrentlyOpen:                OnStashCurrentlyOpen(message); break;               // 153
                 case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;               // 154
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
@@ -858,12 +862,15 @@ namespace MHServerEmu.Games.Network
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
             if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
 
+            // TODO: Log inventory movements to a separate file
+            /*
             Logger.Trace(string.Format("OnTryInventoryMove(): {0} to containerId={1}, inventoryRef={2}, slot={3}, isStackSplit={4}",
                 tryInventoryMove.ItemId,
                 tryInventoryMove.ToInventoryOwnerId,
                 GameDatabase.GetPrototypeName((PrototypeId)tryInventoryMove.ToInventoryPrototype),
                 tryInventoryMove.ToSlot,
                 tryInventoryMove.IsStackSplit));
+            */
 
             Entity entity = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ItemId);
             if (entity == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): entity == null");
@@ -1446,6 +1453,34 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnVanityTitleSelect(MailboxMessage message)    // 140
+        {
+            var vanityTitleSelect = message.As<NetMessageVanityTitleSelect>();
+            if (vanityTitleSelect == null) return Logger.WarnReturn(false, $"OnVanityTitleSelect(): Failed to retrieve message");
+
+            Avatar avatar = Player?.GetActiveAvatarByIndex(vanityTitleSelect.AvatarIndex);
+            if (avatar == null) return true;
+
+            PrototypeId vanityTitleProtoRef = (PrototypeId)vanityTitleSelect.VanityTitlePrototypeId;
+            if (vanityTitleProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnVanityTitleSelect(): vanityTitleProtoRef == PrototypeId.Invalid");
+
+            if (vanityTitleProtoRef != GameDatabase.UIGlobalsPrototype.VanityTitleNoTitle)
+                avatar.SelectVanityTitle(vanityTitleProtoRef);
+            else
+                avatar.Properties.RemoveProperty(PropertyEnum.AvatarVanityTitle);
+
+            return true;
+        }
+
+        private bool OnPlayerTradeCancel(MailboxMessage message)    // 144
+        {
+            var playerTradeCancel = message.As<NetMessagePlayerTradeCancel>();
+            if (playerTradeCancel == null) return Logger.WarnReturn(false, $"OnPlayerTradeCancel(): Failed to retrieve message");
+
+            Player?.CancelPlayerTrade();
+            return true;
+        }
+
         private bool OnChangeCameraSettings(MailboxMessage message) // 148
         {
             var changeCameraSettings = message.As<NetMessageChangeCameraSettings>();
@@ -1466,6 +1501,28 @@ namespace MHServerEmu.Games.Network
             if (uiSystemLockProto == null) return Logger.WarnReturn(false, $"OnUISystemLockState(): UISystemLockPrototype is null");
             uint state = uiSystemLockState.State;
             Player.Properties[PropertyEnum.UISystemLock, uiSystemRef] = state;
+            return true;
+        }
+
+        private bool OnStashInventoryViewed(MailboxMessage message)   // 152
+        {
+            var stashInventoryViewed = message.As<NetMessageStashInventoryViewed>();
+            if (stashInventoryViewed == null) return Logger.WarnReturn(false, $"OnStashInventoryViewed(): Failed to retrieve message");
+
+            if (Player == null) return Logger.WarnReturn(false, "OnStashInventoryViewed(): Player == null");
+
+            Player.OnStashInventoryViewed((PrototypeId)stashInventoryViewed.PrototypeId);
+            return true;
+        }
+
+        private bool OnStashCurrentlyOpen(MailboxMessage message)   // 153
+        {
+            var stashCurrentlyOpen = message.As<NetMessageStashCurrentlyOpen>();
+            if (stashCurrentlyOpen == null) return Logger.WarnReturn(false, $"OnStashCurrentlyOpen(): Failed to retrieve message");
+
+            if (Player == null) return Logger.WarnReturn(false, "OnStashCurrentlyOpen(): Player == null");
+
+            Player.CurrentOpenStashPagePrototypeRef = (PrototypeId)stashCurrentlyOpen.PrototypeId;
             return true;
         }
 

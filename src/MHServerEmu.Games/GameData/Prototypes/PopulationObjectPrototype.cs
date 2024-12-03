@@ -402,6 +402,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         clusterEntity.SetParentRelativeOrientation(markerProto.Rotation);
                         clusterEntity.SnapToFloor = SpawnSpec.SnapToFloorConvert(markerProto.OverrideSnapToFloor, markerProto.OverrideSnapToFloorValue);
                         clusterEntity.EncounterSpawnPhase = markerProto.EncounterSpawnPhase;
+                        if (markerProto.EntityGuid == (PrototypeGuid)13841901974787866331) clusterEntity.EncounterSpawnPhase = 0; // Hardfix for SHIELDAgentForgottenPyreEvent
                         clusterEntity.Flags |= ClusterObjectFlag.SkipFormation;
                     }
                 }

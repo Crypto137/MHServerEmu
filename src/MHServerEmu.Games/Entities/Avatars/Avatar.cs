@@ -234,6 +234,18 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties.RemoveProperty(PropertyEnum.TutorialInvulnerable);
         }
 
+        public bool SelectVanityTitle(PrototypeId vanityTitleProtoRef)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "SelectVanityTitle(): player == null");
+
+            if (player.IsVanityTitleUnlocked(vanityTitleProtoRef) == false)
+                return false;
+
+            Properties[PropertyEnum.AvatarVanityTitle] = vanityTitleProtoRef;
+            return true;
+        }
+
         #region World and Positioning
 
         public override bool CanMove()
@@ -316,7 +328,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     {
                         // Find the target for our respawn teleport
                         PrototypeId deathReleaseTarget = FindDeathReleaseTarget();
-                        Logger.Debug($"DoDeathRelease(): {deathReleaseTarget.GetName()}");
+                        Logger.Trace($"DoDeathRelease(): {deathReleaseTarget.GetName()}");
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
@@ -1090,8 +1102,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                             if (AssignPower(itemPowerProtoRef, indexProps) == null)
                                 Logger.Warn($"AssignItemPowers(): Failed to assign item power {itemPowerProtoRef.GetName()} to avatar {this}");
-                            else
-                                Logger.Debug($"AssignItemPowers(): Assigned item power {itemPowerProtoRef.GetName()} to {this}");
                         }
                     }
                 }
@@ -1300,7 +1310,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
             }
 
-            Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
+            //Logger.Trace($"UseInteractableObject(): {this} => {interactableObject}");
 
             var objectProto = interactableObject.WorldEntityPrototype;
             if (objectProto.PreInteractPower != PrototypeId.Invalid)

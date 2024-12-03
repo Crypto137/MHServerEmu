@@ -355,6 +355,14 @@ namespace MHServerEmu.Games.Powers
                     creationSettings.Lifespan = TimeSpan.FromMilliseconds(lifespanOverride);
                 else
                 {
+                    if (projectileSpeed == 0f)
+                    {
+                        // Projectile speed appears to be zero in some cases, need to figure out if this is intended.
+                        // When range / projectileSpeed = NaN, TimeSpan.FromSeconds() throws an exception.
+                        Logger.Warn($"SetExtraProperties(): projectileSpeed is 0 in [{powerProto}] belonging to [{Owner}].");
+                        projectileSpeed = 1f;
+                    }
+
                     float lifespanMult = missilePrototype.Locomotion.RotationSpeed > 0 ? 1.5f : 1.0f;
                     creationSettings.Lifespan = TimeSpan.FromSeconds(range / projectileSpeed) * lifespanMult + missilePrototype.GetSeekDelayTime();
                 }

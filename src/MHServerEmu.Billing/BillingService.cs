@@ -129,12 +129,11 @@ namespace MHServerEmu.Billing
             var buyItemFromCatalog = message.As<NetMessageBuyItemFromCatalog>();
             if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
 
-            Logger.Info($"Received NetMessageBuyItemFromCatalog");
-            Logger.Trace(buyItemFromCatalog.ToString());
+            long skuId = buyItemFromCatalog.SkuId;
 
             BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
-            CatalogEntry entry = _catalog.GetEntry(buyItemFromCatalog.SkuId);
+            CatalogEntry entry = _catalog.GetEntry(skuId);
             if (entry != null && entry.GuidItems.Length > 0)
             {
                 Prototype catalogItemProto = entry.GuidItems[0].ItemPrototypeRuntimeIdForClient.As<Prototype>();
@@ -158,6 +157,10 @@ namespace MHServerEmu.Billing
                         Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}");
                         break;
                 }
+
+                // Log successful purchases
+                if (result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
+                    Logger.Trace($"OnBuyItemFromCatalog(): Player [{player}] purchased skuId={skuId}, catalogItemProto={catalogItemProto}");
             }
 
             // Send buy response

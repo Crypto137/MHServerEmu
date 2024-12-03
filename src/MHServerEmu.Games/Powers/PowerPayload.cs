@@ -368,7 +368,7 @@ namespace MHServerEmu.Games.Powers
 
             float damagePctWeaken = powerOwner.Properties[PropertyEnum.DamagePctWeaken];
 
-            foreach (var kvp in powerOwner.Properties.IteratePropertyRange(PropertyEnum.DamagePctWeaken))
+            foreach (var kvp in powerOwner.Properties.IteratePropertyRange(PropertyEnum.DamagePctWeakenForPowerKeyword))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid)

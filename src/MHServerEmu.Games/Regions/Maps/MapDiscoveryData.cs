@@ -112,7 +112,6 @@ namespace MHServerEmu.Games.Regions.Maps
 
         private void SendMiniMapUpdate(Player player)
         {
-            Logger.Trace($"SendMiniMapUpdate(): {player}");
             player.SendMessage(ArchiveMessageBuilder.BuildUpdateMiniMapMessage(LowResMap));
         }
 

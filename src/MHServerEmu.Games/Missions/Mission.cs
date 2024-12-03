@@ -2047,10 +2047,10 @@ namespace MHServerEmu.Games.Missions
                 }
                 else
                 {
-                    // Spawn loot as is if there is not chest
+                    // If there is no chest, spawn the loot as is
                     using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
                     inputSettings.Initialize(LootContext.Drop, player, avatar);
-                    lootManager.SpawnLootFromTable(rewardProtoRef, inputSettings);
+                    lootManager.SpawnLootFromTable(rewardProtoRef, inputSettings, 1);
                 }
             }
         }
@@ -2169,7 +2169,9 @@ namespace MHServerEmu.Games.Missions
                 reward.Roll(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
-            Logger.Trace($"RollLootSummary [{PrototypeName}] Rewards {lootSummary}");
+            
+            if (MissionManager.Debug)
+                Logger.Debug($"RollLootSummary [{PrototypeName}] Rewards {lootSummary}");
 
             return lootSummary.HasAnyResult;
         }
