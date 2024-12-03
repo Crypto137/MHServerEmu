@@ -66,7 +66,7 @@ namespace Setup
             if (File.Exists(serverResourcePath) == false)
                 File.Copy(clientResourcePath, serverResourcePath);
 
-            CreateBatFiles(serverRootDirectory, clientExecutablePath, serverCalligraphyPath);
+            CreateBatFiles(serverRootDirectory, clientExecutablePath, serverExecutablePath);
 
             return SetupResult.Success;
         }
