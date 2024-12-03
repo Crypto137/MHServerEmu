@@ -240,9 +240,64 @@ namespace MHServerEmu.Games.Achievements
             }
         }
 
-        private void RecountAchievement(AchievementInfo parent)
+        public void RecountAchievements()
         {
-            throw new NotImplementedException();
+            var state = AchievementState;
+            foreach (var info in AchievementDatabase.Instance.AchievementInfoMap)
+            {
+                if (state.ShouldRecount(info) == false) continue;
+
+                var progress = state.GetAchievementProgress(info.Id);
+                var method = ScoringEvents.GetMethod(info.EventType);
+               
+                int count = (int)progress.Count;
+                if (info.EventType == ScoringEventType.ChildrenComplete) 
+                    count = CountChildrenComplete(info); 
+                
+                if (info.InThresholdRange(method == ScoringMethod.Min, count))
+                {
+                    if (method != ScoringMethod.Update) count = 0;
+                    UpdateAchievement(info, count, false);
+                } 
+                else if (info.EventType != ScoringEventType.ItemCollected)
+                {
+                    RecountAchievement(info);
+                }
+            }
+        }
+
+        private void RecountAchievement(AchievementInfo info)
+        {
+            ScoringRecountData recountData = new() 
+            {
+                EventType = info.EventType,
+                Threshold = (int)info.Threshold,
+                DependentAchievementId = info.DependentAchievementId,
+                EventData = info.EventData
+            };
+
+            int count = 0;
+            if (ScoringEvents.GetPlayerContextCount(Owner, recountData, info.EventContext, ref count) == false) return;
+
+            int progressCount = (int)AchievementState.GetAchievementProgress(info.Id).Count;
+
+            switch (ScoringEvents.GetMethod(info.EventType))
+            {
+                case ScoringMethod.Add:
+                    if (count <= progressCount) return;
+                    count -= progressCount;
+                    break;
+
+                case ScoringMethod.Min:
+                    if (count >= progressCount && progressCount != 0) return;
+                    break;
+
+                case ScoringMethod.Max: 
+                    if (count <= progressCount) return;
+                    break;
+            }
+
+            UpdateAchievement(info, count, false);
         }
 
         private void SendAchievementStateUpdate(uint id, bool showPopups)

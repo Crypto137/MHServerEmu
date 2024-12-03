@@ -256,9 +256,7 @@ namespace MHServerEmu.Games.Achievements
 
             if (completedDate == TimeSpan.Zero)
             {
-                int threshold = (int)info.Threshold;
-                bool updateDate = isMinMethod ? (newCount != 0 && newCount <= threshold) : newCount >= threshold; 
-                if (updateDate)
+                if (info.InThresholdRange(isMinMethod, newCount))
                 {
                     completedDate = Clock.UnixTime;
                     changes = true;
@@ -274,6 +272,13 @@ namespace MHServerEmu.Games.Achievements
             return true;
         }
 
+        public bool ShouldRecount(AchievementInfo info)
+        {
+            if (IsAvailable(info) == false || GetAchievementProgress(info.Id).IsComplete) return false;
+            if (info.EventType == ScoringEventType.ChildrenComplete && info.EventContext.HasContext()) return false;
+            if (info.InOrbis()) return false;
+            return true;
+        }
 
         public struct CategoryStats
         {

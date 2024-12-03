@@ -144,6 +144,19 @@ namespace MHServerEmu.Games.Achievements
                 : AchievementUIProgressDisplayOption.Invalid;
         }
 
+        public bool InOrbis()
+        {
+            if (OrbisTrophy) return true;
+            if (Parent != null) return Parent.InOrbis();
+            return false;
+        }
+
+        public bool InThresholdRange(bool isMinMethod, int count)
+        {
+            int threshold = (int)Threshold;
+            return isMinMethod ? (count != 0 && count <= threshold) : count >= threshold;
+        }
+
         public AchievementDatabaseDump.Types.AchievementInfo ToNetStruct()
         {
             var builder = AchievementDatabaseDump.Types.AchievementInfo.CreateBuilder()

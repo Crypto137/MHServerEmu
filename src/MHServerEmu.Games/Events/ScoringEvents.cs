@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Events
 {
@@ -81,6 +83,14 @@ namespace MHServerEmu.Games.Events
         public bool Proto0IncludeChildren { get; set; }
         public bool Proto1IncludeChildren { get; set; }
         public bool Proto2IncludeChildren { get; set; }
+    }
+
+    public struct ScoringRecountData
+    {
+        public ScoringEventType EventType { get; set; }
+        public int Threshold { get; set; }
+        public uint DependentAchievementId { get; set; }
+        public ScoringEventData EventData { get; set; }
     }
 
     public readonly struct ScoringEvent
@@ -217,6 +227,13 @@ namespace MHServerEmu.Games.Events
             Pet = null;
             Region = null;
             DifficultyTier = null;
+        }
+
+        public bool HasContext()
+        {
+            return Avatar != null || Region != null || Item != null || Pet != null || TeamUp != null 
+                || DifficultyTierMin != null || DifficultyTierMax != null 
+                || Party != null || PublicEventTeam != null;
         }
 
         public bool FilterOwnerContext(Player owner, in ScoringEventContext ownerContext)
@@ -368,6 +385,182 @@ namespace MHServerEmu.Games.Events
             }
 
             return ScoringMethod.Update;
+        }
+
+        public static bool GetPlayerContextCount(Player player, in ScoringRecountData recountData, in ScoringEventContext eventContext, ref int count)
+        {
+            if (player == null) return false;
+
+            return recountData.EventType switch
+            {
+                ScoringEventType.AvatarLevel => GetPlayerAvatarLevelCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.AvatarLevelTotal => GetPlayerAvatarLevelTotalCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.AvatarLevelTotalAllAvatars => GetPlayerAvatarsTotalLevelsCount(player, ref count),
+                ScoringEventType.AvatarsAtLevelCap => GetPlayerAvatarsAtLevelCapCount(player, ref count),
+                ScoringEventType.AvatarsAtPrestigeLevel => GetPlayerAvatarsAtPrestigeLevelCount(player, recountData.EventData.Proto0, ref count),
+                ScoringEventType.AvatarsAtPrestigeLevelCap => GetPlayerAvatarsAtPrestigeLevelCapCount(player, ref count),
+                ScoringEventType.AvatarsUnlocked => GetPlayerAvatarsUnlockedCount(player, recountData.EventData, ref count),
+                ScoringEventType.AchievementScore => GetPlayerAchievementScoreCount(player, ref count),
+                ScoringEventType.Dependent => GetPlayerDependentAchievementCount(player, recountData.DependentAchievementId, ref count),
+                // TODO other types
+                _ => false
+            };
+        }
+
+        private static bool GetPlayerAvatarLevelCount(Player player, Prototype avatarProto, ref int count)
+        {
+            count = 0;
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (avatarProto == null || avatarRef == avatarProto.DataRef)
+                    count = Math.Max(player.GetMaxCharacterLevelAttainedForAvatar(avatarRef, (AvatarMode)avatarMode), count);
+            }
+            return true;
+        }
+
+        private static bool GetPlayerAvatarLevelTotalCount(Player player, Prototype avatarProto, ref int count)
+        {
+            count = 0;
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (avatarProto == null || avatarRef == avatarProto.DataRef)
+                    if ((AvatarMode)avatarMode == AvatarMode.Normal)
+                        count = Math.Max(kvp.Value, count);
+            }
+            return true;
+        }
+
+        public static int GetPlayerAvatarsTotalLevels(Player player)
+        {
+            int totalLevels = 0;
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if ((AvatarMode)avatarMode == AvatarMode.Normal)
+                    totalLevels += kvp.Value;
+            }
+            return totalLevels;
+        }
+
+        private static bool GetPlayerAvatarsTotalLevelsCount(Player player, ref int count)
+        {
+            count = GetPlayerAvatarsTotalLevels(player);
+            return true;
+        }
+
+        public static int GetPlayerAvatarsAtLevelCap(Player player)
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            HashSet<PrototypeId> avatars = new();
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (player.GetMaxCharacterLevelAttainedForAvatar(avatarRef, (AvatarMode)avatarMode) >= levelCap)
+                    avatars.Add(avatarRef);
+            }
+            return avatars.Count;
+        }
+
+        private static bool GetPlayerAvatarsAtLevelCapCount(Player player, ref int count)
+        {
+            count = GetPlayerAvatarsAtLevelCap(player);
+            return true;
+        }
+
+        public static int GetPlayerAvatarsAtPrestigeLevel(Player player, int prestigeLevel)
+        {
+
+            HashSet<PrototypeId> avatars = new();
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (player.GetPrestigeLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= prestigeLevel)
+                    avatars.Add(avatarRef);
+            }
+            return avatars.Count;
+        }
+
+        private static bool GetPlayerAvatarsAtPrestigeLevelCount(Player player, Prototype prestigeLevelProto, ref int count)
+        {
+            int prestigeLevel = 1;
+            if (prestigeLevelProto != null)
+            {
+                if (prestigeLevelProto is not PrestigeLevelPrototype prestigeProto) return false;
+                var advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+                if (advancementProto == null) return false;
+                prestigeLevel = advancementProto.GetPrestigeLevelIndex(prestigeProto);
+                if (prestigeLevel <= 0) return false;
+            }
+            count = GetPlayerAvatarsAtPrestigeLevel(player, prestigeLevel);
+            return true;
+        }
+
+        public static int GetPlayerAvatarsAtPrestigeLevelCap(Player player)
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            var advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return 0;
+            int maxPrestigeLevel = advancementProto.MaxPrestigeLevel;
+
+            HashSet<PrototypeId> avatars = new();
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                Property.FromParam(kvp.Key, 0, out int avatarMode);
+                if (player.GetCharacterLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= levelCap
+                    && player.GetPrestigeLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= maxPrestigeLevel)
+                    avatars.Add(avatarRef);
+            }
+            return avatars.Count;
+        }
+
+        private static bool GetPlayerAvatarsAtPrestigeLevelCapCount(Player player, ref int count)
+        {
+            count = GetPlayerAvatarsAtPrestigeLevelCap(player);
+            return true;
+        }
+
+        private static bool GetPlayerAvatarsUnlockedCount(Player player, ScoringEventData eventData, ref int count)
+        {
+            count = 0;
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarUnlock))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId avatarRef);
+                if (avatarRef == PrototypeId.Invalid) continue;
+                var unlockType = (AvatarUnlockType)(int)kvp.Value;
+                if (unlockType != AvatarUnlockType.Starter)
+                {
+                    var avatarProto = GameDatabase.GetPrototype<AvatarPrototype>(avatarRef);
+                    if (avatarProto == null) continue;
+                    if (FilterPrototype(eventData.Proto0, avatarProto, eventData.Proto0IncludeChildren))
+                        count++;
+                }
+            }
+            return true;
+        }
+
+        private static bool GetPlayerAchievementScoreCount(Player player, ref int count)
+        {
+            count = (int)player.AchievementState.GetTotalStats().Score;
+            return true;
+        }
+
+        private static bool GetPlayerDependentAchievementCount(Player player, uint dependentAchievementId, ref int count)
+        {
+            if (dependentAchievementId == 0) return false;
+            count = (int)player.AchievementState.GetAchievementProgress(dependentAchievementId).Count;
+            return true;
         }
     }
 }

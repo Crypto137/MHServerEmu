@@ -346,6 +346,10 @@ namespace MHServerEmu.Games.Network
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
             // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
 
+            // Recount and update achievements
+            Player.AchievementManager.RecountAchievements();
+            Player.AchievementManager.UpdateScore();
+
             Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);

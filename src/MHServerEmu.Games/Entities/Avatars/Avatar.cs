@@ -1252,12 +1252,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (IsAtLevelCap)
             {
-                int count = player.CountAvatarsAtLevelCap();
+                int count = ScoringEvents.GetPlayerAvatarsAtLevelCap(player);
                 player.OnScoringEvent(new(ScoringEventType.AvatarsAtLevelCap, count));
 
                 if (IsAtMaxPrestigeLevel())
                 {
-                    count = player.CountAvatarsAtPrestigeLevelCap();
+                    count = ScoringEvents.GetPlayerAvatarsAtPrestigeLevelCap(player);
                     player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevelCap, count));
                 }
             }
