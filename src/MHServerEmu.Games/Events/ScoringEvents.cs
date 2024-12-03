@@ -4,6 +4,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Events
@@ -45,7 +46,7 @@ namespace MHServerEmu.Games.Events
         AvatarsAtPrestigeLevelCap,
         AvatarsAtLevelCap,
         AchievementScore,
-        FullyUpgradedLgndrys,
+        FullyUpgradedLegendaries,
         FullyUpgradedPetTech,
         HoursPlayed,
         HoursPlayedByAvatar,
@@ -348,7 +349,7 @@ namespace MHServerEmu.Games.Events
                 case ScoringEventType.EntityDeathViaPower:
                 case ScoringEventType.PvPMatchWon:
                 case ScoringEventType.PvPMatchLost:
-                case ScoringEventType.FullyUpgradedLgndrys:
+                case ScoringEventType.FullyUpgradedLegendaries:
                 case ScoringEventType.OrbsCollected:
                 case ScoringEventType.MetaGameStateCompleteAffix:
                 case ScoringEventType.AvatarDeath:
@@ -402,7 +403,9 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.AvatarsUnlocked => GetPlayerAvatarsUnlockedCount(player, recountData.EventData, ref count),
                 ScoringEventType.AchievementScore => GetPlayerAchievementScoreCount(player, ref count),
                 ScoringEventType.Dependent => GetPlayerDependentAchievementCount(player, recountData.DependentAchievementId, ref count),
-                // TODO other types
+                ScoringEventType.IsComplete => GetPlayerDependentIsCompleteCount(player, recountData.DependentAchievementId, ref count),
+                ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, recountData, eventContext.Avatar, ref count),
+                ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
                 _ => false
             };
         }
@@ -560,6 +563,93 @@ namespace MHServerEmu.Games.Events
         {
             if (dependentAchievementId == 0) return false;
             count = (int)player.AchievementState.GetAchievementProgress(dependentAchievementId).Count;
+            return true;
+        }
+
+        private static bool GetPlayerDependentIsCompleteCount(Player player, uint dependentAchievementId, ref int count)
+        {
+            if (dependentAchievementId == 0) return false;
+            if (player.AchievementState.GetAchievementProgress(dependentAchievementId).IsComplete)
+            {
+                count = 1;
+                return true;
+            }
+            return false;
+        }
+
+        private static bool GetPlayerCompleteMissionCount(Player player, in ScoringRecountData recountData, Prototype avatarProto, ref int count)
+        {
+            if (recountData.EventData.Proto0 is not MissionPrototype missionProto) return false;
+            if (recountData.Threshold > 1 || missionProto.Repeatable) return false;
+            if (missionProto is OpenMissionPrototype 
+                || missionProto is LegendaryMissionPrototype 
+                || missionProto is DailyMissionPrototype) return false;
+
+            if (missionProto.SaveStatePerAvatar)
+            {
+                var propId = new PropertyId(PropertyEnum.AvatarMissionState, missionProto.DataRef);
+                foreach (var avatar in new AvatarIterator(player))
+                    if (avatar.Properties[propId] == (int)MissionState.Completed)
+                        if (avatarProto == null || avatar.Prototype == avatarProto)
+                        {
+                            count = 1;
+                            return true;
+                        }
+            }
+            else if (avatarProto == null)
+            {
+                var manager = player.MissionManager;
+                if (manager == null) return false;
+
+                var mission = manager.FindMissionByDataRef(missionProto.DataRef);
+                if (mission != null && mission.State == MissionState.Completed)
+                {
+                    count = 1;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool GetPlayerFullyUpgradedLegendariesCount(Player player, ref int count)
+        {
+            count = 0;
+            var manager = player.Game.EntityManager;
+
+            foreach (var avatar in new AvatarIterator(player))
+            {
+                var inventory = avatar.GetInventory(InventoryConvenienceLabel.AvatarLegendary);
+                if (inventory == null) continue; 
+                
+                var legendaryId = inventory.GetEntityInSlot(0);
+                if (legendaryId == Entity.InvalidId) continue;
+
+                var legendary = manager.GetEntity<Item>(legendaryId);
+                if (legendary == null) continue;
+
+                if (legendary.Properties[PropertyEnum.ItemAffixLevel] == legendary.GetAffixLevelCap())
+                    count++;
+            }
+
+            var flags = InventoryIterationFlags.PlayerGeneral
+                | InventoryIterationFlags.PlayerGeneralExtra
+                | InventoryIterationFlags.PlayerStashGeneral
+                | InventoryIterationFlags.PlayerStashAvatarSpecific;
+
+            foreach (var inventory in new InventoryIterator(player, flags))
+                foreach (var entry in inventory)
+                { 
+                    var itemProto = GameDatabase.GetPrototype<LegendaryPrototype>(entry.ProtoRef);
+                    if (itemProto == null) continue;
+
+                    var legendary = manager.GetEntity<Item>(entry.Id);
+                    if (legendary == null) continue;
+
+                    if (legendary.Properties[PropertyEnum.ItemAffixLevel] == legendary.GetAffixLevelCap())
+                        count++;
+                }
+
             return true;
         }
     }

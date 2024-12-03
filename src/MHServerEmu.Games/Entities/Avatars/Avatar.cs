@@ -4,7 +4,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.Metrics.Trackers;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
@@ -24,7 +23,6 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
 

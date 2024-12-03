@@ -347,7 +347,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override void PostProcess()
         {
             base.PostProcess();
-            Type = ScoringEventType.FullyUpgradedLgndrys;
+            Type = ScoringEventType.FullyUpgradedLegendaries;
         }
     }
 
