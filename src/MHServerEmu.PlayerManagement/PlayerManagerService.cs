@@ -127,7 +127,7 @@ namespace MHServerEmu.PlayerManagement
         public string GetStatus()
         {
             lock (_pendingSaveDict)
-                return $"Sessions: {_sessionManager.SessionCount} | Games: {_gameManager.GameCount} | Pending Saves: {_pendingSaveDict.Count}";
+                return $"Games: {_gameManager.GameCount} | Sessions: {_sessionManager.ActiveSessionCount} [{_sessionManager.PendingSessionCount}] | Pending Saves: {_pendingSaveDict.Count}";
         }
 
         #endregion
@@ -184,7 +184,7 @@ namespace MHServerEmu.PlayerManagement
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] not found");
             }
 
-            _sessionManager.RemoveSession(client.Session.Id);
+            _sessionManager.RemoveActiveSession(client.Session.Id);
             GetGameByPlayer(client)?.RemoveClient(client);
 
             // Account data is saved asynchronously as a task because it takes some time for a player to leave a game
@@ -217,7 +217,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Retrieves the <see cref="ClientSession"/> for the specified session id. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetSession(sessionId, out session);
+        public bool TryGetSession(ulong sessionId, out ClientSession session) => _sessionManager.TryGetActiveSession(sessionId, out session);
 
         /// <summary>
         /// Retrieves the <see cref="FrontendClient"/> for the specified session id. Returns <see langword="true"/> if successful.
