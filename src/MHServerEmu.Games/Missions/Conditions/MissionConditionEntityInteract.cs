@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                         _cinematicEntityId = entity.Id;
                         _cinematicEventRegistered = true;
                     }
-                }
+                } else return; // don't play already registred cinematic
 
                 player.QueueFullscreenMovie(_proto.Cinematic);
                 return;
