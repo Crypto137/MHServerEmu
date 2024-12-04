@@ -168,7 +168,7 @@ namespace MHServerEmu.Games.Populations
 
         public void PushFailedObject(PopulationObject populationObject)
         {
-            Logger.Trace($"Failed Spawn {populationObject}");
+            if (PopulationManager.Debug) Logger.Trace($"Failed Spawn {populationObject}");
             // FailedObjects.Enqueue(populationObject);
         }
 
