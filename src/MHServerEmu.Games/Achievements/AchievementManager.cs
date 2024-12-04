@@ -73,6 +73,11 @@ namespace MHServerEmu.Games.Achievements
                 && ScoringEvents.FilterPrototype(data.Proto2, scoringEvent.Proto2, data.Proto2IncludeChildren);
         }
 
+        public void OnUpdateEventContext()
+        {
+            _cachedActives = false;
+        }
+
         private void RebuildActivesCache()
         {
             _cachedActives = true;
@@ -331,5 +336,6 @@ namespace MHServerEmu.Games.Achievements
         {
             throw new NotImplementedException();
         }
+
     }
 }

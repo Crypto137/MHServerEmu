@@ -1471,6 +1471,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     return;
                 }
 
+                OnChangeInventory(item);
+
                 Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {this}");
             }
         }
@@ -1502,6 +1504,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 UnassignPower(powerProtoRef);
                 Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {this}");
+            }
+
+            OnChangeInventory(item);
+        }
+
+        private void OnChangeInventory(Item item)
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+            player.UpdateScoringEventContext();
+
+            if (item.IsGear(AvatarPrototype))
+            {
+                int count = ScoringEvents.GetAvatarMinGearLevel(this);
+                player.OnScoringEvent(new(ScoringEventType.MinGearLevel, Prototype, count));
             }
         }
 
@@ -2031,6 +2048,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 Logger.Warn("OnEnteredWorld(): player == null");
                 return;
             }
+
+            player.UpdateScoringEventContext();
 
             base.OnEnteredWorld(settings);
 

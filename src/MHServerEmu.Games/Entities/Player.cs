@@ -2096,6 +2096,12 @@ namespace MHServerEmu.Games.Entities
             AchievementManager.OnScoringEvent(scoringEvent);
         }
 
+        public void UpdateScoringEventContext()
+        {
+            ScoringEventContext.FromPlayer(this);
+            AchievementManager.OnUpdateEventContext();
+        }
+
         public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
         {
             return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());

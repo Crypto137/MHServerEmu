@@ -408,6 +408,7 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
                 ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
                 ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, eventContext.Avatar, ref count),
                 _ => false
             };
         }
@@ -676,6 +677,40 @@ namespace MHServerEmu.Games.Events
                 foreach (var avatar in new AvatarIterator(player))
                     count = Math.Max((int)Math.Floor(avatar.TimePlayed().TotalHours), count);
             }
+
+            return true;
+        }
+
+        public static int GetAvatarMinGearLevel(Avatar avatar)
+        {            
+            var manager = avatar?.Game?.EntityManager;
+            if (manager == null) return 0;
+
+            int minLevel = int.MaxValue;
+            int slot = 0;
+
+            foreach (var entry in new InventoryIterator(avatar, InventoryIterationFlags.Equipment))
+            {
+                var item = manager.GetEntity<Item>(entry.GetEntityInSlot(0));
+                if (item != null && item.IsGear(avatar.AvatarPrototype))
+                {
+                    slot++;
+                    int level = item.GetDisplayItemLevel();
+                    if (level < minLevel)
+                        minLevel = level;
+                }
+            }
+
+            if (slot != 5 || minLevel == int.MaxValue) return 0;
+            return minLevel;
+        }
+
+        private static bool GetPlayerMinGearLevelCount(Player player, Prototype avatarProto, ref int count)
+        {
+            count = 0;
+            foreach (var avatar in new AvatarIterator(player))
+                if (avatarProto == null || avatar.Prototype == avatarProto)
+                    count = Math.Max(GetAvatarMinGearLevel(avatar), count);
 
             return true;
         }

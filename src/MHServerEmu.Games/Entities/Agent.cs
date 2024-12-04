@@ -1044,6 +1044,9 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
+            var player = TeamUpOwner?.GetOwnerOfType<Player>();
+            player?.UpdateScoringEventContext();
+
             if (AIController == null)
                 EntityActionComponent?.InitActionBrain();
         }
@@ -1077,6 +1080,9 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnExitedWorld();
             AIController?.OnAIExitedWorld();
+
+            var player = TeamUpOwner?.GetOwnerOfType<Player>();
+            player?.UpdateScoringEventContext();
         }
 
         public override void OnGotHit(WorldEntity attacker)
