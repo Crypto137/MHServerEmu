@@ -13,6 +13,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Populations;
 using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
@@ -95,6 +96,17 @@ namespace MHServerEmu.Commands.Implementations
         {
             Off,
             On
+        }
+
+        [Command("spawn", "Usage: debug spawn [on|off].", AccountUserLevel.Admin)]
+        public string Spawn(string[] @params, FrontendClient client)
+        {
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
+                flags = Switch.Off;   // Default Off
+
+            PopulationManager.Debug = (flags == Switch.On) ? true : false;
+
+            return $"Spawn Log [{flags}]";
         }
 
         [Command("mission", "Usage: debug mission [on|off].", AccountUserLevel.Admin)]
