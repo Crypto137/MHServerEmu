@@ -6,6 +6,7 @@ using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -457,6 +458,8 @@ namespace MHServerEmu.Games.Entities
                 UpdateVendorLootProperties(vendorTypeProto);
                 RollVendorInventory(vendorTypeProto, false);
             }
+
+            OnScoringEvent(new(ScoringEventType.VendorLevel, vendorTypeProto, newLevel));
 
             if (vendorId != InvalidId)
                 SendMessage(NetMessageVendorLevelUp.CreateBuilder().SetVendorTypeProtoId((ulong)vendorTypeProtoRef).SetVendorID(vendorId).Build());

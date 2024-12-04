@@ -409,6 +409,7 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
                 ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, eventContext.Avatar, ref count),
                 ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.VendorLevel => GetPlayerVendorLevelCount(player, recountData.EventData, ref count),
                 _ => false
             };
         }
@@ -711,6 +712,22 @@ namespace MHServerEmu.Games.Events
             foreach (var avatar in new AvatarIterator(player))
                 if (avatarProto == null || avatar.Prototype == avatarProto)
                     count = Math.Max(GetAvatarMinGearLevel(avatar), count);
+
+            return true;
+        }
+
+        private static bool GetPlayerVendorLevelCount(Player player, ScoringEventData eventData, ref int count)
+        {
+            count = 0;
+            var vendorProto = eventData.Proto0;
+            if (vendorProto == null || eventData.Proto0IncludeChildren)
+            {
+                foreach (var protoRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<VendorTypePrototype>(PrototypeIterateFlags.NoAbstract))
+                    if (vendorProto == null || GameDatabase.DataDirectory.PrototypeIsAPrototype(protoRef, vendorProto.DataRef))
+                        count = Math.Max(player.Properties[PropertyEnum.VendorLevel, protoRef], count);
+            }
+            else
+                count = player.Properties[PropertyEnum.VendorLevel, vendorProto.DataRef];
 
             return true;
         }
