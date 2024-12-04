@@ -406,6 +406,8 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.IsComplete => GetPlayerDependentIsCompleteCount(player, recountData.DependentAchievementId, ref count),
                 ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, recountData, eventContext.Avatar, ref count),
                 ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
+                ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
+                ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, eventContext.Avatar, ref count),
                 _ => false
             };
         }
@@ -649,6 +651,31 @@ namespace MHServerEmu.Games.Events
                     if (legendary.Properties[PropertyEnum.ItemAffixLevel] == legendary.GetAffixLevelCap())
                         count++;
                 }
+
+            return true;
+        }
+
+        private static bool GetPlayerHoursPlayedCount(Player player, ref int count)
+        {
+            count = (int)Math.Floor(player.TimePlayed().TotalHours);
+            return true;
+        }
+
+        private static bool GetPlayerHoursPlayedByAvatarCount(Player player, Prototype avatarProto, ref int count)
+        {
+            count = 0;
+
+            if (avatarProto != null)
+            {
+                foreach (var avatar in new AvatarIterator(player))
+                    if (avatar.Prototype == avatarProto)
+                        count += (int)Math.Floor(avatar.TimePlayed().TotalHours);
+            }
+            else
+            {
+                foreach (var avatar in new AvatarIterator(player))
+                    count = Math.Max((int)Math.Floor(avatar.TimePlayed().TotalHours), count);
+            }
 
             return true;
         }

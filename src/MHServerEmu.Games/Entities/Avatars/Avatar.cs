@@ -2033,6 +2033,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             base.OnEnteredWorld(settings);
+
+            Properties[PropertyEnum.AvatarTimePlayedStart] = Game.CurrentTime;
+
             AssignDefaultAvatarPowers();
 
             // auto unlock chapters and Waypoinst
@@ -2101,8 +2104,24 @@ namespace MHServerEmu.Games.Entities.Avatars
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
             summonedInventory?.DestroyContained();
 
+            if (player != null) player.Properties[PropertyEnum.AvatarTotalTimePlayed] = player.TimePlayed();
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = TimePlayed();
+            Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
+
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
+        }
+
+        public TimeSpan TimePlayed()
+        {
+            TimeSpan timePlayed = TimeSpan.Zero;
+            TimeSpan totalTimePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
+            TimeSpan startTime = Properties[PropertyEnum.AvatarTimePlayedStart];
+
+            if (startTime != TimeSpan.Zero)
+                timePlayed = Game.CurrentTime - startTime;
+
+            return totalTimePlayed + timePlayed;
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
