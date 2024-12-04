@@ -1026,7 +1026,6 @@ namespace MHServerEmu.Games.Network
             var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
             AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
-            Logger.Trace($"NetMessageAbilitySwapInAbilityBar: {slotA} and {slotB}");
 
             // Swap
             PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);

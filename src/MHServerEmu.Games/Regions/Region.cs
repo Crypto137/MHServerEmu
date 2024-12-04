@@ -721,8 +721,6 @@ namespace MHServerEmu.Games.Regions
             foreach (Player player in new PlayerIterator(this))
                 player.DiscoverEntity(worldEntity, updateInterest);
 
-            Logger.Trace($"DiscoverEntity(): {worldEntity}");
-
             return true;
         }
 
@@ -735,8 +733,6 @@ namespace MHServerEmu.Games.Regions
 
             foreach (Player player in new PlayerIterator(this))
                 player.UndiscoverEntity(worldEntity, updateInterest);
-
-            Logger.Trace($"UndiscoverEntity(): {worldEntity}");
 
             return true;
         }

@@ -18,6 +18,8 @@ namespace MHServerEmu.Games.Populations
 {
     public class PopulationManager
     {
+        public static bool Debug { get; set; }
+
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Game Game { get; }
         public Region Region { get; }
@@ -74,7 +76,7 @@ namespace MHServerEmu.Games.Populations
             _encounterSpawnPhases.Clear();
             _blackOutZones.Clear();
             _spawnEvents.Clear();
-            // TODO clear Schedulers?
+
             MarkerSchedulers.Clear();
             LocationSchedulers.Clear();
         }
@@ -157,8 +159,8 @@ namespace MHServerEmu.Games.Populations
                 if (_locationSpawnEvent.IsValid == false)
                 {
                     scheduler.ScheduleEvent(_locationSpawnEvent, timeOffset, _pendingEvents);
-                    _locationSpawnEvent.Get().Initialize(this); _scheduledCount++;
-                    // Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
+                    _locationSpawnEvent.Get().Initialize(this);
+                    if (Debug) Logger.Debug($"LocationSchedule [{_scheduledCount++}]");
                 }
                 else if (_locationSpawnEvent.Get().FireTime > eventTime)
                     scheduler.RescheduleEvent(_locationSpawnEvent, timeOffset);
@@ -179,7 +181,7 @@ namespace MHServerEmu.Games.Populations
                 {
                     scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
                     markerEvent.Get().Initialize(this, markerRef);
-                    // Logger.Debug($"MarkerSchedule [{markerRef}] [{_scheduledCount++}]");
+                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{_scheduledCount++}]");
                 }
                 else if (markerEvent.Get().FireTime > eventTime)
                     scheduler.RescheduleEvent(markerEvent, timeOffset);
@@ -210,10 +212,8 @@ namespace MHServerEmu.Games.Populations
             while (schedulerPicker.PickRemove(out var scheduler))
             {
                 if (scheduler.CanSpawn(currentTime, critical))
-                {
-                    // Logger.Debug($"ScheduleLocationObject [{scheduler.ScheduledObjects.Count}]");
                     scheduler.ScheduleLocationObject(critical);
-                }
+
                 if (scheduler.CanSpawn(currentTime, critical))
                     schedulerPicker.Add(scheduler);
             }

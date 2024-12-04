@@ -1472,8 +1472,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
 
                 OnChangeInventory(item);
-
-                Logger.Debug($"OnOtherEntityAddedToMyInventory(): Assigned item power {powerProtoRef.GetName()} to {this}");
             }
         }
 
@@ -1501,10 +1499,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Unassign powers granted by equipped items
             if (item.GetPowerGranted(out PrototypeId powerProtoRef) && GetPower(powerProtoRef) != null)
-            {
                 UnassignPower(powerProtoRef);
-                Logger.Debug($"OnOtherEntityRemovedFromMyInventory(): Unassigned item power {powerProtoRef.GetName()} from {this}");
-            }
 
             OnChangeInventory(item);
         }

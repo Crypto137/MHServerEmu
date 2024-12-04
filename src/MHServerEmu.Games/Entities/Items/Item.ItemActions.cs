@@ -153,8 +153,6 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoItemActionReplaceSelfItem(PrototypeId itemProtoRef, Player player, Avatar avatar)
         {
-            Logger.Debug($"DoItemActionReplaceSelfItem(): {this}");
-
             ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
             if (itemProto == null) return Logger.WarnReturn(false, "DoItemActionReplaceSelfItem(): itemProto == null");
 
@@ -190,8 +188,6 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoItemActionReplaceSelfLootTable(LootTablePrototype lootTableProto, bool useAvatarLevel, Player player, Avatar avatar)
         {
-            Logger.Debug($"DoItemActionReplaceSelfLootTable(): {this}");
-
             using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
             inputSettings.Initialize(LootContext.MysteryChest, player, null);
             inputSettings.LootRollSettings.Level = useAvatarLevel ? avatar.CharacterLevel : Properties[PropertyEnum.ItemLevel];
@@ -299,8 +295,6 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool ReplaceSelfHelper(LootResultSummary lootResultSummary, Player player, NetMessageLootRewardReport.Builder reportBuilder)
         {
-            Logger.Debug($"ReplaceSelfHelper(): [{lootResultSummary.Types}]");
-
             // Validation
 
             // Loot types not defined here cannot be used as MysteryChest replacements
