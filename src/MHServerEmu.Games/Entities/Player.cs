@@ -1830,6 +1830,8 @@ namespace MHServerEmu.Games.Entities
             avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
         }
 
+        #region Waypoint
+
         public void UnlockChapters()
         {
             foreach (PrototypeId chapterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<ChapterPrototype>(PrototypeIterateFlags.NoAbstract))
@@ -1856,6 +1858,20 @@ namespace MHServerEmu.Games.Entities
                 SendOnWaypointUpdated();
 
             collection[propId] = false;
+        }
+
+        public bool WaypointIsUnlocked(PrototypeId waypointRef)
+        {
+            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
+            if (waypointProto == null) return false;
+
+            PropertyCollection collection;
+            if (waypointProto.IsAccountWaypoint)
+                collection = Properties;
+            else
+                collection = CurrentAvatar.Properties;
+
+            return collection[PropertyEnum.Waypoint, waypointRef];
         }
 
         public void UnlockWaypoint(PrototypeId waypointRef)
@@ -1888,6 +1904,8 @@ namespace MHServerEmu.Games.Entities
                     UnlockWaypoint(waypointRef);
             }
         }
+
+        #endregion
 
         public void PlayKismetSeq(PrototypeId kismetSeq)
         {

@@ -52,8 +52,8 @@ namespace MHServerEmu.Games.Events
         HoursPlayedByAvatar,
         MinGearLevel,
         OrbsCollected,
-        PowerRank,
-        PowerRankUltimate,
+        PowerRank, // Removed in 1.52
+        PowerRankUltimate, // Removed in 1.52
         Dependent, // Legendary
         MetaGameStateCompleteDifficulty,
         MetaGameStateCompleteAffix,
@@ -410,6 +410,9 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, eventContext.Avatar, ref count),
                 ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, eventContext.Avatar, ref count),
                 ScoringEventType.VendorLevel => GetPlayerVendorLevelCount(player, recountData.EventData, ref count),
+                ScoringEventType.PvPMatchWon => GetPlayerPvPMatchWonCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.PvPMatchLost => GetPlayerPvPMatchLostCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.WaypointUnlocked => GetPlayerWaypointUnlockedCount(player, recountData.EventData, ref count),
                 _ => false
             };
         }
@@ -730,6 +733,50 @@ namespace MHServerEmu.Games.Events
                 count = player.Properties[PropertyEnum.VendorLevel, vendorProto.DataRef];
 
             return true;
+        }
+
+        private static bool GetPlayerPvPMatchWonCount(Player player, Prototype avatarProto, ref int count)
+        {
+            count = 0;
+
+            if (avatarProto != null)
+            {
+                foreach (var avatar in new AvatarIterator(player))
+                    if (avatar.Prototype == avatarProto)
+                        count = Math.Max(avatar.Properties[PropertyEnum.PvPWins], count);
+            }
+            else count = player.Properties[PropertyEnum.PvPWins];
+
+            return true;
+        }
+
+        private static bool GetPlayerPvPMatchLostCount(Player player, Prototype avatarProto, ref int count)
+        {
+            count = 0;
+
+            if (avatarProto != null)
+            {
+                foreach (var avatar in new AvatarIterator(player))
+                    if (avatar.Prototype == avatarProto)
+                        count = Math.Max(avatar.Properties[PropertyEnum.PvPLosses], count);
+            }
+            else count = player.Properties[PropertyEnum.PvPLosses];
+
+            return true;
+        }
+
+        private static bool GetPlayerWaypointUnlockedCount(Player player, ScoringEventData eventData, ref int count)
+        {
+            var waypointProto = eventData.Proto0;
+            if (waypointProto == null) return false;
+
+            if (player.WaypointIsUnlocked(waypointProto.DataRef))
+            {
+                count = 1;
+                return true;
+            }
+
+            return false;
         }
     }
 }
