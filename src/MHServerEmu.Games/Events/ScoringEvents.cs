@@ -86,9 +86,10 @@ namespace MHServerEmu.Games.Events
         public bool Proto2IncludeChildren { get; set; }
     }
 
-    public struct ScoringRecountData
+    public struct ScoringPlayerContext
     {
         public ScoringEventType EventType { get; set; }
+        public Prototype AvatarProto { get; internal set; }
         public int Threshold { get; set; }
         public uint DependentAchievementId { get; set; }
         public ScoringEventData EventData { get; set; }
@@ -388,31 +389,31 @@ namespace MHServerEmu.Games.Events
             return ScoringMethod.Update;
         }
 
-        public static bool GetPlayerContextCount(Player player, in ScoringRecountData recountData, in ScoringEventContext eventContext, ref int count)
+        public static bool GetPlayerContextCount(Player player, in ScoringPlayerContext playerContext, ref int count)
         {
             if (player == null) return false;
 
-            return recountData.EventType switch
+            return playerContext.EventType switch
             {
-                ScoringEventType.AvatarLevel => GetPlayerAvatarLevelCount(player, eventContext.Avatar, ref count),
-                ScoringEventType.AvatarLevelTotal => GetPlayerAvatarLevelTotalCount(player, eventContext.Avatar, ref count),
+                ScoringEventType.AvatarLevel => GetPlayerAvatarLevelCount(player, playerContext.AvatarProto, ref count),
+                ScoringEventType.AvatarLevelTotal => GetPlayerAvatarLevelTotalCount(player, playerContext.AvatarProto, ref count),
                 ScoringEventType.AvatarLevelTotalAllAvatars => GetPlayerAvatarsTotalLevelsCount(player, ref count),
                 ScoringEventType.AvatarsAtLevelCap => GetPlayerAvatarsAtLevelCapCount(player, ref count),
-                ScoringEventType.AvatarsAtPrestigeLevel => GetPlayerAvatarsAtPrestigeLevelCount(player, recountData.EventData.Proto0, ref count),
+                ScoringEventType.AvatarsAtPrestigeLevel => GetPlayerAvatarsAtPrestigeLevelCount(player, playerContext.EventData, ref count),
                 ScoringEventType.AvatarsAtPrestigeLevelCap => GetPlayerAvatarsAtPrestigeLevelCapCount(player, ref count),
-                ScoringEventType.AvatarsUnlocked => GetPlayerAvatarsUnlockedCount(player, recountData.EventData, ref count),
+                ScoringEventType.AvatarsUnlocked => GetPlayerAvatarsUnlockedCount(player, playerContext.EventData, ref count),
                 ScoringEventType.AchievementScore => GetPlayerAchievementScoreCount(player, ref count),
-                ScoringEventType.Dependent => GetPlayerDependentAchievementCount(player, recountData.DependentAchievementId, ref count),
-                ScoringEventType.IsComplete => GetPlayerDependentIsCompleteCount(player, recountData.DependentAchievementId, ref count),
-                ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, recountData, eventContext.Avatar, ref count),
+                ScoringEventType.Dependent => GetPlayerDependentAchievementCount(player, playerContext.DependentAchievementId, ref count),
+                ScoringEventType.IsComplete => GetPlayerDependentIsCompleteCount(player, playerContext.DependentAchievementId, ref count),
+                ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, playerContext, ref count),
                 ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
                 ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
-                ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, eventContext.Avatar, ref count),
-                ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, eventContext.Avatar, ref count),
-                ScoringEventType.VendorLevel => GetPlayerVendorLevelCount(player, recountData.EventData, ref count),
-                ScoringEventType.PvPMatchWon => GetPlayerPvPMatchWonCount(player, eventContext.Avatar, ref count),
-                ScoringEventType.PvPMatchLost => GetPlayerPvPMatchLostCount(player, eventContext.Avatar, ref count),
-                ScoringEventType.WaypointUnlocked => GetPlayerWaypointUnlockedCount(player, recountData.EventData, ref count),
+                ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, playerContext.AvatarProto, ref count),
+                ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, playerContext.AvatarProto, ref count),
+                ScoringEventType.VendorLevel => GetPlayerVendorLevelCount(player, playerContext.EventData, ref count),
+                ScoringEventType.PvPMatchWon => GetPlayerPvPMatchWonCount(player, playerContext.AvatarProto, ref count),
+                ScoringEventType.PvPMatchLost => GetPlayerPvPMatchLostCount(player, playerContext.AvatarProto, ref count),
+                ScoringEventType.WaypointUnlocked => GetPlayerWaypointUnlockedCount(player, playerContext.EventData, ref count),
                 _ => false
             };
         }
@@ -500,12 +501,12 @@ namespace MHServerEmu.Games.Events
             return avatars.Count;
         }
 
-        private static bool GetPlayerAvatarsAtPrestigeLevelCount(Player player, Prototype prestigeLevelProto, ref int count)
+        private static bool GetPlayerAvatarsAtPrestigeLevelCount(Player player, in ScoringEventData eventData, ref int count)
         {
             int prestigeLevel = 1;
-            if (prestigeLevelProto != null)
+            if (eventData.Proto0 != null)
             {
-                if (prestigeLevelProto is not PrestigeLevelPrototype prestigeProto) return false;
+                if (eventData.Proto0 is not PrestigeLevelPrototype prestigeProto) return false;
                 var advancementProto = GameDatabase.AdvancementGlobalsPrototype;
                 if (advancementProto == null) return false;
                 prestigeLevel = advancementProto.GetPrestigeLevelIndex(prestigeProto);
@@ -541,7 +542,7 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
-        private static bool GetPlayerAvatarsUnlockedCount(Player player, ScoringEventData eventData, ref int count)
+        private static bool GetPlayerAvatarsUnlockedCount(Player player, in ScoringEventData eventData, ref int count)
         {
             count = 0;
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarUnlock))
@@ -584,10 +585,10 @@ namespace MHServerEmu.Games.Events
             return false;
         }
 
-        private static bool GetPlayerCompleteMissionCount(Player player, in ScoringRecountData recountData, Prototype avatarProto, ref int count)
+        private static bool GetPlayerCompleteMissionCount(Player player, in ScoringPlayerContext playerContext, ref int count)
         {
-            if (recountData.EventData.Proto0 is not MissionPrototype missionProto) return false;
-            if (recountData.Threshold > 1 || missionProto.Repeatable) return false;
+            if (playerContext.EventData.Proto0 is not MissionPrototype missionProto) return false;
+            if (playerContext.Threshold > 1 || missionProto.Repeatable) return false;
             if (missionProto is OpenMissionPrototype 
                 || missionProto is LegendaryMissionPrototype 
                 || missionProto is DailyMissionPrototype) return false;
@@ -597,13 +598,13 @@ namespace MHServerEmu.Games.Events
                 var propId = new PropertyId(PropertyEnum.AvatarMissionState, missionProto.DataRef);
                 foreach (var avatar in new AvatarIterator(player))
                     if (avatar.Properties[propId] == (int)MissionState.Completed)
-                        if (avatarProto == null || avatar.Prototype == avatarProto)
+                        if (playerContext.AvatarProto == null || avatar.Prototype == playerContext.AvatarProto)
                         {
                             count = 1;
                             return true;
                         }
             }
-            else if (avatarProto == null)
+            else if (playerContext.AvatarProto == null)
             {
                 var manager = player.MissionManager;
                 if (manager == null) return false;
@@ -719,7 +720,7 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
-        private static bool GetPlayerVendorLevelCount(Player player, ScoringEventData eventData, ref int count)
+        private static bool GetPlayerVendorLevelCount(Player player, in ScoringEventData eventData, ref int count)
         {
             count = 0;
             var vendorProto = eventData.Proto0;
@@ -765,7 +766,7 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
-        private static bool GetPlayerWaypointUnlockedCount(Player player, ScoringEventData eventData, ref int count)
+        private static bool GetPlayerWaypointUnlockedCount(Player player, in ScoringEventData eventData, ref int count)
         {
             var waypointProto = eventData.Proto0;
             if (waypointProto == null) return false;

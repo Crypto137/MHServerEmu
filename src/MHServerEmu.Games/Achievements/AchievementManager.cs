@@ -273,16 +273,17 @@ namespace MHServerEmu.Games.Achievements
 
         private void RecountAchievement(AchievementInfo info)
         {
-            ScoringRecountData recountData = new() 
+            ScoringPlayerContext playerContext = new() 
             {
                 EventType = info.EventType,
+                AvatarProto = info.EventContext.Avatar,
                 Threshold = (int)info.Threshold,
                 DependentAchievementId = info.DependentAchievementId,
                 EventData = info.EventData
             };
 
             int count = 0;
-            if (ScoringEvents.GetPlayerContextCount(Owner, recountData, info.EventContext, ref count) == false) return;
+            if (ScoringEvents.GetPlayerContextCount(Owner, playerContext, ref count) == false) return;
 
             int progressCount = (int)AchievementState.GetAchievementProgress(info.Id).Count;
 
