@@ -76,7 +76,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             var avatarRef = evt.AvatarRef;
 
             if (player == null || IsMissionPlayer(player) == false) return;
-            if (_proto.AvatarPrototype != PrototypeId.Invalid && _proto.AvatarPrototype != evt.AvatarRef) return;
+            if (_proto.AvatarPrototype != PrototypeId.Invalid && _proto.AvatarPrototype != avatarRef) return;
             if (_proto.Level > level) return;
 
             UpdatePlayerContribution(player);
