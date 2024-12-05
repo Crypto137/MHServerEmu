@@ -405,6 +405,7 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.AchievementScore => GetPlayerAchievementScoreCount(player, ref count),
                 ScoringEventType.Dependent => GetPlayerDependentAchievementCount(player, playerContext.DependentAchievementId, ref count),
                 ScoringEventType.IsComplete => GetPlayerDependentIsCompleteCount(player, playerContext.DependentAchievementId, ref count),
+                ScoringEventType.ItemCollected => GetPlayerItemCollectedCount(player, playerContext, ref count),
                 ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, playerContext, ref count),
                 ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
                 ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
@@ -583,6 +584,54 @@ namespace MHServerEmu.Games.Events
                 return true;
             }
             return false;
+        }
+
+        private static bool GetPlayerItemCollectedCount(Player player, in ScoringPlayerContext playerContext, ref int count)
+        {
+            var itemProto = playerContext.EventData.Proto0;
+            bool itemChilden = playerContext.EventData.Proto0IncludeChildren;
+            var rarityProto = playerContext.EventData.Proto1;
+            bool rarityChildren = playerContext.EventData.Proto1IncludeChildren;
+
+            if (itemProto == null && rarityProto == null) return false;
+
+            var manager = player.Game?.EntityManager;
+            if (manager == null) return false;
+
+            count = 0;
+            
+            var flags = InventoryIterationFlags.PlayerGeneral
+                | InventoryIterationFlags.PlayerGeneralExtra
+                | InventoryIterationFlags.PlayerStashGeneral
+                | InventoryIterationFlags.PlayerStashAvatarSpecific;
+
+            foreach (var inventory in new InventoryIterator(player, flags))
+                foreach (var entry in inventory)
+                {
+                    var item = manager.GetEntity<Item>(entry.Id);
+                    if (item == null) continue;
+
+                    if (itemProto != null && FilterPrototype(itemProto, item.Prototype, itemChilden) == false) continue;
+                    if (rarityProto != null && FilterPrototype(rarityProto, item.RarityPrototype, rarityChildren) == false) continue;
+
+                    count += item.CurrentStackSize;
+                }
+
+            foreach (var avatar in new AvatarIterator(player))
+                if (playerContext.AvatarProto == null || avatar.Prototype == playerContext.AvatarProto)                
+                    foreach (var inventory in new InventoryIterator(avatar, InventoryIterationFlags.Equipment))
+                        foreach (var entry in inventory)
+                        {
+                            var item = manager.GetEntity<Item>(entry.Id);
+                            if (item == null) continue;
+
+                            if (itemProto != null && FilterPrototype(itemProto, item.Prototype, itemChilden) == false) continue;
+                            if (rarityProto != null && FilterPrototype(rarityProto, item.RarityPrototype, rarityChildren) == false) continue;
+
+                            count += item.CurrentStackSize;
+                        }
+
+            return true;
         }
 
         private static bool GetPlayerCompleteMissionCount(Player player, in ScoringPlayerContext playerContext, ref int count)

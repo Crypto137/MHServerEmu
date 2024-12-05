@@ -461,9 +461,7 @@ namespace MHServerEmu.Games.Entities.Items
                     var item = entityManager.GetEntity<Item>(pair.Item1);
                     if (item == null) continue;
                     int count = pair.Item2;
-                    PrototypeId rarityRef = item.Properties[PropertyEnum.ItemRarity];
-                    Prototype rarityProto = GameDatabase.GetPrototype<Prototype>(rarityRef);
-                    player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProto, count));
+                    player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, item.RarityPrototype, count));
                 }
 
                 // Do callbacks

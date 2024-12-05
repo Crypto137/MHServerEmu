@@ -55,6 +55,7 @@ namespace MHServerEmu.Games.Entities.Items
         private List<AffixPropertiesCopyEntry> _affixProperties = new();
 
         public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
+        public RarityPrototype RarityPrototype { get => GameDatabase.GetPrototype<RarityPrototype>(Properties[PropertyEnum.ItemRarity]); }
 
         public ItemSpec ItemSpec { get => _itemSpec; }
         public PrototypeId OnUsePower { get; private set; }
