@@ -176,6 +176,11 @@ namespace MHServerEmu.PlayerManagement
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] has no valid session assigned");
 
+            // Remove the player in reverse (Game -> Session -> PlayerManager)
+            // This is to make sure the player is removed from the game even if there is some issue with their session.
+            GetGameByPlayer(client)?.RemoveClient(client);
+            _sessionManager.RemoveActiveSession(client.Session.Id);
+
             ulong playerDbId = (ulong)client.Session.Account.Id;
 
             lock (_playerDict)
@@ -183,9 +188,6 @@ namespace MHServerEmu.PlayerManagement
                 if (_playerDict.Remove(playerDbId) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] not found");
             }
-
-            _sessionManager.RemoveActiveSession(client.Session.Id);
-            GetGameByPlayer(client)?.RemoveClient(client);
 
             // Account data is saved asynchronously as a task because it takes some time for a player to leave a game
             lock (_pendingSaveDict)
