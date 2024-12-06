@@ -1,9 +1,12 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Achievements
@@ -29,9 +32,11 @@ namespace MHServerEmu.Games.Achievements
         private bool _cachingActives;
         private bool _scoring;
         private bool _cachedActives;
+        private HashSet<AchievementInfo> _rewardAchievements;
         private Dictionary<ScoringEventType, List<ActiveAchievement>> _activeAchievements;
         private EventPointer<UpdateActiveStateEvent> _updateActiveStateEvent;
         private EventPointer<UpdateScoreEvent> _updateScoreEvent;
+        private EventPointer<RewardEvent> _rewardEvent;
         private EventGroup _pendingEvents;
 
         public Player Owner { get; }
@@ -39,6 +44,7 @@ namespace MHServerEmu.Games.Achievements
 
         public AchievementManager(Player owner)
         {
+            _rewardAchievements = new();
             _activeAchievements = new();
             _updateActiveStateEvent = new();
             _updateScoreEvent = new();
@@ -400,9 +406,55 @@ namespace MHServerEmu.Games.Achievements
             Owner.OnScoringEvent(new(ScoringEventType.AchievementScore, count));
         }
 
+        public void GiveAchievementRewards()
+        {
+            CancelRewardsEvent();
+            foreach (var info in _rewardAchievements)
+                GiveAchievementReward(info);
+            _rewardAchievements.Clear();
+        }
+
+        private void GiveAchievementReward(AchievementInfo info)
+        {
+            var manager = Owner.Game?.LootManager;
+            if (manager == null) return;
+            int seed = Owner.Game.Random.Next();
+
+            // TODO Check this
+            
+            using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+            settings.Initialize(LootContext.AchievementReward, Owner, Owner.CurrentAvatar, 1);
+            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            resolver.Initialize(new(seed));
+            resolver.SetContext(LootContext.AchievementReward, Owner);
+
+            var reward = info.RewardPrototype as LootTablePrototype;
+            if (reward.Roll(settings.LootRollSettings, resolver) != LootRollResult.NoRoll)
+            {
+                Logger.Debug($"GiveAchievementReward [{info.Id}] {info.RewardPrototype}");
+                var summary = new LootResultSummary();
+                resolver.FillLootResultSummary(summary);
+                manager.GiveLootFromSummary(summary, Owner);
+            }
+        }
+
+        private void CancelRewardsEvent()
+        {
+            var scheduler = Owner.Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_rewardEvent);
+        }
+
         private void ScheduleRewardEvent(AchievementInfo info)
         {
-            Logger.Debug($"RewardEvent [{info.Id}] {info.RewardPrototype}");
+            _rewardAchievements.Add(info);
+
+            if (_rewardEvent.IsValid) return;
+            var scheduler = Owner.Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            scheduler.ScheduleEvent(_rewardEvent, TimeSpan.Zero, _pendingEvents);
+            _rewardEvent.Get().Initialize(this);
         }
 
         private void ScheduleUpdateActiveStateEvent()
@@ -449,5 +501,9 @@ namespace MHServerEmu.Games.Achievements
             protected override CallbackDelegate GetCallback() => (manager) => manager.ActiveAchievementsStateUpdate();
         }
 
+        protected class RewardEvent : CallMethodEvent<AchievementManager>
+        {
+            protected override CallbackDelegate GetCallback() => (manager) => manager.GiveAchievementRewards();
+        }
     }
 }
