@@ -48,6 +48,7 @@ namespace MHServerEmu.Games.Achievements
             _activeAchievements = new();
             _updateActiveStateEvent = new();
             _updateScoreEvent = new();
+            _rewardEvent = new();
             _pendingEvents = new();
             Owner = owner;
         }

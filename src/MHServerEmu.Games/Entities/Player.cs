@@ -481,7 +481,7 @@ namespace MHServerEmu.Games.Entities
 
         public Region GetRegion()
         {
-            // This shouldn't need any null checks, at least for now
+            if (PlayerConnection == null) return null;
             return AOI.Region;
         }
 
