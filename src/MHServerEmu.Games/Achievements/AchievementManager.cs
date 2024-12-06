@@ -1,6 +1,9 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Achievements
@@ -21,10 +24,15 @@ namespace MHServerEmu.Games.Achievements
 
     public class AchievementManager
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private bool _cachingActives;
         private bool _scoring;
         private bool _cachedActives;
         private Dictionary<ScoringEventType, List<ActiveAchievement>> _activeAchievements;
+        private EventPointer<UpdateActiveStateEvent> _updateActiveStateEvent;
+        private EventPointer<UpdateScoreEvent> _updateScoreEvent;
+        private EventGroup _pendingEvents;
 
         public Player Owner { get; }
         public AchievementState AchievementState { get => Owner.AchievementState; }
@@ -32,7 +40,16 @@ namespace MHServerEmu.Games.Achievements
         public AchievementManager(Player owner)
         {
             _activeAchievements = new();
+            _updateActiveStateEvent = new();
+            _updateScoreEvent = new();
+            _pendingEvents = new();
             Owner = owner;
+        }
+
+        public void Deallocate()
+        {
+            ActiveAchievementsStateUpdate();
+            CancelUpdateScoreEvent();
         }
 
         public void UpdateScore()
@@ -82,7 +99,7 @@ namespace MHServerEmu.Games.Achievements
         {
             _cachedActives = true;
 
-            ActiveAchievementStateUpdate();
+            ActiveAchievementsStateUpdate();
 
             var state = AchievementState;
             uint oldScore = state.GetTotalStats().Score;
@@ -218,13 +235,47 @@ namespace MHServerEmu.Games.Achievements
 
                 if (info.VisibleState != AchievementVisibleState.Invisible && info.VisibleState != AchievementVisibleState.Objective)
                 {
-                    // TODO NetMessagePlayPowerVisuals
+                    SendPlayAchievementUnlocked();
+                    if (info.PartyVisible)
+                        SendAchievementCompletedByPartyMember(info.Id);
                 }
 
                 uint newScore = state.GetTotalStats().Score;
                 if (oldScore != newScore && _cachingActives == false)
                     ScheduleUpdateScoreEvent();
             }
+        }
+
+        private void SendAchievementCompletedByPartyMember(uint id)
+        {
+            var networkManager = Owner.Game?.NetworkManager;
+            if (networkManager == null) return;
+
+            var message = NetMessageAchievementCompletedByPartyMember.CreateBuilder()
+                .SetId(id)             
+                .SetPlayerName(Owner.GetName())
+                .Build();
+
+            networkManager.SendMessageToInterested(message, Owner, Network.AOINetworkPolicyValues.AOIChannelParty, true);
+        }
+
+        private void SendPlayAchievementUnlocked()
+        {
+            var networkManager = Owner.Game?.NetworkManager;
+            if (networkManager == null) return;
+
+            var avatar = Owner.CurrentAvatar;
+            if (avatar == null) return;
+
+            var visualProto = GameDatabase.PowerVisualsGlobalsPrototype;
+            if (visualProto == null) return;
+
+            var message = NetMessagePlayPowerVisuals.CreateBuilder()
+                .SetEntityId(avatar.Id)
+                .SetPowerAssetRef((ulong)visualProto.AchievementUnlockedClass)
+                .Build();
+
+            networkManager.SendMessageToInterested(message, avatar, Network.AOINetworkPolicyValues.AOIChannelProximity);
         }
 
         private void UpdateAchievementInfo(AchievementInfo info, bool recount, bool showPopups, bool fromEvent)
@@ -306,6 +357,30 @@ namespace MHServerEmu.Games.Achievements
             UpdateAchievement(info, count, false);
         }
 
+        private void ActiveAchievementsStateUpdate()
+        {
+            CancelUpdateActiveStateEvent();
+            if (Owner.IsInGame == false) return;
+
+            bool update = false;
+            var messageBuilder = NetMessageAchievementStateUpdate.CreateBuilder();
+
+            foreach (var list in _activeAchievements.Values)
+                foreach (var info in list)
+                    if (info.Updated)
+                    {
+                        messageBuilder.AddAchievementStates(AchievementState.ToProtobuf(info.Id));
+                        update = true;
+                        info.Updated = false;
+                    }
+
+            if (update)
+            {
+                messageBuilder.SetShowpopups(true);
+                Owner.SendMessage(messageBuilder.Build());
+            }
+        }
+
         private void SendAchievementStateUpdate(uint id, bool showPopups)
         {
             if (Owner.IsInGame == false) return;
@@ -318,24 +393,60 @@ namespace MHServerEmu.Games.Achievements
             Owner.SendMessage(message);
         }
 
-        private void ActiveAchievementStateUpdate()
+        private void OnUpdateScoreEvent()
         {
-            throw new NotImplementedException();
+            CancelUpdateScoreEvent();
+            int count = (int)AchievementState.GetTotalStats().Score;
+            Owner.OnScoringEvent(new(ScoringEventType.AchievementScore, count));
         }
 
         private void ScheduleRewardEvent(AchievementInfo info)
         {
-            throw new NotImplementedException();
+            Logger.Debug($"RewardEvent [{info.Id}] {info.RewardPrototype}");
         }
 
         private void ScheduleUpdateActiveStateEvent()
         {
-            throw new NotImplementedException();
+            if (_updateActiveStateEvent.IsValid) return;
+            var scheduler = Owner.Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            scheduler.ScheduleEvent(_updateActiveStateEvent, TimeSpan.FromSeconds(1), _pendingEvents);
+            _updateActiveStateEvent.Get().Initialize(this);
+        }
+
+        private void CancelUpdateActiveStateEvent()
+        {
+            var scheduler = Owner.Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_updateActiveStateEvent);
         }
 
         private void ScheduleUpdateScoreEvent()
         {
-            throw new NotImplementedException();
+            if (_updateScoreEvent.IsValid) return;
+            var scheduler = Owner.Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            scheduler.ScheduleEvent(_updateScoreEvent, TimeSpan.Zero, _pendingEvents);
+            _updateScoreEvent.Get().Initialize(this);
+        }
+
+        private void CancelUpdateScoreEvent()
+        {
+            var scheduler = Owner.Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_updateScoreEvent);
+        }
+
+        protected class UpdateScoreEvent : CallMethodEvent<AchievementManager>
+        {
+            protected override CallbackDelegate GetCallback() => (manager) => manager.OnUpdateScoreEvent();
+        }
+
+        protected class UpdateActiveStateEvent : CallMethodEvent<AchievementManager>
+        {
+            protected override CallbackDelegate GetCallback() => (manager) => manager.ActiveAchievementsStateUpdate();
         }
 
     }

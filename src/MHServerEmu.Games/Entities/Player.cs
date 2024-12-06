@@ -1621,6 +1621,7 @@ namespace MHServerEmu.Games.Entities
             Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
 
             MissionManager.Deallocate();
+            AchievementManager.Deallocate();
             Game.EntityManager.RemovePlayer(this);
             base.OnDeallocate();
         }

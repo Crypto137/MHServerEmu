@@ -489,7 +489,6 @@ namespace MHServerEmu.Games.Events
 
         public static int GetPlayerAvatarsAtPrestigeLevel(Player player, int prestigeLevel)
         {
-
             HashSet<PrototypeId> avatars = new();
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
@@ -719,7 +718,6 @@ namespace MHServerEmu.Games.Events
         private static bool GetPlayerHoursPlayedByAvatarCount(Player player, Prototype avatarProto, ref int count)
         {
             count = 0;
-
             if (avatarProto != null)
             {
                 foreach (var avatar in new AvatarIterator(player))
@@ -788,7 +786,6 @@ namespace MHServerEmu.Games.Events
         private static bool GetPlayerPvPMatchWonCount(Player player, Prototype avatarProto, ref int count)
         {
             count = 0;
-
             if (avatarProto != null)
             {
                 foreach (var avatar in new AvatarIterator(player))
@@ -803,7 +800,6 @@ namespace MHServerEmu.Games.Events
         private static bool GetPlayerPvPMatchLostCount(Player player, Prototype avatarProto, ref int count)
         {
             count = 0;
-
             if (avatarProto != null)
             {
                 foreach (var avatar in new AvatarIterator(player))

@@ -82,6 +82,26 @@ namespace MHServerEmu.Games.Achievements
                 return Logger.WarnReturn(false, $"Initialize(): Achievement context map deserialization failed - {e.Message}");
             }
 
+            // Load party visible achievement 
+            string achievementPartyVisiblePath = Path.Combine(AchievementsDirectory, "AchievementPartyVisible.json");
+            if (File.Exists(achievementPartyVisiblePath) == false)
+                return Logger.WarnReturn(false, $"Initialize(): Achievement party visible not found at {achievementPartyVisiblePath}");
+
+            string achievementPartyVisibleJson = File.ReadAllText(achievementPartyVisiblePath);
+
+            try
+            {
+                List<uint> ids = JsonSerializer.Deserialize<List<uint>>(achievementPartyVisibleJson);
+
+                foreach (uint id in ids)
+                    if (_achievementInfoMap.TryGetValue(id, out var info))
+                        info.PartyVisible = true;
+            }
+            catch (Exception e)
+            {
+                return Logger.WarnReturn(false, $"Initialize(): Achievement party visible deserialization failed - {e.Message}");
+            }
+
             // Load string buffer
             string stringBufferPath = Path.Combine(AchievementsDirectory, "eng.achievements.string");
             if (File.Exists(stringBufferPath) == false)
