@@ -159,8 +159,11 @@ namespace MHServerEmu.PlayerManagement
         {
             lock (_activeSessionDict)
             {
-                _activeSessionDict.Remove(sessionId);
-                _clientDict.Remove(sessionId);
+                if (_activeSessionDict.Remove(sessionId) == false)
+                    Logger.Warn($"RemoveActiveSession(): No active session for sessionId {sessionId:X}");
+
+                if (_clientDict.Remove(sessionId) == false)
+                    Logger.Warn($"RemoveActiveSession(): No client for sessionId {sessionId:X}");
             }
         }
 

@@ -20,6 +20,8 @@ namespace MHServerEmu.Games.Missions.Conditions
             _avatarLeveledUpAction = OnAvatarLeveledUp;
         }
 
+        public override bool EvaluateOnReset() => true; // Recalc Avatar level on reset
+
         public override bool OnReset()
         {
             bool isLevelUp = false;
@@ -70,11 +72,11 @@ namespace MHServerEmu.Games.Missions.Conditions
         private void OnAvatarLeveledUp(AvatarLeveledUpGameEvent evt)
         {
             var player = evt.Player;
-            var avatarRef = evt.AvatarRef;
             int level = evt.Level;
+            var avatarRef = evt.AvatarRef;
 
             if (player == null || IsMissionPlayer(player) == false) return;
-            if (_proto.AvatarPrototype != avatarRef) return;
+            if (_proto.AvatarPrototype != PrototypeId.Invalid && _proto.AvatarPrototype != avatarRef) return;
             if (_proto.Level > level) return;
 
             UpdatePlayerContribution(player);

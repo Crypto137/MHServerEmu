@@ -276,6 +276,50 @@ namespace MHServerEmu.Games.Entities.Items
                 return true;
             }
 
+            // TODO: Rework and move this to Power.DoPowerEventActionSpawnLootTable()
+            foreach (PowerEventActionPrototype powerEventAction in power.Prototype.ActionsTriggeredOnPowerEvent)
+            {
+                if (powerEventAction.EventAction != PowerEventActionType.SpawnLootTable)
+                    continue;
+
+                if (powerEventAction.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext)
+                    continue;
+
+                Player owner = avatar?.GetOwnerOfType<Player>();
+                if (owner == null) continue;
+
+                List<Player> playerList = ListPool<Player>.Instance.Rent();
+
+                if (lootTableContext.IncludeNearbyAvatars)
+                {
+                    Power.ComputeNearbyPlayers(avatar.Region, avatar.RegionLocation.Position, 0, false, playerList);
+                }
+                else
+                {
+                    playerList.Add(owner);
+                }
+
+                int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : avatar.CharacterLevel;
+
+                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
+                {
+                    (lootTableContext.LootTable, lootTableContext.PlaceLootInGeneralInventory ? LootActionType.Give : LootActionType.Spawn)
+                };
+
+                int recipientId = 1;
+                foreach (Player player in playerList)
+                {
+                    using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    settings.Initialize(LootContext.Drop, player, avatar, level);
+                    Game.LootManager.AwardLootFromTables(tables, settings, recipientId++);
+                }
+
+                OnUsePowerActivated();
+
+                ListPool<Player>.Instance.Return(playerList);
+                return true;
+            }
+
             // TODO: normal implementation
 
             return false;

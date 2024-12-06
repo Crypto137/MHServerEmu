@@ -167,6 +167,10 @@ namespace MHServerEmu.Games.Network
                 TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion);
                 Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
+
+                // Unlock chat by default for accounts with elevated permissions to allow them to use chat commands during the tutorial
+                if (_dbAccount.UserLevel > AccountUserLevel.User)
+                    Player.Properties[PropertyEnum.UISystemLock, (PrototypeId)809347018162704299] = 1;
             }
 
             PersistenceHelper.RestoreInventoryEntities(Player, _dbAccount);
