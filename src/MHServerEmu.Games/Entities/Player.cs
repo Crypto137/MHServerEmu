@@ -157,7 +157,6 @@ namespace MHServerEmu.Games.Entities
             _missionManager = new(Game, this);
             _achievementManager = new(this);
             _scoringEventContext = new ScoringEventContext();
-            _scoringEventContext.FromPlayer(this);
             _gameplayOptions.SetOwner(this);
         }
 
@@ -481,7 +480,7 @@ namespace MHServerEmu.Games.Entities
 
         public Region GetRegion()
         {
-            if (PlayerConnection == null) return null;
+            // This shouldn't need any null checks, at least for now
             return AOI.Region;
         }
 
