@@ -299,6 +299,8 @@ namespace MHServerEmu.Games.Entities
             // Event
             int count = item.CurrentStackSize;
             GetRegion()?.PlayerDonatedItemEvent.Invoke(new(this, item, count));
+            var rarityProto = item.RarityPrototype;
+            OnScoringEvent(new(ScoringEventType.ItemDonated, item.Prototype, rarityProto, count));
 
             if (IsVendorMaxLevel(vendorTypeProto) == false)
             {
