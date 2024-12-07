@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Achievements
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="AchievementProgress"/> value is empty.
         /// </summary>
-        public bool IsEmpty { get => Count == 0 && CompletedDate == TimeSpan.Zero; }
+        public bool IsEmpty { get => Count == 0 && CompletedDate == TimeSpan.Zero && ModifiedSinceCheckpoint == false; }
 
 
         /// <summary>

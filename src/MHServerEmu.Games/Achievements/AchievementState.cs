@@ -20,7 +20,9 @@ namespace MHServerEmu.Games.Achievements
         private CategoryStats _totalStats;
         private Dictionary<LocaleStringId, CategoryStats> _categoryStats = new();
         private Dictionary<(LocaleStringId, LocaleStringId), CategoryStats> _subCategoryStats = new();
-
+        //private ulong _migrationStamp = 1;
+        //private TimeSpan _lastFullWriteTime;
+        
         public Dictionary<uint, AchievementProgress> AchievementProgressMap { get; } = new();
 
         /// <summary>
@@ -43,34 +45,50 @@ namespace MHServerEmu.Games.Achievements
                     uint achievementId = kvp.Key;
                     uint count = kvp.Value.Count;
                     TimeSpan completedDate = kvp.Value.CompletedDate;
+                    bool modifiedSinceCheckpoint = kvp.Value.ModifiedSinceCheckpoint;
 
                     success &= Serializer.Transfer(archive, ref achievementId);
                     success &= Serializer.Transfer(archive, ref count);
                     success &= Serializer.Transfer(archive, ref completedDate);
-                    // IsMigration => progress.modifiedSinceCheckpoint
+
+                    //if (archive.IsMigration) 
+                    //    success &= Serializer.Transfer(archive, ref modifiedSinceCheckpoint); 
                 }
 
-                // IsMigration => m_migrationStamp, m_lastFullWriteTime
+                //if (archive.IsMigration)
+                //{
+                //    success &= Serializer.Transfer(archive, ref _migrationStamp);
+                //    success &= Serializer.Transfer(archive, ref _lastFullWriteTime);
+                //}
             }
             else
             {
                 AchievementProgressMap.Clear();
+                _scoreCached = false;
 
                 for (uint i = 0; i < achievementCount; i++)
                 {
                     uint achievementId = 0;
                     uint count = 0;
                     TimeSpan completedDate = TimeSpan.Zero;
+                    bool modifiedSinceCheckpoint = false;
 
                     success &= Serializer.Transfer(archive, ref achievementId);
                     success &= Serializer.Transfer(archive, ref count);
                     success &= Serializer.Transfer(archive, ref completedDate);
-                    // IsMigration => progress.modifiedSinceCheckpoint
 
-                    AchievementProgressMap.Add(achievementId, new(count, completedDate, false));
+                    //if (archive.IsMigration)
+                    //    success &= Serializer.Transfer(archive, ref modifiedSinceCheckpoint);
+
+                    AchievementProgressMap.Add(achievementId, new(count, completedDate, modifiedSinceCheckpoint));
                 }
 
-                // IsMigration => progress.modifiedSinceCheckpoint
+                //if (archive.IsMigration)
+                //{
+                //    success &= Serializer.Transfer(archive, ref _migrationStamp);
+                //    _migrationStamp++;
+                //    success &= Serializer.Transfer(archive, ref _lastFullWriteTime);
+                //}
             }
 
             return success;
@@ -92,7 +110,14 @@ namespace MHServerEmu.Games.Achievements
         /// </summary>
         public void SetAchievementProgress(uint id, AchievementProgress progress)
         {
-            AchievementProgressMap[id] = progress;
+            if (id == 0) return;
+
+            if (progress.IsEmpty)
+                AchievementProgressMap.Remove(id);
+            else
+                AchievementProgressMap[id] = progress;
+
+            _scoreCached = false;
         }
 
         /// <summary>
