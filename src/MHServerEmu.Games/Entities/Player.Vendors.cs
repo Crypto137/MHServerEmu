@@ -186,6 +186,16 @@ namespace MHServerEmu.Games.Entities
                     purchaseData.RecordItemPurchase(vendorSlot);
             }
 
+            // Events
+            if (isInBuybackInventory == false)
+            {
+                int count = item.CurrentStackSize;
+                GetRegion()?.PlayerBoughtItemEvent.Invoke(new(this, item, count));
+                var rarityProto = item.RarityPrototype;
+                OnScoringEvent(new(ScoringEventType.ItemBought, item.Prototype, rarityProto, count));
+                OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProto, count));
+            }
+
             // Use the item if needed
             if (item.Properties[PropertyEnum.ItemAutoUseOnPurchase])
             {
