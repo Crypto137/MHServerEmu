@@ -296,6 +296,10 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: vendor.IsGlobalEventVendor for Events/GlobalEvents/Events/BiFrostUnlock/BifrostUnlock.prototype
 
+            // Event
+            int count = item.CurrentStackSize;
+            GetRegion()?.PlayerDonatedItemEvent.Invoke(new(this, item, count));
+
             if (IsVendorMaxLevel(vendorTypeProto) == false)
             {
                 uint vendorXPGain = item.GetVendorXPGain(vendor, this);
