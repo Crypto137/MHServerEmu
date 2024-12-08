@@ -1354,15 +1354,15 @@ namespace MHServerEmu.Games.Entities
                     region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimatePowerUser);
 
                     killedPlayer.OnScoringEvent(new(ScoringEventType.AvatarDeath));
-                    var killer = avatar.GetOwnerOfType<Player>();
-                    if (killer != null)
-                        foreach (var tagPlayer in TagPlayers.GetPlayers())
-                        {
-                            if (tagPlayer == killer)
-                                tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKill));
-                            else
-                                tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKillAssist));
-                        }
+                    var killer = avatar?.GetOwnerOfType<Player>();
+                   
+                    foreach (var tagPlayer in TagPlayers.GetPlayers())
+                    {
+                        if (tagPlayer == killer)
+                            tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKill));
+                        else
+                            tagPlayer.OnScoringEvent(new(ScoringEventType.AvatarKillAssist));
+                    }
                 }
 
                 if (powerResults.PowerOwnerId != powerResults.TargetId)
@@ -1402,7 +1402,7 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (playerUid != tag.PlayerUID)
                     {
-                        player = manager.GetEntityByDbGuid<Player>(playerUid);
+                        player = manager.GetEntityByDbGuid<Player>(tag.PlayerUID);
                         isCombatActive = player != null && player.CurrentAvatar.IsCombatActive();
 
                         if (isCombatActive)
