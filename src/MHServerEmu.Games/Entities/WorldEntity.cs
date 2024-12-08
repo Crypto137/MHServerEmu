@@ -1344,6 +1344,8 @@ namespace MHServerEmu.Games.Entities
                 region.AdjustHealthEvent.Invoke(new(this, ultimatePowerUser, player, adjustHealth, isDodged));
             }
 
+            bool killed = false;
+
             if (health <= 0 && Properties[PropertyEnum.AIDefeated] == false)
             {
                 if (this is Avatar killedAvatar)
@@ -1372,6 +1374,7 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 Kill(ultimatePowerUser, KillFlags.None, powerUser);
+                killed = true;
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
             else
@@ -1385,6 +1388,33 @@ namespace MHServerEmu.Games.Entities
 
             if (this is Agent agent && adjustHealth < 0 && CanBePlayerOwned() == false)
                 agent.AIController?.OnAIGotDamaged(ultimatePowerUser, adjustHealth);
+
+            if (killed)
+            {
+                ulong playerUid = 0;
+                Player player = null;
+                bool isCombatActive = false;
+
+                var powerTime = Game.CurrentTime - TimeSpan.FromSeconds(10);
+                var manager = Game.EntityManager;
+
+                foreach (var tag in TagPlayers.Tags)
+                {
+                    if (playerUid != tag.PlayerUID)
+                    {
+                        player = manager.GetEntityByDbGuid<Player>(playerUid);
+                        isCombatActive = player != null && player.CurrentAvatar.IsCombatActive();
+
+                        if (isCombatActive)
+                            player.OnScoringEvent(new(ScoringEventType.EntityDeath, Prototype, GetRankPrototype()));
+
+                        playerUid = tag.PlayerUID;
+                    }
+
+                    if (isCombatActive &&  tag.PowerPrototype != null && tag.Time >= powerTime)
+                        player.OnScoringEvent(new(ScoringEventType.EntityDeathViaPower, Prototype, tag.PowerPrototype, GetRankPrototype()), Id);
+                }
+            }
 
             return true;
         }

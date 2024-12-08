@@ -2109,9 +2109,9 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        public void OnScoringEvent(in ScoringEvent scoringEvent)
+        public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId = Entity.InvalidId)
         {
-            AchievementManager.OnScoringEvent(scoringEvent);
+            AchievementManager.OnScoringEvent(scoringEvent, entityId);
         }
 
         public void UpdateScoringEventContext()

@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 
@@ -242,13 +243,14 @@ namespace MHServerEmu.Games.Achievements
             }
         }
 
-        public bool UpdateAchievement(AchievementInfo info, int count, ref bool changes)
+        public bool UpdateAchievement(AchievementInfo info, int count, ref bool changes, ulong entityId)
         {
             int oldCount = 0;
             TimeSpan completedDate = TimeSpan.Zero;
 
             if (AchievementProgressMap.TryGetValue(info.Id, out var progress)) 
             {
+                if (entityId != Entity.InvalidId && progress.LastEntityId == entityId) return false;
                 oldCount = (int)progress.Count;
                 completedDate = progress.CompletedDate;
             }
@@ -291,7 +293,7 @@ namespace MHServerEmu.Games.Achievements
             if (changes == false && newCount == oldCount) 
                 return false;
 
-            AchievementProgressMap[info.Id] = new((uint)newCount, completedDate, true);
+            AchievementProgressMap[info.Id] = new((uint)newCount, completedDate, true, entityId);
 
             if (changes) _scoreCached = false;
             return true;

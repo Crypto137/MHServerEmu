@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Achievements
             avatar.Properties[PropertyEnum.AchievementScore] = score;
         }
 
-        public void OnScoringEvent(in ScoringEvent scoringEvent)
+        public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId = Entity.InvalidId)
         {
             if (_cachingActives) return;
 
@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Achievements
                     if (FilterEventData(scoringEvent, active.Data))
                     {
                         var info = instance.GetAchievementInfoById(active.Id);
-                        UpdateAchievement(info, scoringEvent.Count, true, true, active);
+                        UpdateAchievement(info, scoringEvent.Count, true, true, active, entityId);
                     }
 
             _scoring = false;
@@ -180,13 +180,13 @@ namespace MHServerEmu.Games.Achievements
             return info.EventContext.FilterOwnerContext(Owner, Owner.ScoringEventContext);
         }
 
-        private void UpdateAchievement(AchievementInfo info, int count, bool showPopups = true, bool fromEvent = false, ActiveAchievement active = null)
+        private void UpdateAchievement(AchievementInfo info, int count, bool showPopups = true, bool fromEvent = false, ActiveAchievement active = null, ulong entityId = Entity.InvalidId)
         {
             var state = AchievementState;
             uint oldScore = state.GetTotalStats().Score;
             bool changes = false;
 
-            if (fromEvent && state.UpdateAchievement(info, count, ref changes))
+            if (fromEvent && state.UpdateAchievement(info, count, ref changes, entityId))
             {
                 if (active != null)
                 {
