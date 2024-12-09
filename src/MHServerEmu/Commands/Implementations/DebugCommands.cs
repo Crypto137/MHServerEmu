@@ -9,7 +9,6 @@ using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -126,7 +125,7 @@ namespace MHServerEmu.Commands.Implementations
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
                 flags = Switch.Off;   // Default Off
 
-            MetaGame.Debug = (flags == Switch.On) ? true : false;
+            Games.MetaGames.MetaGame.Debug = (flags == Switch.On) ? true : false;
 
             return $"Metagame Log [{flags}]";
         }
