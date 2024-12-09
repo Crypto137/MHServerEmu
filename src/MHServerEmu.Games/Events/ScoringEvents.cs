@@ -193,10 +193,8 @@ namespace MHServerEmu.Games.Events
             PublicEventTeam = prototype.ContextPublicEventTeam != PrototypeId.Invalid ? prototype.ContextPublicEventTeam.As<Prototype>() : null;
         }
 
-        public void FromPlayer(Player player)
+        public ScoringEventContext(Player player)
         {
-            ClearForPlayer();
-
             var avatar = player.CurrentAvatar;
             if (avatar != null)
             {
@@ -220,15 +218,6 @@ namespace MHServerEmu.Games.Events
 
             // TODO: Party
             // TODO: PublicEventTeam
-        }
-
-        private void ClearForPlayer()
-        {
-            Avatar = null;
-            TeamUp = null;
-            Pet = null;
-            Region = null;
-            DifficultyTier = null;
         }
 
         public bool HasContext()
