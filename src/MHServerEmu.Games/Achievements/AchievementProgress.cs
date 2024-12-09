@@ -36,11 +36,6 @@ namespace MHServerEmu.Games.Achievements
             LastEntityId = entityId;
         }
 
-        /// <summary>
-        /// Returns a copy of this <see cref="AchievementProgress"/> with ModifiedSinceCheckpoint set to false.
-        /// </summary>
-        public AchievementProgress AsNotModified() => new(Count, CompletedDate, false);
-
         public override string ToString()
         {
             StringBuilder sb = new();

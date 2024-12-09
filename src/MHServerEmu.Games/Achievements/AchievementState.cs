@@ -121,35 +121,6 @@ namespace MHServerEmu.Games.Achievements
             _scoreCached = false;
         }
 
-        /// <summary>
-        /// Generates a <see cref="NetMessageAchievementStateUpdate"/> from this <see cref="AchievementState"/> instance.
-        /// </summary>
-        public NetMessageAchievementStateUpdate ToUpdateMessage(bool showPopups = true)
-        {
-            var builder = NetMessageAchievementStateUpdate.CreateBuilder();
-
-            List<uint> sentIds = new();
-
-            foreach (var kvp in AchievementProgressMap)
-            {
-                if (kvp.Value.ModifiedSinceCheckpoint == false) continue;   // Skip achievements that haven't been modified
-
-                builder.AddAchievementStates(NetMessageAchievementStateUpdate.Types.AchievementState.CreateBuilder()
-                    .SetId(kvp.Key)
-                    .SetCount(kvp.Value.Count)
-                    .SetCompleteddate((ulong)kvp.Value.CompletedDate.Ticks / 10));
-
-                sentIds.Add(kvp.Key);
-            }
-
-            // Remove modified from all states we are going to send
-            foreach (uint id in sentIds)
-                AchievementProgressMap[id] = AchievementProgressMap[id].AsNotModified();
-
-            builder.SetShowpopups(showPopups);
-            return builder.Build();
-        }
-
         public NetMessageAchievementStateUpdate.Types.AchievementState ToProtobuf(uint id)
         {
             var progress = AchievementProgressMap[id];
