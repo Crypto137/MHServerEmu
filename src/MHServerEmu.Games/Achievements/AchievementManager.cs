@@ -186,7 +186,7 @@ namespace MHServerEmu.Games.Achievements
             uint oldScore = state.GetTotalStats().Score;
             bool changes = false;
 
-            if (fromEvent && state.UpdateAchievement(info, count, ref changes, entityId))
+            if (state.UpdateAchievement(info, count, ref changes, entityId))
             {
                 if (active != null)
                 {
