@@ -5,7 +5,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.MetaGames.GameModes;
 using MHServerEmu.Games.MetaGames.MetaStates;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
