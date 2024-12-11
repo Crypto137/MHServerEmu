@@ -18,8 +18,8 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            if (int.TryParse(@params[0], out int damage) == false)
-                return $"Failed to parse value {@params[0]}";
+            if ((@params.Length > 0 && int.TryParse(@params[0], out int damage)) == false)
+                damage = 1000;
 
             damage = Math.Clamp(damage, 1, 10000);
             avatar.Properties[PropertyEnum.DamagePctBonus] = (float)damage;
@@ -35,8 +35,8 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            if (int.TryParse(@params[0], out int vsboss) == false)
-                return $"Failed to parse value {@params[0]}";
+            if ((@params.Length > 0 && int.TryParse(@params[0], out int vsboss)) == false)
+                vsboss = 1000;
 
             vsboss = Math.Clamp(vsboss, 1, 10000);
             avatar.Properties[PropertyEnum.DamagePctBonusVsBosses] = (float)vsboss;
