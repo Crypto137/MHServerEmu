@@ -498,7 +498,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;               // 154
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
-                case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:       OnMissionTrackerFiltersUpdate(message); break;      // 166
+                case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:           OnMissionTrackerFiltersUpdate(message); break;              // 166
+                case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;    // 167
 
                 // Grouping Manager
                 case ClientToGameServerMessage.NetMessageChat:                                                                                  // 64
@@ -1557,7 +1558,7 @@ namespace MHServerEmu.Games.Network
         private bool OnMissionTrackerFiltersUpdate(MailboxMessage message)  // 166
         {
             var filters = message.As<NetMessageMissionTrackerFiltersUpdate>();
-            if (filters == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
+            if (filters == null) return Logger.WarnReturn(false, $"OnMissionTrackerFiltersUpdate(): Failed to retrieve message");
 
             foreach (var filter in filters.MissionTrackerFilterChangesList)
             {
@@ -1566,6 +1567,15 @@ namespace MHServerEmu.Games.Network
                 Player.Properties[PropertyEnum.MissionTrackerFilter, filterPrototypeId] = filter.IsFiltered;
             }
 
+            return true;
+        }
+
+        private bool OnAchievementMissionTrackerFilterChange(MailboxMessage message)  // 167
+        {
+            var filter = message.As<NetMessageAchievementMissionTrackerFilterChange>();
+            if (filter == null || filter.AchievementId == 0) 
+                return Logger.WarnReturn(false, $"OnAchievementMissionTrackerFilterChange(): Failed to retrieve message");
+            Player.Properties[PropertyEnum.MissionTrackerAchievements, (int)filter.AchievementId] = filter.IsFiltered;
             return true;
         }
 
