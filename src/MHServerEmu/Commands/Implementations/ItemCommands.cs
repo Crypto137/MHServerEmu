@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Text;
+using MHServerEmu.Games.Locales;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
@@ -47,23 +49,83 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern]", AccountUserLevel.Admin)]
+        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [itemName] [rarity?]", AccountUserLevel.Admin)]
         public string Give(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help item give' to get help.";
 
+            // Step 1: Retrieve the item prototype
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
-            if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
+            if (itemProtoRef == PrototypeId.Invalid) return $"Item '{@params[0]}' not found.";
 
+            // Step 2: Check for rarity argument
+            PrototypeId? forcedRarity = null;
+            if (@params.Length > 1)
+            {
+                foreach (var protoId in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    RarityPrototype rarity = GameDatabase.GetPrototype<RarityPrototype>(protoId);
+                    if (rarity == null) continue;
+
+                    string fullName = protoId.GetName(); // Full name like "Entity/Items/Rarity/R3Rare.prototype"
+                    string shortName = fullName.Split('/').Last().Replace(".prototype", ""); // Extract "R3Rare"
+                    
+                    Logger.Debug($"Checking rarity: Full Name={fullName}, Short Name={shortName}");
+
+                    // Match against either the full name or the short name
+                    if (fullName.Equals(@params[1], StringComparison.OrdinalIgnoreCase) ||
+                        shortName.Equals(@params[1], StringComparison.OrdinalIgnoreCase))
+                    {
+                        forcedRarity = protoId;
+                        break;
+                    }
+                }
+
+                if (forcedRarity == null)
+                {
+                    return $"Rarity '{@params[1]}' not found.";
+                }
+            }
+
+            // Step 3: Get the player and give the item
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
+            // Pass the rarity to the LootManager's GiveItem method
             LootManager lootGenerator = playerConnection.Game.LootManager;
-            lootGenerator.GiveItem(itemProtoRef, LootContext.Drop, player);
-            Logger.Debug($"GiveItem(): {itemProtoRef.GetName()} to {player}");
+            lootGenerator.GiveItem(itemProtoRef, LootContext.Drop, player, forcedRarity);
+            Logger.Debug($"GiveItem(): {itemProtoRef.GetName()} with rarity {forcedRarity?.GetName() ?? "default"} given to player.");
 
-            return string.Empty;
+            return $"Gave {itemProtoRef.GetName()} with rarity {forcedRarity?.GetName() ?? "default"}.";
+        }
+
+        [Command("rarities", "Lists all known rarity prototypes.", AccountUserLevel.Admin)]
+        public string ListRarities(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            StringBuilder sb = new StringBuilder("Known Rarities:\n");
+            int count = 0;
+
+            foreach (var protoId in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                RarityPrototype rarity = GameDatabase.GetPrototype<RarityPrototype>(protoId);
+                if (rarity == null) continue;
+
+                // Display some identifying information
+                // protoId.GetName() might give something like "RarityUnique", "RarityCosmic", etc.
+                string rarityName = protoId.GetName();
+                string displayName = LocaleManager.Instance.CurrentLocale.GetLocaleString(rarity.DisplayNameText);
+                if (string.IsNullOrEmpty(displayName))
+                    displayName = rarityName; // fallback if no localized text
+
+
+                sb.AppendLine($"{count++}: {rarityName} (Display: {displayName}, Tier: {rarity.Tier})");
+            }
+
+            if (count == 0) return "No rarities found.";
+            return sb.ToString().TrimEnd();
         }
 
         [Command("destroyindestructible", "Destroys indestructible items contained in the player's general inventory.\nUsage: item destroyindestructible")]

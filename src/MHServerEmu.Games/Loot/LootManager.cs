@@ -461,9 +461,10 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Creates and gives a new item to the provided <see cref="Player"/>.
         /// </summary>
-        public bool GiveItem(PrototypeId itemProtoRef, LootContext lootContext, Player player)
+        public bool GiveItem(PrototypeId itemProtoRef, LootContext lootContext, Player player, PrototypeId? forcedRarity = null)
         {
-            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player);
+            // Pass the forcedRarity to CreateItemSpec without modifying the original logic for level
+            ItemSpec itemSpec = CreateItemSpec(itemProtoRef, lootContext, player, 1, forcedRarity);
             if (itemSpec == null)
                 return Logger.WarnReturn(false, $"GiveItem(): Failed to create an ItemSpec for {itemProtoRef.GetName()}");
 
@@ -474,10 +475,11 @@ namespace MHServerEmu.Games.Loot
             return GiveLootFromSummary(lootResultSummary, player, PrototypeId.Invalid);
         }
 
+
         /// <summary>
         /// Creates an <see cref="ItemSpec"/> for the provided <see cref="PrototypeId"/>.
         /// </summary>
-        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef, LootContext lootContext, Player player, int level = 1)
+        public ItemSpec CreateItemSpec(PrototypeId itemProtoRef, LootContext lootContext, Player player, int level = 1, PrototypeId? forcedRarity = null)
         {
             ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
             if (itemProto == null)
@@ -494,7 +496,10 @@ namespace MHServerEmu.Games.Loot
             filterArgs.ItemProto = itemProto;
             filterArgs.Level = level;
             filterArgs.RollFor = _resolver.ResolveAvatarPrototype(avatarProto, true, 1f).DataRef;
-            filterArgs.Rarity = _resolver.ResolveRarity(null, level, itemProto);
+
+            // Use forcedRarity if provided, otherwise resolve normally
+            filterArgs.Rarity = forcedRarity ?? _resolver.ResolveRarity(null, level, itemProto);
+
             filterArgs.Slot = itemProto.GetInventorySlotForAgent(avatarProto);
 
             if (itemProto.MakeRestrictionsDroppable(filterArgs, RestrictionTestFlags.All, out _) == false)
