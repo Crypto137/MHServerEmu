@@ -41,6 +41,7 @@ namespace MHServerEmu.Games.Achievements
 
         public Player Owner { get; }
         public AchievementState AchievementState { get => Owner.AchievementState; }
+        public bool AchievementsEnabled { get => Owner.Game.AchievementsEnabled; }
 
         public AchievementManager(Player owner)
         {
@@ -71,7 +72,7 @@ namespace MHServerEmu.Games.Achievements
 
         public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId = Entity.InvalidId)
         {
-            if (_cachingActives) return;
+            if (AchievementsEnabled == false || _cachingActives) return;
 
             if (_cachedActives == false && _scoring == false)
                 RebuildActivesCache();
@@ -99,6 +100,7 @@ namespace MHServerEmu.Games.Achievements
 
         public void OnUpdateEventContext()
         {
+            if (AchievementsEnabled == false) return;
             _cachedActives = false;
         }
 
@@ -305,6 +307,8 @@ namespace MHServerEmu.Games.Achievements
 
         public void RecountAchievements()
         {
+            if (AchievementsEnabled == false) return;
+
             var state = AchievementState;
             foreach (var info in AchievementDatabase.Instance.AchievementInfoMap)
             {
