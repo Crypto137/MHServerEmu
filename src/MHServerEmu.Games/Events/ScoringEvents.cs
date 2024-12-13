@@ -84,6 +84,28 @@ namespace MHServerEmu.Games.Events
         public bool Proto0IncludeChildren { get; set; }
         public bool Proto1IncludeChildren { get; set; }
         public bool Proto2IncludeChildren { get; set; }
+
+        public ScoringEventData(ScoringEventPrototype eventProto) : this()
+        {
+            Proto0 = eventProto.Proto0 != PrototypeId.Invalid ? eventProto.Proto0.As<Prototype>() : null;
+            Proto0IncludeChildren = eventProto.Proto0IncludeChildren;
+            Proto1 = eventProto.Proto1 != PrototypeId.Invalid ? eventProto.Proto1.As<Prototype>() : null;
+            Proto1IncludeChildren = eventProto.Proto1IncludeChildren;
+            Proto2 = eventProto.Proto2 != PrototypeId.Invalid ? eventProto.Proto2.As<Prototype>() : null;
+            Proto2IncludeChildren = eventProto.Proto2IncludeChildren;
+        }
+    }
+
+    public struct ScoringRule
+    {
+        public LeaderboardScoringRulePrototype RuleProto { get; set; }
+        public ScoringEventData Data { get; set; }
+
+        public ScoringRule(LeaderboardScoringRulePrototype ruleProto) : this()
+        {
+            RuleProto = ruleProto;
+            Data = new(ruleProto.Event);
+        }
     }
 
     public struct ScoringPlayerContext
