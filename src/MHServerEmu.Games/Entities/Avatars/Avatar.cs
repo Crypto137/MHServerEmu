@@ -78,6 +78,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public AvatarModePrototype AvatarModePrototype { get => GameDatabase.GetPrototype<AvatarModePrototype>(Properties[PropertyEnum.AvatarMode]); }
         public AvatarMode AvatarMode { get => AvatarModePrototype?.AvatarModeEnum ?? AvatarMode.Invalid; }
+        public PrototypeGuid PrototypeGuid { get => GameDatabase.GetPrototypeGuid(PrototypeDataRef); }
 
         public Avatar(Game game) : base(game) { }
 
