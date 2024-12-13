@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -104,6 +105,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LeaderboardRankingRule RankingRule { get; protected set; }
         public LeaderboardScoreDisplayFormat ScoreDisplayFormat { get; protected set; }
         public MetaLeaderboardEntryPrototype[] MetaLeaderboardEntries { get; protected set; }
+
+        [DoNotCopy]
+        public List<LeaderboardPrototype> MetaLeaderboards { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (ScoringRules.HasValue())
+            {
+                var guid = GameDatabase.GetPrototypeGuid(DataRef);
+                foreach (var ruleProto in ScoringRules)
+                {
+                    if (ruleProto == null) continue;
+                    ruleProto.LeaderboardProto = this;
+                    ruleProto.LeaderboardGuid = guid;
+                }
+            }
+
+            if (Type == LeaderboardType.MetaLeaderboard && MetaLeaderboardEntries.HasValue())
+                foreach (var entryProto in MetaLeaderboardEntries)
+                {
+                    if (entryProto.Leaderboard == PrototypeId.Invalid) continue;
+                    var subLeaderboardProto = GameDatabase.GetPrototype<LeaderboardPrototype>(entryProto.Leaderboard);
+                    if (subLeaderboardProto == null) continue;
+
+                    subLeaderboardProto.MetaLeaderboards ??= new();
+
+                    if (subLeaderboardProto.MetaLeaderboards.Contains(this) == false)
+                        subLeaderboardProto.MetaLeaderboards.Add(this);
+                }
+        }
     }
 
     public class LeaderboardCategoryPrototype : Prototype
@@ -135,6 +168,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ScoringEventPrototype Event { get; protected set; }
         public long GUID { get; protected set; }
+
+        [DoNotCopy]
+        public LeaderboardPrototype LeaderboardProto { get; set; }
+        [DoNotCopy]
+        public PrototypeGuid LeaderboardGuid { get; set; }
     }
 
     public class LeaderboardScoringRuleCurvePrototype : LeaderboardScoringRulePrototype
