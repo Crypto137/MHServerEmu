@@ -4,6 +4,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -15,8 +16,6 @@ namespace MHServerEmu.Leaderboards
         private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        private readonly LeaderboardManager _leaderboardManager = new();
 
         #region IGameService Implementation
 
@@ -50,7 +49,7 @@ namespace MHServerEmu.Leaderboards
 
         public string GetStatus()
         {
-            return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
+            return $"Active Leaderboards: {LeaderboardDatabase.Instance.LeaderboardCount}";
         }
 
         #endregion
@@ -64,8 +63,20 @@ namespace MHServerEmu.Leaderboards
 
             var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
 
-            foreach (PrototypeGuid guid in initializeRequest.LeaderboardIdsList)
-                response.AddLeaderboardInitDataList(_leaderboardManager.GetLeaderboardInitData(guid));
+            foreach (var guid in initializeRequest.LeaderboardIdsList)
+                if (LeaderboardDatabase.Instance.GetLeaderboardInstances((PrototypeGuid)guid, out var instances))
+                {
+                    var initDataBuilder = LeaderboardInitData.CreateBuilder().SetLeaderboardId(guid);
+                    foreach (var instance in instances)
+                    {
+                        var instanceData = instance.ToInstanceData();
+                        if (instance.State == LeaderboardState.eLBS_Active || instance.State == LeaderboardState.eLBS_Created)
+                            initDataBuilder.SetCurrentInstanceData(instanceData);
+                        else
+                            initDataBuilder.AddArchivedInstanceList(instanceData);
+                    }
+                    response.AddLeaderboardInitDataList(initDataBuilder.Build());
+                }
 
             client.SendMessage(MuxChannel, response.Build());
 
@@ -81,11 +92,9 @@ namespace MHServerEmu.Leaderboards
                 Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
 
             Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
-
-            Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
             
             client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
-                .SetReport(leaderboard.GetReport(request, client.Session.Account.PlayerName))
+                .SetReport(LeaderboardDatabase.Instance.GetLeaderboardReport(request))
                 .Build());
 
             return true;

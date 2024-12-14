@@ -6,6 +6,7 @@ using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Locales;
 using MHServerEmu.Games.Properties;
 
@@ -141,6 +142,7 @@ namespace MHServerEmu.Games.GameData
             // processAvatarSynergyMap
 
             AchievementDatabase.Instance.Initialize();
+            LeaderboardDatabase.Instance.Initialize();
 
             // Initialize game data tables
             var tablesWatch = Stopwatch.StartNew();
