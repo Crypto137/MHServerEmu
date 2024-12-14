@@ -1,9 +1,8 @@
-﻿using System.Text;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -109,11 +108,13 @@ namespace MHServerEmu.Games.Powers
         public bool IsInCollection { get => _collection != null; }
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
-        public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Clock.GameTime - _startTime; }
+        public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
         public PrototypeId[] Keywords { get; internal set; }
 
         public PowerIndexPropertyFlags PowerIndexPropertyFlags { get => _conditionPrototype != null ? _conditionPrototype.PowerIndexPropertyFlags : default; }
+
+        public EventPointer<ConditionCollection.RemoveConditionEvent> RemoveEvent { get; set; }
 
         public Condition() { }
 
@@ -313,6 +314,11 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        public void ResetStartTime()
+        {
+            _startTime = Game.Current.CurrentTime;
         }
 
         public override string ToString()

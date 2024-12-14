@@ -3,16 +3,18 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
 {
     public class ConditionCollection : IEnumerable<KeyValuePair<ulong, Condition>>, ISerialize
     {
-        // NOTE: Current state of implementation:
+        // NOTE: Current state of implementation (March 2024):
         // - Adding and removing conditions works, but conditions don't affect their owners ("accrue").
         // - Condition management is semi-implemented (conditions are currently not aware of the collection they belong to).
         // - Some data for stacking (e.g. StackId) is implemented, but none of the actual functionality is.
@@ -25,7 +27,8 @@ namespace MHServerEmu.Games.Entities
 
         private readonly WorldEntity _owner;
 
-        private SortedDictionary<ulong, Condition> _currentConditionDict = new();   // m_currentConditions
+        private readonly SortedDictionary<ulong, Condition> _currentConditionDict = new();   // m_currentCondition
+        private readonly EventGroup _pendingEvents = new();
 
         public int Count { get => _currentConditionDict.Count; }    // Temp property for compatibility with our existing hacks
         public KeywordsMask ConditionKeywordsMask { get; internal set; }
@@ -154,6 +157,8 @@ namespace MHServerEmu.Games.Entities
             if (InsertCondition(condition) == false)
                 return false;
 
+            condition.ResetStartTime();
+
             // Notify interested clients if any
             if (_owner != null)     // TODO: remove null check when we separate parsing from ConditionCollection implementation
             {
@@ -231,6 +236,15 @@ namespace MHServerEmu.Games.Entities
             return new();
         }
 
+        public void OnOwnerDeallocate()
+        {
+            _owner.Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
+
+            // We need to remove all conditions here to unbind their property collections.
+            // If we don't do that, the garbage collector can't clean them and we end up with a memory leak.
+            RemoveAllConditions();
+        }
+
         private bool InsertCondition(Condition condition)
         {
             // TODO: ConditionCollection::Handle?
@@ -244,11 +258,6 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        private void OnInsertCondition(Condition condition)
-        {
-            // NYI
-        }
-
         private bool RemoveCondition(Condition condition)
         {
             if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
@@ -258,6 +267,8 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: more checks
             // TODO: ConditionCollection::unaccrueCondition()
+
+            CancelScheduledConditionEnd(condition);
 
             if (_currentConditionDict.Remove(condition.Id) == false)
                 Logger.Warn($"RemoveCondition(): Failed to remove condition id {condition.Id}");
@@ -279,7 +290,72 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        // See ConditionCollection::MakeConditionStackId()
+        private void OnInsertCondition(Condition condition)
+        {
+            // TODO
+
+            OnPreAccrueCondition(condition);
+
+            OnPostAccrueCondition(condition);
+        }
+
+        private void OnPreAccrueCondition(Condition condition)
+        {
+
+        }
+
+        private void OnPostAccrueCondition(Condition condition)
+        {
+            if (ScheduleConditionEnd(condition) == false)
+                return;
+        }
+
+        private void UnaccrueCondition(Condition condition)
+        {
+            // TODO
+            OnPostUnaccrueCondition(condition);
+        }
+
+        private void OnPostUnaccrueCondition(Condition condition)
+        {
+
+        }
+
+        private bool ScheduleConditionEnd(Condition condition)
+        {
+            if (condition == null) return Logger.WarnReturn(false, "ScheduleConditionEnd(): condition == null");
+
+            if (condition.Duration > TimeSpan.Zero)
+            {
+                TimeSpan timeRemaining = condition.TimeRemaining;
+                if (timeRemaining <= TimeSpan.Zero)
+                {
+                    RemoveCondition(condition);
+                    return false;
+                }
+
+                EventPointer<RemoveConditionEvent> removeEvent = new();
+                condition.RemoveEvent = removeEvent;
+
+                _owner.Game.GameEventScheduler.ScheduleEvent(removeEvent, timeRemaining, _pendingEvents);
+                removeEvent.Get().Initialize(this, condition.Id);
+            }
+
+            return true;
+        }
+
+        private bool CancelScheduledConditionEnd(Condition condition)
+        {
+            if (condition == null) return Logger.WarnReturn(false, "CancelScheduledConditionEnd(): condition == null");
+
+            EventPointer<RemoveConditionEvent> removeEvent = condition.RemoveEvent;
+
+            if (removeEvent?.IsValid == true)
+                _owner.Game.GameEventScheduler.CancelEvent(condition.RemoveEvent);
+
+            return true;
+        }
+
         public readonly struct StackId
         {
             public PrototypeId PrototypeRef { get; }    // ConditionPrototype or PowerPrototype
@@ -288,10 +364,16 @@ namespace MHServerEmu.Games.Entities
 
             public StackId(PrototypeId prototypeRef, int creatorPowerIndex, ulong creatorId)
             {
+                // See ConditionCollection::MakeConditionStackId()
                 PrototypeRef = prototypeRef;
                 CreatorPowerIndex = creatorPowerIndex;
                 CreatorId = creatorId;
             }
+        }
+
+        public class RemoveConditionEvent : CallMethodEventParam1<ConditionCollection, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.RemoveCondition(p1);
         }
     }
 }

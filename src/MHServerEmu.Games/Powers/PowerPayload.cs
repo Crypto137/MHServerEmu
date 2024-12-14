@@ -667,7 +667,12 @@ namespace MHServerEmu.Games.Powers
                 // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
                 condition = target.ConditionCollection.AllocateCondition();
                 condition.InitializeFromPowerMixinPrototype(999, PowerProtoRef, 0, TimeSpan.Zero);
-                condition.StartTime = Game.CurrentTime;
+            }
+            else if (PowerProtoRef == (PrototypeId)5394038587225345882 && target.ConditionCollection.GetCondition(777) == null)
+            {
+                // Magik - Ultimate
+                condition = target.ConditionCollection.AllocateCondition();
+                condition.InitializeFromPowerMixinPrototype(777, PowerProtoRef, 0, TimeSpan.FromSeconds(20));
             }
 
             if (condition != null)
