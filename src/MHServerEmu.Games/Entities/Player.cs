@@ -22,6 +22,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
@@ -73,6 +74,7 @@ namespace MHServerEmu.Games.Entities
 
         private MissionManager _missionManager;
         private AchievementManager _achievementManager;
+        private LeaderboardManager _leaderboardManager;
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
         private RepString _playerName = new();
@@ -121,6 +123,7 @@ namespace MHServerEmu.Games.Entities
         public GameplayOptions GameplayOptions { get => _gameplayOptions; }
         public AchievementState AchievementState { get => _achievementState; }
         public AchievementManager AchievementManager { get => _achievementManager; }
+        public LeaderboardManager LeaderboardManager { get => _leaderboardManager; }
         public ScoringEventContext ScoringEventContext { get; set; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
@@ -155,6 +158,7 @@ namespace MHServerEmu.Games.Entities
         {
             _missionManager = new(Game, this);
             _achievementManager = new(this);
+            _leaderboardManager = new(this);
             ScoringEventContext = new();
             _gameplayOptions.SetOwner(this);
         }
@@ -173,6 +177,8 @@ namespace MHServerEmu.Games.Entities
 
             _community = new(this);
             _community.Initialize();
+
+            _leaderboardManager.Initialize();
 
             // Default loading screen before we start loading into a region
             QueueLoadingScreen(PrototypeId.Invalid);
@@ -1611,6 +1617,8 @@ namespace MHServerEmu.Games.Entities
             if (region != null)
                 MissionManager.Shutdown(region);
 
+            LeaderboardManager.Destory();
+
             base.Destroy();
         }
 
@@ -2111,12 +2119,14 @@ namespace MHServerEmu.Games.Entities
         public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId = Entity.InvalidId)
         {
             AchievementManager.OnScoringEvent(scoringEvent, entityId);
+            LeaderboardManager.OnScoringEvent(scoringEvent, entityId);
         }
 
         public void UpdateScoringEventContext()
         {
             ScoringEventContext = new(this);
             AchievementManager.OnUpdateEventContext();
+            LeaderboardManager.OnUpdateEventContext();
         }
 
         public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
