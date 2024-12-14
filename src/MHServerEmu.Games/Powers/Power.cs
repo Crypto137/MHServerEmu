@@ -14,7 +14,6 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -2962,18 +2961,6 @@ namespace MHServerEmu.Games.Powers
                 Condition travelPowerCondition = Owner.ConditionCollection.AllocateCondition();
                 travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
                 Owner.ConditionCollection.AddCondition(travelPowerCondition);
-            }
-            else if (PrototypeDataRef == (PrototypeId)5394038587225345882 && Owner.ConditionCollection.GetCondition(777) == null)
-            {
-                // Magik - Ultimate
-                Condition magikUltimateCondition = Owner.ConditionCollection.AllocateCondition();
-                magikUltimateCondition.InitializeFromPowerMixinPrototype(777, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(magikUltimateCondition);
-
-                // Schedule condition end
-                EventPointer<TEMP_RemoveConditionEvent> removeConditionEvent = new();
-                Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
-                removeConditionEvent.Get().Initialize(Owner.Id, 777);
             }
 
             if (IsThrowablePower())
