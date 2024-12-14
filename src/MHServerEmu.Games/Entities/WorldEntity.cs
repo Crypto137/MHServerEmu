@@ -1294,10 +1294,106 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return false;
 
-            Region region = Region;
+            // TODO: Procs
 
-            // Apply the results to this entity
+            ApplyPowerResultsInternal(powerResults);
+
+            return true;
+        }
+
+        private bool ApplyPowerResultsInternal(PowerResults powerResults)
+        {
             // TODO: More stuff
+
+            if (powerResults.IsAvoided == false)
+            {
+                // Add / remove conditions
+                ApplyConditionPowerResults(powerResults);
+
+                // Reset lifespan if needed for non-avatar entities
+                TimeSpan lifespan = TimeSpan.FromMilliseconds((int)powerResults.Properties[PropertyEnum.SetTargetLifespanMS]);
+                if (this is not Avatar && lifespan > TimeSpan.Zero)
+                    ResetLifespan(lifespan);
+            }
+
+            // Adjust health
+            ApplyHealthPowerResults(powerResults);
+
+            return true;
+        }
+
+        private bool ApplyConditionPowerResults(PowerResults powerResults)
+        {
+            if (powerResults == null) return Logger.WarnReturn(false, "ApplyConditionPowerResults(): powerResults == null");
+
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null) return true;
+
+            // NOTE: There may not be an owner
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+
+            // NOTE: We use for instead of foreach for iteration to avoid boxing the enumerator for IReadOnlyList
+
+            // Add new conditions
+            for (int i = 0; i < powerResults.ConditionAddList.Count; i++)
+            {
+                Condition condition = powerResults.ConditionAddList[i];
+                if (condition == null)
+                {
+                    Logger.Warn("ApplyConditionPowerResults(): condition == null");
+                    continue;
+                }
+
+                // Skip conditions that need to be manually removed if the owner no longer exists
+                if (condition.Duration == TimeSpan.Zero && powerOwner == null)
+                    continue;
+
+                conditionCollection.AddCondition(condition);
+            }
+
+            // Remove existing conditions
+            if (powerResults.ConditionRemoveList.Count == 0)
+                return true;
+
+            int numRemoved = 0;
+            bool removedNegativeStatusEffect = false;
+
+            for (int i = 0; i < powerResults.ConditionRemoveList.Count; i++)
+            {
+                ulong conditionId = powerResults.ConditionRemoveList[i];
+
+                Condition condition = conditionCollection.GetCondition(conditionId);
+                if (condition == null) continue;    // This may have already been removed
+
+                numRemoved++;
+
+                // IsANegativeStatusEffect iterates the property collection of this condition, so don't do it again if we already found one
+                if (removedNegativeStatusEffect == false && condition.IsANegativeStatusEffect())
+                    removedNegativeStatusEffect = true;
+
+                conditionCollection.RemoveCondition(conditionId);
+            }
+
+            // Trigger relevant power events
+            if (numRemoved == 0 || powerOwner == null || powerOwner.IsInWorld == false)
+                return true;
+
+            Power power = powerOwner.GetPower(powerResults.PowerPrototype.DataRef);
+            if (power != null)
+            {
+                power.HandleTriggerPowerEventOnRemoveCondition(powerResults, numRemoved);
+
+                if (removedNegativeStatusEffect)
+                    power.HandleTriggerPowerEventOnRemoveNegStatusEffect(powerResults);
+            }
+
+            return true;
+        }
+
+        private bool ApplyHealthPowerResults(PowerResults powerResults)
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "ApplyHealthPowerResults(): region == null");
 
             // Calculate health difference based on all damage types and healing
             // NOTE: Health can be > 2147483647, so we have to use 64-bit integers here to avoid overflows

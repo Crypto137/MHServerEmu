@@ -118,14 +118,14 @@ namespace MHServerEmu.Games.Powers
             // not present in the client
         }
 
-        public void HandleTriggerPowerEventOnRemoveCondition()          // 19
+        public void HandleTriggerPowerEventOnRemoveCondition(PowerResults powerResults, int numRemoved) // 19
         {
-            // not present in the client
+            Logger.Debug("HandleTriggerPowerEventOnRemoveCondition()");
         }
 
-        public void HandleTriggerPowerEventOnRemoveNegStatusEffect()    // 20
+        public void HandleTriggerPowerEventOnRemoveNegStatusEffect(PowerResults powerResults)    // 20
         {
-            // not present in the client
+            Logger.Debug("HandleTriggerPowerEventOnRemoveNegStatusEffect()");
         }
 
         public void HandleTriggerPowerEventOnPowerPivot()               // 21

@@ -816,11 +816,13 @@ namespace MHServerEmu.Games.Powers
 
                 PowerResults results = new();
                 payload.InitPowerResultsForTarget(results, target);
-                payload.CalculatePowerResults(results, target);
+                payload.CalculatePowerResults(results, target, false);
                 
                 if (player != null && powerProto.CanCauseTag)
+                {
                     if (avatar.IsInWorld && avatar.IsHostileTo(target))
                         target.SetTaggedBy(player, powerProto);
+                }
 
                 if (player != null && powerProto.CanCauseTag)
                 {
@@ -2952,16 +2954,6 @@ namespace MHServerEmu.Games.Powers
                 DeliverPayload(payload);
             else
                 SchedulePayloadDelivery(payload, deliveryDelay);
-
-            // HACK: Old conditions hacks
-            // TODO: Proper power condition implementation
-            if (IsTravelPower() && Prototype.AppliesConditions != null && Owner.ConditionCollection.GetCondition(666) == null)
-            {
-                // Bikes and other vehicles
-                Condition travelPowerCondition = Owner.ConditionCollection.AllocateCondition();
-                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(travelPowerCondition);
-            }
 
             if (IsThrowablePower())
             {

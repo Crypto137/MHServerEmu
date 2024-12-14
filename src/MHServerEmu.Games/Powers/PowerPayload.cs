@@ -145,10 +145,27 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
         /// </summary>
-        public void CalculatePowerResults(PowerResults results, WorldEntity target)
+        public void CalculatePowerResults(PowerResults results, WorldEntity target, bool isUserResult)
         {
-            CalculateResultDamage(results, target);
-            CalculateResultHealing(results, target);
+            if (isUserResult == false)
+            {
+                CalculateResultDamage(results, target);
+                CalculateResultHealing(results, target);
+
+                CalculateResultConditionsToRemove(results, target);
+            }
+
+            if (results.IsDodged == false)
+                CalculateResultConditionsToAdd(results, target);
+
+            // Copy extra properties
+            results.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
+            results.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
+            results.Properties.CopyProperty(Properties, PropertyEnum.NoExpOnDeath);
+            results.Properties.CopyProperty(Properties, PropertyEnum.NoLootDrop);
+            results.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
+            results.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
+            results.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
         }
 
         #region Initial Calculations
@@ -622,6 +639,23 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        public void CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
+        {
+            // REMOVEME: Old condition hacks for testing
+            if (Power.IsTravelPower(PowerPrototype) && PowerPrototype.AppliesConditions != null && target.ConditionCollection.GetCondition(666) == null)
+            {
+                // Bikes and other vehicles
+                Condition travelPowerCondition = target.ConditionCollection.AllocateCondition();
+                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PowerProtoRef, 0, TimeSpan.Zero);
+                results.AddConditionToAdd(travelPowerCondition);
+            }
+        }
+
+        public void CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
+        {
+
         }
 
         #endregion
