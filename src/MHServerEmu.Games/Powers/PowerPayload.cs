@@ -643,14 +643,35 @@ namespace MHServerEmu.Games.Powers
 
         public void CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
         {
+            Logger.Debug($"CalculateResultConditionsToAdd(): {PowerPrototype}");
+
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
 
             // REMOVEME: Old condition hacks for testing
+            Condition condition = null;
+
             if (Power.IsTravelPower(PowerPrototype) && PowerPrototype.AppliesConditions != null && target.ConditionCollection.GetCondition(666) == null)
             {
                 // Bikes and other vehicles
-                Condition condition = target.ConditionCollection.AllocateCondition();
+                condition = target.ConditionCollection.AllocateCondition();
                 condition.InitializeFromPowerMixinPrototype(666, PowerProtoRef, 0, TimeSpan.Zero);
+            }
+            else if (PowerProtoRef == (PrototypeId)17994345800984565974 && target.ConditionCollection.GetCondition(111) == null)
+            {
+                // Emma Frost - Diamond Form
+                condition = target.ConditionCollection.AllocateCondition();
+                condition.InitializeFromPowerMixinPrototype(111, PowerProtoRef, 0, TimeSpan.Zero);
+            }
+            else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PowerProtoRef, (BlueprintId)11029044031881025595))
+            {
+                // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
+                condition = target.ConditionCollection.AllocateCondition();
+                condition.InitializeFromPowerMixinPrototype(999, PowerProtoRef, 0, TimeSpan.Zero);
+                condition.StartTime = Game.CurrentTime;
+            }
+
+            if (condition != null)
+            {
                 results.AddConditionToAdd(condition);
 
                 if (powerOwner != null)

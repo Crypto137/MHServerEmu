@@ -3439,24 +3439,6 @@ namespace MHServerEmu.Games.Powers
             if (value)
             {
                 HandleTriggerPowerEventOnPowerToggleOn();
-
-                // HACK: Visual condition hacks for toggled powers
-                if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) == null)
-                {
-                    // Emma Frost - Diamond Form
-                    Condition diamondFormCondition = Owner.ConditionCollection.AllocateCondition();
-                    diamondFormCondition.InitializeFromPowerMixinPrototype(111, PrototypeDataRef, 0, TimeSpan.Zero);
-                    Owner.ConditionCollection.AddCondition(diamondFormCondition);
-                }
-                else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
-                {
-                    // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
-                    Condition ambientNpcCondition = Owner.ConditionCollection.AllocateCondition();
-                    ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
-                    ambientNpcCondition.StartTime = Game.CurrentTime;
-                    Owner.ConditionCollection.AddCondition(ambientNpcCondition);
-                    Owner.Properties[PropertyEnum.NPCAmbientLock] = true;
-                }
             }
             else
             {
@@ -3465,17 +3447,7 @@ namespace MHServerEmu.Games.Powers
                 if (doNotStartCooldown == false)
                     StartCooldown();
 
-                // HACK: Old condition hack for Emma Frost's Diamond Form
-                if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) != null)
-                {
-                    Owner.ConditionCollection.RemoveCondition(111);
-                }
-                else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595) &&
-                    Owner.ConditionCollection.GetCondition(999) != null)
-                {
-                    Owner.ConditionCollection.RemoveCondition(999);
-                    Owner.Properties[PropertyEnum.NPCAmbientLock] = false;
-                }
+                RemoveTrackedConditions(false);
             }
 
             return true;
