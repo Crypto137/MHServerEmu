@@ -643,13 +643,21 @@ namespace MHServerEmu.Games.Powers
 
         public void CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
         {
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
+
             // REMOVEME: Old condition hacks for testing
             if (Power.IsTravelPower(PowerPrototype) && PowerPrototype.AppliesConditions != null && target.ConditionCollection.GetCondition(666) == null)
             {
                 // Bikes and other vehicles
-                Condition travelPowerCondition = target.ConditionCollection.AllocateCondition();
-                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PowerProtoRef, 0, TimeSpan.Zero);
-                results.AddConditionToAdd(travelPowerCondition);
+                Condition condition = target.ConditionCollection.AllocateCondition();
+                condition.InitializeFromPowerMixinPrototype(666, PowerProtoRef, 0, TimeSpan.Zero);
+                results.AddConditionToAdd(condition);
+
+                if (powerOwner != null)
+                {
+                    Power power = powerOwner.GetPower(PowerProtoRef);
+                    power?.TrackCondition(target.Id, condition);
+                }
             }
         }
 

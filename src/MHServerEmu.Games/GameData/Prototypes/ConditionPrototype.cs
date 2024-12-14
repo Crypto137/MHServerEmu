@@ -180,6 +180,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ConditionCancelOnFlags CancelOnFlags { get; private set; } = ConditionCancelOnFlags.None;
         [DoNotCopy]
         public bool IsHitReactCondition { get => Properties != null && Properties.HasProperty(PropertyEnum.HitReact); }
+        [DoNotCopy]
+        public PowerIndexPropertyFlags PowerIndexPropertyFlags { get; private set; }
 
         [DoNotCopy]
         public int BlueprintCopyNum { get; set; }
@@ -193,9 +195,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
-            // TODO: stuff
-
-            // Combine cancel flags into a single bit field (TODO: flag enum)
+            // Combine cancel flags into a single bit field
             if (CancelOnHit)                    CancelOnFlags |= ConditionCancelOnFlags.OnHit;
             if (CancelOnKilled)                 CancelOnFlags |= ConditionCancelOnFlags.OnKilled;
             if (CancelOnPowerUse)               CancelOnFlags |= ConditionCancelOnFlags.OnPowerUse;

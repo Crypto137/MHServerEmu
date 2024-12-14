@@ -38,6 +38,9 @@ namespace MHServerEmu.Games.Powers
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
         private PowerActivationSettings _lastActivationSettings;
 
+        private readonly List<TrackedCondition> _trackedConditionList = new();
+        private PowerIndexPropertyFlags _trackedConditionIndexPropertyFlags = PowerIndexPropertyFlags.None;
+
         protected EventGroup _pendingEvents = new();
         private readonly EventGroup _pendingActivationPhaseEvents = new();
         private readonly EventGroup _pendingPowerApplicationEvents = new();
@@ -182,6 +185,18 @@ namespace MHServerEmu.Games.Powers
 
         public void OnUnassign()
         {
+            if (Owner != null && Owner.TestStatus(EntityStatus.ExitingWorld) == false)
+            {
+                if (Prototype.CancelConditionsOnUnassign)
+                {
+                    RemoveTrackedConditions(false);
+                }
+                else
+                {
+                    // TODO: Remove conditions in other cases?
+                }
+            }
+
             _situationalComponent?.Shutdown();
 
             EndPowerFlags endPowerFlags = EndPowerFlags.ExplicitCancel | EndPowerFlags.Unassign;
@@ -200,6 +215,9 @@ namespace MHServerEmu.Games.Powers
 
         public void OnOwnerExitedWorld()
         {
+            if (Prototype.CancelConditionsOnExitWorld)
+                RemoveTrackedConditions(false);
+
             _situationalComponent?.Shutdown();
         }
 
@@ -1271,6 +1289,82 @@ namespace MHServerEmu.Games.Powers
             }
 
             return chargeCount < maxCharges;
+        }
+
+        #endregion
+
+        #region Condition Management
+
+        public void TrackCondition(ulong entityId, Condition condition)
+        {
+            // NOTE: We include power index property flags in tracked conditions because conditions applied by this power
+            // may need to be refreshed when one of the index properties of this power changes (e.g. owner levels up).
+            TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
+            _trackedConditionList.Add(trackedCondition);
+            _trackedConditionIndexPropertyFlags |= trackedCondition.PowerIndexPropertyFlags;
+
+            Logger.Debug($"TrackCondition: {condition} for {Prototype} (total={_trackedConditionList.Count})");
+        }
+
+        public void UntrackCondition(ulong entityId, Condition condition)
+        {
+            TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
+
+            if (_trackedConditionList.Remove(trackedCondition))
+                RefreshConditionIndexProperties();
+        }
+
+        private void RemoveTrackedConditions(bool allowReset)
+        {
+            List<TrackedCondition> resetConditionList = ListPool<TrackedCondition>.Instance.Rent();
+
+            EntityManager entityManager = Game.EntityManager;
+
+            while (_trackedConditionList.Count > 0)
+            {
+                int index = _trackedConditionList.Count - 1;
+                TrackedCondition trackedCondition = _trackedConditionList[index];
+                _trackedConditionList.RemoveAt(index);
+
+                // The entity the tracked condition was applied to may no longer exist
+                WorldEntity entity = entityManager.GetEntity<WorldEntity>(trackedCondition.EntityId);
+                ConditionCollection conditionCollection = entity?.ConditionCollection;
+                if (conditionCollection == null)
+                    continue;
+
+                if (allowReset)
+                {
+                    if (conditionCollection.ResetOrRemoveCondition(trackedCondition.ConditionId) == false)
+                        resetConditionList.Add(trackedCondition);
+                }
+                else
+                {
+                    conditionCollection.RemoveCondition(trackedCondition.ConditionId);
+                }
+            }
+
+            if (allowReset)
+            {
+                // Readd conditions that were reset
+                foreach (TrackedCondition resetCondition in resetConditionList)
+                    _trackedConditionList.Add(resetCondition);
+            }
+
+            RefreshConditionIndexProperties();
+            ListPool<TrackedCondition>.Instance.Return(resetConditionList);
+        }
+
+        private void RefreshConditionIndexProperties()
+        {
+            _trackedConditionIndexPropertyFlags = PowerIndexPropertyFlags.None;
+
+            foreach (TrackedCondition trackedCondition in _trackedConditionList)
+                _trackedConditionIndexPropertyFlags |= trackedCondition.PowerIndexPropertyFlags;
+        }
+
+        private bool HasConditionsWithIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
+        {
+            return (_trackedConditionIndexPropertyFlags & indexPropertyFlags) != PowerIndexPropertyFlags.None;
         }
 
         #endregion
@@ -3049,15 +3143,22 @@ namespace MHServerEmu.Games.Powers
             if (flags.HasFlag(EndPowerFlags.ExplicitCancel) || flags.HasFlag(EndPowerFlags.Force)
                 || IsRecurring() || Properties[PropertyEnum.PowerActiveUntilProjExpire])
             {
-                // Why are these verifies returning false and not true? Is this a bug?
-                if (Game == null) return Logger.WarnReturn(false, "OnEndPowerRemoveApplications(): Game == null");
-                if (Game.GameEventScheduler == null) return Logger.WarnReturn(false, "Game.GameEventScheduler == null");
+                EventScheduler gameEventScheduler = Game?.GameEventScheduler;
 
-                Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
+                if (gameEventScheduler != null)
+                    gameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
+                else
+                    Logger.Warn("OnEndPowerRemoveApplications(): gameEventScheduler == null");
             }
             else if (_pendingPowerApplicationEvents.IsEmpty == false)
             {
                 Logger.Warn($"OnEndPowerRemoveApplications(): _pendingPowerApplicationEvents is not empty! endPowerFlags=[{flags}] power=[{this}]");
+            }
+
+            if (IsToggled() && flags.HasFlag(EndPowerFlags.ExplicitCancel) == false && flags.HasFlag(EndPowerFlags.ExitWorld))
+            {
+                RemoveTrackedConditions(false);
+                return true;
             }
 
             return false;
@@ -3079,13 +3180,11 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual void OnEndPowerCancelConditions()
         {
-            // HACK: Old condition hack for travel power vehicles
-            if (IsTravelPower() && Prototype.AppliesConditions != null)
-            {
-                // Bikes and other vehicles
-                if (Owner.ConditionCollection.GetCondition(666) != null)
-                    Owner.ConditionCollection.RemoveCondition(666);
-            }
+            if (IsToggled())
+                return;
+
+            if (Prototype.CancelConditionsOnEnd || Prototype.Activation == PowerActivationType.Passive)
+                RemoveTrackedConditions(true);
         }
 
         protected virtual void OnEndPowerSendCancel(EndPowerFlags flags)

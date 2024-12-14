@@ -178,6 +178,27 @@ namespace MHServerEmu.Games.Entities
             return RemoveCondition(condition);
         }
 
+        public bool ResetOrRemoveCondition(ulong conditionId)
+        {
+            if (_owner == null) return Logger.WarnReturn(false, "ResetOrRemoveCondition(): _owner == null");
+
+            Condition condition = GetCondition(conditionId);
+            if (condition == null) return false;
+
+            return ResetOrRemoveCondition(condition);
+        }
+
+        public bool ResetOrRemoveCondition(Condition condition)
+        {
+            Logger.Debug($"ResetOrRemoveCondition(): {condition}");
+
+            // TODO: reset
+
+            // Removing by id also checks to make sure this condition is in this collection
+            RemoveCondition(condition.Id);
+            return true;
+        }
+
         public bool RemoveAllConditions(bool removePersistToDB = true)
         {
             if (_owner == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner == null");

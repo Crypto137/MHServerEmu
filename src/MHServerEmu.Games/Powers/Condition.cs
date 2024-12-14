@@ -113,6 +113,8 @@ namespace MHServerEmu.Games.Powers
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
         public PrototypeId[] Keywords { get; internal set; }
 
+        public PowerIndexPropertyFlags PowerIndexPropertyFlags { get => _conditionPrototype != null ? _conditionPrototype.PowerIndexPropertyFlags : default; }
+
         public Condition() { }
 
         public bool Serialize(Archive archive, WorldEntity owner)
@@ -315,25 +317,10 @@ namespace MHServerEmu.Games.Powers
 
         public override string ToString()
         {
-            StringBuilder sb = new();
+            if (_conditionPrototype != null)
+                return _conditionPrototype.ToString();
 
-            sb.AppendLine($"{nameof(_serializationFlags)}: {_serializationFlags}");
-            sb.AppendLine($"{nameof(_id)}: {_id}");
-            sb.AppendLine($"{nameof(_creatorId)}: {_creatorId}");
-            sb.AppendLine($"{nameof(_ultimateCreatorId)}: {_ultimateCreatorId}");
-            sb.AppendLine($"{nameof(_conditionPrototypeRef)}: {GameDatabase.GetPrototypeName(_conditionPrototypeRef)}");
-            sb.AppendLine($"{nameof(_creatorPowerPrototypeRef)}: {GameDatabase.GetPrototypeName(_creatorPowerPrototypeRef)}");
-            sb.AppendLine($"{nameof(_creatorPowerIndex)}: {_creatorPowerIndex}");
-            sb.AppendLine($"{nameof(_ownerAssetRef)}: {GameDatabase.GetAssetName(_ownerAssetRef)}");
-            sb.AppendLine($"{nameof(_startTime)}: {Clock.GameTimeToDateTime(_startTime)}");
-            sb.AppendLine($"{nameof(_pauseTime)}: {(_pauseTime != TimeSpan.Zero ? Clock.GameTimeToDateTime(_pauseTime) : 0)}");
-            sb.AppendLine($"{nameof(_duration)}: {TimeSpan.FromMilliseconds(_duration)}");
-            sb.AppendLine($"{nameof(_isEnabled)}: {_isEnabled}");
-            sb.AppendLine($"{nameof(_updateIntervalMS)}: {_updateIntervalMS}");
-            sb.AppendLine($"{nameof(_properties)}: {_properties}");
-            sb.AppendLine($"{nameof(_cancelOnFlags)}: {_cancelOnFlags}");
-
-            return sb.ToString();
+            return _creatorPowerPrototype?.ToString();
         }
 
         public bool IsPersistToDB()
