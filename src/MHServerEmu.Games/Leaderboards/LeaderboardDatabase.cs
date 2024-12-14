@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.DRAG;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Diagnostics;
@@ -100,7 +99,7 @@ namespace MHServerEmu.Games.Leaderboards
                 ulong playerId = query.PlayerId;
                 ulong avatarId = query.HasAvatarId ? query.AvatarId : 0;
 
-                if (GetLeaderboardScoreData(LeaderboardType.Player, leaderboardId, instanceId, playerId, avatarId, out LeaderboardScoreData scoreData))
+                if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, avatarId, out LeaderboardScoreData scoreData))
                     report.SetScoreData(scoreData);
             }
 
@@ -111,7 +110,7 @@ namespace MHServerEmu.Games.Leaderboards
                 instanceId = query.InstanceId;
                 ulong guid = query.GuildId;
 
-                if (GetLeaderboardScoreData(LeaderboardType.Guild, leaderboardId, instanceId, guid, 0, out LeaderboardScoreData scoreData))
+                if (GetLeaderboardScoreData(leaderboardId, instanceId, guid, 0, out LeaderboardScoreData scoreData))
                     report.SetScoreData(scoreData);
             }
 
@@ -122,7 +121,7 @@ namespace MHServerEmu.Games.Leaderboards
                 instanceId = query.InstanceId;
                 ulong playerId = query.PlayerId;
 
-                if (GetLeaderboardScoreData(LeaderboardType.MetaLeaderboard, leaderboardId, instanceId, playerId, 0, out LeaderboardScoreData scoreData))
+                if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, 0, out LeaderboardScoreData scoreData))
                     report.SetScoreData(scoreData);
             }
 
@@ -154,12 +153,14 @@ namespace MHServerEmu.Games.Leaderboards
             return true;
         }
 
-        private bool GetLeaderboardScoreData(LeaderboardType type, ulong leaderboardId, ulong instanceId, ulong guid, ulong avatarId, 
+        private bool GetLeaderboardScoreData(ulong leaderboardId, ulong instanceId, ulong guid, ulong avatarId, 
             out LeaderboardScoreData scoreData)
         {
             scoreData = null;
             var leaderboard = GetLeaderboard((PrototypeGuid)leaderboardId);
             if (leaderboard == null) return false;
+
+            var type = leaderboard.Prototype.Type;
 
             var instance = leaderboard.GetInstance(instanceId);
             if (instance == null) return false;
