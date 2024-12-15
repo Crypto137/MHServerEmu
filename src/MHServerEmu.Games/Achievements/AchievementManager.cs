@@ -310,6 +310,15 @@ namespace MHServerEmu.Games.Achievements
             if (AchievementsEnabled == false) return;
 
             var state = AchievementState;
+
+            // clear completed achievement tracker
+            foreach (var kvp in Owner.Properties.IteratePropertyRange(PropertyEnum.MissionTrackerAchievements).ToArray())
+            {
+                Property.FromParam(kvp.Key, 0, out int id);
+                if (state.GetAchievementProgress((uint)id).IsComplete)
+                    Owner.Properties.RemoveProperty(new PropertyId(PropertyEnum.MissionTrackerAchievements, (PropertyParam)id));
+            }
+
             foreach (var info in AchievementDatabase.Instance.AchievementInfoMap)
             {
                 if (state.ShouldRecount(info) == false) continue;
