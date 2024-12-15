@@ -1,8 +1,10 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Leaderboards;
 
@@ -15,13 +17,30 @@ namespace MHServerEmu.Leaderboards
     {
         private const ushort MuxChannel = 1;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly Logger Logger = LogManager.CreateLogger(); 
+        private bool _isRunning;
 
         #region IGameService Implementation
 
-        public void Run() { }
+        public void Run()
+        {
+            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            _isRunning = config.LeaderboardsEnabled;
 
-        public void Shutdown() { }
+            // load PlayerInfoMap
+            // load ActiveLeaderboards
+
+            while (_isRunning)
+            {
+                LeaderboardDatabase.Instance.UpdateLeaderboards();
+                Thread.Sleep(1000);
+            }
+        }
+
+        public void Shutdown() 
+        { 
+            _isRunning = false;
+        }
 
         public void Handle(ITcpClient tcpClient, MessagePackage message)
         {
