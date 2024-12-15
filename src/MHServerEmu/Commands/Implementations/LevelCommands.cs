@@ -8,7 +8,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("level", "Provides commands for creating items.", AccountUserLevel.User)]
+    [CommandGroup("level", "Provides commands for creating items.", AccountUserLevel.Admin)]
     public class LevelCommands : CommandGroup
     {
         [Command("up", "Levels up the current avatar.\nUsage: level up")]
