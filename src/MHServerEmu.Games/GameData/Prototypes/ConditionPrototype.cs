@@ -1,8 +1,12 @@
-﻿using MHServerEmu.Games.GameData.Calligraphy;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -172,22 +176,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int UrgentTimeMS { get; protected set; }
         public AssetId IconPathHiRes { get; protected set; }
 
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; protected set; }
         [DoNotCopy]
-        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
-        [DoNotCopy]
-        public ConditionCancelOnFlags CancelOnFlags { get; private set; } = ConditionCancelOnFlags.None;
-        [DoNotCopy]
-        public bool IsHitReactCondition { get => Properties != null && Properties.HasProperty(PropertyEnum.HitReact); }
+        public ConditionCancelOnFlags CancelOnFlags { get; private set; }
         [DoNotCopy]
         public PowerIndexPropertyFlags PowerIndexPropertyFlags { get; private set; }
 
         [DoNotCopy]
         public int BlueprintCopyNum { get; set; }
-
         [DoNotCopy]
         public int ConditionPrototypeEnumValue { get; private set; }
+
+        [DoNotCopy]
+        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(UpdateIntervalMS); }
+        [DoNotCopy]
+        public bool IsHitReactCondition { get => Properties != null && Properties.HasProperty(PropertyEnum.HitReact); }
 
         public override void PostProcess()
         {
@@ -205,7 +213,80 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             ConditionPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetConditionBlueprintDataRef());
 
-            // TODO: more stuff
+            // Find all index properties for this condition
+            HashSet<PropertyEnum> enumSet = HashSetPool<PropertyEnum>.Instance.Get();
+            List<PropertyId> evalPropertyIdList = ListPool<PropertyId>.Instance.Get();
+
+            // Duration
+            if (DurationMSCurve != CurveId.Invalid)
+            {
+                Curve durationCurve = DurationMSCurve.AsCurve();
+                if (durationCurve != null)
+                {
+                    if (durationCurve.IsCurveZero == false)
+                        enumSet.Add(GameDatabase.PropertyInfoTable.GetPropertyEnumFromPrototype(DurationMSCurveIndex));
+                }
+                else
+                {
+                    Logger.Warn("PostProcess(): durationCurve == null");
+                }
+            }
+
+            // Properties
+            Properties?.GetPropertyCurveIndexPropertyEnumValues(enumSet);
+
+            // Evals
+            if (ChanceToApplyCondition != null)
+                Eval.GetEvalPropertyIds(ChanceToApplyCondition, evalPropertyIdList, GetEvalPropertyIdEnum.Input, null);
+
+            if (DurationMSEval != null)
+                Eval.GetEvalPropertyIds(DurationMSEval, evalPropertyIdList, GetEvalPropertyIdEnum.Input, null);
+
+            if (EvalOnCreate.HasValue())
+            {
+                foreach (EvalPrototype evalOnCreate in EvalOnCreate)
+                    Eval.GetEvalPropertyIds(evalOnCreate, evalPropertyIdList, GetEvalPropertyIdEnum.Input, null);
+            }
+
+            if (EvalPartyBoost.HasValue())
+            {
+                foreach (EvalPrototype evalPartyBoost in EvalPartyBoost)
+                    Eval.GetEvalPropertyIds(evalPartyBoost, evalPropertyIdList, GetEvalPropertyIdEnum.Input, null);
+            }
+
+            // Convert found enums to flags
+            foreach (PropertyId propertyId in evalPropertyIdList)
+                enumSet.Add(propertyId.Enum);
+
+            foreach (PropertyEnum propertyEnum in enumSet)
+            {
+                switch (propertyEnum)
+                {
+                    case PropertyEnum.PowerRank:
+                        PowerIndexPropertyFlags |= PowerIndexPropertyFlags.PowerRank;
+                        break;
+
+                    case PropertyEnum.CharacterLevel:
+                        PowerIndexPropertyFlags |= PowerIndexPropertyFlags.CharacterLevel;
+                        break;
+
+                    case PropertyEnum.CombatLevel:
+                        PowerIndexPropertyFlags |= PowerIndexPropertyFlags.CombatLevel;
+                        break;
+
+                    case PropertyEnum.ItemLevel:
+                        PowerIndexPropertyFlags |= PowerIndexPropertyFlags.ItemLevel;
+                        break;
+
+                    case PropertyEnum.ItemVariation:
+                        PowerIndexPropertyFlags |= PowerIndexPropertyFlags.ItemVariation;
+                        break;
+                }
+            }
+
+            // Clean up
+            HashSetPool<PropertyEnum>.Instance.Return(enumSet);
+            ListPool<PropertyId>.Instance.Return(evalPropertyIdList);
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)
