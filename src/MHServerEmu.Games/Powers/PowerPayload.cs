@@ -641,57 +641,69 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public void CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
+        private bool CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
         {
-            if (PowerPrototype.AppliesConditions == null)
-                return;
+            if (PowerPrototype.AppliesConditions == null && PowerPrototype.ConditionsByRef.IsNullOrEmpty())
+                return true;
 
-            Logger.Debug($"CalculateResultConditionsToAdd(): {PowerPrototype}");
-            ConditionPrototype conditionProto = (ConditionPrototype)PowerPrototype.AppliesConditions[0].Prototype;
+            ConditionCollection conditionCollection = target?.ConditionCollection;
+            if (conditionCollection == null) return Logger.WarnReturn(false, "CalculateResultConditionsToAdd(): conditionCollection == null");
 
-            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(results.UltimateOwnerId);
 
-            // REMOVEME: Old condition hacks for testing
-            Condition condition = null;
-
-            if (Power.IsTravelPower(PowerPrototype) && PowerPrototype.AppliesConditions != null && target.ConditionCollection.GetCondition(666) == null)
+            if (PowerPrototype.AppliesConditions != null)
             {
-                // Bikes and other vehicles
-                condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(666, this, conditionProto, TimeSpan.Zero);
-            }
-            else if (PowerProtoRef == (PrototypeId)17994345800984565974 && target.ConditionCollection.GetCondition(111) == null)
-            {
-                // Emma Frost - Diamond Form
-                condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(111, this, conditionProto, TimeSpan.Zero);
-            }
-            else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PowerProtoRef, (BlueprintId)11029044031881025595))
-            {
-                // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
-                condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(999, this, conditionProto, TimeSpan.Zero);
-            }
-            else if (PowerProtoRef == (PrototypeId)5394038587225345882 && target.ConditionCollection.GetCondition(777) == null)
-            {
-                // Magik - Ultimate
-                condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(777, this, conditionProto, TimeSpan.FromSeconds(20));
-            }
-
-            if (condition != null)
-            {
-                results.AddConditionToAdd(condition);
-
-                if (powerOwner != null)
+                foreach (var entry in PowerPrototype.AppliesConditions)
                 {
-                    Power power = powerOwner.GetPower(PowerProtoRef);
-                    power?.TrackCondition(target.Id, condition);
+                    ConditionPrototype conditionProto = entry.Prototype as ConditionPrototype;
+                    if (conditionProto == null)
+                    {
+                        Logger.Warn("CalculateResultConditionsToAdd(): conditionProto == null");
+                        continue;
+                    }
+
+                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, conditionCollection, conditionProto);
                 }
             }
+
+            if (PowerPrototype.ConditionsByRef.HasValue())
+            {
+                // TODO
+                Logger.Warn($"CalculateResultConditionsToAdd(): Skipping ConditionsByRef for {PowerPrototype}");
+            }
+
+            for (int i = 0; i < results.ConditionAddList.Count; i++)
+            {
+                Condition condition = results.ConditionAddList[i];
+
+                if (owner != null)
+                {
+                    Power power = owner.GetPower(PowerProtoRef);
+                    power?.TrackCondition(target.Id, condition);
+                }
+                else if (condition.Duration == TimeSpan.Zero)
+                {
+                    Logger.Warn($"CalculateResultConditionsToAdd(): No owner to cancel infinite condition for {PowerPrototype}");
+                }
+            }
+
+            return true;
         }
 
-        public void CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
+        private void CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
+            ConditionCollection conditionCollection, ConditionPrototype conditionProto)
+        {
+            CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration);
+
+            Condition condition = conditionCollection.AllocateCondition();
+            condition.InitializeFromPowerMixinPrototype(conditionCollection.NextConditionId, this, conditionProto, duration);
+            results.AddConditionToAdd(condition);
+
+            Logger.Debug($"CalculateResultConditionsToAddHelper(): {PowerPrototype}[{conditionProto.BlueprintCopyNum}] - {duration.TotalMilliseconds} ms");
+        }
+
+        private void CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
         {
 
         }
@@ -798,6 +810,12 @@ namespace MHServerEmu.Games.Powers
             // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
             return Game.Random.NextFloat() < superCritChance;
+        }
+
+        private bool CalculateConditionDuration(ConditionPrototype conditionProto, WorldEntity owner, WorldEntity target, out TimeSpan duration)
+        {
+            duration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+            return true;
         }
 
         /// <summary>

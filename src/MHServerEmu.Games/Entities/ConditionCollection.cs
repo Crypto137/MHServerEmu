@@ -27,10 +27,13 @@ namespace MHServerEmu.Games.Entities
 
         private readonly WorldEntity _owner;
 
-        private readonly SortedDictionary<ulong, Condition> _currentConditionDict = new();   // m_currentCondition
+        private readonly SortedDictionary<ulong, Condition> _currentConditionDict = new();
         private readonly EventGroup _pendingEvents = new();
 
-        public int Count { get => _currentConditionDict.Count; }    // Temp property for compatibility with our existing hacks
+        private ulong _currentConditionId = 1;
+
+        public ulong NextConditionId { get => _currentConditionId++; }
+
         public KeywordsMask ConditionKeywordsMask { get; internal set; }
 
         public ConditionCollection(WorldEntity owner)
