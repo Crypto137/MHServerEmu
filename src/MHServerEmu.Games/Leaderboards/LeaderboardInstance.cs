@@ -1,51 +1,12 @@
 ﻿using Gazillion;
-using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Leaderboards
 {
-    public class Leaderboard
-    {
-        public PrototypeGuid Guid;
-        public LeaderboardPrototype Prototype;
-        public List<LeaderboardInstance> Instances;
-        public ulong LeaderboardId { get => (ulong)Guid; }
-        public bool IsActive { get; set; }
-
-        private Queue<LeaderboardQueue> _updateQueue = new();
-
-        public LeaderboardInstance GetInstance(ulong instanceId)
-        {
-            return Instances.Find(instance => instance.InstanceId == instanceId);
-        }
-
-        // TODO UpdateProcess
-
-        public void OnQueueUpdate(in LeaderboardQueue queue)
-        {
-            if (IsActive) _updateQueue.Enqueue(queue);
-        }
-    }
-
-    public struct LeaderboardQueue
-    {
-        public ulong GameId;
-        public ulong AvatarId;
-        public long RuleId;
-        public int Count;
-
-        public LeaderboardQueue(in LeaderboardGuidKey key, int count)
-        {
-            GameId = key.PlayerGuid;
-            AvatarId = (ulong)key.AvatarGuid;
-            RuleId = key.RuleGuid;
-            Count = count;
-        }
-    }
-
     public class LeaderboardInstance
     {
-        private Leaderboard _leaderboard;
+        private Leaderboard _leaderboard; 
+        private readonly object _lock = new object();
         private LeaderboardTableData _cachedTableData;
 
         public ulong LeaderboardId { get => _leaderboard.LeaderboardId; }
@@ -102,46 +63,34 @@ namespace MHServerEmu.Games.Leaderboards
 
         public LeaderboardTableData GetTableData()
         {
-            // TODO lock 
-            return _cachedTableData;
+            lock (_lock)
+            {
+                return _cachedTableData;
+            }
         }
 
         public void UpdateCachedTableData()
         {
-            // TODO lock 
             var tableDataBuilder = LeaderboardTableData.CreateBuilder()
                 .SetInfo(ToMetadata());
 
             foreach (LeaderboardEntry entry in GetEntries(LeaderboardPrototype.DepthOfStandings))
                 tableDataBuilder.AddEntries(entry.ToProtobuf());
 
-            _cachedTableData = tableDataBuilder.Build();
+            lock (_lock)
+            {
+                _cachedTableData = tableDataBuilder.Build();
+            }
         }
 
         private IEnumerable<LeaderboardEntry> GetEntries(int depthOfStandings)
         {
             throw new NotImplementedException();
         }
-    }
 
-    public class LeaderboardEntry
-    {
-        public uint GameId;
-        public string Name;
-        public LocaleStringId NameId;
-        public uint Score;
-
-        public Gazillion.LeaderboardEntry ToProtobuf()
+        public void OnUpdate(LeaderboardQueue queue)
         {
-            var entryBuilder = Gazillion.LeaderboardEntry.CreateBuilder()
-                .SetGameId(GameId)
-                .SetName(Name)
-                .SetScore(Score);
-
-            if (NameId != LocaleStringId.Blank)
-                entryBuilder.SetNameId((ulong)NameId);
-
-            return entryBuilder.Build();
+            throw new NotImplementedException();
         }
     }
 }

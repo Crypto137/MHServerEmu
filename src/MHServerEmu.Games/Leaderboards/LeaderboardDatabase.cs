@@ -28,51 +28,34 @@ namespace MHServerEmu.Games.Leaderboards
         public bool Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
-
-            // load leaderboards
+            
+            // Check leaderboards
             string configPath = Path.Combine(LeaderboardsDirectory, "Leaderboard.db");
             if (File.Exists(configPath) == false)
-                return Logger.WarnReturn(false, $"Initialize(): Leaderboard.db not found at {configPath}");
-
-            // load PlayerInfoMap
-            // load ActiveLeaderboards
-
-            CachedData();
+            {
+                // TODO create new leaderboard.db
+            }
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
         }
 
-        private void CachedData()
+        public IEnumerable<LeaderboardPrototype> GetActiveLeaderboardPrototypes()
         {
-            // TODO
-        }
-
-        public IEnumerable<LeaderboardPrototype> GetActiveLeaderboards()
-        {
-            foreach (var info in _leaderboards.Values)
-                foreach (var instance in info.Instances)
+            foreach (var leaderboard in _leaderboards.Values)
+                foreach (var instance in leaderboard.Instances)
                     if (instance.State == LeaderboardState.eLBS_Active)
-                    {
-                        var protoRef = GameDatabase.GetDataRefByPrototypeGuid(info.Guid);
-                        if (protoRef == PrototypeId.Invalid) continue;
-                        var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(protoRef);
-                        if (proto == null) continue;
-                        yield return proto;
-                    }
+                        yield return leaderboard.Prototype;
         }
 
         public bool GetLeaderboardInstances(PrototypeGuid guid, out List<LeaderboardInstance> instances)
         {
             instances = new();
 
-            if (_leaderboards.TryGetValue(guid, out var info) == false) return false;            
-            var protoRef = GameDatabase.GetDataRefByPrototypeGuid(guid);
-            if (protoRef == PrototypeId.Invalid) return false;
-            var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(protoRef);
-            if (proto == null) return false;
+            if (_leaderboards.TryGetValue(guid, out var info) == false) return false;
+            if (info.Prototype == null) return false;
 
-            int maxarchived = proto.MaxArchivedInstances;
+            int maxarchived = info.Prototype.MaxArchivedInstances;
 
             foreach (var instance in info.Instances)
             {
@@ -205,6 +188,13 @@ namespace MHServerEmu.Games.Leaderboards
             if (_leaderboards.TryGetValue(guid, out var leaderboard))
                 return leaderboard;
             return null;
+        }
+
+        public void UpdateLeaderboards()
+        {
+            foreach (var leaderboard in _leaderboards.Values.ToArray())
+                if (leaderboard.NeedsUpdate)
+                    leaderboard.OnUpdate();
         }
     }
 }
