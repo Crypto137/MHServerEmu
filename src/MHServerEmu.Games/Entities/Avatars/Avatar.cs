@@ -56,6 +56,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
         public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
 
+        public PrototypeId EquippedCostumeRef { get => Properties[PropertyEnum.CostumeCurrent]; }
+        public CostumePrototype EquippedCostume { get => EquippedCostumeRef.As<CostumePrototype>(); }
+
         public bool IsUsingGamepadInput { get; set; } = false;
         public PrototypeId CurrentTransformMode { get; private set; } = PrototypeId.Invalid;
 
@@ -1471,6 +1474,84 @@ namespace MHServerEmu.Games.Entities.Avatars
                 UnassignPower(powerProtoRef);
         }
 
+        protected override bool InitInventories(bool populateInventories)
+        {
+            bool success = base.InitInventories(populateInventories);
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
+            {
+                if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
+                {
+                    success = false;
+                    Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
+                }
+            }
+
+            return success;
+        }
+
+        #endregion
+
+        #region Costumes
+
+        public override AssetId GetEntityWorldAsset()
+        {
+            AssetId result = AssetId.Invalid;
+
+            TransformModePrototype transformModeProto = CurrentTransformMode.As<TransformModePrototype>();
+            if (transformModeProto != null)
+            {
+                if (transformModeProto.UnrealClassOverrides.HasValue())
+                {
+                    AssetId currentCostumeAssetRef = GetCurrentCostumeAssetRef();
+
+                    foreach (TransformModeUnrealOverridePrototype overrideProto in transformModeProto.UnrealClassOverrides)
+                    {
+                        if (overrideProto.IncomingUnrealClass == AssetId.Invalid)
+                        {
+                            Logger.Warn("GetEntityWorldAsset(): overrideProto.IncomingUnrealClass == AssetId.Invalid");
+                            continue;
+                        }
+
+                        if (overrideProto.IncomingUnrealClass == currentCostumeAssetRef)
+                        {
+                            result = overrideProto.TransformedUnrealClass;
+                            break;
+                        }
+                    }
+                }
+
+                if (result == AssetId.Invalid)
+                    result = transformModeProto.UnrealClass;
+            }
+            else
+            {
+                result = GetCurrentCostumeAssetRef();
+            }
+
+            if (result == AssetId.Invalid)
+                Logger.Warn($"GetEntityWorldAsset(): Unable to get a valid unreal class asset for avatar [{this}]");
+
+            return result;
+        }
+
+        public AssetId GetCurrentCostumeAssetRef()
+        {
+            CostumePrototype equippedCostume = EquippedCostume;
+            if (equippedCostume != null)
+                return equippedCostume.CostumeUnrealClass;
+
+            return GetStartingCostumeAssetRef();
+        }
+
+        public AssetId GetStartingCostumeAssetRef()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(AssetId.Invalid, "GetStartingCostumeAssetRef(): avatarProto == null");
+            return avatarProto.GetStartingCostumeAssetRef(Platforms.PC);
+        }
+
         public bool ChangeCostume(PrototypeId costumeProtoRef)
         {
             CostumePrototype costumeProto = null;
@@ -1493,23 +1574,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             owner.Properties[PropertyEnum.AvatarLibraryCostume, 0, PrototypeDataRef] = costumeProtoRef;
 
             return true;
-        }
-
-        protected override bool InitInventories(bool populateInventories)
-        {
-            bool success = base.InitInventories(populateInventories);
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
-            {
-                if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
-                {
-                    success = false;
-                    Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
-                }
-            }
-
-            return success;
         }
 
         #endregion
