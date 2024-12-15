@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.GameData
             // processAvatarSynergyMap
 
             AchievementDatabase.Instance.Initialize();
-            LeaderboardDatabase.Instance.Initialize();
+            LeaderboardGameDatabase.Instance.Initialize();
 
             // Initialize game data tables
             var tablesWatch = Stopwatch.StartNew();

@@ -139,7 +139,7 @@ namespace MHServerEmu.Games.Leaderboards
 
             ClearActiveRules();
 
-            foreach (var leaderboard in LeaderboardDatabase.Instance.GetActiveLeaderboardPrototypes())
+            foreach (var leaderboard in LeaderboardGameDatabase.Instance.GetActiveLeaderboardPrototypes())
                 if (leaderboard.ScoringRules.HasValue())
                     foreach (var ruleProto in leaderboard.ScoringRules)                    
                     {
@@ -174,12 +174,9 @@ namespace MHServerEmu.Games.Leaderboards
             foreach (var kvp in _ruleEvents)
             {
                 var key = kvp.Key;
-                int count = kvp.Value;              
-                
-                var leaderboard = LeaderboardDatabase.Instance.GetLeaderboard(key.LeaderboardGuid);
-                if (leaderboard == null) continue;
-                                
-                leaderboard.AddToQueue(new(key, count)); // TODO send to LeaderboardService
+                int count = kvp.Value;
+
+                LeaderboardGameDatabase.Instance.AddUpdateQueue(new(key, count));
             }
 
             _ruleEvents.Clear();

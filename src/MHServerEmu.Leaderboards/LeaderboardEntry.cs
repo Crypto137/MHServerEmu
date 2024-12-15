@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Games.GameData;
 
-namespace MHServerEmu.Games.Leaderboards
+namespace MHServerEmu.Leaderboards
 {
     public class LeaderboardEntry
     {

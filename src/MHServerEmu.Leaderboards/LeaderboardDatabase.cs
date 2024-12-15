@@ -3,9 +3,10 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Leaderboards;
 using System.Diagnostics;
 
-namespace MHServerEmu.Games.Leaderboards
+namespace MHServerEmu.Leaderboards
 {   
     /// <summary>
     /// A singleton that contains leaderboard infomation.
@@ -17,10 +18,9 @@ namespace MHServerEmu.Games.Leaderboards
 
         private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Leaderboards");
         private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
-        public static LeaderboardDatabase Instance { get; } = new();
         public int LeaderboardCount { get; set; }
 
-        private LeaderboardDatabase() { }
+        public LeaderboardDatabase() { }
 
         /// <summary>
         /// Initializes the <see cref="LeaderboardDatabase"/> instance.
@@ -36,16 +36,11 @@ namespace MHServerEmu.Games.Leaderboards
                 // TODO create new leaderboard.db
             }
 
+            // load PlayerInfoMap
+            // load ActiveLeaderboards
+
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
-        }
-
-        public IEnumerable<LeaderboardPrototype> GetActiveLeaderboardPrototypes()
-        {
-            foreach (var leaderboard in _leaderboards.Values)
-                foreach (var instance in leaderboard.Instances)
-                    if (instance.State == LeaderboardState.eLBS_Active)
-                        yield return leaderboard.Prototype;
         }
 
         public bool GetLeaderboardInstances(PrototypeGuid guid, out List<LeaderboardInstance> instances)
@@ -190,11 +185,13 @@ namespace MHServerEmu.Games.Leaderboards
             return null;
         }
 
-        public void UpdateLeaderboards()
+        public void UpdateLeaderboards(Queue<LeaderboardQueue> updateQueue)
         {
-            foreach (var leaderboard in _leaderboards.Values.ToArray())
-                if (leaderboard.NeedsUpdate)
-                    leaderboard.OnUpdate();
+            while (updateQueue.TryDequeue(out var queue)) 
+            {
+                var leaderboard = GetLeaderboard(queue.LeaderboardId);
+                leaderboard?.OnUpdate(queue);
+            }
         }
     }
 }

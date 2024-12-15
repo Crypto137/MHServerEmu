@@ -1,7 +1,8 @@
 ﻿using Gazillion;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Leaderboards;
 
-namespace MHServerEmu.Games.Leaderboards
+namespace MHServerEmu.Leaderboards
 {
     public class LeaderboardInstance
     {
