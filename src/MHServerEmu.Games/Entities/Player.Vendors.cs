@@ -539,7 +539,7 @@ namespace MHServerEmu.Games.Entities
             if (vendorTypeProto.IsCrafter)
                 return true;
 
-            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Rent();
+            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Get();
             vendorTypeProto.GetInventories(inventoryList);
 
             foreach (PrototypeId inventoryProtoRef in inventoryList)
@@ -583,7 +583,7 @@ namespace MHServerEmu.Games.Entities
                 return true;
 
             // Early return if there are no inventories to roll
-            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Rent();
+            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Get();
             if (vendorTypeProto.GetInventories(inventoryList) == false)
                 goto end;
 

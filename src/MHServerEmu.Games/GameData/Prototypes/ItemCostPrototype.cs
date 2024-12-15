@@ -312,7 +312,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             int price = GetBuyPrice(player, item);
 
-            List<ulong> currencyItemList = ListPool<ulong>.Instance.Rent();
+            List<ulong> currencyItemList = ListPool<ulong>.Instance.Get();
             InventoryIterationFlags flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra | InventoryIterationFlags.PlayerStashGeneral;
             InventoryIterator.GetMatchingContained(player, CurrencyItem, flags, currencyItemList);
 

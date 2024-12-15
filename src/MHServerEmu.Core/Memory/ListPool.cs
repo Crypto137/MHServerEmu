@@ -17,13 +17,13 @@ namespace MHServerEmu.Core.Memory
         /// <summary>
         /// Gets a <see cref="List{T}"/> from the pool.
         /// </summary>
-        public List<T> Rent()
+        public List<T> Get()
         {
             lock (_listStack)
             {
                 if (_listStack.Count == 0)
                 {
-                    Logger.Trace($"Rent(): Created a new instance of List<{typeof(T).Name}> (TotalCount={++_totalCount})");
+                    Logger.Trace($"Get(): Created a new instance of List<{typeof(T).Name}> (TotalCount={++_totalCount})");
                     return new();
                 }
 

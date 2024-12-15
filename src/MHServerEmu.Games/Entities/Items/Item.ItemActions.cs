@@ -287,7 +287,7 @@ namespace MHServerEmu.Games.Entities.Items
                 Player owner = avatar?.GetOwnerOfType<Player>();
                 if (owner == null) continue;
 
-                List<Player> playerList = ListPool<Player>.Instance.Rent();
+                List<Player> playerList = ListPool<Player>.Instance.Get();
 
                 if (lootTableContext.IncludeNearbyAvatars)
                 {
@@ -365,7 +365,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Failed to remove the last item in the stack from its inventory\nItem=[{this}]\nInvLoc=[{InventoryLocation}]");
 
             // We need to keep track of everything we are doing so we can roll back if something goes wrong
-            List<(ulong, int)> replacementItemList = ListPool<(ulong, int)>.Instance.Rent();
+            List<(ulong, int)> replacementItemList = ListPool<(ulong, int)>.Instance.Get();
 
             using PropertyCollection oldCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             oldCurrencyProperties.CopyPropertyRange(player.Properties, PropertyEnum.Currency);

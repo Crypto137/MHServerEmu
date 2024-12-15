@@ -1316,7 +1316,7 @@ namespace MHServerEmu.Games.Powers
 
         private void RemoveTrackedConditions(bool allowReset)
         {
-            List<TrackedCondition> resetConditionList = ListPool<TrackedCondition>.Instance.Rent();
+            List<TrackedCondition> resetConditionList = ListPool<TrackedCondition>.Instance.Get();
 
             EntityManager entityManager = Game.EntityManager;
 

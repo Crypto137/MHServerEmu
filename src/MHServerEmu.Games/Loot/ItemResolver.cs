@@ -303,7 +303,7 @@ namespace MHServerEmu.Games.Loot
             using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
             DropFilterArguments.Initialize(filterArgs, LootContext);
 
-            List<RarityEntry> rarityEntryList = ListPool<RarityEntry>.Instance.Rent();
+            List<RarityEntry> rarityEntryList = ListPool<RarityEntry>.Instance.Get();
             float weightSum = 0f;
 
             foreach (PrototypeId rarityProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<RarityPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))

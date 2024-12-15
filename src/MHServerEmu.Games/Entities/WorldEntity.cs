@@ -2261,7 +2261,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return false;
 
-            List<Player> playerList = ListPool<Player>.Instance.Rent();
+            List<Player> playerList = ListPool<Player>.Instance.Get();
             // NOTE: Compute nearby players on demand for performance reasons
 
             // Loot Tables
@@ -2304,7 +2304,7 @@ namespace MHServerEmu.Games.Entities
 
             // NOTE: Bowling ball dispenser is not per-player cloned, so interacting
             // with it will give a ball to all players nearby. This doesn't seem right.
-            List<Player> playerList = ListPool<Player>.Instance.Rent();
+            List<Player> playerList = ListPool<Player>.Instance.Get();
             Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
 
             AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);

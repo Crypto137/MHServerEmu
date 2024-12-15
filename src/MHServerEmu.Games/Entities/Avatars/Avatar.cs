@@ -883,7 +883,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public ulong FindAbilityItem(ItemPrototype itemProto, ulong skipItemId = InvalidId)
         {
-            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Rent();
+            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();
 
             try
             {
@@ -1033,7 +1033,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player playerOwner = GetOwnerOfType<Player>();
             if (playerOwner == null) return Logger.WarnReturn(false, "AssignItemPowers(): playerOwner == null");
 
-            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Rent();
+            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();
 
             try
             {

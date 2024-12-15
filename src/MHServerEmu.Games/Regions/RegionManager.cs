@@ -332,7 +332,7 @@ namespace MHServerEmu.Games.Regions
         {
             EntityManager entityManager = Game.EntityManager;
 
-            List<Region> regionList = ListPool<Region>.Instance.Rent();
+            List<Region> regionList = ListPool<Region>.Instance.Get();
 
             foreach (Region region in _matches.Values)
             {

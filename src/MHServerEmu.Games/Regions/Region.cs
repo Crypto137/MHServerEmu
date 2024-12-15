@@ -1546,7 +1546,7 @@ namespace MHServerEmu.Games.Regions
             if (IsFirstLoaded) return;
             IsFirstLoaded = true;
 
-            List<PrototypeId> timerRefList = ListPool<PrototypeId>.Instance.Rent();
+            List<PrototypeId> timerRefList = ListPool<PrototypeId>.Instance.Get();
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))
             {
