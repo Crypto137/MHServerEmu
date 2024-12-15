@@ -1847,7 +1847,7 @@ namespace MHServerEmu.Games.Properties.Evals
                     if (condition == null) continue;
 
                     data.SetVar_PropertyCollectionPtr(EvalContext.Condition, condition.Properties);
-                    data.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.ConditionKeywords, condition.Keywords);
+                    data.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.ConditionKeywords, condition.GetKeywords());
 
                     if (forEachProto.LoopConditionPreScope != null)
                     {

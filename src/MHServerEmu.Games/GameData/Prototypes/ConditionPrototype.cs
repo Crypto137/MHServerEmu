@@ -293,6 +293,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
         }
+
+        public AssetId GetUnrealClass(AssetId entityArtAssetRef, bool fallbackToDefault = true)
+        {
+            AssetId unrealClassAssetRef = fallbackToDefault ? UnrealClass : AssetId.Invalid;
+
+            if (UnrealOverrides.HasValue())
+            {
+                foreach (ConditionUnrealPrototype unrealAssetOverrideProto in UnrealOverrides)
+                {
+                    if (unrealAssetOverrideProto.EntityArt != entityArtAssetRef)
+                        continue;
+
+                    unrealClassAssetRef = unrealAssetOverrideProto.ConditionArt;
+                    break;
+                }
+            }
+
+            return unrealClassAssetRef;
+        }
     }
 
     public class ConditionEffectPrototype : Prototype

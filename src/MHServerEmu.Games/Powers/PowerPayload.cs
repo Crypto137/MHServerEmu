@@ -643,7 +643,11 @@ namespace MHServerEmu.Games.Powers
 
         public void CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
         {
+            if (PowerPrototype.AppliesConditions == null)
+                return;
+
             Logger.Debug($"CalculateResultConditionsToAdd(): {PowerPrototype}");
+            ConditionPrototype conditionProto = (ConditionPrototype)PowerPrototype.AppliesConditions[0].Prototype;
 
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
 
@@ -654,25 +658,25 @@ namespace MHServerEmu.Games.Powers
             {
                 // Bikes and other vehicles
                 condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(666, PowerProtoRef, 0, TimeSpan.Zero);
+                condition.InitializeFromPowerMixinPrototype(666, this, conditionProto, TimeSpan.Zero);
             }
             else if (PowerProtoRef == (PrototypeId)17994345800984565974 && target.ConditionCollection.GetCondition(111) == null)
             {
                 // Emma Frost - Diamond Form
                 condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(111, PowerProtoRef, 0, TimeSpan.Zero);
+                condition.InitializeFromPowerMixinPrototype(111, this, conditionProto, TimeSpan.Zero);
             }
             else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PowerProtoRef, (BlueprintId)11029044031881025595))
             {
                 // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
                 condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(999, PowerProtoRef, 0, TimeSpan.Zero);
+                condition.InitializeFromPowerMixinPrototype(999, this, conditionProto, TimeSpan.Zero);
             }
             else if (PowerProtoRef == (PrototypeId)5394038587225345882 && target.ConditionCollection.GetCondition(777) == null)
             {
                 // Magik - Ultimate
                 condition = target.ConditionCollection.AllocateCondition();
-                condition.InitializeFromPowerMixinPrototype(777, PowerProtoRef, 0, TimeSpan.FromSeconds(20));
+                condition.InitializeFromPowerMixinPrototype(777, this, conditionProto, TimeSpan.FromSeconds(20));
             }
 
             if (condition != null)

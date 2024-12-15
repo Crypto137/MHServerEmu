@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -12,29 +13,29 @@ namespace MHServerEmu.Games.Powers
     [Flags]
     public enum ConditionSerializationFlags : uint
     {
-        // These serialization flags were introduced in version 1.25, and they are used to reduce the size of condition
-        // net messages by omitting data that can be derived from the owner world entity or the ConditionPrototype.
+        // These serialization flags are used to reduce the size of serialized conditions
+        // by omitting data that can be derived from the prototype and the owner.
         None                        = 0,
-        NoCreatorId                 = 1 << 0,   // _creatorId == owner.Id
-        NoUltimateCreatorId         = 1 << 1,   // _ultimateCreatorId == _creatorId
+        CreatorIsOwner              = 1 << 0,
+        CreatorIsUltimateCreator    = 1 << 1,
 
         // The condition prototype is identified either by a condition prototype ref if it's a standalone condition,
         // or a creator power prototype ref + index in the AppliesConditions mixin list if this condition's prototype
         // is mixed into a PowerPrototype.
         NoConditionPrototypeRef     = 1 << 2,   // _conditionPrototypeRef != PrototypeId.Invalid
         NoCreatorPowerPrototypeRef  = 1 << 3,   // _creatorPowerPrototypeRef != PrototypeId.Invalid
-        HasCreatorPowerIndex        = 1 << 4,   // _creatorPowerIndex != -1
+        HasCreatorPowerIndex        = 1 << 4,   // _creatorPowerIndex >= 0
 
         HasOwnerAssetRef            = 1 << 5,   // _ownerAssetRef != AssetId.Invalid (defaults to owner.EntityWorldAsset if OwnerAssetRefOverride is not set)
         HasPauseTime                = 1 << 6,   // _pauseTime != TimeSpan.Zero
         HasDuration                 = 1 << 7,   // _duration != 0
         IsDisabled                  = 1 << 8,   // _isEnabled == false
-        OwnerAssetRefOverride       = 1 << 9,   // owner == null || owner.Id != _ultimateCreatorId || _ownerAssetRef != owner.EntityWorldAsset
+        HasOwnerAssetRefOverride    = 1 << 9,   // owner == null || owner.Id != _ultimateCreatorId || _ownerAssetRef != owner.EntityWorldAsset
 
         // Normally, _updateInterval and _cancelOnFlags are taken from the ConditionPrototype, but if any of these two flags
         // are set, it means that the default values are overriden.
-        UpdateIntervalOverride      = 1 << 10,
-        CancelOnFlagsOverride       = 1 << 11
+        HasUpdateIntervalOverride   = 1 << 10,
+        HasCancelOnFlagsOverride    = 1 << 11
     }
 
     [Flags]
@@ -54,7 +55,7 @@ namespace MHServerEmu.Games.Powers
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ConditionSerializationFlags _serializationFlags;
-        private ulong _id;                                          // Condition id
+        private ulong _conditionId;                                          // Condition id
         private ulong _creatorId;                                   // Entity id
         private ulong _ultimateCreatorId;                           // Entity id, the highest entity in the creation hierarchy (i.e. creator of creator, or the creator itself)
 
@@ -67,9 +68,9 @@ namespace MHServerEmu.Games.Powers
         private AssetId _ownerAssetRef;
         private TimeSpan _startTime;
         private TimeSpan _pauseTime;
-        private long _duration;                                     // milliseconds (e.g. 7200000 == 2 hours)
+        private long _durationMS;
         private bool _isEnabled = true;
-        private int _updateIntervalMS;                              // milliseconds
+        private int _updateIntervalMS;
         private ReplicatedPropertyCollection _properties = new();
         private ConditionCancelOnFlags _cancelOnFlags;
 
@@ -77,46 +78,48 @@ namespace MHServerEmu.Games.Powers
         private ConditionCollection _collection;                    // Condition collection this condition belongs to
 
         // Accessors
-        // TODO: Replace setters with Initialize()
-        public ConditionSerializationFlags SerializationFlags { get => _serializationFlags; set => _serializationFlags = value; }
-        public ulong Id { get => _id; set => _id = value; }
-        public ulong CreatorId { get => _creatorId; set => _creatorId = value; }
-        public ulong UltimateCreatorId { get => _ultimateCreatorId; set => _ultimateCreatorId = value; }
+        public ConditionSerializationFlags SerializationFlags { get => _serializationFlags; }
+        public ulong Id { get => _conditionId; }
+        public ulong CreatorId { get => _creatorId; }
+        public ulong UltimateCreatorId { get => _ultimateCreatorId; }
 
-        public PrototypeId ConditionPrototypeRef {
-            get => _conditionPrototypeRef;
-            set { _conditionPrototypeRef = value; _conditionPrototype = value.As<ConditionPrototype>(); } }
+        public PrototypeId ConditionPrototypeRef { get => _conditionPrototypeRef; }
         public ConditionPrototype ConditionPrototype { get => _conditionPrototype; }
 
-        public PrototypeId CreatorPowerPrototypeRef {
-            get => _creatorPowerPrototypeRef;
-            set { _creatorPowerPrototypeRef = value; _creatorPowerPrototype = value.As<PowerPrototype>(); } }
+        public PrototypeId CreatorPowerPrototypeRef { get => _creatorPowerPrototypeRef; }
         public PowerPrototype CreatorPowerPrototype { get => _creatorPowerPrototype; }
-
         public int CreatorPowerIndex { get => _creatorPowerIndex; set => _creatorPowerIndex = value; }
-        public AssetId OwnerAssetRef { get => _ownerAssetRef; set => _ownerAssetRef = value; }
-        public TimeSpan StartTime { get => _startTime; set => _startTime = value; }
-        public TimeSpan PauseTime { get => _pauseTime; set => _pauseTime = value; }
-        public TimeSpan Duration { get => TimeSpan.FromMilliseconds(_duration); set => _duration = (long)value.TotalMilliseconds; }
-        public bool IsEnabled { get => _isEnabled; set => _isEnabled = value; }
-        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(_updateIntervalMS); set => _updateIntervalMS = (int)value.TotalMilliseconds; }
-        public ReplicatedPropertyCollection Properties { get => _properties; }
-        public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; set => _cancelOnFlags = value; }
 
-        public ulong CreatorPlayerId { get => _creatorPlayerId; set => _creatorPlayerId = value; }
-        public ConditionCollection Collection { get => _collection; set => _collection = value; }
+        public AssetId OwnerAssetRef { get => _ownerAssetRef; }
+        public TimeSpan StartTime { get => _startTime; }
+        public TimeSpan PauseTime { get => _pauseTime; }
+        public TimeSpan Duration { get => TimeSpan.FromMilliseconds(_durationMS); }
+        public bool IsEnabled { get => _isEnabled; }
+        public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(_updateIntervalMS); }
+        public ReplicatedPropertyCollection Properties { get => _properties; }
+        public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; }
+
+        public ulong CreatorPlayerId { get => _creatorPlayerId; }
+        public ConditionCollection Collection { get => _collection; }
         public bool IsInCollection { get => _collection != null; }
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
-        public PrototypeId[] Keywords { get; internal set; }
 
         public PowerIndexPropertyFlags PowerIndexPropertyFlags { get => _conditionPrototype != null ? _conditionPrototype.PowerIndexPropertyFlags : default; }
 
         public EventPointer<ConditionCollection.RemoveConditionEvent> RemoveEvent { get; set; }
 
         public Condition() { }
+
+        public override string ToString()
+        {
+            if (_conditionPrototype != null)
+                return _conditionPrototype.ToString();
+
+            return _creatorPowerPrototype?.ToString();
+        }
 
         public bool Serialize(Archive archive, WorldEntity owner)
         {
@@ -125,22 +128,67 @@ namespace MHServerEmu.Games.Powers
             // flags.
 
             bool success = true;
-            
-            // if (archive.IsTransient) -> This wasn't originally used for persistent condition serialization
+
+            // This wasn't originally used for persistent condition serialization,
+            // need to implement something like PropertyStore and restore persistent conditions.
+            if (archive.IsTransient == false)
+                return success;
 
             if (archive.IsPacking)
             {
-                // TODO: build serialization flags here
+                // Build serialization flags
+                _serializationFlags = ConditionSerializationFlags.None;
+                if (owner != null && owner.Id == _creatorId)
+                    _serializationFlags |= ConditionSerializationFlags.CreatorIsOwner;
+
+                if (_ultimateCreatorId == _creatorId)
+                    _serializationFlags |= ConditionSerializationFlags.CreatorIsUltimateCreator;
+
+                if (_conditionPrototypeRef == PrototypeId.Invalid)
+                    _serializationFlags |= ConditionSerializationFlags.NoConditionPrototypeRef;
+
+                if (_creatorPowerPrototypeRef == PrototypeId.Invalid)
+                    _serializationFlags |= ConditionSerializationFlags.NoCreatorPowerPrototypeRef;
+
+                if (_creatorPowerIndex >= 0)
+                    _serializationFlags |= ConditionSerializationFlags.HasCreatorPowerIndex;
+
+                if (_ownerAssetRef == AssetId.Invalid)
+                    _serializationFlags |= ConditionSerializationFlags.HasOwnerAssetRef;
+
+                if (_pauseTime.TotalMilliseconds != 0)
+                    _serializationFlags |= ConditionSerializationFlags.HasPauseTime;
+
+                if (_isEnabled == false)
+                    _serializationFlags |= ConditionSerializationFlags.IsDisabled;
+
+                if (_ownerAssetRef != AssetId.Invalid)
+                {
+                    _serializationFlags |= ConditionSerializationFlags.HasOwnerAssetRef;
+                    if (owner == null || owner.Id != _ultimateCreatorId || _ownerAssetRef != owner.GetOriginalWorldAsset())
+                        _serializationFlags |= ConditionSerializationFlags.HasOwnerAssetRefOverride;
+                }
+
+                if (_durationMS != 0)
+                    _serializationFlags |= ConditionSerializationFlags.HasDuration;
+
+                if (_updateIntervalMS != (int)_conditionPrototype.UpdateInterval.TotalMilliseconds)
+                    _serializationFlags |= ConditionSerializationFlags.HasUpdateIntervalOverride;
+
+                if (_cancelOnFlags != _conditionPrototype.CancelOnFlags)
+                    _serializationFlags |= ConditionSerializationFlags.HasCancelOnFlagsOverride;
+
+                // Write data
                 uint serializationFlags = (uint)_serializationFlags;
                 success &= Serializer.Transfer(archive, ref serializationFlags);
 
                 // Pack all the necessary data according to our flags
-                success &= Serializer.Transfer(archive, ref _id);
+                success &= Serializer.Transfer(archive, ref _conditionId);
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorId) == false)
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CreatorIsOwner) == false)
                     success &= Serializer.Transfer(archive, ref _creatorId);
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoUltimateCreatorId) == false)
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CreatorIsUltimateCreator) == false)
                     success &= Serializer.Transfer(archive, ref _ultimateCreatorId);
 
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoConditionPrototypeRef) == false)
@@ -155,7 +203,7 @@ namespace MHServerEmu.Games.Powers
                     success &= Serializer.Transfer(archive, ref index);
                 }
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.OwnerAssetRefOverride))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRefOverride))
                     success &= Serializer.Transfer(archive, ref _ownerAssetRef);
 
                 success &= Serializer.TransferTimeAsDelta(archive, null, ref _startTime);
@@ -164,14 +212,14 @@ namespace MHServerEmu.Games.Powers
                     success &= Serializer.TransferTimeAsDelta(archive, null, ref _pauseTime);
 
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasDuration))
-                    success &= Serializer.Transfer(archive, ref _duration);
+                    success &= Serializer.Transfer(archive, ref _durationMS);
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateIntervalOverride))
                     success &= Serializer.Transfer(archive, ref _updateIntervalMS);
 
                 success &= Serializer.Transfer(archive, ref _properties);
 
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlagsOverride))
                 {
                     uint cancelOnFlags = (uint)_cancelOnFlags;
                     success &= Serializer.Transfer(archive, ref cancelOnFlags);
@@ -185,17 +233,17 @@ namespace MHServerEmu.Games.Powers
                 success &= Serializer.Transfer(archive, ref serializationFlags);
                 _serializationFlags = (ConditionSerializationFlags)serializationFlags;
 
-                success &= Serializer.Transfer(archive, ref _id);
+                success &= Serializer.Transfer(archive, ref _conditionId);
 
                 // Default creator is the owner
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoCreatorId))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CreatorIsOwner))
                     _creatorId = owner != null ? owner.Id : 0;
                 else
                     success &= Serializer.Transfer(archive, ref _creatorId);
 
                 // Default ultimate creator is the creator
                 _ultimateCreatorId = _creatorId;
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.NoUltimateCreatorId) == false)
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CreatorIsUltimateCreator) == false)
                     success &= Serializer.Transfer(archive, ref _ultimateCreatorId);
 
                 // There MUST be a ConditionPrototype, either a directly referenced one,
@@ -243,7 +291,7 @@ namespace MHServerEmu.Games.Powers
 
                 // Default owner asset is AssetId.Invalid
                 _ownerAssetRef = AssetId.Invalid;
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.OwnerAssetRefOverride))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRefOverride))
                     success &= Serializer.Transfer(archive, ref _ownerAssetRef);                // Get asset override if we have one
                 else if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasOwnerAssetRef))
                     _ownerAssetRef = owner != null ? owner.GetEntityWorldAsset() : AssetId.Invalid;  // Fall back to the owner asset
@@ -257,23 +305,23 @@ namespace MHServerEmu.Games.Powers
                     success &= Serializer.TransferTimeAsDelta(archive, null, ref _pauseTime);
 
                 // Default duration is 0 ms, which means unlimited duration? (to be confirmed)
-                _duration = 0;
+                _durationMS = 0;
                 if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasDuration))
-                    success &= Serializer.Transfer(archive, ref _duration);
+                    success &= Serializer.Transfer(archive, ref _durationMS);
 
                 // For some reason _isEnabled is not updated during deserialization in the client.
                 // ConditionCollection does call Condition::serializationFlagIsDisabled() during OnUnpackComplete() though.
 
                 // Default update interval is taken from the ConditionPrototype
                 _updateIntervalMS = _conditionPrototype.UpdateIntervalMS;
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.UpdateIntervalOverride))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasUpdateIntervalOverride))
                     success &= Serializer.Transfer(archive, ref _updateIntervalMS);
 
                 success &= Serializer.Transfer(archive, ref _properties);
 
                 // Default cancel on flags are taken from the ConditionPrototype
                 _cancelOnFlags = _conditionPrototype.CancelOnFlags;
-                if (_serializationFlags.HasFlag(ConditionSerializationFlags.CancelOnFlagsOverride))
+                if (_serializationFlags.HasFlag(ConditionSerializationFlags.HasCancelOnFlagsOverride))
                 {
                     uint cancelOnFlags = 0;
                     success &= Serializer.Transfer(archive, ref cancelOnFlags);
@@ -284,34 +332,35 @@ namespace MHServerEmu.Games.Powers
             return success;
         }
 
-        public bool InitializeFromPowerMixinPrototype(ulong conditionId, PrototypeId creatorPowerPrototypeRef, int creatorPowerIndex, TimeSpan duration,
-            bool hasOwnerAssetRef = true, AssetId ownerAssetRefOverride = AssetId.Invalid)
+        public bool InitializeFromPowerMixinPrototype(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
         {
-            _id = conditionId;
-            _creatorPowerPrototypeRef = creatorPowerPrototypeRef;
-            _creatorPowerPrototype = creatorPowerPrototypeRef.As<PowerPrototype>();
-            _creatorPowerIndex = creatorPowerIndex;
+            _conditionId = conditionId;
 
-            _serializationFlags = ConditionSerializationFlags.NoCreatorId;
-            _serializationFlags |= ConditionSerializationFlags.NoUltimateCreatorId;
-            _serializationFlags |= ConditionSerializationFlags.NoConditionPrototypeRef;
-            _serializationFlags |= ConditionSerializationFlags.HasCreatorPowerIndex;
-
-            if (duration != TimeSpan.Zero)
+            _creatorId = payload.PowerOwnerId;
+            _ultimateCreatorId = payload.UltimateOwnerId != Entity.InvalidId ? payload.UltimateOwnerId : payload.PowerOwnerId;
+            
+            WorldEntity ultimateCreator = payload.Game.EntityManager.GetEntity<WorldEntity>(_ultimateCreatorId);
+            if (ultimateCreator != null)
             {
-                _duration = (long)duration.TotalMilliseconds;
-                _serializationFlags |= ConditionSerializationFlags.HasDuration;
-            }
-
-            if (hasOwnerAssetRef)
-            {
-                _serializationFlags |= ConditionSerializationFlags.HasOwnerAssetRef;
-                if (ownerAssetRefOverride != AssetId.Invalid)
+                if (ultimateCreator is Avatar avatar)
                 {
-                    _ownerAssetRef = ownerAssetRefOverride;
-                    _serializationFlags |= ConditionSerializationFlags.OwnerAssetRefOverride;
-                }    
+                    Player player = avatar.GetOwnerOfType<Player>();
+                    if (player != null)
+                        _creatorPlayerId = player.DatabaseUniqueId;
+                }
+
+                _ownerAssetRef = DetermineAssetRefByOwner(ultimateCreator, conditionProto);
             }
+
+            _conditionPrototype = conditionProto;
+            _conditionPrototypeRef = PrototypeId.Invalid;
+
+            _creatorPowerPrototype = payload.PowerPrototype;
+            _creatorPowerPrototypeRef = payload.PowerProtoRef;
+            _creatorPowerIndex = conditionProto.BlueprintCopyNum;
+
+            _durationMS = (long)duration.TotalMilliseconds;
+            _cancelOnFlags = conditionProto.CancelOnFlags;
 
             return true;
         }
@@ -321,18 +370,10 @@ namespace MHServerEmu.Games.Powers
             _startTime = Game.Current.CurrentTime;
         }
 
-        public override string ToString()
-        {
-            if (_conditionPrototype != null)
-                return _conditionPrototype.ToString();
-
-            return _creatorPowerPrototype?.ToString();
-        }
-
         public bool IsPersistToDB()
         {
             if (_conditionPrototype == null)
-                return Logger.WarnReturn(false, $"IsPersistToDB(): _conditionPrototype == null");
+                return Logger.WarnReturn(false, "IsPersistToDB(): _conditionPrototype == null");
 
             return _conditionPrototype.PersistToDB;
         }
@@ -340,7 +381,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsBoost()
         {
             if (_conditionPrototype == null)
-                return Logger.WarnReturn(false, $"IsBoost(): _conditionPrototype == null");
+                return Logger.WarnReturn(false, "IsBoost(): _conditionPrototype == null");
 
             return _conditionPrototype.IsBoost;
         }
@@ -348,9 +389,22 @@ namespace MHServerEmu.Games.Powers
         public bool IsHitReactCondition()
         {
             if (_conditionPrototype == null)
-                return Logger.WarnReturn(false, $"IsHitReactCondition(): _conditionPrototype == null");
+                return Logger.WarnReturn(false, "IsHitReactCondition(): _conditionPrototype == null");
 
             return _conditionPrototype.IsHitReactCondition;
+        }
+
+        public PrototypeId[] GetKeywords()
+        {
+            if (_conditionPrototype == null)
+                return Logger.WarnReturn<PrototypeId[]>(null, "GetKeywords(): _conditionPrototype == null");
+
+            return _conditionPrototype.Keywords;
+        }
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return _conditionPrototype.HasKeyword(keywordProto);
         }
 
         /// <summary>
@@ -400,9 +454,25 @@ namespace MHServerEmu.Games.Powers
             return containsNegativeStatusEffects;
         }
 
-        public bool HasKeyword(KeywordPrototype keywordProto)
+        private bool UpdateOwnerAssetRef(WorldEntity owner)
         {
-            return _conditionPrototype.HasKeyword(keywordProto);
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "UpdateOwnerAssetRef(): _conditionPrototype == null");
+
+            AssetId assetRef = DetermineAssetRefByOwner(owner, _conditionPrototype);
+            if (assetRef == _ownerAssetRef)
+                return false;
+
+            _ownerAssetRef = assetRef;
+            return true;
+        }
+
+        private static AssetId DetermineAssetRefByOwner(WorldEntity owner, ConditionPrototype conditionProto)
+        {
+            AssetId entityWorldAssetRef = owner.GetEntityWorldAsset();
+            if (conditionProto.GetUnrealClass(entityWorldAssetRef, false) != AssetId.Invalid)
+                return entityWorldAssetRef;
+
+            return owner.GetOriginalWorldAsset();
         }
     }
 }
