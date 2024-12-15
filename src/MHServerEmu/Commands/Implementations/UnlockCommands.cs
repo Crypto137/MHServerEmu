@@ -8,7 +8,7 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("unlock", "Provides commands for unlock.", AccountUserLevel.User)]
+    [CommandGroup("unlock", "Provides commands for unlock.", AccountUserLevel.Admin)]
     public class Unlock : CommandGroup
     {
         [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints")]

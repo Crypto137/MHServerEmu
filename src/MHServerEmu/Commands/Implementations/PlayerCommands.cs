@@ -117,7 +117,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]", AccountUserLevel.User)]
+        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]", AccountUserLevel.Admin)]
         public string GiveCurrency(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

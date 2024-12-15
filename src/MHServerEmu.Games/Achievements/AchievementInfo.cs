@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Achievements
             OrbisTrophyShared = info.OrbisTrophyShared;
         }
 
-        public bool SetContext(AchievementContext context)
+        public bool SetContext(in AchievementContext context)
         {
             if (EventType != context.EventType) return Logger.WarnReturn(false, $"SetContext [{context.Id}] {EventType} != {context.EventType}");
             RewardPrototype = AchievementContext.GetPrototype(context.RewardPrototype);

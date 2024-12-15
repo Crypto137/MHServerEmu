@@ -10,7 +10,7 @@ The following instructions are intended for stable builds of the server. If you 
 
 3. Download the latest [MHServerEmu stable build](https://github.com/Crypto137/MHServerEmu/releases/latest) and extract it.
 
-4. Run the included `SetupSorcererSupreme` tool and point it to your Marvel Heroes game files. If you have the game on Steam, you can find them by right clicking on the game in your library and choosing `Manage` -> `Browse local files`.
+4. Run the included `Setup` tool and point it to your Marvel Heroes game files. If you have the game on Steam, you can find them by right clicking on the game in your library and choosing `Manage` -> `Browse local files`.
 
 ## Running the Server
 

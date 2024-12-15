@@ -135,7 +135,6 @@ namespace MHServerEmu.Games.Achievements
             // Post-process
             ImportAchievementStringsToCurrentLocale();
             HookUpParentChildAchievementReferences();
-            RebuildCachedData();
 
             // Create the dump for sending to clients
             CreateDump();
@@ -216,11 +215,6 @@ namespace MHServerEmu.Games.Achievements
 
             using (MemoryStream ms = new(_localizedAchievementStringBuffer))
                 currentLocale.ImportStringStream("achievements", ms);
-        }
-
-        private void RebuildCachedData()
-        {
-            // TODO
         }
 
         /// <summary>
