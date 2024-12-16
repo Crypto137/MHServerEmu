@@ -1314,6 +1314,12 @@ namespace MHServerEmu.Games.Powers
                 RefreshConditionIndexProperties();
         }
 
+        public bool IsTrackingCondition(ulong entityId, Condition condition)
+        {
+            TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
+            return _trackedConditionList.Contains(trackedCondition);
+        }
+
         private void RemoveTrackedConditions(bool allowReset)
         {
             List<TrackedCondition> resetConditionList = ListPool<TrackedCondition>.Instance.Get();

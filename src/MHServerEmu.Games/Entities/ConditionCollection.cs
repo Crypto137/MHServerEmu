@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -220,6 +221,47 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Attempts to readd a condition to the <see cref="Power"/> that created it.
+        /// Returns <see langword="false"/> if condition is no longer valid.
+        /// </summary>
+        public bool TryRestorePowerCondition(Condition condition, WorldEntity owner)
+        {
+            if (owner == null)
+                return false;
+
+            if (condition.CreatorPowerPrototypeRef == PrototypeId.Invalid)
+                return false;
+
+            // Restore tracking if the power is still assigned and can be used
+            Power power = owner.PowerCollection?.GetPower(condition.CreatorPowerPrototypeRef);
+            if (power != null)
+            {
+                if (power.CanBeUsedInRegion(owner.Region) == false)
+                    return false;
+
+                if (power.IsTrackingCondition(owner.Id, condition) == false)
+                    power.TrackCondition(owner.Id, condition);
+
+                return true;
+            }
+
+            // Sometimes the condition should remain even if the power that created it is gone
+            PowerPrototype powerProto = condition.CreatorPowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TryRestorePowerCondition(): powerProto == null");
+
+            // Consumable items that grant conditions (e.g. boosts)
+            if (Power.IsItemPower(powerProto))
+                return true;
+
+            // Powers that do not cancel their conditions when they are gone
+            if (powerProto.Activation != PowerActivationType.Passive && powerProto.CancelConditionsOnEnd == false && powerProto.CancelConditionsOnUnassign == false)
+                return true;
+
+            // Remove conditions in other cases
+            return false;
         }
 
         public bool HasANegativeStatusEffectCondition()

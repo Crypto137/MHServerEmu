@@ -1035,6 +1035,38 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        private bool RestoreSelfAppliedPowerConditions()
+        {
+            // Powers are unassigned when avatar exits world, but the conditions remain.
+            // We need to reconnect existing conditions to the newly reassigned powers.
+
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
+
+            List<ulong> conditionCleanupList = ListPool<ulong>.Instance.Get();
+
+            // Try to restore condition connections for self-applied powers
+            foreach (Condition condition in ConditionCollection.IterateConditions(false))
+            {
+                PowerPrototype powerProto = condition.CreatorPowerPrototype;
+                if (powerProto == null)
+                    continue;
+
+                if (Power.GetTargetingShape(powerProto) != TargetingShapeType.Self)
+                    continue;
+
+                if (conditionCollection.TryRestorePowerCondition(condition, this) == false)
+                    conditionCleanupList.Add(condition.Id);
+            }
+
+            // Clean up conditions that are no longer valid
+            foreach (ulong conditionId in conditionCleanupList)
+                conditionCollection.RemoveCondition(conditionId);
+
+            ListPool<ulong>.Instance.Return(conditionCleanupList);
+            return true;
+        }
+
         private bool AssignItemPowers()
         {
             // This has similar structure to FindAbilityItem()
@@ -2116,7 +2148,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             AssignDefaultAvatarPowers();
 
-            // auto unlock chapters and Waypoinst
+            RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
+
+            // Unlock chapters and waypoints that should be unlocked by default
             player.UnlockChapters();
             player.UnlockWaypoints();
 
