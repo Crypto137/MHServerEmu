@@ -197,12 +197,6 @@ namespace MHServerEmu.Games.Entities
             // TODO: Clean this up
             //---
 
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-                Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
-            }
-
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
             _emailVerified = true;
@@ -283,6 +277,13 @@ namespace MHServerEmu.Games.Entities
                 var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
                 if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
                     Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
+            }
+
+            // HACK: Unlock avatars here too
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                UnlockAvatar(avatarRef, false);
             }
 
             _newPlayerUISystemsUnlocked = true;
@@ -1796,6 +1797,22 @@ namespace MHServerEmu.Games.Entities
             if (unlockType == AvatarUnlockType.None && avatarProto.IsStarterAvatar) 
                 return AvatarUnlockType.Starter;
             return unlockType;
+        }
+
+        public bool UnlockAvatar(PrototypeId avatarRef, bool sendToClient)
+        {
+            AvatarUnlockType currentUnlockType = GetAvatarUnlockType(avatarRef);
+            if (currentUnlockType != AvatarUnlockType.None && currentUnlockType != AvatarUnlockType.Starter)
+                return false;
+
+            Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
+            GetRegion()?.PlayerUnlockedAvatarEvent.Invoke(new(this, avatarRef));
+            OnScoringEvent(new(ScoringEventType.AvatarsUnlocked, avatarRef.As<AvatarPrototype>(), 1));
+
+            if (sendToClient)
+                SendMessage(NetMessageNewAvatarAcquired.CreateBuilder().SetPrototypeId((ulong)avatarRef).Build());
+
+            return true;
         }
 
         public int GetCharacterLevelForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)

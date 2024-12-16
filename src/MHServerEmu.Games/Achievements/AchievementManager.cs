@@ -310,6 +310,15 @@ namespace MHServerEmu.Games.Achievements
             if (AchievementsEnabled == false) return;
 
             var state = AchievementState;
+
+            // clear completed achievement tracker
+            foreach (var kvp in Owner.Properties.IteratePropertyRange(PropertyEnum.MissionTrackerAchievements).ToArray())
+            {
+                Property.FromParam(kvp.Key, 0, out int id);
+                if (state.GetAchievementProgress((uint)id).IsComplete)
+                    Owner.Properties.RemoveProperty(new PropertyId(PropertyEnum.MissionTrackerAchievements, (PropertyParam)id));
+            }
+
             foreach (var info in AchievementDatabase.Instance.AchievementInfoMap)
             {
                 if (state.ShouldRecount(info) == false) continue;
@@ -421,14 +430,13 @@ namespace MHServerEmu.Games.Achievements
 
         private void GiveAchievementReward(AchievementInfo info)
         {
-            var manager = Owner.Game?.LootManager;
-            if (manager == null) return;
+            var lootManager = Owner.Game?.LootManager;
+            if (lootManager == null) return;
             int seed = Owner.Game.Random.Next();
-
-            // TODO Check this
             
             using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
             settings.Initialize(LootContext.AchievementReward, Owner, Owner.CurrentAvatar, 1);
+
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(seed));
             resolver.SetContext(LootContext.AchievementReward, Owner);
@@ -436,10 +444,12 @@ namespace MHServerEmu.Games.Achievements
             var reward = info.RewardPrototype as LootTablePrototype;
             if (reward.Roll(settings.LootRollSettings, resolver) != LootRollResult.NoRoll)
             {
-                Logger.Debug($"GiveAchievementReward [{info.Id}] {info.RewardPrototype}");
-                var summary = new LootResultSummary();
+                //Logger.Debug($"GiveAchievementReward [{info.Id}] {info.RewardPrototype}");
+                using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();
                 resolver.FillLootResultSummary(summary);
-                manager.GiveLootFromSummary(summary, Owner);
+
+                if (lootManager.GiveLootFromSummary(summary, Owner) == false)
+                    Logger.Warn($"GiveAchievementReward(): Failed to give reward for achievement id {info.Id} to [{Owner}]");
             }
         }
 
