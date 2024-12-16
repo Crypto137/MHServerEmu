@@ -1,14 +1,51 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
 using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Locales;
 
 namespace MHServerEmu.Games.Achievements
 {
+    #region Enum
+    public enum AchievementVisibleState
+    {
+        Invalid,
+        Visible,
+        Invisible,
+        ParentComplete,
+        Complete,
+        InProgress,
+        Objective
+    }
+
+    public enum AchievementEvaluationType
+    {
+        Invalid,
+        Available,
+        Children,
+        Disabled,
+        Parent
+    }
+
+    public enum AchievementUIProgressDisplayOption
+    {
+        Invalid = -1,
+        Threshold,
+        Hidden,
+        Checkbox,
+        ProgressBar,
+        Max
+    }
+
+    #endregion
+
     public class AchievementInfo
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public uint Id { get; set; }
         public bool Enabled { get; set; }
         public uint ParentId { get; set; }
@@ -34,6 +71,17 @@ namespace MHServerEmu.Games.Achievements
         public bool OrbisTrophyShared { get; set; } = false;
 
         [JsonIgnore]
+        public bool PartyVisible { get; set; }
+        [JsonIgnore]
+        public Prototype RewardPrototype { get; set; }
+        [JsonIgnore]
+        public bool IsTopLevelAchievement { get => VisibleState == AchievementVisibleState.Visible || VisibleState == AchievementVisibleState.ParentComplete; }
+        [JsonIgnore]
+        public ScoringEventData EventData { get; set; }
+        [JsonIgnore]
+        public ScoringEventContext EventContext { get; set; }
+
+        [JsonIgnore]
         public AchievementInfo Parent { get; set; }
         [JsonIgnore]
         public List<AchievementInfo> Children { get; } = new();
@@ -55,17 +103,60 @@ namespace MHServerEmu.Games.Achievements
             CategoryStr = (LocaleStringId)info.CategoryStr;
             SubCategoryStr = (LocaleStringId)info.SubCategoryStr;
             DisplayOrder = info.DisplayOrder;
-            VisibleState = (AchievementVisibleState)info.VisibleState;
-            EvaluationType = (AchievementEvaluationType)info.EvaluationType;
-            EventType = (ScoringEventType)info.Eventtype;
+            VisibleState = GetAchievementVisibleStateFromInt(info.VisibleState);
+            EvaluationType = GetAchievementEvaluationTypeFromInt(info.EvaluationType);
+            EventType = ScoringEvents.GetScoringEventTypeFromInt(info.Eventtype);
             Threshold = info.Threshold;
             DependentAchievementId = info.DependentAchievementId;
-            UIProgressDisplayOption = (AchievementUIProgressDisplayOption)info.UiProgressDisplayOption;
+            UIProgressDisplayOption = GetAchievementUIProgressDisplayOptionFromInt(info.UiProgressDisplayOption);
             PublishedDateUS = new((long)info.PublishedDateUS * TimeSpan.TicksPerSecond);
             IconPathHiResAssetId = (AssetId)info.IconPathHiResAssetId;
             OrbisTrophy = info.OrbisTrophy;
             OrbisTrophyId = info.OrbisTrophyId;
             OrbisTrophyShared = info.OrbisTrophyShared;
+        }
+
+        public bool SetContext(in AchievementContext context)
+        {
+            if (EventType != context.EventType) return Logger.WarnReturn(false, $"SetContext [{context.Id}] {EventType} != {context.EventType}");
+            RewardPrototype = AchievementContext.GetPrototype(context.RewardPrototype);
+            EventData = context.GetScoringEventData();
+            EventContext = context.GetScoringEventContext();
+            return true;
+        }
+
+        public static AchievementVisibleState GetAchievementVisibleStateFromInt(uint state)
+        {
+            return state > (uint)AchievementVisibleState.Invalid && state <= (uint)AchievementVisibleState.Objective
+                ? (AchievementVisibleState)state
+                : AchievementVisibleState.Invalid;
+        }
+
+        public static AchievementEvaluationType GetAchievementEvaluationTypeFromInt(uint evaluationType)
+        {
+            return evaluationType > (uint)AchievementEvaluationType.Invalid && evaluationType <= (uint)AchievementEvaluationType.Parent
+                ? (AchievementEvaluationType)evaluationType
+                : AchievementEvaluationType.Invalid;
+        }
+
+        public static AchievementUIProgressDisplayOption GetAchievementUIProgressDisplayOptionFromInt(uint option)
+        {
+            return option < (uint)AchievementUIProgressDisplayOption.Max
+                ? (AchievementUIProgressDisplayOption)option
+                : AchievementUIProgressDisplayOption.Invalid;
+        }
+
+        public bool InOrbis()
+        {
+            if (OrbisTrophy) return true;
+            if (Parent != null) return Parent.InOrbis();
+            return false;
+        }
+
+        public bool InThresholdRange(bool isMinMethod, int count)
+        {
+            int threshold = (int)Threshold;
+            return isMinMethod ? (count != 0 && count <= threshold) : count >= threshold;
         }
 
         public AchievementDatabaseDump.Types.AchievementInfo ToNetStruct()

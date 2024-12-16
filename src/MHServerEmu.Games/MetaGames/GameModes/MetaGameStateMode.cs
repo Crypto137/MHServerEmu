@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             _pickIntervalEvent.Get().Initialize(this);
         }
 
-        private void OnStatePickInterval()
+        public void OnStatePickInterval()
         {
             var region = Region;
             if (region == null) return;
@@ -187,6 +187,8 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
             return true;
         }
+
+        public PrototypeId GetCurrentStateRef() => _stateRef;
 
         protected class StatePickIntervalEvent : CallMethodEvent<MetaGameStateMode>
         {

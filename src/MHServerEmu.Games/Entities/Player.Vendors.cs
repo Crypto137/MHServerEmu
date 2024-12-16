@@ -6,6 +6,7 @@ using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -185,6 +186,16 @@ namespace MHServerEmu.Games.Entities
                     purchaseData.RecordItemPurchase(vendorSlot);
             }
 
+            // Events
+            if (isInBuybackInventory == false)
+            {
+                int count = item.CurrentStackSize;
+                GetRegion()?.PlayerBoughtItemEvent.Invoke(new(this, item, count));
+                var rarityProto = item.RarityPrototype;
+                OnScoringEvent(new(ScoringEventType.ItemBought, item.Prototype, rarityProto, count));
+                OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProto, count));
+            }
+
             // Use the item if needed
             if (item.Properties[PropertyEnum.ItemAutoUseOnPurchase])
             {
@@ -288,6 +299,8 @@ namespace MHServerEmu.Games.Entities
             // Event
             int count = item.CurrentStackSize;
             GetRegion()?.PlayerDonatedItemEvent.Invoke(new(this, item, count));
+            var rarityProto = item.RarityPrototype;
+            OnScoringEvent(new(ScoringEventType.ItemDonated, item.Prototype, rarityProto, count));
 
             if (IsVendorMaxLevel(vendorTypeProto) == false)
             {
@@ -461,6 +474,8 @@ namespace MHServerEmu.Games.Entities
                 UpdateVendorLootProperties(vendorTypeProto);
                 RollVendorInventory(vendorTypeProto, false);
             }
+
+            OnScoringEvent(new(ScoringEventType.VendorLevel, vendorTypeProto, newLevel));
 
             if (vendorId != InvalidId)
                 SendMessage(NetMessageVendorLevelUp.CreateBuilder().SetVendorTypeProtoId((ulong)vendorTypeProtoRef).SetVendorID(vendorId).Build());

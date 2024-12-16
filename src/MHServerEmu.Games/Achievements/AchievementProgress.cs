@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -20,23 +21,20 @@ namespace MHServerEmu.Games.Achievements
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="AchievementProgress"/> value is empty.
         /// </summary>
-        public bool IsEmpty { get => Count == 0 && CompletedDate == TimeSpan.Zero; }
+        public bool IsEmpty { get => Count == 0 && CompletedDate == TimeSpan.Zero && ModifiedSinceCheckpoint == false; }
+        public ulong LastEntityId { get; }
 
 
         /// <summary>
         /// Constructs a new <see cref="AchievementProgress"/> value.
         /// </summary>
-        public AchievementProgress(uint count, TimeSpan completedDate, bool modifiedSinceCheckpoint = true)
+        public AchievementProgress(uint count, TimeSpan completedDate, bool modifiedSinceCheckpoint = true, ulong entityId = Entity.InvalidId)
         {
             Count = count;
             CompletedDate = completedDate;
             ModifiedSinceCheckpoint = modifiedSinceCheckpoint;
+            LastEntityId = entityId;
         }
-
-        /// <summary>
-        /// Returns a copy of this <see cref="AchievementProgress"/> with ModifiedSinceCheckpoint set to false.
-        /// </summary>
-        public AchievementProgress AsNotModified() => new(Count, CompletedDate, false);
 
         public override string ToString()
         {

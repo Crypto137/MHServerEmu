@@ -52,6 +52,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
         public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }   // TODO: Save reference
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
+        public Agent CurrentVanityPet { get => GetCurrentVanityPet(); }
+
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
         public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
@@ -73,6 +75,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public PrototypeId TeamUpPowerRef { get => GameDatabase.GlobalsPrototype.TeamUpSummonPower; }
         public PrototypeId UltimatePowerRef { get => AvatarPrototype.UltimatePowerRef; }
+
+        public AvatarModePrototype AvatarModePrototype { get => GameDatabase.GetPrototype<AvatarModePrototype>(Properties[PropertyEnum.AvatarMode]); }
+        public AvatarMode AvatarMode { get => AvatarModePrototype?.AvatarModeEnum ?? AvatarMode.Invalid; }
 
         public Avatar(Game game) : base(game) { }
 
@@ -1145,6 +1150,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto != null ? advancementProto.GetAvatarLevelCap() : 0;
         }
 
+        public bool IsAtMaxPrestigeLevel()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return false;
+            return PrestigeLevel >= advancementProto.MaxPrestigeLevel;
+        }
+
         public override long GetLevelUpXPRequirement(int level)
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
@@ -1240,8 +1252,23 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.SetCharacterLevel(characterLevel);
 
-            Player owner = GetOwnerOfType<Player>();
-            owner?.OnAvatarCharacterLevelChanged(this);
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            player.OnAvatarCharacterLevelChanged(this);
+            player.OnScoringEvent(new(ScoringEventType.AvatarLevel, characterLevel));
+
+            if (IsAtLevelCap)
+            {
+                int count = ScoringEvents.GetPlayerAvatarsAtLevelCap(player);
+                player.OnScoringEvent(new(ScoringEventType.AvatarsAtLevelCap, count));
+
+                if (IsAtMaxPrestigeLevel())
+                {
+                    count = ScoringEvents.GetPlayerAvatarsAtPrestigeLevelCap(player);
+                    player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevelCap, count));
+                }
+            }
         }
 
         protected override void SetCombatLevel(int combatLevel)
@@ -1300,6 +1327,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (interactableObject.Properties[PropertyEnum.EntSelActHasInteractOption])
                 interactableObject.TriggerEntityActionEvent(EntitySelectorActionEventType.OnPlayerInteract);
+
+            player.OnScoringEvent(new(ScoringEventType.EntityInteract, interactableObject.Prototype));
 
             if (interactableObject is Transition transition)
                 transition.UseTransition(player);
@@ -1441,6 +1470,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {this}");
                     return;
                 }
+
+                OnChangeInventory(item);
             }
         }
 
@@ -1469,6 +1500,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Unassign powers granted by equipped items
             if (item.GetPowerGranted(out PrototypeId powerProtoRef) && GetPower(powerProtoRef) != null)
                 UnassignPower(powerProtoRef);
+
+            OnChangeInventory(item);
+        }
+
+        private void OnChangeInventory(Item item)
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+            player.UpdateScoringEventContext();
+
+            if (item.IsGear(AvatarPrototype))
+            {
+                int count = ScoringEvents.GetAvatarMinGearLevel(this);
+                player.OnScoringEvent(new(ScoringEventType.MinGearLevel, Prototype, count));
+            }
         }
 
         public bool ChangeCostume(PrototypeId costumeProtoRef)
@@ -1891,6 +1937,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player?.GetTeamUpAgent(teamUpProtoRef);
         }
 
+        private Agent GetCurrentVanityPet()
+        {
+            var keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (keywordGlobals == null) return Logger.WarnReturn((Agent)null, "GetCurrentVanityPet(): keywordGlobals == null");
+
+            var manager = Game.EntityManager;
+            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
+            {
+                var summoned = manager.GetEntity<Agent>(inventory.Id);
+                if (summoned != null && summoned.HasKeyword(keywordGlobals.VanityPetKeyword))
+                    return summoned;
+            }
+            return null;
+        }
+
         private void ActivateTeamUpAgent(bool playIntro)
         {
             Agent teamUp = CurrentTeamUpAgent;
@@ -1940,11 +2001,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (newArea != null)
             {
-                // TODO Achievement?
                 PlayerEnteredAreaGameEvent evt = new(player, newArea.PrototypeDataRef);
                 newArea.PopulationArea?.OnPlayerEntered();
                 newArea.PlayerEnteredAreaEvent.Invoke(evt);
                 newArea.Region.PlayerEnteredAreaEvent.Invoke(evt);
+                player.OnScoringEvent(new(ScoringEventType.AreaEnter, newArea.Prototype));
             }
         }
 
@@ -1983,7 +2044,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
             }
 
+            player.UpdateScoringEventContext();
+
             base.OnEnteredWorld(settings);
+
+            Properties[PropertyEnum.AvatarTimePlayedStart] = Game.CurrentTime;
+
             AssignDefaultAvatarPowers();
 
             // auto unlock chapters and Waypoinst
@@ -2010,6 +2076,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Update interest
                 missionManager.UpdateMissionInterest();
             }
+
+            // update achievement score
+            player.AchievementManager.UpdateScore();
 
             // Update AOI of the owner player
             AreaOfInterest aoi = player.AOI;
@@ -2049,8 +2118,24 @@ namespace MHServerEmu.Games.Entities.Avatars
             Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
             summonedInventory?.DestroyContained();
 
+            if (player != null) player.Properties[PropertyEnum.AvatarTotalTimePlayed] = player.TimePlayed();
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = TimePlayed();
+            Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
+
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
+        }
+
+        public TimeSpan TimePlayed()
+        {
+            TimeSpan timePlayed = TimeSpan.Zero;
+            TimeSpan totalTimePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
+            TimeSpan startTime = Properties[PropertyEnum.AvatarTimePlayedStart];
+
+            if (startTime != TimeSpan.Zero)
+                timePlayed = Game.CurrentTime - startTime;
+
+            return totalTimePlayed + timePlayed;
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
@@ -2087,6 +2172,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             var region = Region;
             region?.AvatarEnteredRegionEvent.Invoke(new(player, region.PrototypeDataRef));
+            player.OnScoringEvent(new(ScoringEventType.RegionEnter));
         }
 
         public void ScheduleSwapInPower()

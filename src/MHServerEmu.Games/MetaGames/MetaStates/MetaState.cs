@@ -5,6 +5,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.MetaGames.MetaStates
@@ -69,7 +70,38 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
         protected void PlayerMetaStateComplete()
         {
-            // TODO achievement
+            var mode = MetaGame.CurrentMode;
+            if (mode == null) return;
+
+            var region = Region;
+            if (region == null) return;
+
+            var affixes = region.Settings.Affixes;
+            var rarityRef = region.Settings.ItemRarity;
+            int difficulty = region.Properties[PropertyEnum.RegionAffixDifficulty];
+            int waveCount = MetaGame.Properties[PropertyEnum.MetaGameWaveCount];
+
+            Prototype rarityProto = GameDatabase.GetPrototype<Prototype>(rarityRef);
+
+            foreach (var player in new PlayerIterator(region))
+            {
+                player.OnScoringEvent(new(ScoringEventType.MetaGameStateComplete, Prototype, rarityProto));
+
+                foreach (var affix in affixes)
+                    if (affix != PrototypeId.Invalid)
+                    {
+                        Prototype affixProto = GameDatabase.GetPrototype<Prototype>(affix);
+                        player.OnScoringEvent(new(ScoringEventType.MetaGameStateCompleteAffix, Prototype, affixProto, rarityProto));
+                    }
+
+                if (difficulty > 0)
+                    player.OnScoringEvent(new(ScoringEventType.MetaGameStateCompleteDifficulty, Prototype, rarityProto, difficulty));
+
+                if (waveCount > 0)
+                    player.OnScoringEvent(new(ScoringEventType.MetaGameWaveComplete, mode.Prototype, waveCount));
+
+                // region.PlayerMetaStateCompleteEvent.Invoke() ?
+            }
         }
 
         public virtual void OnApply() { }

@@ -7,6 +7,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Locales;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Events;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -20,11 +21,12 @@ namespace MHServerEmu.Games.Achievements
         private static readonly string AchievementsDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Achievements");
 
         private readonly Dictionary<uint, AchievementInfo> _achievementInfoMap = new();
+        private Dictionary<ScoringEventType, List<AchievementInfo>> _scoringEventTypeToAchievementInfo = new();
         private byte[] _localizedAchievementStringBuffer = Array.Empty<byte>();
         private NetMessageAchievementDatabaseDump _cachedDump = NetMessageAchievementDatabaseDump.DefaultInstance;
 
         public static AchievementDatabase Instance { get; } = new();
-
+        public Dictionary<uint, AchievementInfo>.ValueCollection AchievementInfoMap { get => _achievementInfoMap.Values; }
         public TimeSpan AchievementNewThresholdUS { get; private set; }     // Unix timestamp in seconds
 
         private AchievementDatabase() { }
@@ -44,7 +46,7 @@ namespace MHServerEmu.Games.Achievements
                 return Logger.WarnReturn(false, $"Initialize(): Achievement info map not found at {achievementInfoMapPath}");
 
             string achievementInfoMapJson = File.ReadAllText(achievementInfoMapPath);
-            
+
             try
             {
                 JsonSerializerOptions options = new();
@@ -57,6 +59,47 @@ namespace MHServerEmu.Games.Achievements
             catch (Exception e)
             {
                 return Logger.WarnReturn(false, $"Initialize(): Achievement info map deserialization failed - {e.Message}");
+            }
+
+            // Load achievement contexts map
+            string achievementContextMapPath = Path.Combine(AchievementsDirectory, "AchievementContextMap.json");
+            if (File.Exists(achievementContextMapPath) == false)
+                return Logger.WarnReturn(false, $"Initialize(): Achievement context map not found at {achievementContextMapPath}");
+
+            string achievementContextMapJson = File.ReadAllText(achievementContextMapPath);
+
+            try
+            {
+                JsonSerializerOptions options = new();
+                var contexts = JsonSerializer.Deserialize<IEnumerable<AchievementContext>>(achievementContextMapJson, options);
+
+                foreach (AchievementContext context in contexts)
+                    if (_achievementInfoMap.TryGetValue(context.Id, out var info))
+                        info.SetContext(context);
+            }
+            catch (Exception e)
+            {
+                return Logger.WarnReturn(false, $"Initialize(): Achievement context map deserialization failed - {e.Message}");
+            }
+
+            // Load party visible achievement 
+            string achievementPartyVisiblePath = Path.Combine(AchievementsDirectory, "AchievementPartyVisible.json");
+            if (File.Exists(achievementPartyVisiblePath) == false)
+                return Logger.WarnReturn(false, $"Initialize(): Achievement party visible not found at {achievementPartyVisiblePath}");
+
+            string achievementPartyVisibleJson = File.ReadAllText(achievementPartyVisiblePath);
+
+            try
+            {
+                List<uint> ids = JsonSerializer.Deserialize<List<uint>>(achievementPartyVisibleJson);
+
+                foreach (uint id in ids)
+                    if (_achievementInfoMap.TryGetValue(id, out var info))
+                        info.PartyVisible = true;
+            }
+            catch (Exception e)
+            {
+                return Logger.WarnReturn(false, $"Initialize(): Achievement party visible deserialization failed - {e.Message}");
             }
 
             // Load string buffer
@@ -92,7 +135,6 @@ namespace MHServerEmu.Games.Achievements
             // Post-process
             ImportAchievementStringsToCurrentLocale();
             HookUpParentChildAchievementReferences();
-            RebuildCachedData();
 
             // Create the dump for sending to clients
             CreateDump();
@@ -115,14 +157,20 @@ namespace MHServerEmu.Games.Achievements
         /// <summary>
         /// Returns all <see cref="AchievementInfo"/> instances that use the specified <see cref="ScoringEventType"/>.
         /// </summary>
-        public IEnumerable<AchievementInfo> GetAchievementsByEventType(ScoringEventType eventType)
+        public List<AchievementInfo> GetAchievementsByEventType(ScoringEventType eventType)
         {
-            // TODO: Optimize this if needed
+            // Is already a result in cache?
+            if (_scoringEventTypeToAchievementInfo.ContainsKey(eventType))
+                return _scoringEventTypeToAchievementInfo[eventType];
+
+            List<AchievementInfo> achievementInfosFound = new();
             foreach (AchievementInfo info in _achievementInfoMap.Values)
             {
                 if (info.EventType == eventType)
-                    yield return info;
+                    achievementInfosFound.Add(info);
             }
+            _scoringEventTypeToAchievementInfo[eventType] = achievementInfosFound;
+            return achievementInfosFound;
         }
 
         /// <summary>
@@ -167,11 +215,6 @@ namespace MHServerEmu.Games.Achievements
 
             using (MemoryStream ms = new(_localizedAchievementStringBuffer))
                 currentLocale.ImportStringStream("achievements", ms);
-        }
-
-        private void RebuildCachedData()
-        {
-            // TODO
         }
 
         /// <summary>

@@ -1044,6 +1044,9 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
+            var player = TeamUpOwner?.GetOwnerOfType<Player>();
+            player?.UpdateScoringEventContext();
+
             if (AIController == null)
                 EntityActionComponent?.InitActionBrain();
         }
@@ -1077,6 +1080,9 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnExitedWorld();
             AIController?.OnAIExitedWorld();
+
+            var player = TeamUpOwner?.GetOwnerOfType<Player>();
+            player?.UpdateScoringEventContext();
         }
 
         public override void OnGotHit(WorldEntity attacker)
@@ -1098,6 +1104,13 @@ namespace MHServerEmu.Games.Entities
             Avatar teamUpOwner = TeamUpOwner;
             if (teamUpOwner != null)
                 teamUpOwner.ClearSummonedTeamUpAgent(this);
+
+            if (Prototype is OrbPrototype && Properties.HasProperty(PropertyEnum.ItemCurrency) == false)
+            {
+                var avatar = killer as Avatar;
+                var player = avatar?.GetOwnerOfType<Player>();
+                player?.OnScoringEvent(new(ScoringEventType.OrbsCollected, Prototype));
+            }
 
             if (AIController != null)
             {

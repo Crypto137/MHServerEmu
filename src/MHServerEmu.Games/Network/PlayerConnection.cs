@@ -16,6 +16,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Persistence;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -349,6 +350,10 @@ namespace MHServerEmu.Games.Network
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
             // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
 
+            // Recount and update achievements
+            Player.AchievementManager.RecountAchievements();
+            Player.AchievementManager.UpdateScore();
+
             Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
             SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
@@ -493,7 +498,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;               // 154
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
-                case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:       OnMissionTrackerFiltersUpdate(message); break;      // 166
+                case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:           OnMissionTrackerFiltersUpdate(message); break;              // 166
+                case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;    // 167
 
                 // Grouping Manager
                 case ClientToGameServerMessage.NetMessageChat:                                                                                  // 64
@@ -838,6 +844,14 @@ namespace MHServerEmu.Games.Network
 
             // Flag the item as recently added
             item.SetRecentlyAdded(true);
+
+            // Scoring ItemCollected
+            if (item.Properties.HasProperty(PropertyEnum.RestrictedToPlayerGuid))
+            {
+                PrototypeId rarityRef = item.Properties[PropertyEnum.ItemRarity];
+                Prototype rarityProto = GameDatabase.GetPrototype<Prototype>(rarityRef);
+                Player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProto, item.CurrentStackSize));
+            }
 
             // Cancel lifespan expiration for the picked up item
             item.CancelScheduledLifespanExpireEvent();
@@ -1544,7 +1558,7 @@ namespace MHServerEmu.Games.Network
         private bool OnMissionTrackerFiltersUpdate(MailboxMessage message)  // 166
         {
             var filters = message.As<NetMessageMissionTrackerFiltersUpdate>();
-            if (filters == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
+            if (filters == null) return Logger.WarnReturn(false, $"OnMissionTrackerFiltersUpdate(): Failed to retrieve message");
 
             foreach (var filter in filters.MissionTrackerFilterChangesList)
             {
@@ -1553,6 +1567,15 @@ namespace MHServerEmu.Games.Network
                 Player.Properties[PropertyEnum.MissionTrackerFilter, filterPrototypeId] = filter.IsFiltered;
             }
 
+            return true;
+        }
+
+        private bool OnAchievementMissionTrackerFilterChange(MailboxMessage message)  // 167
+        {
+            var filter = message.As<NetMessageAchievementMissionTrackerFilterChange>();
+            if (filter == null || filter.AchievementId == 0) 
+                return Logger.WarnReturn(false, $"OnAchievementMissionTrackerFilterChange(): Failed to retrieve message");
+            Player.Properties[PropertyEnum.MissionTrackerAchievements, (int)filter.AchievementId] = filter.IsFiltered;
             return true;
         }
 

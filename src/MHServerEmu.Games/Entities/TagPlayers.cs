@@ -7,6 +7,8 @@ namespace MHServerEmu.Games.Entities
         private EntityManager _manager;
         private WorldEntity _owner;
         private SortedSet<TagInfo> _tags;
+
+        public SortedSet<TagInfo> Tags { get => _tags; }
         public bool HasTags { get => _tags.Count > 0; }
 
         public TagPlayers(WorldEntity worldEntity)
@@ -32,7 +34,14 @@ namespace MHServerEmu.Games.Entities
 
         public void Add(Player player, PowerPrototype powerProto)
         {
-            _tags.Add(new(player.DatabaseUniqueId, powerProto));
+            var tag = new TagInfo(player.DatabaseUniqueId, powerProto, player.Game.CurrentTime);
+
+            if (_tags.Add(tag) == false)
+            {
+                _tags.Remove(tag);
+                _tags.Add(tag);
+            }
+
             player.AddTag(_owner);
         }
     }
@@ -41,11 +50,13 @@ namespace MHServerEmu.Games.Entities
     {
         public ulong PlayerUID;
         public PowerPrototype PowerPrototype;
+        public TimeSpan Time;
 
-        public TagInfo(ulong playerUID, PowerPrototype powerPrototype)
+        public TagInfo(ulong playerUID, PowerPrototype powerPrototype, TimeSpan time)
         {
             PlayerUID = playerUID;
             PowerPrototype = powerPrototype;
+            Time = time;
         }
 
         public int CompareTo(TagInfo other)
