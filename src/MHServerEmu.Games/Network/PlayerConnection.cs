@@ -44,6 +44,7 @@ namespace MHServerEmu.Games.Network
 
         private bool _waitingForRegionIsAvailableResponse = false;
         private bool _doNotUpdateDBAccount = false;
+        private bool _isFirstLoad = true;
 
         public Game Game { get; }
 
@@ -350,13 +351,19 @@ namespace MHServerEmu.Games.Network
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
             // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
 
-            // Recount and update achievements
-            Player.AchievementManager.RecountAchievements();
-            Player.AchievementManager.UpdateScore();
-
             Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
-            SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
+            if (_isFirstLoad)
+            {
+                // Recount and update achievements
+                Player.AchievementManager.RecountAchievements();
+                Player.AchievementManager.UpdateScore();
+
+                // Notify the client
+                SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
+
+                _isFirstLoad = false;
+            }
 
             // Clear region interest by setting it to invalid region, we still keep our owned entities
             AOI.SetRegion(0, false, null, null);
