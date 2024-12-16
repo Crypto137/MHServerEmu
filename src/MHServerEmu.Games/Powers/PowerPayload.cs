@@ -815,6 +815,12 @@ namespace MHServerEmu.Games.Powers
         private bool CalculateConditionDuration(ConditionPrototype conditionProto, WorldEntity owner, WorldEntity target, out TimeSpan duration)
         {
             duration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+
+            // TODO: Apply modifiers to the base duration we get from the prototype
+
+            if (duration < TimeSpan.Zero)
+                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
+
             return true;
         }
 

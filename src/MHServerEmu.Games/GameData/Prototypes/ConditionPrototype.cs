@@ -316,8 +316,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public TimeSpan GetDuration(PropertyCollection properties, WorldEntity owner, PrototypeId powerProtoRef, WorldEntity target)
         {
-            // TODO
-            return TimeSpan.FromMilliseconds(DurationMS);
+            TimeSpan duration = TimeSpan.FromMilliseconds(DurationMS);
+
+            // Apply index property delta
+            if (properties != null && DurationMSCurve != CurveId.Invalid)
+            {
+                Curve durationCurve = DurationMSCurve.AsCurve();
+                if (durationCurve == null) return Logger.WarnReturn(duration, "GetDuration(): durationCurve == null");
+
+                PropertyInfoTable propInfoTable = GameDatabase.PropertyInfoTable;
+                PropertyEnum indexProp = propInfoTable.GetPropertyEnumFromPrototype(DurationMSCurveIndex);
+                PropertyInfo indexPropInfo = propInfoTable.LookupPropertyInfo(indexProp);
+
+                if (indexPropInfo.DataType != PropertyDataType.Integer)
+                    return Logger.WarnReturn(duration, "GetDuration(): indexPropInfo.DataType != PropertyDataType.Integer");
+
+                if (indexPropInfo.ParamCount != 0)
+                    return Logger.WarnReturn(duration, "GetDuration(): indexPropInfo.ParamCount != 0");
+
+                int curveDeltaMS = durationCurve.GetIntAt(properties[indexProp]);
+                duration += TimeSpan.FromMilliseconds(curveDeltaMS);
+            }
+
+            // Apply eval delta
+            if (DurationMSEval != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using PropertyCollection dummyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+
+                if (owner != null)
+                {
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                    evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, owner);
+                }
+                else
+                {
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, dummyProperties);
+                    evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, null);
+                }
+
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var3, target);
+
+                int evalDeltaMS = Eval.RunInt(DurationMSEval, evalContext);
+                duration += TimeSpan.FromMilliseconds(evalDeltaMS);
+
+                // Make sure there is no infinite duration as a result of running the eval
+                if (duration <= TimeSpan.Zero)
+                    return Logger.WarnReturn(TimeSpan.FromMilliseconds(1), "GetDuration(): DurationMSEval resulted in an infinite or negative duration!");
+            }
+
+            return duration;
         }
     }
 
