@@ -1012,11 +1012,15 @@ namespace MHServerEmu.Games.Missions
                 {
                     if (isOpenMission)
                         region.OpenMissionCompleteEvent.Invoke(new(missionRef));
-                    
-                    foreach(var activity in GetPlayerActivities())
+
+                    bool isAchievement = isOpenMission == false || OpenMissionPrototype.AchievementTimeLimitSeconds == 0 || Game.CurrentTime <= _achievementTime;
+
+                    foreach (var activity in GetPlayerActivities())
                     {
                         region.PlayerCompletedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
-                        // TODO achievements
+
+                        if (isAchievement)
+                            activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, Prototype));
                     }
                 }
 

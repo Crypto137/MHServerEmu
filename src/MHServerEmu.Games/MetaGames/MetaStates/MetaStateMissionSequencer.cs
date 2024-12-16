@@ -163,7 +163,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             _missionCompleteEvent.Get().Initialize(this);
         }
 
-        private void OnMissionComplete()
+        public void OnMissionComplete()
         {
             var region = Region;
             if (region == null) return;

@@ -83,6 +83,7 @@ namespace MHServerEmu.Games
         public ulong CurrentRepId { get => ++_currentRepId; }
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
         public bool OmegaMissionsEnabled { get; set; }
+        public bool AchievementsEnabled { get; set; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
@@ -92,6 +93,7 @@ namespace MHServerEmu.Games
 
             // Initialize game options
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            AchievementsEnabled = config.AchievementsEnabled;
             GameOptions = config.ToProtobuf();
 
             CustomGameOptions = ConfigManager.Instance.GetConfig<CustomGameOptionsConfig>();

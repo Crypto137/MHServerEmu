@@ -67,9 +67,12 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
+        private readonly EventPointer<PlayedTimeEvent> _playedTimeEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
+        private readonly EventGroup _pendingEvents = new();
 
         private MissionManager _missionManager;
+        private AchievementManager _achievementManager;
         private ReplicatedPropertyCollection _avatarProperties = new();
         private ulong _shardId;
         private RepString _playerName = new();
@@ -117,6 +120,8 @@ namespace MHServerEmu.Games.Entities
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get => _gameplayOptions; }
         public AchievementState AchievementState { get => _achievementState; }
+        public AchievementManager AchievementManager { get => _achievementManager; }
+        public ScoringEventContext ScoringEventContext { get; set; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
         public bool IsOnLoadingScreen { get; private set; }
@@ -149,6 +154,8 @@ namespace MHServerEmu.Games.Entities
         public Player(Game game) : base(game)
         {
             _missionManager = new(Game, this);
+            _achievementManager = new(this);
+            ScoringEventContext = new();
             _gameplayOptions.SetOwner(this);
         }
 
@@ -183,12 +190,6 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: Clean this up
             //---
-
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-            {
-                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-                Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
-            }
 
             // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
             Properties[PropertyEnum.LoginCount] = 1075;
@@ -270,6 +271,13 @@ namespace MHServerEmu.Games.Entities
                 var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
                 if (uiSystemLockProto.IsNewPlayerExperienceLocked && Properties[PropertyEnum.UISystemLock, uiSystemLockRef] != 1)
                     Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
+            }
+
+            // HACK: Unlock avatars here too
+            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                UnlockAvatar(avatarRef, false);
             }
 
             _newPlayerUISystemsUnlocked = true;
@@ -456,6 +464,7 @@ namespace MHServerEmu.Games.Entities
             base.EnterGame(settings);
 
             InitializeVendors();
+            SchedulePlayedTimeEvent();
             UpdateUISystemLocks();
         }
 
@@ -1033,6 +1042,7 @@ namespace MHServerEmu.Games.Entities
                 var propId = new PropertyId (PropertyEnum.Currency, currencyProtoRef);
                 Properties.AdjustProperty(delta, propId);
                 GetRegion()?.CurrencyCollectedEvent.Invoke(new(this, currencyProtoRef, Properties[propId]));
+                OnScoringEvent(new(ScoringEventType.CurrencyCollected, currencyProto, delta));
 
                 result = true;
             }
@@ -1304,8 +1314,17 @@ namespace MHServerEmu.Games.Entities
         public void OnAvatarCharacterLevelChanged(Avatar avatar)
         {
             int characterLevel = avatar.CharacterLevel;
+            int prestigeLevel = avatar.PrestigeLevel;
+            int levelCap = Avatar.GetAvatarLevelCap();
+            int totalLevel = prestigeLevel * levelCap + characterLevel;
 
-            Properties[PropertyEnum.AvatarLibraryLevel, 0, avatar.PrototypeDataRef] = characterLevel;
+            Properties[PropertyEnum.AvatarLibraryLevel, (int)avatar.AvatarMode, avatar.PrototypeDataRef] = totalLevel;
+
+            if (avatar.AvatarMode == AvatarMode.Normal)
+            {
+                OnScoringEvent(new(ScoringEventType.AvatarLevelTotal, totalLevel));
+                OnScoringEvent(new(ScoringEventType.AvatarLevelTotalAllAvatars, ScoringEvents.GetPlayerAvatarsTotalLevels(this)));
+            }
 
             // Update max avatar level for things like mode unlocks
             if (characterLevel > Properties[PropertyEnum.PlayerMaxAvatarLevel])
@@ -1598,7 +1617,10 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnDeallocate()
         {
+            Game?.GameEventScheduler?.CancelAllEvents(_pendingEvents);
+
             MissionManager.Deallocate();
+            AchievementManager.Deallocate();
             Game.EntityManager.RemovePlayer(this);
             base.OnDeallocate();
         }
@@ -1769,6 +1791,22 @@ namespace MHServerEmu.Games.Entities
             return unlockType;
         }
 
+        public bool UnlockAvatar(PrototypeId avatarRef, bool sendToClient)
+        {
+            AvatarUnlockType currentUnlockType = GetAvatarUnlockType(avatarRef);
+            if (currentUnlockType != AvatarUnlockType.None && currentUnlockType != AvatarUnlockType.Starter)
+                return false;
+
+            Properties[PropertyEnum.AvatarUnlock, avatarRef] = (int)AvatarUnlockType.Type2;
+            GetRegion()?.PlayerUnlockedAvatarEvent.Invoke(new(this, avatarRef));
+            OnScoringEvent(new(ScoringEventType.AvatarsUnlocked, avatarRef.As<AvatarPrototype>(), 1));
+
+            if (sendToClient)
+                SendMessage(NetMessageNewAvatarAcquired.CreateBuilder().SetPrototypeId((ulong)avatarRef).Build());
+
+            return true;
+        }
+
         public int GetCharacterLevelForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
         {
             int levelCap = Avatar.GetAvatarLevelCap();
@@ -1777,6 +1815,15 @@ namespace MHServerEmu.Games.Entities
             if (level <= 0) return 0;
             level %= levelCap;
             return level == 0 ? levelCap : level;
+        }
+
+        public int GetPrestigeLevelForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        {
+            int levelCap = Avatar.GetAvatarLevelCap();
+            if (levelCap <= 0) return 0;
+            int level = Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef];
+            if (level <= 0) return 0;
+            return (level - 1) / levelCap;
         }
 
         public void SetActiveChapter(PrototypeId chapterRef)
@@ -1798,6 +1845,8 @@ namespace MHServerEmu.Games.Entities
             if (avatar == null) return;
             avatar.Properties[PropertyEnum.ChapterUnlocked, chapterRef] = true;
         }
+
+        #region Waypoint
 
         public void UnlockChapters()
         {
@@ -1827,6 +1876,20 @@ namespace MHServerEmu.Games.Entities
             collection[propId] = false;
         }
 
+        public bool WaypointIsUnlocked(PrototypeId waypointRef)
+        {
+            var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
+            if (waypointProto == null) return false;
+
+            PropertyCollection collection;
+            if (waypointProto.IsAccountWaypoint)
+                collection = Properties;
+            else
+                collection = CurrentAvatar.Properties;
+
+            return collection[PropertyEnum.Waypoint, waypointRef];
+        }
+
         public void UnlockWaypoint(PrototypeId waypointRef)
         {
             var waypointProto = GameDatabase.GetPrototype<WaypointPrototype>(waypointRef);
@@ -1843,6 +1906,8 @@ namespace MHServerEmu.Games.Entities
             {
                 SendWaypointUnlocked();
                 collection[propId] = true;
+
+                OnScoringEvent(new(ScoringEventType.WaypointUnlocked, waypointProto));
             }
         }
 
@@ -1855,6 +1920,8 @@ namespace MHServerEmu.Games.Entities
                     UnlockWaypoint(waypointRef);
             }
         }
+
+        #endregion
 
         public void PlayKismetSeq(PrototypeId kismetSeq)
         {
@@ -2058,6 +2125,57 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId = Entity.InvalidId)
+        {
+            AchievementManager.OnScoringEvent(scoringEvent, entityId);
+        }
+
+        public void UpdateScoringEventContext()
+        {
+            ScoringEventContext = new(this);
+            AchievementManager.OnUpdateEventContext();
+        }
+
+        public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        {
+            return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());
+        }
+
+        public TimeSpan TimePlayed()
+        {
+            TimeSpan timePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
+
+            var avatar = CurrentAvatar;
+            if (avatar != null)
+                timePlayed += avatar.TimePlayed() - avatar.Properties[PropertyEnum.AvatarTotalTimePlayed];
+
+            return timePlayed;
+        }
+
+        private void PlayedTimeUpdate()
+        {
+            int count = (int)Math.Floor(TimePlayed().TotalHours);
+            OnScoringEvent(new(ScoringEventType.HoursPlayed, count));
+
+            var avatar = CurrentAvatar;
+            if (avatar != null)
+            {
+                count = (int)Math.Floor(avatar.TimePlayed().TotalHours);
+                OnScoringEvent(new(ScoringEventType.HoursPlayedByAvatar, avatar.Prototype, count));
+            }
+
+            SchedulePlayedTimeEvent();
+        }
+
+        private void SchedulePlayedTimeEvent()
+        {
+            if (_playedTimeEvent.IsValid) return;
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.ScheduleEvent(_playedTimeEvent, TimeSpan.FromMinutes(1), _pendingEvents);
+            _playedTimeEvent.Get().Initialize(this);
+        }
+
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {
             int eventInstance = eventProto.GetEventInstance();
@@ -2232,6 +2350,11 @@ namespace MHServerEmu.Games.Entities
         private class SwitchAvatarEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as Player).SwitchAvatar();
+        }
+
+        private class PlayedTimeEvent : CallMethodEvent<Player>
+        {
+            protected override CallbackDelegate GetCallback() => (player) => player.PlayedTimeUpdate();
         }
 
         private struct TeleportData

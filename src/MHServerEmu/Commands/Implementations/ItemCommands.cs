@@ -47,7 +47,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern]", AccountUserLevel.Admin)]
+        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern] [count]", AccountUserLevel.Admin)]
         public string Give(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -56,12 +56,17 @@ namespace MHServerEmu.Commands.Implementations
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
+            if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
+                count = 1;
+
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
             LootManager lootGenerator = playerConnection.Game.LootManager;
-            lootGenerator.GiveItem(itemProtoRef, LootContext.Drop, player);
-            Logger.Debug($"GiveItem(): {itemProtoRef.GetName()} to {player}");
+
+            for (int i = 0; i < count; i++)
+                lootGenerator.GiveItem(itemProtoRef, LootContext.Drop, player);
+            Logger.Debug($"GiveItem(): {itemProtoRef.GetName()}[{count}] to {player}");
 
             return string.Empty;
         }

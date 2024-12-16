@@ -10,6 +10,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -55,6 +56,7 @@ namespace MHServerEmu.Games.Entities.Items
         private List<AffixPropertiesCopyEntry> _affixProperties = new();
 
         public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
+        public RarityPrototype RarityPrototype { get => GameDatabase.GetPrototype<RarityPrototype>(Properties[PropertyEnum.ItemRarity]); }
 
         public ItemSpec ItemSpec { get => _itemSpec; }
         public PrototypeId OnUsePower { get; private set; }
@@ -663,6 +665,17 @@ namespace MHServerEmu.Games.Entities.Items
             return GameDatabase.AdvancementGlobalsPrototype.GetItemAffixLevelUpXPRequirement(level);
         }
 
+        public int GetDisplayItemLevel()
+        {
+            var itemProto = ItemPrototype;
+            if (itemProto.EvalDisplayLevel == null) return 0;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = Game;
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
+            return Eval.RunInt(itemProto.EvalDisplayLevel, evalContext);
+        }
+
         private bool TryLevelUpAffix(bool isDeserializing)
         {
             if (Prototype is not LegendaryPrototype)
@@ -778,6 +791,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         private void OnAffixLevelUp()
         {
+            if (Prototype is LegendaryPrototype && Properties[PropertyEnum.ItemAffixLevel] == GetAffixLevelCap()) // TODO check GetAffixLevelCap
+            { 
+                var player = GetOwnerOfType<Player>();
+                player?.OnScoringEvent(new(ScoringEventType.FullyUpgradedLegendaries));
+            }
+
             NetMessageLevelUp levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
             Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
         }
@@ -1479,6 +1498,21 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; // we need this?
+        }
+
+        public bool IsGear(AvatarPrototype avatarProto)
+        {
+            if (Prototype is not ArmorPrototype armorProto) return false;
+
+            return armorProto.GetInventorySlotForAgent(avatarProto) switch
+            {
+                EquipmentInvUISlot.Gear01 
+                or EquipmentInvUISlot.Gear02 
+                or EquipmentInvUISlot.Gear03 
+                or EquipmentInvUISlot.Gear04 
+                or EquipmentInvUISlot.Gear05 => true,
+                _ => false,
+            };
         }
     }
 }

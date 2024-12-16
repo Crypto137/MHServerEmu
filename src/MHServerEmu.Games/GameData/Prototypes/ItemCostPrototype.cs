@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
@@ -337,6 +338,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (remaining != 0)
                 return Logger.WarnReturn(false, $"PayItemCost(): Player [{player}] was not able to spend enough currency item {CurrencyItem.GetName()} to pay for [{item}]");
+
+            // Event ItemSpent
+            player.OnScoringEvent(new(ScoringEventType.ItemSpent, item.Prototype, price));
 
             return true;
         }
