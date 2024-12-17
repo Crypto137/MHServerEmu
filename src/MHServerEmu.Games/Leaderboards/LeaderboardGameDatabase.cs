@@ -1,5 +1,4 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -14,12 +13,10 @@ namespace MHServerEmu.Games.Leaderboards
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Leaderboards");
         private Dictionary<PrototypeGuid, LeaderboardInfo> _leaderboardInfoMap = new();
         private Queue<LeaderboardQueue> _updateQueue = new(); 
         private readonly object updateLock = new object();
         public static LeaderboardGameDatabase Instance { get; } = new();
-        public int LeaderboardCount { get; set; }
 
         private LeaderboardGameDatabase() { }
 
@@ -29,15 +26,19 @@ namespace MHServerEmu.Games.Leaderboards
         public bool Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
-            
-            // Check leaderboards
-            string configPath = Path.Combine(LeaderboardsDirectory, "Leaderboard.db");
-            if (File.Exists(configPath) == false)
+
+            int count = 0;
+
+            // Load leaderboard prototypes
+            foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                // TODO create new leaderboard.db
+                var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+                if (proto == null) Logger.Warn($"Prototype {dataRef} == null");
+                count++;
             }
 
-            Logger.Info($"Initialized {_leaderboardInfoMap.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
+            Logger.Info($"Initialized {count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
+
             return true;
         }
 

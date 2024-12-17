@@ -1,6 +1,8 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
@@ -16,7 +18,6 @@ namespace MHServerEmu.Leaderboards
         private static readonly Logger Logger = LogManager.CreateLogger();
         private const ulong UpdateTimeIntervalMS = 30 * 1000;   // 30 seconds
 
-        private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Leaderboards");
         private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
         public int LeaderboardCount { get; set; }
 
@@ -28,13 +29,12 @@ namespace MHServerEmu.Leaderboards
         public bool Initialize()
         {
             var stopwatch = Stopwatch.StartNew();
-            
-            // Check leaderboards
-            string configPath = Path.Combine(LeaderboardsDirectory, "Leaderboard.db");
-            if (File.Exists(configPath) == false)
-            {
-                // TODO create new leaderboard.db
-            }
+
+            var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
+
+            // Initialize leaderboard database
+            string configPath = Path.Combine(FileHelper.DataDirectory, config.FileName);
+            SQLiteLDBManager.Instance.Initialize(configPath);
 
             // load PlayerInfoMap
             // load ActiveLeaderboards
