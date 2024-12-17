@@ -24,5 +24,14 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             return File.ReadAllText(filePath);
         }
+
+        public static string GetLeaderboardsScript()
+        {
+            string filePath = Path.Combine(FileHelper.DataDirectory, "SQLite", "InitializeLeaderboardsDatabase.sql");
+            if (File.Exists(filePath) == false)
+                return Logger.WarnReturn(string.Empty, $"GetDatabaseInitializationScript(): Initialization script file not found at {FileHelper.GetRelativePath(filePath)}");
+
+            return File.ReadAllText(filePath);
+        }
     }
 }
