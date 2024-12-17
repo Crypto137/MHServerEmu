@@ -13,7 +13,7 @@ using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class ConditionCollection : IEnumerable<KeyValuePair<ulong, Condition>>, ISerialize
+    public class ConditionCollection : ISerialize
     {
         public const int MaxConditions = 256;
         public const ulong InvalidConditionId = 0;
@@ -28,9 +28,9 @@ namespace MHServerEmu.Games.Entities
         private readonly EventGroup _pendingEvents = new();
 
         private uint _version = 0;
-        private ulong _currentConditionId = 1;
+        private ulong _nextConditionId = 1;
 
-        public ulong NextConditionId { get => _currentConditionId++; }
+        public ulong NextConditionId { get => _nextConditionId++; }
 
         public KeywordsMask ConditionKeywordsMask { get; internal set; }
 
@@ -121,21 +121,9 @@ namespace MHServerEmu.Games.Entities
             return condition.Id;
         }
 
-        public IEnumerable<Condition> IterateConditions(bool skipDisabled)
+        public Iterator IterateConditions(bool skipDisabled)
         {
-            if (skipDisabled)
-            {
-                foreach (Condition condition in _currentConditions.Values)
-                {
-                    if (condition.IsEnabled)
-                        yield return condition;
-                }
-            }
-            else
-            {
-                foreach (Condition condition in _currentConditions.Values)
-                    yield return condition;
-            }
+            return new(this, skipDisabled);
         }
 
         public int GetNumberOfStacks(Condition condition)
@@ -255,10 +243,11 @@ namespace MHServerEmu.Games.Entities
             if (_owner == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner == null");
             if (_owner.Game == null) return Logger.WarnReturn(false, "RemoveAllConditions(): _owner.Game == null");
 
-            // Convert values to an array so that we can remove items from the dict while we iterate
-            foreach (Condition condition in _currentConditions.Values.ToArray())
+            foreach (Condition condition in this)
             {
-                if (removePersistToDB == false && condition.IsPersistToDB()) continue;
+                if (removePersistToDB == false && condition.IsPersistToDB())
+                    continue;
+                
                 RemoveCondition(condition);
             }
 
@@ -313,8 +302,10 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public IEnumerator<KeyValuePair<ulong, Condition>> GetEnumerator() => _currentConditions.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public Iterator.Enumerator GetEnumerator()
+        {
+            return new Iterator(this, false).GetEnumerator();
+        }
 
         public Condition AllocateCondition()
         {
@@ -542,6 +533,160 @@ namespace MHServerEmu.Games.Entities
 
                 return Condition;
             }
+        }
+
+        /// <summary>
+        /// Iterates <see cref="Condition"/> instances contained in a <see cref="ConditionCollection"/>, skipping disabled ones if specified.
+        /// Supports removing instances from the collection during iteration.
+        /// </summary>
+        public readonly struct Iterator
+        {
+            private readonly ConditionCollection _collection;
+            private readonly bool _skipDisabled;
+
+            public Iterator(ConditionCollection collection, bool skipDisabled)
+            {
+                _collection = collection;
+                _skipDisabled = skipDisabled;
+            }
+
+            public Enumerator GetEnumerator()
+            {
+                return new(_collection, _skipDisabled);
+            }
+
+            public struct Enumerator : IEnumerator<Condition>
+            {
+                private readonly ConditionCollection _collection;
+                private readonly bool _skipDisabled;
+
+                private ulong _currentConditionId;
+                private uint _currentCollectionVersion;
+                private SortedDictionary<ulong, Condition>.ValueCollection.Enumerator _currentEnumerator;
+
+                public Condition Current { get => GetCurrent(); }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(ConditionCollection collection, bool skipDisabled)
+                {
+                    _collection = collection;
+                    _skipDisabled = skipDisabled;
+
+                    _currentConditionId = InvalidConditionId;
+                    _currentCollectionVersion = collection._version;
+                    _currentEnumerator = collection._currentConditions.Values.GetEnumerator();
+                }
+
+                public bool MoveNext()
+                {
+                    // Reset the current enumerator if the collection we are iterating has changed
+                    if (_currentCollectionVersion != _collection._version)
+                    {
+                        _currentEnumerator.Dispose();   // We don't really need this, but calling just in case something changes in the SortedDictionary
+                        _currentEnumerator = UpperBound(_currentConditionId);
+                        _currentCollectionVersion = _collection._version;
+                    }
+                    else
+                    {
+                        _currentEnumerator.MoveNext();
+                    }
+
+                    AdvanceToEnabledCondition();
+                    return Current != null;
+                }
+
+                public void Reset()
+                {
+                    _currentConditionId = InvalidConditionId;
+                    _currentCollectionVersion = _collection._version;
+                    _currentEnumerator = _collection._currentConditions.Values.GetEnumerator();
+                }
+
+                public void Dispose()
+                {
+                    _currentEnumerator.Dispose();
+                }
+
+                private Condition GetCurrent()
+                {
+                    // Find the current condition again if the collection we are iterating has changed
+                    if (_currentCollectionVersion != _collection._version)
+                    {
+                        _currentEnumerator.Dispose();   // We don't really need this, but calling just in case something changes in the SortedDictionary
+                        _currentEnumerator = Find(_currentConditionId);
+                        if (_currentEnumerator.Current != null)
+                            _currentCollectionVersion = _collection._version;
+                    }
+
+                    return _currentEnumerator.Current;
+                }
+
+                private void AdvanceToEnabledCondition()
+                {
+                    if (_skipDisabled)
+                    {
+                        // If the current condition is not enabled, move until we find one or reach the end.
+                        Condition condition = _currentEnumerator.Current;
+                        while (condition != null)
+                        {
+                            if (condition.IsEnabled)
+                            {
+                                _currentConditionId = condition.Id;
+                                return;
+                            }
+
+                            _currentEnumerator.MoveNext();
+                            condition = _currentEnumerator.Current;
+                        }
+                    }
+                    else
+                    {
+                        // Just record the id for the current condition if we are not skipping disabled ones
+                        Condition condition = _currentEnumerator.Current;
+                        if (condition != null)
+                        {
+                            _currentConditionId = condition.Id;
+                            return;
+                        }
+                    }
+
+                    // Clear the current condition id if we have reached the end
+                    _currentConditionId = InvalidConditionId;
+                }
+
+                // Helper methods to imitate C++ iterator behavior
+
+                /// <summary>
+                /// Returns a new enumerator positioned at the specified condition, or <see langword="null"/> if it is no longer present in the collection.
+                /// </summary>
+                private readonly SortedDictionary<ulong, Condition>.ValueCollection.Enumerator Find(ulong conditionId)
+                {
+                    SortedDictionary<ulong, Condition>.ValueCollection.Enumerator enumerator = _collection._currentConditions.Values.GetEnumerator();
+
+                    do
+                    {
+                        enumerator.MoveNext();
+                    } while (enumerator.Current != null && enumerator.Current.Id != conditionId);
+
+                    return enumerator;
+                }
+
+                /// <summary>
+                /// Returns a new enumerator positioned at the condition after the specified one, or <see langword="null"/> if there are no more conditions.
+                /// </summary>
+                private readonly SortedDictionary<ulong, Condition>.ValueCollection.Enumerator UpperBound(ulong conditionId)
+                {
+                    SortedDictionary<ulong, Condition>.ValueCollection.Enumerator enumerator = _collection._currentConditions.Values.GetEnumerator();
+
+                    do
+                    {
+                        enumerator.MoveNext();
+                    } while (enumerator.Current != null && enumerator.Current.Id <= conditionId);
+
+                    return enumerator;
+                }
+            }
+
         }
 
         public class RemoveConditionEvent : CallMethodEventParam1<ConditionCollection, ulong>

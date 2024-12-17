@@ -2792,8 +2792,8 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in _trackingContextMap)
                 sb.AppendLine($"{nameof(_trackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            foreach (var kvp in _conditionCollection)
-                sb.AppendLine($"{nameof(_conditionCollection)}[{kvp.Key}]: {kvp.Value}");
+            foreach (Condition condition in _conditionCollection)
+                sb.AppendLine($"{nameof(_conditionCollection)}[{condition.Id}]: {condition}");
 
             if (_powerCollection.PowerCount > 0)
             {
