@@ -75,7 +75,6 @@ namespace MHServerEmu.Games.Powers
         private ConditionCancelOnFlags _cancelOnFlags;
 
         private ulong _creatorPlayerId;                             // Player entity guid
-        private ConditionCollection _collection;                    // Condition collection this condition belongs to
 
         // Accessors
         public ConditionSerializationFlags SerializationFlags { get => _serializationFlags; }
@@ -100,8 +99,8 @@ namespace MHServerEmu.Games.Powers
         public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; }
 
         public ulong CreatorPlayerId { get => _creatorPlayerId; }
-        public ConditionCollection Collection { get => _collection; }
-        public bool IsInCollection { get => _collection != null; }
+        public ConditionCollection Collection { get; set; }
+        public bool IsInCollection { get => Collection != null; }
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
