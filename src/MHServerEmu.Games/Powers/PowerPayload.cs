@@ -145,9 +145,9 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
         /// </summary>
-        public void CalculatePowerResults(PowerResults results, WorldEntity target, bool isUserResult)
+        public void CalculatePowerResults(PowerResults results, WorldEntity target, bool isTargetResult)
         {
-            if (isUserResult == false)
+            if (isTargetResult)
             {
                 CalculateResultDamage(results, target);
                 CalculateResultHealing(results, target);
@@ -156,7 +156,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (results.IsDodged == false)
-                CalculateResultConditionsToAdd(results, target);
+                CalculateResultConditionsToAdd(results, target, isTargetResult);
 
             // Copy extra properties
             results.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
@@ -641,7 +641,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool CalculateResultConditionsToAdd(PowerResults results, WorldEntity target)
+        private bool CalculateResultConditionsToAdd(PowerResults results, WorldEntity target, bool isTargetResult)
         {
             if (PowerPrototype.AppliesConditions == null && PowerPrototype.ConditionsByRef.IsNullOrEmpty())
                 return true;
@@ -663,7 +663,7 @@ namespace MHServerEmu.Games.Powers
                         continue;
                     }
 
-                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, conditionCollection, conditionProto);
+                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, isTargetResult, conditionCollection, conditionProto);
                 }
             }
 
@@ -691,9 +691,15 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private void CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
-            ConditionCollection conditionCollection, ConditionPrototype conditionProto)
+        private bool CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
+            bool isTargetResult, ConditionCollection conditionCollection, ConditionPrototype conditionProto)
         {
+            if ((conditionProto.Scope == ConditionScopeType.Target && isTargetResult == false) ||
+                (conditionProto.Scope == ConditionScopeType.User && isTargetResult))
+            {
+                return false;
+            }    
+
             CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration);
 
             Condition condition = conditionCollection.AllocateCondition();
@@ -701,6 +707,7 @@ namespace MHServerEmu.Games.Powers
             results.AddConditionToAdd(condition);
 
             Logger.Debug($"CalculateResultConditionsToAddHelper(): {condition} - {duration.TotalMilliseconds} ms");
+            return true;
         }
 
         private void CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)

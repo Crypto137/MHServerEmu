@@ -834,7 +834,7 @@ namespace MHServerEmu.Games.Powers
 
                 PowerResults results = new();
                 payload.InitPowerResultsForTarget(results, target);
-                payload.CalculatePowerResults(results, target, false);
+                payload.CalculatePowerResults(results, target, true);
                 
                 if (player != null && powerProto.CanCauseTag)
                 {
