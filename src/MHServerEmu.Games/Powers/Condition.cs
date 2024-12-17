@@ -114,10 +114,10 @@ namespace MHServerEmu.Games.Powers
 
         public override string ToString()
         {
-            if (_conditionPrototype != null)
-                return _conditionPrototype.ToString();
+            if (_conditionPrototypeRef != PrototypeId.Invalid)
+                return _conditionPrototypeRef.GetName();
 
-            return _creatorPowerPrototype?.ToString();
+            return $"{_creatorPowerPrototype}[{_conditionPrototype.BlueprintCopyNum}]";
         }
 
         public bool Serialize(Archive archive, WorldEntity owner)

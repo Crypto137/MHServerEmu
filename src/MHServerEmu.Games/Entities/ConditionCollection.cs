@@ -141,7 +141,7 @@ namespace MHServerEmu.Games.Entities
             if (condition == null) return Logger.WarnReturn(false, "AddCondition(): condition == null");
             if (condition.IsInCollection) return Logger.WarnReturn(false, "AddCondition(): condition.IsInCollection");
 
-            Logger.Debug($"AddCondition(): {condition.CreatorPowerPrototype} {condition.ConditionPrototype}");
+            Logger.Debug($"AddCondition(): {condition}");
 
             bool success = false;
 
@@ -356,7 +356,7 @@ namespace MHServerEmu.Games.Entities
             if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
             if (condition == null) return false;
 
-            Logger.Debug($"RemoveCondition(): {condition.CreatorPowerPrototype} {condition.ConditionPrototype}");
+            Logger.Debug($"RemoveCondition(): {condition}");
 
             CancelScheduledConditionEnd(condition);
 

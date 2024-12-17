@@ -1303,7 +1303,7 @@ namespace MHServerEmu.Games.Powers
             _trackedConditionList.Add(trackedCondition);
             _trackedConditionIndexPropertyFlags |= trackedCondition.PowerIndexPropertyFlags;
 
-            Logger.Debug($"TrackCondition: {condition} for {Prototype} (total={_trackedConditionList.Count})");
+            Logger.Debug($"TrackCondition: {condition} (total={_trackedConditionList.Count})");
         }
 
         public void UntrackCondition(ulong entityId, Condition condition)

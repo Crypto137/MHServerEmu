@@ -700,7 +700,7 @@ namespace MHServerEmu.Games.Powers
             condition.InitializeFromPowerMixinPrototype(conditionCollection.NextConditionId, this, conditionProto, duration);
             results.AddConditionToAdd(condition);
 
-            Logger.Debug($"CalculateResultConditionsToAddHelper(): {PowerPrototype}[{conditionProto.BlueprintCopyNum}] - {duration.TotalMilliseconds} ms");
+            Logger.Debug($"CalculateResultConditionsToAddHelper(): {condition} - {duration.TotalMilliseconds} ms");
         }
 
         private void CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
