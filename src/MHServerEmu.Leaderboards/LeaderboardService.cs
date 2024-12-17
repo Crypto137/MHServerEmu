@@ -3,6 +3,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.GameData;
@@ -18,7 +19,7 @@ namespace MHServerEmu.Leaderboards
         private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private LeaderboardDatabase _database = new();
+        private LeaderboardDatabase _database;
         private bool _isRunning;
 
         #region IGameService Implementation
@@ -28,7 +29,8 @@ namespace MHServerEmu.Leaderboards
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
             _isRunning = config.LeaderboardsEnabled;
 
-            _database.Initialize();
+            _database = LeaderboardDatabase.Instance;
+            _database.Initialize(SQLiteLDBManager.Instance);
 
             while (_isRunning)
             {

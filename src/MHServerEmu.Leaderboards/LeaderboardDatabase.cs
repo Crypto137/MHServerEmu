@@ -18,29 +18,46 @@ namespace MHServerEmu.Leaderboards
         private static readonly Logger Logger = LogManager.CreateLogger();
         private const ulong UpdateTimeIntervalMS = 30 * 1000;   // 30 seconds
 
+        private readonly object _lock = new object();
         private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
+        private Dictionary<ulong, string> _playerNames = new();
+        public SQLiteLDBManager DBManager { get; private set; }
         public int LeaderboardCount { get; set; }
-
-        public LeaderboardDatabase() { }
+        public static LeaderboardDatabase Instance { get; } = new();
+        private LeaderboardDatabase() { }
 
         /// <summary>
         /// Initializes the <see cref="LeaderboardDatabase"/> instance.
         /// </summary>
-        public bool Initialize()
+        public bool Initialize(SQLiteLDBManager instance)
         {
+            DBManager = instance;
+
             var stopwatch = Stopwatch.StartNew();
 
             var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
 
             // Initialize leaderboard database
             string configPath = Path.Combine(FileHelper.DataDirectory, config.FileName);
-            SQLiteLDBManager.Instance.Initialize(configPath);
+            DBManager.Initialize(configPath);
 
-            // load PlayerInfoMap
+            // load PlayerNames
+            if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames) == false)
+                Logger.Warn($"Failed get player names from SQLiteDBManager");
+
             // load ActiveLeaderboards
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
+        }
+
+        public string GetPlayerNameById(ulong id)
+        {
+            lock (_lock)
+            {
+                if (_playerNames.TryGetValue(id, out var playerName)) return playerName;
+                return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, id);
+            }
         }
 
         public bool GetLeaderboardInstances(PrototypeGuid guid, out List<LeaderboardInstance> instances)

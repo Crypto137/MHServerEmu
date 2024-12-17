@@ -398,5 +398,40 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                                 Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
                                 entries, transaction);
         }
+
+        /// <summary>
+        /// Queries a player names from the database.
+        /// </summary>
+        public bool TryGetPlayerNames(Dictionary<ulong, string> playerNames)
+        {
+            if (_connectionString == string.Empty) return false;
+
+            using SQLiteConnection connection = GetConnection();
+            var playersList = connection.Query<DBPlayerName>("SELECT Id, PlayerName FROM Account");
+
+            foreach (var player in playersList)
+            {
+                playerNames[(ulong)player.Id] = player.PlayerName;
+            }
+
+            return playerNames.Count > 0;
+        }
+
+        public string UpdatePlayerName(Dictionary<ulong, string> playerNames, ulong id)
+        {
+            string playerName = $"Player{id}";
+            if (_connectionString == string.Empty) return playerName;
+
+            using SQLiteConnection connection = GetConnection();
+            var result = connection.Query<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)id });
+
+            if (result.Count() == 1) 
+            {
+                playerName = result.First();
+                playerNames[id] = playerName;                
+            }
+
+            return playerName;
+        }
     }
 }
