@@ -8,6 +8,8 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
+using StackId = MHServerEmu.Games.Entities.ConditionCollection.StackId;
+
 namespace MHServerEmu.Games.Powers
 {
     [Flags]
@@ -101,6 +103,7 @@ namespace MHServerEmu.Games.Powers
         public ulong CreatorPlayerId { get => _creatorPlayerId; }
         public ConditionCollection Collection { get; set; }
         public bool IsInCollection { get => Collection != null; }
+        public StackId StackId { get; private set; } = StackId.Invalid;
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
@@ -362,6 +365,41 @@ namespace MHServerEmu.Games.Powers
             _cancelOnFlags = conditionProto.CancelOnFlags;
 
             return true;
+        }
+
+        public bool CacheStackId()
+        {
+            // Non-power conditions cannot stack
+            PowerPrototype powerProto = CreatorPowerPrototype;
+            if (powerProto == null)
+                return true;
+
+            if (StackId.PrototypeRef != PrototypeId.Invalid)
+                return true;
+
+            ConditionPrototype conditionProto = ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn(false, "CacheStackId(): conditionProto == null");
+
+            StackId = ConditionCollection.MakeConditionStackId(powerProto, conditionProto, UltimateCreatorId, CreatorPlayerId, out _);
+            return true;
+        }
+
+        public bool CanStackWith(in StackId stackId)
+        {
+            return StackId == stackId;
+        }
+
+        public StackingBehaviorPrototype GetStackingBehaviorPrototype()
+        {
+            // Non-power conditions cannot stack
+            PowerPrototype powerProto = CreatorPowerPrototype;
+            if (powerProto == null)
+                return null;
+
+            ConditionPrototype conditionProto = ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn<StackingBehaviorPrototype>(null, "GetStackingBehaviorProto(): conditionProto == null");
+
+            return conditionProto.StackingBehavior != null ? conditionProto.StackingBehavior : powerProto.StackingBehaviorLEGACY;
         }
 
         public void ResetStartTime()

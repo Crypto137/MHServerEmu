@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
@@ -25,6 +26,8 @@ namespace MHServerEmu.Games.Entities
         private readonly WorldEntity _owner;
 
         private readonly SortedDictionary<ulong, Condition> _currentConditions = new();
+        private readonly Dictionary<StackId, int> _stackCountCache = new();
+
         private readonly EventGroup _pendingEvents = new();
 
         private uint _version = 0;
@@ -128,20 +131,85 @@ namespace MHServerEmu.Games.Entities
 
         public int GetNumberOfStacks(Condition condition)
         {
-            throw new NotImplementedException();
+            // Non-power conditions cannot stack
+            if (condition.CreatorPowerPrototype == null)
+                return 0;
+
+            return GetNumberOfStacks(condition.StackId);
         }
 
-        public int GetNumberOfStacks(StackId stackId)
+        public int GetNumberOfStacks(in StackId stackId)
         {
-            throw new NotImplementedException();
+            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetNumberOfStacks(): stackId.PrototypeRef == PrototypeId.Invalid");
+
+            if (_stackCountCache.TryGetValue(stackId, out int stackCount) == false)
+                return 0;
+
+            return stackCount;
+        }
+
+        public static StackId MakeConditionStackId(PowerPrototype powerProto, ConditionPrototype conditionProto, ulong creatorEntityId,
+            ulong creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto)
+        {
+            bool useLegacyStackingBehavior = false;
+
+            if (conditionProto?.StackingBehavior != null)
+            {
+                stackingBehaviorProto = conditionProto.StackingBehavior;
+            }
+            else
+            {
+                stackingBehaviorProto = powerProto.StackingBehaviorLEGACY;
+                useLegacyStackingBehavior = true;
+            }
+
+            if (stackingBehaviorProto == null)
+                return Logger.WarnReturn(StackId.Invalid, "MakeConditionStackId(): stackingBehaviorProto == null");
+
+            ulong stackCreatorId = Entity.InvalidId;
+
+            if (stackingBehaviorProto.StacksFromDifferentCreators == false)
+            {
+                stackCreatorId = creatorPlayerId != Entity.InvalidId ? creatorPlayerId : creatorEntityId;
+                if (stackCreatorId == Entity.InvalidId)
+                    return Logger.WarnReturn(StackId.Invalid, $"MakeConditionStackId(): Invalid creator id! creatorEntityId=[{creatorEntityId}] creatorPlayerId=[{creatorPlayerId}] power=[{powerProto}] condition=[{conditionProto}]");
+            }
+
+            if (stackingBehaviorProto.StacksByKeyword.HasValue())
+            {
+                // Keyword stacking
+                PrototypeId keywordProtoRef = stackingBehaviorProto.StacksByKeyword[0];
+                return new(keywordProtoRef, -1, stackCreatorId);
+            }
+            else if (stackingBehaviorProto.StacksWithOtherPower != PrototypeId.Invalid)
+            {
+                // Legacy stacking with other powers
+                if (useLegacyStackingBehavior == false)
+                    return Logger.WarnReturn(StackId.Invalid, "MakeConditionStackId(): Stacking with other powers is supported only for legacy stacking behavior");
+
+                PrototypeId powerProtoRef = powerProto.DataRef < stackingBehaviorProto.StacksWithOtherPower ? powerProto.DataRef : stackingBehaviorProto.StacksWithOtherPower;
+                return new(powerProtoRef, -1, stackCreatorId);
+            }
+            else if (conditionProto.DataRef != PrototypeId.Invalid)
+            {
+                // Standalone condition stacking
+                if (useLegacyStackingBehavior)
+                    return new(powerProto.DataRef, -1, stackCreatorId);
+
+                return new(conditionProto.DataRef, -1, stackCreatorId);
+            }
+
+            // Power mixin condition stacking
+            if (useLegacyStackingBehavior)
+                return new(powerProto.DataRef, -1, stackCreatorId);
+
+            return new(powerProto.DataRef, conditionProto.BlueprintCopyNum, stackCreatorId);
         }
 
         public bool AddCondition(Condition condition)
         {
             if (condition == null) return Logger.WarnReturn(false, "AddCondition(): condition == null");
             if (condition.IsInCollection) return Logger.WarnReturn(false, "AddCondition(): condition.IsInCollection");
-
-            Logger.Debug($"AddCondition(): {condition}");
 
             bool success = false;
 
@@ -158,8 +226,23 @@ namespace MHServerEmu.Games.Entities
                         break;
                 }
 
-                // TODO: Stacking
+                // Check stacking limits for power conditions
+                int stackCount = 0;
 
+                StackingBehaviorPrototype stackingBehaviorProto = condition.GetStackingBehaviorPrototype();
+                if (stackingBehaviorProto != null)
+                {
+                    condition.CacheStackId();
+                    stackCount = GetNumberOfStacks(condition);
+
+                    // Do not add this condition if the maximum number of stacks has been reached
+                    if (stackCount >= stackingBehaviorProto.MaxNumStacks)
+                        break;
+                }
+
+                stackCount++;
+
+                // Do the insertion
                 if (InsertCondition(condition) == false)
                 {
                     Logger.Warn("AddCondition(): InsertCondition(condition) == false");
@@ -185,6 +268,7 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 success = true;
+                Logger.Debug($"AddCondition(): {condition}");
 
                 condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
 
@@ -422,6 +506,8 @@ namespace MHServerEmu.Games.Entities
 
         private void OnPostAccrueCondition(Condition condition)
         {
+            IncrementStackCountCache(condition);
+
             if (ScheduleConditionEnd(condition) == false)
                 return;
         }
@@ -434,7 +520,8 @@ namespace MHServerEmu.Games.Entities
 
         private void OnPostUnaccrueCondition(Condition condition)
         {
-
+            // rebuildConditionKeywordsMask
+            DecrementStackCountCache(condition);
         }
 
         private bool ScheduleConditionEnd(Condition condition)
@@ -472,18 +559,90 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public readonly struct StackId
+        private void IncrementStackCountCache(Condition condition)
         {
+            // Non-power conditions cannot stack
+            if (condition.CreatorPowerPrototype == null)
+                return;
+
+            StackId stackId = condition.StackId;
+
+            if (_stackCountCache.TryGetValue(stackId, out int stackCount) == false)
+                _stackCountCache.Add(stackId, 1);
+            else
+                _stackCountCache[stackId] = ++stackCount;
+        }
+
+        private void DecrementStackCountCache(Condition condition)
+        {
+            // Non-power conditions cannot stack
+            if (condition.CreatorPowerPrototype == null)
+                return;
+
+            StackId stackId = condition.StackId;
+            if (_stackCountCache.TryGetValue(stackId, out int count) == false)
+            {
+                Logger.Warn($"DecrementStackCountCache(): Condition being removed but there is no cache entry for it! {stackId}");
+                return;
+            }
+
+            count--;
+            
+            if (count <= 0)
+            {
+                if (count < 0)
+                    Logger.Warn("DecrementStackCountCache(): count < 0");
+
+                _stackCountCache.Remove(stackId);
+            }
+        }
+
+        public readonly struct StackId : IEquatable<StackId>
+        {
+            public static readonly StackId Invalid = new(PrototypeId.Invalid, -1, Entity.InvalidId);
+
             public PrototypeId PrototypeRef { get; }    // ConditionPrototype or PowerPrototype
             public int CreatorPowerIndex { get; }
             public ulong CreatorId { get; }             // EntityId or PlayerGuid
 
             public StackId(PrototypeId prototypeRef, int creatorPowerIndex, ulong creatorId)
             {
-                // See ConditionCollection::MakeConditionStackId()
                 PrototypeRef = prototypeRef;
                 CreatorPowerIndex = creatorPowerIndex;
                 CreatorId = creatorId;
+            }
+
+            public override string ToString()
+            {
+                return $"PrototypeRef={PrototypeRef}, CreatorPowerIndex={CreatorPowerIndex}, CreatorId={CreatorId}";
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(PrototypeRef, CreatorPowerIndex, CreatorId);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is not StackId other)
+                    return false;
+
+                return Equals(other);
+            }
+
+            public bool Equals(StackId other)
+            {
+                return PrototypeRef == other.PrototypeRef && CreatorPowerIndex == other.CreatorPowerIndex && CreatorId == other.CreatorId;
+            }
+
+            public static bool operator ==(StackId left, StackId right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(StackId left, StackId right)
+            {
+                return !(left == right);
             }
         }
 
