@@ -8,6 +8,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Locales;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Achievements
 {
@@ -22,6 +23,7 @@ namespace MHServerEmu.Games.Achievements
 
         private readonly Dictionary<uint, AchievementInfo> _achievementInfoMap = new();
         private Dictionary<ScoringEventType, List<AchievementInfo>> _scoringEventTypeToAchievementInfo = new();
+        private Dictionary<Prototype, List<AchievementInfo>> _prototypeToAchievementInfo = new();
         private byte[] _localizedAchievementStringBuffer = Array.Empty<byte>();
         private NetMessageAchievementDatabaseDump _cachedDump = NetMessageAchievementDatabaseDump.DefaultInstance;
 
@@ -159,17 +161,39 @@ namespace MHServerEmu.Games.Achievements
         /// </summary>
         public List<AchievementInfo> GetAchievementsByEventType(ScoringEventType eventType)
         {
-            // Is already a result in cache?
             if (_scoringEventTypeToAchievementInfo.ContainsKey(eventType))
                 return _scoringEventTypeToAchievementInfo[eventType];
 
             List<AchievementInfo> achievementInfosFound = new();
             foreach (AchievementInfo info in _achievementInfoMap.Values)
-            {
                 if (info.EventType == eventType)
                     achievementInfosFound.Add(info);
-            }
+
             _scoringEventTypeToAchievementInfo[eventType] = achievementInfosFound;
+            return achievementInfosFound;
+        }
+
+        private static bool FilterEventDataPrototype(Prototype proto, in ScoringEventData data)
+        {
+            return (data.Proto0 != null && ScoringEvents.FilterPrototype(data.Proto0, proto, data.Proto0IncludeChildren))
+                || (data.Proto1 != null && ScoringEvents.FilterPrototype(data.Proto1, proto, data.Proto1IncludeChildren))
+                || (data.Proto2 != null && ScoringEvents.FilterPrototype(data.Proto2, proto, data.Proto2IncludeChildren));
+        }
+
+        /// <summary>
+        /// Returns all <see cref="AchievementInfo"/> instances for <see cref="ScoringEventType"/>.ItemCollected that use the specified <see cref="Prototype"/>.
+        /// </summary>
+        public List<AchievementInfo> GetItemCollectedAchievements(Prototype itemPrototype)
+        {
+            if (_prototypeToAchievementInfo.ContainsKey(itemPrototype))
+                return _prototypeToAchievementInfo[itemPrototype];
+
+            List<AchievementInfo> achievementInfosFound = new();
+            foreach (AchievementInfo info in GetAchievementsByEventType(ScoringEventType.ItemCollected))
+                if (FilterEventDataPrototype(itemPrototype, info.EventData))
+                    achievementInfosFound.Add(info);
+
+            _prototypeToAchievementInfo[itemPrototype] = achievementInfosFound;
             return achievementInfosFound;
         }
 

@@ -2,6 +2,9 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -340,6 +343,76 @@ namespace MHServerEmu.Games.Achievements
                     RecountAchievement(info);
                 }
             }
+
+            RecountItemCollected();
+        }
+
+        private void RecountItemCollected()
+        {
+            var manager = Owner.Game?.EntityManager;
+            if (manager == null) return;
+
+            Dictionary<AchievementInfo, int> achievementsCount = new();
+
+            var flags = InventoryIterationFlags.PlayerGeneral
+                | InventoryIterationFlags.PlayerGeneralExtra
+                | InventoryIterationFlags.PlayerStashGeneral
+                | InventoryIterationFlags.PlayerStashAvatarSpecific
+                | InventoryIterationFlags.DeliveryBoxAndErrorRecovery;
+
+            foreach (var inventory in new InventoryIterator(Owner, flags))
+                foreach (var entry in inventory)
+                {
+                    var item = manager.GetEntity<Item>(entry.Id);
+                    if (item != null) GetAchievementsCountForItem(item, achievementsCount);
+                }
+
+            foreach (var avatar in new AvatarIterator(Owner))
+                foreach (var inventory in new InventoryIterator(avatar, InventoryIterationFlags.Equipment))
+                    foreach (var entry in inventory)
+                    {
+                        var item = manager.GetEntity<Item>(entry.Id);
+                        if (item != null) GetAchievementsCountForItem(item, achievementsCount);
+                    }
+
+            var state = AchievementState;
+            foreach (var kvp in achievementsCount)
+            {
+                var info = kvp.Key;
+                int count = kvp.Value;
+                int progressCount = (int)state.GetAchievementProgress(info.Id).Count;
+                if (count > progressCount)
+                    UpdateAchievement(info, count - progressCount, false);
+            }
+        }
+
+        private void GetAchievementsCountForItem(Item item, Dictionary<AchievementInfo, int> achievementsCount)
+        {
+            var itemAchievements = AchievementDatabase.Instance.GetItemCollectedAchievements(item.Prototype);
+            foreach (var info in itemAchievements)
+                GetAchievementCountForItem(item, info, achievementsCount);
+
+            foreach (var info in AchievementDatabase.Instance.GetItemCollectedAchievements(item.RarityPrototype))
+                if (itemAchievements.Contains(info) == false)
+                    GetAchievementCountForItem(item, info, achievementsCount);            
+        }
+
+        private void GetAchievementCountForItem(Item item, AchievementInfo info, Dictionary<AchievementInfo, int> achievementsCount)
+        {
+            if (AchievementState.ShouldRecount(info) == false || info.Threshold > 1) return;
+
+            var itemProto = info.EventData.Proto0;
+            bool itemChilden = info.EventData.Proto0IncludeChildren;
+            var rarityProto = info.EventData.Proto1;
+            bool rarityChildren = info.EventData.Proto1IncludeChildren;
+
+            if (itemProto == null && rarityProto == null) return;
+
+            if (itemProto != null && ScoringEvents.FilterPrototype(itemProto, item.Prototype, itemChilden) == false) return;
+            if (rarityProto != null && ScoringEvents.FilterPrototype(rarityProto, item.RarityPrototype, rarityChildren) == false) return;
+
+            achievementsCount.TryGetValue(info, out int count);
+            achievementsCount[info] = count + item.CurrentStackSize;
         }
 
         private void RecountAchievement(AchievementInfo info)
