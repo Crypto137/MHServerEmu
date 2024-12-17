@@ -67,17 +67,12 @@ namespace MHServerEmu.Games.Leaderboards
             LeaderboardGuidKey key = new(ruleProto);
             var player = Owner;
 
-            switch (ruleProto.LeaderboardProto.Type)
-            {
-                case LeaderboardType.Player:
-                    key.PlayerGuid = player.DatabaseUniqueId;
-                    break;
+            key.PlayerGuid = player.DatabaseUniqueId;
 
-                case LeaderboardType.Avatar: // TestEntityDeathLeaderboard Only
-                    var avatar = player.CurrentAvatar;
-                    key.AvatarGuid = avatar.PrototypeGuid;
-                    key.PlayerGuid = player.DatabaseUniqueId;
-                    break;
+            if (ruleProto.LeaderboardProto.Type == LeaderboardType.Avatar) // TestEntityDeathLeaderboard Only
+            {
+                var avatar = player.CurrentAvatar;
+                key.AvatarGuid = avatar.PrototypeGuid;
             }
 
             int newCount = count;
@@ -175,10 +170,8 @@ namespace MHServerEmu.Games.Leaderboards
             {
                 var key = kvp.Key;
                 int count = kvp.Value;
-
                 LeaderboardGameDatabase.Instance.AddUpdateQueue(new(key, count));
             }
-
             _ruleEvents.Clear();
         }
 

@@ -23,9 +23,7 @@ CREATE TABLE "Instances" (
 CREATE TABLE "Entries" (
 	"Id"	INTEGER NOT NULL UNIQUE,
 	"InstanceId"	INTEGER NOT NULL,
-	"AccountId"	INTEGER NOT NULL,
 	"GameId"	INTEGER NOT NULL,
-	"AvatarId"	INTEGER,
 	"Score"	INTEGER,
 	"RuleState"	BLOB,
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE,

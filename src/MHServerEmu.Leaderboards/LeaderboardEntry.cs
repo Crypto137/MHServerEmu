@@ -4,10 +4,10 @@ namespace MHServerEmu.Leaderboards
 {
     public class LeaderboardEntry
     {
-        public uint GameId;
-        public string Name;
-        public LocaleStringId NameId;
-        public uint Score;
+        public uint GameId { get; set; }
+        public string Name { get; set; }
+        public LocaleStringId NameId { get; set; }
+        public uint Score { get; set; }
 
         public Gazillion.LeaderboardEntry ToProtobuf()
         {
