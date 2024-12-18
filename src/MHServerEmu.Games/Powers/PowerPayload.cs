@@ -701,6 +701,13 @@ namespace MHServerEmu.Games.Powers
             }    
 
             CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration);
+            
+            if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
+                (conditionProto.Properties != null && conditionProto.Properties[PropertyEnum.Knockback]))
+            {
+                // TODO: calculate duration for conditions that last as long as the entity is moving
+                return false;
+            }
 
             Condition condition = conditionCollection.AllocateCondition();
             condition.InitializeFromPowerMixinPrototype(conditionCollection.NextConditionId, this, conditionProto, duration);

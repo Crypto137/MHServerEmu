@@ -873,9 +873,7 @@ namespace MHServerEmu.Games.Entities
 
             Power.CopyPowerIndexProperties(indexProperties, modProperties);
 
-            // NOTE: While we can get away with adding properties to a collection while iterating in the current implementation,
-            // it's more of a side-effect than expected behavior, so it's safer to do it in two separate loops.
-            List<PrototypeId> procPowerRefList = new();
+            List<PrototypeId> procPowerRefList = ListPool<PrototypeId>.Instance.Get();
             foreach (var kvp in modProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
@@ -886,6 +884,8 @@ namespace MHServerEmu.Games.Entities
 
             foreach (PrototypeId procPowerRef in procPowerRefList)
                 modProperties[PropertyEnum.ProcPowerRank, procPowerRef] = rank;
+
+            ListPool<PrototypeId>.Instance.Return(procPowerRefList);
 
             OnAttachedPropertiesPreAdd(modProperties);
             Properties.AddChildCollection(modProperties);

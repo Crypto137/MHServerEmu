@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -7,6 +9,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 using StackId = MHServerEmu.Games.Entities.ConditionCollection.StackId;
 
@@ -365,6 +368,19 @@ namespace MHServerEmu.Games.Powers
             _durationMS = (long)duration.TotalMilliseconds;
             _cancelOnFlags = conditionProto.CancelOnFlags;
 
+            if (properties != null)
+            {
+                Properties.FlattenCopyFrom(properties, true);
+            }
+            else
+            {
+                WorldEntity creator = payload.Game.EntityManager.GetEntity<WorldEntity>(_creatorId);
+                WorldEntity target = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
+
+                if (GenerateConditionProperties(Properties, conditionProto, payload.Properties, creator, target, payload.Game) == false)
+                    Logger.Warn($"InitializeFromPowerMixinPrototype(): Failed to generate properties for [{this}]");
+            }
+
             return true;
         }
 
@@ -498,6 +514,64 @@ namespace MHServerEmu.Games.Powers
             }
 
             return containsNegativeStatusEffects;
+        }
+
+        public static bool GenerateConditionProperties(PropertyCollection conditionProperties, ConditionPrototype conditionProto,
+            PropertyCollection initializeProperties, WorldEntity sourceEntity, WorldEntity destEntity, Game game)
+        {
+            bool success = true;
+
+            // Copy base properties from the prototype
+            if (conditionProto.Properties != null)
+                conditionProperties.FlattenCopyFrom(conditionProto.Properties, true);
+
+            // Assign extra properties from the creator
+            if (initializeProperties != null)
+            {
+                foreach (var kvp in initializeProperties.IteratePropertyRange(PropertyEnumFilter.SerializeConditionSrcToConditionFunc))
+                    conditionProperties[kvp.Key] = kvp.Value;
+            }
+
+            // Run eval
+            if (conditionProto.EvalOnCreate.HasValue())
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = game;
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, conditionProperties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, sourceEntity?.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, destEntity?.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, initializeProperties);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, sourceEntity);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var3, destEntity);
+
+                Eval.InitTeamUpEvalContext(evalContext, sourceEntity);
+
+                foreach (EvalPrototype evalProto in conditionProto.EvalOnCreate)
+                {
+                    bool evalSuccess = Eval.RunBool(evalProto, evalContext);
+                    success &= evalSuccess;
+                    if (evalSuccess == false)
+                        Logger.Warn($"GenerateConditionProperties(): The following EvalOnCreate Eval in a condition failed:\nEval: [{evalProto.ExpressionString()}]\nCondition: [{conditionProto}]\nSource entity: [{sourceEntity}]\nDest entity: [{destEntity}]");
+                }
+            }
+
+            // Assign proc properties
+            List<PrototypeId> procPowerRefList = ListPool<PrototypeId>.Instance.Get();
+            foreach (var kvp in conditionProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
+                procPowerRefList.Add(procPowerRef);
+            }
+
+            foreach (PrototypeId procPowerRef in procPowerRefList)
+            {
+                conditionProperties[PropertyEnum.ProcPowerItemLevel, procPowerRef] = conditionProperties[PropertyEnum.ItemLevel];
+                conditionProperties[PropertyEnum.ProcPowerItemVariation, procPowerRef] = conditionProperties[PropertyEnum.ItemVariation];
+            }
+
+            ListPool<PrototypeId>.Instance.Return(procPowerRefList);
+
+            return success;
         }
 
         private bool UpdateOwnerAssetRef(WorldEntity owner)

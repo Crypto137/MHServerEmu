@@ -383,7 +383,11 @@ namespace MHServerEmu.Games.Entities
         public bool HasANegativeStatusEffectCondition()
         {
             foreach (Condition condition in _currentConditions.Values)
-                if (condition != null && condition.IsANegativeStatusEffect()) return true;
+            {
+                if (condition != null && condition.IsANegativeStatusEffect())
+                    return true;
+            }
+
             return false;
         }
 
@@ -510,9 +514,9 @@ namespace MHServerEmu.Games.Entities
 
             if (_owner.UpdateProcEffectPowers(condition.Properties, true) == false)
                 Logger.Warn($"OnInsertCondition(): UpdateProcEffectPowers failed when adding condition=[{condition}] owner=[{_owner}]");
-
-            // Uncomment this later
-            //_owner.Properties.AddChildCollection(condition.Properties);
+            
+            // Accrue properties from this condition on the owner (these are added and removed along with the condition)
+            _owner.Properties.AddChildCollection(condition.Properties);
 
             if (handle.Valid() == false)
                 return true;
@@ -536,8 +540,24 @@ namespace MHServerEmu.Games.Entities
 
         private void UnaccrueCondition(Condition condition)
         {
-            // TODO
+            if (condition.Collection != this) Logger.Warn("UnaccrueCondition(): condition.Collection != this");
+
+            Handle handle = new(this, condition);
+            if (condition.IsEnabled)
+            {
+                // Disable the condition
+                condition.IsEnabled = false;
+                if (condition.Properties.RemoveFromParent(_owner.Properties) == false)
+                    Logger.Warn($"RemoveFromParent FAILED owner=[{_owner}] condition=[{(handle.Valid() ? condition.ToString() : "INVALID")}]");
+            }
+
+            if (handle.Valid() == false)
+                return;
+
             OnPostUnaccrueCondition(condition);
+
+            if (_owner.IsDestroyed == false)
+                _owner.RegisterForPendingPhysicsResolve();
         }
 
         private void OnPostUnaccrueCondition(Condition condition)
