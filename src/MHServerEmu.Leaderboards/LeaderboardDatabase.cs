@@ -20,6 +20,7 @@ namespace MHServerEmu.Leaderboards
 
         private readonly object _lock = new object();
         private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
+        private Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
         private Dictionary<ulong, string> _playerNames = new();
         public SQLiteLDBManager DBManager { get; private set; }
         public int LeaderboardCount { get; set; }
@@ -46,6 +47,30 @@ namespace MHServerEmu.Leaderboards
                 Logger.Warn($"Failed get player names from SQLiteDBManager");
 
             // load ActiveLeaderboards
+            foreach (var dbLeaderboard in DBManager.GetLeaderboardList())
+            {
+                if (dbLeaderboard.IsActive == false) continue;
+
+                PrototypeGuid leaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
+                PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardId);
+                if (dataRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"Failed GetDataRefByPrototypeGuid LeaderboardId = {leaderboardId}");
+                    continue;
+                }
+                var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+                if (proto == null) 
+                {
+                    Logger.Warn($"Failed GetPrototype dataRef = {dataRef}");
+                    continue;
+                }
+
+                var leaderboard = new Leaderboard(proto, dbLeaderboard);
+                if (proto.Type == LeaderboardType.MetaLeaderboard)
+                    _metaLeaderboards.Add(leaderboardId, leaderboard);
+                else
+                    _leaderboards.Add(leaderboardId, leaderboard);
+            }
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
@@ -62,20 +87,23 @@ namespace MHServerEmu.Leaderboards
 
         public bool GetLeaderboardInstances(PrototypeGuid guid, out List<LeaderboardInstance> instances)
         {
-            instances = new();
-
-            if (_leaderboards.TryGetValue(guid, out var info) == false) return false;
-            if (info.Prototype == null) return false;
-
-            int maxarchived = info.Prototype.MaxArchivedInstances;
-
-            foreach (var instance in info.Instances)
+            lock (_lock)
             {
-                instances.Add(instance);
-                if (maxarchived-- == 0) break;
-            }
+                instances = new();
 
-            return true;
+                if (_leaderboards.TryGetValue(guid, out var info) == false) return false;
+                if (info.Prototype == null) return false;
+
+                int maxarchived = info.Prototype.MaxArchivedInstances;
+
+                foreach (var instance in info.Instances)
+                {
+                    instances.Add(instance);
+                    if (maxarchived-- == 0) break;
+                }
+
+                return true;
+            }
         }
 
         public LeaderboardReport GetLeaderboardReport(NetMessageLeaderboardRequest request)
@@ -197,9 +225,12 @@ namespace MHServerEmu.Leaderboards
 
         public Leaderboard GetLeaderboard(PrototypeGuid guid)
         {
-            if (_leaderboards.TryGetValue(guid, out var leaderboard))
-                return leaderboard;
-            return null;
+            lock (_lock)
+            {
+                if (_leaderboards.TryGetValue(guid, out var leaderboard))
+                    return leaderboard;
+                return null;
+            }
         }
 
         public void UpdateLeaderboards(Queue<LeaderboardQueue> updateQueue)

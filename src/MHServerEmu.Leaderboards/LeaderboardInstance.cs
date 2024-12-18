@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
 
@@ -14,9 +15,39 @@ namespace MHServerEmu.Leaderboards
         public LeaderboardPrototype LeaderboardPrototype { get => _leaderboard.Prototype; }
         public ulong InstanceId { get; set; }
         public LeaderboardState State { get; set; }
-        public TimeSpan ActivationTime { get; set; }
-        public TimeSpan ExpirationTime { get; set; }
+        public DateTime ActivationTime { get; set; }
+        public DateTime ExpirationTime { get; set; }
         public bool Visible { get; set; }
+
+        public LeaderboardInstance(Leaderboard leaderboard, DBLeaderboardInstance dbInstance)
+        {
+            _leaderboard = leaderboard;
+            InstanceId = (ulong)dbInstance.InstanceId;
+            State = dbInstance.State;
+            ActivationTime = dbInstance.ActivationDateTime;
+            ExpirationTime = CalcExpirationTime();
+            Visible = dbInstance.Visible;
+        }
+
+        private DateTime CalcExpirationTime()
+        {
+            return LeaderboardPrototype.Duration switch
+            {
+                LeaderboardDurationType._10minutes => ActivationTime.AddMinutes(10),
+                LeaderboardDurationType._15minutes => ActivationTime.AddMinutes(15),
+                LeaderboardDurationType._30minutes => ActivationTime.AddMinutes(30),
+                LeaderboardDurationType._1hour => ActivationTime.AddHours(1),
+                LeaderboardDurationType._2hours => ActivationTime.AddHours(2),
+                LeaderboardDurationType._3hours => ActivationTime.AddHours(3),
+                LeaderboardDurationType._4hours => ActivationTime.AddHours(4),
+                LeaderboardDurationType._8hours => ActivationTime.AddHours(8),
+                LeaderboardDurationType._12hours => ActivationTime.AddHours(12),
+                LeaderboardDurationType.Day => ActivationTime.AddDays(1),
+                LeaderboardDurationType.Week => ActivationTime.AddDays(7),
+                LeaderboardDurationType.Month => ActivationTime.AddMonths(1),
+                _ => ActivationTime,
+            };
+        }
 
         /// <summary>
         /// Returns <see cref="LeaderboardInstanceData"/> from <see cref="LeaderboardInstance"/>.
@@ -26,8 +57,8 @@ namespace MHServerEmu.Leaderboards
             return LeaderboardInstanceData.CreateBuilder()
                     .SetInstanceId(InstanceId)
                     .SetState(State)
-                    .SetActivationTimestamp((long)ActivationTime.TotalSeconds)
-                    .SetExpirationTimestamp((long)ExpirationTime.TotalSeconds)
+                    .SetActivationTimestamp(((DateTimeOffset)ActivationTime).ToUnixTimeSeconds())
+                    .SetExpirationTimestamp(((DateTimeOffset)ExpirationTime).ToUnixTimeSeconds())
                     .SetVisible(Visible)
                     .Build();
         }
@@ -41,8 +72,8 @@ namespace MHServerEmu.Leaderboards
                     .SetLeaderboardId(LeaderboardId)
                     .SetInstanceId(InstanceId)
                     .SetState(State)
-                    .SetActivationTimestampUtc((long)ActivationTime.TotalSeconds)
-                    .SetExpirationTimestampUtc((long)ExpirationTime.TotalSeconds)
+                    .SetActivationTimestampUtc(((DateTimeOffset)ActivationTime).ToUnixTimeSeconds())
+                    .SetExpirationTimestampUtc(((DateTimeOffset)ExpirationTime).ToUnixTimeSeconds())
                     .SetVisible(Visible)
                     .Build();
         }
@@ -68,6 +99,12 @@ namespace MHServerEmu.Leaderboards
             {
                 return _cachedTableData;
             }
+        }
+
+        public void LoadEntries()
+        {
+            var dbManager = LeaderboardDatabase.Instance.DBManager;
+
         }
 
         public void UpdateCachedTableData()

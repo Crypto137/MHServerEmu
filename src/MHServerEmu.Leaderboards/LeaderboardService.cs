@@ -30,7 +30,8 @@ namespace MHServerEmu.Leaderboards
             _isRunning = config.LeaderboardsEnabled;
 
             _database = LeaderboardDatabase.Instance;
-            _database.Initialize(SQLiteLDBManager.Instance);
+            if (config.LeaderboardsEnabled) 
+                _database.Initialize(SQLiteLDBManager.Instance);
 
             while (_isRunning)
             {
