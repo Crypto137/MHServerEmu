@@ -1,5 +1,7 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
 
@@ -18,15 +20,19 @@ namespace MHServerEmu.Leaderboards
         public DateTime ActivationTime { get; set; }
         public DateTime ExpirationTime { get; set; }
         public bool Visible { get; set; }
+        public List<LeaderboardEntry> Entries { get; }
+
+        private Dictionary<PrototypeGuid, LeaderboardEntry> _entryMap = new();
 
         public LeaderboardInstance(Leaderboard leaderboard, DBLeaderboardInstance dbInstance)
         {
             _leaderboard = leaderboard;
             InstanceId = (ulong)dbInstance.InstanceId;
             State = dbInstance.State;
-            ActivationTime = dbInstance.ActivationDateTime;
+            ActivationTime = dbInstance.GetActivationDateTime();
             ExpirationTime = CalcExpirationTime();
             Visible = dbInstance.Visible;
+            Entries = new();
         }
 
         private DateTime CalcExpirationTime()
@@ -57,8 +63,8 @@ namespace MHServerEmu.Leaderboards
             return LeaderboardInstanceData.CreateBuilder()
                     .SetInstanceId(InstanceId)
                     .SetState(State)
-                    .SetActivationTimestamp(((DateTimeOffset)ActivationTime).ToUnixTimeSeconds())
-                    .SetExpirationTimestamp(((DateTimeOffset)ExpirationTime).ToUnixTimeSeconds())
+                    .SetActivationTimestamp((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
+                    .SetExpirationTimestamp((long)Clock.DateTimeToUnixTime(ExpirationTime).TotalSeconds)
                     .SetVisible(Visible)
                     .Build();
         }
@@ -72,23 +78,30 @@ namespace MHServerEmu.Leaderboards
                     .SetLeaderboardId(LeaderboardId)
                     .SetInstanceId(InstanceId)
                     .SetState(State)
-                    .SetActivationTimestampUtc(((DateTimeOffset)ActivationTime).ToUnixTimeSeconds())
-                    .SetExpirationTimestampUtc(((DateTimeOffset)ExpirationTime).ToUnixTimeSeconds())
+                    .SetActivationTimestampUtc((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
+                    .SetExpirationTimestampUtc((long)Clock.DateTimeToUnixTime(ExpirationTime).TotalSeconds)
                     .SetVisible(Visible)
                     .Build();
         }
 
-        public LeaderboardEntry GetEntry(ulong guid, ulong avatarId)
+        public LeaderboardEntry GetEntry(PrototypeGuid guid, ulong avatarId)
         {
-            throw new NotImplementedException();
+            // avatarId don't used in active Leaderboards
+            if (_entryMap.TryGetValue(guid, out var entry) == false) return null;
+            return entry;
         }
 
-        public ulong GetLeaderboardEntryId(ulong guid)
+        public PrototypeGuid GetLeaderboardEntryId(PrototypeGuid guid)
         {
             throw new NotImplementedException();
         }
 
         public LeaderboardPercentile GetPercentileBucket(LeaderboardEntry entry)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void UpdatePercentileBuckets()
         {
             throw new NotImplementedException();
         }
@@ -103,8 +116,33 @@ namespace MHServerEmu.Leaderboards
 
         public void LoadEntries()
         {
-            var dbManager = LeaderboardDatabase.Instance.DBManager;
+            lock (_lock)
+            {
+                _entryMap.Clear();
+                Entries.Clear();
+                var leaderboardProto = LeaderboardPrototype;
+                var dbManager = LeaderboardDatabase.Instance.DBManager;
+                foreach (var dbEntry in dbManager.GetEntries((long)InstanceId, leaderboardProto.RankingRule == LeaderboardRankingRule.Ascending))
+                {
+                    LeaderboardEntry entry = new(dbEntry);
+                    if (leaderboardProto.Type == LeaderboardType.MetaLeaderboard)
+                    {
+                        var dataRef = GameDatabase.GetDataRefByPrototypeGuid(entry.GameId);
+                        var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+                        entry.NameId = proto != null ? proto.Name : LocaleStringId.Blank;
+                    }
+                    else
+                    {
+                        entry.Name = LeaderboardDatabase.Instance.GetPlayerNameById(entry.GameId);
+                    }
 
+                    Entries.Add(entry);
+                    _entryMap[entry.GameId] = entry;
+                }
+
+                UpdatePercentileBuckets();
+                UpdateCachedTableData();
+            }
         }
 
         public void UpdateCachedTableData()

@@ -93,5 +93,19 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             return instanceList;
         }
+
+        public List<DBLeaderboardEntry> GetEntries(long instanceId, bool ascending)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            string order = ascending ? "ASC" : "DESC";
+
+            List<DBLeaderboardEntry> entryList = new(
+                connection.Query<DBLeaderboardEntry>(
+                    $"SELECT * FROM Entries WHERE InstanceId = @InstanceId ORDER BY HighScore {order}",
+                    new { InstanceId = instanceId }));
+
+            return entryList;
+        }
     }
 }

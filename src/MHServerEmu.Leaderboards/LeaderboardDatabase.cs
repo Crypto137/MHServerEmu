@@ -76,12 +76,12 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        public string GetPlayerNameById(ulong id)
+        public string GetPlayerNameById(PrototypeGuid id)
         {
             lock (_lock)
             {
-                if (_playerNames.TryGetValue(id, out var playerName)) return playerName;
-                return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, id);
+                if (_playerNames.TryGetValue((ulong)id, out var playerName)) return playerName;
+                return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, (ulong)id);
             }
         }
 
@@ -108,7 +108,7 @@ namespace MHServerEmu.Leaderboards
 
         public LeaderboardReport GetLeaderboardReport(NetMessageLeaderboardRequest request)
         {
-            ulong leaderboardId = 0;
+            PrototypeGuid leaderboardId = 0;
             ulong instanceId = 0;
 
             var report = LeaderboardReport.CreateBuilder()
@@ -117,9 +117,9 @@ namespace MHServerEmu.Leaderboards
             if (request.HasPlayerScoreQuery)
             {
                 var query = request.PlayerScoreQuery;
-                leaderboardId = query.LeaderboardId;
+                leaderboardId = (PrototypeGuid)query.LeaderboardId;
                 instanceId = query.InstanceId;
-                ulong playerId = query.PlayerId;
+                var playerId = (PrototypeGuid)query.PlayerId;
                 ulong avatarId = query.HasAvatarId ? query.AvatarId : 0;
 
                 if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, avatarId, out LeaderboardScoreData scoreData))
@@ -129,9 +129,9 @@ namespace MHServerEmu.Leaderboards
             if (request.HasGuildScoreQuery) // Not used
             {
                 var query = request.GuildScoreQuery;
-                leaderboardId = query.LeaderboardId;
+                leaderboardId = (PrototypeGuid)query.LeaderboardId;
                 instanceId = query.InstanceId;
-                ulong guid = query.GuildId;
+                var guid = (PrototypeGuid)query.GuildId;
 
                 if (GetLeaderboardScoreData(leaderboardId, instanceId, guid, 0, out LeaderboardScoreData scoreData))
                     report.SetScoreData(scoreData);
@@ -140,9 +140,9 @@ namespace MHServerEmu.Leaderboards
             if (request.HasMetaScoreQuery) // Tournament: Civil War
             {
                 var query = request.MetaScoreQuery;
-                leaderboardId = query.LeaderboardId;
+                leaderboardId = (PrototypeGuid)query.LeaderboardId;
                 instanceId = query.InstanceId;
-                ulong playerId = query.PlayerId;
+                var playerId = (PrototypeGuid)query.PlayerId;
 
                 if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, 0, out LeaderboardScoreData scoreData))
                     report.SetScoreData(scoreData);
@@ -151,22 +151,22 @@ namespace MHServerEmu.Leaderboards
             if (request.HasDataQuery)
             {
                 var query = request.DataQuery;
-                leaderboardId = query.LeaderboardId;
+                leaderboardId = (PrototypeGuid)query.LeaderboardId;
                 instanceId = query.InstanceId;
 
                 if (GetLeaderboardTableData(leaderboardId, instanceId, out LeaderboardTableData tableData))
                     report.SetTableData(tableData);
             }
 
-            report.SetLeaderboardId(leaderboardId).SetInstanceId(instanceId);
+            report.SetLeaderboardId((ulong)leaderboardId).SetInstanceId(instanceId);
 
             return report.Build();
         }
 
-        private bool GetLeaderboardTableData(ulong leaderboardId, ulong instanceId, out LeaderboardTableData tableData)
+        private bool GetLeaderboardTableData(PrototypeGuid leaderboardId, ulong instanceId, out LeaderboardTableData tableData)
         {
             tableData = null;
-            var leaderboard = GetLeaderboard((PrototypeGuid)leaderboardId);
+            var leaderboard = GetLeaderboard(leaderboardId);
             if (leaderboard == null) return false;
 
             var instance = leaderboard.GetInstance(instanceId);
@@ -176,11 +176,11 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        private bool GetLeaderboardScoreData(ulong leaderboardId, ulong instanceId, ulong guid, ulong avatarId, 
+        private bool GetLeaderboardScoreData(PrototypeGuid leaderboardId, ulong instanceId, PrototypeGuid guid, ulong avatarId, 
             out LeaderboardScoreData scoreData)
         {
             scoreData = null;
-            var leaderboard = GetLeaderboard((PrototypeGuid)leaderboardId);
+            var leaderboard = GetLeaderboard(leaderboardId);
             if (leaderboard == null) return false;
 
             var type = leaderboard.Prototype.Type;
@@ -191,7 +191,7 @@ namespace MHServerEmu.Leaderboards
             LeaderboardEntry entry;
             if (type == LeaderboardType.MetaLeaderboard)
             {
-                ulong leaderboardEntryId = instance.GetLeaderboardEntryId(guid);
+                var leaderboardEntryId = instance.GetLeaderboardEntryId(guid);
                 entry = instance.GetEntry(leaderboardEntryId, avatarId);
             }
             else
@@ -202,18 +202,18 @@ namespace MHServerEmu.Leaderboards
             if (entry == null) return false;
 
             var scoreDataBuilder = LeaderboardScoreData.CreateBuilder()
-                .SetLeaderboardId(leaderboardId);
+                .SetLeaderboardId((ulong)leaderboardId);
 
             if (instanceId != 0) scoreDataBuilder.SetInstanceId(instanceId);
 
             if (type == LeaderboardType.Player) 
             {
                 scoreDataBuilder.SetAvatarId(avatarId);
-                scoreDataBuilder.SetPlayerId(guid);
+                scoreDataBuilder.SetPlayerId((ulong)guid);
             }
 
             if (type == LeaderboardType.Guild)
-                scoreDataBuilder.SetGuildId(guid);
+                scoreDataBuilder.SetGuildId((ulong)guid);
 
             scoreDataBuilder.SetScore(entry.Score);
             scoreDataBuilder.SetPercentileBucket((uint)instance.GetPercentileBucket(entry));

@@ -25,7 +25,8 @@ CREATE TABLE "Entries" (
 	"InstanceId"	INTEGER NOT NULL,
 	"GameId"	INTEGER NOT NULL,
 	"Score"	INTEGER,
-	"RuleState"	BLOB,
+	"HighScore"	INTEGER,
+	"RuleStates"	BLOB,
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE,
 	PRIMARY KEY("Id" AUTOINCREMENT)
 )
