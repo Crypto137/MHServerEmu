@@ -185,11 +185,6 @@
     "Value": 0.0
   },
   {
-    "Prototype": "Powers/EnemyPowers/Boss/LivingLaser/LivingLaserBlastStart.prototype",
-    "Setting": "ePTV_PowerEnabled",
-    "Value": 0.0
-  },
-  {
     "Prototype": "Regions/EndGame/StaticScenarios/CivilWar/Airport/CivilWarAirportCaptainAmericaRegionBand.prototype",
     "Setting": "eRTV_Enabled",
     "Value": 0.0

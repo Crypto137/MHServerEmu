@@ -491,7 +491,7 @@ namespace MHServerEmu.Games.Powers
                 if (settings.Flags.HasFlag(PowerActivationSettingsFlags.ClientCombo))
                     return false;
 
-                return triggeredPower.Activate(ref settings) == PowerUseResult.Success;
+                return Owner.ActivatePower(triggeredPower.PrototypeDataRef, ref settings) == PowerUseResult.Success;
             }
             else if (Owner is Hotspot)
             {
