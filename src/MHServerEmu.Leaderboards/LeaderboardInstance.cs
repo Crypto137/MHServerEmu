@@ -22,7 +22,8 @@ namespace MHServerEmu.Leaderboards
         public bool Visible { get; set; }
         public List<LeaderboardEntry> Entries { get; }
 
-        private Dictionary<PrototypeGuid, LeaderboardEntry> _entryMap = new();
+        private Dictionary<PrototypeGuid, LeaderboardEntry> _entryMap = new(); 
+        private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
 
         public LeaderboardInstance(Leaderboard leaderboard, DBLeaderboardInstance dbInstance)
         {
@@ -33,6 +34,8 @@ namespace MHServerEmu.Leaderboards
             ExpirationTime = CalcExpirationTime();
             Visible = dbInstance.Visible;
             Entries = new();
+
+            InitPercentileBuckets();
         }
 
         private DateTime CalcExpirationTime()
@@ -96,14 +99,38 @@ namespace MHServerEmu.Leaderboards
             throw new NotImplementedException();
         }
 
+        private void InitPercentileBuckets()
+        {
+            _percentileBuckets = new();
+            for (int i = 0; i < 10; i++)
+                _percentileBuckets.Add(((LeaderboardPercentile)i, 0));
+        }
+
         public LeaderboardPercentile GetPercentileBucket(LeaderboardEntry entry)
         {
-            throw new NotImplementedException();
+            var proto = LeaderboardPrototype;
+            if (proto == null) return LeaderboardPercentile.Over90Percent;
+            var rankingRule = proto.RankingRule;
+
+            foreach (var (percentile, score) in _percentileBuckets)
+                if ((rankingRule == LeaderboardRankingRule.Ascending && entry.Score <= score)
+                    || (rankingRule == LeaderboardRankingRule.Descending && entry.Score >= score))
+                    return percentile;
+
+            return LeaderboardPercentile.Over90Percent;
         }
 
         private void UpdatePercentileBuckets()
         {
-            throw new NotImplementedException();
+            int totalEntries = Entries.Count;
+            if (totalEntries == 0) return;
+
+            for (int i = 0; i < 10; i++)
+            {
+                int thresholdIndex = (int)Math.Floor((i + 1) * 0.1 * totalEntries);
+                if (thresholdIndex < totalEntries)
+                    _percentileBuckets[i] = ((LeaderboardPercentile)i, Entries[thresholdIndex].Score);
+            }
         }
 
         public LeaderboardTableData GetTableData()
