@@ -2,6 +2,7 @@
 using System.Data.SQLite;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.DatabaseAccess.SQLite
 {
@@ -65,6 +66,32 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             SQLiteConnection connection = new(_connectionString);
             connection.Open();
             return connection;
+        }
+
+        public DBLeaderboard[] GetLeaderboardList()
+        {
+            using SQLiteConnection connection = GetConnection();
+            return connection.Query<DBLeaderboard>("SELECT * FROM Leaderboards").ToArray();
+        }
+
+        public List<DBLeaderboardInstance> GetInstanceList(long leaderboardId, int maxArchivedInstances)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            List<DBLeaderboardInstance> instanceList = new(
+                connection.Query<DBLeaderboardInstance>(
+                    "SELECT * FROM Instances WHERE LeaderboardId = @LeaderboardId AND State <= 1 ORDER BY InstanceId DESC",
+                    new { LeaderboardId = leaderboardId }));
+
+            if (maxArchivedInstances > 0)
+            {
+                instanceList.AddRange(
+                connection.Query<DBLeaderboardInstance>(
+                    "SELECT * FROM Instances WHERE LeaderboardId = @LeaderboardId AND State > 1 ORDER BY InstanceId DESC LIMIT @MaxArchivedInstances",
+                    new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances}));
+            }
+
+            return instanceList;
         }
     }
 }
