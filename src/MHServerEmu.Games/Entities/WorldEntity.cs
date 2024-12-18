@@ -2756,13 +2756,12 @@ namespace MHServerEmu.Games.Entities
             if (conditionCollection != null)
             {
                 KeywordsMask keywordsMask = conditionCollection.ConditionKeywordsMask;
-                if (keywordsMask == null) return false;     // REMOVEME: Temp fix for condition collections not having keyword masks
                 return keywordsMask[keyword];
             }
             return false;
         }
 
-        public bool HasConditionWithAnyKeyword(IEnumerable<PrototypeId> keywordProtoRefs)
+        public bool HasConditionWithAnyKeyword(PrototypeId[] keywordProtoRefs)
         {
             foreach (PrototypeId keywordProtoRef in keywordProtoRefs)
             {

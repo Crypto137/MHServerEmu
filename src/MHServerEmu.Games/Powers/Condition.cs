@@ -55,6 +55,7 @@ namespace MHServerEmu.Games.Powers
     public class Condition
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly KeywordsMask EmptyMask = new();
 
         private ConditionSerializationFlags _serializationFlags;
         private ulong _conditionId;                                          // Condition id
@@ -95,7 +96,7 @@ namespace MHServerEmu.Games.Powers
         public TimeSpan StartTime { get => _startTime; }
         public TimeSpan PauseTime { get => _pauseTime; }
         public TimeSpan Duration { get => TimeSpan.FromMilliseconds(_durationMS); }
-        public bool IsEnabled { get => _isEnabled; }
+        public bool IsEnabled { get => _isEnabled; set => _isEnabled = value; }
         public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(_updateIntervalMS); }
         public ReplicatedPropertyCollection Properties { get => _properties; }
         public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; }
@@ -437,6 +438,14 @@ namespace MHServerEmu.Games.Powers
                 return Logger.WarnReturn<PrototypeId[]>(null, "GetKeywords(): _conditionPrototype == null");
 
             return _conditionPrototype.Keywords;
+        }
+
+        public KeywordsMask GetKeywordsMask()
+        {
+            ConditionPrototype conditionProto = ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn(EmptyMask, "GetKeywordsMask(): conditionProto == null");
+
+            return conditionProto.KeywordsMask;
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

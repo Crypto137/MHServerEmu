@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -35,7 +36,7 @@ namespace MHServerEmu.Games.Entities
 
         public ulong NextConditionId { get => _nextConditionId++; }
 
-        public KeywordsMask ConditionKeywordsMask { get; internal set; }
+        public KeywordsMask ConditionKeywordsMask { get; } = new();
 
         public ConditionCollection(WorldEntity owner)
         {
@@ -490,13 +491,34 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private void OnInsertCondition(Condition condition)
+        private bool OnInsertCondition(Condition condition)
         {
-            // TODO
+            if (condition == null) return Logger.WarnReturn(false, "OnInsertCondition(): condition == null");
+            if (condition.Collection != this) return Logger.WarnReturn(false, "OnInsertCondition(): condition.Collection != this");
+
+            Handle handle = new(this, condition);
+
+            RebuildConditionKeywordsMask();
 
             OnPreAccrueCondition(condition);
 
+            if (handle.Valid() == false)
+                return true;
+
+            condition.IsEnabled = true;
+            condition.CacheStackId();
+
+            if (_owner.UpdateProcEffectPowers(condition.Properties, true) == false)
+                Logger.Warn($"OnInsertCondition(): UpdateProcEffectPowers failed when adding condition=[{condition}] owner=[{_owner}]");
+
+            // Uncomment this later
+            //_owner.Properties.AddChildCollection(condition.Properties);
+
+            if (handle.Valid() == false)
+                return true;
+
             OnPostAccrueCondition(condition);
+            return true;
         }
 
         private void OnPreAccrueCondition(Condition condition)
@@ -520,7 +542,7 @@ namespace MHServerEmu.Games.Entities
 
         private void OnPostUnaccrueCondition(Condition condition)
         {
-            // rebuildConditionKeywordsMask
+            RebuildConditionKeywordsMask(condition.Id);
             DecrementStackCountCache(condition);
         }
 
@@ -557,6 +579,18 @@ namespace MHServerEmu.Games.Entities
                 _owner.Game.GameEventScheduler.CancelEvent(condition.RemoveEvent);
 
             return true;
+        }
+
+        private void RebuildConditionKeywordsMask(ulong conditionIdToSkip = InvalidConditionId)
+        {
+            ConditionKeywordsMask.Clear();
+            foreach (Condition condition in _currentConditions.Values)
+            {
+                if (conditionIdToSkip != InvalidConditionId && condition.Id == conditionIdToSkip)
+                    continue;
+
+                GBitArray.Or(ConditionKeywordsMask, condition.GetKeywordsMask());
+            }
         }
 
         private void IncrementStackCountCache(Condition condition)
