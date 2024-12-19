@@ -3175,11 +3175,14 @@ namespace MHServerEmu.Games.Powers
             long preWindowTimeMS = (long)preWindowTime.TotalMilliseconds;
             long postWindowTimeMS = (long)postWindowTime.TotalMilliseconds;
 
+            // Delay this power's end if it's within the time window of not being interruptable
             if (timeSinceLastActivationMS >= preWindowTimeMS && timeSinceLastActivationMS < postWindowTimeMS)
             {
                 _lastActivationSettings.Flags |= PowerActivationSettingsFlags.Cancel;
                 TimeSpan endDelay = postWindowTime - timeSinceLastActivation;
                 SchedulePowerEnd(endDelay, flags | EndPowerFlags.WaitForMinTime);
+
+                return true;
             }
 
             return false;
