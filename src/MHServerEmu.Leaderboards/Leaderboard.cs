@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Leaderboards
 {
     public class Leaderboard
     {
-        public ulong LeaderboardId { get; } // PrototypeGuid
+        public PrototypeGuid LeaderboardId { get; }
         public LeaderboardPrototype Prototype { get; }
         public List<LeaderboardInstance> Instances { get; }
         public LeaderboardInstance ActiveInstance { get; protected set; }
@@ -22,12 +23,15 @@ namespace MHServerEmu.Leaderboards
                 AddInstance(dbInstance, true);
 
             if (dBLeaderboard.ActiveInstanceId != 0)
-                SetActiveInstance(dBLeaderboard.ActiveInstanceId);                
+                SetActiveInstance((ulong)dBLeaderboard.ActiveInstanceId);                
         }
 
-        private void SetActiveInstance(long activeInstanceId)
+        private void SetActiveInstance(ulong activeInstanceId, bool dbUpdate = false)
         {
-            throw new NotImplementedException();
+            if (dbUpdate && ActiveInstance != null && ActiveInstance.InstanceId != activeInstanceId)
+                ActiveInstance.SaveEntries();
+
+            ActiveInstance = GetInstance(activeInstanceId);
         }
 
         public void AddInstance(DBLeaderboardInstance dbInstance, bool loadEntries)

@@ -5,6 +5,7 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
+using System.Collections.Generic;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -14,7 +15,7 @@ namespace MHServerEmu.Leaderboards
         private readonly object _lock = new object();
         private LeaderboardTableData _cachedTableData;
 
-        public ulong LeaderboardId { get => _leaderboard.LeaderboardId; }
+        public PrototypeGuid LeaderboardId { get => _leaderboard.LeaderboardId; }
         public LeaderboardPrototype LeaderboardPrototype { get => _leaderboard.Prototype; }
         public ulong InstanceId { get; set; }
         public LeaderboardState State { get; set; }
@@ -81,7 +82,7 @@ namespace MHServerEmu.Leaderboards
         public LeaderboardMetadata ToMetadata()
         {
             return LeaderboardMetadata.CreateBuilder()
-                    .SetLeaderboardId(LeaderboardId)
+                    .SetLeaderboardId((ulong)LeaderboardId)
                     .SetInstanceId(InstanceId)
                     .SetState(State)
                     .SetActivationTimestampUtc((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
@@ -211,23 +212,35 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        public void SaveEntries(bool forceUpdate = false)
+        {
+            lock (_lock)
+            {
+                List<DBLeaderboardEntry> dbEntries = new();
+                foreach (var entry in Entries)
+                    if (forceUpdate || entry.NeedUpdate)
+                        dbEntries.Add(entry.ToDbEntry());
+
+                var dbManager = LeaderboardDatabase.Instance.DBManager;
+                dbManager.SetEntries(dbEntries);
+            }
+        }
+
         public void UpdateCachedTableData()
         {
             var tableDataBuilder = LeaderboardTableData.CreateBuilder()
                 .SetInfo(ToMetadata());
 
-            foreach (LeaderboardEntry entry in GetEntries(LeaderboardPrototype.DepthOfStandings))
-                tableDataBuilder.AddEntries(entry.ToProtobuf());
-
             lock (_lock)
             {
+                int depthOfStandings = LeaderboardPrototype.DepthOfStandings;
+                foreach (var entry in Entries)
+                {
+                    if (depthOfStandings-- == 0) break;
+                    tableDataBuilder.AddEntries(entry.ToProtobuf());
+                }
                 _cachedTableData = tableDataBuilder.Build();
             }
-        }
-
-        private IEnumerable<LeaderboardEntry> GetEntries(int depthOfStandings)
-        {
-            throw new NotImplementedException();
         }
 
         public void OnUpdate(LeaderboardQueue queue)

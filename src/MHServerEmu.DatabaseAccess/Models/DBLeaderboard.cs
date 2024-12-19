@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.System.Time;
+using System.Data.SQLite;
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
@@ -80,6 +81,16 @@ namespace MHServerEmu.DatabaseAccess.Models
                 }
                 RuleStates = memoryStream.ToArray();
             }
+        }
+
+        public void SetParameters(SQLiteCommand command)
+        {
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("@InstanceId", InstanceId);
+            command.Parameters.AddWithValue("@GameId", GameId);
+            command.Parameters.AddWithValue("@Score", Score);
+            command.Parameters.AddWithValue("@HighScore", HighScore);
+            command.Parameters.AddWithValue("@RuleStates", RuleStates);
         }
     }
 

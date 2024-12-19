@@ -3,32 +3,29 @@
 PRAGMA user_version = 2;
 
 CREATE TABLE "Leaderboards" (
-	"LeaderboardId"	INTEGER NOT NULL UNIQUE,
+	"LeaderboardId"	INTEGER NOT NULL PRIMARY KEY,
 	"PrototypeName"	TEXT,
 	"ActiveInstanceId"	INTEGER,
-	"IsActive"	INTEGER,
-	PRIMARY KEY("LeaderboardId")
+	"IsActive"	INTEGER
 )
 
 CREATE TABLE "Instances" (
-	"InstanceId"	INTEGER NOT NULL UNIQUE,
+	"InstanceId"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	"LeaderboardId"	INTEGER NOT NULL,
 	"State"	INTEGER,
 	"ActivationDate"	INTEGER,
 	"Visible"	INTEGER,
-	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE,
-	PRIMARY KEY("InstanceId" AUTOINCREMENT)
+	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE
 )
 
 CREATE TABLE "Entries" (
-	"Id"	INTEGER NOT NULL UNIQUE,
 	"InstanceId"	INTEGER NOT NULL,
 	"GameId"	INTEGER NOT NULL,
 	"Score"	INTEGER,
 	"HighScore"	INTEGER,
 	"RuleStates"	BLOB,
-	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE,
-	PRIMARY KEY("Id" AUTOINCREMENT)
+	PRIMARY KEY ("InstanceId", "GameId"),
+	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
 )
 
 CREATE TABLE "MetaInstances" (

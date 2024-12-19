@@ -6,17 +6,17 @@ using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.DatabaseAccess.SQLite
 {
-    public class SQLiteLDBManager
+    public class SQLiteLeaderboardDBManager
     {
         private const int CurrentSchemaVersion = 1;         // Increment this when making changes to the database schema
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public static SQLiteLDBManager Instance { get; } = new();
+        public static SQLiteLeaderboardDBManager Instance { get; } = new();
 
         private string _dbFilePath;
         private string _connectionString;
 
-        private SQLiteLDBManager() { }
+        private SQLiteLeaderboardDBManager() { }
 
         public bool Initialize(string configPath)
         {
@@ -79,16 +79,20 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using SQLiteConnection connection = GetConnection();
 
             List<DBLeaderboardInstance> instanceList = new(
-                connection.Query<DBLeaderboardInstance>(
-                    "SELECT * FROM Instances WHERE LeaderboardId = @LeaderboardId AND State <= 1 ORDER BY InstanceId DESC",
+                connection.Query<DBLeaderboardInstance>(@"
+                    SELECT * FROM Instances 
+                    WHERE LeaderboardId = @LeaderboardId AND State <= 1 
+                    ORDER BY InstanceId DESC",
                     new { LeaderboardId = leaderboardId }));
 
             if (maxArchivedInstances > 0)
             {
                 instanceList.AddRange(
-                connection.Query<DBLeaderboardInstance>(
-                    "SELECT * FROM Instances WHERE LeaderboardId = @LeaderboardId AND State > 1 ORDER BY InstanceId DESC LIMIT @MaxArchivedInstances",
-                    new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances}));
+                    connection.Query<DBLeaderboardInstance>(@"
+                        SELECT * FROM Instances 
+                        WHERE LeaderboardId = @LeaderboardId AND State > 1 
+                        ORDER BY InstanceId DESC LIMIT @MaxArchivedInstances",
+                        new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances}));
             }
 
             return instanceList;
@@ -100,12 +104,46 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             string order = ascending ? "ASC" : "DESC";
 
-            List<DBLeaderboardEntry> entryList = new(
-                connection.Query<DBLeaderboardEntry>(
-                    $"SELECT * FROM Entries WHERE InstanceId = @InstanceId ORDER BY HighScore {order}",
-                    new { InstanceId = instanceId }));
+            return connection.Query<DBLeaderboardEntry>(@"
+                SELECT * FROM Entries WHERE InstanceId = @InstanceId 
+                ORDER BY HighScore " + order, 
+                new { InstanceId = instanceId }).ToList();
+        }
 
-            return entryList;
+        public void SetEntries(List<DBLeaderboardEntry> dbEntries)
+        {
+            if (dbEntries.Count == 0) return;
+            using var connection = GetConnection();
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+
+            var updateCommand = new SQLiteCommand(connection)
+            {
+                CommandText = @"
+                UPDATE Entries
+                SET Score = @Score, HighScore = @HighScore, RuleStates = @RuleStates
+                WHERE InstanceId = @InstanceId AND GameId = @GameId"
+            };
+
+            var insertCommand = new SQLiteCommand(connection)
+            {
+                CommandText = @"
+                INSERT INTO Entries (InstanceId, GameId, Score, HighScore, RuleStates)
+                VALUES (@InstanceId, @GameId, @Score, @HighScore, @RuleStates)"
+            };
+
+            foreach (var entry in dbEntries)
+            {
+                entry.SetParameters(updateCommand);
+                if (updateCommand.ExecuteNonQuery() == 0)
+                {
+                    entry.SetParameters(insertCommand);
+                    insertCommand.ExecuteNonQuery();
+                }
+            }
+
+            transaction.Commit();
         }
 
         public void SetMetaInstances(long leaderboardId, long instanceId, List<DBMetaInstance> instances)
@@ -166,6 +204,5 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             return instances;
         }
-
     }
 }

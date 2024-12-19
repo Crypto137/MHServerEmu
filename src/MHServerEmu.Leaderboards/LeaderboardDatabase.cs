@@ -22,7 +22,7 @@ namespace MHServerEmu.Leaderboards
         private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
         private Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
         private Dictionary<ulong, string> _playerNames = new();
-        public SQLiteLDBManager DBManager { get; private set; }
+        public SQLiteLeaderboardDBManager DBManager { get; private set; }
         public int LeaderboardCount { get; set; }
         public static LeaderboardDatabase Instance { get; } = new();
         private LeaderboardDatabase() { }
@@ -30,7 +30,7 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Initializes the <see cref="LeaderboardDatabase"/> instance.
         /// </summary>
-        public bool Initialize(SQLiteLDBManager instance)
+        public bool Initialize(SQLiteLeaderboardDBManager instance)
         {
             DBManager = instance;
 

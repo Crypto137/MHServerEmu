@@ -11,6 +11,7 @@ namespace MHServerEmu.Leaderboards
         public ulong Score { get; set; }
         public ulong HighScore { get; set; }
         public List<LeaderboardRuleState> RuleStates { get; set; }
+        public bool NeedUpdate { get; set; }
 
         public LeaderboardEntry(DBLeaderboardEntry dbEntry)
         {
@@ -18,6 +19,18 @@ namespace MHServerEmu.Leaderboards
             Score = (ulong)dbEntry.Score;
             HighScore = (ulong)dbEntry.HighScore;
             RuleStates = dbEntry.GetRuleStates();
+        }
+
+        public DBLeaderboardEntry ToDbEntry()
+        {
+            DBLeaderboardEntry entry = new()
+            {
+                GameId = (long)GameId,
+                Score = (long)Score,
+                HighScore = (long)HighScore
+            };
+            entry.SetRuleStates(RuleStates);
+            return entry;
         }
 
         public Gazillion.LeaderboardEntry ToProtobuf()
