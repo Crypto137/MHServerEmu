@@ -2965,6 +2965,22 @@ namespace MHServerEmu.Games.Entities
                 ScheduleEntityEvent(_exitWorldEvent, time);
         }
 
+        public void ScheduleApplyPowerResultsEvent(PowerResults powerResults)
+        {
+            if (IsSimulated == false)
+                return;
+
+            if (powerResults.PowerPrototype.ApplyResultsImmediately)
+            {
+                ApplyPowerResults(powerResults);
+            }
+            else
+            {
+                EventPointer<ScheduledPowerResultsEvent> scheduledPowerResults = new();
+                ScheduleEntityEvent(scheduledPowerResults, TimeSpan.Zero, powerResults);
+            }
+        }
+
         public void CancelExitWorldEvent()
         {
             if (_exitWorldEvent.IsValid)
@@ -2985,6 +3001,11 @@ namespace MHServerEmu.Games.Entities
         protected class ScheduledKillEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.Kill();
+        }
+
+        private class ScheduledPowerResultsEvent : CallMethodEventParam1<Entity, PowerResults>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).ApplyPowerResults(p1);
         }
 
         private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>

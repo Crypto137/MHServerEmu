@@ -857,7 +857,6 @@ namespace MHServerEmu.Games.Powers
                 }
 
                 targetResultsList.Add(results);
-                Logger.Warn(results.Properties.ToString());
             }
 
             // Calculate owner results
@@ -885,7 +884,7 @@ namespace MHServerEmu.Games.Powers
                 if (target == null || target.IsInWorld == false)
                     continue;
 
-                target.ApplyPowerResults(results);
+                target.ScheduleApplyPowerResultsEvent(results);
             }
 
             ListPool<WorldEntity>.Instance.Return(targetList);
