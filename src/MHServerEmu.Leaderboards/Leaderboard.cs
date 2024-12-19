@@ -1,4 +1,5 @@
-﻿using MHServerEmu.DatabaseAccess.Models;
+﻿using Gazillion;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
@@ -11,7 +12,7 @@ namespace MHServerEmu.Leaderboards
         public LeaderboardPrototype Prototype { get; }
         public List<LeaderboardInstance> Instances { get; }
         public LeaderboardInstance ActiveInstance { get; protected set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get => ActiveInstance != null && ActiveInstance.State == LeaderboardState.eLBS_Active; }
 
         public Leaderboard(LeaderboardPrototype proto, DBLeaderboard dBLeaderboard)
         {

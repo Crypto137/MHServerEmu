@@ -39,7 +39,6 @@ namespace MHServerEmu.DatabaseAccess.Models
 
     public class DBLeaderboardEntry
     {
-        public long Id { get; set; }
         public long InstanceId { get; set; }
         public long GameId { get; set; }
         public long Score { get; set; }

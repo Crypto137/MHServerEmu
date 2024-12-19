@@ -5,7 +5,6 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
-using System.Collections.Generic;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -219,7 +218,7 @@ namespace MHServerEmu.Leaderboards
                 List<DBLeaderboardEntry> dbEntries = new();
                 foreach (var entry in Entries)
                     if (forceUpdate || entry.NeedUpdate)
-                        dbEntries.Add(entry.ToDbEntry());
+                        dbEntries.Add(entry.ToDbEntry(InstanceId));
 
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.SetEntries(dbEntries);
@@ -243,9 +242,20 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void OnUpdate(LeaderboardQueue queue)
+        public void OnUpdate(in LeaderboardQueue queue)
         {
-            throw new NotImplementedException();
+            lock (_lock)
+            {
+                var gameId = queue.GameId;
+                if (_entryMap.TryGetValue(gameId, out var entry) == false)
+                {
+                    entry = new(queue);
+                    Entries.Add(entry);
+                    _entryMap.Add(gameId, entry);
+                }
+
+                entry.UpdateScore(queue, LeaderboardPrototype);
+            }
         }
 
         public void InitMetaLeaderboardEntries(MetaLeaderboardEntryPrototype[] metaLeaderboardEntries)

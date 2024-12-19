@@ -30,18 +30,18 @@ namespace MHServerEmu.Games.Leaderboards
     public struct LeaderboardQueue
     {
         public PrototypeGuid LeaderboardId;
-        public ulong GameId;
+        public PrototypeGuid GameId;
         public ulong AvatarId;
-        public long RuleId;
-        public int Count;
+        public ulong RuleId;
+        public ulong Count;
 
         public LeaderboardQueue(in LeaderboardGuidKey key, int count)
         {
             LeaderboardId = key.LeaderboardGuid;
-            GameId = key.PlayerGuid;
+            GameId = (PrototypeGuid)key.PlayerGuid;
             AvatarId = (ulong)key.AvatarGuid;
-            RuleId = key.RuleGuid;
-            Count = count;
+            RuleId = (ulong)key.RuleGuid;
+            Count = (ulong)count;
         }
     }
 }

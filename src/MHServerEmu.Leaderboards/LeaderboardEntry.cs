@@ -1,5 +1,9 @@
-﻿using MHServerEmu.DatabaseAccess.Models;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -21,10 +25,18 @@ namespace MHServerEmu.Leaderboards
             RuleStates = dbEntry.GetRuleStates();
         }
 
-        public DBLeaderboardEntry ToDbEntry()
+        public LeaderboardEntry(in LeaderboardQueue queue)
+        {
+            GameId = (PrototypeGuid)queue.GameId;
+            Name = LeaderboardDatabase.Instance.GetPlayerNameById(GameId);
+            RuleStates = new();
+        }
+
+        public DBLeaderboardEntry ToDbEntry(ulong instanceId)
         {
             DBLeaderboardEntry entry = new()
             {
+                InstanceId = (long)instanceId,
                 GameId = (long)GameId,
                 Score = (long)Score,
                 HighScore = (long)HighScore
@@ -44,6 +56,80 @@ namespace MHServerEmu.Leaderboards
                 entryBuilder.SetNameId((ulong)NameId);
 
             return entryBuilder.Build();
+        }
+
+        public void UpdateScore(in LeaderboardQueue queue, LeaderboardPrototype leaderboardProto)
+        {
+            var ruleId = (ulong)queue.RuleId;
+            var ruleState = RuleStates.Find(rule => rule.RuleId == ruleId);
+            if (ruleState == null)
+            {
+                ruleState = new() { RuleId = ruleId };
+                RuleStates.Add(ruleState);
+            }
+
+            if (leaderboardProto.ScoringRules.IsNullOrEmpty()) return;
+
+            var scoringRule = leaderboardProto.ScoringRules.First(rule => (ulong)rule.GUID == ruleId);
+            if (scoringRule == null || scoringRule.Event == null) return;
+            if (scoringRule is not LeaderboardScoringRuleIntPrototype ruleIntProto) return;
+
+            ulong count = queue.Count;
+            ulong oldCount = ruleState.Count;
+            ulong score = count * (ulong)ruleIntProto.ValueInt;
+            ulong deltaScore = score - ruleState.Score;
+
+            var method = ScoringEvents.GetMethod(scoringRule.Event.Type);
+            switch (method)
+            {
+                case ScoringMethod.Update:
+
+                    if (count != oldCount)
+                    {
+                        ruleState.Count = count;
+                        ruleState.Score = score;
+                        Score += deltaScore;
+                    }
+                    break;
+
+                case ScoringMethod.Add:
+
+                    ruleState.Count += count;
+                    ruleState.Score += score;
+                    Score += score;
+                    break;
+
+                case ScoringMethod.Max:
+
+                    if (count > oldCount)
+                    {
+                        ruleState.Count = count;
+                        ruleState.Score = score;
+                        Score += deltaScore;
+                    }
+                    break;
+
+                case ScoringMethod.Min:
+
+                    if (count < oldCount || oldCount == 0)
+                    {
+                        ruleState.Count = count;
+                        ruleState.Score = score;
+                        Score += deltaScore;
+                    }
+                    break;
+            }
+
+            if (leaderboardProto.RankingRule == LeaderboardRankingRule.Ascending)
+            {
+                HighScore = (HighScore == 0) ? Score : Math.Min(Score, HighScore);
+            }
+            else
+            {
+                HighScore = Math.Max(Score, HighScore);
+            }
+
+            NeedUpdate = true;
         }
     }
 }
