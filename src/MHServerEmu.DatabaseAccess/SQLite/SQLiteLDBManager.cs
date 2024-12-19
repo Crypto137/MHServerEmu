@@ -107,5 +107,65 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             return entryList;
         }
+
+        public void SetMetaInstances(long leaderboardId, long instanceId, List<DBMetaInstance> instances)
+        {
+            using var connection = GetConnection();
+            connection.Open();
+
+            using var transaction = connection.BeginTransaction();
+            using var command = new SQLiteCommand(connection)
+            {
+                CommandText = @"
+                INSERT INTO MetaInstances (LeaderboardId, InstanceId, MetaLeaderboardId, MetaInstanceId)
+                VALUES (@LeaderboardId, @InstanceId, @MetaLeaderboardId, @MetaInstanceId)"
+            };
+
+            foreach (var instance in instances)
+            {
+                command.Parameters.Clear();
+                command.Parameters.AddWithValue("@LeaderboardId", leaderboardId);
+                command.Parameters.AddWithValue("@InstanceId", instanceId);
+                command.Parameters.AddWithValue("@MetaLeaderboardId", instance.MetaLeaderboardId);
+                command.Parameters.AddWithValue("@MetaInstanceId", instance.MetaInstanceId);
+                command.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+
+        public List<DBMetaInstance> GetMetaInstances(long leaderboardId, long instanceId)
+        {
+            var instances = new List<DBMetaInstance>();
+
+            using var connection = GetConnection();
+            connection.Open();
+
+            using var command = new SQLiteCommand(connection)
+            {
+                CommandText = @"
+                SELECT MetaLeaderboardId, MetaInstanceId
+                FROM MetaInstances
+                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId"
+            };
+
+            command.Parameters.AddWithValue("@LeaderboardId", leaderboardId);
+            command.Parameters.AddWithValue("@InstanceId", instanceId);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var instance = new DBMetaInstance
+                {
+                    MetaLeaderboardId = reader.GetInt64(0),
+                    MetaInstanceId = reader.GetInt64(1)
+                };
+
+                instances.Add(instance);
+            }
+
+            return instances;
+        }
+
     }
 }

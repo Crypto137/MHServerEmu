@@ -30,6 +30,12 @@ namespace MHServerEmu.DatabaseAccess.Models
         }
     }
 
+    public class DBMetaInstance
+    {
+        public long MetaLeaderboardId { get; set; }
+        public long MetaInstanceId { get; set; }
+    }
+
     public class DBLeaderboardEntry
     {
         public long Id { get; set; }

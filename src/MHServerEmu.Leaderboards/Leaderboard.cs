@@ -36,9 +36,16 @@ namespace MHServerEmu.Leaderboards
             if (instance != null) return;
 
             instance = new(this, dbInstance);
+
+            if (Prototype.Type == LeaderboardType.MetaLeaderboard)
+                instance.InitMetaLeaderboardEntries(Prototype.MetaLeaderboardEntries);
+
             Instances.Add(instance);
 
             if (loadEntries) instance.LoadEntries();
+
+            if (Prototype.Type == LeaderboardType.MetaLeaderboard)
+                instance.LoadMetaInstances();
         }
 
         public LeaderboardInstance GetInstance(ulong instanceId)

@@ -31,5 +31,13 @@ CREATE TABLE "Entries" (
 	PRIMARY KEY("Id" AUTOINCREMENT)
 )
 
+CREATE TABLE "MetaInstances" (
+	"LeaderboardId"	INTEGER NOT NULL,
+	"InstanceId"	INTEGER NOT NULL,
+	"MetaLeaderboardId"	INTEGER NOT NULL,
+	"MetaInstanceId"	INTEGER NOT NULL,
+	PRIMARY KEY("LeaderboardId", "InstanceId")
+)
+
 CREATE INDEX idx_instances_leaderboardid ON Instances (LeaderboardId);
 CREATE INDEX idx_entries_instanceid ON Entries (InstanceId);

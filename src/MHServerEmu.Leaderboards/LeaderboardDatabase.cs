@@ -191,8 +191,8 @@ namespace MHServerEmu.Leaderboards
             LeaderboardEntry entry;
             if (type == LeaderboardType.MetaLeaderboard)
             {
-                var leaderboardEntryId = instance.GetLeaderboardEntryId(guid);
-                entry = instance.GetEntry(leaderboardEntryId, avatarId);
+                var metaLeaderboardId = instance.GetMetaLeaderboardId(guid);
+                entry = instance.GetEntry(metaLeaderboardId, avatarId);
             }
             else
             {

@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
@@ -22,8 +23,10 @@ namespace MHServerEmu.Leaderboards
         public bool Visible { get; set; }
         public List<LeaderboardEntry> Entries { get; }
 
-        private Dictionary<PrototypeGuid, LeaderboardEntry> _entryMap = new(); 
+        private Dictionary<PrototypeGuid, LeaderboardEntry> _entryMap = new();
+        private Dictionary<PrototypeGuid, PrototypeGuid> _entryGuidMap;
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
+        private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
 
         public LeaderboardInstance(Leaderboard leaderboard, DBLeaderboardInstance dbInstance)
         {
@@ -94,9 +97,23 @@ namespace MHServerEmu.Leaderboards
             return entry;
         }
 
-        public PrototypeGuid GetLeaderboardEntryId(PrototypeGuid guid)
+        public PrototypeGuid GetMetaLeaderboardId(PrototypeGuid guid)
         {
-            throw new NotImplementedException();
+            if (_entryGuidMap.TryGetValue(guid, out var metaLeaderboardId) == false)
+                foreach (var entry in _metaLeaderboardEntries)
+                    if (entry.MetaInstance != null && entry.MetaInstance.HasEntryGuid(guid))
+                    {
+                        metaLeaderboardId = entry.MetaLeaderboardId;
+                        _entryGuidMap[guid] = metaLeaderboardId;
+                        break;
+                    }
+
+            return metaLeaderboardId;
+        }
+
+        private bool HasEntryGuid(PrototypeGuid guid)
+        {
+            return _entryGuidMap.ContainsKey(guid);
         }
 
         private void InitPercentileBuckets()
@@ -138,6 +155,28 @@ namespace MHServerEmu.Leaderboards
             lock (_lock)
             {
                 return _cachedTableData;
+            }
+        }
+
+        public void LoadMetaInstances()
+        {
+            var dbManager = LeaderboardDatabase.Instance.DBManager;
+            foreach (var dbMetaInstance in dbManager.GetMetaInstances((long)LeaderboardId, (long)InstanceId))
+                SetMetaInstance((PrototypeGuid)dbMetaInstance.MetaLeaderboardId, (ulong)dbMetaInstance.MetaInstanceId);
+        }
+
+        private void SetMetaInstance(PrototypeGuid metaLeaderboardId, ulong metaInstanceId)
+        {
+            lock (_lock)
+            {
+                var leaderboard = LeaderboardDatabase.Instance.GetLeaderboard(metaLeaderboardId);
+                if (leaderboard == null) return;
+                var instance = leaderboard.GetInstance(InstanceId);
+                if (instance == null) return;
+                var metaEntry = _metaLeaderboardEntries.Find(meta => meta.MetaLeaderboardId == metaLeaderboardId);
+                if (metaEntry == null) return;
+                metaEntry.MetaInstance = instance;
+                metaEntry.MetaInstanceId = metaInstanceId;
             }
         }
 
@@ -194,6 +233,34 @@ namespace MHServerEmu.Leaderboards
         public void OnUpdate(LeaderboardQueue queue)
         {
             throw new NotImplementedException();
+        }
+
+        public void InitMetaLeaderboardEntries(MetaLeaderboardEntryPrototype[] metaLeaderboardEntries)
+        {
+            if (metaLeaderboardEntries.IsNullOrEmpty()) return;
+
+            _metaLeaderboardEntries = new();
+            _entryGuidMap = new();
+            foreach (var entryProto in metaLeaderboardEntries)
+            {
+                var metaLeaderboardId = GameDatabase.GetPrototypeGuid(entryProto.Leaderboard);
+                if (metaLeaderboardId == PrototypeGuid.Invalid) continue;
+                _metaLeaderboardEntries.Add(new(metaLeaderboardId, entryProto.Rewards));
+            }
+        }
+    }
+
+    public class MetaLeaderboardEntry
+    {
+        public PrototypeGuid MetaLeaderboardId { get; }
+        public ulong MetaInstanceId { get; set; }
+        public LeaderboardInstance MetaInstance { get; set; }
+        public LeaderboardRewardEntryPrototype[] Rewards { get; }
+
+        public MetaLeaderboardEntry(PrototypeGuid metaLeaderboardId, LeaderboardRewardEntryPrototype[] rewards)
+        {
+            MetaLeaderboardId = metaLeaderboardId;
+            Rewards = rewards;
         }
     }
 }
