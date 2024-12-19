@@ -808,14 +808,21 @@ namespace MHServerEmu.Games.Powers
         public static bool DeliverPayload(PowerPayload payload)
         {
             // Find targets for this power application
-            List<WorldEntity> targetList = new();
+            List<WorldEntity> targetList = ListPool<WorldEntity>.Instance.Get();
+            List<PowerResults> targetResultsList = ListPool<PowerResults>.Instance.Get();
+
             GetTargets(targetList, payload);
+
+            EntityManager entityManager = payload.Game.EntityManager;
 
             PowerPrototype powerProto = payload.PowerPrototype;
             Game game = payload.Game;
-            WorldEntity ultimateOwner = game.EntityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
+            WorldEntity powerOwner = entityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+            WorldEntity ultimateOwner = entityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
             Avatar avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
             Player player = avatar?.GetOwnerOfType<Player>();
+
+            PowerActivationSettings activationSettings = payload.ActivationSettings;
 
             // Calculate and apply results for each target
             int payloadCombatLevel = payload.CombatLevel;
@@ -849,9 +856,39 @@ namespace MHServerEmu.Games.Powers
                         target.SetTaggedBy(player, powerProto);
                 }
 
+                targetResultsList.Add(results);
+            }
+
+            // Calculate owner results
+            if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false)
+            {
+                Power power = powerOwner.GetPower(powerProto.DataRef);
+                if (power != null)
+                {
+                    power.HandleTriggerPowerEventOnPowerApply(ref activationSettings);
+
+                    foreach (PowerResults results in targetResultsList)
+                    {
+                        if (results.IsDodged)
+                            continue;
+
+                        power.HandleTriggerPowerEventOnPowerHit(results, ref activationSettings);
+                    }
+                }
+            }
+
+            // Apply results - this is delayed to account for proc effects that may kill our targets
+            foreach (PowerResults results in targetResultsList)
+            {
+                WorldEntity target = entityManager.GetEntity<WorldEntity>(results.TargetId);
+                if (target == null || target.IsInWorld == false)
+                    continue;
+
                 target.ApplyPowerResults(results);
             }
 
+            ListPool<WorldEntity>.Instance.Return(targetList);
+            ListPool<PowerResults>.Instance.Return(targetResultsList);
             return true;
         }
 
@@ -3012,9 +3049,6 @@ namespace MHServerEmu.Games.Powers
                     }
                 }
             }
-
-            // Trigger application event
-            HandleTriggerPowerEventOnPowerApply();
 
             // Avatar may exit world as a result of the application of this power
             if (Owner.IsInWorld == false) return true;

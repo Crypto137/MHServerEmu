@@ -44,6 +44,8 @@ namespace MHServerEmu.Games.Powers
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
 
+        public PowerActivationSettings ActivationSettings { get => new(TargetId, TargetPosition, PowerOwnerPosition); }
+
         /// <summary>
         /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
         /// the state of the <see cref="Power"/> and its owner.

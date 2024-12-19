@@ -38,9 +38,9 @@ namespace MHServerEmu.Games.Powers
 
         }
 
-        public void HandleTriggerPowerEventOnPowerApply()               // 4
+        public void HandleTriggerPowerEventOnPowerApply(ref PowerActivationSettings payloadSettings)  // 4
         {
-            PowerActivationSettings settings = _lastActivationSettings;
+            PowerActivationSettings settings = payloadSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
 
             HandleTriggerPowerEvent(PowerEventType.OnPowerApply, ref settings);
@@ -54,9 +54,19 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnPowerEnd, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnPowerHit()                 // 6
+        public void HandleTriggerPowerEventOnPowerHit(PowerResults powerResults, ref PowerActivationSettings payloadSettings)    // 6
         {
+            PowerActivationSettings settings = payloadSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.NotifyOwner | PowerActivationSettingsFlags.ServerCombo;
 
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.TargetId);
+            if (target != null)
+                settings.TargetPosition = target.RegionLocation.Position;
+
+            HandleTriggerPowerEvent(PowerEventType.OnPowerHit, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerStart()               // 7
