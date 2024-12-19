@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.Entities.Items
             // Validation
 
             // Loot types not defined here cannot be used as MysteryChest replacements
-            const LootType LootTypeFilter = LootType.Item | LootType.Currency | LootType.CallbackNode;
+            const LootType LootTypeFilter = LootType.Item | LootType.Currency | LootType.CallbackNode | LootType.VanityTitle;
 
             LootType unsupportedTypes = lootResultSummary.Types & ~LootTypeFilter;
             if (unsupportedTypes != LootType.None)
@@ -511,6 +511,10 @@ namespace MHServerEmu.Games.Entities.Items
                 // Do callbacks
                 foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
                     callbackNode.OnResultsEvaluation(player, null);
+
+                // Grant vanity titles
+                foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
+                    player.UnlockVanityTitle(vanityTitleProtoRef);
 
                 // Consume a stack of this item
                 DecrementStack();
