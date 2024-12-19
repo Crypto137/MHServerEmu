@@ -1616,8 +1616,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public AssetId GetCurrentCostumeAssetRef()
         {
+            // HACK: Return starting costume for Entity/Items/Costumes/Costume.defaults to avoid spam when forcing pre-VU costumes
             CostumePrototype equippedCostume = EquippedCostume;
-            if (equippedCostume != null)
+            if (equippedCostume != null && equippedCostume.DataRef != (PrototypeId)10774581141289766864)
                 return equippedCostume.CostumeUnrealClass;
 
             return GetStartingCostumeAssetRef();
