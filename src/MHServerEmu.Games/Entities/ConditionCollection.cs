@@ -273,8 +273,27 @@ namespace MHServerEmu.Games.Entities
 
                 condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
 
-                // TODO: Additional effects
+                // Trigger additional effects (TODO: procs)
+                WorldEntity creator = _owner.Game.EntityManager.GetEntity<WorldEntity>(condition.CreatorId);
+                PowerPrototype powerProto = condition.CreatorPowerPrototype;
 
+                if (creator != null && powerProto != null)
+                {
+                    Power power = creator.GetPower(powerProto.DataRef);
+                    power?.HandleTriggerPowerEventOnStackCount(_owner, stackCount);
+                }
+
+                if (powerProto != null)
+                {
+                    if (stackingBehaviorProto == null)
+                    {
+                        Logger.Warn("AddCondition(): stackingBehaviorProto == null");
+                        break;
+                    }
+
+                    if (stackingBehaviorProto.RemoveStackOnMaxNumStacksReached && stackCount >= stackingBehaviorProto.MaxNumStacks && handle.Valid())
+                        RemoveStack(condition.StackId);
+                }
             } while (false);
 
             if (handle.Valid() && condition.IsInCollection == false)
@@ -648,6 +667,18 @@ namespace MHServerEmu.Games.Entities
                     Logger.Warn("DecrementStackCountCache(): count < 0");
 
                 _stackCountCache.Remove(stackId);
+            }
+        }
+
+        /// <summary>
+        /// Removes all <see cref="Condition"/> instances that match the provided <see cref="StackId"/> from this <see cref="ConditionCollection"/>.
+        /// </summary>
+        private void RemoveStack(in StackId stackId)
+        {
+            foreach (Condition condition in this)
+            {
+                if (condition.CanStackWith(stackId))
+                    RemoveCondition(condition);
             }
         }
 

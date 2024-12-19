@@ -24,23 +24,25 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnContactTime, ref settings);
         }
 
         public void HandleTriggerPowerEventOnCriticalHit()              // 2
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnHitKeyword()               // 3
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnPowerApply()               // 4
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerApply, ref settings);
         }
 
@@ -48,93 +50,115 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerEnd, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerHit()                 // 6
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnPowerStart()               // 7
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerStart, ref settings);
         }
 
         public void HandleTriggerPowerEventOnProjectileHit()            // 8
         {
-            // not present in the client
+
         }
 
-        public void HandleTriggerPowerEventOnStackCount()               // 9
+        public void HandleTriggerPowerEventOnStackCount(WorldEntity target, int stackCount)    // 9
         {
-            // not present in the client
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = target.Id;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            HandleTriggerPowerEvent(PowerEventType.OnStackCount, ref settings, stackCount, MathComparisonType.Equals);
         }
 
         public void HandleTriggerPowerEventOnTargetKill()               // 10
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnSummonEntity()             // 11
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnHoldBegin()                // 12
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnMissileHit()               // 13
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnMissileKilled()            // 14
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnHotspotNegated()           // 15
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnHotspotNegatedByOther()    // 16
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnHotspotOverlapBegin()      // 17
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnHotspotOverlapEnd()        // 18
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnRemoveCondition(PowerResults powerResults, int numRemoved) // 19
         {
-            Logger.Debug("HandleTriggerPowerEventOnRemoveCondition()");
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            for (int i = 0; i < numRemoved; i++)
+                HandleTriggerPowerEvent(PowerEventType.OnRemoveCondition, ref settings);
         }
 
         public void HandleTriggerPowerEventOnRemoveNegStatusEffect(PowerResults powerResults)    // 20
         {
-            Logger.Debug("HandleTriggerPowerEventOnRemoveNegStatusEffect()");
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            HandleTriggerPowerEvent(PowerEventType.OnRemoveNegStatusEffect, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerPivot()               // 21
         {
             // Client-only?
             Logger.Debug("HandleTriggerPowerEventOnPowerPivot()");
+
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
             settings.Flags |= PowerActivationSettingsFlags.ClientCombo;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerPivot, ref settings);
         }
 
@@ -142,6 +166,7 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOn, ref settings);
         }
 
@@ -149,6 +174,7 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerToggleOff, ref settings);
         }
 
@@ -207,6 +233,7 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnExtraActivationCooldown, ref settings);
         }
 
@@ -214,28 +241,30 @@ namespace MHServerEmu.Games.Powers
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnPowerLoopEnd, ref settings);
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerAssigned()      // 27
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerUnassigned()    // 28
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnEntityControlled()                 // 29
         {
-            // not present in the client
+
         }
 
         public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()  // 30
         {
             PowerActivationSettings settings = _lastActivationSettings;
             settings.TriggeringPowerRef = PrototypeDataRef;
+
             HandleTriggerPowerEvent(PowerEventType.OnOutOfRangeActivateMovementPower, ref settings);
         }
 
