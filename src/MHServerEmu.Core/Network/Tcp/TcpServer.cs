@@ -153,8 +153,14 @@ namespace MHServerEmu.Core.Network.Tcp
                     bytesSentTotal += bytesSent;
                 }
             }
-            catch (SocketException) { RemoveClientConnection(connection); }
-            catch (Exception e) { Logger.DebugException(e, nameof(Send)); }
+            catch (SocketException)
+            {
+                RemoveClientConnection(connection);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(Send));
+            }
 
             return bytesSentTotal;
         }
@@ -195,13 +201,16 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task AcceptConnectionsAsync()
         {
+            const int MaxErrorCount = 100;
+            int errorCount = 0;
+
             while (true)
             {
                 try
                 {
                     // Wait for a connection
                     Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
-                    socket.SendTimeout = 10000;
+                    socket.SendTimeout = 6000;  // Exile-like
 
                     // Establish a new client connection
                     TcpClientConnection connection = new(this, socket);
@@ -210,9 +219,23 @@ namespace MHServerEmu.Core.Network.Tcp
 
                     // Begin receiving data from our new connection
                     _ = Task.Run(async () => await ReceiveDataAsync(connection));
+
+                    // Reset the error counter if everything is fine
+                    errorCount = 0;
                 }
-                catch (TaskCanceledException) { return; }
-                catch (Exception e) { Logger.DebugException(e, nameof(AcceptConnectionsAsync)); }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorException(e, nameof(AcceptConnectionsAsync));
+
+                    // Limit the number of errors in a row to prevent the server from infinitely writing error messages when it's stuck in an error loop.
+                    // We have only a single report of this happening so far, which was on Linux, but better safe than sorry.
+                    if (errorCount >= MaxErrorCount)
+                        throw new($"AcceptConnectionsAsync: Maximum error count ({MaxErrorCount}) reached.");
+                }
             }
         }
 
@@ -249,10 +272,13 @@ namespace MHServerEmu.Core.Network.Tcp
                     RemoveClientConnection(connection);
                     return;
                 }
-                catch (TaskCanceledException) { return; }
+                catch (TaskCanceledException)
+                {
+                    return;
+                }
                 catch (Exception e)
                 {
-                    Logger.DebugException(e, nameof(ReceiveDataAsync));
+                    Logger.ErrorException(e, nameof(ReceiveDataAsync));
                     return;
                 }
             }
