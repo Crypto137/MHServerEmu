@@ -857,6 +857,7 @@ namespace MHServerEmu.Games.Powers
                 }
 
                 targetResultsList.Add(results);
+                Logger.Warn(results.Properties.ToString());
             }
 
             // Calculate owner results
@@ -3702,12 +3703,13 @@ namespace MHServerEmu.Games.Powers
             if (region == null) return Logger.WarnReturn(false, "GetAOETargets(): region == null");
 
             // Look for potential targets in the AOE shape
-            List<WorldEntity> potentialTargetList = new(256);
+            List<WorldEntity> potentialTargetList = ListPool<WorldEntity>.Instance.Get();
             GetPotentialTargetsInShape(region, radius, in aoePosition, in aoeDirection, powerProto, potentialTargetList);
 
             // Set up random
             if (reachProto.RandomAOETargets && randomSeed == 0)
             {
+                ListPool<WorldEntity>.Instance.Return(potentialTargetList);
                 return Logger.WarnReturn(false,
                     $"GetAOETargets(): A power has RandomAOETargets set true, but no random seed to do it with!\n Power: {powerProto}\n Owner: {owner}\n");
             }
@@ -3740,8 +3742,9 @@ namespace MHServerEmu.Games.Powers
                     if (powerProto.MaxAOETargets > 0 && targetList.Count >= powerProto.MaxAOETargets)
                         break;
                 }
-            }     
+            }
 
+            ListPool<WorldEntity>.Instance.Return(potentialTargetList);
             return true;
         }
 
