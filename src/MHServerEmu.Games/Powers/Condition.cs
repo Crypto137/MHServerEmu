@@ -60,10 +60,12 @@ namespace MHServerEmu.Games.Powers
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly KeywordsMask EmptyMask = new();
 
+        // NOTE: If you add any new fields here, also add them to Clear()
+
         private ConditionSerializationFlags _serializationFlags;
-        private ulong _conditionId;                                          // Condition id
-        private ulong _creatorId;                                   // Entity id
-        private ulong _ultimateCreatorId;                           // Entity id, the highest entity in the creation hierarchy (i.e. creator of creator, or the creator itself)
+        private ulong _conditionId;
+        private ulong _creatorId;               // Entity id
+        private ulong _ultimateCreatorId;       // Entity id of the highest entity in the creation hierarchy (i.e. creator of creator, or the creator itself)
 
         private PrototypeId _conditionPrototypeRef;
         private ConditionPrototype _conditionPrototype;
@@ -80,7 +82,11 @@ namespace MHServerEmu.Games.Powers
         private ReplicatedPropertyCollection _properties = new();
         private ConditionCancelOnFlags _cancelOnFlags;
 
-        private ulong _creatorPlayerId;                             // Player entity guid
+        public ulong CreatorPlayerId { get; private set; }  // PlayerGuid
+        public ConditionCollection Collection { get; set; }
+        public StackId StackId { get; private set; } = StackId.Invalid;
+
+        public EventPointer<ConditionCollection.RemoveConditionEvent> RemoveEvent { get; set; }
 
         // Accessors
         public ConditionSerializationFlags SerializationFlags { get => _serializationFlags; }
@@ -104,18 +110,13 @@ namespace MHServerEmu.Games.Powers
         public ReplicatedPropertyCollection Properties { get => _properties; }
         public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; }
 
-        public ulong CreatorPlayerId { get => _creatorPlayerId; }
-        public ConditionCollection Collection { get; set; }
         public bool IsInCollection { get => Collection != null; }
-        public StackId StackId { get; private set; } = StackId.Invalid;
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
 
         public PowerIndexPropertyFlags PowerIndexPropertyFlags { get => _conditionPrototype != null ? _conditionPrototype.PowerIndexPropertyFlags : default; }
-
-        public EventPointer<ConditionCollection.RemoveConditionEvent> RemoveEvent { get; set; }
 
         public Condition() { }
 
@@ -338,6 +339,36 @@ namespace MHServerEmu.Games.Powers
             return success;
         }
 
+        public void Clear()
+        {
+            // Clear all data from this condition instance for later reuse via pooling
+            _serializationFlags = default;
+            _conditionId = default;
+            _creatorId = default;
+            _ultimateCreatorId = default;
+
+            _conditionPrototypeRef = default;
+            _conditionPrototype = default;
+            _creatorPowerPrototypeRef = default;
+            _creatorPowerPrototype = default;
+            _creatorPowerIndex = -1;
+
+            _ownerAssetRef = default;
+            _startTime = default;
+            _pauseTime = default;
+            _durationMS = default;
+            _isEnabled = true;
+            _updateIntervalMS = default;
+            _properties.Clear();
+            _cancelOnFlags = default;
+
+            CreatorPlayerId = default;
+            Collection = default;
+            StackId = StackId.Invalid;
+
+            RemoveEvent = default;
+        }
+
         public bool InitializeFromPowerMixinPrototype(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
         {
             _conditionId = conditionId;
@@ -352,7 +383,7 @@ namespace MHServerEmu.Games.Powers
                 {
                     Player player = avatar.GetOwnerOfType<Player>();
                     if (player != null)
-                        _creatorPlayerId = player.DatabaseUniqueId;
+                        CreatorPlayerId = player.DatabaseUniqueId;
                 }
 
                 _ownerAssetRef = DetermineAssetRefByOwner(ultimateCreator, conditionProto);

@@ -1339,8 +1339,6 @@ namespace MHServerEmu.Games.Powers
             TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
             _trackedConditionList.Add(trackedCondition);
             _trackedConditionIndexPropertyFlags |= trackedCondition.PowerIndexPropertyFlags;
-
-            Logger.Debug($"TrackCondition: {condition} (total={_trackedConditionList.Count})");
         }
 
         public void UntrackCondition(ulong entityId, Condition condition)

@@ -269,7 +269,7 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 success = true;
-                Logger.Debug($"AddCondition(): {condition}");
+                Logger.Trace($"AddCondition(): {condition} - {condition.Duration.TotalMilliseconds} ms");
 
                 condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
 
@@ -417,10 +417,7 @@ namespace MHServerEmu.Games.Entities
 
         public Condition AllocateCondition()
         {
-            // TODO: Pooling
-            ConditionCount++;
-            Logger.Debug($"AllocateCondition(): ConditionCount={ConditionCount}");
-            return new();
+            return ConditionPool.Instance.Get();
         }
 
         public bool DeleteCondition(Condition condition)
@@ -428,10 +425,10 @@ namespace MHServerEmu.Games.Entities
             if (condition == null) return Logger.WarnReturn(false, "DeleteCondition(): condition == null");
             if (condition.IsInCollection) return Logger.WarnReturn(false, "DeleteCondition(): condition.IsInCollection");
 
-            // TODO: Pooling
-            ConditionCount--;
-
             condition.Properties.Unbind();
+
+            ConditionPool.Instance.Return(condition);
+
             return true;
         }
 
@@ -464,7 +461,7 @@ namespace MHServerEmu.Games.Entities
             if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
             if (condition == null) return false;
 
-            Logger.Debug($"RemoveCondition(): {condition}");
+            Logger.Trace($"RemoveCondition(): {condition}");
 
             CancelScheduledConditionEnd(condition);
 
