@@ -41,9 +41,9 @@ namespace MHServerEmu.Games.Properties
 
         public void Unbind()
         {
-            if (IsBound == false) return;
+            _messageDispatcher?.UnregisterMessageHandler(this);
+            _messageDispatcher = null;
 
-            _messageDispatcher.UnregisterMessageHandler(this);
             _replicationId = IArchiveMessageDispatcher.InvalidReplicationId;
         }
 
