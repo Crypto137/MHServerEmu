@@ -5,6 +5,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
@@ -660,9 +661,49 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 4
-        private void DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionContextCallback(): Not implemented");
+            PowerEventContextPrototype contextProto = triggeredPowerEvent.PowerEventContext;
+            if (contextProto == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): contextProto == null");
+
+            if (contextProto is not PowerEventContextCallbackPrototype contextCallbackProto)
+                return true;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            WorldEntity target = entityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+            Vector3 targetPosition = settings.TargetPosition;
+
+            if (contextCallbackProto.SetContextOnOwnerSummonEntities)
+            {
+                Inventory summonedInventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+                if (summonedInventory == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): summonedInventory == null");
+
+                if (contextCallbackProto.SummonedEntitiesUsePowerTarget == false)
+                    target = Owner;
+
+                foreach (var entry in summonedInventory)
+                {
+                    WorldEntity summon = entityManager.GetEntity<WorldEntity>(entry.Id);
+                    contextCallbackProto.HandlePowerEvent(summon, target, targetPosition);
+                }
+            }
+            else if (contextCallbackProto.SetContextOnOwnerAgent)
+            {
+                WorldEntity owner = entityManager.GetEntity<WorldEntity>(Owner.PowerUserOverrideId);
+                if (owner != null)
+                    contextCallbackProto.HandlePowerEvent(owner, target, targetPosition);
+            }
+            else if (contextCallbackProto.SetContextOnTargetEntity)
+            {
+                contextCallbackProto.HandlePowerEvent(target, null, targetPosition);
+            }
+            else
+            {
+                contextCallbackProto.HandlePowerEvent(Owner, target, targetPosition);
+            }
+
+            return true;
         }
 
         // 5

@@ -669,6 +669,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool SetContextOnOwnerSummonEntities { get; protected set; }
         public bool SummonedEntitiesUsePowerTarget { get; protected set; }
         public bool SetContextOnTargetEntity { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public virtual bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
+        {
+            return Logger.WarnReturn(false, "HandlePowerEvent(): PowerEventContextPrototype should not be called directly");
+        }
     }
 
     public class MapPowerPrototype : Prototype
@@ -707,6 +716,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype EvalEventTriggerChance { get; protected set; }
         public EvalPrototype EvalEventParam { get; protected set; }
         public bool ResetFXRandomSeed { get; protected set; }
+
+        //---
 
         [DoNotCopy]
         public bool HasEvalEventTriggerChance { get => EvalEventTriggerChance != null; }
@@ -821,10 +832,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PropertyInfoRef { get; protected set; }
         public int Value { get; protected set; }
         public bool UseTargetEntityId { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
+        {
+            return Logger.WarnReturn(false, $"HandlePowerEvent(): Not implemented (user=[{user}], target=[{target}], targetPosition=[{targetPosition}]");
+        }
     }
 
     public class PowerEventContextCallbackAISetAssistedEntityFromCreatorPrototype : PowerEventContextCallbackPrototype
     {
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
+        {
+            return Logger.WarnReturn(false, $"HandlePowerEvent(): Not implemented (user=[{user}], target=[{target}], targetPosition=[{targetPosition}]");
+        }
     }
 
     public class PowerEventContextCallbackAISummonsTryActivatePowerPrototype : PowerEventContextCallbackPrototype
@@ -832,6 +860,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId PowerToActivate { get; protected set; }
         public bool SummonsUsePowerTargetLocation { get; protected set; }
         public PrototypeId SummonsKeywordFilter { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
+        {
+            return Logger.WarnReturn(false, $"HandlePowerEvent(): Not implemented (user=[{user}], target=[{target}], targetPosition=[{targetPosition}]");
+        }
     }
 
     public class TransformModeUnrealOverridePrototype : Prototype
