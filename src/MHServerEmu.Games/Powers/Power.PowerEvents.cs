@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -10,6 +11,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -819,9 +821,39 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 13
-        private void DoPowerEventActionSpawnLootTable(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionSpawnLootTable(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionSpawnLootTable(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): triggeredPowerEvent.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext");
+
+            Avatar avatar = Owner as Avatar;
+            Player player = avatar?.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
+
+            List<Player> playerList = ListPool<Player>.Instance.Get();
+
+            if (lootTableContext.IncludeNearbyAvatars)
+                ComputeNearbyPlayers(avatar.Region, avatar.RegionLocation.Position, 0, false, playerList);
+            else
+                playerList.Add(player);
+
+            int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : avatar.CharacterLevel;
+
+            Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
+            {
+                (lootTableContext.LootTable, lootTableContext.PlaceLootInGeneralInventory ? LootActionType.Give : LootActionType.Spawn)
+            };
+
+            int recipientId = 1;
+            foreach (Player recipient in playerList)
+            {
+                using LootInputSettings lootSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                lootSettings.Initialize(LootContext.Drop, recipient, avatar, level);
+                Game.LootManager.AwardLootFromTables(tables, lootSettings, recipientId++);
+            }
+
+            ListPool<Player>.Instance.Return(playerList);
+            return true;
         }
 
         // 14

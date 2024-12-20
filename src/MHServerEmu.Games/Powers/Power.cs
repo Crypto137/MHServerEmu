@@ -11,6 +11,7 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
@@ -1326,6 +1327,37 @@ namespace MHServerEmu.Games.Powers
             }
 
             return chargeCount < maxCharges;
+        }
+
+        #endregion
+
+        #region Costs
+
+        private void PayCost(PowerApplication powerApplication)
+        {
+            // it's free real estate
+            if (powerApplication.IsFree)
+                return;
+
+            // TODO: mana costs and others
+
+            // Item cost
+            if (powerApplication.ItemSourceId != Entity.InvalidId)
+            {
+                Item item = Game.EntityManager.GetEntity<Item>(powerApplication.ItemSourceId);
+                if (item != null)
+                    item.OnUsePowerActivated();
+                else
+                    Logger.Warn("PayCost(): item == null");
+            }
+
+            // Charges
+            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+            {
+                // Doctors hate him! BUE fixed with one simple trick
+                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
+                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
+            }
         }
 
         #endregion
@@ -3080,13 +3112,8 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // Pay costs (TODO: mana costs)
-            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
-            {
-                // Doctors hate him! BUE fixed with one simple trick
-                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
-                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
-            }
+            // Pay costs
+            PayCost(powerApplication);
 
             // Deliver payload now or schedule it for later
             TimeSpan deliveryDelay = GetPayloadDeliveryDelay(payload);
