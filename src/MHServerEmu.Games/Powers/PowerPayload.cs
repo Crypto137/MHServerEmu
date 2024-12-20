@@ -658,21 +658,30 @@ namespace MHServerEmu.Games.Powers
             {
                 foreach (var entry in PowerPrototype.AppliesConditions)
                 {
-                    ConditionPrototype conditionProto = entry.Prototype as ConditionPrototype;
-                    if (conditionProto == null)
+                    ConditionPrototype mixinConditionProto = entry.Prototype as ConditionPrototype;
+                    if (mixinConditionProto == null)
                     {
-                        Logger.Warn("CalculateResultConditionsToAdd(): conditionProto == null");
+                        Logger.Warn("CalculateResultConditionsToAdd(): mixinConditionProto == null");
                         continue;
                     }
 
-                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, isTargetResult, conditionCollection, conditionProto);
+                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, isTargetResult, conditionCollection, mixinConditionProto);
                 }
             }
 
             if (PowerPrototype.ConditionsByRef.HasValue())
             {
-                // TODO
-                Logger.Warn($"CalculateResultConditionsToAdd(): Skipping ConditionsByRef for {PowerPrototype}");
+                foreach (PrototypeId conditionProtoRef in PowerPrototype.ConditionsByRef)
+                {
+                    ConditionPrototype conditionByRefProto = conditionProtoRef.As<ConditionPrototype>();
+                    if (conditionByRefProto == null)
+                    {
+                        Logger.Warn("CalculateResultConditionsToAdd(): conditionByRefProto == null");
+                        continue;
+                    }
+
+                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, isTargetResult, conditionCollection, conditionByRefProto);
+                }
             }
 
             for (int i = 0; i < results.ConditionAddList.Count; i++)
@@ -712,7 +721,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             Condition condition = conditionCollection.AllocateCondition();
-            condition.InitializeFromPowerMixinPrototype(conditionCollection.NextConditionId, this, conditionProto, duration);
+            condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration);
             results.AddConditionToAdd(condition);
 
             return true;

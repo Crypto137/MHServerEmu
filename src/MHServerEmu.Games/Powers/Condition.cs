@@ -369,7 +369,7 @@ namespace MHServerEmu.Games.Powers
             RemoveEvent = default;
         }
 
-        public bool InitializeFromPowerMixinPrototype(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
+        public bool InitializeFromPower(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
         {
             _conditionId = conditionId;
 
@@ -390,11 +390,19 @@ namespace MHServerEmu.Games.Powers
             }
 
             _conditionPrototype = conditionProto;
-            _conditionPrototypeRef = PrototypeId.Invalid;
-
             _creatorPowerPrototype = payload.PowerPrototype;
             _creatorPowerPrototypeRef = payload.PowerProtoRef;
-            _creatorPowerIndex = conditionProto.BlueprintCopyNum;
+
+            if (conditionProto.DataRef == PrototypeId.Invalid)
+            {
+                _conditionPrototypeRef = PrototypeId.Invalid;
+                _creatorPowerIndex = conditionProto.BlueprintCopyNum;
+            }
+            else
+            {
+                _conditionPrototypeRef = conditionProto.DataRef;
+                _creatorPowerIndex = -1;
+            }
 
             _durationMS = (long)duration.TotalMilliseconds;
             _cancelOnFlags = conditionProto.CancelOnFlags;
