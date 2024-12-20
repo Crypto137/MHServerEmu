@@ -1342,7 +1342,7 @@ namespace MHServerEmu.Games.Powers
             // TODO: mana costs and others
 
             // Item cost
-            if (powerApplication.ItemSourceId != Entity.InvalidId)
+            if (powerApplication.ItemSourceId != Entity.InvalidId && IsItemPower())
             {
                 Item item = Game.EntityManager.GetEntity<Item>(powerApplication.ItemSourceId);
                 if (item != null)
