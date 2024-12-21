@@ -876,13 +876,19 @@ namespace MHServerEmu.Games.Powers
             if (triggeredPower == null) return Logger.WarnReturn(false, "DoPowerEventActionTogglePower(): triggeredPower == null");
 
             // This is for toggled powers only
-            if (triggeredPower.IsToggled() == false) return false;
+            if (triggeredPower.IsToggled() == false)
+                return false;
+
+            if (Owner is not Agent agent)
+                return false;
 
             if ((triggeredPower.IsToggledOn() == false && actionType == PowerEventActionType.ToggleOnPower) ||
                 (triggeredPower.IsToggledOn() && actionType == PowerEventActionType.ToggleOffPower))
             {
-                Owner.ActivatePower(triggeredPower.PrototypeDataRef, ref settings);
-                return true;
+                if (agent.CanActivatePower(triggeredPower, settings.TargetEntityId, settings.TargetPosition) != PowerUseResult.Success)
+                    return false;
+
+                return agent.ActivatePower(triggeredPower.PrototypeDataRef, ref settings) == PowerUseResult.Success;
             }
 
             return false;
