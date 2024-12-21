@@ -946,7 +946,47 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public ulong FindOwnedItemThatGrantsPower(PrototypeId powerProtoRef)
         {
-            // TODO
+            ulong itemId = InvalidId;
+
+            // Search avatar equipment
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                itemId = FindOwnedItemThatGrantsPowerHelper(powerProtoRef, inventory);
+                if (itemId != InvalidId)
+                    return itemId;
+            }
+
+            // Search the player's general inventories
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(InvalidId, "FindOwnedItemThatGrantsPower(): player == null");
+
+            foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
+            {
+                itemId = FindOwnedItemThatGrantsPowerHelper(powerProtoRef, inventory);
+                if (itemId != InvalidId)
+                    return itemId;
+            }
+
+            return itemId;
+        }
+
+        private ulong FindOwnedItemThatGrantsPowerHelper(PrototypeId powerProtoRef, Inventory inventory)
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var entry in inventory)
+            {
+                Item item = entityManager.GetEntity<Item>(entry.Id);
+                if (item == null)
+                {
+                    Logger.Warn("FindOwnedItemThatGrantsPowerHelper(): item == null");
+                    continue;
+                }
+
+                if (item.GetPowerGranted(out PrototypeId powerGrantedProtoRef) && powerGrantedProtoRef == powerGrantedProtoRef)
+                    return item.Id;
+            }
+
             return InvalidId;
         }
 
