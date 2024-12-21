@@ -1984,6 +1984,8 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnExitedWorld()
         {
+            SetSimulated(false);
+
             var region = Region;
 
             if (region.EntityTracker != null)
@@ -1995,8 +1997,6 @@ namespace MHServerEmu.Games.Entities
             // Undiscover from region
             if (WorldEntityPrototype.DiscoverInRegion)
                 region.UndiscoverEntity(this, true);
-
-            PowerCollection?.OnOwnerExitedWorld();
 
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
@@ -2017,9 +2017,9 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            UpdateInterestPolicies(false);
+            PowerCollection?.OnOwnerExitedWorld();
 
-            UpdateSimulationState();
+            UpdateInterestPolicies(false);
         }
 
         public override void OnDeallocate()
