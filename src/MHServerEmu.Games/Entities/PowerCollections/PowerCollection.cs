@@ -466,8 +466,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
 
             AssignTriggeredPowers(power);
-            _owner.OnPowerAssigned(power);
+
+            // NOTE: The client calls OnPowerAssigned before OnAssign, but then auto-activated powers do not get their keywords mask. If this a bug?
             power.OnAssign();
+            _owner.OnPowerAssigned(power);
         }
 
         private bool AssignTriggeredPowers(Power power)

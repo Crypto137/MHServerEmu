@@ -1650,6 +1650,19 @@ namespace MHServerEmu.Games.Powers
             return owner.Properties[PropertyEnum.PowerToggleOn, powerProto.DataRef];
         }
 
+        public bool IsToggleInPrevRegion()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsToggleInPrevRegion(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsToggleInPrevRegion(): Owner == null");
+            return IsToggleInPrevRegion(powerProto, Owner);
+        }
+
+        public static bool IsToggleInPrevRegion(PowerPrototype powerProto, WorldEntity owner)
+        {
+            return owner.Properties[PropertyEnum.PowerToggleInPrevRegion, powerProto.DataRef];
+        }
+
         public float GetEnduranceCost(ManaType manaType, bool useSecondaryResource)
         {
             PowerPrototype powerProto = Prototype;

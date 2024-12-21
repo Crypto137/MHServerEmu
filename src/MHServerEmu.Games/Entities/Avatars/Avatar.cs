@@ -944,6 +944,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+        public ulong FindOwnedItemThatGrantsPower(PrototypeId powerProtoRef)
+        {
+            // TODO
+            return InvalidId;
+        }
+
         private bool AssignDefaultAvatarPowers()
         {
             Player player = GetOwnerOfType<Player>();
@@ -967,6 +973,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
             AssignItemPowers();
+
+            // Assign hidden passive powers (these need to be assigned before progression table powers)
+            if (avatarPrototype.HiddenPassivePowers.HasValue())
+            {
+                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
+                    AssignPower(abilityAssignmentProto.Ability, indexProps);
+            }
 
             // Progression table powers
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
@@ -1001,13 +1014,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                     var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
                     AssignPower(stealablePowerInfo.Power, indexProps);
                 }
-            }
-
-            // Assign hidden passive powers
-            if (avatarPrototype.HiddenPassivePowers.HasValue())
-            {
-                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
-                    AssignPower(abilityAssignmentProto.Ability, indexProps);
             }
 
             // Travel

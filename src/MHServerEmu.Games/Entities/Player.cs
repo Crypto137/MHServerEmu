@@ -1216,13 +1216,17 @@ namespace MHServerEmu.Games.Entities
             Vector3 prevPosition = CurrentAvatar.RegionLocation.Position;
             Orientation prevOrientation = CurrentAvatar.RegionLocation.Orientation;
 
-            // Do the switch
+            // Find the avatar to switch to
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
             Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
 
             if (avatarLibrary.GetMatchingEntity(avatarProtoRef) is not Avatar avatar)
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to find avatar entity for avatarProtoRef {GameDatabase.GetPrototypeName(avatarProtoRef)}");
 
+            // Remove non-persistent conditions from the current avatar
+            CurrentAvatar?.ConditionCollection?.RemoveAllConditions(false);
+
+            // Do the switch
             InventoryResult result = avatar.ChangeInventoryLocation(avatarInPlay, 0);
 
             if (result != InventoryResult.Success)
