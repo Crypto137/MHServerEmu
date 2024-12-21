@@ -248,37 +248,6 @@ namespace MHServerEmu.Games.Entities.Items
             Power power = avatar.GetPower(powerProtoRef);
             if (power == null) return Logger.WarnReturn(false, "DoItemActionUsePower(): power == null");
 
-            // HACK/REMOVEME: Remove these hacks when we get summon powers working properly
-            if (power.Prototype is SummonPowerPrototype summonPowerProto)
-            {
-                Logger.Debug($"DoItemActionUsePower(): item=[{this}], powerProtoRef={powerProtoRef.GetName()}");
-
-                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerProtoRef);
-                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef])
-                {
-                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-
-                    if (power.IsToggled())  // Check for Danger Room scenarios that are not toggled
-                        avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef] = false;
-
-                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
-                }
-                else
-                {
-                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, this);
-
-                    if (power.IsToggled())  // Check for Danger Room scenarios that are not toggled
-                        avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef] = true;
-
-                    avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
-                }
-
-                OnUsePowerActivated();
-                return true;
-            }
-
-            // Normal implementation
-
             // Adjust index properties for this power specifically (if we have different items that activate the same power)
             power.Properties.CopyProperty(Properties, PropertyEnum.ItemLevel);
             power.Properties.CopyProperty(Properties, PropertyEnum.ItemVariation);
