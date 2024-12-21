@@ -1952,8 +1952,12 @@ namespace MHServerEmu.Games.Entities
 
             // We need to update our simulation state when we lose proximity because when a player's AOI is cleared,
             // cells are removed before entities, and at that point entities still have the proximity policy.
-            if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
-                UpdateSimulationState();
+            //
+            // UPDATE 2024-12-22: Actually we can't do this because region location is cleared after OnExitedWorld() is called,
+            // so this triggers auto-activated (passive) powers. I hate this codebase so much.
+            //
+            //if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                //UpdateSimulationState();
 
             // Update map location if we gained a policy that allows us to exist outside of proximity (Party / Discovery)
             if ((gainedPolicies & AOINetworkPolicyValues.MapChannels) != 0)
