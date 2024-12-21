@@ -825,6 +825,11 @@ namespace MHServerEmu.Games.Powers
 
             PowerActivationSettings activationSettings = payload.ActivationSettings;
 
+            // Accumulate results for the owner in a separate PowerResults instance
+            PowerResults ownerResults = new();
+            ulong ownerId = payload.PowerOwnerId;
+            ownerResults.Init(ownerId, ownerId, ownerId, payload.PowerOwnerPosition, powerProto, payload.PowerAssetRefOverride, false);
+
             // Calculate and apply results for each target
             int payloadCombatLevel = payload.CombatLevel;
 
@@ -840,9 +845,9 @@ namespace MHServerEmu.Games.Powers
                     payloadCombatLevel = targetCombatLevel;
                 }
 
-                PowerResults results = new();
-                payload.InitPowerResultsForTarget(results, target);
-                payload.CalculatePowerResults(results, target, true);
+                PowerResults targetResults = new();
+                payload.InitPowerResultsForTarget(targetResults, target);
+                payload.CalculatePowerResults(targetResults, ownerResults, target, true);
                 
                 if (player != null && powerProto.CanCauseTag)
                 {
@@ -857,12 +862,17 @@ namespace MHServerEmu.Games.Powers
                         target.SetTaggedBy(player, powerProto);
                 }
 
-                targetResultsList.Add(results);
+                targetResultsList.Add(targetResults);
             }
 
             // Calculate owner results
+            bool hasMeaningfulOwnerResults = false;
+
             if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false)
             {
+                payload.CalculatePowerResults(ownerResults, null, powerOwner, false);
+                hasMeaningfulOwnerResults = ownerResults.HasMeaningfulResults();
+
                 Power power = powerOwner.GetPower(powerProto.DataRef);
                 if (power != null)
                 {
@@ -878,6 +888,9 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            if (hasMeaningfulOwnerResults == false)
+                ownerResults = new();        // todo: fix this
+
             // Apply results - this is delayed to account for proc effects that may kill our targets
             foreach (PowerResults results in targetResultsList)
             {
@@ -887,6 +900,9 @@ namespace MHServerEmu.Games.Powers
 
                 target.ScheduleApplyPowerResultsEvent(results);
             }
+
+            if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false && ownerResults.HasMeaningfulResults())
+                powerOwner.ScheduleApplyPowerResultsEvent(ownerResults);
 
             ListPool<WorldEntity>.Instance.Return(targetList);
             ListPool<PowerResults>.Instance.Return(targetResultsList);

@@ -147,27 +147,27 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
         /// </summary>
-        public void CalculatePowerResults(PowerResults results, WorldEntity target, bool isTargetResult)
+        public void CalculatePowerResults(PowerResults targetResults, PowerResults userResults, WorldEntity target, bool calculateForTarget)
         {
-            if (isTargetResult)
+            if (calculateForTarget)
             {
-                CalculateResultDamage(results, target);
-                CalculateResultHealing(results, target);
+                CalculateResultDamage(targetResults, target);
+                CalculateResultHealing(targetResults, target);
 
-                CalculateResultConditionsToRemove(results, target);
+                CalculateResultConditionsToRemove(targetResults, target);
             }
 
-            if (results.IsDodged == false)
-                CalculateResultConditionsToAdd(results, target, isTargetResult);
+            if (targetResults.IsDodged == false)
+                CalculateResultConditionsToAdd(targetResults, target, calculateForTarget);
 
             // Copy extra properties
-            results.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
-            results.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
-            results.Properties.CopyProperty(Properties, PropertyEnum.NoExpOnDeath);
-            results.Properties.CopyProperty(Properties, PropertyEnum.NoLootDrop);
-            results.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
-            results.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
-            results.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoExpOnDeath);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoLootDrop);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
         }
 
         #region Initial Calculations
@@ -703,10 +703,10 @@ namespace MHServerEmu.Games.Powers
         }
 
         private bool CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
-            bool isTargetResult, ConditionCollection conditionCollection, ConditionPrototype conditionProto)
+            bool calculateForTarget, ConditionCollection conditionCollection, ConditionPrototype conditionProto)
         {
-            if ((conditionProto.Scope == ConditionScopeType.Target && isTargetResult == false) ||
-                (conditionProto.Scope == ConditionScopeType.User && isTargetResult))
+            if ((conditionProto.Scope == ConditionScopeType.Target && calculateForTarget == false) ||
+                (conditionProto.Scope == ConditionScopeType.User && calculateForTarget))
             {
                 return false;
             }    

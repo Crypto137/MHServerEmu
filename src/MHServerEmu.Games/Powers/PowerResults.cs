@@ -2,6 +2,7 @@
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -97,6 +98,60 @@ namespace MHServerEmu.Games.Powers
         {
             _conditionRemoveList.Add(conditionId);
             return true;
+        }
+
+        public bool HasMeaningfulResults()
+        {
+            foreach (var kvp in Properties)
+            {
+                // Skip meaningless properties
+                switch (kvp.Key.Enum)
+                {
+                    case PropertyEnum.CreatorEntityAssetRefBase:
+                    case PropertyEnum.CreatorEntityAssetRefCurrent:
+                    case PropertyEnum.NoExpOnDeath:
+                    case PropertyEnum.NoLootDrop:
+                    case PropertyEnum.ProcRecursionDepth:
+                    case PropertyEnum.SetTargetLifespanMS:
+                        continue;
+                }
+
+                return true;
+            }
+
+            if (_conditionAddList.Count > 0 || _conditionRemoveList.Count > 0)
+                return true;
+
+            if ((Flags & PowerResultFlags.HasResultsFlags) != 0)
+                return true;
+
+            return false;
+        }
+
+        public bool ShouldSendToClient()
+        {
+            if (GetTotalDamageForClient() > 0f || HealingForClient > 0f)
+                return true;
+
+            if (HasVisuals())
+                return true;
+
+            if ((Flags & PowerResultFlags.SendToClientFlags) != 0)
+                return true;
+
+            return false;
+        }
+
+        public bool HasVisuals()
+        {
+            if (PowerAssetRefOverride != AssetId.Invalid)
+                return true;
+
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null)
+                return false;
+
+            return powerProto.HUDMessage != PrototypeId.Invalid || powerProto.PowerUnrealClass != AssetId.Invalid;
         }
     }
 }

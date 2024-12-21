@@ -49,7 +49,10 @@ namespace MHServerEmu.Games.Powers
         Teleport        = 1 << 9,
         NoDamage        = 1 << 10,
         Resurrect       = 1 << 11,
-        InstantKill     = 1 << 12
+        InstantKill     = 1 << 12,
+
+        HasResultsFlags   = Dodged | Resisted | Blocked | Unaffected | Resurrect | InstantKill,
+        SendToClientFlags = Critical | Dodged | Resisted | Blocked | SuperCritical | Unaffected | NoDamage
     }
 
     public enum PowerActivationPhase
