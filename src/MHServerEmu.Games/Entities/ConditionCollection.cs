@@ -377,6 +377,10 @@ namespace MHServerEmu.Games.Entities
                 if (power.CanBeUsedInRegion(owner.Region) == false)
                     return false;
 
+                // Trying to figure out if this orphan condition bug is a data issue with a specific power (DiamondFormCondition) or a more broad issue
+                if (power.IsToggled() && power.IsToggledOn() == false && power.PrototypeDataRef != (PrototypeId)17994345800984565974)
+                    Logger.Warn($"TryRestorePowerCondition(): Toggled power is off, but has an active condition! power=[{power}]");
+
                 if (power.IsTrackingCondition(owner.Id, condition) == false)
                     power.TrackCondition(owner.Id, condition);
 
