@@ -2972,6 +2972,12 @@ namespace MHServerEmu.Games.Entities
                 ScheduleEntityEvent(_exitWorldEvent, time);
         }
 
+        public void ScheduleUnassignPowerEvent(PrototypeId powerProtoRef)
+        {
+            EventPointer<ScheduledUnassignPowerEvent> scheduledUnassignPower = new();
+            ScheduleEntityEvent(scheduledUnassignPower, TimeSpan.FromMilliseconds(1), powerProtoRef);
+        }
+
         public void ScheduleApplyPowerResultsEvent(PowerResults powerResults)
         {
             if (IsSimulated == false)
@@ -3008,6 +3014,11 @@ namespace MHServerEmu.Games.Entities
         protected class ScheduledKillEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.Kill();
+        }
+
+        private class ScheduledUnassignPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).UnassignPower(p1);
         }
 
         private class ScheduledPowerResultsEvent : CallMethodEventParam1<Entity, PowerResults>

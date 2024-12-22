@@ -3363,8 +3363,9 @@ namespace MHServerEmu.Games.Powers
         protected virtual void OnEndPowerConditionalRemove(EndPowerFlags flags)
         {
             // Unassign one-off powers (e.g. throwables)
+            // Removal needs to happen with a delay because it can mess up the timing of interactables
             if (Prototype.RemovedOnUse && flags.HasFlag(EndPowerFlags.Unassign) == false)
-                Owner.UnassignPower(PrototypeDataRef);
+                Owner.ScheduleUnassignPowerEvent(PrototypeDataRef);
         }
 
         protected virtual void OnEndChannelingPhase()
