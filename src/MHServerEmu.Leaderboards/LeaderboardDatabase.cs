@@ -46,24 +46,7 @@ namespace MHServerEmu.Leaderboards
             DBManager.Initialize(configPath, ref noTables);
 
             // Add leaderboards from prototypes
-            if (noTables)
-            {
-                List<DBLeaderboard> dbLeaderboards = new();
-                foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
-                {
-                    var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
-                    if (proto == null || proto.DesignState != DesignWorkflowState.Live || proto.Public == false) continue;
-
-                    dbLeaderboards.Add(new DBLeaderboard
-                    {
-                        LeaderboardId = (long)GameDatabase.GetPrototypeGuid(dataRef),
-                        PrototypeName = dataRef.GetNameFormatted(),
-                        IsActive = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset,
-                    });
-                }
-
-                DBManager.CreateLeaderboards(dbLeaderboards);
-            }
+            if (noTables) GenerateTables();
 
             // load PlayerNames
             if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames) == false)
@@ -97,6 +80,61 @@ namespace MHServerEmu.Leaderboards
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
+        }
+
+        private void GenerateTables()
+        {
+            List<DBLeaderboard> dbLeaderboards = new();
+            List<DBLeaderboardInstance> dbInstances = new();
+            var activationDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
+
+            foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+                if (proto == null || proto.DesignState != DesignWorkflowState.Live || proto.Public == false) continue;
+
+                var leaderboardId = GameDatabase.GetPrototypeGuid(dataRef);
+                var instanceId = (long)Leaderboard.GenInstanceId(leaderboardId);
+
+                bool isActive = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset;
+                if (leaderboardId == (PrototypeGuid)16486420054343424221) isActive = false; // Anniversary2016
+
+                dbLeaderboards.Add(new DBLeaderboard
+                {
+                    LeaderboardId = (long)leaderboardId,
+                    PrototypeName = dataRef.GetNameFormatted(),
+                    ActiveInstanceId = instanceId,
+                    IsActive = isActive,
+                });
+
+                dbInstances.Add(new DBLeaderboardInstance
+                {
+                    InstanceId = instanceId,
+                    LeaderboardId = (long)leaderboardId,
+                    State = isActive ? LeaderboardState.eLBS_Created : LeaderboardState.eLBS_Rewarded,
+                    ActivationDate = activationDate,
+                    Visible = isActive
+                });
+
+                if (proto.Type == LeaderboardType.MetaLeaderboard)
+                {
+                    List<DBMetaInstance> dbMetaInstances = new();
+                    foreach (var meta in proto.MetaLeaderboards)
+                    {
+                        var metaLeaderboardId = GameDatabase.GetPrototypeGuid(meta.DataRef);
+                        var metaInstanceId = (long)Leaderboard.GenInstanceId(metaLeaderboardId);
+                        dbMetaInstances.Add(new DBMetaInstance
+                        {
+                            MetaLeaderboardId = (long)metaLeaderboardId,
+                            MetaInstanceId = metaInstanceId
+                        });
+                    }
+                    DBManager.SetMetaInstances((long)leaderboardId, instanceId, dbMetaInstances);
+                }
+            }
+
+            DBManager.SetLeaderboardList(dbLeaderboards);
+            DBManager.SetInstanceList(dbInstances);
         }
 
         public string GetPlayerNameById(PrototypeGuid id)

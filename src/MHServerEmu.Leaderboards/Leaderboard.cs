@@ -14,7 +14,7 @@ namespace MHServerEmu.Leaderboards
         public List<LeaderboardInstance> Instances { get; }
         public LeaderboardInstance ActiveInstance { get; protected set; }
         public bool IsActive { get => ActiveInstance != null && ActiveInstance.State == LeaderboardState.eLBS_Active; }
-        public bool CanReset { get => Prototype != null && Prototype?.ResetFrequency != LeaderboardResetFrequency.NeverReset; }
+        public bool CanReset { get => Prototype != null && Prototype.ResetFrequency != LeaderboardResetFrequency.NeverReset; }
 
         public Leaderboard(LeaderboardPrototype proto, DBLeaderboard dBLeaderboard)
         {
@@ -28,6 +28,11 @@ namespace MHServerEmu.Leaderboards
 
             if (dBLeaderboard.ActiveInstanceId != 0)
                 SetActiveInstance((ulong)dBLeaderboard.ActiveInstanceId, LeaderboardState.eLBS_Active);
+        }
+
+        public static ulong GenInstanceId(PrototypeGuid leaderboardId)
+        {
+            return ((ulong)leaderboardId & 0xFFFFFFFF00000000UL) | 1UL;
         }
 
         public bool SetActiveInstance(ulong activeInstanceId, LeaderboardState state, bool dbUpdate = false)
@@ -103,7 +108,7 @@ namespace MHServerEmu.Leaderboards
 
                                     newInstanceDb = new()
                                     {
-                                        InstanceId = (long)instance.NextInstanceId(),
+                                        InstanceId = NextInstanceId(),
                                         LeaderboardId = (long)LeaderboardId,
                                         State = LeaderboardState.eLBS_Created,
                                         Visible = instance.Visible
@@ -155,10 +160,15 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        private long NextInstanceId()
+        {
+            return (long)Instances.Max(i => i.InstanceId) + 1;
+        }
+
         private void AddNewInstance(DBLeaderboardInstance dbInstance, LeaderboardInstance metaInstance)
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            dbManager.InsertInstance(dbInstance);
+            dbManager.SetInstance(dbInstance);
 
             // add new MetaInstances
             metaInstance?.AddMetaInstances(dbInstance.InstanceId);

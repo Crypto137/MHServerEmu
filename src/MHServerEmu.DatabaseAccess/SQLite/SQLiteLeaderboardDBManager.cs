@@ -53,7 +53,17 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return true;
         }
 
-        public void CreateLeaderboards(List<DBLeaderboard> dbLeaderboards)
+        /// <summary>
+        /// Creates and opens a new <see cref="SQLiteConnection"/>.
+        /// </summary>
+        private SQLiteConnection GetConnection()
+        {
+            SQLiteConnection connection = new(_connectionString);
+            connection.Open();
+            return connection;
+        }
+
+        public void SetLeaderboardList(List<DBLeaderboard> dbLeaderboards)
         {
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
@@ -63,24 +73,14 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 INSERT INTO Leaderboards (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive)
                 VALUES (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive)"
             };
-           
+
             foreach (var leaderboard in dbLeaderboards)
             {
                 leaderboard.SetParameters(command);
                 command.ExecuteNonQuery();
             }
 
-            transaction.Commit();         
-        }
-
-        /// <summary>
-        /// Creates and opens a new <see cref="SQLiteConnection"/>.
-        /// </summary>
-        private SQLiteConnection GetConnection()
-        {
-            SQLiteConnection connection = new(_connectionString);
-            connection.Open();
-            return connection;
+            transaction.Commit();
         }
 
         public DBLeaderboard[] GetLeaderboardList()
@@ -127,7 +127,27 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return instanceList;
         }
 
-        public void InsertInstance(DBLeaderboardInstance dbInstance)
+        public void SetInstanceList(List<DBLeaderboardInstance> dbInstances)
+        {
+            using var connection = GetConnection();
+            using var transaction = connection.BeginTransaction();
+            using var command = new SQLiteCommand(connection)
+            {
+                CommandText = @"
+                INSERT INTO Instances (InstanceId, LeaderboardId, State, ActivationDate, Visible) 
+                VALUES (@InstanceId, @LeaderboardId, @State, @ActivationDate, @Visible)"
+            };
+
+            foreach (var instance in dbInstances)
+            {
+                instance.SetParameters(command);
+                command.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+
+        public void SetInstance(DBLeaderboardInstance dbInstance)
         {
             using SQLiteConnection connection = GetConnection();
 

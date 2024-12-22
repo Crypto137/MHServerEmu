@@ -438,11 +438,6 @@ namespace MHServerEmu.Leaderboards
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             dbManager.SetInstanceState((long)InstanceId, (int)state);
         }
-
-        public ulong NextInstanceId()
-        {
-            return InstanceId == 0 ? ((ulong)LeaderboardId & 0xFFFFFFFF00000000UL) + 1 : InstanceId + 1;
-        }
     }
 
     public class MetaLeaderboardEntry

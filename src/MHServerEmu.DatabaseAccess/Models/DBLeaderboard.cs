@@ -29,6 +29,16 @@ namespace MHServerEmu.DatabaseAccess.Models
         public long ActivationDate { get; set; }
         public bool Visible { get; set; }
 
+        public void SetParameters(SQLiteCommand command)
+        {
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("@InstanceId", InstanceId);
+            command.Parameters.AddWithValue("@LeaderboardId", LeaderboardId);
+            command.Parameters.AddWithValue("@State", State);
+            command.Parameters.AddWithValue("@ActivationDate", ActivationDate);
+            command.Parameters.AddWithValue("@Visible", Visible ? 1 : 0);
+        }
+
         public DateTime GetActivationDateTime() 
         { 
             return Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(ActivationDate)); 
