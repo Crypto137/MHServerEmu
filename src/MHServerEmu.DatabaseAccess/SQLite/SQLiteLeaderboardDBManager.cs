@@ -18,7 +18,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         private SQLiteLeaderboardDBManager() { }
 
-        public bool Initialize(string configPath)
+        public bool Initialize(string configPath, ref bool noTables)
         {
             _dbFilePath = configPath; 
             _connectionString = $"Data Source={_dbFilePath}";
@@ -28,6 +28,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 // Create a new database file if it does not exist
                 if (InitializeDatabaseFile() == false)
                     return false;
+
+                noTables = true;
             }
 
             return true;
@@ -46,16 +48,29 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using SQLiteConnection connection = GetConnection();
             connection.Execute(initializationScript);
 
-            Logger.Info($"Initialized a new database file at {Path.GetRelativePath(FileHelper.ServerRoot, _dbFilePath)} using schema version {CurrentSchemaVersion}");
-
-            CreateLeaderboards();
+            Logger.Info($"Initialized a new database file at {Path.GetRelativePath(FileHelper.ServerRoot, _dbFilePath)} using schema version {CurrentSchemaVersion}");            
 
             return true;
         }
 
-        private void CreateLeaderboards()
+        public void CreateLeaderboards(List<DBLeaderboard> dbLeaderboards)
         {
-            // TODO Add leaderboards
+            using var connection = GetConnection();
+            using var transaction = connection.BeginTransaction();
+            using var command = new SQLiteCommand(connection)
+            {
+                CommandText = @"
+                INSERT INTO Leaderboards (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive)
+                VALUES (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive)"
+            };
+           
+            foreach (var leaderboard in dbLeaderboards)
+            {
+                leaderboard.SetParameters(command);
+                command.ExecuteNonQuery();
+            }
+
+            transaction.Commit();         
         }
 
         /// <summary>
@@ -72,6 +87,20 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             using SQLiteConnection connection = GetConnection();
             return connection.Query<DBLeaderboard>("SELECT * FROM Leaderboards").ToArray();
+        }
+
+        public bool SetActiveInstanceState(long leaderboardId, long activeInstanceId, int state)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            int rows = connection.Execute(@"
+                UPDATE Leaderboards SET ActiveInstanceId = @ActiveInstanceId 
+                WHERE LeaderboardId = @LeaderboardId",
+                new { LeaderboardId = leaderboardId, ActiveInstanceId = activeInstanceId });
+
+            rows += UpdateInstanceState(connection, activeInstanceId, state);
+
+            return rows == 2;
         }
 
         public List<DBLeaderboardInstance> GetInstanceList(long leaderboardId, int maxArchivedInstances)
@@ -98,6 +127,30 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return instanceList;
         }
 
+        public void InsertInstance(DBLeaderboardInstance dbInstance)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            connection.Execute(@"
+                INSERT INTO Instances (InstanceId, LeaderboardId, State, ActivationDate, Visible) 
+                VALUES (@InstanceId, @LeaderboardId, @State, @ActivationDate, @Visible);",
+                dbInstance);
+        }
+
+        public void SetInstanceState(long instanceId, int state)
+        {
+            using SQLiteConnection connection = GetConnection();
+            UpdateInstanceState(connection, instanceId, state);
+        }
+
+        private int UpdateInstanceState(SQLiteConnection connection, long instanceId, int state)
+        {
+            return connection.Execute(@"
+                UPDATE Instances SET State = @State 
+                WHERE InstanceId = @InstanceId",
+                new { InstanceId = instanceId, State = state });
+        }
+
         public List<DBLeaderboardEntry> GetEntries(long instanceId, bool ascending)
         {
             using SQLiteConnection connection = GetConnection();
@@ -114,8 +167,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             if (dbEntries.Count == 0) return;
             using var connection = GetConnection();
-            connection.Open();
-
             using var transaction = connection.BeginTransaction();
 
             var updateCommand = new SQLiteCommand(connection)
@@ -146,11 +197,19 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             transaction.Commit();
         }
 
+        public long GetMetaInstanceId(long leaderboardId, long instanceId, long metaLeaderboardId)
+        {
+            using var connection = GetConnection();
+            return connection.QuerySingleOrDefault<long>(@"
+                SELECT MetaInstanceId FROM MetaInstances
+                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId 
+                AND MetaLeaderboardId = @MetaLeaderboardId",
+                new { LeaderboardId = leaderboardId, InstanceId = instanceId, MetaLeaderboardId = metaLeaderboardId });
+        }
+
         public void SetMetaInstances(long leaderboardId, long instanceId, List<DBMetaInstance> instances)
         {
             using var connection = GetConnection();
-            connection.Open();
-
             using var transaction = connection.BeginTransaction();
             using var command = new SQLiteCommand(connection)
             {
@@ -174,35 +233,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public List<DBMetaInstance> GetMetaInstances(long leaderboardId, long instanceId)
         {
-            var instances = new List<DBMetaInstance>();
-
             using var connection = GetConnection();
-            connection.Open();
-
-            using var command = new SQLiteCommand(connection)
-            {
-                CommandText = @"
+            return connection.Query<DBMetaInstance>(@"
                 SELECT MetaLeaderboardId, MetaInstanceId
                 FROM MetaInstances
-                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId"
-            };
-
-            command.Parameters.AddWithValue("@LeaderboardId", leaderboardId);
-            command.Parameters.AddWithValue("@InstanceId", instanceId);
-
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                var instance = new DBMetaInstance
-                {
-                    MetaLeaderboardId = reader.GetInt64(0),
-                    MetaInstanceId = reader.GetInt64(1)
-                };
-
-                instances.Add(instance);
-            }
-
-            return instances;
+                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId", 
+                new { LeaderboardId = leaderboardId, InstanceId = instanceId }).ToList();
         }
     }
 }
