@@ -27,6 +27,7 @@ namespace MHServerEmu.Leaderboards
         private Dictionary<PrototypeGuid, PrototypeGuid> _entryGuidMap;
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
         private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
+        private bool _sorted;
 
         public LeaderboardInstance(Leaderboard leaderboard, DBLeaderboardInstance dbInstance)
         {
@@ -158,11 +159,74 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        private void UpdateMetaInstances()
+        {
+            lock (_lock)
+            { 
+                foreach (var metaEntry in _metaLeaderboardEntries)
+                {
+                    CheckMetaInsance(metaEntry);
+                    metaEntry.MetaInstance?.UpdateMetaScore(metaEntry.MetaLeaderboardId);
+                }
+
+                _sorted = false;
+            }            
+        }
+
+        private void CheckMetaInsance(MetaLeaderboardEntry metaEntry)
+        {
+            if (metaEntry.MetaInstance == null)
+            {
+                if (metaEntry.MetaInstanceId == 0)
+                {
+                    var dbManager = LeaderboardDatabase.Instance.DBManager;
+                    metaEntry.MetaInstanceId = (ulong)dbManager.GetMetaInstanceId((long)LeaderboardId, (long)InstanceId, (long)metaEntry.MetaLeaderboardId);
+                }
+
+                if (metaEntry.MetaInstanceId != 0)
+                    SetMetaInstance(metaEntry.MetaLeaderboardId, metaEntry.MetaInstanceId);
+            }
+        }
+
+        private void UpdateMetaScore(PrototypeGuid metaLeaderboardId)
+        {
+            lock (_lock)
+            {
+                ulong score = 0;
+                foreach (var entry in Entries)
+                    score += entry.Score;
+
+                if (_entryMap.TryGetValue(metaLeaderboardId, out var updateEntry) == false)
+                {
+                    updateEntry = new(metaLeaderboardId);
+                    _entryMap[metaLeaderboardId] = updateEntry;
+                }
+
+                updateEntry.Score = score;
+                updateEntry.HighScore = score;
+            }
+        }
+
         public void LoadMetaInstances()
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             foreach (var dbMetaInstance in dbManager.GetMetaInstances((long)LeaderboardId, (long)InstanceId))
                 SetMetaInstance((PrototypeGuid)dbMetaInstance.MetaLeaderboardId, (ulong)dbMetaInstance.MetaInstanceId);
+        }
+
+        public void AddMetaInstances(long instanceId)
+        {            
+            List<DBMetaInstance> metaInstances = new();
+            foreach (var entry in _metaLeaderboardEntries)
+                metaInstances.Add(
+                    new DBMetaInstance
+                    {
+                        MetaInstanceId = (long)entry.MetaInstanceId + 1,
+                        MetaLeaderboardId = (long)entry.MetaLeaderboardId 
+                    });
+
+            var dbManager = LeaderboardDatabase.Instance.DBManager;
+            dbManager.SetMetaInstances((long)LeaderboardId, instanceId, metaInstances);
         }
 
         private void SetMetaInstance(PrototypeGuid metaLeaderboardId, ulong metaInstanceId)
@@ -171,11 +235,11 @@ namespace MHServerEmu.Leaderboards
             {
                 var leaderboard = LeaderboardDatabase.Instance.GetLeaderboard(metaLeaderboardId);
                 if (leaderboard == null) return;
-                var instance = leaderboard.GetInstance(InstanceId);
-                if (instance == null) return;
+                var metaInstance = leaderboard.GetInstance(metaInstanceId);
+                if (metaInstance == null) return;
                 var metaEntry = _metaLeaderboardEntries.Find(meta => meta.MetaLeaderboardId == metaLeaderboardId);
                 if (metaEntry == null) return;
-                metaEntry.MetaInstance = instance;
+                metaEntry.MetaInstance = metaInstance;
                 metaEntry.MetaInstanceId = metaInstanceId;
             }
         }
@@ -186,25 +250,48 @@ namespace MHServerEmu.Leaderboards
             {
                 _entryMap.Clear();
                 Entries.Clear();
+
                 var leaderboardProto = LeaderboardPrototype;
+                if (leaderboardProto == null) return;
+
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 foreach (var dbEntry in dbManager.GetEntries((long)InstanceId, leaderboardProto.RankingRule == LeaderboardRankingRule.Ascending))
                 {
                     LeaderboardEntry entry = new(dbEntry);
                     if (leaderboardProto.Type == LeaderboardType.MetaLeaderboard)
-                    {
-                        var dataRef = GameDatabase.GetDataRefByPrototypeGuid(entry.GameId);
-                        var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
-                        entry.NameId = proto != null ? proto.Name : LocaleStringId.Blank;
-                    }
+                        entry.SetNameFromLeaderboardGuid(entry.GameId);
                     else
-                    {
                         entry.Name = LeaderboardDatabase.Instance.GetPlayerNameById(entry.GameId);
-                    }
 
                     Entries.Add(entry);
                     _entryMap[entry.GameId] = entry;
                 }
+
+                _sorted = true;
+
+                UpdatePercentileBuckets();
+                UpdateCachedTableData();
+            }
+        }
+
+        private void SortEntries()
+        {
+            lock (_lock)
+            {
+                var leaderboardProto = LeaderboardPrototype;
+                if (leaderboardProto == null) return;
+
+                if (leaderboardProto.Type == LeaderboardType.MetaLeaderboard)
+                    UpdateMetaInstances();
+
+                if (_sorted) return;
+
+                if (leaderboardProto.RankingRule == LeaderboardRankingRule.Ascending)
+                    Entries.Sort((a, b) => a.Score.CompareTo(b.Score));
+                else
+                    Entries.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+                _sorted = true;
 
                 UpdatePercentileBuckets();
                 UpdateCachedTableData();
@@ -242,7 +329,7 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void OnUpdate(in LeaderboardQueue queue)
+        public void OnScoreUpdate(in LeaderboardQueue queue)
         {
             lock (_lock)
             {
@@ -255,6 +342,8 @@ namespace MHServerEmu.Leaderboards
                 }
 
                 entry.UpdateScore(queue, LeaderboardPrototype);
+
+                _sorted = false;
             }
         }
 
@@ -270,6 +359,89 @@ namespace MHServerEmu.Leaderboards
                 if (metaLeaderboardId == PrototypeGuid.Invalid) continue;
                 _metaLeaderboardEntries.Add(new(metaLeaderboardId, entryProto.Rewards));
             }
+        }
+
+        public bool GiveRewards()
+        {
+            // TODO sent to db
+            return true;
+        }
+
+        public bool IsExpired(DateTime currentTime)
+        {
+            return ExpirationTime != ActivationTime && currentTime >= ExpirationTime;
+        }
+
+        public bool IsActive(DateTime currentTime)
+        {
+            return currentTime >= ActivationTime;
+        }
+
+        public bool SetState(LeaderboardState state)
+        {
+            bool changed = false;
+
+            lock (_lock)
+            {
+                switch (state)
+                {
+                    case LeaderboardState.eLBS_Created:
+
+                        changed = _leaderboard.SetActiveInstance(InstanceId, state, true);
+                        break;
+
+                    case LeaderboardState.eLBS_Active:
+
+                        if (State == LeaderboardState.eLBS_Created)
+                            changed = _leaderboard.SetActiveInstance(InstanceId, state, true);
+                        break;
+
+                    case LeaderboardState.eLBS_Expired:
+
+                        if (State == LeaderboardState.eLBS_Active)
+                        {
+                            SortEntries();
+                            SaveEntries(true);
+                        }
+
+                        changed = true;
+                        break;
+
+                    case LeaderboardState.eLBS_Reward:
+
+                        changed = true;
+                        break;
+
+                    case LeaderboardState.eLBS_RewardsPending:
+
+                        changed = State == LeaderboardState.eLBS_Reward;
+                        break;
+
+                    case LeaderboardState.eLBS_Rewarded:
+
+                        changed = State == LeaderboardState.eLBS_RewardsPending;
+                        break;
+                }
+
+                if (changed)
+                {
+                    State = state;
+                    _leaderboard.OnChangedState(InstanceId, state);
+                }
+            }
+
+            return changed;
+        }
+
+        public void UpdateDBState(LeaderboardState state)
+        {
+            var dbManager = LeaderboardDatabase.Instance.DBManager;
+            dbManager.SetInstanceState((long)InstanceId, (int)state);
+        }
+
+        public ulong NextInstanceId()
+        {
+            return InstanceId == 0 ? ((ulong)LeaderboardId & 0xFFFFFFFF00000000UL) + 1 : InstanceId + 1;
         }
     }
 
