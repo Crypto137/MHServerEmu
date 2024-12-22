@@ -39,6 +39,22 @@ namespace MHServerEmu.Games.Powers
             SetFlag(PowerResultFlags.Hostile, isHostile);
         }
 
+        public override void Clear()
+        {
+            base.Clear();
+
+            for (int i = 0; i < _damageForClient.Length; i++)
+                _damageForClient[i] = default;
+
+            _conditionAddList.Clear();
+            _conditionRemoveList.Clear();
+
+            HealingForClient = default;
+            PowerAssetRefOverride = default;
+            Flags = default;
+            TransferToId = default;
+        }
+
         public bool HasDamageForClient()
         {
             for (int i = 0; i < _damageForClient.Length; i++)

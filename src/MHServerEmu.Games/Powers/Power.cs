@@ -889,7 +889,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (hasMeaningfulOwnerResults == false)
-                ownerResults = new();        // todo: fix this
+                ownerResults.Clear();
 
             // Apply results - this is delayed to account for proc effects that may kill our targets
             foreach (PowerResults results in targetResultsList)

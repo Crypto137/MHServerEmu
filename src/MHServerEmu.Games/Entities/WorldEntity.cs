@@ -1288,8 +1288,11 @@ namespace MHServerEmu.Games.Entities
         public bool ApplyPowerResults(PowerResults powerResults)
         {
             // Send power results to clients
-            NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
-            Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+            if (powerResults.ShouldSendToClient())
+            {
+                NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
+                Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+            }
 
             if (IsInWorld == false)
                 return false;
