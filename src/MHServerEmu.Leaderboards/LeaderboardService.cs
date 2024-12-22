@@ -17,6 +17,7 @@ namespace MHServerEmu.Leaderboards
     public class LeaderboardService : IGameService
     {
         private const ushort MuxChannel = 1;
+        private const int UpdateTimeMs = 1000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private LeaderboardDatabase _database;
@@ -30,21 +31,20 @@ namespace MHServerEmu.Leaderboards
             _isRunning = config.LeaderboardsEnabled;
 
             _database = LeaderboardDatabase.Instance;
-            if (config.LeaderboardsEnabled) 
+            if (_isRunning) 
                 _database.Initialize(SQLiteLeaderboardDBManager.Instance);
 
             while (_isRunning)
             {
-                // Get uptadequeue from LeaderboardGameDatabase and update
+                // Get uptade queue from LeaderboardGameDatabase and update
                 var updateQueue = LeaderboardGameDatabase.Instance.GetUpdateQueue();
                 if (updateQueue.Count > 0)
-                {
-                    _database.UpdateLeaderboards(updateQueue);
-                }
-                else 
-                {
-                    Thread.Sleep(1000);
-                }
+                    _database.ScoreUpdateForLeaderboards(updateQueue);
+                    
+                Thread.Sleep(UpdateTimeMs);
+
+                // update state for instances
+                _database.UpdateState();
             }
         }
 

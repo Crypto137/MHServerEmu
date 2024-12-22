@@ -137,48 +137,51 @@ namespace MHServerEmu.Leaderboards
             var report = LeaderboardReport.CreateBuilder()
                 .SetNextUpdateTimeIntervalMS(UpdateTimeIntervalMS);
 
-            if (request.HasPlayerScoreQuery)
+            lock (_lock)
             {
-                var query = request.PlayerScoreQuery;
-                leaderboardId = (PrototypeGuid)query.LeaderboardId;
-                instanceId = query.InstanceId;
-                var playerId = (PrototypeGuid)query.PlayerId;
-                ulong avatarId = query.HasAvatarId ? query.AvatarId : 0;
+                if (request.HasPlayerScoreQuery)
+                {
+                    var query = request.PlayerScoreQuery;
+                    leaderboardId = (PrototypeGuid)query.LeaderboardId;
+                    instanceId = query.InstanceId;
+                    var playerId = (PrototypeGuid)query.PlayerId;
+                    ulong avatarId = query.HasAvatarId ? query.AvatarId : 0;
 
-                if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, avatarId, out LeaderboardScoreData scoreData))
-                    report.SetScoreData(scoreData);
-            }
+                    if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, avatarId, out LeaderboardScoreData scoreData))
+                        report.SetScoreData(scoreData);
+                }
 
-            if (request.HasGuildScoreQuery) // Not used
-            {
-                var query = request.GuildScoreQuery;
-                leaderboardId = (PrototypeGuid)query.LeaderboardId;
-                instanceId = query.InstanceId;
-                var guid = (PrototypeGuid)query.GuildId;
+                if (request.HasGuildScoreQuery) // Not used
+                {
+                    var query = request.GuildScoreQuery;
+                    leaderboardId = (PrototypeGuid)query.LeaderboardId;
+                    instanceId = query.InstanceId;
+                    var guid = (PrototypeGuid)query.GuildId;
 
-                if (GetLeaderboardScoreData(leaderboardId, instanceId, guid, 0, out LeaderboardScoreData scoreData))
-                    report.SetScoreData(scoreData);
-            }
+                    if (GetLeaderboardScoreData(leaderboardId, instanceId, guid, 0, out LeaderboardScoreData scoreData))
+                        report.SetScoreData(scoreData);
+                }
 
-            if (request.HasMetaScoreQuery) // Tournament: Civil War
-            {
-                var query = request.MetaScoreQuery;
-                leaderboardId = (PrototypeGuid)query.LeaderboardId;
-                instanceId = query.InstanceId;
-                var playerId = (PrototypeGuid)query.PlayerId;
+                if (request.HasMetaScoreQuery) // Tournament: Civil War
+                {
+                    var query = request.MetaScoreQuery;
+                    leaderboardId = (PrototypeGuid)query.LeaderboardId;
+                    instanceId = query.InstanceId;
+                    var playerId = (PrototypeGuid)query.PlayerId;
 
-                if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, 0, out LeaderboardScoreData scoreData))
-                    report.SetScoreData(scoreData);
-            }
+                    if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, 0, out LeaderboardScoreData scoreData))
+                        report.SetScoreData(scoreData);
+                }
 
-            if (request.HasDataQuery)
-            {
-                var query = request.DataQuery;
-                leaderboardId = (PrototypeGuid)query.LeaderboardId;
-                instanceId = query.InstanceId;
+                if (request.HasDataQuery)
+                {
+                    var query = request.DataQuery;
+                    leaderboardId = (PrototypeGuid)query.LeaderboardId;
+                    instanceId = query.InstanceId;
 
-                if (GetLeaderboardTableData(leaderboardId, instanceId, out LeaderboardTableData tableData))
-                    report.SetTableData(tableData);
+                    if (GetLeaderboardTableData(leaderboardId, instanceId, out LeaderboardTableData tableData))
+                        report.SetTableData(tableData);
+                }
             }
 
             report.SetLeaderboardId((ulong)leaderboardId).SetInstanceId(instanceId);
