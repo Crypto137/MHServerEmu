@@ -10,6 +10,15 @@ namespace MHServerEmu.DatabaseAccess.Models
         public string PrototypeName { get; set; }
         public long ActiveInstanceId { get; set; }
         public bool IsActive { get; set; }
+
+        public void SetParameters(SQLiteCommand command)
+        {
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("@LeaderboardId", LeaderboardId);
+            command.Parameters.AddWithValue("@PrototypeName", PrototypeName);
+            command.Parameters.AddWithValue("@ActiveInstanceId", ActiveInstanceId);
+            command.Parameters.AddWithValue("@IsActive", IsActive ? 1 : 0);
+        }
     }
 
     public class DBLeaderboardInstance 
