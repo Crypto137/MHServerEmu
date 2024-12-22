@@ -2,6 +2,8 @@
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Time;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -40,7 +42,28 @@ namespace MHServerEmu.Leaderboards
 
             // Initialize leaderboard database
             string configPath = Path.Combine(FileHelper.DataDirectory, config.FileName);
-            DBManager.Initialize(configPath);
+            bool noTables = false;
+            DBManager.Initialize(configPath, ref noTables);
+
+            // Add leaderboards from prototypes
+            if (noTables)
+            {
+                List<DBLeaderboard> dbLeaderboards = new();
+                foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+                    if (proto == null || proto.DesignState != DesignWorkflowState.Live || proto.Public == false) continue;
+
+                    dbLeaderboards.Add(new DBLeaderboard
+                    {
+                        LeaderboardId = (long)GameDatabase.GetPrototypeGuid(dataRef),
+                        PrototypeName = dataRef.GetNameFormatted(),
+                        IsActive = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset,
+                    });
+                }
+
+                DBManager.CreateLeaderboards(dbLeaderboards);
+            }
 
             // load PlayerNames
             if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames) == false)
@@ -233,13 +256,28 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void UpdateLeaderboards(Queue<LeaderboardQueue> updateQueue)
+        public void ScoreUpdateForLeaderboards(Queue<LeaderboardQueue> updateQueue)
         {
             while (updateQueue.TryDequeue(out var queue)) 
             {
                 var leaderboard = GetLeaderboard(queue.LeaderboardId);
-                leaderboard?.OnUpdate(queue);
+                leaderboard?.OnScoreUpdate(queue);
             }
+        }
+
+        public void UpdateState()
+        {
+            List<Leaderboard> leaderboards = new();
+            var updateTime = Clock.UtcNowPrecise;
+
+            lock (_lock)
+            {
+                leaderboards.AddRange(_leaderboards.Values);
+                leaderboards.AddRange(_metaLeaderboards.Values);
+            }
+
+            foreach (var leaderboard in leaderboards)
+                leaderboard.UpdateState(updateTime);
         }
     }
 }
