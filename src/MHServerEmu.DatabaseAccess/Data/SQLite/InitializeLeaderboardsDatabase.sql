@@ -10,7 +10,7 @@ CREATE TABLE "Leaderboards" (
 )
 
 CREATE TABLE "Instances" (
-	"InstanceId"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	"InstanceId"	INTEGER NOT NULL PRIMARY KEY,
 	"LeaderboardId"	INTEGER NOT NULL,
 	"State"	INTEGER,
 	"ActivationDate"	INTEGER,
@@ -33,7 +33,8 @@ CREATE TABLE "MetaInstances" (
 	"InstanceId"	INTEGER NOT NULL,
 	"MetaLeaderboardId"	INTEGER NOT NULL,
 	"MetaInstanceId"	INTEGER NOT NULL,
-	PRIMARY KEY("LeaderboardId", "InstanceId")
+	PRIMARY KEY("LeaderboardId", "InstanceId"),
+	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE
 )
 
 CREATE INDEX idx_instances_leaderboardid ON Instances (LeaderboardId);
