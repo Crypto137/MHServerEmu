@@ -27,9 +27,23 @@ namespace MHServerEmu.Leaderboards
 
         public LeaderboardEntry(in LeaderboardQueue queue)
         {
-            GameId = (PrototypeGuid)queue.GameId;
+            GameId = queue.GameId;
             Name = LeaderboardDatabase.Instance.GetPlayerNameById(GameId);
             RuleStates = new();
+        }
+
+        public LeaderboardEntry(PrototypeGuid metaLeaderboardId)
+        {
+            GameId = metaLeaderboardId;
+            SetNameFromLeaderboardGuid(metaLeaderboardId);
+        }
+
+        public void SetNameFromLeaderboardGuid(PrototypeGuid guid)
+        {
+            var dataRef = GameDatabase.GetDataRefByPrototypeGuid(guid);
+            var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+            Name = string.Empty;
+            NameId = proto != null ? proto.Name : LocaleStringId.Blank;
         }
 
         public DBLeaderboardEntry ToDbEntry(ulong instanceId)
