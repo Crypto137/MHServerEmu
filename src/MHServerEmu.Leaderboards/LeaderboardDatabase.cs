@@ -255,6 +255,10 @@ namespace MHServerEmu.Leaderboards
             {
                 if (_leaderboards.TryGetValue(guid, out var leaderboard))
                     return leaderboard;
+
+                if (_metaLeaderboards.TryGetValue(guid, out var metaLeaderboard))
+                    return metaLeaderboard;
+
                 return null;
             }
         }
