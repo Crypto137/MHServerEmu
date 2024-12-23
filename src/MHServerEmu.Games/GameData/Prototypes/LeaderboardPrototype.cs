@@ -108,6 +108,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         [DoNotCopy]
         public List<LeaderboardPrototype> MetaLeaderboards { get; private set; }
+        [DoNotCopy]
+        public bool IsMetaLeaderboard { get; private set; }
 
         public override void PostProcess()
         {
@@ -125,6 +127,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             if (Type == LeaderboardType.MetaLeaderboard && MetaLeaderboardEntries.HasValue())
+            {                
                 foreach (var entryProto in MetaLeaderboardEntries)
                 {
                     if (entryProto.Leaderboard == PrototypeId.Invalid) continue;
@@ -136,6 +139,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (subLeaderboardProto.MetaLeaderboards.Contains(this) == false)
                         subLeaderboardProto.MetaLeaderboards.Add(this);
                 }
+
+                IsMetaLeaderboard = true;
+            }
         }
     }
 
