@@ -480,6 +480,7 @@ namespace MHServerEmu.Games.Entities
 
             // Trigger events
             _owner.OnConditionRemoved(condition);
+            _owner.TryActivateOnConditionEndProcs(condition);
 
             // Notify interested clients if any
             var networkManager = _owner.Game.NetworkManager;
@@ -654,20 +655,24 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             StackId stackId = condition.StackId;
-            if (_stackCountCache.TryGetValue(stackId, out int count) == false)
+            if (_stackCountCache.TryGetValue(stackId, out int stackCount) == false)
             {
                 Logger.Warn($"DecrementStackCountCache(): Condition being removed but there is no cache entry for it! {stackId}");
                 return;
             }
 
-            count--;
+            stackCount--;
             
-            if (count <= 0)
+            if (stackCount <= 0)
             {
-                if (count < 0)
-                    Logger.Warn("DecrementStackCountCache(): count < 0");
+                if (stackCount < 0)
+                    Logger.Warn("DecrementStackCountCache(): stackCount < 0");
 
                 _stackCountCache.Remove(stackId);
+            }
+            else
+            {
+                _stackCountCache[stackId] = stackCount;
             }
         }
 

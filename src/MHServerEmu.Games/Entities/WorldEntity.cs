@@ -1617,6 +1617,27 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Procs
+
+        public void TryActivateOnConditionEndProcs(Condition condition)
+        {
+            if (IsInWorld == false)
+                return;
+
+            // TODO: Proper implementation
+
+            // HACK: Activate cooldown for Moon Knight's signature
+            if (condition.CreatorPowerPrototypeRef == (PrototypeId)924314278184884866)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                AssignPower((PrototypeId)10152747549179582463, indexProps);
+                PowerActivationSettings settings = new(Id, default, RegionLocation.Position);
+                ActivatePower((PrototypeId)10152747549179582463, ref settings);
+            }
+        }
+
+        #endregion
+
         #region Stats
 
         public RankPrototype GetRankPrototype()

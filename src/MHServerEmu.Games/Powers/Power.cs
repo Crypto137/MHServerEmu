@@ -229,6 +229,13 @@ namespace MHServerEmu.Games.Powers
             if (Prototype.CancelConditionsOnExitWorld)
                 RemoveTrackedConditions(false);
 
+            // Immediately finish the chain of subsequent activations
+            if (_subsequentActivationTimeoutEvent.IsValid)
+            {
+                CancelExtraActivationTimeout();
+                ExtraActivateTimeoutCallback();
+            }
+
             _situationalComponent?.Shutdown();
         }
 
