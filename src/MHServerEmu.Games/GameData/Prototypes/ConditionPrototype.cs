@@ -295,6 +295,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
         }
 
+        public bool HasKeyword(PrototypeId keywordProtoRef)
+        {
+            return HasKeyword(keywordProtoRef.As<KeywordPrototype>());
+        }
+
         public AssetId GetUnrealClass(AssetId entityArtAssetRef, bool fallbackToDefault = true)
         {
             AssetId unrealClassAssetRef = fallbackToDefault ? UnrealClass : AssetId.Invalid;
@@ -368,6 +373,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return duration;
+        }
+
+        public float GetChanceToApplyConditionEffects(PropertyCollection properties, WorldEntity target, ConditionCollection conditionCollection,
+            PrototypeId powerProtoRef, WorldEntity owner = null)
+        {
+            if (ChanceToApplyCondition == null)
+                return 1f;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, target.Properties);
+            evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, conditionCollection);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner?.Properties);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, owner);
+            evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var3, target);
+
+            float chanceToApply = Eval.RunFloat(ChanceToApplyCondition, evalContext);
+            return Math.Clamp(chanceToApply, 0f, 1f);
         }
     }
 

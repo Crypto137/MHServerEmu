@@ -705,12 +705,27 @@ namespace MHServerEmu.Games.Powers
         private bool CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
             bool calculateForTarget, ConditionCollection conditionCollection, ConditionPrototype conditionProto)
         {
+            // Make sure the condition matches the scope for the current results
             if ((conditionProto.Scope == ConditionScopeType.Target && calculateForTarget == false) ||
                 (conditionProto.Scope == ConditionScopeType.User && calculateForTarget))
             {
                 return false;
-            }    
+            }
 
+            // Check for condition immunities
+            foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.ImmuneToConditionWithKwd))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                if (keywordProtoRef != PrototypeId.Invalid && conditionProto.HasKeyword(keywordProtoRef))
+                    return false;
+            }
+
+            // Roll the chance to apply
+            float chanceToApply = conditionProto.GetChanceToApplyConditionEffects(Properties, target, conditionCollection, PowerProtoRef, ultimateOwner);
+            if (Game.Random.NextFloat() >= chanceToApply)
+                return false;
+
+            // Apply the conditon
             CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration);
             
             if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
