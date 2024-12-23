@@ -151,12 +151,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
         }
 
-        public bool ContainsPower(PrototypeId powerProtoRef) => GetPowerRecordByRef(powerProtoRef) != null;
-
-        public bool ContainsPowerProgressionPower(PrototypeId powerProtoRef)
+        public bool ContainsPower(PrototypeId powerProtoRef, bool excludeNonPowerProgressionPowers = false)
         {
             PowerCollectionRecord record = GetPowerRecordByRef(powerProtoRef);
-            return record != null && record.IsPowerProgressionPower;
+            return record != null && (excludeNonPowerProgressionPowers == false || record.IsPowerProgressionPower);
         }
 
         public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, PrototypeId triggeringPowerRef = PrototypeId.Invalid, bool sendPowerAssignmentToClients = true)

@@ -188,14 +188,24 @@ namespace MHServerEmu.Games.Powers
         {
             if (Owner != null && Owner.TestStatus(EntityStatus.ExitingWorld) == false)
             {
-                if (Prototype.CancelConditionsOnUnassign)
+                // Remove conditions from flagged powers and non-proc power progression powers
+                bool removeConditions = Prototype.CancelConditionsOnUnassign;
+                if (removeConditions == false && IsProcEffect() == false)
                 {
+                    removeConditions = Owner.PowerCollection.ContainsPower(PrototypeDataRef, true);
+
+                    // Do not remove conditions from powers triggered by proc effects
+                    if (removeConditions && IsComboEffect())
+                    {
+                        PrototypeId triggeringPowerProtoRef = Properties[PropertyEnum.TriggeringPowerRef, PrototypeDataRef];
+                        PowerPrototype triggeringPowerProto = triggeringPowerProtoRef.As<PowerPrototype>();
+                        if (triggeringPowerProto != null && IsProcEffect(triggeringPowerProto))
+                            removeConditions = false;
+                    }
+                }
+
+                if (removeConditions)
                     RemoveTrackedConditions(false);
-                }
-                else
-                {
-                    // TODO: Remove conditions in other cases?
-                }
             }
 
             _situationalComponent?.Shutdown();
@@ -1817,6 +1827,11 @@ namespace MHServerEmu.Games.Powers
         public static bool IsUltimatePower(PowerPrototype powerProto)
         {
             return powerProto.IsUltimate;
+        }
+
+        public bool IsTalentPower()
+        {
+            return Prototype is SpecializationPowerPrototype;
         }
 
         public static bool IsTalentPower(PowerPrototype powerProto)
