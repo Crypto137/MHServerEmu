@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.System.Time;
-using System.Data.SQLite;
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
@@ -10,15 +9,6 @@ namespace MHServerEmu.DatabaseAccess.Models
         public string PrototypeName { get; set; }
         public long ActiveInstanceId { get; set; }
         public bool IsActive { get; set; }
-
-        public void SetParameters(SQLiteCommand command)
-        {
-            command.Parameters.Clear();
-            command.Parameters.AddWithValue("@LeaderboardId", LeaderboardId);
-            command.Parameters.AddWithValue("@PrototypeName", PrototypeName);
-            command.Parameters.AddWithValue("@ActiveInstanceId", ActiveInstanceId);
-            command.Parameters.AddWithValue("@IsActive", IsActive ? 1 : 0);
-        }
     }
 
     public class DBLeaderboardInstance 
@@ -28,16 +18,6 @@ namespace MHServerEmu.DatabaseAccess.Models
         public LeaderboardState State { get; set; }
         public long ActivationDate { get; set; }
         public bool Visible { get; set; }
-
-        public void SetParameters(SQLiteCommand command)
-        {
-            command.Parameters.Clear();
-            command.Parameters.AddWithValue("@InstanceId", InstanceId);
-            command.Parameters.AddWithValue("@LeaderboardId", LeaderboardId);
-            command.Parameters.AddWithValue("@State", State);
-            command.Parameters.AddWithValue("@ActivationDate", ActivationDate);
-            command.Parameters.AddWithValue("@Visible", Visible ? 1 : 0);
-        }
 
         public DateTime GetActivationDateTime() 
         { 
@@ -52,6 +32,8 @@ namespace MHServerEmu.DatabaseAccess.Models
 
     public class DBMetaInstance
     {
+        public long InstanceId { get; set; }
+        public long LeaderboardId { get; set; }
         public long MetaLeaderboardId { get; set; }
         public long MetaInstanceId { get; set; }
     }
@@ -100,16 +82,6 @@ namespace MHServerEmu.DatabaseAccess.Models
                 RuleStates = memoryStream.ToArray();
             }
         }
-
-        public void SetParameters(SQLiteCommand command)
-        {
-            command.Parameters.Clear();
-            command.Parameters.AddWithValue("@InstanceId", InstanceId);
-            command.Parameters.AddWithValue("@GameId", GameId);
-            command.Parameters.AddWithValue("@Score", Score);
-            command.Parameters.AddWithValue("@HighScore", HighScore);
-            command.Parameters.AddWithValue("@RuleStates", RuleStates);
-        }
     }
 
     public class LeaderboardRuleState
@@ -117,5 +89,26 @@ namespace MHServerEmu.DatabaseAccess.Models
         public ulong RuleId { get; set; }
         public ulong Count { get; set; }
         public ulong Score { get; set; }
+    }
+
+    public class DBRewardEntry
+    {
+        public long LeaderboardId { get; set; }
+        public long InstanceId { get; set; }
+        public long RewardId { get; set; }
+        public long GameId { get; set; }
+        public int Position { get; set; }
+        public long CreationDate {  get; set; }
+
+        public DBRewardEntry(long leaderboardId, long instanceId, long rewardId, long gameId, int position)
+        {
+            LeaderboardId = leaderboardId;
+            InstanceId = instanceId;
+            RewardId = rewardId;
+            GameId = gameId;
+            Position = position;
+
+            CreationDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
+        }
     }
 }

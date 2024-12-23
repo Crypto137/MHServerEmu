@@ -53,7 +53,7 @@ namespace MHServerEmu.Leaderboards
                 Logger.Warn($"Failed get player names from SQLiteDBManager");
 
             // load ActiveLeaderboards
-            foreach (var dbLeaderboard in DBManager.GetLeaderboardList())
+            foreach (var dbLeaderboard in DBManager.GetLeaderboards())
             {
                 if (dbLeaderboard.IsActive == false) continue;
 
@@ -72,7 +72,7 @@ namespace MHServerEmu.Leaderboards
                 }
 
                 var leaderboard = new Leaderboard(proto, dbLeaderboard);
-                if (proto.Type == LeaderboardType.MetaLeaderboard)
+                if (proto.IsMetaLeaderboard)
                     _metaLeaderboards.Add(leaderboardId, leaderboard);
                 else
                     _leaderboards.Add(leaderboardId, leaderboard);
@@ -116,7 +116,7 @@ namespace MHServerEmu.Leaderboards
                     Visible = isActive
                 });
 
-                if (proto.Type == LeaderboardType.MetaLeaderboard)
+                if (proto.IsMetaLeaderboard)
                 {
                     List<DBMetaInstance> dbMetaInstances = new();
                     foreach (var meta in proto.MetaLeaderboards)
@@ -125,16 +125,18 @@ namespace MHServerEmu.Leaderboards
                         var metaInstanceId = (long)Leaderboard.GenInstanceId(metaLeaderboardId);
                         dbMetaInstances.Add(new DBMetaInstance
                         {
+                            LeaderboardId = (long)leaderboardId,
+                            InstanceId = instanceId,
                             MetaLeaderboardId = (long)metaLeaderboardId,
                             MetaInstanceId = metaInstanceId
                         });
                     }
-                    DBManager.SetMetaInstances((long)leaderboardId, instanceId, dbMetaInstances);
+                    DBManager.SetMetaInstances(dbMetaInstances);
                 }
             }
 
-            DBManager.SetLeaderboardList(dbLeaderboards);
-            DBManager.SetInstanceList(dbInstances);
+            DBManager.SetLeaderboards(dbLeaderboards);
+            DBManager.SetInstances(dbInstances);
         }
 
         public string GetPlayerNameById(PrototypeGuid id)

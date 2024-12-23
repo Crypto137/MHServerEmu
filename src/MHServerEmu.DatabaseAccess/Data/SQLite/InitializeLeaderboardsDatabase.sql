@@ -37,5 +37,17 @@ CREATE TABLE "MetaInstances" (
 	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE
 )
 
+CREATE TABLE "Rewards" (
+	"LeaderboardId"	INTEGER NOT NULL,
+	"InstanceId"	INTEGER NOT NULL,
+	"GameId"	INTEGER NOT NULL,
+	"Position"	INTEGER NOT NULL,
+	"RewardId"	INTEGER NOT NULL,
+	"CreationDate"	INTEGER,
+	"RewardedDate"	INTEGER,
+	PRIMARY KEY ("LeaderboardId", "InstanceId", "GameId"),
+	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
+)
+
 CREATE INDEX idx_instances_leaderboardid ON Instances (LeaderboardId);
 CREATE INDEX idx_entries_instanceid ON Entries (InstanceId);

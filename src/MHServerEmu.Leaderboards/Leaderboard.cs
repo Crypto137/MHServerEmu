@@ -22,7 +22,7 @@ namespace MHServerEmu.Leaderboards
             Prototype = proto;
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            var instanceList = dbManager.GetInstanceList(dBLeaderboard.LeaderboardId, proto.MaxArchivedInstances);
+            var instanceList = dbManager.GetInstances(dBLeaderboard.LeaderboardId, proto.MaxArchivedInstances);
             foreach (var dbInstance in instanceList)
                 AddInstance(dbInstance, true);
 
@@ -56,14 +56,14 @@ namespace MHServerEmu.Leaderboards
 
                 instance = new(this, dbInstance);
 
-                if (Prototype.Type == LeaderboardType.MetaLeaderboard)
+                if (Prototype.IsMetaLeaderboard)
                     instance.InitMetaLeaderboardEntries(Prototype.MetaLeaderboardEntries);
 
                 Instances.Add(instance);
 
                 if (loadEntries) instance.LoadEntries();
 
-                if (Prototype.Type == LeaderboardType.MetaLeaderboard)
+                if (Prototype.IsMetaLeaderboard)
                     instance.LoadMetaInstances();
             }
         }
@@ -116,7 +116,7 @@ namespace MHServerEmu.Leaderboards
 
                                     newInstanceDb.SetActivationDateTime(nextActivationTime);
 
-                                    if (Prototype.Type == LeaderboardType.MetaLeaderboard)
+                                    if (Prototype.IsMetaLeaderboard)
                                         metaInstance = instance;
                                 }
                             }
@@ -134,6 +134,9 @@ namespace MHServerEmu.Leaderboards
                                         instance.SetState(LeaderboardState.eLBS_Rewarded);
                                     }
                                 }
+
+                                // instance.SortEntries();
+                                // instance.SaveEntries();
                             }
 
                             break;

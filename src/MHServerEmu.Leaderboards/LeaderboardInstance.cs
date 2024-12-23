@@ -221,12 +221,14 @@ namespace MHServerEmu.Leaderboards
                 metaInstances.Add(
                     new DBMetaInstance
                     {
+                        LeaderboardId = (long)LeaderboardId,
+                        InstanceId = instanceId,
                         MetaInstanceId = (long)entry.MetaInstanceId + 1,
                         MetaLeaderboardId = (long)entry.MetaLeaderboardId 
                     });
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            dbManager.SetMetaInstances((long)LeaderboardId, instanceId, metaInstances);
+            dbManager.SetMetaInstances(metaInstances);
         }
 
         private void SetMetaInstance(PrototypeGuid metaLeaderboardId, ulong metaInstanceId)
@@ -258,7 +260,7 @@ namespace MHServerEmu.Leaderboards
                 foreach (var dbEntry in dbManager.GetEntries((long)InstanceId, leaderboardProto.RankingRule == LeaderboardRankingRule.Ascending))
                 {
                     LeaderboardEntry entry = new(dbEntry);
-                    if (leaderboardProto.Type == LeaderboardType.MetaLeaderboard)
+                    if (leaderboardProto.IsMetaLeaderboard)
                         entry.SetNameFromLeaderboardGuid(entry.GameId);
                     else
                         entry.Name = LeaderboardDatabase.Instance.GetPlayerNameById(entry.GameId);
@@ -274,14 +276,14 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        private void SortEntries()
+        public void SortEntries()
         {
             lock (_lock)
             {
                 var leaderboardProto = LeaderboardPrototype;
                 if (leaderboardProto == null) return;
 
-                if (leaderboardProto.Type == LeaderboardType.MetaLeaderboard)
+                if (leaderboardProto.IsMetaLeaderboard)
                     UpdateMetaInstances();
 
                 if (_sorted) return;
@@ -363,8 +365,112 @@ namespace MHServerEmu.Leaderboards
 
         public bool GiveRewards()
         {
-            // TODO sent to db
+            lock (_lock) 
+            {
+                if (Entries.Count == 0) return true;
+
+                List<DBRewardEntry> rewardsList = new();
+
+                var rewards = LeaderboardPrototype.Rewards;
+                if (rewards.HasValue())
+                    GetRewards(rewards, rewardsList);
+
+                if (LeaderboardPrototype.IsMetaLeaderboard)
+                    GetMetaRewards(rewardsList);
+
+                var dbManager = LeaderboardDatabase.Instance.DBManager;
+                dbManager.SetRewards(rewardsList);
+            }
             return true;
+        }
+
+        private void GetMetaRewards(List<DBRewardEntry> rewardsList)
+        {
+            ulong prevScore = 0;
+            int prevPosition = 0;
+            int entryIndex = 0;
+
+            foreach (var entry in Entries)
+            {
+                int position = entryIndex + 1;
+
+                if (entry.Score == prevScore)
+                    position = prevPosition;
+
+                var metaEntry = _metaLeaderboardEntries.Find(meta => meta.MetaLeaderboardId == entry.GameId);
+                if (metaEntry == null || metaEntry.MetaInstance == null || metaEntry.Rewards.IsNullOrEmpty()) 
+                    continue;
+
+                foreach (var rewardProto in metaEntry.Rewards)
+                    if (EvaluateReward(rewardProto, entry, position))
+                    {
+                        var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
+
+                        foreach (var entryInst in metaEntry.MetaInstance.Entries)
+                            rewardsList.Add(new DBRewardEntry(
+                                (long)LeaderboardId, (long)InstanceId, 
+                                (long)rewardId, (long)entryInst.GameId, position));
+
+                        prevScore = entry.Score;
+                        prevPosition = position;
+
+                        break;
+                    }
+                
+                entryIndex++;
+            }
+        }
+
+        private void GetRewards(LeaderboardRewardEntryPrototype[] rewards, List<DBRewardEntry> rewardsList)
+        {
+            int count = Entries.Count;
+
+            ulong prevScore = 0;
+            int prevPosition = 0;
+            int entryIndex = 0;
+
+            foreach (var rewardProto in rewards)
+            {
+                while (entryIndex < count)
+                {
+                    var entry = Entries[entryIndex];
+                    int position = entryIndex + 1;
+
+                    if (entry.Score == prevScore)
+                        position = prevPosition;
+
+                    if (EvaluateReward(rewardProto, entry, position) == false) break;
+
+                    var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
+                    rewardsList.Add(new DBRewardEntry(
+                        (long)LeaderboardId, (long)InstanceId, 
+                        (long)rewardId, (long)entry.GameId, position));
+
+                    prevScore = entry.Score;
+                    prevPosition = position;
+
+                    entryIndex++;
+                }
+            }
+        }
+
+        private bool EvaluateReward(LeaderboardRewardEntryPrototype rewardProto, LeaderboardEntry entry, int position)
+        {
+            if (rewardProto is LeaderboardRewardEntryPercentilePrototype percentileProto)
+                return GetPercentileBucket(entry) <= percentileProto.PercentileBucket;
+
+            if (rewardProto is LeaderboardRewardEntryPositionPrototype positionProto)            
+                return position <= positionProto.Position;
+
+            if (rewardProto is LeaderboardRewardEntryScorePrototype scoreProto)
+            {
+                if (LeaderboardPrototype.RankingRule == LeaderboardRankingRule.Ascending)
+                    return (int)entry.Score <= scoreProto.Score;
+                else
+                    return (int)entry.Score >= scoreProto.Score;
+            }            
+
+            return false;
         }
 
         public bool IsExpired(DateTime currentTime)
