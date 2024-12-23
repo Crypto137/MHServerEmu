@@ -3583,7 +3583,44 @@ namespace MHServerEmu.Games.Powers
 
         private bool CancelTogglePowersInSameGroup()
         {
-            // TODO
+            // NOTE: This is used only for vanity pets in 1.52, but before that it was used for hero powers as well.
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CancelTogglePowersInSameGroup(): powerProto == null");
+
+            if (powerProto.ToggleGroup == PrototypeId.Invalid)
+                return true;
+
+            PowerCollection powerCollection = Owner?.PowerCollection;
+            if (powerCollection == null)
+                return true;
+
+            foreach (var kvp in powerCollection)
+            {
+                Power otherPower = kvp.Value.Power;
+                if (otherPower == null)
+                {
+                    Logger.Warn($"CancelTogglePowersInSameGroup(): Encountered empty power record. Power prototype: {kvp.Value.PowerPrototypeRef.GetName()}\nOwner: {Owner}");
+                    continue;
+                }
+
+                if (otherPower.PrototypeDataRef == PrototypeDataRef)
+                    continue;
+
+                PowerPrototype otherPowerProto = otherPower.Prototype;
+                if (otherPowerProto == null)
+                {
+                    Logger.Warn($"CancelTogglePowersInSameGroup(): Failed to get PowerPrototype for a power when testing ToggleGroups for Power [{this}].\nOtherPower: {otherPower}\nOwner: {Owner}");
+                    continue;
+                }
+
+                if (otherPower.IsToggled() == false)
+                    continue;
+
+                if (otherPower.IsToggledOn() && otherPowerProto.ToggleGroup == powerProto.ToggleGroup)
+                    otherPower.SetToggleState(false);
+            }
+
             return true;
         }
 
