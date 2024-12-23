@@ -500,6 +500,13 @@ namespace MHServerEmu.Games.Regions
             return Generator.GetPossibleConnections(connections, segment);
         }
 
+        public KeywordsMask GetKeywordsMask()
+        {
+            AreaPrototype areaProto = Prototype;
+            if (areaProto == null) return Logger.WarnReturn(KeywordsMask.Empty, "GetKeywordsMask(): areaProto == null");
+            return areaProto.KeywordsMask;
+        }
+
         private void RemoveAllCells()
         {
             while (Cells.Any())

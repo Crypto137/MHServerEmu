@@ -146,6 +146,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //---
 
         [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; private set; }
+        [DoNotCopy]
         public DifficultyTierMask DifficultyTierMask { get; private set; }
         [DoNotCopy]
         public bool HasPvPMetaGame { get; private set; }
@@ -161,8 +163,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsPrivate { get => IsPublic == false; }
 
         private Dictionary<AssetId, List<LootTableAssignmentPrototype>> _lootTableMap = new();
-
-        private KeywordsMask _keywordsMask;
 
         public static bool Equivalent(RegionPrototype regionA, RegionPrototype regionB)
         {
@@ -252,7 +252,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     }
                 }
 
-            _keywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
 
             // GetLevelAccessRestrictionMinMax client only?
 
@@ -319,7 +319,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
-            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+            return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
         }
 
         public bool HasKeyword(PrototypeId keywordRef)

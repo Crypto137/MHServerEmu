@@ -287,10 +287,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private KeywordsMask _keywordsMask; 
+        private KeywordsMask _keywordsMask;
 
         private object _interactionDataLock;
         private bool _interactionDataCached;
+
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get => _keywordsMask; }
 
         [DoNotCopy]
         public bool IsVacuumable { get; protected set; }

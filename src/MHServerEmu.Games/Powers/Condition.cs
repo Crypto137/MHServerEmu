@@ -58,7 +58,6 @@ namespace MHServerEmu.Games.Powers
     public class Condition
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly KeywordsMask EmptyMask = new();
 
         // NOTE: If you add any new fields here, also add them to Clear()
 
@@ -498,7 +497,7 @@ namespace MHServerEmu.Games.Powers
         public KeywordsMask GetKeywordsMask()
         {
             ConditionPrototype conditionProto = ConditionPrototype;
-            if (conditionProto == null) return Logger.WarnReturn(EmptyMask, "GetKeywordsMask(): conditionProto == null");
+            if (conditionProto == null) return Logger.WarnReturn(KeywordsMask.Empty, "GetKeywordsMask(): conditionProto == null");
 
             return conditionProto.KeywordsMask;
         }

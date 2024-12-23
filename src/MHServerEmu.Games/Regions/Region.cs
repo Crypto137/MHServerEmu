@@ -1573,6 +1573,13 @@ namespace MHServerEmu.Games.Regions
             return keywordProto != null && Prototype.HasKeyword(keywordProto);
         }
 
+        public KeywordsMask GetKeywordsMask()
+        {
+            RegionPrototype regionProto = Prototype;
+            if (regionProto == null) return Logger.WarnReturn(KeywordsMask.Empty, "GetKeywordsMask(): regionProto == null");
+            return regionProto.KeywordsMask;
+        }
+
         public AvatarOnKilledInfoPrototype GetAvatarOnKilledInfo()
         {
             // Return default info if no override is set

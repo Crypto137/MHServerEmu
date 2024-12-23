@@ -130,6 +130,7 @@ namespace MHServerEmu.Games.Entities
         public Power ActivePower { get => GetActivePower(); }
         public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
         public PrototypeId[] Keywords { get => WorldEntityPrototype?.Keywords; }
+        public KeywordsMask KeywordsMask { get => WorldEntityPrototype?.KeywordsMask; }
         public Vector3 Forward { get => GetTransform().Col0; }
         public Vector3 GetUp { get => GetTransform().Col2; }
         public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
