@@ -385,7 +385,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        public void ReapplyIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
+        private void ReapplyIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
         {
             //Logger.Debug($"ReapplyIndexProperties(): {this} - {indexPropertyFlags}");
 
@@ -721,7 +721,7 @@ namespace MHServerEmu.Games.Powers
             Activate(ref settings);
         }
 
-        public bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             if (Game == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): Game == null");
             if (_scheduledActivateEventList == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): _scheduledActivateEventList == null");
@@ -823,7 +823,7 @@ namespace MHServerEmu.Games.Powers
             return success;
         }
 
-        public static bool DeliverPayload(PowerPayload payload)
+        private static bool DeliverPayload(PowerPayload payload)
         {
             // Find targets for this power application
             List<WorldEntity> targetList = ListPool<WorldEntity>.Instance.Get();
@@ -1028,7 +1028,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool StopCharging()
+        private bool StopCharging()
         {
             //Logger.Debug("StopCharging()");
 
@@ -1050,7 +1050,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool StartChanneling()
+        private bool StartChanneling()
         {
             //Logger.Debug("StartChanneling()");
 
@@ -1088,7 +1088,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool StopChanneling()
+        private bool StopChanneling()
         {
             //Logger.Debug("StopChanneling()");
 
@@ -1299,7 +1299,7 @@ namespace MHServerEmu.Games.Powers
             return ModifyCooldown(cooldownTimeRemaining * value);
         }
 
-        public void OnCooldownEndCallback()
+        private void OnCooldownEndCallback()
         {
             // This callback is only for replenishing power charges
             if (ShouldReplenishCharges() == false)
@@ -1322,7 +1322,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        public bool ExtraActivateTimeoutCallback()
+        private bool ExtraActivateTimeoutCallback()
         {
             if (Owner == null) return Logger.WarnReturn(false, "ExtraActivateTimeoutCallback(): Owner == null");
 
