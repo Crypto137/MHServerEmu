@@ -93,6 +93,22 @@ namespace MHServerEmu.Leaderboards
                     .Build();
         }
 
+        /// <summary>
+        /// Returns <see cref="LeaderboardInstanceInfo"/> from <see cref="LeaderboardInstance"/>.
+        /// </summary>
+        public LeaderboardInstanceInfo ToInstanceInfo()
+        {
+            return new LeaderboardInstanceInfo
+            {
+                LeaderboardId = LeaderboardId,
+                InstanceId = InstanceId,
+                State = State,
+                ActivationTime = ActivationTime,
+                ExpirationTime = ExpirationTime,
+                Visible = Visible
+            };
+        }
+
         public LeaderboardEntry GetEntry(PrototypeGuid guid, ulong avatarId)
         {
             // avatarId don't used in active Leaderboards

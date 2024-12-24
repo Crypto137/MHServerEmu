@@ -53,6 +53,17 @@ namespace MHServerEmu.Leaderboards
                 Logger.Warn($"Failed get player names from SQLiteDBManager");
 
             // load ActiveLeaderboards
+            LoadLeaderboards();
+
+            // send to LeaderboardGameDatabase
+            SendLeaderboardsToGameDatabase();
+
+            Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
+            return true;
+        }
+
+        private void LoadLeaderboards()
+        {
             foreach (var dbLeaderboard in DBManager.GetLeaderboards())
             {
                 if (dbLeaderboard.IsActive == false) continue;
@@ -65,7 +76,7 @@ namespace MHServerEmu.Leaderboards
                     continue;
                 }
                 var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
-                if (proto == null) 
+                if (proto == null)
                 {
                     Logger.Warn($"Failed GetPrototype dataRef = {dataRef}");
                     continue;
@@ -77,9 +88,19 @@ namespace MHServerEmu.Leaderboards
                 else
                     _leaderboards.Add(leaderboardId, leaderboard);
             }
+        }
 
-            Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
-            return true;
+        private void SendLeaderboardsToGameDatabase()
+        {
+            List<LeaderboardInstanceInfo> instances = new();
+
+            foreach (var leaderboard in _leaderboards.Values)
+                leaderboard.GetInstancesInfo(instances);
+
+            foreach (var leaderboard in _metaLeaderboards.Values)
+                leaderboard.GetInstancesInfo(instances);
+
+            LeaderboardGameDatabase.Instance.UpdateLeaderboards(instances);
         }
 
         private void GenerateTables()
@@ -157,12 +178,12 @@ namespace MHServerEmu.Leaderboards
                 if (_leaderboards.TryGetValue(guid, out var info) == false) return false;
                 if (info.Prototype == null) return false;
 
-                int maxarchived = info.Prototype.MaxArchivedInstances;
+                int maxInstances = info.Prototype.MaxArchivedInstances;
 
                 foreach (var instance in info.Instances)
                 {
                     instances.Add(instance);
-                    if (maxarchived-- == 0) break;
+                    if (--maxInstances < 0) break;
                 }
 
                 return true;

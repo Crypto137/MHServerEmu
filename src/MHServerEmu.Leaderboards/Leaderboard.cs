@@ -61,7 +61,10 @@ namespace MHServerEmu.Leaderboards
 
                 Instances.Add(instance);
 
-                if (loadEntries) instance.LoadEntries();
+                if (loadEntries) 
+                    instance.LoadEntries();
+                else
+                    instance.UpdateCachedTableData();
 
                 if (Prototype.IsMetaLeaderboard)
                     instance.LoadMetaInstances();
@@ -202,7 +205,23 @@ namespace MHServerEmu.Leaderboards
 
         public void OnChangedState(ulong instanceId, LeaderboardState state)
         {
-            // TODO Update LeaderboardGameDatabase ?
+            var instance = GetInstance(instanceId);
+            if (instance == null) return;
+
+            var instanceInfo = instance.ToInstanceInfo();
+            instanceInfo.State = state;
+
+            LeaderboardGameDatabase.Instance.UpdateLeaderboardInstance(instanceInfo);
+        }
+
+        public void GetInstancesInfo(List<LeaderboardInstanceInfo> instancesInfo)
+        {
+            var maxInstances = Prototype.MaxArchivedInstances;
+            foreach(var instance in Instances)
+            {
+                instancesInfo.Add(instance.ToInstanceInfo());
+                if (--maxInstances < 0) break;
+            }
         }
     }
 }

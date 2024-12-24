@@ -6,24 +6,37 @@ namespace MHServerEmu.Games.Leaderboards
 {
     public class LeaderboardInfo
     {
-        public ulong LeaderboardId { get; } // PrototypeGuid
         public LeaderboardPrototype Prototype { get; }
         public List<LeaderboardInstanceInfo> Instances { get; }
-        public LeaderboardInstanceInfo ActiveInstance { get; protected set; }
-        public bool IsActive { get; set; }
+
+        public LeaderboardInfo(LeaderboardPrototype proto)
+        {
+            Prototype = proto;
+            Instances = new();
+        }
     }
 
     public class LeaderboardInstanceInfo
     {
+        public PrototypeGuid LeaderboardId { get; set; }
         public ulong InstanceId { get; set; }
         public LeaderboardState State { get; set; }
-        public TimeSpan ActivationTime { get; set; }
-        public TimeSpan ExpirationTime { get; set; }
+        public DateTime ActivationTime { get; set; }
+        public DateTime ExpirationTime { get; set; }
         public bool Visible { get; set; }
 
-        public void OnUpdate(LeaderboardQueue queue)
+        public void Update(LeaderboardInstanceInfo updateInstance)
         {
-            throw new NotImplementedException();
+            if (State != updateInstance.State 
+                || ActivationTime != updateInstance.ActivationTime 
+                || ExpirationTime != updateInstance.ExpirationTime
+                || Visible != Visible)
+            {
+                State = updateInstance.State;
+                ActivationTime = updateInstance.ActivationTime;
+                ExpirationTime = updateInstance.ExpirationTime;
+                Visible = updateInstance.Visible;
+            }
         }
     }
 

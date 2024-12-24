@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.Leaderboards
 
         private Dictionary<PrototypeGuid, LeaderboardInfo> _leaderboardInfoMap = new();
         private Queue<LeaderboardQueue> _updateQueue = new(); 
-        private readonly object updateLock = new object();
+        private readonly object _lock = new object();
         public static LeaderboardGameDatabase Instance { get; } = new();
 
         private LeaderboardGameDatabase() { }
@@ -33,8 +33,14 @@ namespace MHServerEmu.Games.Leaderboards
             foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
-                if (proto == null) Logger.Warn($"Prototype {dataRef} == null");
-                count++;
+                if (proto != null)
+                {
+                    var guid = GameDatabase.GetPrototypeGuid(dataRef);
+                    _leaderboardInfoMap[guid] = new(proto);
+                    count++;
+                }
+                else
+                    Logger.Warn($"Prototype {dataRef} == null");
             }
 
             Logger.Info($"Initialized {count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
@@ -44,20 +50,55 @@ namespace MHServerEmu.Games.Leaderboards
 
         public IEnumerable<LeaderboardPrototype> GetActiveLeaderboardPrototypes()
         {
-            foreach (var leaderboard in _leaderboardInfoMap.Values)
-                foreach (var instance in leaderboard.Instances)
-                    if (instance.State == LeaderboardState.eLBS_Active)
-                        yield return leaderboard.Prototype;
+            lock (_lock)
+            {
+                foreach (var leaderboard in _leaderboardInfoMap.Values)
+                    foreach (var instance in leaderboard.Instances)
+                        if (instance.State == LeaderboardState.eLBS_Active)
+                            yield return leaderboard.Prototype;
+            }
         }
 
-        public void UpdateLeaderboards()
+        public void UpdateLeaderboards(List<LeaderboardInstanceInfo> instances)
         {
-           // TODO
+            lock (_lock)
+            {
+                foreach (var instance in instances)
+                    UpdateLeaderboardInstance(instance);
+            }
+        }
+
+        public void UpdateLeaderboardInstance(LeaderboardInstanceInfo instanceInfo)
+        {
+            lock (_lock)
+            {
+                if (_leaderboardInfoMap.TryGetValue(instanceInfo.LeaderboardId, out var leaderboardInfo))
+                {
+                    var updateInstance = leaderboardInfo.Instances.Find(instance => instance.InstanceId == instanceInfo.InstanceId);
+
+                    if (updateInstance != null)
+                        updateInstance.Update(instanceInfo);
+                    else
+                        leaderboardInfo.Instances.Add(instanceInfo);
+                }
+                else
+                {
+                    var dataRef = GameDatabase.GetDataRefByPrototypeGuid(instanceInfo.LeaderboardId);
+                    var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+
+                    if (proto != null)
+                    {
+                        leaderboardInfo = new(proto);
+                        leaderboardInfo.Instances.Add(instanceInfo);
+                        _leaderboardInfoMap[instanceInfo.LeaderboardId] = leaderboardInfo;
+                    }
+                }
+            }
         }
 
         public void AddUpdateQueue(LeaderboardQueue queue)
         {
-            lock (updateLock)
+            lock (_lock)
             {
                 _updateQueue.Enqueue(queue);
             }
@@ -65,7 +106,7 @@ namespace MHServerEmu.Games.Leaderboards
 
         public Queue<LeaderboardQueue> GetUpdateQueue()
         {
-            lock (updateLock)
+            lock (_lock)
             {
                 Queue<LeaderboardQueue> queue = new(_updateQueue);
                 _updateQueue.Clear();
