@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Properties
             ("PowerEventType",                  typeof(PowerEventType)),
             ("LootDropEventType",               typeof(LootDropEventType)),
             ("LootDropActionType",              typeof(LootActionType)),
-            ("PowerConditionType",              typeof(PowerConditionType)),
+            ("PowerConditionType",              typeof(ConditionType)),
             ("ItemEffectUnrealClass",           null),
             ("HotspotNegateByAllianceType",     typeof(HotspotNegateByAllianceType)),
             ("DEPRECATEDDifficultyMode",        typeof(DEPRECATEDDifficultyMode)),

@@ -742,9 +742,75 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private void CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
+        private bool CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
         {
+            bool removedAny = false;
 
+            ConditionCollection conditionCollection = target?.ConditionCollection;
+            if (conditionCollection == null)
+                return removedAny;
+
+            // Remove conditions created by specified powers
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RemoveConditionsOfPower))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionOfPowerFunc, powerProtoRef, maxStacksToRemove);
+            }
+
+            // Remove conditions with specified keywords
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RemoveConditionsWithKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionWithKeywordFunc, keywordProtoRef, maxStacksToRemove);
+            }
+
+            // Remove conditions that have specified properties
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RemoveConditionsWithPropertyOfType))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId propertyProtoRef);
+                Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
+
+                PropertyEnum propertyEnum = propertyInfoTable.GetPropertyEnumFromPrototype(propertyProtoRef);
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionWithPropertyOfTypeFunc, propertyEnum, maxStacksToRemove);
+            }
+
+            // Remove conditions of the specified type (no params here)
+            AssetId conditionTypeAssetRef = Properties[PropertyEnum.RemoveConditionsOfType];
+            if (conditionTypeAssetRef != AssetId.Invalid)
+            {
+                ConditionType conditionType = (ConditionType)AssetDirectory.Instance.GetEnumValue(conditionTypeAssetRef);
+                if (conditionType != ConditionType.Neither)
+                    removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionOfTypeFunc, conditionType, 0);
+            }
+
+            return removedAny;
+        }
+
+        private bool CalculateResultConditionsToRemoveHelper<T>(PowerResults results, ConditionCollection conditionColleciton,
+            ConditionFilter.Func<T> filterFunc, T filterArg, int maxStacksToRemove = 0)
+        {
+            int numRemoved = 0;
+
+            foreach (Condition condition in conditionColleciton)
+            {
+                if (filterFunc(condition, filterArg) == false)
+                    continue;
+
+                results.AddConditionToRemove(condition.Id);
+                numRemoved++;
+
+                if (maxStacksToRemove > 0 && numRemoved == maxStacksToRemove)
+                    break;
+            }
+
+            return numRemoved > 0;
         }
 
         #endregion

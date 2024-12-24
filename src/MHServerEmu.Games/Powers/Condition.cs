@@ -507,6 +507,11 @@ namespace MHServerEmu.Games.Powers
             return _conditionPrototype.HasKeyword(keywordProto);
         }
 
+        public bool HasKeyword(PrototypeId keywordProtoRef)
+        {
+            return _conditionPrototype.HasKeyword(keywordProtoRef);
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="Condition"/> includes any negative status effects.
         /// Negative effect prototype refs are added to the provided <see cref="List{T}"/> if it's not <see langword="null"/>.

@@ -14,7 +14,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     #region Enums
 
     [AssetEnum((int)Neither)]
-    public enum PowerConditionType
+    public enum ConditionType
     {
         Neither = 0,
         Buff = 1,
@@ -144,7 +144,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public ConditionScopeType Scope { get; protected set; }
         public AssetId UnrealClass { get; protected set; }
         public EvalPrototype ChanceToApplyCondition { get; protected set; }
-        public PowerConditionType ConditionType { get; protected set; }
+        public ConditionType ConditionType { get; protected set; }
         public bool VisualOnly { get; protected set; }
         public ConditionUnrealPrototype[] UnrealOverrides { get; protected set; }
         public PrototypeId[] Keywords { get; protected set; }
