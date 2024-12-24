@@ -164,6 +164,35 @@ namespace MHServerEmu.Games.Leaderboards
             ScheduleUpdateEvent();
         }
 
+        public void RecountPlayerContext()
+        {
+            if (LeaderboardsEnabled == false) return;
+
+            foreach (var leaderboard in LeaderboardGameDatabase.Instance.GetActiveLeaderboardPrototypes())
+                if (leaderboard.ScoringRules.HasValue())
+                    foreach (var ruleProto in leaderboard.ScoringRules)
+                    {
+                        var eventProto = ruleProto?.Event;
+                        if (eventProto == null) continue;
+
+                        if (ScoringEvents.GetMethod(eventProto.Type) == ScoringMethod.Add)
+                        {                            
+                            var playerContext = new ScoringPlayerContext
+                            {
+                                EventType = eventProto.Type,
+                                EventData = new(eventProto),              
+                                AvatarProto = eventProto.Context?.Context.Avatar,
+                                DependentAchievementId = 0,
+                                Threshold = int.MaxValue
+                            };
+
+                            int count = 0;
+                            if (ScoringEvents.GetPlayerContextCount(Owner, playerContext, ref count))
+                                UpdateEvent(ruleProto, count, 0);
+                        }
+                    }
+        }
+
         private void UpdateEvents()
         {
             foreach (var kvp in _ruleEvents)

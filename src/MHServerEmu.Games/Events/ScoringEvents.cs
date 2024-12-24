@@ -111,7 +111,7 @@ namespace MHServerEmu.Games.Events
     public struct ScoringPlayerContext
     {
         public ScoringEventType EventType { get; set; }
-        public Prototype AvatarProto { get; internal set; }
+        public Prototype AvatarProto { get; set; }
         public int Threshold { get; set; }
         public uint DependentAchievementId { get; set; }
         public ScoringEventData EventData { get; set; }

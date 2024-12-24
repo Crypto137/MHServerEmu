@@ -359,6 +359,9 @@ namespace MHServerEmu.Games.Network
                 Player.AchievementManager.RecountAchievements();
                 Player.AchievementManager.UpdateScore();
 
+                // Recount Leaderboards context
+                Player.LeaderboardManager.RecountPlayerContext();
+
                 // Notify the client
                 SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
