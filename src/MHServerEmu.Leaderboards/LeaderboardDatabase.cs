@@ -25,7 +25,7 @@ namespace MHServerEmu.Leaderboards
         private Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
         private Dictionary<ulong, string> _playerNames = new();
         public SQLiteLeaderboardDBManager DBManager { get; private set; }
-        public int LeaderboardCount { get; set; }
+        public int LeaderboardCount { get => _leaderboards.Count; }
         public static LeaderboardDatabase Instance { get; } = new();
         private LeaderboardDatabase() { }
 
@@ -140,9 +140,9 @@ namespace MHServerEmu.Leaderboards
                 if (proto.IsMetaLeaderboard)
                 {
                     List<DBMetaInstance> dbMetaInstances = new();
-                    foreach (var meta in proto.MetaLeaderboards)
+                    foreach (var meta in proto.MetaLeaderboardEntries)
                     {
-                        var metaLeaderboardId = GameDatabase.GetPrototypeGuid(meta.DataRef);
+                        var metaLeaderboardId = GameDatabase.GetPrototypeGuid(meta.Leaderboard);
                         var metaInstanceId = (long)Leaderboard.GenInstanceId(metaLeaderboardId);
                         dbMetaInstances.Add(new DBMetaInstance
                         {

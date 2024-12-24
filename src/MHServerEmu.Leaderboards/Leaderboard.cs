@@ -20,6 +20,7 @@ namespace MHServerEmu.Leaderboards
         {
             LeaderboardId = (PrototypeGuid)dBLeaderboard.LeaderboardId;
             Prototype = proto;
+            Instances = new();
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             var instanceList = dbManager.GetInstances(dBLeaderboard.LeaderboardId, proto.MaxArchivedInstances);

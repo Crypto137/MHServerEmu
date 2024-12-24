@@ -50,7 +50,7 @@ namespace MHServerEmu.Leaderboards
 
         public void Shutdown() 
         {
-            _database.Save();
+            _database?.Save();
             _isRunning = false;
         }
 
@@ -80,7 +80,7 @@ namespace MHServerEmu.Leaderboards
 
         public string GetStatus()
         {
-            return $"Active Leaderboards: {_database.LeaderboardCount}";
+            return $"Active Leaderboards: {(_database != null ? _database.LeaderboardCount : 0)}";
         }
 
         #endregion
