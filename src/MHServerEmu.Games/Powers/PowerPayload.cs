@@ -154,6 +154,12 @@ namespace MHServerEmu.Games.Powers
                 PowerAssetRefOverride, isHostile);
         }
 
+        public void UpdateTarget(ulong targetId, Vector3 targetPosition)
+        {
+            TargetId = targetId;
+            TargetPosition = targetPosition;
+        }
+
         public void RecalculateInitialDamageForCombatLevel(int combatLevel)
         {
             Properties[PropertyEnum.CombatLevel] = combatLevel;

@@ -4208,23 +4208,104 @@ namespace MHServerEmu.Games.Powers
             Game game = payload.Game;
 
             // Start building the bounce message
-            float projectileSpeed = payload.Properties[PropertyEnum.BounceSpeedPayload];
+            ulong lastTargetId = payload.TargetId;
+            float speed = payload.Properties[PropertyEnum.BounceSpeedPayload];
 
             NetMessagePowerBounce.Builder bounceMessageBuilder = NetMessagePowerBounce.CreateBuilder()
                 .SetIdPowerUser(payload.PowerOwnerId)
-                .SetIdLastTarget(payload.TargetId)
+                .SetIdLastTarget(lastTargetId)
                 .SetPowerPrototypeId((ulong)payload.PowerProtoRef)
                 .SetUserOriginalAssetId((ulong)payload.Properties[PropertyEnum.CreatorEntityAssetRefBase])
                 .SetUserCurrentAssetId((ulong)payload.Properties[PropertyEnum.CreatorEntityAssetRefCurrent])
-                .SetProjectileSpeed(projectileSpeed)
+                .SetProjectileSpeed(speed)
                 .SetFxRandomSeed((int)payload.FXRandomSeed);
 
             // Do bouncing if we still have any to do
             int bounceCount = payload.Properties[PropertyEnum.BounceCountPayload];
             if (bounceCount > 0)
             {
-                // TODO: find the next target to bounce to
-                payload.Properties[PropertyEnum.BounceCountPayload] = -1;
+                Region region = game.RegionManager.GetRegion(payload.RegionId);
+                if (region == null) return Logger.WarnReturn(false, "TryBouncePayload(): region == null");
+
+                PowerPrototype powerProto = payload.PowerPrototype;
+                TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
+                Vector3 lastTargetPosition = payload.TargetPosition;
+                float range = payload.Properties[PropertyEnum.BounceRangePayload];
+
+                WorldEntity unhitTarget = null;
+                WorldEntity repeatTarget = null;
+                WorldEntity destructibleTarget = null;
+
+                float shortestDistanceUnhit = float.MaxValue;
+                float shortestDistanceDestructible = float.MaxValue;
+
+                int lowestTargetIndex = int.MaxValue;
+
+                Sphere bounds = new(lastTargetPosition, range);
+                foreach (WorldEntity potentialTarget in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.ActivePartition)))
+                {
+                    if (potentialTarget.Id == lastTargetId)
+                        continue;
+
+                    if (potentialTarget.Properties[PropertyEnum.InvalidBounceTarget])
+                        continue;
+
+                    if (IsValidTarget(powerProto, payload.PowerOwnerId, payload.OwnerAlliance, potentialTarget) == false)
+                        continue;
+
+                    if (reachProto.RequiresLineOfSight && potentialTarget.LineOfSightTo(lastTargetPosition) == false)
+                        continue;
+
+                    int targetIndex = GetBounceTargetIndex(payload.Properties, potentialTarget.Id);
+                    if (targetIndex == -1)
+                    {
+                        if (potentialTarget.IsDestructible)
+                            CheckBounceTarget(potentialTarget, lastTargetPosition, ref destructibleTarget, ref shortestDistanceDestructible);
+                        else
+                            CheckBounceTarget(potentialTarget, lastTargetPosition, ref unhitTarget, ref shortestDistanceUnhit);
+                    }
+                    else if (payload.Properties[PropertyEnum.BounceCanRepeatTarget])
+                    {
+                        if (targetIndex < lowestTargetIndex)
+                        {
+                            lowestTargetIndex = targetIndex;
+                            repeatTarget = potentialTarget;
+                        }
+                    }
+                }
+
+                // Prioritize targets that haven't been hit
+                WorldEntity newTarget = unhitTarget != null ? unhitTarget : repeatTarget;
+                
+                // Prioritize non-destructible targets over destructibles
+                newTarget ??= destructibleTarget;
+
+                if (newTarget != null)
+                {
+                    ulong newTargetId = newTarget.Id;
+
+                    payload.UpdateTarget(newTargetId, newTarget.RegionLocation.Position);
+                    RecordBounceTarget(payload.Properties, newTargetId);
+
+                    TimeSpan delay = TimeSpan.Zero;
+                    if (speed > 0f)
+                    {
+                        float distance = Vector3.Length(lastTargetPosition - payload.TargetPosition);
+                        delay = TimeSpan.FromSeconds(distance / speed);
+                    }
+
+                    payload.Properties[PropertyEnum.BounceCountPayload] = (bounceCount > 1) ? --bounceCount : -1;
+
+                    SchedulePayloadDelivery(payload, delay);
+
+                    bounceMessageBuilder.SetLastTargetPosition(lastTargetPosition.ToNetStructPoint3());
+                    bounceMessageBuilder.SetIdNewTarget(newTargetId);
+
+                    game.NetworkManager.SendMessageToInterested(bounceMessageBuilder.Build(), newTarget, AOINetworkPolicyValues.AOIChannelProximity);
+
+                    // More bouncing to do or finalize, so return true
+                    return true;
+                }
             }
 
             // Finish bouncing
@@ -4240,7 +4321,56 @@ namespace MHServerEmu.Games.Powers
                 // TODO: Return weapon to the owner (shield, etc.)
             }
 
+            // Bouncing over, proceed to ending the power
             return false;
+        }
+
+        private static void CheckBounceTarget(WorldEntity targetToCheck, Vector3 lastPosition, ref WorldEntity closestTarget, ref float shortestDistance)
+        {
+            float distance = Vector3.LengthSquared(lastPosition - targetToCheck.RegionLocation.Position);
+            if (distance < shortestDistance)
+            {
+                shortestDistance = distance;
+                closestTarget = targetToCheck;
+            }
+        }
+
+        private static int GetBounceTargetIndex(PropertyCollection properties, ulong targetId)
+        {
+            int targetIndex = -1;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.PowerPreviousTargetsID))
+            {
+                if (kvp.Value != targetId)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out targetIndex);
+                break;
+            }
+
+            return targetIndex;
+        }
+
+        private static void RecordBounceTarget(PropertyCollection properties, ulong targetId)
+        {
+            int maxIndex = -1;
+            int oldIndex = -1;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.PowerPreviousTargetsID))
+            {
+                Property.FromParam(kvp.Key, 0, out int targetIndex);
+                maxIndex = Math.Max(targetIndex, maxIndex);
+
+                if (kvp.Value == targetId)
+                    oldIndex = targetIndex;
+            }
+
+            // Remove the old recorded index
+            if (oldIndex > -1)
+                properties.RemoveProperty(new(PropertyEnum.PowerPreviousTargetsID, (PropertyParam)oldIndex));
+
+            // Record the target
+            properties[PropertyEnum.PowerPreviousTargetsID, ++maxIndex] = targetId;
         }
 
         /// <summary>
@@ -4383,11 +4513,11 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool SchedulePayloadDelivery(PowerPayload payload, TimeSpan deliveryDelay)
+        private static bool SchedulePayloadDelivery(PowerPayload payload, TimeSpan deliveryDelay)
         {
             if (payload == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): payload == null");
 
-            EventScheduler scheduler = Game.GameEventScheduler;
+            EventScheduler scheduler = payload.Game.GameEventScheduler;
             if (scheduler == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): scheduler == null");
 
             EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();
