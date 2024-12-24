@@ -1,13 +1,13 @@
 -- Initialize a new database file using the current schema version
 
-PRAGMA user_version = 2;
+PRAGMA user_version = 1;
 
 CREATE TABLE "Leaderboards" (
 	"LeaderboardId"	INTEGER NOT NULL PRIMARY KEY,
 	"PrototypeName"	TEXT,
 	"ActiveInstanceId"	INTEGER,
 	"IsActive"	INTEGER
-)
+);
 
 CREATE TABLE "Instances" (
 	"InstanceId"	INTEGER NOT NULL PRIMARY KEY,
@@ -16,7 +16,7 @@ CREATE TABLE "Instances" (
 	"ActivationDate"	INTEGER,
 	"Visible"	INTEGER,
 	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE
-)
+);
 
 CREATE TABLE "Entries" (
 	"InstanceId"	INTEGER NOT NULL,
@@ -26,16 +26,16 @@ CREATE TABLE "Entries" (
 	"RuleStates"	BLOB,
 	PRIMARY KEY ("InstanceId", "GameId"),
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
-)
+);
 
 CREATE TABLE "MetaInstances" (
 	"LeaderboardId"	INTEGER NOT NULL,
 	"InstanceId"	INTEGER NOT NULL,
 	"MetaLeaderboardId"	INTEGER NOT NULL,
 	"MetaInstanceId"	INTEGER NOT NULL,
-	PRIMARY KEY("LeaderboardId", "InstanceId"),
+	PRIMARY KEY("LeaderboardId", "InstanceId", "MetaLeaderboardId"),
 	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE
-)
+);
 
 CREATE TABLE "Rewards" (
 	"LeaderboardId"	INTEGER NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE "Rewards" (
 	"RewardedDate"	INTEGER,
 	PRIMARY KEY ("LeaderboardId", "InstanceId", "GameId"),
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
-)
+);
 
 CREATE INDEX idx_instances_leaderboardid ON Instances (LeaderboardId);
 CREATE INDEX idx_entries_instanceid ON Entries (InstanceId);
