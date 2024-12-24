@@ -815,6 +815,16 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
+        #region Bouncing
+
+        public bool TryBounce()
+        {
+            // TODO
+            return false;
+        }
+
+        #endregion
+
         #region Helper Methods
 
         /// <summary>

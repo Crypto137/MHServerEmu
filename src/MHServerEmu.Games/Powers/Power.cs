@@ -923,6 +923,11 @@ namespace MHServerEmu.Games.Powers
 
             ListPool<WorldEntity>.Instance.Return(targetList);
             ListPool<PowerResults>.Instance.Return(targetResultsList);
+
+            // Check if this payload needs bouncing and end projectile powers once all bouncing is over
+            if (TryBouncePayload(payload) == false)
+                TryEndNonMissilePowerActiveUntilProjExpire(payload);
+
             return true;
         }
 
@@ -4187,6 +4192,58 @@ namespace MHServerEmu.Games.Powers
 
             return true;
         }
+
+        #region Bouncing
+
+        private static bool TryBouncePayload(PowerPayload payload)
+        {
+            // todo
+            return false;
+        }
+
+        /// <summary>
+        /// Ends non-missile powers that have the PowerActiveUntilProjExpire property (e.g. chain powers where the user is the one bouncing around).
+        /// </summary>
+        private static bool TryEndNonMissilePowerActiveUntilProjExpire(PowerPayload payload)
+        {
+            PowerPrototype powerProto = payload.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TryEndNonMissilePowerActiveUntilProjExpire(): powerProto == null");
+            if (powerProto.Properties == null) return Logger.WarnReturn(false, "TryEndNonMissilePowerActiveUntilProjExpire(): powerProto.Properties == null");
+
+            // Missile powers handle PowerActiveUntilProjExpire separately
+            if (powerProto is MissilePowerPrototype || powerProto.Properties[PropertyEnum.PowerActiveUntilProjExpire] == false)
+                return true;
+
+            // Check if the owner still exists and is in the world
+            WorldEntity powerOwner = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+            if (powerOwner == null || powerOwner.IsInWorld == false)
+                return true;
+
+            // Check if the owner still has the power
+            Power power = powerOwner.GetPower(powerProto.DataRef);
+            if (power == null)
+                return true;
+
+            // Wait for the projectile to return if we need to
+            if (powerProto.ProjectileReturnsToUser)
+            {
+                Vector3 ownerPosition = powerOwner.RegionLocation.Position;
+                Vector3 targetPosition = payload.TargetPosition;
+
+                float distance = Vector3.Distance(ownerPosition, targetPosition);
+                float speed = power.GetProjectileSpeed(ownerPosition, targetPosition);
+                TimeSpan delay = TimeSpan.FromSeconds(distance / speed);
+
+                power.SchedulePowerEnd(delay);
+                return true;
+            }
+
+            // End straight away if we don't need to wait for the projectile to return
+            power.EndPower(EndPowerFlags.None);
+            return true;
+        }
+
+        #endregion
 
         private void DoRandomTargetSelection(Power triggeredPower, ref PowerActivationSettings settings)
         {
