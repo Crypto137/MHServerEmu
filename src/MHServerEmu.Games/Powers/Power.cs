@@ -4197,7 +4197,49 @@ namespace MHServerEmu.Games.Powers
 
         private static bool TryBouncePayload(PowerPayload payload)
         {
-            // todo
+            if (payload == null) return Logger.WarnReturn(false, "TryBouncePayload(): payload == null");
+
+            // Check if there is any bouncing to do for this power
+            if (payload.Properties.HasProperty(PropertyEnum.BounceCountPayload) == false)
+                return false;
+
+            Logger.Debug($"TryBouncePayload(): {payload.PowerPrototype}");
+
+            Game game = payload.Game;
+
+            // Start building the bounce message
+            float projectileSpeed = payload.Properties[PropertyEnum.BounceSpeedPayload];
+
+            NetMessagePowerBounce.Builder bounceMessageBuilder = NetMessagePowerBounce.CreateBuilder()
+                .SetIdPowerUser(payload.PowerOwnerId)
+                .SetIdLastTarget(payload.TargetId)
+                .SetPowerPrototypeId((ulong)payload.PowerProtoRef)
+                .SetUserOriginalAssetId((ulong)payload.Properties[PropertyEnum.CreatorEntityAssetRefBase])
+                .SetUserCurrentAssetId((ulong)payload.Properties[PropertyEnum.CreatorEntityAssetRefCurrent])
+                .SetProjectileSpeed(projectileSpeed)
+                .SetFxRandomSeed((int)payload.FXRandomSeed);
+
+            // Do bouncing if we still have any to do
+            int bounceCount = payload.Properties[PropertyEnum.BounceCountPayload];
+            if (bounceCount > 0)
+            {
+                // TODO: find the next target to bounce to
+                payload.Properties[PropertyEnum.BounceCountPayload] = -1;
+            }
+
+            // Finish bouncing
+            WorldEntity ultimateOwner = game.EntityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
+            if (ultimateOwner != null)
+            {
+                bounceMessageBuilder.SetIdPowerUser(ultimateOwner.Id);
+                bounceMessageBuilder.SetLastTargetPosition(payload.TargetPosition.ToNetStructPoint3());
+                bounceMessageBuilder.SetIdNewTarget(Entity.InvalidId);
+
+                game.NetworkManager.SendMessageToInterested(bounceMessageBuilder.Build(), ultimateOwner, AOINetworkPolicyValues.AOIChannelProximity);
+
+                // TODO: Return weapon to the owner (shield, etc.)
+            }
+
             return false;
         }
 

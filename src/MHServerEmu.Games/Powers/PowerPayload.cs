@@ -115,6 +115,22 @@ namespace MHServerEmu.Games.Powers
                 Properties.CopyPropertyRange(power.Properties, PropertyEnum.DamageBaseUnmodifiedPerRank);
             }
 
+            // Initialize bouncing
+            int bounceCount = power.Properties[PropertyEnum.BounceCount];
+            if (bounceCount > 0)
+            {
+                Properties[PropertyEnum.BounceCountPayload] = bounceCount;
+                Properties[PropertyEnum.BounceRangePayload] = power.GetRange();
+                Properties[PropertyEnum.BounceSpeedPayload] = power.GetProjectileSpeed(PowerOwnerPosition, TargetPosition);
+                Properties[PropertyEnum.PayloadSkipRangeCheck] = true;
+                Properties[PropertyEnum.PowerPreviousTargetsID, 0] = TargetId;
+            }
+            else if (powerApplication.SkipRangeCheck)
+            {
+                // Copy range skip from the application if we didn't get it from bouncing
+                Properties[PropertyEnum.PayloadSkipRangeCheck] = true;
+            }
+
             return true;
         }
 
@@ -811,16 +827,6 @@ namespace MHServerEmu.Games.Powers
             }
 
             return numRemoved > 0;
-        }
-
-        #endregion
-
-        #region Bouncing
-
-        public bool TryBounce()
-        {
-            // TODO
-            return false;
         }
 
         #endregion
