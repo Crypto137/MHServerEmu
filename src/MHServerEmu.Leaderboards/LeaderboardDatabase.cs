@@ -326,5 +326,19 @@ namespace MHServerEmu.Leaderboards
             foreach (var leaderboard in leaderboards)
                 leaderboard.UpdateState(updateTime);
         }
+
+        public void Save()
+        {
+            List<Leaderboard> leaderboards = new();
+
+            lock (_lock)
+            {
+                leaderboards.AddRange(_leaderboards.Values);
+                leaderboards.AddRange(_metaLeaderboards.Values);
+            }
+
+            foreach (var leaderboard in leaderboards)                
+                leaderboard.ActiveInstance?.SaveEntries(true);
+        }
     }
 }

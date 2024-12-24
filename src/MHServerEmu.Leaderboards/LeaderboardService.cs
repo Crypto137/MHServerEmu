@@ -49,7 +49,8 @@ namespace MHServerEmu.Leaderboards
         }
 
         public void Shutdown() 
-        { 
+        {
+            _database.Save();
             _isRunning = false;
         }
 

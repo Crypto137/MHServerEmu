@@ -135,8 +135,7 @@ namespace MHServerEmu.Leaderboards
                                     }
                                 }
 
-                                // instance.SortEntries();
-                                // instance.SaveEntries();
+                                instance.AutoSave();
                             }
 
                             break;

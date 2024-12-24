@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
@@ -28,6 +29,7 @@ namespace MHServerEmu.Leaderboards
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
         private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
         private bool _sorted;
+        private DateTime _lastSaveTime;
 
         public LeaderboardInstance(Leaderboard leaderboard, DBLeaderboardInstance dbInstance)
         {
@@ -270,6 +272,7 @@ namespace MHServerEmu.Leaderboards
                 }
 
                 _sorted = true;
+                _lastSaveTime = Clock.UtcNowPrecise;
 
                 UpdatePercentileBuckets();
                 UpdateCachedTableData();
@@ -311,6 +314,8 @@ namespace MHServerEmu.Leaderboards
 
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.SetEntries(dbEntries);
+
+                _lastSaveTime = Clock.UtcNowPrecise;
             }
         }
 
@@ -543,6 +548,16 @@ namespace MHServerEmu.Leaderboards
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             dbManager.SetInstanceState((long)InstanceId, (int)state);
+        }
+
+        public void AutoSave()
+        {
+            if (_sorted == false) SortEntries();
+
+            var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
+            int intervalMinutes = config.AutoSaveIntervalMinutes;
+            if (_lastSaveTime.AddMinutes(intervalMinutes) < Clock.UtcNowPrecise)
+                SaveEntries();
         }
     }
 
