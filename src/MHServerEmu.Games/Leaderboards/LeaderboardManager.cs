@@ -292,29 +292,10 @@ namespace MHServerEmu.Games.Leaderboards
             entitySettings.ItemSpec = itemSpec;
 
             var entity = entityManager.CreateEntity(entitySettings);
-            if (entity is not Item item)
+            if (entity is not Item item || Owner.AcquireItem(item, PrototypeId.Invalid) != InventoryResult.Success)
             {
                 entity.Destroy(); 
                 return false;
-            }
-
-            var result = InventoryResult.Invalid;
-
-            var inventory = Owner.GetInventory(InventoryConvenienceLabel.General);
-            if (inventory != null)
-                 result = item.ChangeInventoryLocation(inventory);
-
-            if (result != InventoryResult.Success)
-            {
-                var deliveryBox = Owner.GetInventory(InventoryConvenienceLabel.DeliveryBox);
-                if (deliveryBox != null) 
-                    result = item.ChangeInventoryLocation(deliveryBox);
-
-                if (result != InventoryResult.Success)
-                {
-                    entity.Destroy();
-                    return false;
-                }
             }
 
             Owner.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, item.RarityPrototype, item.CurrentStackSize));
