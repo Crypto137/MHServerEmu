@@ -1,12 +1,16 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.Leaderboards
 {
@@ -273,9 +277,49 @@ namespace MHServerEmu.Games.Leaderboards
             _pendingRewards.Clear();
         }
 
-        private bool GiveReward(PrototypeId rewardDataRef)
+        private bool GiveReward(PrototypeId itemProtoRef)
         {
-            throw new NotImplementedException();
+            var entityManager = Game.EntityManager;
+            if (entityManager == null) return false;
+
+            if (itemProtoRef == PrototypeId.Invalid) return false;
+
+            ItemSpec itemSpec = Game.LootManager.CreateItemSpec(itemProtoRef, LootContext.LeaderboardReward, Owner);
+            if (itemSpec == null) return false;
+
+            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            entitySettings.EntityRef = itemProtoRef;
+            entitySettings.ItemSpec = itemSpec;
+
+            var entity = entityManager.CreateEntity(entitySettings);
+            if (entity is not Item item)
+            {
+                entity.Destroy(); 
+                return false;
+            }
+
+            var result = InventoryResult.Invalid;
+
+            var inventory = Owner.GetInventory(InventoryConvenienceLabel.General);
+            if (inventory != null)
+                 result = item.ChangeInventoryLocation(inventory);
+
+            if (result != InventoryResult.Success)
+            {
+                var deliveryBox = Owner.GetInventory(InventoryConvenienceLabel.DeliveryBox);
+                if (deliveryBox != null) 
+                    result = item.ChangeInventoryLocation(deliveryBox);
+
+                if (result != InventoryResult.Success)
+                {
+                    entity.Destroy();
+                    return false;
+                }
+            }
+
+            Owner.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, item.RarityPrototype, item.CurrentStackSize));
+
+            return true;
         }
 
         private void ScheduleUpdateEvent()
