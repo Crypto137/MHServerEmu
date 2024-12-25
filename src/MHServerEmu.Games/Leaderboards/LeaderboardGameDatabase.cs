@@ -65,21 +65,13 @@ namespace MHServerEmu.Games.Leaderboards
             lock (_lock)
             {
                 foreach (var instance in instances)
-                    UpdateLeaderboardInstance(instance, false);
+                    UpdateLeaderboardInstance(instance);
             }
         }
-
-        public void UpdateLeaderboardInstance(LeaderboardInstanceInfo instanceInfo, bool rewarded)
+        public void UpdateLeaderboardInstance(LeaderboardInstanceInfo instanceInfo)
         {
             lock (_lock)
             {
-                if (rewarded)
-                {
-                    var activePlayers = new PlayerIterator(Game.Current).ToArray();
-                    foreach (var player in activePlayers)
-                        player.LeaderboardManager.CheckRewards = true;
-                }
-
                 if (_leaderboardInfoMap.TryGetValue(instanceInfo.LeaderboardId, out var leaderboardInfo))
                 {
                     var updateInstance = leaderboardInfo.Instances.Find(instance => instance.InstanceId == instanceInfo.InstanceId);
@@ -100,6 +92,37 @@ namespace MHServerEmu.Games.Leaderboards
                         leaderboardInfo.Instances.Add(instanceInfo);
                         _leaderboardInfoMap[instanceInfo.LeaderboardId] = leaderboardInfo;
                     }
+                }
+            }
+        }
+
+        public void OnLeaderboardStateChange(LeaderboardInstanceInfo instanceInfo, LeaderboardState state)
+        {
+            lock (_lock)
+            {
+                instanceInfo.State = state;
+                UpdateLeaderboardInstance(instanceInfo);
+
+                bool rewarded = state == LeaderboardState.eLBS_Rewarded;
+                bool sendClient = state == LeaderboardState.eLBS_Created
+                    || state == LeaderboardState.eLBS_Active
+                    || state == LeaderboardState.eLBS_Expired
+                    || state == LeaderboardState.eLBS_Rewarded;
+
+                NetMessageLeaderboardStateChange message = null;
+                if (sendClient)
+                    message = instanceInfo.ToLeaderboardStateChange();
+
+                var activePlayers = new PlayerIterator(Game.Current).ToArray();
+                foreach (var player in activePlayers)
+                {
+                    player.LeaderboardManager.OnUpdateEventContext();
+
+                    if (rewarded)
+                        player.LeaderboardManager.CheckRewards = true;
+
+                    if (sendClient) 
+                        player.SendMessage(message);
                 }
             }
         }

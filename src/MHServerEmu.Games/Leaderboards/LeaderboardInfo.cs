@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -37,6 +38,18 @@ namespace MHServerEmu.Games.Leaderboards
                 ExpirationTime = updateInstance.ExpirationTime;
                 Visible = updateInstance.Visible;
             }
+        }
+
+        public NetMessageLeaderboardStateChange ToLeaderboardStateChange()
+        {
+            return NetMessageLeaderboardStateChange.CreateBuilder()
+                .SetLeaderboardId((ulong)LeaderboardId)
+                .SetInstanceId(InstanceId)
+                .SetNewState(State)
+                .SetActivationTimestamp((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
+                .SetExpirationTimestamp((long)Clock.DateTimeToUnixTime(ExpirationTime).TotalSeconds)
+                .SetVisible(Visible)
+                .Build();
         }
     }
 

@@ -553,7 +553,7 @@ namespace MHServerEmu.Leaderboards
                 if (changed)
                 {
                     State = state;
-                    _leaderboard.OnChangedState(InstanceId, state);
+                    _leaderboard.OnStateChange(InstanceId, state);
                 }
             }
 

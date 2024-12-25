@@ -180,7 +180,7 @@ namespace MHServerEmu.Leaderboards
             metaInstance?.AddMetaInstances(dbInstance.InstanceId);
 
             AddInstance(dbInstance, true);
-            OnChangedState((ulong)dbInstance.InstanceId, dbInstance.State);
+            OnStateChange((ulong)dbInstance.InstanceId, dbInstance.State);
             SetActiveInstance((ulong)dbInstance.InstanceId, dbInstance.State, true);
         }
 
@@ -204,15 +204,13 @@ namespace MHServerEmu.Leaderboards
             };
         }
 
-        public void OnChangedState(ulong instanceId, LeaderboardState state)
+        public void OnStateChange(ulong instanceId, LeaderboardState state)
         {
             var instance = GetInstance(instanceId);
             if (instance == null) return;
 
             var instanceInfo = instance.ToInstanceInfo();
-            instanceInfo.State = state;
-
-            LeaderboardGameDatabase.Instance.UpdateLeaderboardInstance(instanceInfo, state == LeaderboardState.eLBS_Rewarded);
+            LeaderboardGameDatabase.Instance.OnLeaderboardStateChange(instanceInfo, state);
         }
 
         public void GetInstancesInfo(List<LeaderboardInstanceInfo> instancesInfo)
