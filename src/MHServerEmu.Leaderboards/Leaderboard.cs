@@ -212,7 +212,7 @@ namespace MHServerEmu.Leaderboards
             var instanceInfo = instance.ToInstanceInfo();
             instanceInfo.State = state;
 
-            LeaderboardGameDatabase.Instance.UpdateLeaderboardInstance(instanceInfo);
+            LeaderboardGameDatabase.Instance.UpdateLeaderboardInstance(instanceInfo, state == LeaderboardState.eLBS_Rewarded);
         }
 
         public void GetInstancesInfo(List<LeaderboardInstanceInfo> instancesInfo)

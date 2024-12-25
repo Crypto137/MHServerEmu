@@ -97,18 +97,25 @@ namespace MHServerEmu.DatabaseAccess.Models
         public long InstanceId { get; set; }
         public long RewardId { get; set; }
         public long GameId { get; set; }
-        public int Position { get; set; }
+        public int Rank { get; set; }
         public long CreationDate {  get; set; }
+        public long RewardedDate { get; set; }
 
-        public DBRewardEntry(long leaderboardId, long instanceId, long rewardId, long gameId, int position)
+        public DBRewardEntry(long leaderboardId, long instanceId, long rewardId, long gameId, int rank)
         {
             LeaderboardId = leaderboardId;
             InstanceId = instanceId;
             RewardId = rewardId;
             GameId = gameId;
-            Position = position;
+            Rank = rank;
 
             CreationDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
+            RewardedDate = 0;
+        }
+
+        public void Rewarded()
+        {
+            RewardedDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
         }
     }
 }

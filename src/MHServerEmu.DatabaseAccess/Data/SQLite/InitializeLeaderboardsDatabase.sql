@@ -41,7 +41,7 @@ CREATE TABLE "Rewards" (
 	"LeaderboardId"	INTEGER NOT NULL,
 	"InstanceId"	INTEGER NOT NULL,
 	"GameId"	INTEGER NOT NULL,
-	"Position"	INTEGER NOT NULL,
+	"Rank"	INTEGER NOT NULL,
 	"RewardId"	INTEGER NOT NULL,
 	"CreationDate"	INTEGER,
 	"RewardedDate"	INTEGER,
@@ -51,3 +51,4 @@ CREATE TABLE "Rewards" (
 
 CREATE INDEX idx_instances_leaderboardid ON Instances (LeaderboardId);
 CREATE INDEX idx_entries_instanceid ON Entries (InstanceId);
+CREATE INDEX idx_rewards_gameid ON Rewards (GameId);

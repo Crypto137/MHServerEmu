@@ -1,4 +1,7 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
@@ -11,33 +14,51 @@ namespace MHServerEmu.Games.Leaderboards
     {
         private bool _cachedActives;
         private EventPointer<UpdateRuleEvent> _updateEvent;
+        private EventPointer<RewardsEvent> _rewardsEvent;
         private Dictionary<ScoringEventType, List<ScoringRule>> _activeRules;
         private Dictionary<LeaderboardScoringRulePrototype, ulong> _ruleEntities;
         private Dictionary<LeaderboardGuidKey, int> _ruleEvents;
         private EventGroup _pendingEvents;
+        private List<DBRewardEntry> _pendingRewards;
+        private SQLiteLeaderboardDBManager _dbManager;
 
         public Game Game { get; }
         public Player Owner { get; }
         public bool LeaderboardsEnabled { get => Game.LeaderboardsEnabled; }
+        public bool CheckRewards { get; set; }
+
 
         public LeaderboardManager(Player owner)
         {
             Owner = owner;
             Game = Owner.Game;
+
             _activeRules = new();
             _ruleEntities = new();
             _ruleEvents = new();
+
+            _updateEvent = new();
+            _rewardsEvent = new();
+            _pendingEvents = new();
+            _pendingRewards = new();
+
+            CheckRewards = false;
+            _dbManager = SQLiteLeaderboardDBManager.Instance;
         }
 
         public void Initialize()
         {
-            if (LeaderboardsEnabled) ScheduleUpdateEvent();
+            if (LeaderboardsEnabled == false) return;
+            
+            ScheduleUpdateEvent();
+            ScheduleRewardsEvent();            
         }
 
         public void Destory()
         {
             UpdateEvents();
             CancelUpdateEvent();
+            CancelRewardsEvent();
         }
 
         public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId)
@@ -204,6 +225,59 @@ namespace MHServerEmu.Games.Leaderboards
             _ruleEvents.Clear();
         }
 
+
+        private void DoCheckRewards()
+        {
+            GivePendingRewards();
+
+            if (CheckRewards)
+            {
+                _pendingRewards.AddRange(_dbManager.GetRewards(Owner.DatabaseUniqueId));
+                CheckRewards = false;
+            }
+
+            ScheduleRewardsEvent();
+        }
+
+        private void GivePendingRewards()
+        {
+            if (_pendingRewards.Count == 0) return;
+
+            foreach (var reward in _pendingRewards)
+            {
+                var rewardGuid = (PrototypeGuid)reward.RewardId;
+                var rewardDataRef = GameDatabase.GetDataRefByPrototypeGuid(rewardGuid);
+                var leaderboardGuid = (PrototypeGuid)reward.LeaderboardId;
+                var leaderboardDataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardGuid);
+                var leaderboardProto = GameDatabase.GetPrototype<LeaderboardPrototype>(leaderboardDataRef);
+                if (leaderboardProto == null) continue;
+
+                if (GiveReward(rewardDataRef))
+                {
+                    if (leaderboardProto.Public)
+                    {
+                        var message = NetMessageLeaderboardRewarded.CreateBuilder()
+                            .SetLeaderboardId((ulong)reward.LeaderboardId)
+                            .SetLeaderboardInstance((ulong)reward.InstanceId)
+                            .SetRewardGuid((ulong)reward.RewardId)
+                            .SetRank((ulong)reward.Rank).Build();
+
+                        Owner.SendMessage(message);                        
+                    }
+
+                    reward.Rewarded();
+                    _dbManager.SetRewarded(reward);
+                }
+            }
+
+            _pendingRewards.Clear();
+        }
+
+        private bool GiveReward(PrototypeId rewardDataRef)
+        {
+            throw new NotImplementedException();
+        }
+
         private void ScheduleUpdateEvent()
         {
             if (_updateEvent.IsValid) return;
@@ -214,6 +288,16 @@ namespace MHServerEmu.Games.Leaderboards
             _updateEvent.Get().Initialize(this);
         }
 
+        private void ScheduleRewardsEvent()
+        {
+            if (_rewardsEvent.IsValid) return;
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            scheduler.ScheduleEvent(_rewardsEvent, TimeSpan.FromSeconds(1), _pendingEvents);
+            _rewardsEvent.Get().Initialize(this);
+        }
+
         private void CancelUpdateEvent()
         {
             var scheduler = Game?.GameEventScheduler;
@@ -221,9 +305,21 @@ namespace MHServerEmu.Games.Leaderboards
             scheduler.CancelEvent(_updateEvent);
         }
 
+        private void CancelRewardsEvent()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_rewardsEvent);
+        }
+
         protected class UpdateRuleEvent : CallMethodEvent<LeaderboardManager>
         {
             protected override CallbackDelegate GetCallback() => (manager) => manager.DoUpdate();
+        }
+
+        protected class RewardsEvent : CallMethodEvent<LeaderboardManager>
+        {
+            protected override CallbackDelegate GetCallback() => (manager) => manager.DoCheckRewards();
         }
     }
 

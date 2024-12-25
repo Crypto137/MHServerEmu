@@ -408,32 +408,32 @@ namespace MHServerEmu.Leaderboards
         private void GetMetaRewards(List<DBRewardEntry> rewardsList)
         {
             ulong prevScore = 0;
-            int prevPosition = 0;
+            int prevRank = 0;
             int entryIndex = 0;
 
             foreach (var entry in Entries)
             {
-                int position = entryIndex + 1;
+                int rank = entryIndex + 1;
 
                 if (entry.Score == prevScore)
-                    position = prevPosition;
+                    rank = prevRank;
 
                 var metaEntry = _metaLeaderboardEntries.Find(meta => meta.MetaLeaderboardId == entry.GameId);
                 if (metaEntry == null || metaEntry.MetaInstance == null || metaEntry.Rewards.IsNullOrEmpty()) 
                     continue;
 
                 foreach (var rewardProto in metaEntry.Rewards)
-                    if (EvaluateReward(rewardProto, entry, position))
+                    if (EvaluateReward(rewardProto, entry, rank))
                     {
                         var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
 
                         foreach (var entryInst in metaEntry.MetaInstance.Entries)
                             rewardsList.Add(new DBRewardEntry(
                                 (long)LeaderboardId, (long)InstanceId, 
-                                (long)rewardId, (long)entryInst.GameId, position));
+                                (long)rewardId, (long)entryInst.GameId, rank));
 
                         prevScore = entry.Score;
-                        prevPosition = position;
+                        prevRank = rank;
 
                         break;
                     }
@@ -447,7 +447,7 @@ namespace MHServerEmu.Leaderboards
             int count = Entries.Count;
 
             ulong prevScore = 0;
-            int prevPosition = 0;
+            int prevRank = 0;
             int entryIndex = 0;
 
             foreach (var rewardProto in rewards)
@@ -455,20 +455,20 @@ namespace MHServerEmu.Leaderboards
                 while (entryIndex < count)
                 {
                     var entry = Entries[entryIndex];
-                    int position = entryIndex + 1;
+                    int rank = entryIndex + 1;
 
                     if (entry.Score == prevScore)
-                        position = prevPosition;
+                        rank = prevRank;
 
-                    if (EvaluateReward(rewardProto, entry, position) == false) break;
+                    if (EvaluateReward(rewardProto, entry, rank) == false) break;
 
                     var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
                     rewardsList.Add(new DBRewardEntry(
                         (long)LeaderboardId, (long)InstanceId, 
-                        (long)rewardId, (long)entry.GameId, position));
+                        (long)rewardId, (long)entry.GameId, rank));
 
                     prevScore = entry.Score;
-                    prevPosition = position;
+                    prevRank = rank;
 
                     entryIndex++;
                 }

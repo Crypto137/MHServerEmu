@@ -226,8 +226,29 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var transaction = connection.BeginTransaction();
 
             connection.Execute(@"
-                INSERT INTO Rewards (LeaderboardId, InstanceId, GameId, RewardId, Position, CreationDate)
-                VALUES (@LeaderboardId, @InstanceId, @GameId, @RewardId, @Position, @CreationDate)", dbRewards, transaction);
+                INSERT INTO Rewards (LeaderboardId, InstanceId, GameId, RewardId, Rank, CreationDate)
+                VALUES (@LeaderboardId, @InstanceId, @GameId, @RewardId, @Rank, @CreationDate)", dbRewards, transaction);
+
+            transaction.Commit();
+        }
+
+        public List<DBRewardEntry> GetRewards(ulong gameId)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            return connection.Query<DBRewardEntry>(@"
+                SELECT * FROM Rewards WHERE GameId = @GameId AND RewardedDate = 0",
+                new { GameId = (long)gameId }).ToList();
+        }
+
+        public void SetRewarded(DBRewardEntry reward)
+        {
+            using SQLiteConnection connection = GetConnection();
+            using var transaction = connection.BeginTransaction();
+
+            connection.Execute(@"
+                UPDATE Rewards SET RewardedDate = @RewardedDate 
+                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId AND GameId = @GameId", reward, transaction);
 
             transaction.Commit();
         }

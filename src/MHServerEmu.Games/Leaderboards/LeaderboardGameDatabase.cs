@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Diagnostics;
@@ -64,14 +65,21 @@ namespace MHServerEmu.Games.Leaderboards
             lock (_lock)
             {
                 foreach (var instance in instances)
-                    UpdateLeaderboardInstance(instance);
+                    UpdateLeaderboardInstance(instance, false);
             }
         }
 
-        public void UpdateLeaderboardInstance(LeaderboardInstanceInfo instanceInfo)
+        public void UpdateLeaderboardInstance(LeaderboardInstanceInfo instanceInfo, bool rewarded)
         {
             lock (_lock)
             {
+                if (rewarded)
+                {
+                    var activePlayers = new PlayerIterator(Game.Current).ToArray();
+                    foreach (var player in activePlayers)
+                        player.LeaderboardManager.CheckRewards = true;
+                }
+
                 if (_leaderboardInfoMap.TryGetValue(instanceInfo.LeaderboardId, out var leaderboardInfo))
                 {
                     var updateInstance = leaderboardInfo.Instances.Find(instance => instance.InstanceId == instanceInfo.InstanceId);
