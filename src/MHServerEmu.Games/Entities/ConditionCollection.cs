@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Events;
@@ -147,6 +148,118 @@ namespace MHServerEmu.Games.Entities
                 return 0;
 
             return stackCount;
+        }
+
+        public int GetStackApplicationData(in StackId stackId, StackingBehaviorPrototype stackingBehaviorProto, int rankToApply, 
+            out TimeSpan longestTimeRemaining, List<ulong> removeList = null, List<ulong> refreshList = null)
+        {
+            return GetStackApplicationData(stackId, stackingBehaviorProto, rankToApply, 0, out _, out longestTimeRemaining, removeList, refreshList);
+        }
+
+        public int GetStackApplicationData(in StackId stackId, StackingBehaviorPrototype stackingBehaviorProto, int rankToApply, ulong creatorId,
+            out int existingStackCount, out TimeSpan longestTimeRemaining, List<ulong> removeList = null, List<ulong> refreshList = null)
+        {
+            existingStackCount = 0;
+            longestTimeRemaining = TimeSpan.Zero;
+            
+            int numStacksToApply = 0;
+            int maxNumStacksToApply = stackingBehaviorProto.NumStacksToApply;
+            int numStacksAvailable = stackingBehaviorProto.MaxNumStacks;
+
+            List<(int, ulong)> conditionsByRankList = ListPool<(int, ulong)>.Instance.Get();
+
+            foreach (Condition condition in _currentConditions.Values)
+            {
+                if (condition.CanStackWith(stackId) == false)
+                    continue;
+
+                // Mark all used stack slots
+                numStacksAvailable--;
+
+                // Track lower rank conditions to remove if we run out of stack slots
+                if (stackingBehaviorProto.StacksFromDifferentCreators)
+                {
+                    int rank = condition.Rank;
+                    if (rank < rankToApply)
+                        conditionsByRankList.Add((rank, condition.Id));
+                }
+
+                // Count the current number of stacks
+                if (creatorId != Entity.InvalidId && condition.Id == creatorId)
+                    existingStackCount++;
+
+                // Determine the longest remaining duration
+                TimeSpan timeRemaining = condition.TimeRemaining;
+                if (timeRemaining > longestTimeRemaining)
+                    longestTimeRemaining = timeRemaining;
+
+                // Mark all conditions for removal if this stacking behavior recreates all stacks on each application
+                if (removeList != null && stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.Recreate)
+                    removeList.Add(condition.Id);
+
+                // Mark conditions with duration for refresh / duration extension if needed
+                if (refreshList != null &&
+                    (stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.Refresh ||
+                    stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.SingleStackAddDuration ||
+                    stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.MultiStackAddDuration) &&
+                    condition.Duration > TimeSpan.Zero)
+                {
+                    refreshList.Add(condition.Id);
+                }
+            }
+
+            // The available number of stack slots should always be >= 0
+            if (numStacksAvailable < 0)
+            {
+                Logger.Warn("GetStackingData(): numStacksAvailable < 0");
+                goto end;
+            }
+
+            // Determine the number of stacks to apply based on the application style
+            switch (stackingBehaviorProto.ApplicationStyle)
+            {
+                case StackingApplicationStyleType.DontRefresh:
+                case StackingApplicationStyleType.Refresh:
+                case StackingApplicationStyleType.MatchDuration:
+                case StackingApplicationStyleType.MultiStackAddDuration:
+                    numStacksToApply = Math.Min(numStacksAvailable, maxNumStacksToApply);
+
+                    // Remove lower rank conditions until we run out of lower rank conditions or reach the required number of stacks
+                    if (numStacksToApply < maxNumStacksToApply)
+                    {
+                        // Sort to remove the lowest rank conditions first
+                        conditionsByRankList.Sort((left, right) => left.Item1.CompareTo(right.Item1));
+                        foreach (var entry in conditionsByRankList)
+                        {
+                            if (numStacksToApply >= maxNumStacksToApply)
+                                break;
+
+                            removeList?.Add(entry.Item2);
+                            numStacksToApply++;
+                        }
+                    }
+
+                    break;
+
+                case StackingApplicationStyleType.Recreate:
+                    // Apply all the stacks if we are recreating
+                    numStacksToApply = maxNumStacksToApply;
+                    break;
+
+                case StackingApplicationStyleType.SingleStackAddDuration:
+                    // Only add a single stack if it's not present already
+                    if (numStacksAvailable == 1)
+                        numStacksToApply = 1;
+                    break;
+
+                default:
+                    Logger.Warn($"GetStackingData(): Unsupported application style {stackingBehaviorProto.ApplicationStyle}");
+                    goto end;
+            }
+
+            end:
+            ListPool<(int, ulong)>.Instance.Return(conditionsByRankList);
+            return numStacksToApply;
         }
 
         public static StackId MakeConditionStackId(PowerPrototype powerProto, ConditionPrototype conditionProto, ulong creatorEntityId,

@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -747,7 +748,7 @@ namespace MHServerEmu.Games.Powers
             if (Game.Random.NextFloat() >= chanceToApply)
                 return false;
 
-            // Apply the conditon
+            // Calculate duration
             CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration);
             
             if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
@@ -757,9 +758,16 @@ namespace MHServerEmu.Games.Powers
                 return false;
             }
 
-            Condition condition = conditionCollection.AllocateCondition();
-            condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration);
-            results.AddConditionToAdd(condition);
+            // Calculate the number of stacks to apply and modify duration if needed
+            int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref duration);
+
+            // Apply the calculated number of stacks
+            for (int i = 0; i < numStacksToApply; i++)
+            {
+                Condition condition = conditionCollection.AllocateCondition();
+                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration);
+                results.AddConditionToAdd(condition);
+            }
 
             return true;
         }
@@ -949,6 +957,44 @@ namespace MHServerEmu.Games.Powers
                 return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
 
             return true;
+        }
+
+        private int CalculateConditionNumStacksToApply(WorldEntity target, WorldEntity ultimateOwner,
+            ConditionCollection conditionCollection, ConditionPrototype conditionProto, ref TimeSpan duration)
+        {
+            ulong creatorPlayerId = ultimateOwner is Avatar avatar ? avatar.OwnerPlayerDbId : 0;
+
+            ConditionCollection.StackId stackId = ConditionCollection.MakeConditionStackId(PowerPrototype,
+                conditionProto, UltimateOwnerId, creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto);
+
+            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateResultConditionNumStacksToApply(): ");
+
+            List<ulong> refreshList = ListPool<ulong>.Instance.Get();
+            List<ulong> removeList = ListPool<ulong>.Instance.Get();
+
+            int numStacksToApply = conditionCollection.GetStackApplicationData(stackId, stackingBehaviorProto,
+                Properties[PropertyEnum.PowerRank], out TimeSpan longestTimeRemaining, removeList, refreshList);
+
+            // Remove conditions
+            foreach (ulong conditionId in removeList)
+                conditionCollection.RemoveCondition(conditionId);
+
+            // Modify duration and refresh conditions
+            // NOTE: The order is important here because refreshing can potentially modify duration as well
+            if (stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.MatchDuration)
+                duration = longestTimeRemaining;
+
+            foreach (ulong conditionId in refreshList)
+            {
+                // TODO
+            }
+
+            if (stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.MultiStackAddDuration)
+                duration += longestTimeRemaining;
+
+            ListPool<ulong>.Instance.Return(refreshList);
+            ListPool<ulong>.Instance.Return(removeList);
+            return numStacksToApply;
         }
 
         /// <summary>

@@ -114,6 +114,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
+        public int Rank { get => Properties[PropertyEnum.PowerRank]; }
 
         public PowerIndexPropertyFlags PowerIndexPropertyFlags { get => _conditionPrototype != null ? _conditionPrototype.PowerIndexPropertyFlags : default; }
 
