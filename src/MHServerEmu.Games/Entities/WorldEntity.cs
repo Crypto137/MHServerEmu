@@ -2319,6 +2319,7 @@ namespace MHServerEmu.Games.Entities
         public virtual bool OnPowerUnassigned(Power power) { return true; }
         public virtual void OnPowerEnded(Power power, EndPowerFlags flags) { }
         public virtual void OnConditionRemoved(Condition condition) { }
+        public virtual void OnNegativeStatusEffectApplied(ulong conditionId) { }
 
         public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
         public virtual void OnOverlapEnd(WorldEntity whom) { }

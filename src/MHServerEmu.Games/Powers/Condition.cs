@@ -102,7 +102,7 @@ namespace MHServerEmu.Games.Powers
 
         public AssetId OwnerAssetRef { get => _ownerAssetRef; }
         public TimeSpan StartTime { get => _startTime; }
-        public TimeSpan PauseTime { get => _pauseTime; }
+        public TimeSpan PauseTime { get => _pauseTime; set => _pauseTime = value; }
         public TimeSpan Duration { get => TimeSpan.FromMilliseconds(_durationMS); }
         public bool IsEnabled { get => _isEnabled; set => _isEnabled = value; }
         public TimeSpan UpdateInterval { get => TimeSpan.FromMilliseconds(_updateIntervalMS); }
@@ -461,6 +461,14 @@ namespace MHServerEmu.Games.Powers
         public void ResetStartTime()
         {
             _startTime = Game.Current.CurrentTime;
+        }
+
+        public void SetDuration(long duration)
+        {
+            if (duration <= 0)
+                Logger.Warn("SetDuration(): duration <= 0");
+
+            _durationMS = duration < 0 ? 0 : duration;
         }
 
         public bool IsPersistToDB()

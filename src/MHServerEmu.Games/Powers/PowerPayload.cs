@@ -980,16 +980,43 @@ namespace MHServerEmu.Games.Powers
                 conditionCollection.RemoveCondition(conditionId);
 
             // Modify duration and refresh conditions
-            // NOTE: The order is important here because refreshing can potentially modify duration as well
-            if (stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.MatchDuration)
+            // NOTE: The order is important here because refreshing uses the duration
+            StackingApplicationStyleType applicationStyle = stackingBehaviorProto.ApplicationStyle;
+
+            if (applicationStyle == StackingApplicationStyleType.MatchDuration)
                 duration = longestTimeRemaining;
 
-            foreach (ulong conditionId in refreshList)
+            if (refreshList.Count > 0)
             {
-                // TODO
+                bool refreshedAny = false;
+                bool refreshedAnyNegativeStatus = false;
+                ulong negativeStatusId = 0;
+
+                foreach (ulong conditionId in refreshList)
+                {
+                    Condition condition = conditionCollection.GetCondition(conditionId);
+                    if (condition == null)
+                        continue;
+
+                    TimeSpan durationDelta = TimeSpan.Zero;
+                    if (applicationStyle == StackingApplicationStyleType.SingleStackAddDuration || applicationStyle == StackingApplicationStyleType.MultiStackAddDuration)
+                        durationDelta = duration;
+
+                    bool refreshedThis = conditionCollection.RefreshCondition(conditionId, PowerOwnerId, durationDelta);
+                    refreshedAny |= refreshedThis;
+
+                    if (refreshedThis && refreshedAnyNegativeStatus == false && condition.IsANegativeStatusEffect())
+                    {
+                        refreshedAnyNegativeStatus = true;
+                        negativeStatusId = conditionId;
+                    }
+                }
+
+                if (refreshedAnyNegativeStatus)
+                    target.OnNegativeStatusEffectApplied(negativeStatusId);
             }
 
-            if (stackingBehaviorProto.ApplicationStyle == StackingApplicationStyleType.MultiStackAddDuration)
+            if (applicationStyle == StackingApplicationStyleType.MultiStackAddDuration)
                 duration += longestTimeRemaining;
 
             ListPool<ulong>.Instance.Return(refreshList);

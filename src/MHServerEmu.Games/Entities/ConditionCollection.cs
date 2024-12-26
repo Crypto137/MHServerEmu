@@ -426,6 +426,43 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
+        public bool RefreshCondition(ulong conditionId, ulong creatorId, TimeSpan durationDelta = default)
+        {
+            Condition condition = GetCondition(conditionId);
+            if (condition == null) return Logger.WarnReturn(false, "RefreshCondition(): condition == null");
+
+            // Modify duration if needed
+            if (durationDelta != default)
+            {
+                // Do not allow duration to be reduced to zero because that would make it infinite
+                long newDurationMS = (long)(condition.TimeRemaining + durationDelta).TotalMilliseconds;
+                condition.SetDuration(Math.Max(newDurationMS, 1));
+            }
+
+            // Do the refresh
+            bool conditionIsActive = false;
+
+            condition.ResetStartTime();
+            condition.PauseTime = TimeSpan.Zero;
+
+            // TODO: paused conditions
+            CancelScheduledConditionEnd(condition);
+            Handle handle = new(this, condition);
+            // TODO: reset ticker
+            conditionIsActive = handle.Valid() && ScheduleConditionEnd(condition);
+
+            // Notify the owner player if needed
+            Player player = _owner.GetOwnerOfType<Player>();
+            player?.SendMessage(NetMessageChangeConditionDuration.CreateBuilder()
+                .SetIdEntity(_owner.Id)
+                .SetKey(condition.Id)
+                .SetDuration((long)condition.Duration.TotalMilliseconds)
+                .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
+                .Build());
+
+            return conditionIsActive;
+        }
+
         public bool RemoveCondition(ulong conditionId)
         {
             if (_currentConditions.TryGetValue(conditionId, out Condition condition) == false)
