@@ -2222,6 +2222,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 missionManager.UpdateMissionInterest();
             }
 
+            // Finish the switch (if there was one)
+            player.Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
+
             // update achievement score
             player.AchievementManager.UpdateScore();
 

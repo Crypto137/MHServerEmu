@@ -423,6 +423,33 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public bool InitializeFromOtherCondition(ulong conditionId, Condition other, WorldEntity owner)
+        {
+            _conditionId = conditionId;
+            
+            // This method is used to copy a condition from one avatar to another, so the owner changes
+            _creatorId = owner.Id;
+            _ultimateCreatorId = owner.Id;
+
+            _conditionPrototypeRef = other._conditionPrototypeRef;
+            _conditionPrototype = other._conditionPrototype;
+            _creatorPowerPrototypeRef = other._creatorPowerPrototypeRef;
+            _creatorPowerPrototype = other._creatorPowerPrototype;
+            _creatorPowerIndex = other._creatorPowerIndex;
+
+            _ownerAssetRef = owner.GetEntityWorldAsset();
+            // _startTime and _pauseTime is set when this condition is added to a collection
+            _durationMS = (long)other.TimeRemaining.TotalMilliseconds;
+            _isEnabled = other._isEnabled;
+            _updateIntervalMS = other._updateIntervalMS;
+            _properties.FlattenCopyFrom(other._properties, true);
+            _cancelOnFlags = other._cancelOnFlags;
+
+            CreatorPlayerId = other.CreatorPlayerId;
+
+            return true;
+        }
+
         public bool CacheStackId()
         {
             // Non-power conditions cannot stack
@@ -473,26 +500,26 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsPersistToDB()
         {
-            if (_conditionPrototype == null)
-                return Logger.WarnReturn(false, "IsPersistToDB(): _conditionPrototype == null");
-
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPersistToDB(): _conditionPrototype == null");
             return _conditionPrototype.PersistToDB;
         }
 
         public bool IsBoost()
         {
-            if (_conditionPrototype == null)
-                return Logger.WarnReturn(false, "IsBoost(): _conditionPrototype == null");
-
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsBoost(): _conditionPrototype == null");
             return _conditionPrototype.IsBoost;
         }
 
         public bool IsHitReactCondition()
         {
-            if (_conditionPrototype == null)
-                return Logger.WarnReturn(false, "IsHitReactCondition(): _conditionPrototype == null");
-
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsHitReactCondition(): _conditionPrototype == null");
             return _conditionPrototype.IsHitReactCondition;
+        }
+
+        public bool IsTransferToCurrentAvatar()
+        {
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsTransferToCurrentAvatar(): _conditionPrototype == null");
+            return _conditionPrototype.TransferToCurrentAvatar;
         }
 
         public PrototypeId[] GetKeywords()

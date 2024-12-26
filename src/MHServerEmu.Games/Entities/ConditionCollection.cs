@@ -553,6 +553,43 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
+        public bool TransferConditionsFrom(ConditionCollection other)
+        {
+            if (other == null) return Logger.WarnReturn(false, "TransferConditionsFrom(): other == null");
+
+            // Make sure both condition collections belong to the same player owner
+            Player player = _owner.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "TransferConditionsFrom(): player == null");
+
+            Player otherPlayer = other._owner.GetOwnerOfType<Player>();
+            if (otherPlayer == null) return Logger.WarnReturn(false, "TransferConditionsFrom(): otherPlayer == null");
+
+            if (player != otherPlayer)
+                return Logger.WarnReturn(false, $"TransferConditionsFrom(): Attempted to transfer conditions from [{otherPlayer}] to [{player}] ([{other._owner}] to [{_owner}])");
+
+            // Transfer
+            foreach (Condition condition in other)
+            {
+                if (condition.IsTransferToCurrentAvatar() == false)
+                    continue;
+
+                Condition conditionCopy = AllocateCondition();
+                if (conditionCopy.InitializeFromOtherCondition(NextConditionId, condition, _owner))
+                {
+                    AddCondition(conditionCopy);
+                }
+                else
+                {
+                    Logger.Warn($"TransferConditionsFrom(): Failed to copy condition [{condition}] from [{other._owner}] to [{_owner}]");
+                    DeleteCondition(conditionCopy);
+                }
+
+                other.RemoveCondition(condition.Id);
+            }
+
+            return true;
+        }
+
         public bool HasANegativeStatusEffectCondition()
         {
             foreach (Condition condition in _currentConditions.Values)
