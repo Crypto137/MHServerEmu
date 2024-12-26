@@ -36,6 +36,7 @@ namespace MHServerEmu.Games.Leaderboards
                 var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
                 if (proto != null)
                 {
+                    if (proto.Public == false) continue;
                     var guid = GameDatabase.GetPrototypeGuid(dataRef);
                     _leaderboardInfoMap[guid] = new(proto);
                     count++;
