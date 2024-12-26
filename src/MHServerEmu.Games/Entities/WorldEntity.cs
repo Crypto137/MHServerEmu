@@ -248,6 +248,12 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
+        public override void OnUnpackComplete(Archive archive)
+        {
+            base.OnUnpackComplete(archive);
+            ConditionCollection?.OnUnpackComplete(archive);
+        }
+
         public void AddTankingContributor(Player player, long damage)
         {
             if (player == null) return;

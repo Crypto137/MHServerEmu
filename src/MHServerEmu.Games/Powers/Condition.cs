@@ -114,6 +114,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }
         public TimeSpan TimeRemaining { get => Duration - ElapsedTime; }
+        public bool IsFinite { get => Duration > TimeSpan.Zero || Properties.HasProperty(PropertyEnum.ConditionKillCountLimit); }
         public int Rank { get => Properties[PropertyEnum.PowerRank]; }
 
         public PowerIndexPropertyFlags PowerIndexPropertyFlags { get => _conditionPrototype != null ? _conditionPrototype.PowerIndexPropertyFlags : default; }
@@ -339,6 +340,20 @@ namespace MHServerEmu.Games.Powers
             return success;
         }
 
+        public void RestoreCreatorIdIfPossible(ulong entityId, ulong playerDbId)
+        {
+            PowerPrototype creatorPowerProto = CreatorPowerPrototype;
+            if (creatorPowerProto == null)
+                return;
+
+            if (Power.GetTargetingShape(creatorPowerProto) != TargetingShapeType.Self)
+                return;
+
+            _creatorId = entityId;
+            _ultimateCreatorId = entityId;
+            CreatorPlayerId = playerDbId;
+        }
+
         public void Clear()
         {
             // Clear all data from this condition instance for later reuse via pooling
@@ -502,6 +517,12 @@ namespace MHServerEmu.Games.Powers
         {
             if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPersistToDB(): _conditionPrototype == null");
             return _conditionPrototype.PersistToDB;
+        }
+
+        public bool IsRealTime()
+        {
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsRealTime(): _conditionPrototype == null");
+            return _conditionPrototype.RealTime;
         }
 
         public bool IsBoost()

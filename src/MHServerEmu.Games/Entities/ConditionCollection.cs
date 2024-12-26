@@ -6,6 +6,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -48,7 +49,6 @@ namespace MHServerEmu.Games.Entities
         {
             bool success = true;
 
-            // TODO: Persistent serialization
             if (archive.IsTransient)
             {
                 if (archive.IsPacking)
@@ -84,6 +84,29 @@ namespace MHServerEmu.Games.Entities
             }
 
             return success;
+        }
+
+        public bool OnUnpackComplete(Archive archive)
+        {
+            if (archive.IsUnpacking == false) return Logger.WarnReturn(false, "OnUnpackComplete(): archive.IsUnpacking == false");
+            if (_owner == null) return Logger.WarnReturn(false, "OnUnpackComplete(): _owner == null");
+
+            Avatar avatar = _owner.GetSelfOrOwnerOfType<Avatar>();
+            ulong ownerPlayerDbId = avatar != null ? avatar.OwnerPlayerDbId : 0;
+
+            foreach (Condition condition in this)
+            {
+                condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
+                condition.RestoreCreatorIdIfPossible(_owner.Id, ownerPlayerDbId);   // Owner's entity id changes on transfer
+                condition.CacheStackId();
+
+                if (condition.SerializationFlags.HasFlag(ConditionSerializationFlags.IsDisabled))
+                    IncrementStackCountCache(condition);    // Just increment the stack instead of doing the whole OnInsertCondition() callback
+                else
+                    OnInsertCondition(condition);           // Apply this condition to the owner
+            }
+
+            return true;
         }
 
         /// <summary>
