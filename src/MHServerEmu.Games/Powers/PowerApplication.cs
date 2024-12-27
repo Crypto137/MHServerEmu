@@ -23,6 +23,8 @@ namespace MHServerEmu.Games.Powers
         public int BeamSweepVar { get; set; } = -1;
         public TimeSpan UnknownTimeSpan { get; set; } = TimeSpan.Zero;
 
+        public bool IsFree { get; set; }
+
         public PowerApplication() { }
 
         public PowerApplication(PowerApplication other)

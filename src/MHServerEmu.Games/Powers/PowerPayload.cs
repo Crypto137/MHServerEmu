@@ -4,10 +4,12 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 
@@ -43,6 +45,8 @@ namespace MHServerEmu.Games.Powers
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
+
+        public PowerActivationSettings ActivationSettings { get => new(TargetId, TargetPosition, PowerOwnerPosition); }
 
         /// <summary>
         /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
@@ -113,6 +117,22 @@ namespace MHServerEmu.Games.Powers
                 Properties.CopyPropertyRange(power.Properties, PropertyEnum.DamageBaseUnmodifiedPerRank);
             }
 
+            // Initialize bouncing
+            int bounceCount = power.Properties[PropertyEnum.BounceCount];
+            if (bounceCount > 0)
+            {
+                Properties[PropertyEnum.BounceCountPayload] = bounceCount;
+                Properties[PropertyEnum.BounceRangePayload] = power.GetRange();
+                Properties[PropertyEnum.BounceSpeedPayload] = power.GetProjectileSpeed(PowerOwnerPosition, TargetPosition);
+                Properties[PropertyEnum.PayloadSkipRangeCheck] = true;
+                Properties[PropertyEnum.PowerPreviousTargetsID, 0] = TargetId;
+            }
+            else if (powerApplication.SkipRangeCheck)
+            {
+                // Copy range skip from the application if we didn't get it from bouncing
+                Properties[PropertyEnum.PayloadSkipRangeCheck] = true;
+            }
+
             return true;
         }
 
@@ -136,6 +156,12 @@ namespace MHServerEmu.Games.Powers
                 PowerAssetRefOverride, isHostile);
         }
 
+        public void UpdateTarget(ulong targetId, Vector3 targetPosition)
+        {
+            TargetId = targetId;
+            TargetPosition = targetPosition;
+        }
+
         public void RecalculateInitialDamageForCombatLevel(int combatLevel)
         {
             Properties[PropertyEnum.CombatLevel] = combatLevel;
@@ -145,10 +171,27 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
         /// </summary>
-        public void CalculatePowerResults(PowerResults results, WorldEntity target)
+        public void CalculatePowerResults(PowerResults targetResults, PowerResults userResults, WorldEntity target, bool calculateForTarget)
         {
-            CalculateResultDamage(results, target);
-            CalculateResultHealing(results, target);
+            if (calculateForTarget)
+            {
+                CalculateResultDamage(targetResults, target);
+                CalculateResultHealing(targetResults, target);
+
+                CalculateResultConditionsToRemove(targetResults, target);
+            }
+
+            if (targetResults.IsDodged == false)
+                CalculateResultConditionsToAdd(targetResults, target, calculateForTarget);
+
+            // Copy extra properties
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoExpOnDeath);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoLootDrop);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
         }
 
         #region Initial Calculations
@@ -624,6 +667,177 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool CalculateResultConditionsToAdd(PowerResults results, WorldEntity target, bool isTargetResult)
+        {
+            if (PowerPrototype.AppliesConditions == null && PowerPrototype.ConditionsByRef.IsNullOrEmpty())
+                return true;
+
+            ConditionCollection conditionCollection = target?.ConditionCollection;
+            if (conditionCollection == null) return Logger.WarnReturn(false, "CalculateResultConditionsToAdd(): conditionCollection == null");
+
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(results.PowerOwnerId);
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(results.UltimateOwnerId);
+
+            if (PowerPrototype.AppliesConditions != null)
+            {
+                foreach (var entry in PowerPrototype.AppliesConditions)
+                {
+                    ConditionPrototype mixinConditionProto = entry.Prototype as ConditionPrototype;
+                    if (mixinConditionProto == null)
+                    {
+                        Logger.Warn("CalculateResultConditionsToAdd(): mixinConditionProto == null");
+                        continue;
+                    }
+
+                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, isTargetResult, conditionCollection, mixinConditionProto);
+                }
+            }
+
+            if (PowerPrototype.ConditionsByRef.HasValue())
+            {
+                foreach (PrototypeId conditionProtoRef in PowerPrototype.ConditionsByRef)
+                {
+                    ConditionPrototype conditionByRefProto = conditionProtoRef.As<ConditionPrototype>();
+                    if (conditionByRefProto == null)
+                    {
+                        Logger.Warn("CalculateResultConditionsToAdd(): conditionByRefProto == null");
+                        continue;
+                    }
+
+                    CalculateResultConditionsToAddHelper(results, target, owner, ultimateOwner, isTargetResult, conditionCollection, conditionByRefProto);
+                }
+            }
+
+            for (int i = 0; i < results.ConditionAddList.Count; i++)
+            {
+                Condition condition = results.ConditionAddList[i];
+
+                if (owner != null)
+                {
+                    Power power = owner.GetPower(PowerProtoRef);
+                    power?.TrackCondition(target.Id, condition);
+                }
+                else if (condition.Duration == TimeSpan.Zero)
+                {
+                    Logger.Warn($"CalculateResultConditionsToAdd(): No owner to cancel infinite condition for {PowerPrototype}");
+                }
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultConditionsToAddHelper(PowerResults results, WorldEntity target, WorldEntity owner, WorldEntity ultimateOwner,
+            bool calculateForTarget, ConditionCollection conditionCollection, ConditionPrototype conditionProto)
+        {
+            // Make sure the condition matches the scope for the current results
+            if ((conditionProto.Scope == ConditionScopeType.Target && calculateForTarget == false) ||
+                (conditionProto.Scope == ConditionScopeType.User && calculateForTarget))
+            {
+                return false;
+            }
+
+            // Check for condition immunities
+            foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.ImmuneToConditionWithKwd))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                if (keywordProtoRef != PrototypeId.Invalid && conditionProto.HasKeyword(keywordProtoRef))
+                    return false;
+            }
+
+            // Roll the chance to apply
+            float chanceToApply = conditionProto.GetChanceToApplyConditionEffects(Properties, target, conditionCollection, PowerProtoRef, ultimateOwner);
+            if (Game.Random.NextFloat() >= chanceToApply)
+                return false;
+
+            // Calculate duration
+            if (CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration) == false)
+                return false;
+
+            // Calculate the number of stacks to apply and modify duration if needed
+            int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref duration);
+
+            // Apply the calculated number of stacks
+            for (int i = 0; i < numStacksToApply; i++)
+            {
+                Condition condition = ConditionCollection.AllocateCondition();
+                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration);
+                results.AddConditionToAdd(condition);
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
+        {
+            bool removedAny = false;
+
+            ConditionCollection conditionCollection = target?.ConditionCollection;
+            if (conditionCollection == null)
+                return removedAny;
+
+            // Remove conditions created by specified powers
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RemoveConditionsOfPower))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionOfPowerFunc, powerProtoRef, maxStacksToRemove);
+            }
+
+            // Remove conditions with specified keywords
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RemoveConditionsWithKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionWithKeywordFunc, keywordProtoRef, maxStacksToRemove);
+            }
+
+            // Remove conditions that have specified properties
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RemoveConditionsWithPropertyOfType))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId propertyProtoRef);
+                Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
+
+                PropertyEnum propertyEnum = propertyInfoTable.GetPropertyEnumFromPrototype(propertyProtoRef);
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionWithPropertyOfTypeFunc, propertyEnum, maxStacksToRemove);
+            }
+
+            // Remove conditions of the specified type (no params here)
+            AssetId conditionTypeAssetRef = Properties[PropertyEnum.RemoveConditionsOfType];
+            if (conditionTypeAssetRef != AssetId.Invalid)
+            {
+                ConditionType conditionType = (ConditionType)AssetDirectory.Instance.GetEnumValue(conditionTypeAssetRef);
+                if (conditionType != ConditionType.Neither)
+                    removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionOfTypeFunc, conditionType, 0);
+            }
+
+            return removedAny;
+        }
+
+        private bool CalculateResultConditionsToRemoveHelper<T>(PowerResults results, ConditionCollection conditionColleciton,
+            ConditionFilter.Func<T> filterFunc, T filterArg, int maxStacksToRemove = 0)
+        {
+            int numRemoved = 0;
+
+            foreach (Condition condition in conditionColleciton)
+            {
+                if (filterFunc(condition, filterArg) == false)
+                    continue;
+
+                results.AddConditionToRemove(condition.Id);
+                numRemoved++;
+
+                if (maxStacksToRemove > 0 && numRemoved == maxStacksToRemove)
+                    break;
+            }
+
+            return numRemoved > 0;
+        }
+
         #endregion
 
         #region Helper Methods
@@ -726,6 +940,90 @@ namespace MHServerEmu.Games.Powers
             // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
             return Game.Random.NextFloat() < superCritChance;
+        }
+
+        private bool CalculateConditionDuration(ConditionPrototype conditionProto, WorldEntity owner, WorldEntity target, out TimeSpan duration)
+        {
+            duration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+
+            // TODO: Apply modifiers to the base duration we get from the prototype
+
+            if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
+                (conditionProto.Properties != null && conditionProto.Properties[PropertyEnum.Knockback]))
+            {
+                // TODO: calculate duration for conditions that last as long as the entity is moving
+                return false;
+            }
+
+            if (duration < TimeSpan.Zero)
+                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
+
+            return true;
+        }
+
+        private int CalculateConditionNumStacksToApply(WorldEntity target, WorldEntity ultimateOwner,
+            ConditionCollection conditionCollection, ConditionPrototype conditionProto, ref TimeSpan duration)
+        {
+            ulong creatorPlayerId = ultimateOwner is Avatar avatar ? avatar.OwnerPlayerDbId : 0;
+
+            ConditionCollection.StackId stackId = ConditionCollection.MakeConditionStackId(PowerPrototype,
+                conditionProto, UltimateOwnerId, creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto);
+
+            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateResultConditionNumStacksToApply(): ");
+
+            List<ulong> refreshList = ListPool<ulong>.Instance.Get();
+            List<ulong> removeList = ListPool<ulong>.Instance.Get();
+
+            int numStacksToApply = conditionCollection.GetStackApplicationData(stackId, stackingBehaviorProto,
+                Properties[PropertyEnum.PowerRank], out TimeSpan longestTimeRemaining, removeList, refreshList);
+
+            // Remove conditions
+            foreach (ulong conditionId in removeList)
+                conditionCollection.RemoveCondition(conditionId);
+
+            // Modify duration and refresh conditions
+            // NOTE: The order is important here because refreshing uses the duration
+            StackingApplicationStyleType applicationStyle = stackingBehaviorProto.ApplicationStyle;
+
+            if (applicationStyle == StackingApplicationStyleType.MatchDuration)
+                duration = longestTimeRemaining;
+
+            if (refreshList.Count > 0)
+            {
+                bool refreshedAny = false;
+                bool refreshedAnyNegativeStatus = false;
+                ulong negativeStatusId = 0;
+
+                foreach (ulong conditionId in refreshList)
+                {
+                    Condition condition = conditionCollection.GetCondition(conditionId);
+                    if (condition == null)
+                        continue;
+
+                    TimeSpan durationDelta = TimeSpan.Zero;
+                    if (applicationStyle == StackingApplicationStyleType.SingleStackAddDuration || applicationStyle == StackingApplicationStyleType.MultiStackAddDuration)
+                        durationDelta = duration;
+
+                    bool refreshedThis = conditionCollection.RefreshCondition(conditionId, PowerOwnerId, durationDelta);
+                    refreshedAny |= refreshedThis;
+
+                    if (refreshedThis && refreshedAnyNegativeStatus == false && condition.IsANegativeStatusEffect())
+                    {
+                        refreshedAnyNegativeStatus = true;
+                        negativeStatusId = conditionId;
+                    }
+                }
+
+                if (refreshedAnyNegativeStatus)
+                    target.OnNegativeStatusEffectApplied(negativeStatusId);
+            }
+
+            if (applicationStyle == StackingApplicationStyleType.MultiStackAddDuration)
+                duration += longestTimeRemaining;
+
+            ListPool<ulong>.Instance.Return(refreshList);
+            ListPool<ulong>.Instance.Return(removeList);
+            return numStacksToApply;
         }
 
         /// <summary>

@@ -3,7 +3,10 @@ using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class KeywordsMask : GBitArray { }
+    public class KeywordsMask : GBitArray
+    {
+        public static readonly KeywordsMask Empty = new();
+    }
 
     public class KeywordPrototype : Prototype
     {

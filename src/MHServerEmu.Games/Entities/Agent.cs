@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Entities
         {
             // Cancel cleanup events
             CancelExitWorldEvent();
-            // CancelKillEvent();
+            CancelKillEvent();
             CancelDestroyEvent();
 
             // Reset health
@@ -154,12 +154,18 @@ namespace MHServerEmu.Games.Entities
 
             Game.NetworkManager.SendMessageToInterested(resurrectMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
 
-            // Activate resurrection power
-            if (AgentPrototype.OnResurrectedPower != PrototypeId.Invalid)
+            if (IsInWorld)
             {
-                PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
-                settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
-                ActivatePower(AgentPrototype.OnResurrectedPower, ref settings);
+                // Activate resurrection power
+                if (AgentPrototype.OnResurrectedPower != PrototypeId.Invalid)
+                {
+                    PowerActivationSettings settings = new(Id, RegionLocation.Position, RegionLocation.Position);
+                    settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                    ActivatePower(AgentPrototype.OnResurrectedPower, ref settings);
+                }
+
+                // Reactivate passive and toggled powers
+                TryAutoActivatePowersInCollection();
             }
 
             return true;
@@ -272,9 +278,14 @@ namespace MHServerEmu.Games.Entities
             if (GetPower(powerRef) == null) return PowerUseResult.AbilityMissing;
 
             if (targetingProto.TargetingShape == TargetingShapeType.Self)
+            {
                 targetId = Id;
+            }
             else
-                if (IsInWorld == false) return PowerUseResult.RestrictiveCondition;
+            {
+                if (IsInWorld == false)
+                    return PowerUseResult.RestrictiveCondition;
+            }
 
             var triggerResult = CanTriggerPower(powerProto, power, flags);
             if (triggerResult != PowerUseResult.Success)
@@ -1148,28 +1159,22 @@ namespace MHServerEmu.Games.Entities
                     ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
                 }
             }
-            if (oldState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting) ^ newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting))
-            {
-                if (IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
-                {
-                    // HACK: off start animation
-                    var startCondition = ConditionCollection.GetCondition(999);
-                    if (startCondition != null)
-                        UnassignPower(startCondition.CreatorPowerPrototypeRef);
-                }
-            }
         }
 
         public override bool OnPowerAssigned(Power power)
         {
-            if (base.OnPowerAssigned(power) == false) return false;
+            if (base.OnPowerAssigned(power) == false)
+                return false;
 
             // Set rank for normal powers
-            if (power.IsNormalPower())
+            if (this is Avatar && power.IsNormalPower() && power.IsEmotePower() == false)
             {
                 Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
                 Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
             }
+
+            if (IsDormant == false)
+                TryAutoActivatePower(power);
 
             return true;
         }
@@ -1394,9 +1399,79 @@ namespace MHServerEmu.Games.Entities
                     EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
         }
 
+        /// <summary>
+        /// Activates passive powers and toggled powers that were previous on.
+        /// </summary>
         private void TryAutoActivatePowersInCollection()
         {
-            // TODO throw new NotImplementedException();
+            if (PowerCollection == null)
+                return;
+
+            foreach (var kvp in PowerCollection)
+                TryAutoActivatePower(kvp.Value.Power);
+        }
+
+        /// <summary>
+        /// Activates the provided power if it's a passive power or a toggle power that was previosuly toggled on.
+        /// </summary>
+        private bool TryAutoActivatePower(Power power)
+        {
+            if (IsInWorld == false || IsSimulated == false || IsDead)
+                return false;
+
+            PowerPrototype powerProto = power?.Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TryAutoActivatePower(): powerProto == null");
+
+            bool wasToggled = false;
+            bool shouldActivate = false;
+
+            if (power.IsToggledOn() || power.IsToggleInPrevRegion())
+            {
+                wasToggled = true;
+
+                Properties[PropertyEnum.PowerToggleOn, power.PrototypeDataRef] = false;
+                Properties[PropertyEnum.PowerToggleInPrevRegion, power.PrototypeDataRef] = false;
+
+                shouldActivate = powerProto.PowerCategory != PowerCategoryType.ProcEffect;
+            }
+
+            shouldActivate |= power.GetActivationType() == PowerActivationType.Passive;
+
+            if (shouldActivate == false)
+                return false;
+
+            TargetingStylePrototype targetingStyleProto = powerProto.GetTargetingStyle();
+            ulong targetId = targetingStyleProto.TargetingShape == TargetingShapeType.Self ? Id : InvalidId;
+            Vector3 position = RegionLocation.Position;
+
+            PowerActivationSettings settings = new(targetId, position, position);
+            settings.Flags |= PowerActivationSettingsFlags.NoOnPowerUseProcs | PowerActivationSettingsFlags.AutoActivate;
+
+            // Extra settings for combo/item powers
+            if (power.IsComboEffect())
+            {
+                settings.TriggeringPowerRef = power.Properties[PropertyEnum.TriggeringPowerRef, power.PrototypeDataRef];
+            }
+            else if (power.IsItemPower() && this is Avatar avatar)
+            {
+                settings.ItemSourceId = avatar.FindOwnedItemThatGrantsPower(power.PrototypeDataRef);
+                if (settings.ItemSourceId == InvalidId)
+                    return Logger.WarnReturn(false, "TryAutoActivatePower(): settings.ItemSourceId == InvalidId");
+            }
+
+            PowerUseResult result = CanActivatePower(power, settings.TargetEntityId, settings.TargetPosition, settings.Flags, settings.ItemSourceId);
+            if (result == PowerUseResult.Success)
+            {
+                result = ActivatePower(power, ref settings);
+                if (result != PowerUseResult.Success)
+                    Logger.Warn($"TryAutoActivatePower(): Failed to auto-activate power [{powerProto}] for [{this}] for reason [{result}]");
+            }
+            else if (result == PowerUseResult.RegionRestricted && wasToggled)
+            {
+                Properties[PropertyEnum.PowerToggleInPrevRegion, power.PrototypeDataRef] = true;
+            }
+
+            return result == PowerUseResult.Success;
         }
 
         #region Scheduled Events

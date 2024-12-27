@@ -23,6 +23,7 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -130,6 +131,7 @@ namespace MHServerEmu.Games.Entities
         public Power ActivePower { get => GetActivePower(); }
         public bool IsExecutingPower { get => ActivePowerRef != PrototypeId.Invalid; }
         public PrototypeId[] Keywords { get => WorldEntityPrototype?.Keywords; }
+        public KeywordsMask KeywordsMask { get => WorldEntityPrototype?.KeywordsMask; }
         public Vector3 Forward { get => GetTransform().Col0; }
         public Vector3 GetUp { get => GetTransform().Col2; }
         public float MovementSpeedRate { get => Properties[PropertyEnum.MovementSpeedRate]; } // PropertyTemp[PropertyEnum.MovementSpeedRate]
@@ -245,6 +247,12 @@ namespace MHServerEmu.Games.Entities
                 success &= Serializer.Transfer(archive, ref _unkEvent);
 
             return success;
+        }
+
+        public override void OnUnpackComplete(Archive archive)
+        {
+            base.OnUnpackComplete(archive);
+            ConditionCollection?.OnUnpackComplete(archive);
         }
 
         public void AddTankingContributor(Player player, long damage)
@@ -1288,16 +1296,118 @@ namespace MHServerEmu.Games.Entities
         public bool ApplyPowerResults(PowerResults powerResults)
         {
             // Send power results to clients
-            NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
-            Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+            if (powerResults.ShouldSendToClient())
+            {
+                NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
+                Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+            }
 
             if (IsInWorld == false)
+            {
+                powerResults.Clear();   // Clearing the results instance returns any conditions it may have to the pool
                 return false;
+            }
 
-            Region region = Region;
+            // TODO: Procs
 
-            // Apply the results to this entity
+            ApplyPowerResultsInternal(powerResults);
+
+            return true;
+        }
+
+        private bool ApplyPowerResultsInternal(PowerResults powerResults)
+        {
             // TODO: More stuff
+
+            if (powerResults.IsAvoided == false)
+            {
+                // Add / remove conditions
+                ApplyConditionPowerResults(powerResults);
+
+                // Reset lifespan if needed for non-avatar entities
+                TimeSpan lifespan = TimeSpan.FromMilliseconds((int)powerResults.Properties[PropertyEnum.SetTargetLifespanMS]);
+                if (this is not Avatar && lifespan > TimeSpan.Zero)
+                    ResetLifespan(lifespan);
+            }
+
+            // Adjust health
+            ApplyHealthPowerResults(powerResults);
+
+            return true;
+        }
+
+        private bool ApplyConditionPowerResults(PowerResults powerResults)
+        {
+            if (powerResults == null) return Logger.WarnReturn(false, "ApplyConditionPowerResults(): powerResults == null");
+
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null) return true;
+
+            // NOTE: There may not be an owner
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+
+            // NOTE: We use for instead of foreach for iteration to avoid boxing the enumerator for IReadOnlyList
+
+            // Add new conditions
+            for (int i = 0; i < powerResults.ConditionAddList.Count; i++)
+            {
+                Condition condition = powerResults.ConditionAddList[i];
+                if (condition == null)
+                {
+                    Logger.Warn("ApplyConditionPowerResults(): condition == null");
+                    continue;
+                }
+
+                // Skip conditions that need to be manually removed if the owner no longer exists
+                if (condition.Duration == TimeSpan.Zero && powerOwner == null)
+                    continue;
+
+                conditionCollection.AddCondition(condition);
+            }
+
+            // Remove existing conditions
+            if (powerResults.ConditionRemoveList.Count == 0)
+                return true;
+
+            int numRemoved = 0;
+            bool removedNegativeStatusEffect = false;
+
+            for (int i = 0; i < powerResults.ConditionRemoveList.Count; i++)
+            {
+                ulong conditionId = powerResults.ConditionRemoveList[i];
+
+                Condition condition = conditionCollection.GetCondition(conditionId);
+                if (condition == null) continue;    // This may have already been removed
+
+                numRemoved++;
+
+                // IsANegativeStatusEffect iterates the property collection of this condition, so don't do it again if we already found one
+                if (removedNegativeStatusEffect == false && condition.IsANegativeStatusEffect())
+                    removedNegativeStatusEffect = true;
+
+                conditionCollection.RemoveCondition(conditionId);
+            }
+
+            // Trigger relevant power events
+            if (numRemoved == 0 || powerOwner == null || powerOwner.IsInWorld == false)
+                return true;
+
+            Power power = powerOwner.GetPower(powerResults.PowerPrototype.DataRef);
+            if (power != null)
+            {
+                power.HandleTriggerPowerEventOnRemoveCondition(powerResults, numRemoved);
+
+                if (removedNegativeStatusEffect)
+                    power.HandleTriggerPowerEventOnRemoveNegStatusEffect(powerResults);
+            }
+
+            return true;
+        }
+
+        private bool ApplyHealthPowerResults(PowerResults powerResults)
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "ApplyHealthPowerResults(): region == null");
 
             // Calculate health difference based on all damage types and healing
             // NOTE: Health can be > 2147483647, so we have to use 64-bit integers here to avoid overflows
@@ -1514,6 +1624,27 @@ namespace MHServerEmu.Games.Entities
                 || IsInWorld == false || IsSimulated == false
                 || IsDormant || IsUnaffectable || IsHotspot) return false;
             return true;
+        }
+
+        #endregion
+
+        #region Procs
+
+        public void TryActivateOnConditionEndProcs(Condition condition)
+        {
+            if (IsInWorld == false)
+                return;
+
+            // TODO: Proper implementation
+
+            // HACK: Activate cooldown for Moon Knight's signature
+            if (condition.CreatorPowerPrototypeRef == (PrototypeId)924314278184884866)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                AssignPower((PrototypeId)10152747549179582463, indexProps);
+                PowerActivationSettings settings = new(Id, default, RegionLocation.Position);
+                ActivatePower((PrototypeId)10152747549179582463, ref settings);
+            }
         }
 
         #endregion
@@ -1856,8 +1987,12 @@ namespace MHServerEmu.Games.Entities
 
             // We need to update our simulation state when we lose proximity because when a player's AOI is cleared,
             // cells are removed before entities, and at that point entities still have the proximity policy.
-            if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
-                UpdateSimulationState();
+            //
+            // UPDATE 2024-12-22: Actually we can't do this because region location is cleared after OnExitedWorld() is called,
+            // so this triggers auto-activated (passive) powers. I hate this codebase so much.
+            //
+            //if (lostPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                //UpdateSimulationState();
 
             // Update map location if we gained a policy that allows us to exist outside of proximity (Party / Discovery)
             if ((gainedPolicies & AOINetworkPolicyValues.MapChannels) != 0)
@@ -1888,6 +2023,8 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnExitedWorld()
         {
+            SetSimulated(false);
+
             var region = Region;
 
             if (region.EntityTracker != null)
@@ -1899,8 +2036,6 @@ namespace MHServerEmu.Games.Entities
             // Undiscover from region
             if (WorldEntityPrototype.DiscoverInRegion)
                 region.UndiscoverEntity(this, true);
-
-            PowerCollection?.OnOwnerExitedWorld();
 
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))
@@ -1921,19 +2056,16 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            UpdateInterestPolicies(false);
+            PowerCollection?.OnOwnerExitedWorld();
 
-            UpdateSimulationState();
+            UpdateInterestPolicies(false);
         }
 
         public override void OnDeallocate()
         {
             base.OnDeallocate();
             PowerCollection?.OnOwnerDeallocate();
-
-            // We need to remove all conditions here to unbind their property collections.
-            // If we don't do that, the garbage collector can't clean them and we end up with a memory leak.
-            ConditionCollection?.RemoveAllConditions();     
+            ConditionCollection?.OnOwnerDeallocate();
         }
 
         public virtual void OnDramaticEntranceEnd() { }
@@ -2196,6 +2328,8 @@ namespace MHServerEmu.Games.Entities
         public virtual bool OnPowerAssigned(Power power) { return true; }
         public virtual bool OnPowerUnassigned(Power power) { return true; }
         public virtual void OnPowerEnded(Power power, EndPowerFlags flags) { }
+        public virtual void OnConditionRemoved(Condition condition) { }
+        public virtual void OnNegativeStatusEffectApplied(ulong conditionId) { }
 
         public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
         public virtual void OnOverlapEnd(WorldEntity whom) { }
@@ -2216,7 +2350,7 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return false;
 
-            List<Player> playerList = ListPool<Player>.Instance.Rent();
+            List<Player> playerList = ListPool<Player>.Instance.Get();
             // NOTE: Compute nearby players on demand for performance reasons
 
             // Loot Tables
@@ -2259,7 +2393,7 @@ namespace MHServerEmu.Games.Entities
 
             // NOTE: Bowling ball dispenser is not per-player cloned, so interacting
             // with it will give a ball to all players nearby. This doesn't seem right.
-            List<Player> playerList = ListPool<Player>.Instance.Rent();
+            List<Player> playerList = ListPool<Player>.Instance.Get();
             Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
 
             AwardLootForDropEvent(LootDropEventType.OnInteractedWith, playerList);
@@ -2662,13 +2796,12 @@ namespace MHServerEmu.Games.Entities
             if (conditionCollection != null)
             {
                 KeywordsMask keywordsMask = conditionCollection.ConditionKeywordsMask;
-                if (keywordsMask == null) return false;     // REMOVEME: Temp fix for condition collections not having keyword masks
                 return keywordsMask[keyword];
             }
             return false;
         }
 
-        public bool HasConditionWithAnyKeyword(IEnumerable<PrototypeId> keywordProtoRefs)
+        public bool HasConditionWithAnyKeyword(PrototypeId[] keywordProtoRefs)
         {
             foreach (PrototypeId keywordProtoRef in keywordProtoRefs)
             {
@@ -2698,8 +2831,8 @@ namespace MHServerEmu.Games.Entities
             foreach (var kvp in _trackingContextMap)
                 sb.AppendLine($"{nameof(_trackingContextMap)}[{GameDatabase.GetPrototypeName(kvp.Key)}]: {kvp.Value}");
 
-            foreach (var kvp in _conditionCollection)
-                sb.AppendLine($"{nameof(_conditionCollection)}[{kvp.Key}]: {kvp.Value}");
+            foreach (Condition condition in _conditionCollection)
+                sb.AppendLine($"{nameof(_conditionCollection)}[{condition.Id}]: {condition}");
 
             if (_powerCollection.PowerCount > 0)
             {
@@ -2872,6 +3005,28 @@ namespace MHServerEmu.Games.Entities
                 ScheduleEntityEvent(_exitWorldEvent, time);
         }
 
+        public void ScheduleUnassignPowerEvent(PrototypeId powerProtoRef)
+        {
+            EventPointer<ScheduledUnassignPowerEvent> scheduledUnassignPower = new();
+            ScheduleEntityEvent(scheduledUnassignPower, TimeSpan.FromMilliseconds(1), powerProtoRef);
+        }
+
+        public void ScheduleApplyPowerResultsEvent(PowerResults powerResults)
+        {
+            if (IsSimulated == false)
+                return;
+
+            if (powerResults.PowerPrototype.ApplyResultsImmediately)
+            {
+                ApplyPowerResults(powerResults);
+            }
+            else
+            {
+                EventPointer<ScheduledPowerResultsEvent> scheduledPowerResults = new();
+                ScheduleEntityEvent(scheduledPowerResults, TimeSpan.Zero, powerResults);
+            }
+        }
+
         public void CancelExitWorldEvent()
         {
             if (_exitWorldEvent.IsValid)
@@ -2892,6 +3047,16 @@ namespace MHServerEmu.Games.Entities
         protected class ScheduledKillEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as WorldEntity)?.Kill();
+        }
+
+        private class ScheduledUnassignPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).UnassignPower(p1);
+        }
+
+        private class ScheduledPowerResultsEvent : CallMethodEventParam1<Entity, PowerResults>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).ApplyPowerResults(p1);
         }
 
         private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>

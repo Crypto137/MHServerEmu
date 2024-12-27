@@ -359,8 +359,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO: Needs bit_array::test_any()
-            //Logger.Warn("Apply(): Not implemented");
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            if (_conditionKeywordsMask.TestAny(settings.AvatarConditionKeywords))
+                return;
+
             settings.DropChanceModifiers |= LootDropChanceModifiers.ConditionRestricted;
         }
 
@@ -388,8 +392,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO: Needs bit_array::test_any()
-            //Logger.Warn("Apply(): Not implemented");
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            if (_conditionKeywordsMask.TestAny(settings.AvatarConditionKeywords))
+                settings.DropChanceModifiers |= LootDropChanceModifiers.ConditionRestricted;
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -416,8 +423,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO: Needs bit_array::test_any()
-            //Logger.Warn("Apply(): Not implemented");
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            if (_conditionKeywordsMask.TestAny(settings.SourceEntityKeywords))
+                return;
+
             settings.DropChanceModifiers |= LootDropChanceModifiers.DropperRestricted;
         }
 
@@ -445,8 +456,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO: Needs bit_array::test_any()
-            //Logger.Warn("Apply(): Not implemented");
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            if (_conditionKeywordsMask.TestAny(settings.SourceEntityKeywords))
+                settings.DropChanceModifiers |= LootDropChanceModifiers.DropperRestricted;
         }
 
         public override bool IsValidForNode(LootNodePrototype node)
@@ -473,8 +487,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO: Needs bit_array::test_any()
-            //Logger.Warn("Apply(): Not implemented");
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            if (_conditionKeywordsMask.TestAny(settings.RegionKeywords))
+                return;
+
             settings.DropChanceModifiers |= LootDropChanceModifiers.RegionRestricted;
         }
 
@@ -502,8 +520,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void Apply(LootRollSettings settings)
         {
-            // TODO: Needs bit_array::test_any()
-            //Logger.Warn("Apply(): Not implemented");
+            if (Choices.IsNullOrEmpty())
+                return;
+
+            if (_conditionKeywordsMask.TestAny(settings.RegionKeywords))
+                settings.DropChanceModifiers |= LootDropChanceModifiers.RegionRestricted;
         }
 
         public override bool IsValidForNode(LootNodePrototype node)

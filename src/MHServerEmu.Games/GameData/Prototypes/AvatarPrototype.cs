@@ -136,6 +136,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return StartingCostume.Item;
         }
 
+        public AssetId GetStartingCostumeAssetRef(Platforms platform)
+        {
+            PrototypeId costumeProtoRef = GetStartingCostumeForPlatform(platform);
+            if (costumeProtoRef == PrototypeId.Invalid)
+                Logger.Warn("GetStartingCostumeAssetRef(): costumeProtoRef == PrototypeId.Invalid");
+
+            CostumePrototype startingCostumeProto = costumeProtoRef.As<CostumePrototype>();
+            if (startingCostumeProto == null) return Logger.WarnReturn(AssetId.Invalid, "GetStartingCostumeAssetRef(): startingCostumeProto == null");
+
+            return startingCostumeProto.CostumeUnrealClass;
+        }
+
         /// <summary>
         /// Retrieves <see cref="PowerProgressionEntryPrototype"/> instances for powers that would be unlocked at the specified level or level range.
         /// </summary>

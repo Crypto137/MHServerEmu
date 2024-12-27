@@ -11,14 +11,15 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
-using MHServerEmu.Games.Events.LegacyImplementations;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -38,6 +39,9 @@ namespace MHServerEmu.Games.Powers
 
         private PowerActivationPhase _activationPhase = PowerActivationPhase.Inactive;
         private PowerActivationSettings _lastActivationSettings;
+
+        private readonly List<TrackedCondition> _trackedConditionList = new();
+        private PowerIndexPropertyFlags _trackedConditionIndexPropertyFlags = PowerIndexPropertyFlags.None;
 
         protected EventGroup _pendingEvents = new();
         private readonly EventGroup _pendingActivationPhaseEvents = new();
@@ -183,6 +187,28 @@ namespace MHServerEmu.Games.Powers
 
         public void OnUnassign()
         {
+            if (Owner != null && Owner.TestStatus(EntityStatus.ExitingWorld) == false)
+            {
+                // Remove conditions from flagged powers and non-proc power progression powers
+                bool removeConditions = Prototype.CancelConditionsOnUnassign;
+                if (removeConditions == false && IsProcEffect() == false)
+                {
+                    removeConditions = Owner.PowerCollection.ContainsPower(PrototypeDataRef, true);
+
+                    // Do not remove conditions from powers triggered by proc effects
+                    if (removeConditions && IsComboEffect())
+                    {
+                        PrototypeId triggeringPowerProtoRef = Properties[PropertyEnum.TriggeringPowerRef, PrototypeDataRef];
+                        PowerPrototype triggeringPowerProto = triggeringPowerProtoRef.As<PowerPrototype>();
+                        if (triggeringPowerProto != null && IsProcEffect(triggeringPowerProto))
+                            removeConditions = false;
+                    }
+                }
+
+                if (removeConditions)
+                    RemoveTrackedConditions(false);
+            }
+
             _situationalComponent?.Shutdown();
 
             EndPowerFlags endPowerFlags = EndPowerFlags.ExplicitCancel | EndPowerFlags.Unassign;
@@ -201,6 +227,16 @@ namespace MHServerEmu.Games.Powers
 
         public void OnOwnerExitedWorld()
         {
+            if (Prototype.CancelConditionsOnExitWorld)
+                RemoveTrackedConditions(false);
+
+            // Immediately finish the chain of subsequent activations
+            if (_subsequentActivationTimeoutEvent.IsValid)
+            {
+                CancelExtraActivationTimeout();
+                ExtraActivateTimeoutCallback();
+            }
+
             _situationalComponent?.Shutdown();
         }
 
@@ -350,7 +386,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        public void ReapplyIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
+        private void ReapplyIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
         {
             //Logger.Debug($"ReapplyIndexProperties(): {this} - {indexPropertyFlags}");
 
@@ -686,7 +722,7 @@ namespace MHServerEmu.Games.Powers
             Activate(ref settings);
         }
 
-        public bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool ScheduledActivateCallback(PrototypeId triggeredPowerProtoRef, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
             if (Game == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): Game == null");
             if (_scheduledActivateEventList == null) return Logger.WarnReturn(false, "ScheduledActivateCallback(): _scheduledActivateEventList == null");
@@ -788,17 +824,29 @@ namespace MHServerEmu.Games.Powers
             return success;
         }
 
-        public static bool DeliverPayload(PowerPayload payload)
+        private static bool DeliverPayload(PowerPayload payload)
         {
             // Find targets for this power application
-            List<WorldEntity> targetList = new();
+            List<WorldEntity> targetList = ListPool<WorldEntity>.Instance.Get();
+            List<PowerResults> targetResultsList = ListPool<PowerResults>.Instance.Get();
+
             GetTargets(targetList, payload);
+
+            EntityManager entityManager = payload.Game.EntityManager;
 
             PowerPrototype powerProto = payload.PowerPrototype;
             Game game = payload.Game;
-            WorldEntity ultimateOwner = game.EntityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
+            WorldEntity powerOwner = entityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+            WorldEntity ultimateOwner = entityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
             Avatar avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
             Player player = avatar?.GetOwnerOfType<Player>();
+
+            PowerActivationSettings activationSettings = payload.ActivationSettings;
+
+            // Accumulate results for the owner in a separate PowerResults instance
+            PowerResults ownerResults = new();
+            ulong ownerId = payload.PowerOwnerId;
+            ownerResults.Init(ownerId, ownerId, ownerId, payload.PowerOwnerPosition, powerProto, payload.PowerAssetRefOverride, false);
 
             // Calculate and apply results for each target
             int payloadCombatLevel = payload.CombatLevel;
@@ -815,13 +863,15 @@ namespace MHServerEmu.Games.Powers
                     payloadCombatLevel = targetCombatLevel;
                 }
 
-                PowerResults results = new();
-                payload.InitPowerResultsForTarget(results, target);
-                payload.CalculatePowerResults(results, target);
+                PowerResults targetResults = new();
+                payload.InitPowerResultsForTarget(targetResults, target);
+                payload.CalculatePowerResults(targetResults, ownerResults, target, true);
                 
                 if (player != null && powerProto.CanCauseTag)
+                {
                     if (avatar.IsInWorld && avatar.IsHostileTo(target))
                         target.SetTaggedBy(player, powerProto);
+                }
 
                 if (player != null && powerProto.CanCauseTag)
                 {
@@ -830,8 +880,54 @@ namespace MHServerEmu.Games.Powers
                         target.SetTaggedBy(player, powerProto);
                 }
 
-                target.ApplyPowerResults(results);
+                targetResultsList.Add(targetResults);
             }
+
+            // Calculate owner results
+            bool hasMeaningfulOwnerResults = false;
+
+            if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false)
+            {
+                payload.CalculatePowerResults(ownerResults, null, powerOwner, false);
+                hasMeaningfulOwnerResults = ownerResults.HasMeaningfulResults();
+
+                Power power = powerOwner.GetPower(powerProto.DataRef);
+                if (power != null)
+                {
+                    power.HandleTriggerPowerEventOnPowerApply(ref activationSettings);
+
+                    foreach (PowerResults results in targetResultsList)
+                    {
+                        if (results.IsDodged)
+                            continue;
+
+                        power.HandleTriggerPowerEventOnPowerHit(results, ref activationSettings);
+                    }
+                }
+            }
+
+            if (hasMeaningfulOwnerResults == false)
+                ownerResults.Clear();
+
+            // Apply results - this is delayed to account for proc effects that may kill our targets
+            foreach (PowerResults results in targetResultsList)
+            {
+                WorldEntity target = entityManager.GetEntity<WorldEntity>(results.TargetId);
+                if (target == null || target.IsInWorld == false)
+                    continue;
+
+                target.ScheduleApplyPowerResultsEvent(results);
+            }
+
+            if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false && ownerResults.HasMeaningfulResults())
+                powerOwner.ScheduleApplyPowerResultsEvent(ownerResults);
+
+            ListPool<WorldEntity>.Instance.Return(targetList);
+            ListPool<PowerResults>.Instance.Return(targetResultsList);
+
+            // Check if this payload needs bouncing and end projectile powers once all bouncing is over
+            if (TryBouncePayload(payload) == false)
+                TryEndNonMissilePowerActiveUntilProjExpire(payload);
 
             return true;
         }
@@ -938,7 +1034,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool StopCharging()
+        private bool StopCharging()
         {
             //Logger.Debug("StopCharging()");
 
@@ -960,7 +1056,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool StartChanneling()
+        private bool StartChanneling()
         {
             //Logger.Debug("StartChanneling()");
 
@@ -998,7 +1094,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool StopChanneling()
+        private bool StopChanneling()
         {
             //Logger.Debug("StopChanneling()");
 
@@ -1209,7 +1305,7 @@ namespace MHServerEmu.Games.Powers
             return ModifyCooldown(cooldownTimeRemaining * value);
         }
 
-        public void OnCooldownEndCallback()
+        private void OnCooldownEndCallback()
         {
             // This callback is only for replenishing power charges
             if (ShouldReplenishCharges() == false)
@@ -1232,7 +1328,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        public bool ExtraActivateTimeoutCallback()
+        private bool ExtraActivateTimeoutCallback()
         {
             if (Owner == null) return Logger.WarnReturn(false, "ExtraActivateTimeoutCallback(): Owner == null");
 
@@ -1270,6 +1366,117 @@ namespace MHServerEmu.Games.Powers
             }
 
             return chargeCount < maxCharges;
+        }
+
+        #endregion
+
+        #region Costs
+
+        private void PayCost(PowerApplication powerApplication)
+        {
+            // it's free real estate
+            if (powerApplication.IsFree)
+                return;
+
+            // TODO: mana costs and others
+
+            // Item cost
+            if (powerApplication.ItemSourceId != Entity.InvalidId && IsItemPower())
+            {
+                Item item = Game.EntityManager.GetEntity<Item>(powerApplication.ItemSourceId);
+                if (item != null)
+                    item.OnUsePowerActivated();
+                else
+                    Logger.Warn("PayCost(): item == null");
+            }
+
+            // Charges
+            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
+            {
+                // Doctors hate him! BUE fixed with one simple trick
+                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
+                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
+            }
+        }
+
+        #endregion
+
+        #region Condition Management
+
+        public void TrackCondition(ulong entityId, Condition condition)
+        {
+            // NOTE: We include power index property flags in tracked conditions because conditions applied by this power
+            // may need to be refreshed when one of the index properties of this power changes (e.g. owner levels up).
+            TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
+            _trackedConditionList.Add(trackedCondition);
+            _trackedConditionIndexPropertyFlags |= trackedCondition.PowerIndexPropertyFlags;
+        }
+
+        public void UntrackCondition(ulong entityId, Condition condition)
+        {
+            TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
+
+            if (_trackedConditionList.Remove(trackedCondition))
+                RefreshConditionIndexProperties();
+        }
+
+        public bool IsTrackingCondition(ulong entityId, Condition condition)
+        {
+            TrackedCondition trackedCondition = new(entityId, condition.Id, condition.PowerIndexPropertyFlags);
+            return _trackedConditionList.Contains(trackedCondition);
+        }
+
+        private void RemoveTrackedConditions(bool allowReset)
+        {
+            List<TrackedCondition> resetConditionList = ListPool<TrackedCondition>.Instance.Get();
+
+            EntityManager entityManager = Game.EntityManager;
+
+            while (_trackedConditionList.Count > 0)
+            {
+                int index = _trackedConditionList.Count - 1;
+                TrackedCondition trackedCondition = _trackedConditionList[index];
+                _trackedConditionList.RemoveAt(index);
+
+                // The entity the tracked condition was applied to may no longer exist
+                WorldEntity entity = entityManager.GetEntity<WorldEntity>(trackedCondition.EntityId);
+                ConditionCollection conditionCollection = entity?.ConditionCollection;
+                if (conditionCollection == null)
+                    continue;
+
+                if (allowReset)
+                {
+                    if (conditionCollection.ResetOrRemoveCondition(trackedCondition.ConditionId) == false)
+                        resetConditionList.Add(trackedCondition);
+                }
+                else
+                {
+                    conditionCollection.RemoveCondition(trackedCondition.ConditionId);
+                }
+            }
+
+            if (allowReset)
+            {
+                // Readd conditions that were reset
+                foreach (TrackedCondition resetCondition in resetConditionList)
+                    _trackedConditionList.Add(resetCondition);
+            }
+
+            RefreshConditionIndexProperties();
+            ListPool<TrackedCondition>.Instance.Return(resetConditionList);
+        }
+
+        private void RefreshConditionIndexProperties()
+        {
+            _trackedConditionIndexPropertyFlags = PowerIndexPropertyFlags.None;
+
+            foreach (TrackedCondition trackedCondition in _trackedConditionList)
+                _trackedConditionIndexPropertyFlags |= trackedCondition.PowerIndexPropertyFlags;
+        }
+
+        private bool HasConditionsWithIndexProperties(PowerIndexPropertyFlags indexPropertyFlags)
+        {
+            return (_trackedConditionIndexPropertyFlags & indexPropertyFlags) != PowerIndexPropertyFlags.None;
         }
 
         #endregion
@@ -1482,6 +1689,19 @@ namespace MHServerEmu.Games.Powers
             return owner.Properties[PropertyEnum.PowerToggleOn, powerProto.DataRef];
         }
 
+        public bool IsToggleInPrevRegion()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "IsToggleInPrevRegion(): powerProto == null");
+            if (Owner == null) return Logger.WarnReturn(false, "IsToggleInPrevRegion(): Owner == null");
+            return IsToggleInPrevRegion(powerProto, Owner);
+        }
+
+        public static bool IsToggleInPrevRegion(PowerPrototype powerProto, WorldEntity owner)
+        {
+            return owner.Properties[PropertyEnum.PowerToggleInPrevRegion, powerProto.DataRef];
+        }
+
         public float GetEnduranceCost(ManaType manaType, bool useSecondaryResource)
         {
             PowerPrototype powerProto = Prototype;
@@ -1620,6 +1840,11 @@ namespace MHServerEmu.Games.Powers
         public static bool IsUltimatePower(PowerPrototype powerProto)
         {
             return powerProto.IsUltimate;
+        }
+
+        public bool IsTalentPower()
+        {
+            return Prototype is SpecializationPowerPrototype;
         }
 
         public static bool IsTalentPower(PowerPrototype powerProto)
@@ -2912,9 +3137,6 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // Trigger application event
-            HandleTriggerPowerEventOnPowerApply();
-
             // Avatar may exit world as a result of the application of this power
             if (Owner.IsInWorld == false) return true;
 
@@ -2947,13 +3169,8 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // Pay costs (TODO: mana costs)
-            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
-            {
-                // Doctors hate him! BUE fixed with one simple trick
-                if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
-                    Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
-            }
+            // Pay costs
+            PayCost(powerApplication);
 
             // Deliver payload now or schedule it for later
             TimeSpan deliveryDelay = GetPayloadDeliveryDelay(payload);
@@ -2961,28 +3178,6 @@ namespace MHServerEmu.Games.Powers
                 DeliverPayload(payload);
             else
                 SchedulePayloadDelivery(payload, deliveryDelay);
-
-            // HACK: Old conditions hacks
-            // TODO: Proper power condition implementation
-            if (IsTravelPower() && Prototype.AppliesConditions != null && Owner.ConditionCollection.GetCondition(666) == null)
-            {
-                // Bikes and other vehicles
-                Condition travelPowerCondition = Owner.ConditionCollection.AllocateCondition();
-                travelPowerCondition.InitializeFromPowerMixinPrototype(666, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(travelPowerCondition);
-            }
-            else if (PrototypeDataRef == (PrototypeId)5394038587225345882 && Owner.ConditionCollection.GetCondition(777) == null)
-            {
-                // Magik - Ultimate
-                Condition magikUltimateCondition = Owner.ConditionCollection.AllocateCondition();
-                magikUltimateCondition.InitializeFromPowerMixinPrototype(777, PrototypeDataRef, 0, TimeSpan.Zero);
-                Owner.ConditionCollection.AddCondition(magikUltimateCondition);
-
-                // Schedule condition end
-                EventPointer<TEMP_RemoveConditionEvent> removeConditionEvent = new();
-                Game.GameEventScheduler.ScheduleEvent(removeConditionEvent, TimeSpan.FromSeconds(20));
-                removeConditionEvent.Get().Initialize(Owner.Id, 777);
-            }
 
             if (IsThrowablePower())
             {
@@ -3081,15 +3276,22 @@ namespace MHServerEmu.Games.Powers
             if (flags.HasFlag(EndPowerFlags.ExplicitCancel) || flags.HasFlag(EndPowerFlags.Force)
                 || IsRecurring() || Properties[PropertyEnum.PowerActiveUntilProjExpire])
             {
-                // Why are these verifies returning false and not true? Is this a bug?
-                if (Game == null) return Logger.WarnReturn(false, "OnEndPowerRemoveApplications(): Game == null");
-                if (Game.GameEventScheduler == null) return Logger.WarnReturn(false, "Game.GameEventScheduler == null");
+                EventScheduler gameEventScheduler = Game?.GameEventScheduler;
 
-                Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
+                if (gameEventScheduler != null)
+                    gameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
+                else
+                    Logger.Warn("OnEndPowerRemoveApplications(): gameEventScheduler == null");
             }
             else if (_pendingPowerApplicationEvents.IsEmpty == false)
             {
                 Logger.Warn($"OnEndPowerRemoveApplications(): _pendingPowerApplicationEvents is not empty! endPowerFlags=[{flags}] power=[{this}]");
+            }
+
+            if (IsToggled() && flags.HasFlag(EndPowerFlags.ExplicitCancel) == false && flags.HasFlag(EndPowerFlags.ExitWorld))
+            {
+                RemoveTrackedConditions(false);
+                return true;
             }
 
             return false;
@@ -3111,13 +3313,11 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual void OnEndPowerCancelConditions()
         {
-            // HACK: Old condition hack for travel power vehicles
-            if (IsTravelPower() && Prototype.AppliesConditions != null)
-            {
-                // Bikes and other vehicles
-                if (Owner.ConditionCollection.GetCondition(666) != null)
-                    Owner.ConditionCollection.RemoveCondition(666);
-            }
+            if (IsToggled())
+                return;
+
+            if (Prototype.CancelConditionsOnEnd || Prototype.Activation == PowerActivationType.Passive)
+                RemoveTrackedConditions(true);
         }
 
         protected virtual void OnEndPowerSendCancel(EndPowerFlags flags)
@@ -3191,8 +3391,9 @@ namespace MHServerEmu.Games.Powers
         protected virtual void OnEndPowerConditionalRemove(EndPowerFlags flags)
         {
             // Unassign one-off powers (e.g. throwables)
+            // Removal needs to happen with a delay because it can mess up the timing of interactables
             if (Prototype.RemovedOnUse && flags.HasFlag(EndPowerFlags.Unassign) == false)
-                Owner.UnassignPower(PrototypeDataRef);
+                Owner.ScheduleUnassignPowerEvent(PrototypeDataRef);
         }
 
         protected virtual void OnEndChannelingPhase()
@@ -3372,24 +3573,6 @@ namespace MHServerEmu.Games.Powers
             if (value)
             {
                 HandleTriggerPowerEventOnPowerToggleOn();
-
-                // HACK: Visual condition hacks for toggled powers
-                if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) == null)
-                {
-                    // Emma Frost - Diamond Form
-                    Condition diamondFormCondition = Owner.ConditionCollection.AllocateCondition();
-                    diamondFormCondition.InitializeFromPowerMixinPrototype(111, PrototypeDataRef, 0, TimeSpan.Zero);
-                    Owner.ConditionCollection.AddCondition(diamondFormCondition);
-                }
-                else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595))
-                {
-                    // Powers/Blueprints/ConditionPowers/AmbientNPCPower.defaults
-                    Condition ambientNpcCondition = Owner.ConditionCollection.AllocateCondition();
-                    ambientNpcCondition.InitializeFromPowerMixinPrototype(999, PrototypeDataRef, 0, TimeSpan.Zero);
-                    ambientNpcCondition.StartTime = Game.CurrentTime;
-                    Owner.ConditionCollection.AddCondition(ambientNpcCondition);
-                    Owner.Properties[PropertyEnum.NPCAmbientLock] = true;
-                }
             }
             else
             {
@@ -3398,17 +3581,7 @@ namespace MHServerEmu.Games.Powers
                 if (doNotStartCooldown == false)
                     StartCooldown();
 
-                // HACK: Old condition hack for Emma Frost's Diamond Form
-                if (PrototypeDataRef == (PrototypeId)17994345800984565974 && Owner.ConditionCollection.GetCondition(111) != null)
-                {
-                    Owner.ConditionCollection.RemoveCondition(111);
-                }
-                else if (DataDirectory.Instance.PrototypeIsChildOfBlueprint(PrototypeDataRef, (BlueprintId)11029044031881025595) &&
-                    Owner.ConditionCollection.GetCondition(999) != null)
-                {
-                    Owner.ConditionCollection.RemoveCondition(999);
-                    Owner.Properties[PropertyEnum.NPCAmbientLock] = false;
-                }
+                RemoveTrackedConditions(false);
             }
 
             return true;
@@ -3416,7 +3589,44 @@ namespace MHServerEmu.Games.Powers
 
         private bool CancelTogglePowersInSameGroup()
         {
-            // TODO
+            // NOTE: This is used only for vanity pets in 1.52, but before that it was used for hero powers as well.
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CancelTogglePowersInSameGroup(): powerProto == null");
+
+            if (powerProto.ToggleGroup == PrototypeId.Invalid)
+                return true;
+
+            PowerCollection powerCollection = Owner?.PowerCollection;
+            if (powerCollection == null)
+                return true;
+
+            foreach (var kvp in powerCollection)
+            {
+                Power otherPower = kvp.Value.Power;
+                if (otherPower == null)
+                {
+                    Logger.Warn($"CancelTogglePowersInSameGroup(): Encountered empty power record. Power prototype: {kvp.Value.PowerPrototypeRef.GetName()}\nOwner: {Owner}");
+                    continue;
+                }
+
+                if (otherPower.PrototypeDataRef == PrototypeDataRef)
+                    continue;
+
+                PowerPrototype otherPowerProto = otherPower.Prototype;
+                if (otherPowerProto == null)
+                {
+                    Logger.Warn($"CancelTogglePowersInSameGroup(): Failed to get PowerPrototype for a power when testing ToggleGroups for Power [{this}].\nOtherPower: {otherPower}\nOwner: {Owner}");
+                    continue;
+                }
+
+                if (otherPower.IsToggled() == false)
+                    continue;
+
+                if (otherPower.IsToggledOn() && otherPowerProto.ToggleGroup == powerProto.ToggleGroup)
+                    otherPower.SetToggleState(false);
+            }
+
             return true;
         }
 
@@ -3615,12 +3825,13 @@ namespace MHServerEmu.Games.Powers
             if (region == null) return Logger.WarnReturn(false, "GetAOETargets(): region == null");
 
             // Look for potential targets in the AOE shape
-            List<WorldEntity> potentialTargetList = new(256);
+            List<WorldEntity> potentialTargetList = ListPool<WorldEntity>.Instance.Get();
             GetPotentialTargetsInShape(region, radius, in aoePosition, in aoeDirection, powerProto, potentialTargetList);
 
             // Set up random
             if (reachProto.RandomAOETargets && randomSeed == 0)
             {
+                ListPool<WorldEntity>.Instance.Return(potentialTargetList);
                 return Logger.WarnReturn(false,
                     $"GetAOETargets(): A power has RandomAOETargets set true, but no random seed to do it with!\n Power: {powerProto}\n Owner: {owner}\n");
             }
@@ -3653,8 +3864,9 @@ namespace MHServerEmu.Games.Powers
                     if (powerProto.MaxAOETargets > 0 && targetList.Count >= powerProto.MaxAOETargets)
                         break;
                 }
-            }     
+            }
 
+            ListPool<WorldEntity>.Instance.Return(potentialTargetList);
             return true;
         }
 
@@ -3982,6 +4194,228 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        #region Bouncing
+
+        private static bool TryBouncePayload(PowerPayload payload)
+        {
+            if (payload == null) return Logger.WarnReturn(false, "TryBouncePayload(): payload == null");
+
+            // Check if there is any bouncing to do for this power
+            if (payload.Properties.HasProperty(PropertyEnum.BounceCountPayload) == false)
+                return false;
+
+            Game game = payload.Game;
+
+            // Start building the bounce message
+            ulong lastTargetId = payload.TargetId;
+            float speed = payload.Properties[PropertyEnum.BounceSpeedPayload];
+
+            NetMessagePowerBounce.Builder bounceMessageBuilder = NetMessagePowerBounce.CreateBuilder()
+                .SetIdPowerUser(payload.PowerOwnerId)
+                .SetIdLastTarget(lastTargetId)
+                .SetPowerPrototypeId((ulong)payload.PowerProtoRef)
+                .SetUserOriginalAssetId((ulong)payload.Properties[PropertyEnum.CreatorEntityAssetRefBase])
+                .SetUserCurrentAssetId((ulong)payload.Properties[PropertyEnum.CreatorEntityAssetRefCurrent])
+                .SetProjectileSpeed(speed)
+                .SetFxRandomSeed((int)payload.FXRandomSeed);
+
+            // Do bouncing if we still have any to do
+            int bounceCount = payload.Properties[PropertyEnum.BounceCountPayload];
+            if (bounceCount > 0)
+            {
+                Region region = game.RegionManager.GetRegion(payload.RegionId);
+                if (region == null) return Logger.WarnReturn(false, "TryBouncePayload(): region == null");
+
+                PowerPrototype powerProto = payload.PowerPrototype;
+                TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
+                Vector3 lastTargetPosition = payload.TargetPosition;
+                float range = payload.Properties[PropertyEnum.BounceRangePayload];
+
+                WorldEntity unhitTarget = null;
+                WorldEntity repeatTarget = null;
+                WorldEntity destructibleTarget = null;
+
+                float shortestDistanceUnhit = float.MaxValue;
+                float shortestDistanceDestructible = float.MaxValue;
+
+                int lowestTargetIndex = int.MaxValue;
+
+                Sphere bounds = new(lastTargetPosition, range);
+                foreach (WorldEntity potentialTarget in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.ActivePartition)))
+                {
+                    if (potentialTarget.Id == lastTargetId)
+                        continue;
+
+                    if (potentialTarget.Properties[PropertyEnum.InvalidBounceTarget])
+                        continue;
+
+                    if (IsValidTarget(powerProto, payload.PowerOwnerId, payload.OwnerAlliance, potentialTarget) == false)
+                        continue;
+
+                    if (reachProto.RequiresLineOfSight && potentialTarget.LineOfSightTo(lastTargetPosition) == false)
+                        continue;
+
+                    int targetIndex = GetBounceTargetIndex(payload.Properties, potentialTarget.Id);
+                    if (targetIndex == -1)
+                    {
+                        if (potentialTarget.IsDestructible)
+                            CheckBounceTarget(potentialTarget, lastTargetPosition, ref destructibleTarget, ref shortestDistanceDestructible);
+                        else
+                            CheckBounceTarget(potentialTarget, lastTargetPosition, ref unhitTarget, ref shortestDistanceUnhit);
+                    }
+                    else if (payload.Properties[PropertyEnum.BounceCanRepeatTarget])
+                    {
+                        if (targetIndex < lowestTargetIndex)
+                        {
+                            lowestTargetIndex = targetIndex;
+                            repeatTarget = potentialTarget;
+                        }
+                    }
+                }
+
+                // Prioritize targets that haven't been hit
+                WorldEntity newTarget = unhitTarget != null ? unhitTarget : repeatTarget;
+                
+                // Prioritize non-destructible targets over destructibles
+                newTarget ??= destructibleTarget;
+
+                if (newTarget != null)
+                {
+                    ulong newTargetId = newTarget.Id;
+
+                    payload.UpdateTarget(newTargetId, newTarget.RegionLocation.Position);
+                    RecordBounceTarget(payload.Properties, newTargetId);
+
+                    TimeSpan delay = TimeSpan.Zero;
+                    if (speed > 0f)
+                    {
+                        float distance = Vector3.Length(lastTargetPosition - payload.TargetPosition);
+                        delay = TimeSpan.FromSeconds(distance / speed);
+                    }
+
+                    payload.Properties[PropertyEnum.BounceCountPayload] = (bounceCount > 1) ? --bounceCount : -1;
+
+                    SchedulePayloadDelivery(payload, delay);
+
+                    bounceMessageBuilder.SetLastTargetPosition(lastTargetPosition.ToNetStructPoint3());
+                    bounceMessageBuilder.SetIdNewTarget(newTargetId);
+
+                    game.NetworkManager.SendMessageToInterested(bounceMessageBuilder.Build(), newTarget, AOINetworkPolicyValues.AOIChannelProximity);
+
+                    // More bouncing to do or finalize, so return true
+                    return true;
+                }
+            }
+
+            // Finish bouncing
+            WorldEntity ultimateOwner = game.EntityManager.GetEntity<WorldEntity>(payload.UltimateOwnerId);
+            if (ultimateOwner != null)
+            {
+                bounceMessageBuilder.SetIdPowerUser(ultimateOwner.Id);
+                bounceMessageBuilder.SetLastTargetPosition(payload.TargetPosition.ToNetStructPoint3());
+                bounceMessageBuilder.SetIdNewTarget(Entity.InvalidId);
+
+                game.NetworkManager.SendMessageToInterested(bounceMessageBuilder.Build(), ultimateOwner, AOINetworkPolicyValues.AOIChannelProximity);
+
+                // TODO: Return weapon to the owner (shield, etc.)
+            }
+
+            // Bouncing over, proceed to ending the power
+            return false;
+        }
+
+        private static void CheckBounceTarget(WorldEntity targetToCheck, Vector3 lastPosition, ref WorldEntity closestTarget, ref float shortestDistance)
+        {
+            float distance = Vector3.LengthSquared(lastPosition - targetToCheck.RegionLocation.Position);
+            if (distance < shortestDistance)
+            {
+                shortestDistance = distance;
+                closestTarget = targetToCheck;
+            }
+        }
+
+        private static int GetBounceTargetIndex(PropertyCollection properties, ulong targetId)
+        {
+            int targetIndex = -1;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.PowerPreviousTargetsID))
+            {
+                if (kvp.Value != targetId)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out targetIndex);
+                break;
+            }
+
+            return targetIndex;
+        }
+
+        private static void RecordBounceTarget(PropertyCollection properties, ulong targetId)
+        {
+            int maxIndex = -1;
+            int oldIndex = -1;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.PowerPreviousTargetsID))
+            {
+                Property.FromParam(kvp.Key, 0, out int targetIndex);
+                maxIndex = Math.Max(targetIndex, maxIndex);
+
+                if (kvp.Value == targetId)
+                    oldIndex = targetIndex;
+            }
+
+            // Remove the old recorded index
+            if (oldIndex > -1)
+                properties.RemoveProperty(new(PropertyEnum.PowerPreviousTargetsID, (PropertyParam)oldIndex));
+
+            // Record the target
+            properties[PropertyEnum.PowerPreviousTargetsID, ++maxIndex] = targetId;
+        }
+
+        /// <summary>
+        /// Ends non-missile powers that have the PowerActiveUntilProjExpire property (e.g. chain powers where the user is the one bouncing around).
+        /// </summary>
+        private static bool TryEndNonMissilePowerActiveUntilProjExpire(PowerPayload payload)
+        {
+            PowerPrototype powerProto = payload.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TryEndNonMissilePowerActiveUntilProjExpire(): powerProto == null");
+            if (powerProto.Properties == null) return Logger.WarnReturn(false, "TryEndNonMissilePowerActiveUntilProjExpire(): powerProto.Properties == null");
+
+            // Missile powers handle PowerActiveUntilProjExpire separately
+            if (powerProto is MissilePowerPrototype || powerProto.Properties[PropertyEnum.PowerActiveUntilProjExpire] == false)
+                return true;
+
+            // Check if the owner still exists and is in the world
+            WorldEntity powerOwner = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+            if (powerOwner == null || powerOwner.IsInWorld == false)
+                return true;
+
+            // Check if the owner still has the power
+            Power power = powerOwner.GetPower(powerProto.DataRef);
+            if (power == null)
+                return true;
+
+            // Wait for the projectile to return if we need to
+            if (powerProto.ProjectileReturnsToUser)
+            {
+                Vector3 ownerPosition = powerOwner.RegionLocation.Position;
+                Vector3 targetPosition = payload.TargetPosition;
+
+                float distance = Vector3.Distance(ownerPosition, targetPosition);
+                float speed = power.GetProjectileSpeed(ownerPosition, targetPosition);
+                TimeSpan delay = TimeSpan.FromSeconds(distance / speed);
+
+                power.SchedulePowerEnd(delay);
+                return true;
+            }
+
+            // End straight away if we don't need to wait for the projectile to return
+            power.EndPower(EndPowerFlags.None);
+            return true;
+        }
+
+        #endregion
+
         private void DoRandomTargetSelection(Power triggeredPower, ref PowerActivationSettings settings)
         {
             // TODO
@@ -4078,11 +4512,11 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool SchedulePayloadDelivery(PowerPayload payload, TimeSpan deliveryDelay)
+        private static bool SchedulePayloadDelivery(PowerPayload payload, TimeSpan deliveryDelay)
         {
             if (payload == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): payload == null");
 
-            EventScheduler scheduler = Game.GameEventScheduler;
+            EventScheduler scheduler = payload.Game.GameEventScheduler;
             if (scheduler == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): scheduler == null");
 
             EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();

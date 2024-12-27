@@ -151,12 +151,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
         }
 
-        public bool ContainsPower(PrototypeId powerProtoRef) => GetPowerRecordByRef(powerProtoRef) != null;
-
-        public bool ContainsPowerProgressionPower(PrototypeId powerProtoRef)
+        public bool ContainsPower(PrototypeId powerProtoRef, bool excludeNonPowerProgressionPowers = false)
         {
             PowerCollectionRecord record = GetPowerRecordByRef(powerProtoRef);
-            return record != null && record.IsPowerProgressionPower;
+            return record != null && (excludeNonPowerProgressionPowers == false || record.IsPowerProgressionPower);
         }
 
         public Power AssignPower(PrototypeId powerProtoRef, PowerIndexProperties indexProps, PrototypeId triggeringPowerRef = PrototypeId.Invalid, bool sendPowerAssignmentToClients = true)
@@ -466,8 +464,10 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             }
 
             AssignTriggeredPowers(power);
-            _owner.OnPowerAssigned(power);
+
+            // NOTE: The client calls OnPowerAssigned before OnAssign, but then auto-activated powers do not get their keywords mask. If this a bug?
             power.OnAssign();
+            _owner.OnPowerAssigned(power);
         }
 
         private bool AssignTriggeredPowers(Power power)

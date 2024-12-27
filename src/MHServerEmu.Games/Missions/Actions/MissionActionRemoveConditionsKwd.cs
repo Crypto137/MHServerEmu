@@ -22,11 +22,10 @@ namespace MHServerEmu.Games.Missions.Actions
             {
                 var conditions = player.CurrentAvatar?.ConditionCollection;
                 if (conditions == null) continue;
-                foreach (var kvp in conditions.ToArray()) 
+                foreach (var condition in conditions) 
                 {
-                    var condition = kvp.Value;
                     if (condition.HasKeyword(keywordProto))
-                        conditions.RemoveCondition(kvp.Key);
+                        conditions.RemoveCondition(condition.Id);
                 }
             }
         }

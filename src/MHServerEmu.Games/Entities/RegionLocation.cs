@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
@@ -164,6 +165,20 @@ namespace MHServerEmu.Games.Entities
             Area area = Area;
             if (area != null && area.HasKeyword(keywordProto)) return true;
             return false;
+        }
+
+        public KeywordsMask GetKeywordsMask()
+        {
+            KeywordsMask keywordsMask = new();
+
+            if (_region != null)
+                GBitArray.Or(keywordsMask, _region.GetKeywordsMask());
+
+            Area area = Area;
+            if (area != null)
+                GBitArray.Or(keywordsMask, area.GetKeywordsMask());
+
+            return keywordsMask;
         }
 
         public Vector3 GetVectorFrom(RegionLocation other)

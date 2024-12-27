@@ -202,6 +202,17 @@ namespace MHServerEmu.Games.Powers
             return IsValidTargetInternal(powerProto, user, userEntityId, userAllianceProto, target);
         }
 
+        public static bool IsValidTarget(PowerPrototype powerProto, ulong userEntityId, AlliancePrototype userAllianceProto, WorldEntity target)
+        {
+            (bool result, bool noMoreChecksRequired) = IsValidTargetNoCasterEntityChecks(powerProto, userEntityId, userAllianceProto, target);
+
+            if (noMoreChecksRequired)
+                return result;
+
+            WorldEntity user = target.Game.EntityManager.GetEntity<WorldEntity>(userEntityId);
+            return IsValidTargetInternal(powerProto, user, userEntityId, userAllianceProto, target);
+        }
+
         public static bool ValidateAOETarget(WorldEntity target, PowerPrototype powerProto, WorldEntity user, Vector3 userPosition,
             AlliancePrototype userAllianceProto, bool requiresLineOfSight)
         {

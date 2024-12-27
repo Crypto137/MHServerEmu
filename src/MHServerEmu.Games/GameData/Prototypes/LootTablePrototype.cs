@@ -157,7 +157,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                     using DropFilterArguments pickFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
                     DropFilterArguments.Initialize(pickFilterArgs, null, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
-                    pickFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
+                    pickFilterArgs.DropDistanceSq = settings.DropDistanceSq;
 
                     if (picker.Empty() ||
                         LootUtilities.PickValidItem(resolver, picker, resolvedTeamUpProto, pickFilterArgs, ref pickedItemProto, restrictionFlags, ref rarityProtoRef) == false)
@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 using DropFilterArguments pushFilterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
                 DropFilterArguments.Initialize(pushFilterArgs, pickedItemProto, rollFor, level, rarityProtoRef.Value, 0, slot, resolver.LootContext);
-                pushFilterArgs.DropDistanceSq = settings.DropDistanceThresholdSq;
+                pushFilterArgs.DropDistanceSq = settings.DropDistanceSq;
 
                 if (pickedItemProto.IsCurrency)
                 {

@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Loot
             // Construct a new loot grid for the current context
             Array.Clear(_cells);
 
-            List<WorldEntity> entityList = ListPool<WorldEntity>.Instance.Rent();
+            List<WorldEntity> entityList = ListPool<WorldEntity>.Instance.Get();
             _context.Region.GetEntitiesInVolume(entityList, new Sphere(_context.Position, MaxSpiralRadius), new());
 
             foreach (WorldEntity entity in entityList)

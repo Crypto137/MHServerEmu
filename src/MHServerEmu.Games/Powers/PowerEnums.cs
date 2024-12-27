@@ -6,12 +6,12 @@ namespace MHServerEmu.Games.Powers
     public enum PowerActivationSettingsFlags
     {
         None                = 0,
-        NotifyOwner         = 1 << 0,   // unknown server-only flag, we currently use it to force send power activations to owner (e.g. team-up powers)
+        NotifyOwner         = 1 << 0,   // server-only flag, we use it to force send power activations to owner (e.g. team-up powers)
         Cancel              = 1 << 1,
-        Server2             = 1 << 2,   // unknown server-only flag, currently unused
+        NoOnPowerUseProcs   = 1 << 2,   // server-only flag, we use it to skip on power use procs
         SkipRangeCheck      = 1 << 3,
         Continuous          = 1 << 4,
-        ServerCombo         = 1 << 5,   // unknown server-only flag, probably the equivalent of flag6 for server-triggered combo powers
+        ServerCombo         = 1 << 5,   // server-only flag, probably the equivalent of flag6 for server-triggered combo powers
         ClientCombo         = 1 << 6,
         AutoActivate        = 1 << 7,
         Item                = 1 << 8    // see Item::playerCanUsePowerAction()
@@ -49,7 +49,10 @@ namespace MHServerEmu.Games.Powers
         Teleport        = 1 << 9,
         NoDamage        = 1 << 10,
         Resurrect       = 1 << 11,
-        InstantKill     = 1 << 12
+        InstantKill     = 1 << 12,
+
+        HasResultsFlags   = Dodged | Resisted | Blocked | Unaffected | Resurrect | InstantKill,
+        SendToClientFlags = Critical | Dodged | Resisted | Blocked | SuperCritical | Unaffected | NoDamage
     }
 
     public enum PowerActivationPhase

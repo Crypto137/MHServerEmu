@@ -1546,7 +1546,7 @@ namespace MHServerEmu.Games.Regions
             if (IsFirstLoaded) return;
             IsFirstLoaded = true;
 
-            List<PrototypeId> timerRefList = ListPool<PrototypeId>.Instance.Rent();
+            List<PrototypeId> timerRefList = ListPool<PrototypeId>.Instance.Get();
 
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.ScoringEventTimerStartTimeMS))
             {
@@ -1571,6 +1571,13 @@ namespace MHServerEmu.Games.Regions
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && Prototype.HasKeyword(keywordProto);
+        }
+
+        public KeywordsMask GetKeywordsMask()
+        {
+            RegionPrototype regionProto = Prototype;
+            if (regionProto == null) return Logger.WarnReturn(KeywordsMask.Empty, "GetKeywordsMask(): regionProto == null");
+            return regionProto.KeywordsMask;
         }
 
         public AvatarOnKilledInfoPrototype GetAvatarOnKilledInfo()

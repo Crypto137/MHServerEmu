@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Events;
@@ -244,85 +245,20 @@ namespace MHServerEmu.Games.Entities.Items
         
         private bool DoItemActionUsePower(PrototypeId powerProtoRef, Avatar avatar)
         {
-            Logger.Debug($"DoItemActionUsePower(): item=[{this}], powerProtoRef={powerProtoRef.GetName()}");
-
             Power power = avatar.GetPower(powerProtoRef);
             if (power == null) return Logger.WarnReturn(false, "DoItemActionUsePower(): power == null");
 
-            // HACK/REMOVEME: Remove these hacks when we get summon powers working properly
-            if (power.Prototype is SummonPowerPrototype summonPowerProto)
-            {
-                PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerProtoRef);
-                if (avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef])
-                {
-                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
+            // Adjust index properties for this power specifically (if we have different items that activate the same power)
+            power.Properties.CopyProperty(Properties, PropertyEnum.ItemLevel);
+            power.Properties.CopyProperty(Properties, PropertyEnum.ItemVariation);
 
-                    if (power.IsToggled())  // Check for Danger Room scenarios that are not toggled
-                        avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef] = false;
+            // Activate the power
+            Vector3 position = avatar.RegionLocation.Position;
+            PowerActivationSettings settings = new(InvalidId, position, position);
+            settings.ItemSourceId = Id;
+            settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
 
-                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
-                }
-                else
-                {
-                    EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, this);
-
-                    if (power.IsToggled())  // Check for Danger Room scenarios that are not toggled
-                        avatar.Properties[PropertyEnum.PowerToggleOn, powerProtoRef] = true;
-
-                    avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
-                }
-
-                OnUsePowerActivated();
-                return true;
-            }
-
-            // TODO: Rework and move this to Power.DoPowerEventActionSpawnLootTable()
-            foreach (PowerEventActionPrototype powerEventAction in power.Prototype.ActionsTriggeredOnPowerEvent)
-            {
-                if (powerEventAction.EventAction != PowerEventActionType.SpawnLootTable)
-                    continue;
-
-                if (powerEventAction.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext)
-                    continue;
-
-                Player owner = avatar?.GetOwnerOfType<Player>();
-                if (owner == null) continue;
-
-                List<Player> playerList = ListPool<Player>.Instance.Rent();
-
-                if (lootTableContext.IncludeNearbyAvatars)
-                {
-                    Power.ComputeNearbyPlayers(avatar.Region, avatar.RegionLocation.Position, 0, false, playerList);
-                }
-                else
-                {
-                    playerList.Add(owner);
-                }
-
-                int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : avatar.CharacterLevel;
-
-                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
-                {
-                    (lootTableContext.LootTable, lootTableContext.PlaceLootInGeneralInventory ? LootActionType.Give : LootActionType.Spawn)
-                };
-
-                int recipientId = 1;
-                foreach (Player player in playerList)
-                {
-                    using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                    settings.Initialize(LootContext.Drop, player, avatar, level);
-                    Game.LootManager.AwardLootFromTables(tables, settings, recipientId++);
-                }
-
-                OnUsePowerActivated();
-
-                ListPool<Player>.Instance.Return(playerList);
-                return true;
-            }
-
-            // TODO: normal implementation
-
-            return false;
+            return avatar.ActivatePower(powerProtoRef, ref settings) == PowerUseResult.Success;
         }
 
         private bool DoItemActionAwardTeamUpXP()
@@ -366,7 +302,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return Logger.WarnReturn(false, $"ReplaceSelfHelper(): Failed to remove the last item in the stack from its inventory\nItem=[{this}]\nInvLoc=[{InventoryLocation}]");
 
             // We need to keep track of everything we are doing so we can roll back if something goes wrong
-            List<(ulong, int)> replacementItemList = ListPool<(ulong, int)>.Instance.Rent();
+            List<(ulong, int)> replacementItemList = ListPool<(ulong, int)>.Instance.Get();
 
             using PropertyCollection oldCurrencyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             oldCurrencyProperties.CopyPropertyRange(player.Properties, PropertyEnum.Currency);

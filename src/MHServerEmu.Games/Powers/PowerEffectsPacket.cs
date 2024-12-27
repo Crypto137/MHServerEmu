@@ -5,6 +5,7 @@ using MHServerEmu.Games.Properties;
 namespace MHServerEmu.Games.Powers
 {
     // Base abstract class for PowerPayload and PowerResults
+    // TODO: Pooling?
     public abstract class PowerEffectsPacket
     {
         public ulong PowerOwnerId { get; protected set; }
@@ -17,5 +18,16 @@ namespace MHServerEmu.Games.Powers
 
         // long - TimeSpan?
         // BitArray - keywords?
+
+        public virtual void Clear()
+        {
+            PowerOwnerId = default;
+            UltimateOwnerId = default;
+            TargetId = default;
+            PowerOwnerPosition = default;
+            PowerPrototype = default;
+
+            Properties.Clear();
+        }
     }
 }

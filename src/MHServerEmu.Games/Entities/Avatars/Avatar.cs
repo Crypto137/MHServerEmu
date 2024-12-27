@@ -22,6 +22,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
@@ -57,6 +58,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
         public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
+
+        public PrototypeId EquippedCostumeRef { get => Properties[PropertyEnum.CostumeCurrent]; }
+        public CostumePrototype EquippedCostume { get => EquippedCostumeRef.As<CostumePrototype>(); }
 
         public bool IsUsingGamepadInput { get; set; } = false;
         public PrototypeId CurrentTransformMode { get; private set; } = PrototypeId.Invalid;
@@ -889,7 +893,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public ulong FindAbilityItem(ItemPrototype itemProto, ulong skipItemId = InvalidId)
         {
-            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Rent();
+            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();
 
             try
             {
@@ -942,6 +946,52 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+        public ulong FindOwnedItemThatGrantsPower(PrototypeId powerProtoRef)
+        {
+            ulong itemId = InvalidId;
+
+            // Search avatar equipment
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                itemId = FindOwnedItemThatGrantsPowerHelper(powerProtoRef, inventory);
+                if (itemId != InvalidId)
+                    return itemId;
+            }
+
+            // Search the player's general inventories
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(InvalidId, "FindOwnedItemThatGrantsPower(): player == null");
+
+            foreach (Inventory inventory in new InventoryIterator(player, InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra))
+            {
+                itemId = FindOwnedItemThatGrantsPowerHelper(powerProtoRef, inventory);
+                if (itemId != InvalidId)
+                    return itemId;
+            }
+
+            return itemId;
+        }
+
+        private ulong FindOwnedItemThatGrantsPowerHelper(PrototypeId powerProtoRef, Inventory inventory)
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var entry in inventory)
+            {
+                Item item = entityManager.GetEntity<Item>(entry.Id);
+                if (item == null)
+                {
+                    Logger.Warn("FindOwnedItemThatGrantsPowerHelper(): item == null");
+                    continue;
+                }
+
+                if (item.GetPowerGranted(out PrototypeId powerGrantedProtoRef) && powerGrantedProtoRef == powerProtoRef)
+                    return item.Id;
+            }
+
+            return InvalidId;
+        }
+
         private bool AssignDefaultAvatarPowers()
         {
             Player player = GetOwnerOfType<Player>();
@@ -965,6 +1015,32 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
             AssignItemPowers();
+
+            // Emotes
+            // Starting emotes
+            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
+            {
+                PrototypeId emoteProtoRef = emoteAssignment.Ability;
+                if (GetPower(emoteProtoRef) != null) continue;
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            // Unlockable emotes
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
+                if (GetPower(emoteProtoRef) != null) continue;
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            // Assign hidden passive powers (these need to be assigned before progression table powers)
+            if (avatarPrototype.HiddenPassivePowers.HasValue())
+            {
+                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
+                    AssignPower(abilityAssignmentProto.Ability, indexProps);
+            }
 
             // Progression table powers
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
@@ -1001,35 +1077,41 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
-            // Assign hidden passive powers
-            if (avatarPrototype.HiddenPassivePowers.HasValue())
-            {
-                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
-                    AssignPower(abilityAssignmentProto.Ability, indexProps);
-            }
-
             // Travel
             AssignPower(avatarPrototype.TravelPower, indexProps);
 
-            // Emotes
-            // Starting emotes
-            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
+            return true;
+        }
+
+        private bool RestoreSelfAppliedPowerConditions()
+        {
+            // Powers are unassigned when avatar exits world, but the conditions remain.
+            // We need to reconnect existing conditions to the newly reassigned powers.
+
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
+
+            List<ulong> conditionCleanupList = ListPool<ulong>.Instance.Get();
+
+            // Try to restore condition connections for self-applied powers
+            foreach (Condition condition in ConditionCollection.IterateConditions(false))
             {
-                PrototypeId emoteProtoRef = emoteAssignment.Ability;
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+                PowerPrototype powerProto = condition.CreatorPowerPrototype;
+                if (powerProto == null)
+                    continue;
+
+                if (Power.GetTargetingShape(powerProto) != TargetingShapeType.Self)
+                    continue;
+
+                if (conditionCollection.TryRestorePowerCondition(condition, this) == false)
+                    conditionCleanupList.Add(condition.Id);
             }
 
-            // Unlockable emotes
-            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
-            {
-                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"AssignDefaultAvatarPowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
+            // Clean up conditions that are no longer valid
+            foreach (ulong conditionId in conditionCleanupList)
+                conditionCollection.RemoveCondition(conditionId);
 
+            ListPool<ulong>.Instance.Return(conditionCleanupList);
             return true;
         }
 
@@ -1039,7 +1121,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player playerOwner = GetOwnerOfType<Player>();
             if (playerOwner == null) return Logger.WarnReturn(false, "AssignItemPowers(): playerOwner == null");
 
-            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Rent();
+            List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();
 
             try
             {
@@ -1518,6 +1600,85 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+        protected override bool InitInventories(bool populateInventories)
+        {
+            bool success = base.InitInventories(populateInventories);
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
+            {
+                if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
+                {
+                    success = false;
+                    Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
+                }
+            }
+
+            return success;
+        }
+
+        #endregion
+
+        #region Costumes
+
+        public override AssetId GetEntityWorldAsset()
+        {
+            AssetId result = AssetId.Invalid;
+
+            TransformModePrototype transformModeProto = CurrentTransformMode.As<TransformModePrototype>();
+            if (transformModeProto != null)
+            {
+                if (transformModeProto.UnrealClassOverrides.HasValue())
+                {
+                    AssetId currentCostumeAssetRef = GetCurrentCostumeAssetRef();
+
+                    foreach (TransformModeUnrealOverridePrototype overrideProto in transformModeProto.UnrealClassOverrides)
+                    {
+                        if (overrideProto.IncomingUnrealClass == AssetId.Invalid)
+                        {
+                            Logger.Warn("GetEntityWorldAsset(): overrideProto.IncomingUnrealClass == AssetId.Invalid");
+                            continue;
+                        }
+
+                        if (overrideProto.IncomingUnrealClass == currentCostumeAssetRef)
+                        {
+                            result = overrideProto.TransformedUnrealClass;
+                            break;
+                        }
+                    }
+                }
+
+                if (result == AssetId.Invalid)
+                    result = transformModeProto.UnrealClass;
+            }
+            else
+            {
+                result = GetCurrentCostumeAssetRef();
+            }
+
+            if (result == AssetId.Invalid)
+                Logger.Warn($"GetEntityWorldAsset(): Unable to get a valid unreal class asset for avatar [{this}]");
+
+            return result;
+        }
+
+        public AssetId GetCurrentCostumeAssetRef()
+        {
+            // HACK: Return starting costume for Entity/Items/Costumes/Costume.defaults to avoid spam when forcing pre-VU costumes
+            CostumePrototype equippedCostume = EquippedCostume;
+            if (equippedCostume != null && equippedCostume.DataRef != (PrototypeId)10774581141289766864)
+                return equippedCostume.CostumeUnrealClass;
+
+            return GetStartingCostumeAssetRef();
+        }
+
+        public AssetId GetStartingCostumeAssetRef()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(AssetId.Invalid, "GetStartingCostumeAssetRef(): avatarProto == null");
+            return avatarProto.GetStartingCostumeAssetRef(Platforms.PC);
+        }
+
         public bool ChangeCostume(PrototypeId costumeProtoRef)
         {
             CostumePrototype costumeProto = null;
@@ -1540,23 +1701,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             owner.Properties[PropertyEnum.AvatarLibraryCostume, 0, PrototypeDataRef] = costumeProtoRef;
 
             return true;
-        }
-
-        protected override bool InitInventories(bool populateInventories)
-        {
-            bool success = base.InitInventories(populateInventories);
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-            foreach (AvatarEquipInventoryAssignmentPrototype equipInvAssignment in avatarProto.EquipmentInventories)
-            {
-                if (AddInventory(equipInvAssignment.Inventory, populateInventories ? equipInvAssignment.LootTable : PrototypeId.Invalid) == false)
-                {
-                    success = false;
-                    Logger.Warn($"InitInventories(): Failed to add inventory {GameDatabase.GetPrototypeName(equipInvAssignment.Inventory)} to {this}");
-                }
-            }
-
-            return success;
         }
 
         #endregion
@@ -2053,7 +2197,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             AssignDefaultAvatarPowers();
 
-            // auto unlock chapters and Waypoinst
+            RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
+
+            // Unlock chapters and waypoints that should be unlocked by default
             player.UnlockChapters();
             player.UnlockWaypoints();
 
@@ -2077,6 +2223,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Update interest
                 missionManager.UpdateMissionInterest();
             }
+
+            // Finish the switch (if there was one)
+            player.Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
 
             // update achievement score
             player.AchievementManager.UpdateScore();

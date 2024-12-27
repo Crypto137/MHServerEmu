@@ -1841,13 +1841,10 @@ namespace MHServerEmu.Games.Properties.Evals
                 return evalVar;
 
             if (conditionCollection != null)
-                foreach (var kvp in conditionCollection)
+                foreach (var condition in conditionCollection)
                 {
-                    Condition condition = kvp.Value;
-                    if (condition == null) continue;
-
                     data.SetVar_PropertyCollectionPtr(EvalContext.Condition, condition.Properties);
-                    data.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.ConditionKeywords, condition.Keywords);
+                    data.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.ConditionKeywords, condition.GetKeywords());
 
                     if (forEachProto.LoopConditionPreScope != null)
                     {

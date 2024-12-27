@@ -205,6 +205,12 @@ namespace MHServerEmu.Games.Properties
             return curveProperty.IndexPropertyId;
         }
 
+        public void GetPropertyCurveIndexPropertyEnumValues(HashSet<PropertyEnum> enumSet)
+        {
+            foreach (CurveProperty curveProperty in _curveList.Values)
+                enumSet.Add(curveProperty.IndexPropertyId.Enum);
+        }
+
         /// <summary>
         /// Adds the specified <see cref="int"/> delta to the <see cref="PropertyValue"/> with the provided <see cref="PropertyId"/>.
         /// </summary>
