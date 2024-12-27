@@ -6,7 +6,8 @@ CREATE TABLE "Leaderboards" (
 	"LeaderboardId"	INTEGER NOT NULL PRIMARY KEY,
 	"PrototypeName"	TEXT,
 	"ActiveInstanceId"	INTEGER,
-	"IsActive"	INTEGER
+	"IsActive"	INTEGER,
+	"Schedule" TEXT
 );
 
 CREATE TABLE "Instances" (

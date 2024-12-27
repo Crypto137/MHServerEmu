@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace MHServerEmu.Leaderboards
 {   
@@ -21,6 +22,7 @@ namespace MHServerEmu.Leaderboards
         private const ulong UpdateTimeIntervalMS = 30 * 1000;   // 30 seconds
 
         private readonly object _lock = new object();
+        private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Leaderboards");
         private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
         private Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
         private Dictionary<ulong, string> _playerNames = new();
@@ -41,18 +43,21 @@ namespace MHServerEmu.Leaderboards
             var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
 
             // Initialize leaderboard database
-            string configPath = Path.Combine(FileHelper.DataDirectory, config.FileName);
+            string configPath = Path.Combine(LeaderboardsDirectory, config.FileName);
             bool noTables = false;
             DBManager.Initialize(configPath, ref noTables);
 
             // Add leaderboards from prototypes
-            if (noTables) GenerateTables();
+            string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
+            if (noTables) GenerateTables(jsonConfigPath);
 
             // load PlayerNames
             if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames) == false)
                 Logger.Warn($"Failed get player names from SQLiteDBManager");
 
             // load ActiveLeaderboards
+            List<DBLeaderboard> activeLeaderboards = new();
+            LoadJsonConfig(jsonConfigPath, activeLeaderboards);
             LoadLeaderboards();
 
             // send to LeaderboardGameDatabase
@@ -60,6 +65,108 @@ namespace MHServerEmu.Leaderboards
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
+        }
+
+        private bool LoadJsonConfig(string jsonConfigPath, List<DBLeaderboard> activeLeaderboards)
+        {
+            List<DBLeaderboardInstance> dbInstances = new();
+            string leaderboardsJson = File.ReadAllText(jsonConfigPath);
+
+            try
+            {
+                JsonSerializerOptions options = new();
+                var leaderboards = JsonSerializer.Deserialize<IEnumerable<LeaderboardSchedule>>(leaderboardsJson, options);
+                var oldDbLeaderboards = DBManager.GetLeaderboards();
+                foreach (LeaderboardSchedule leaderboard in leaderboards)
+                {
+                    // Skip old
+                    var oldLeaderboard = oldDbLeaderboards.First(lb => lb.LeaderboardId == leaderboard.LeaderboardId);
+                    if (oldLeaderboard == null) continue;
+                    if (oldLeaderboard.IsActive == leaderboard.IsActive 
+                        && oldLeaderboard.Schedule == leaderboard.Schedule) continue;
+                    
+                    var activeLeaderboard = leaderboard.ToDBLeaderboard();
+                    activeLeaderboard.ActiveInstanceId = oldLeaderboard.ActiveInstanceId;
+                    activeLeaderboards.Add(activeLeaderboard);
+
+                    if (leaderboard.IsActive)
+                        dbInstances.Add(new DBLeaderboardInstance
+                        {
+                            InstanceId = oldLeaderboard.ActiveInstanceId + 1,
+                            LeaderboardId = leaderboard.LeaderboardId,
+                            State = LeaderboardState.eLBS_Created,
+                            ActivationDate = 0,
+                            Visible = leaderboard.IsActive
+                        });
+                }
+            }
+            catch (Exception e)
+            {
+                return Logger.WarnReturn(false, $"Initialize(): LeaderboardsJson {jsonConfigPath} deserialization failed - {e.Message}");
+            }
+
+            DBManager.UpdateLeaderboards(activeLeaderboards);
+            DBManager.SetInstances(dbInstances);
+
+            return activeLeaderboards.Count > 0;
+        }
+
+        public void ReloadJsonConfig()
+        {
+            lock (_lock)
+            {
+                var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
+                string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
+                
+                List<DBLeaderboard> activeLeaderboards = new();
+                if (LoadJsonConfig(jsonConfigPath, activeLeaderboards))
+                    ReloadActiveLeaderboards(activeLeaderboards);
+            }
+        }
+
+        private void ReloadActiveLeaderboards(List<DBLeaderboard> activeLeaderboards)
+        {            
+            foreach (var activeLeaderboard in activeLeaderboards)
+            {
+                var leaderboard = GetLeaderboard((PrototypeGuid)activeLeaderboard.LeaderboardId);
+                if (leaderboard == null) continue;
+                
+                if (activeLeaderboard.IsActive)
+                {
+                    leaderboard.SetSchedule(activeLeaderboard);
+
+                    // Add new instances
+                    var dbNewInstance = new DBLeaderboardInstance
+                    {
+                        InstanceId = activeLeaderboard.ActiveInstanceId + 1,
+                        LeaderboardId = activeLeaderboard.LeaderboardId,
+                        State = LeaderboardState.eLBS_Created,
+                        ActivationDate = 0,
+                        Visible = true
+                    };
+
+                    if (leaderboard.Prototype.IsMetaLeaderboard)
+                    {
+                        var metaInstance = leaderboard.GetInstance((ulong)activeLeaderboard.ActiveInstanceId);
+                        // add new MetaInstances
+                        metaInstance?.AddMetaInstances(dbNewInstance.InstanceId);
+                    }
+
+                    leaderboard.AddInstance(dbNewInstance, false);
+                    leaderboard.OnStateChange((ulong)dbNewInstance.InstanceId, LeaderboardState.eLBS_Created);
+                }
+                else
+                {
+                    var activeInstance = leaderboard.ActiveInstance;
+                    if (activeInstance == null) continue;
+
+                    // disable active instance
+                    activeInstance.Visible = false;
+                    activeInstance.State = LeaderboardState.eLBS_Rewarded;
+                    activeInstance.UpdateDBState(LeaderboardState.eLBS_Rewarded);
+                    leaderboard.OnStateChange(leaderboard.ActiveInstance.InstanceId, LeaderboardState.eLBS_Rewarded);
+                }
+            }
         }
 
         private void LoadLeaderboards()
@@ -103,11 +210,11 @@ namespace MHServerEmu.Leaderboards
             LeaderboardGameDatabase.Instance.UpdateLeaderboards(instances);
         }
 
-        private void GenerateTables()
+        private void GenerateTables(string jsonConfigPath)
         {
             List<DBLeaderboard> dbLeaderboards = new();
             List<DBLeaderboardInstance> dbInstances = new();
-            var activationDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
+            List<LeaderboardSchedule> jsonLeaderboards = new();
 
             foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -120,20 +227,24 @@ namespace MHServerEmu.Leaderboards
                 bool isActive = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset;
                 if (leaderboardId == (PrototypeGuid)16486420054343424221) isActive = false; // Anniversary2016
 
-                dbLeaderboards.Add(new DBLeaderboard
+                var dbLeaderboard = new DBLeaderboard
                 {
                     LeaderboardId = (long)leaderboardId,
                     PrototypeName = dataRef.GetNameFormatted(),
                     ActiveInstanceId = instanceId,
                     IsActive = isActive,
-                });
+                    Schedule = "* * * * *"
+                };
+
+                dbLeaderboards.Add(dbLeaderboard);
+                jsonLeaderboards.Add(new LeaderboardSchedule(dbLeaderboard));
 
                 dbInstances.Add(new DBLeaderboardInstance
                 {
                     InstanceId = instanceId,
                     LeaderboardId = (long)leaderboardId,
                     State = isActive ? LeaderboardState.eLBS_Created : LeaderboardState.eLBS_Rewarded,
-                    ActivationDate = activationDate,
+                    ActivationDate = 0,
                     Visible = isActive
                 });
 
@@ -155,6 +266,10 @@ namespace MHServerEmu.Leaderboards
                     DBManager.SetMetaInstances(dbMetaInstances);
                 }
             }
+
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            string json = JsonSerializer.Serialize<IEnumerable<LeaderboardSchedule>>(jsonLeaderboards, options);
+            File.WriteAllText(jsonConfigPath, json);
 
             DBManager.SetLeaderboards(dbLeaderboards);
             DBManager.SetInstances(dbInstances);

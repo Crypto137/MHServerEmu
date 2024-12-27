@@ -69,6 +69,7 @@ namespace MHServerEmu.Games.Leaderboards
                     UpdateLeaderboardInstance(instance);
             }
         }
+
         public void UpdateLeaderboardInstance(LeaderboardInstanceInfo instanceInfo)
         {
             lock (_lock)
@@ -114,7 +115,10 @@ namespace MHServerEmu.Games.Leaderboards
                 if (sendClient)
                     message = instanceInfo.ToLeaderboardStateChange();
 
-                var activePlayers = new PlayerIterator(Game.Current).ToArray();
+                var game = Game.Current;
+                if (game == null) return;
+
+                var activePlayers = new PlayerIterator(game).ToArray();
                 foreach (var player in activePlayers)
                 {
                     player.LeaderboardManager.OnUpdateEventContext();

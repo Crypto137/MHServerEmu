@@ -65,14 +65,27 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public void SetLeaderboards(List<DBLeaderboard> dbLeaderboards)
         {
+            if (dbLeaderboards.Count == 0) return;
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
             connection.Execute(@"
-                INSERT INTO Leaderboards (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive)
-                VALUES (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive)", dbLeaderboards, transaction);
+                INSERT INTO Leaderboards (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive, Schedule)
+                VALUES (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive, @Schedule)", dbLeaderboards, transaction);
 
             transaction.Commit();
+        }
+
+        public void UpdateLeaderboards(List<DBLeaderboard> dbLeaderboards)
+        {
+            if (dbLeaderboards.Count == 0) return;
+            using SQLiteConnection connection = GetConnection();
+            connection.Execute(@"
+                UPDATE Leaderboards 
+                SET ActiveInstanceId = @ActiveInstanceId,
+                IsActive = @IsActive, Schedule = @Schedule
+                WHERE LeaderboardId = @LeaderboardId",
+                dbLeaderboards);
         }
 
         public DBLeaderboard[] GetLeaderboards()
@@ -121,6 +134,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public void SetInstances(List<DBLeaderboardInstance> dbInstances)
         {
+            if (dbInstances.Count == 0) return;
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
@@ -152,6 +166,14 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 UPDATE Instances SET State = @State 
                 WHERE InstanceId = @InstanceId",
                 new { InstanceId = instanceId, State = state });
+        }
+
+        public void UpdateInstanceActivationDate(DBLeaderboardInstance dbInstance)
+        {
+            using SQLiteConnection connection = GetConnection();
+            connection.Execute(@"
+                UPDATE Instances SET ActivationDate = @ActivationDate 
+                WHERE InstanceId = @InstanceId", dbInstance);
         }
 
         public List<DBLeaderboardEntry> GetEntries(long instanceId, bool ascending)
@@ -200,6 +222,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public void SetMetaInstances(List<DBMetaInstance> instances)
         {
+            if (instances.Count == 0) return;
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
@@ -222,6 +245,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         public void SetRewards(List<DBRewardEntry> dbRewards)
         {
+            if (dbRewards.Count == 0) return;
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 

@@ -25,4 +25,14 @@
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Cronos" Version="0.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Data\Leaderboards\IMPORTANT.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

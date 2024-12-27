@@ -36,6 +36,16 @@ namespace MHServerEmu.Leaderboards
             _leaderboard = leaderboard;
             InstanceId = (ulong)dbInstance.InstanceId;
             State = dbInstance.State;
+
+            if (dbInstance.ActivationDate == 0 && leaderboard.CanReset)
+            {
+                var currentTime = Clock.UtcNowPrecise;
+                var activationDate = _leaderboard.CalcNextUtcActivationDate(currentTime, currentTime);
+                dbInstance.SetActivationDateTime(activationDate);
+                var dbManager = LeaderboardDatabase.Instance.DBManager;
+                dbManager.UpdateInstanceActivationDate(dbInstance);
+            }
+
             ActivationTime = dbInstance.GetActivationDateTime();
             ExpirationTime = CalcExpirationTime();
             Visible = dbInstance.Visible;

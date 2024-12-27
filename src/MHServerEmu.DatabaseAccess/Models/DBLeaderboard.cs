@@ -9,6 +9,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         public string PrototypeName { get; set; }
         public long ActiveInstanceId { get; set; }
         public bool IsActive { get; set; }
+        public string Schedule { get; set; }
     }
 
     public class DBLeaderboardInstance 

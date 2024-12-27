@@ -3,6 +3,7 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
+using Cronos;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -15,20 +16,24 @@ namespace MHServerEmu.Leaderboards
         public LeaderboardInstance ActiveInstance { get; protected set; }
         public bool IsActive { get => ActiveInstance != null && ActiveInstance.State == LeaderboardState.eLBS_Active; }
         public bool CanReset { get => Prototype != null && Prototype.ResetFrequency != LeaderboardResetFrequency.NeverReset; }
+        public CronExpression Schedule { get; protected set; }
+        public CronExpression ResetSchedule { get; protected set; }
 
-        public Leaderboard(LeaderboardPrototype proto, DBLeaderboard dBLeaderboard)
+        public Leaderboard(LeaderboardPrototype proto, DBLeaderboard dbLeaderboard)
         {
-            LeaderboardId = (PrototypeGuid)dBLeaderboard.LeaderboardId;
             Prototype = proto;
+            LeaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
             Instances = new();
 
+            if (CanReset) InitSchedule(dbLeaderboard);
+
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            var instanceList = dbManager.GetInstances(dBLeaderboard.LeaderboardId, proto.MaxArchivedInstances);
+            var instanceList = dbManager.GetInstances(dbLeaderboard.LeaderboardId, proto.MaxArchivedInstances);
             foreach (var dbInstance in instanceList)
                 AddInstance(dbInstance, true);
 
-            if (dBLeaderboard.ActiveInstanceId != 0)
-                SetActiveInstance((ulong)dBLeaderboard.ActiveInstanceId, LeaderboardState.eLBS_Active);
+            if (dbLeaderboard.ActiveInstanceId != 0)
+                ActiveInstance = GetInstance((ulong)dbLeaderboard.ActiveInstanceId);
         }
 
         public static ulong GenInstanceId(PrototypeGuid leaderboardId)
@@ -39,13 +44,13 @@ namespace MHServerEmu.Leaderboards
         public bool SetActiveInstance(ulong activeInstanceId, LeaderboardState state, bool dbUpdate = false)
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            bool ativate = dbManager.SetActiveInstanceState((long)LeaderboardId, (long)activeInstanceId, (int)state);
+            bool activate = dbManager.SetActiveInstanceState((long)LeaderboardId, (long)activeInstanceId, (int)state);
 
             if (dbUpdate && ActiveInstance != null && ActiveInstance.InstanceId != activeInstanceId)
                 ActiveInstance.SaveEntries();
 
             ActiveInstance = GetInstance(activeInstanceId);
-            return ativate;
+            return activate;
         }
 
         public void AddInstance(DBLeaderboardInstance dbInstance, bool loadEntries)
@@ -107,7 +112,7 @@ namespace MHServerEmu.Leaderboards
 
                                 if (CanReset && newInstanceDb == null)
                                 {
-                                    var nextActivationTime = CalcNextActivationDate(instance.ActivationTime);
+                                    var nextActivationTime = CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
                                     if (nextActivationTime == instance.ActivationTime) continue;
 
                                     newInstanceDb = new()
@@ -136,6 +141,7 @@ namespace MHServerEmu.Leaderboards
                                     {
                                         instance.UpdateDBState(LeaderboardState.eLBS_Rewarded);
                                         instance.SetState(LeaderboardState.eLBS_Rewarded);
+                                        break;
                                     }
                                 }
 
@@ -184,24 +190,50 @@ namespace MHServerEmu.Leaderboards
             SetActiveInstance((ulong)dbInstance.InstanceId, dbInstance.State, true);
         }
 
-        private DateTime CalcNextActivationDate(DateTime activationTime)
+        private void InitSchedule(DBLeaderboard dbLeaderboard)
         {
-            return Prototype.ResetFrequency switch
+            SetSchedule(dbLeaderboard);
+            ResetSchedule = LeaderboardSchedule.GetResetSchedule(Prototype.ResetFrequency);
+        }
+
+        public void SetSchedule(DBLeaderboard dbLeaderboard)
+        {
+            if (dbLeaderboard.IsActive && LeaderboardSchedule.IsValidSchedule(dbLeaderboard.Schedule))
+                Schedule = CronExpression.Parse(dbLeaderboard.Schedule);
+            else
+                Schedule = CronExpression.EveryMinute;
+        }
+
+        public DateTime CalcNextUtcActivationDate(DateTime activationTime, DateTime currentTime)
+        {
+            currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 
+                currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
+
+            var nextReset = GetNextUtcResetDatetime(activationTime);
+
+            if (nextReset < currentTime)
             {
-                LeaderboardResetFrequency.Every10minutes => activationTime.AddMinutes(10),
-                LeaderboardResetFrequency.Every15minutes => activationTime.AddMinutes(15),
-                LeaderboardResetFrequency.Every30minutes => activationTime.AddMinutes(30),
-                LeaderboardResetFrequency.Every1hour => activationTime.AddHours(1),
-                LeaderboardResetFrequency.Every2hours => activationTime.AddHours(2),
-                LeaderboardResetFrequency.Every3hours => activationTime.AddHours(3),
-                LeaderboardResetFrequency.Every4hours => activationTime.AddHours(4),
-                LeaderboardResetFrequency.Every8hours => activationTime.AddHours(8),
-                LeaderboardResetFrequency.Every12hours => activationTime.AddHours(12),
-                LeaderboardResetFrequency.Daily => activationTime.AddDays(1),
-                LeaderboardResetFrequency.Weekly => activationTime.AddDays(7),
-                LeaderboardResetFrequency.Monthly => activationTime.AddMonths(1),
-                _ => activationTime,
-            };
+                nextReset = new DateTime(
+                    currentTime.Year, currentTime.Month, currentTime.Day,
+                    nextReset.Hour, nextReset.Minute, nextReset.Second, DateTimeKind.Utc);
+
+                if (nextReset < currentTime)
+                    nextReset = GetNextUtcResetDatetime(currentTime);
+            }
+
+            var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
+
+            var nextActivation = Schedule.GetNextOccurrence(nextResetDay, true);
+            if (nextActivation.HasValue == false)
+                return activationTime;
+            else
+                return nextActivation > nextResetDay ? nextActivation.Value : nextReset;
+        }
+
+        private DateTime GetNextUtcResetDatetime(DateTime activationTime)
+        {
+            var nextReset = ResetSchedule.GetNextOccurrence(activationTime);
+            return nextReset ?? activationTime;
         }
 
         public void OnStateChange(ulong instanceId, LeaderboardState state)
