@@ -11,8 +11,6 @@ namespace MHServerEmu.Commands.Implementations
         [Command("jsonreload", "Reload json config file for leaderboards.\nUsage: leaderboards jsonreload")]
         public string JsonReload(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help leaderboards jsonreload' to get help.";
-
             LeaderboardDatabase.Instance.ReloadJsonConfig();
             return "Leaderboards Reloaded";
         }
