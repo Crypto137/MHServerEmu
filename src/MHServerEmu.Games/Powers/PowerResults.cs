@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers.Conditions;
@@ -46,6 +47,9 @@ namespace MHServerEmu.Games.Powers
 
             for (int i = 0; i < _damageForClient.Length; i++)
                 _damageForClient[i] = default;
+
+            foreach (Condition condition in _conditionAddList)
+                ConditionCollection.DeleteCondition(condition);
 
             _conditionAddList.Clear();
             _conditionRemoveList.Clear();

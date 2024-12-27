@@ -1303,7 +1303,10 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (IsInWorld == false)
+            {
+                powerResults.Clear();   // Clearing the results instance returns any conditions it may have to the pool
                 return false;
+            }
 
             // TODO: Procs
 

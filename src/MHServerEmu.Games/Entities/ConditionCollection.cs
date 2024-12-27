@@ -676,12 +676,12 @@ namespace MHServerEmu.Games.Entities
             return new Iterator(this, false).GetEnumerator();
         }
 
-        public Condition AllocateCondition()
+        public static Condition AllocateCondition()
         {
             return ConditionPool.Instance.Get();
         }
 
-        public bool DeleteCondition(Condition condition)
+        public static bool DeleteCondition(Condition condition)
         {
             if (condition == null) return Logger.WarnReturn(false, "DeleteCondition(): condition == null");
             if (condition.IsInCollection) return Logger.WarnReturn(false, "DeleteCondition(): condition.IsInCollection");

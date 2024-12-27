@@ -759,7 +759,7 @@ namespace MHServerEmu.Games.Powers
             // Apply the calculated number of stacks
             for (int i = 0; i < numStacksToApply; i++)
             {
-                Condition condition = conditionCollection.AllocateCondition();
+                Condition condition = ConditionCollection.AllocateCondition();
                 condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration);
                 results.AddConditionToAdd(condition);
             }
