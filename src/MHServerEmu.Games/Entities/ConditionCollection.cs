@@ -455,7 +455,7 @@ namespace MHServerEmu.Games.Entities
                     break;
 
                 success = true;
-                Logger.Trace($"AddCondition(): {condition} - {condition.Duration.TotalMilliseconds} ms");
+                //Logger.Trace($"AddCondition(): {condition} - {condition.Duration.TotalMilliseconds} ms");
 
                 condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
 
@@ -556,8 +556,6 @@ namespace MHServerEmu.Games.Entities
 
         public bool ResetOrRemoveCondition(Condition condition)
         {
-            Logger.Debug($"ResetOrRemoveCondition(): {condition}");
-
             // TODO: reset
 
             // Removing by id also checks to make sure this condition is in this collection
@@ -725,7 +723,7 @@ namespace MHServerEmu.Games.Entities
             if (_owner == null) return Logger.WarnReturn(false, "RemoveCondition(): _owner == null");
             if (condition == null) return false;
 
-            Logger.Trace($"RemoveCondition(): {condition}");
+            //Logger.Trace($"RemoveCondition(): {condition}");
 
             CancelScheduledConditionEnd(condition);
 

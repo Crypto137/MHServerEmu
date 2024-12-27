@@ -4203,8 +4203,6 @@ namespace MHServerEmu.Games.Powers
             if (payload.Properties.HasProperty(PropertyEnum.BounceCountPayload) == false)
                 return false;
 
-            Logger.Debug($"TryBouncePayload(): {payload.PowerPrototype}");
-
             Game game = payload.Game;
 
             // Start building the bounce message

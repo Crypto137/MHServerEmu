@@ -2342,8 +2342,6 @@ namespace MHServerEmu.Games.Entities
             if (amount <= 0)
                 return true;
 
-            Logger.Debug($"AwardBonusItemFindPoints(): amount={amount} to [{this}]");
-
             int points = Properties[PropertyEnum.BonusItemFindPoints] + amount;
             if (points >= lootGlobalsProto.BonusItemFindNumPointsForBonus)
             {

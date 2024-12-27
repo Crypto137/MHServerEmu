@@ -1462,7 +1462,6 @@ namespace MHServerEmu.Games.Entities
             PowerUseResult result = CanActivatePower(power, settings.TargetEntityId, settings.TargetPosition, settings.Flags, settings.ItemSourceId);
             if (result == PowerUseResult.Success)
             {
-                Logger.Debug($"TryAutoActivatePower(): {powerProto}");
                 result = ActivatePower(power, ref settings);
                 if (result != PowerUseResult.Success)
                     Logger.Warn($"TryAutoActivatePower(): Failed to auto-activate power [{powerProto}] for [{this}] for reason [{result}]");
