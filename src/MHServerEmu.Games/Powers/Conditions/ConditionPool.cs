@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 
-namespace MHServerEmu.Games.Powers
+namespace MHServerEmu.Games.Powers.Conditions
 {
     public sealed class ConditionPool
     {

@@ -13,46 +13,46 @@ using MHServerEmu.Games.Properties.Evals;
 
 using StackId = MHServerEmu.Games.Entities.ConditionCollection.StackId;
 
-namespace MHServerEmu.Games.Powers
+namespace MHServerEmu.Games.Powers.Conditions
 {
     [Flags]
     public enum ConditionSerializationFlags : uint
     {
         // These serialization flags are used to reduce the size of serialized conditions
         // by omitting data that can be derived from the prototype and the owner.
-        None                        = 0,
-        CreatorIsOwner              = 1 << 0,
-        CreatorIsUltimateCreator    = 1 << 1,
+        None = 0,
+        CreatorIsOwner = 1 << 0,
+        CreatorIsUltimateCreator = 1 << 1,
 
         // The condition prototype is identified either by a condition prototype ref if it's a standalone condition,
         // or a creator power prototype ref + index in the AppliesConditions mixin list if this condition's prototype
         // is mixed into a PowerPrototype.
-        NoConditionPrototypeRef     = 1 << 2,   // _conditionPrototypeRef != PrototypeId.Invalid
-        NoCreatorPowerPrototypeRef  = 1 << 3,   // _creatorPowerPrototypeRef != PrototypeId.Invalid
-        HasCreatorPowerIndex        = 1 << 4,   // _creatorPowerIndex >= 0
+        NoConditionPrototypeRef = 1 << 2,   // _conditionPrototypeRef != PrototypeId.Invalid
+        NoCreatorPowerPrototypeRef = 1 << 3,   // _creatorPowerPrototypeRef != PrototypeId.Invalid
+        HasCreatorPowerIndex = 1 << 4,   // _creatorPowerIndex >= 0
 
-        HasOwnerAssetRef            = 1 << 5,   // _ownerAssetRef != AssetId.Invalid (defaults to owner.EntityWorldAsset if OwnerAssetRefOverride is not set)
-        HasPauseTime                = 1 << 6,   // _pauseTime != TimeSpan.Zero
-        HasDuration                 = 1 << 7,   // _duration != 0
-        IsDisabled                  = 1 << 8,   // _isEnabled == false
-        HasOwnerAssetRefOverride    = 1 << 9,   // owner == null || owner.Id != _ultimateCreatorId || _ownerAssetRef != owner.EntityWorldAsset
+        HasOwnerAssetRef = 1 << 5,   // _ownerAssetRef != AssetId.Invalid (defaults to owner.EntityWorldAsset if OwnerAssetRefOverride is not set)
+        HasPauseTime = 1 << 6,   // _pauseTime != TimeSpan.Zero
+        HasDuration = 1 << 7,   // _duration != 0
+        IsDisabled = 1 << 8,   // _isEnabled == false
+        HasOwnerAssetRefOverride = 1 << 9,   // owner == null || owner.Id != _ultimateCreatorId || _ownerAssetRef != owner.EntityWorldAsset
 
         // Normally, _updateInterval and _cancelOnFlags are taken from the ConditionPrototype, but if any of these two flags
         // are set, it means that the default values are overriden.
-        HasUpdateIntervalOverride   = 1 << 10,
-        HasCancelOnFlagsOverride    = 1 << 11
+        HasUpdateIntervalOverride = 1 << 10,
+        HasCancelOnFlagsOverride = 1 << 11
     }
 
     [Flags]
     public enum ConditionCancelOnFlags : uint
     {
-        None                        = 0,
-        OnHit                       = 1 << 0,
-        OnKilled                    = 1 << 1,
-        OnPowerUse                  = 1 << 2,
-        OnPowerUsePost              = 1 << 3,
-        OnTransfer                  = 1 << 4,
-        OnIntraRegionTeleport       = 1 << 5
+        None = 0,
+        OnHit = 1 << 0,
+        OnKilled = 1 << 1,
+        OnPowerUse = 1 << 2,
+        OnPowerUsePost = 1 << 3,
+        OnTransfer = 1 << 4,
+        OnIntraRegionTeleport = 1 << 5
     }
 
     public class Condition
@@ -390,7 +390,7 @@ namespace MHServerEmu.Games.Powers
 
             _creatorId = payload.PowerOwnerId;
             _ultimateCreatorId = payload.UltimateOwnerId != Entity.InvalidId ? payload.UltimateOwnerId : payload.PowerOwnerId;
-            
+
             WorldEntity ultimateCreator = payload.Game.EntityManager.GetEntity<WorldEntity>(_ultimateCreatorId);
             if (ultimateCreator != null)
             {
@@ -441,7 +441,7 @@ namespace MHServerEmu.Games.Powers
         public bool InitializeFromOtherCondition(ulong conditionId, Condition other, WorldEntity owner)
         {
             _conditionId = conditionId;
-            
+
             // This method is used to copy a condition from one avatar to another, so the owner changes
             _creatorId = owner.Id;
             _ultimateCreatorId = owner.Id;

@@ -2,7 +2,7 @@
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
-namespace MHServerEmu.Games.Powers
+namespace MHServerEmu.Games.Powers.Conditions
 {
     /// <summary>
     /// Functions for filtering <see cref="Condition"/> instances.

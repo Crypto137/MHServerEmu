@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 
 namespace MHServerEmu.Games.Properties
 {

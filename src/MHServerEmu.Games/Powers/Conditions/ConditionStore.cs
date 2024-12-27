@@ -4,7 +4,7 @@ using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 
-namespace MHServerEmu.Games.Powers
+namespace MHServerEmu.Games.Powers.Conditions
 {
     /// <summary>
     /// Contains data required to persistently store a <see cref="Condition"/>.

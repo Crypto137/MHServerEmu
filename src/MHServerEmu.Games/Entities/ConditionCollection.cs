@@ -14,6 +14,7 @@ using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
@@ -1018,7 +1019,7 @@ namespace MHServerEmu.Games.Entities
         }
 
         /// <summary>
-        /// Represents a <see cref="Powers.Condition"/> stored in a <see cref="ConditionCollection"/>.
+        /// Represents a <see cref="Powers.Conditions.Condition"/> stored in a <see cref="ConditionCollection"/>.
         /// </summary>
         public struct Handle
         {

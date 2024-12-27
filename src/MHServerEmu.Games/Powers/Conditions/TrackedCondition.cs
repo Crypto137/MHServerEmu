@@ -1,4 +1,4 @@
-﻿namespace MHServerEmu.Games.Powers
+﻿namespace MHServerEmu.Games.Powers.Conditions
 {
     /// <summary>
     /// Represents a <see cref="Condition"/> tracked by the <see cref="Power"/> it was applied by.

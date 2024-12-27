@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
