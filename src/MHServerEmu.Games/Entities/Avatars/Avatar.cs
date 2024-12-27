@@ -984,7 +984,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     continue;
                 }
 
-                if (item.GetPowerGranted(out PrototypeId powerGrantedProtoRef) && powerGrantedProtoRef == powerGrantedProtoRef)
+                if (item.GetPowerGranted(out PrototypeId powerGrantedProtoRef) && powerGrantedProtoRef == powerProtoRef)
                     return item.Id;
             }
 

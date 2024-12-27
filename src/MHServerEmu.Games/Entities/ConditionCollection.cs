@@ -26,8 +26,6 @@ namespace MHServerEmu.Games.Entities
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static int ConditionCount = 0;  // test variable to make sure we delete all conditions we allocate
-
         private readonly WorldEntity _owner;
 
         private readonly SortedDictionary<ulong, Condition> _currentConditions = new();
