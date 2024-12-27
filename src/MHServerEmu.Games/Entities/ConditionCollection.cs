@@ -14,6 +14,7 @@ using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -79,6 +80,55 @@ namespace MHServerEmu.Games.Entities
                         success &= condition.Serialize(archive, _owner);
                         if (InsertCondition(condition) == false && condition.IsInCollection == false)
                             DeleteCondition(condition);
+                    }
+                }
+            }
+            else if (archive.IsPersistent && archive.Version >= ArchiveVersion.ImplementedConditionPersistence)
+            {
+                uint numConditions = (uint)GetPersistentConditionCount();
+                success &= Serializer.Transfer(archive, ref numConditions);
+
+                // When GetPersistentConditionCount() fails validation, it returns 0. Return early to avoid partial writes.
+                if (numConditions == 0)
+                    return success;
+
+                if (archive.IsPacking)
+                {
+                    foreach (Condition condition in _currentConditions.Values)
+                    {
+                        if (condition.IsPersistToDB() == false)
+                            continue;
+
+                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        ConditionStore conditionStore = new(properties);
+                        success &= condition.SaveToConditionStore(ref conditionStore);
+                        success &= conditionStore.Serialize(archive);
+                        numConditions--;
+                    }
+
+                    // This is very bad and should never happen
+                    if (numConditions != 0)
+                        Logger.Error($"Serialize(): Count mismatch when serializing persistent conditions for owner [{_owner}]");
+                }
+                else
+                {
+                    for (uint i = 0; i < numConditions; i++)
+                    {
+                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        ConditionStore conditionStore = new(properties);
+                        success &= conditionStore.Serialize(archive);
+
+                        Condition condition = AllocateCondition();
+                        if (condition.InitializeFromConditionStore(NextConditionId, ref conditionStore, _owner))
+                        {
+                            InsertCondition(condition);
+                        }
+                        else
+                        {
+                            success = false;
+                            Logger.Error($"Serialize(): Failed to initialize condition from ConditionStore for owner [{_owner}]");
+                            DeleteCondition(condition);
+                        }
                     }
                 }
             }
@@ -896,6 +946,28 @@ namespace MHServerEmu.Games.Entities
                 if (condition.CanStackWith(stackId))
                     RemoveCondition(condition);
             }
+        }
+
+        private int GetPersistentConditionCount()
+        {
+            int count = 0;
+
+            foreach (Condition condition in _currentConditions.Values)
+            {
+                if (condition.IsPersistToDB() == false)
+                    continue;
+
+                // Do some extra validation
+                if (condition.ConditionPrototypeRef == PrototypeId.Invalid)
+                    return Logger.WarnReturn(0, "GetPersistentConditionCount(): condition.ConditionPrototypeRef == PrototypeId.Invalid");
+
+                if (condition.IsFinite == false)
+                    return Logger.WarnReturn(0, "GetPersistentConditionCount(): condition.IsFinite == false");
+
+                count++;
+            }
+
+            return count;
         }
 
         public readonly struct StackId : IEquatable<StackId>

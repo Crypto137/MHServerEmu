@@ -465,6 +465,154 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public bool InitializeFromConditionStore(ulong conditionId, ref ConditionStore conditionStore, WorldEntity owner)
+        {
+            TimeSpan currentTime = Game.Current.CurrentTime;
+
+            // Restore prototype-derivable data
+            _conditionId = conditionId;
+            _creatorId = 0;
+            _ultimateCreatorId = 0;
+
+            _conditionPrototypeRef = conditionStore.ConditionProtoRef;
+            _conditionPrototype = _conditionPrototypeRef.As<ConditionPrototype>();
+            if (_conditionPrototype == null) return Logger.ErrorReturn(false, "InitializeFromConditionStore(): _conditionPrototype == null");
+
+            _creatorPowerPrototypeRef = conditionStore.CreatorPowerPrototypeRef;
+            _creatorPowerPrototype = _creatorPowerPrototypeRef.As<PowerPrototype>();
+            _creatorPowerIndex = -1;
+
+            _startTime = currentTime;
+
+            if (conditionStore.IsPaused)
+                _pauseTime = currentTime;
+
+            _updateIntervalMS = _conditionPrototype.UpdateIntervalMS;
+            _cancelOnFlags = _conditionPrototype.CancelOnFlags;
+
+            // Restore duration
+            TimeSpan duration = TimeSpan.FromMilliseconds(conditionStore.TimeRemaining);
+
+            int killCount = conditionStore.Properties[PropertyEnum.ConditionKillCountLimit];
+            if (duration <= TimeSpan.Zero && killCount <= 0)
+            {
+                Logger.Warn($"InitializeFromConditionStore(): Found infinite condition [{this}] without a kill count (owner=[{owner}])");
+                duration = TimeSpan.FromMilliseconds(1);
+            }
+
+            if (conditionStore.SerializeGameTime != 0)
+            {
+                if (IsRealTime())
+                {
+                    TimeSpan timeSinceSerialize = currentTime - TimeSpan.FromMilliseconds(conditionStore.SerializeGameTime);
+                    duration -= timeSinceSerialize;
+
+                    // Expire ASAP if this condition ran out while it was stored
+                    if (duration <= TimeSpan.Zero)
+                        duration = TimeSpan.FromMilliseconds(1);
+                }
+                else
+                {
+                    Logger.Warn($"InitializeFromConditionStore(): Condition [{this}] was saved as a real-time condition, but it's not flagged as real-time in the prototype (owner=[{owner}])");
+                }
+            }
+
+            _durationMS = (long)duration.TotalMilliseconds;
+
+            // Restore properties
+            using PropertyCollection initializeProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            PropertyInfoTable infoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in conditionStore.Properties)
+            {
+                PropertyInfoPrototype propertyInfoProto = infoTable.LookupPropertyInfo(kvp.Key.Enum)?.Prototype;
+                if (propertyInfoProto == null)
+                {
+                    Logger.Warn("StoreCondition(): propertyInfoProto == null");
+                    continue;
+                }
+
+                if (propertyInfoProto.SerializeConditionSrcToCondition == false)
+                    continue;
+
+                switch (kvp.Key.Enum)
+                {
+                    case PropertyEnum.ConditionItemLevel:
+                        initializeProperties[PropertyEnum.ItemLevel] = kvp.Value;
+                        break;
+
+                    case PropertyEnum.CharacterLevel:
+                        initializeProperties.CopyProperty(conditionStore.Properties, kvp.Key);
+                        initializeProperties[PropertyEnum.CombatLevel] = kvp.Value;
+                        break;
+
+                    default:
+                        initializeProperties.CopyProperty(conditionStore.Properties, kvp.Key);
+                        break;
+                }
+            }
+
+            if (GenerateConditionProperties(Properties, _conditionPrototype, initializeProperties, null, owner, owner.Game) == false)
+                return Logger.ErrorReturn(false, $"InitializeFromConditionStore(): Failed to generate properties for [{this}]");
+
+            return true;
+        }
+
+        public bool SaveToConditionStore(ref ConditionStore conditionStore)
+        {
+            conditionStore.ConditionProtoRef = ConditionPrototypeRef;
+            conditionStore.CreatorPowerPrototypeRef = CreatorPowerPrototypeRef;
+            conditionStore.IsPaused = IsPaused;
+
+            // Special handling for conditions that go away after a certain number of kills
+            long timeRemaining = (long)TimeRemaining.TotalMilliseconds;
+            int killCount = Properties[PropertyEnum.ConditionKillCountLimit];
+
+            if (timeRemaining < 0 && killCount > 0)
+                timeRemaining = 0;
+            else if (timeRemaining <= 0 && killCount <= 0)
+                timeRemaining = 1;  // Do not allow conditions without kill counts to become "infinite"
+
+            conditionStore.TimeRemaining = (ulong)timeRemaining;
+
+            // Serialize current game time for conditions that expire in real time when the owner is logged out
+            conditionStore.SerializeGameTime = IsRealTime() ? (ulong)Game.Current.CurrentTime.TotalMilliseconds : 0;
+
+            // Copy properties
+            PropertyCollection propertiesToCopy = Properties;
+            PropertyInfoTable infoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in propertiesToCopy)
+            {
+                PropertyInfoPrototype propertyInfoProto = infoTable.LookupPropertyInfo(kvp.Key.Enum)?.Prototype;
+                if (propertyInfoProto == null)
+                {
+                    Logger.Warn("SaveToConditionStore(): propertyInfoProto == null");
+                    continue;
+                }
+
+                if (propertyInfoProto.SerializeConditionSrcToCondition == false)
+                    continue;
+
+                // Store ItemLevel, which usually does not persist, in a separate property
+                if (kvp.Key.Enum == PropertyEnum.ItemLevel)
+                {
+                    Properties[PropertyEnum.ConditionItemLevel] = kvp.Value;
+                    continue;
+                }
+
+                // Skip non-persistent properties
+                if (propertyInfoProto.ReplicateToDatabase == DatabasePolicy.None)
+                    continue;
+
+                // Copy persistent properties for serialization
+                Properties.CopyProperty(propertiesToCopy, kvp.Key);
+            }
+
+            return true;
+        }
+
         public bool CacheStackId()
         {
             // Non-power conditions cannot stack
