@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.DatabaseAccess.SQLite;
@@ -16,6 +17,8 @@ namespace MHServerEmu.Games.Leaderboards
 {
     public class LeaderboardManager
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+        public static bool Debug = true;
         private bool _cachedActives;
         private EventPointer<UpdateRuleEvent> _updateEvent;
         private EventPointer<RewardsEvent> _rewardsEvent;
@@ -192,7 +195,7 @@ namespace MHServerEmu.Games.Leaderboards
         public void RecountPlayerContext()
         {
             if (LeaderboardsEnabled == false) return;
-
+            
             foreach (var leaderboard in LeaderboardGameDatabase.Instance.GetActiveLeaderboardPrototypes())
                 if (leaderboard.ScoringRules.HasValue())
                     foreach (var ruleProto in leaderboard.ScoringRules)
@@ -216,6 +219,8 @@ namespace MHServerEmu.Games.Leaderboards
                                 UpdateEvent(ruleProto, count, 0);
                         }
                     }
+
+            CheckRewards = true;
         }
 
         private void UpdateEvents()
@@ -236,6 +241,7 @@ namespace MHServerEmu.Games.Leaderboards
 
             if (CheckRewards)
             {
+                if (Debug) Logger.Debug($"DoCheckRewards try get reward for {Owner.GetName()}");
                 _pendingRewards.AddRange(_dbManager.GetRewards(Owner.DatabaseUniqueId));
                 CheckRewards = false;
             }
@@ -283,6 +289,8 @@ namespace MHServerEmu.Games.Leaderboards
             if (entityManager == null) return false;
 
             if (itemProtoRef == PrototypeId.Invalid) return false;
+
+            if (Debug) Logger.Debug($"GiveReward try give reward {itemProtoRef.GetNameFormatted()} for {Owner.GetName()}");
 
             ItemSpec itemSpec = Game.LootManager.CreateItemSpec(itemProtoRef, LootContext.LeaderboardReward, Owner);
             if (itemSpec == null) return false;

@@ -9,6 +9,7 @@ using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -117,6 +118,17 @@ namespace MHServerEmu.Commands.Implementations
             MissionManager.Debug = (flags == Switch.On) ? true : false;
 
             return $"Mission Log [{flags}]";
+        }
+
+        [Command("leaderboard", "Usage: debug leaderboard [on|off].", AccountUserLevel.Admin)]
+        public string Leaderboards(string[] @params, FrontendClient client)
+        {
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
+                flags = Switch.Off;   // Default Off
+
+            LeaderboardManager.Debug = (flags == Switch.On) ? true : false;
+
+            return $"Leaderboard Log [{flags}]";
         }
 
         [Command("metagame", "Usage: debug metagame [on|off].", AccountUserLevel.Admin)]
