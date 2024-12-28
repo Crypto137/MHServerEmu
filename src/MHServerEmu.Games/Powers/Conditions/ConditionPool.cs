@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using System.Text;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Powers.Conditions
 {
@@ -7,8 +8,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         // Allocate conditions in chunks of 256 instances, which should more than enough for one player.
         // Cap the maximum number of chunks at 128, which should be enough for how many players a single game can handle.
         private const int ChunkSize = 256;
-        private const int MaxChunkCount = 128;
-        private const int MaxCapacity = ChunkSize * MaxChunkCount;
+        private const int MaxChunkCount = 256;  // temp increased to 256 until we fix the leak
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -17,6 +17,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         public static ConditionPool Instance { get { ThreadInstance ??= new(); return ThreadInstance; } }
 
         private readonly Stack<Condition> _conditionStack = new();
+        private readonly HashSet<Condition> _allConditions = new();     // Track pooled conditions 
 
         private int _chunkCount = 0;
 
@@ -52,6 +53,16 @@ namespace MHServerEmu.Games.Powers.Conditions
             _conditionStack.Push(condition);
         }
 
+        public string GetConditionList()
+        {
+            StringBuilder sb = new();
+
+            foreach (Condition condition in _allConditions)
+                sb.AppendLine(condition.ToString());
+
+            return sb.ToString();
+        }
+
         private bool AllocateChunk()
         {
             if (_chunkCount >= MaxChunkCount)
@@ -61,8 +72,14 @@ namespace MHServerEmu.Games.Powers.Conditions
             _allocatedCount += ChunkSize;
 
             _conditionStack.EnsureCapacity(_allocatedCount);
+            _allConditions.EnsureCapacity(_allocatedCount);
+
             for (int i = 0; i < ChunkSize; i++)
-                _conditionStack.Push(new());
+            {
+                Condition condition = new();
+                _conditionStack.Push(condition);
+                _allConditions.Add(condition);
+            }
 
             Logger.Trace($"AllocateChunk(): {this}");
             return true;

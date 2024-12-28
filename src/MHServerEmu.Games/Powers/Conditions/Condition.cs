@@ -126,7 +126,10 @@ namespace MHServerEmu.Games.Powers.Conditions
             if (_conditionPrototypeRef != PrototypeId.Invalid)
                 return _conditionPrototypeRef.GetName();
 
-            return $"{_creatorPowerPrototype}[{_conditionPrototype.BlueprintCopyNum}]";
+            if (_creatorPowerPrototype != null)
+                return $"{_creatorPowerPrototype}[{_conditionPrototype.BlueprintCopyNum}]";
+
+            return "INVALID";
         }
 
         public bool Serialize(Archive archive, WorldEntity owner)

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using Gazillion;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -13,6 +14,7 @@ using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
@@ -270,6 +272,22 @@ namespace MHServerEmu.Commands.Implementations
         {
             if (client != null) return "You can only invoke this command from the server console.";
             throw new("Server crash invoked by a debug command.");
+        }
+
+        [Command("getconditionlist", "Gets a list of all conditions tracked by the ConditionPool.")]
+        public string GetConditionList(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            string filePath = $"Download/Conditions_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
+
+            client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
+                .SetResponse($"Saved condition list for the current game to {filePath}")
+                .SetFilerelativepath(filePath)
+                .SetFilecontents(ConditionPool.Instance.GetConditionList())
+                .Build());
+
+            return string.Empty;
         }
     }
 }
