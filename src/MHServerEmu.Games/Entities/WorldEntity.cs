@@ -1302,17 +1302,17 @@ namespace MHServerEmu.Games.Entities
                 Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
             }
 
-            if (IsInWorld == false)
+            bool success = false;
+
+            if (IsInWorld)
             {
-                powerResults.Clear();   // Clearing the results instance returns any conditions it may have to the pool
-                return false;
+                success = ApplyPowerResultsInternal(powerResults);
+
+                // TODO: Procs
             }
 
-            // TODO: Procs
-
-            ApplyPowerResultsInternal(powerResults);
-
-            return true;
+            powerResults.Clear();   // Clear to prevent leaking (TODO: PowerResults pooling)
+            return success;
         }
 
         private bool ApplyPowerResultsInternal(PowerResults powerResults)
@@ -3057,6 +3057,12 @@ namespace MHServerEmu.Games.Entities
         private class ScheduledPowerResultsEvent : CallMethodEventParam1<Entity, PowerResults>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).ApplyPowerResults(p1);
+
+            public override bool OnCancelled()
+            {
+                _param1.Clear();    // Clear to prevent leaking (TODO: PowerResults pooling)
+                return true;
+            }
         }
 
         private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>

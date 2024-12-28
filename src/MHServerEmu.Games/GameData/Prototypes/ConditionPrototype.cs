@@ -350,6 +350,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 using PropertyCollection dummyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
 
+                evalContext.Game = owner?.Game;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
 
                 if (owner != null)
