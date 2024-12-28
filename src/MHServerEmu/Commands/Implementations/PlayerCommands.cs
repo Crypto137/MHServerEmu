@@ -4,10 +4,12 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Grouping;
 
@@ -133,6 +135,29 @@ namespace MHServerEmu.Commands.Implementations
                 player.Properties.AdjustProperty(amount, new(PropertyEnum.Currency, currencyProtoRef));
 
             return $"Successfully given {amount} of all currencies.";
+        }
+
+        [Command("clearconditions", "Clears persistent conditions.\nUsage: player clearconditions")]
+        public string ClearConditions(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+            Avatar avatar = player.CurrentAvatar;
+
+            int count = 0;
+
+            foreach (Condition condition in avatar.ConditionCollection)
+            {
+                if (condition.IsPersistToDB() == false)
+                    continue;
+
+                avatar.ConditionCollection.RemoveCondition(condition.Id);
+                count++;
+            }
+
+            return $"Cleared {count} persistent conditions.";
         }
     }
 }
