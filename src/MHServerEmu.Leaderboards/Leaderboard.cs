@@ -161,7 +161,10 @@ namespace MHServerEmu.Leaderboards
 
                             if (instance.SetState(LeaderboardState.eLBS_RewardsPending))
                                 if (instance.GiveRewards())
+                                {
+                                    instance.UpdateDBState(LeaderboardState.eLBS_Rewarded);
                                     instance.SetState(LeaderboardState.eLBS_Rewarded);
+                                }
 
                             break;
                     }

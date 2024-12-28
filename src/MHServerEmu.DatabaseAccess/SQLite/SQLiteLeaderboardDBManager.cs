@@ -261,7 +261,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using SQLiteConnection connection = GetConnection();
 
             return connection.Query<DBRewardEntry>(@"
-                SELECT * FROM Rewards WHERE GameId = @GameId AND RewardedDate = 0",
+                SELECT * FROM Rewards WHERE GameId = @GameId AND RewardedDate IS NULL",
                 new { GameId = (long)gameId }).ToList();
         }
 

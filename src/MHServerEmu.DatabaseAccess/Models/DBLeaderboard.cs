@@ -102,6 +102,8 @@ namespace MHServerEmu.DatabaseAccess.Models
         public long CreationDate {  get; set; }
         public long RewardedDate { get; set; }
 
+        public DBRewardEntry() { }
+
         public DBRewardEntry(long leaderboardId, long instanceId, long rewardId, long gameId, int rank)
         {
             LeaderboardId = leaderboardId;
