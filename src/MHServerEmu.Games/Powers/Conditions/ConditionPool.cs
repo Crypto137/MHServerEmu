@@ -17,47 +17,55 @@ namespace MHServerEmu.Games.Powers.Conditions
         public static ConditionPool Instance { get { ThreadInstance ??= new(); return ThreadInstance; } }
 
         private readonly Stack<Condition> _conditionStack = new();
-        private readonly HashSet<Condition> _allConditions = new();     // Track pooled conditions 
+        private readonly HashSet<Condition> _activeConditions = new();  // Track all active conditions to prevent returning multiple times
 
         private int _chunkCount = 0;
-
         private int _allocatedCount = 0;
-        private int _activeCount = 0;
 
         private ConditionPool() { }
 
         public override string ToString()
         {
-            return $"chunks={_chunkCount}/{MaxChunkCount}, active={_activeCount}/{_allocatedCount}";
+            return $"chunks={_chunkCount}/{MaxChunkCount}, active={_activeConditions.Count}/{_allocatedCount}";
         }
 
         public Condition Get()
         {
-            _activeCount++;
+            Condition condition;
 
             if (_conditionStack.Count == 0 && AllocateChunk() == false)
-                return Logger.WarnReturn(new Condition(), $"Get(): Exceeded maximum capacity ({this})");
+            {
+                Logger.WarnReturn(new Condition(), $"Get(): Exceeded maximum capacity ({this})");
+                condition = new();
+            }
+            else
+            {
+                condition = _conditionStack.Pop();
+            }
 
+            _activeConditions.Add(condition);
             //Logger.Debug($"Get(): {this}");
-            return _conditionStack.Pop();
+            return condition;
         }
 
-        public void Return(Condition condition)
+        public bool Return(Condition condition)
         {
-            _activeCount--;
+            if (_activeConditions.Remove(condition) == false)
+                return Logger.WarnReturn(false, $"Return(): Condition [{condition}] is not an active condition tracked by this pool");  
 
             if (_conditionStack.Count >= _allocatedCount)
-                return;
+                return false;
 
             condition.Clear();
             _conditionStack.Push(condition);
+            return true;
         }
 
         public string GetConditionList()
         {
             StringBuilder sb = new();
 
-            foreach (Condition condition in _allConditions)
+            foreach (Condition condition in _activeConditions)
                 sb.AppendLine(condition.ToString());
 
             return sb.ToString();
@@ -72,14 +80,10 @@ namespace MHServerEmu.Games.Powers.Conditions
             _allocatedCount += ChunkSize;
 
             _conditionStack.EnsureCapacity(_allocatedCount);
-            _allConditions.EnsureCapacity(_allocatedCount);
+            _activeConditions.EnsureCapacity(_allocatedCount);
 
             for (int i = 0; i < ChunkSize; i++)
-            {
-                Condition condition = new();
-                _conditionStack.Push(condition);
-                _allConditions.Add(condition);
-            }
+                _conditionStack.Push(new());
 
             Logger.Trace($"AllocateChunk(): {this}");
             return true;

@@ -914,7 +914,10 @@ namespace MHServerEmu.Games.Powers
             {
                 WorldEntity target = entityManager.GetEntity<WorldEntity>(results.TargetId);
                 if (target == null || target.IsInWorld == false)
+                {
+                    results.Clear();    // Clear to prevent leaking (TODO: PowerResults pooling)
                     continue;
+                }
 
                 target.ScheduleApplyPowerResultsEvent(results);
             }

@@ -49,7 +49,10 @@ namespace MHServerEmu.Games.Powers
                 _damageForClient[i] = default;
 
             foreach (Condition condition in _conditionAddList)
-                ConditionCollection.DeleteCondition(condition);
+            {
+                if (condition.IsInCollection == false)
+                    ConditionCollection.DeleteCondition(condition);
+            }
 
             _conditionAddList.Clear();
             _conditionRemoveList.Clear();
