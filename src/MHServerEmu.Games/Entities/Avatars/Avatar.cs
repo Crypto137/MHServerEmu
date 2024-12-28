@@ -1746,7 +1746,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             float stackingExperienceBonusPct = 0f;
 
-            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.LootBonusRarityStackCount))
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.ExperienceBonusStackCount))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
                 int stackCount = kvp.Value;
