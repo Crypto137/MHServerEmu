@@ -1042,6 +1042,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Progression table powers
+            indexProps = new(1, CharacterLevel, CombatLevel);   // use rank 1 for power progression (todo: remove this when we have everything working properly)
+
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
                 AssignPower(powerProgressionEntry.PowerAssignment.Ability, indexProps);
 
@@ -1072,6 +1074,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (PrototypeId stealablePowerInfoProtoRef in avatarPrototype.StealablePowersAllowed)
                 {
                     var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
+                    
+                    // Skip assigning stealable passives for now
+                    PowerPrototype powerProto = stealablePowerInfo.Power.As<PowerPrototype>();
+                    if (powerProto.Activation == PowerActivationType.Passive)
+                        continue;
+
                     AssignPower(stealablePowerInfo.Power, indexProps);
                 }
             }
