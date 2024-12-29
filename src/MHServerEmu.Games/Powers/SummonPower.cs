@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -9,6 +10,8 @@ namespace MHServerEmu.Games.Powers
 {
     public class SummonPower : Power
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
         }
@@ -29,6 +32,8 @@ namespace MHServerEmu.Games.Powers
                 return base.Activate(ref settings);
 
             // Do the hackery
+            Logger.Debug($"Activate(): {Prototype}");   // log in case something unexpected triggers this
+
             SummonPowerPrototype summonPowerProto = Prototype as SummonPowerPrototype;
 
             PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, PrototypeDataRef);
