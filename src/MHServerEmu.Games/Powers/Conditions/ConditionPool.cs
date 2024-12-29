@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             _activeConditions.EnsureCapacity(_allocatedCount);
 
             for (int i = 0; i < ChunkSize; i++)
-                _conditionStack.Push(new());
+                _conditionStack.Push(new() { IsInPool = true });
 
             Logger.Trace($"AllocateChunk(): {this}");
             return true;
