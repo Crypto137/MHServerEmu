@@ -34,19 +34,23 @@ namespace MHServerEmu.Core.Metrics.Categories
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // At 20 FPS this gives us about 51.2 seconds of data
-        private readonly TimeTracker _frameTimeTracker = new(1024);
-        private readonly TimeTracker _frameTriggerEventsTimeTracker = new(1024);
-        private readonly TimeTracker _frameLocomoteEntitiesTimeTracker = new(1024);
-        private readonly TimeTracker _framePhysicsResolveEntitiesTimeTracker = new(1024);
-        private readonly TimeTracker _frameProcessDeferredListsTimeTracker = new(1024);
-        private readonly TimeTracker _frameSendAllPendingMessagesTime = new(1024);
+        private const int NumSamples = 1024;
 
-        private readonly FloatTracker _catchUpFrameCountTracker = new(1024);
-        private readonly TimeTracker _timeSkipTracker = new(1024);
+        private readonly TimeTracker _frameTimeTracker = new(NumSamples);
+        private readonly TimeTracker _frameTriggerEventsTimeTracker = new(NumSamples);
+        private readonly TimeTracker _frameLocomoteEntitiesTimeTracker = new(NumSamples);
+        private readonly TimeTracker _framePhysicsResolveEntitiesTimeTracker = new(NumSamples);
+        private readonly TimeTracker _frameProcessDeferredListsTimeTracker = new(NumSamples);
+        private readonly TimeTracker _frameSendAllPendingMessagesTime = new(NumSamples);
 
-        private readonly FloatTracker _scheduledEventsPerUpdateTracker = new(1024);
-        private readonly FloatTracker _eventSchedulerFramesPerUpdate = new(1024);
-        private readonly FloatTracker _remainingScheduledEventsTracker = new(1024);
+        private readonly FloatTracker _catchUpFrameCountTracker = new(NumSamples);
+        private readonly TimeTracker _timeSkipTracker = new(NumSamples);
+
+        private readonly FloatTracker _scheduledEventsPerUpdateTracker = new(NumSamples);
+        private readonly FloatTracker _eventSchedulerFramesPerUpdate = new(NumSamples);
+        private readonly FloatTracker _remainingScheduledEventsTracker = new(NumSamples);
+
+        private readonly FloatTracker _entityCountTracker = new(NumSamples);
 
         public ulong GameId { get; }
 
@@ -105,6 +109,10 @@ namespace MHServerEmu.Core.Metrics.Categories
                     _remainingScheduledEventsTracker.Track(metricValue.FloatValue);
                     break;
 
+                case GamePerformanceMetricEnum.EntityCount:
+                    _entityCountTracker.Track(metricValue.FloatValue);
+                    break;
+
                 default:
                     Logger.Warn($"Update(): Unknown game performance metric {metricValue.Metric}");
                     break;
@@ -129,6 +137,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             public ReportFloatEntry ScheduledEventsPerUpdate { get; }
             public ReportFloatEntry EventSchedulerFramesPerUpdate { get; }
             public ReportFloatEntry RemainingScheduledEvents { get; }
+            public ReportFloatEntry EntityCount { get; }
 
             public Report(GamePerformanceMetrics metrics)
             {
@@ -143,6 +152,7 @@ namespace MHServerEmu.Core.Metrics.Categories
                 ScheduledEventsPerUpdate = metrics._scheduledEventsPerUpdateTracker.AsReportEntry();
                 EventSchedulerFramesPerUpdate = metrics._eventSchedulerFramesPerUpdate.AsReportEntry();
                 RemainingScheduledEvents = metrics._remainingScheduledEventsTracker.AsReportEntry();
+                EntityCount = metrics._entityCountTracker.AsReportEntry();
             }
 
             public override string ToString()
@@ -159,6 +169,7 @@ namespace MHServerEmu.Core.Metrics.Categories
                 sb.AppendLine($"{nameof(ScheduledEventsPerUpdate)}: {ScheduledEventsPerUpdate}");
                 sb.AppendLine($"{nameof(EventSchedulerFramesPerUpdate)}: {EventSchedulerFramesPerUpdate}");
                 sb.AppendLine($"{nameof(RemainingScheduledEvents)}: {RemainingScheduledEvents}");
+                sb.AppendLine($"{nameof(EntityCount)}: {EntityCount}");
                 return sb.ToString();
             }
         }

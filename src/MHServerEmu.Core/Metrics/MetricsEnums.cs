@@ -19,6 +19,7 @@
         TimeSkip,
         ScheduledEventsPerUpdate,
         EventSchedulerFramesPerUpdate,
-        RemainingScheduledEvents
+        RemainingScheduledEvents,
+        EntityCount
     }
 }

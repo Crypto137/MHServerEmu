@@ -334,6 +334,9 @@ namespace MHServerEmu.Games
                 _lastFixedTimeUpdateProcessTime = _gameTimer.Elapsed - stepStartTime;
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameTime, _lastFixedTimeUpdateProcessTime);
 
+                // Record additional metrics
+                MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.EntityCount, EntityManager.EntityCount);
+
                 if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
                     Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
 
