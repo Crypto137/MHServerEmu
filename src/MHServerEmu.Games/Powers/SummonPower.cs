@@ -31,9 +31,11 @@ namespace MHServerEmu.Games.Powers
             if (item == null)
                 return base.Activate(ref settings);
 
-            // Do the hackery
-            Logger.Debug($"Activate(): {Prototype}");   // log in case something unexpected triggers this
+            // Also pass passive summons from items, we don't have proper cleanup for those
+            if (GetActivationType() == PowerActivationType.Passive || IsItemPower() == false)
+                return base.Activate(ref settings);
 
+            // Do the hackery
             SummonPowerPrototype summonPowerProto = Prototype as SummonPowerPrototype;
 
             PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, PrototypeDataRef);
