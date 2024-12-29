@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Powers
 
             foreach (Condition condition in _conditionAddList)
             {
-                if (condition.IsInCollection == false)
+                if (condition.IsInPool == false && condition.IsInCollection == false)
                     ConditionCollection.DeleteCondition(condition);
             }
 
