@@ -41,6 +41,27 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
+        [Command("listall", "Lists all region instances in the current game.\nUsage: instance listall", AccountUserLevel.User)]
+        public string ListAll(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
+                return string.Empty;
+
+            RegionManager regionManager = playerConnection.Game.RegionManager;
+
+            ChatHelper.SendMetagameMessage(client, "Active Instances:");
+
+            foreach (Region region in regionManager)
+            {
+                TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
+                ChatHelper.SendMetagameMessage(client, $"{region.PrototypeDataRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
+            }
+
+            return string.Empty;
+        }
+
         [Command("reset", "Resets private instances.\nUsage: instance reset", AccountUserLevel.User)]
         public string Reset(string[] @params, FrontendClient client)
         {
