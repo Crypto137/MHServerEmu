@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.Logging
+﻿using System.Runtime.CompilerServices;
+
+namespace MHServerEmu.Core.Logging
 {
     public enum LoggingLevel
     {
@@ -130,16 +132,25 @@
         /// <summary>
         /// Logs a message on the specified <see cref="LoggingLevel"/>.
         /// </summary>
-        private void Log(LoggingLevel level, string message) => LogRouter.AddMessage(level, _name, message);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Log(LoggingLevel level, string message)
+        {
+            LogRouter.AddMessage(level, _name, message);
+        }
 
         /// <summary>
         /// Logs an exception on the specified level.
         /// </summary>
-        private void LogException(LoggingLevel level, string message, Exception exception) => Log(level, $"{message} - [Exception] {exception}");
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void LogException(LoggingLevel level, string message, Exception exception)
+        {
+            Log(level, $"{message} - [Exception] {exception}");
+        }
 
         /// <summary>
         /// Logs a message on the specified <see cref="LoggingLevel"/> and returns <typeparamref name="T"/>.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T LogReturn<T>(LoggingLevel level, string message, T returnValue)
         {
             Log(level, message);
