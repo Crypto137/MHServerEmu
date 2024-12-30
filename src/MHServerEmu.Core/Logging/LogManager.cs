@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 
 namespace MHServerEmu.Core.Logging
 {
@@ -8,8 +9,6 @@ namespace MHServerEmu.Core.Logging
     public static class LogManager
     {
         private static readonly Dictionary<string, Logger> _loggerDict = new();
-        private static readonly object _loggerDictLock = new();
-
         private static readonly HashSet<LogTarget> _targets = new();
 
         public static bool Enabled { get; set; }
@@ -31,9 +30,9 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         public static Logger CreateLogger(string name)
         {
-            lock (_loggerDictLock)
+            lock (_loggerDict)
             {
-                if (_loggerDict.TryGetValue(name, out var logger) == false)
+                if (_loggerDict.TryGetValue(name, out Logger logger) == false)
                 {
                     logger = new(name);
                     _loggerDict.Add(name, logger);
@@ -54,9 +53,65 @@ namespace MHServerEmu.Core.Logging
         /// <summary>
         /// Iterates through all attached <see cref="LogTarget"/> instances that accept the specified <see cref="LoggingLevel"/>.
         /// </summary>
-        internal static IEnumerable<LogTarget> IterateTargets(LoggingLevel level)
+        internal static Iterator IterateTargets(LoggingLevel loggingLevel)
         {
-            return _targets.Where(target => (level >= target.MinimumLevel) && (level <= target.MaximumLevel));
+            return new(loggingLevel);
+        }
+
+        internal readonly struct Iterator
+        {
+            private readonly LoggingLevel _loggingLevel;
+
+            public Iterator(LoggingLevel loggingLevel)
+            {
+                _loggingLevel = loggingLevel;
+            }
+
+            public readonly Enumerator GetEnumerator()
+            {
+                return new(_loggingLevel);
+            }
+
+            public struct Enumerator : IEnumerator<LogTarget>
+            {
+                private readonly LoggingLevel _loggingLevel;
+
+                private HashSet<LogTarget>.Enumerator _targetEnumerator;
+
+                public LogTarget Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(LoggingLevel loggingLevel)
+                {
+                    _loggingLevel = loggingLevel;
+                    _targetEnumerator = _targets.GetEnumerator();
+                }
+
+                public bool MoveNext()
+                {
+                    while (_targetEnumerator.MoveNext())
+                    {
+                        LogTarget target = _targetEnumerator.Current;
+                        if (_loggingLevel >= target.MinimumLevel && _loggingLevel <= target.MaximumLevel)
+                        {
+                            Current = target;
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                public void Reset()
+                {
+                    _targetEnumerator = _targets.GetEnumerator();
+                }
+
+                public void Dispose()
+                {
+                    _targetEnumerator.Dispose();
+                }
+            }
         }
     }
 }
