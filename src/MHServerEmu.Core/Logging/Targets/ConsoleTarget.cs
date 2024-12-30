@@ -13,7 +13,7 @@
         /// <summary>
         /// Outputs a <see cref="LogMessage"/> instance to the <see cref="Console"/>.
         /// </summary>
-        public override void ProcessLogMessage(LogMessage message)
+        public override void ProcessLogMessage(in LogMessage message)
         {
             SetForegroundColor(message.Level);
             Console.WriteLine(message.ToString(IncludeTimestamps));

@@ -11,7 +11,19 @@ namespace MHServerEmu.Core.Logging
         private static readonly Dictionary<string, Logger> _loggerDict = new();
         private static readonly HashSet<LogTarget> _targets = new();
 
+        private static readonly DateTime _logTimeBase;
+        private static readonly Stopwatch _logTimeStopwatch;
+
         public static bool Enabled { get; set; }
+
+        public static DateTime LogTimeNow { get => _logTimeBase.Add(_logTimeStopwatch.Elapsed); }
+
+        static LogManager()
+        {
+            // Use a base datetime + stopwatch to get more accurate timing and not poll system time on every log message
+            _logTimeBase = DateTime.Now;
+            _logTimeStopwatch = Stopwatch.StartNew();
+        }
 
         /// <summary>
         /// Creates or returns existing <see cref="Logger"/> instance with the same name as the caller's <see cref="Type"/>.
