@@ -907,23 +907,26 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (hasMeaningfulOwnerResults == false)
-                ownerResults.Clear();
+                ownerResults.Clear();   // Clear results to prevent them from being sent
 
             // Apply results - this is delayed to account for proc effects that may kill our targets
             foreach (PowerResults results in targetResultsList)
             {
-                WorldEntity target = entityManager.GetEntity<WorldEntity>(results.TargetId);
-                if (target == null || target.IsInWorld == false)
-                {
-                    results.Clear();    // Clear to prevent leaking (TODO: PowerResults pooling)
-                    continue;
-                }
+                bool applied = false;
 
-                target.ScheduleApplyPowerResultsEvent(results);
+                WorldEntity target = entityManager.GetEntity<WorldEntity>(results.TargetId);
+                if (target != null && target.IsInWorld)
+                    applied = target.ScheduleApplyPowerResultsEvent(results);
+
+                if (applied == false)
+                    results.Clear();    // leak prevention
             }
 
             if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false && ownerResults.HasMeaningfulResults())
-                powerOwner.ScheduleApplyPowerResultsEvent(ownerResults);
+            {
+                if (powerOwner.ScheduleApplyPowerResultsEvent(ownerResults) == false)
+                    ownerResults.Clear(); // leak prevention
+            }
 
             ListPool<WorldEntity>.Instance.Return(targetList);
             ListPool<PowerResults>.Instance.Return(targetResultsList);

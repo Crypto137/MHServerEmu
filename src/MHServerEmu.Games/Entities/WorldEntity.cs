@@ -3011,10 +3011,10 @@ namespace MHServerEmu.Games.Entities
             ScheduleEntityEvent(scheduledUnassignPower, TimeSpan.FromMilliseconds(1), powerProtoRef);
         }
 
-        public void ScheduleApplyPowerResultsEvent(PowerResults powerResults)
+        public bool ScheduleApplyPowerResultsEvent(PowerResults powerResults)
         {
             if (IsSimulated == false)
-                return;
+                return false;
 
             if (powerResults.PowerPrototype.ApplyResultsImmediately)
             {
@@ -3025,6 +3025,8 @@ namespace MHServerEmu.Games.Entities
                 EventPointer<ScheduledPowerResultsEvent> scheduledPowerResults = new();
                 ScheduleEntityEvent(scheduledPowerResults, TimeSpan.Zero, powerResults);
             }
+
+            return true;
         }
 
         public void CancelExitWorldEvent()
