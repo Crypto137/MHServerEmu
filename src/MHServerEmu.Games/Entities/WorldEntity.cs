@@ -1318,6 +1318,7 @@ namespace MHServerEmu.Games.Entities
         private bool ApplyPowerResultsInternal(PowerResults powerResults)
         {
             // TODO: More stuff
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
             if (powerResults.IsAvoided == false)
             {
@@ -1331,7 +1332,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Adjust health
-            ApplyHealthPowerResults(powerResults);
+            ApplyHealthPowerResults(powerResults, ultimateOwner);
 
             return true;
         }
@@ -1404,7 +1405,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private bool ApplyHealthPowerResults(PowerResults powerResults)
+        private bool ApplyHealthPowerResults(PowerResults powerResults, WorldEntity ultimateOwner)
         {
             Region region = Region;
             if (region == null) return Logger.WarnReturn(false, "ApplyHealthPowerResults(): region == null");
@@ -1413,7 +1414,7 @@ namespace MHServerEmu.Games.Entities
             // NOTE: Health can be > 2147483647, so we have to use 64-bit integers here to avoid overflows
             long health = Properties[PropertyEnum.Health];
             long startHealth = health;
-            float healthDelta = 0f;
+            long healthDelta = 0;
 
             if (powerResults.Flags.HasFlag(PowerResultFlags.InstantKill))
             {
@@ -1423,13 +1424,36 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 // Calculate damage delta normally
-                healthDelta -= powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
-                healthDelta -= powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
-                healthDelta -= powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
-                healthDelta += powerResults.Properties[PropertyEnum.Healing];
+                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
+                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
+                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
+                healthDelta += (long)(float)powerResults.Properties[PropertyEnum.Healing];
             }
 
-            // Apply health delta
+            // Check for invulnerability
+            if (powerResults.TestFlag(PowerResultFlags.Hostile) && Properties[PropertyEnum.Invulnerable])
+                healthDelta = 0;
+
+            // todo: procs
+
+            // Abort if not valid
+            // Case 1: No health change
+            if (healthDelta == 0)
+                return false;
+
+            // Case 2: you are already dead (NANI)
+            if (healthDelta <= 0 && health <= 0)
+                return false;
+
+            // Case 3: Ignores damage from alliance
+            if (ultimateOwner != null)
+            {
+                PrototypeId allianceProtoRef = Properties[PropertyEnum.DamageIgnoreFromAlliance];
+                if (allianceProtoRef != PrototypeId.Invalid && allianceProtoRef == ultimateOwner.Alliance.DataRef)
+                    return false;
+            }
+
+            // Now apply the health delta
             health += (long)MathF.Round(healthDelta);
             health = Math.Clamp(health, Properties[PropertyEnum.HealthMin], Properties[PropertyEnum.HealthMaxOther]);
 
