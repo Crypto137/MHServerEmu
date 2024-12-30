@@ -13,6 +13,8 @@ namespace MHServerEmu.Core.Metrics
         public MemoryMetrics.Report Memory { get; private set; }
         public Dictionary<ulong, GamePerformanceMetrics.Report> Games { get; } = new();
 
+        public bool IsInPool { get; set; }
+
         public PerformanceReport() { }
 
         public void Initialize(MemoryMetrics memoryMetrics, IEnumerable<GamePerformanceMetrics> gameMetrics)

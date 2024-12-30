@@ -19,26 +19,36 @@ namespace MHServerEmu.Core.Memory
         /// </summary>
         public T Get<T>() where T: IPoolable, new()
         {
+            T @object;
+
             if (AvailableCount == 0)
             {
-                T @object = new();
+                @object = new();
 
                 TotalCount++;
                 Logger.Trace($"Get<T>(): Created a new instance of {typeof(T).Name} (TotalCount={TotalCount})");
-
-                return @object;
+            }
+            else
+            {
+                @object = (T)_objects.Pop();
+                @object.IsInPool = false;
             }
 
-            return (T)_objects.Pop();
+            return @object;
         }
 
         /// <summary>
         /// Returns an instance of <typeparamref name="T"/> to the pool for later reuse.
         /// </summary>
-        public void Return<T>(T @object) where T: IPoolable, new()
+        public bool Return<T>(T @object) where T: IPoolable, new()
         {
+            if (@object.IsInPool)
+                return Logger.WarnReturn(false, $"Return<T>(): Attempted to return an instance of {typeof(T).Name} that is already in a pool!");
+
             @object.ResetForPool();
+            @object.IsInPool = true;
             _objects.Push(@object);
+            return true;
         }
     }
 }

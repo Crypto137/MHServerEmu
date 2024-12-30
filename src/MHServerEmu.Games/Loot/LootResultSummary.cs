@@ -35,6 +35,8 @@ namespace MHServerEmu.Games.Loot
 
         public int NumDrops { get => ItemSpecs.Count + AgentSpecs.Count + Credits.Count + Currencies.Count; }
 
+        public bool IsInPool { get; set; }
+
         public LootResultSummary() { }
 
         public void Add(in LootResult lootResult)

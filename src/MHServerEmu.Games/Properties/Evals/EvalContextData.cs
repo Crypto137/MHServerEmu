@@ -12,6 +12,8 @@ namespace MHServerEmu.Games.Properties.Evals
         public PropertyCollection CallerStackProperties { get; set; }
         public PropertyCollection LocalStackProperties { get; set; }
 
+        public bool IsInPool { get; set; }
+
         public EvalContextData()    // Use pooling instead of calling this directly
         {
             for (int i = 0; i < (int)EvalContext.MaxVars; i++)

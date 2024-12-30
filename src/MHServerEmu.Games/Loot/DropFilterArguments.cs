@@ -17,6 +17,8 @@ namespace MHServerEmu.Games.Loot
         public EquipmentInvUISlot Slot { get; set; }
         public float DropDistanceSq { get; set; }
 
+        public bool IsInPool { get; set; }
+
         public DropFilterArguments() { }    // Use pooling instead of calling this directly
 
         public static void Initialize(DropFilterArguments args, LootContext lootContext)

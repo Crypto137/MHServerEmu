@@ -136,6 +136,8 @@ namespace MHServerEmu.Games.Properties
 
         #endregion
 
+        public bool IsInPool { get; set; }
+
         public PropertyCollection() { }
 
         // NOTE: In the client GetProperty() and SetProperty() handle conversion to and from PropertyValue,
