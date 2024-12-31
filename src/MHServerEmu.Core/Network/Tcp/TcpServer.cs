@@ -201,6 +201,9 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task AcceptConnectionsAsync()
         {
+            const int SendTimeout = 6000;           // Exile-like
+            const int SendBufferSize = 1024 * 512;  // 512 KB
+
             const int MaxErrorCount = 100;
             int errorCount = 0;
 
@@ -210,7 +213,8 @@ namespace MHServerEmu.Core.Network.Tcp
                 {
                     // Wait for a connection
                     Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
-                    socket.SendTimeout = 6000;  // Exile-like
+                    socket.SendTimeout = SendTimeout;
+                    socket.SendBufferSize = SendBufferSize;
 
                     // Establish a new client connection
                     TcpClientConnection connection = new(this, socket);
