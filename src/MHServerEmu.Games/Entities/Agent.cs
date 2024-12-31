@@ -1167,7 +1167,9 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             // Set rank for normal powers
-            if (this is Avatar && power.IsNormalPower() && power.IsEmotePower() == false)
+            // REMOVEME: Remove IsTeamUpAgent and set rank only for non-power progression avatar powers
+            // after we implement proper power progression
+            if ((this is Avatar || IsTeamUpAgent) && power.IsNormalPower() && power.IsEmotePower() == false)
             {
                 Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
                 Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
