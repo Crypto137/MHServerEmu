@@ -8,7 +8,7 @@ namespace MHServerEmu.Core.Metrics.Trackers
     /// <summary>
     /// Tracks <see cref="TimeSpan"/> values.
     /// </summary>
-    public class TimeTracker
+    public class TimeTracker : IMetricTracker
     {
         private CircularBuffer<TimeSpan> _buffer;
         private TimeSpan _min = TimeSpan.MaxValue;
@@ -25,8 +25,10 @@ namespace MHServerEmu.Core.Metrics.Trackers
         /// <summary>
         /// Tracks a new <see cref="TimeSpan"/> value.
         /// </summary>
-        public void Track(TimeSpan time)
+        public void Track(in MetricValue metricValue)
         {
+            TimeSpan time = metricValue.TimeValue;
+
             _buffer.Add(time);
             _min = Clock.Min(_min, time);
             _max = Clock.Max(_max, time);

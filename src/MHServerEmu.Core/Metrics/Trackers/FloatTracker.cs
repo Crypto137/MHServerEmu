@@ -7,7 +7,7 @@ namespace MHServerEmu.Core.Metrics.Trackers
     /// <summary>
     /// Tracks <see cref="float"/> values.
     /// </summary>
-    public class FloatTracker
+    public class FloatTracker : IMetricTracker
     {
         private CircularBuffer<float> _buffer;
         private float _min = float.MaxValue;
@@ -24,8 +24,10 @@ namespace MHServerEmu.Core.Metrics.Trackers
         /// <summary>
         /// Tracks a new <see cref="TimeSpan"/> value.
         /// </summary>
-        public void Track(float value)
+        public void Track(in MetricValue metricValue)
         {
+            float value = metricValue.FloatValue;
+
             _buffer.Add(value);
             _min = MathF.Min(_min, value);
             _max = MathF.Max(_max, value);
