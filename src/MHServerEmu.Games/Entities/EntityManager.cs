@@ -55,6 +55,7 @@ namespace MHServerEmu.Games.Entities
         public ulong PeekNextEntityId() { return _nextEntityId; }
 
         public int EntityCount { get => _entityDict.Count; }
+        public int PlayerCount { get => Players.Count; }
 
         public bool IsDestroyingAllEntities { get; private set; } = false;
 
