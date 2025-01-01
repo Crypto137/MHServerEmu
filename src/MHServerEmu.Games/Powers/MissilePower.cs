@@ -49,8 +49,13 @@ namespace MHServerEmu.Games.Powers
             // These are the players that receive NetMessageActivatePower and create the
             // missile on their own, including the player who used the power in the first place.
             _interestedPlayers.Clear();
-            foreach (Player player in Game.NetworkManager.GetInterestedPlayers(Owner, AOINetworkPolicyValues.AOIChannelProximity))
+
+            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
+            foreach (Player player in interestedPlayerList)
                 _interestedPlayers.Add(player);
+
+            ListPool<Player>.Instance.Return(interestedPlayerList);                
 
             CancelCreationDelayEvent();
             return base.Activate(ref settings);
@@ -66,17 +71,23 @@ namespace MHServerEmu.Games.Powers
         protected override bool ApplyInternal(PowerApplication powerApplication)
         {
             // Remove interested players who became no longer interested between activation and application of this power
-            HashSet<Player> currentlyInterestedPlayers = new();
+            HashSet<Player> interestedPlayerSet = HashSetPool<Player>.Instance.Get();
+            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
 
-            foreach (Player player in Game.NetworkManager.GetInterestedPlayers(Owner, AOINetworkPolicyValues.AOIChannelProximity))
-                currentlyInterestedPlayers.Add(player);
+            Game.NetworkManager.GetInterestedPlayers(interestedPlayerList, Owner, AOINetworkPolicyValues.AOIChannelProximity);
+
+            foreach (Player player in interestedPlayerList)
+                interestedPlayerSet.Add(player);
 
             // NOTE: It should be safe to remove from a HashSet<T> during iteration as of .NET 6
             foreach (Player player in _interestedPlayers)
             {
-                if (currentlyInterestedPlayers.Contains(player) == false)
+                if (interestedPlayerSet.Contains(player) == false)
                     _interestedPlayers.Remove(player);
             }
+
+            HashSetPool<Player>.Instance.Return(interestedPlayerSet);
+            ListPool<Player>.Instance.Return(interestedPlayerList);
 
             // Do the application
             if (base.ApplyInternal(powerApplication) == false) return false;

@@ -3017,12 +3017,15 @@ namespace MHServerEmu.Games.Powers
 
                 // Owner is excluded from power activation messages unless explicitly flagged or this is a combo power triggered by the server (therefore the client is not aware of it)
                 bool skipOwner = settings.Flags.HasFlag(PowerActivationSettingsFlags.NotifyOwner) == false && settings.Flags.HasFlag(PowerActivationSettingsFlags.ServerCombo) == false;
-                IEnumerable<PlayerConnection> interestedClients = networkManager.GetInterestedClients(Owner, AOINetworkPolicyValues.AOIChannelProximity, skipOwner);
-                if (interestedClients.Any())
+
+                List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+                if (networkManager.GetInterestedClients(interestedClientList, Owner, AOINetworkPolicyValues.AOIChannelProximity, skipOwner))
                 {
                     NetMessageActivatePower activatePowerMessage = ArchiveMessageBuilder.BuildActivatePowerMessage(this, ref settings);
-                    networkManager.SendMessageToMultiple(interestedClients, activatePowerMessage);
+                    networkManager.SendMessageToMultiple(interestedClientList, activatePowerMessage);
                 }
+
+                ListPool<PlayerConnection>.Instance.Return(interestedClientList);
             }
 
             // ScoringEvent AvatarUsedPower
@@ -3341,18 +3344,22 @@ namespace MHServerEmu.Games.Powers
 
             // The owner's client should have canceled the power it requested on its own
             bool skipOwner = flags.HasFlag(EndPowerFlags.ClientRequest);
-            IEnumerable<PlayerConnection> interestedClients = networkManager.GetInterestedClients(Owner, AOINetworkPolicyValues.AOIChannelProximity, skipOwner);
-            if (interestedClients.Any() == false) return;
 
-            // NOTE: Although NetMessageCancelPower is not an archive, it uses power prototype enums
-            ulong powerPrototypeEnum = (ulong)DataDirectory.Instance.GetPrototypeEnumValue<PowerPrototype>(PrototypeDataRef);
-            var cancelPowerMessage = NetMessageCancelPower.CreateBuilder()
-                .SetIdAgent(Owner.Id)
-                .SetPowerPrototypeId(powerPrototypeEnum)
-                .SetEndPowerFlags((uint)flags)
-                .Build();
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, Owner, AOINetworkPolicyValues.AOIChannelProximity, skipOwner))
+            {
+                // NOTE: Although NetMessageCancelPower is not an archive, it uses power prototype enums
+                ulong powerPrototypeEnum = (ulong)DataDirectory.Instance.GetPrototypeEnumValue<PowerPrototype>(PrototypeDataRef);
+                var cancelPowerMessage = NetMessageCancelPower.CreateBuilder()
+                    .SetIdAgent(Owner.Id)
+                    .SetPowerPrototypeId(powerPrototypeEnum)
+                    .SetEndPowerFlags((uint)flags)
+                    .Build();
 
-            networkManager.SendMessageToMultiple(interestedClients, cancelPowerMessage);
+                networkManager.SendMessageToMultiple(interestedClientList, cancelPowerMessage);
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         protected virtual bool OnEndPowerCheckLoopEnd(EndPowerFlags flags)

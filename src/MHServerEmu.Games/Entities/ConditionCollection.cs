@@ -438,13 +438,16 @@ namespace MHServerEmu.Games.Entities
                 condition.ResetStartTime();
 
                 // Notify interested clients if any
-                var networkManager = _owner.Game.NetworkManager;
-                var interestedClients = networkManager.GetInterestedClients(_owner);
-                if (interestedClients.Any())
+                PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
+
+                List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+                if (networkManager.GetInterestedClients(interestedClientList, _owner))
                 {
                     NetMessageAddCondition addConditionMessage = ArchiveMessageBuilder.BuildAddConditionMessage(_owner, condition);
-                    networkManager.SendMessageToMultiple(interestedClients, addConditionMessage);
+                    networkManager.SendMessageToMultiple(interestedClientList, addConditionMessage);
                 }
+
+                ListPool<PlayerConnection>.Instance.Return(interestedClientList);
 
                 OnInsertCondition(condition);
 
@@ -740,17 +743,20 @@ namespace MHServerEmu.Games.Entities
             _owner.TryActivateOnConditionEndProcs(condition);
 
             // Notify interested clients if any
-            var networkManager = _owner.Game.NetworkManager;
-            var interestedClients = networkManager.GetInterestedClients(_owner);
-            if (interestedClients.Any())
+            PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
+
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, _owner))
             {
                 var deleteConditionMessage = NetMessageDeleteCondition.CreateBuilder()
                     .SetIdEntity(_owner.Id)
                     .SetKey(condition.Id)
                     .Build();
 
-                networkManager.SendMessageToMultiple(interestedClients, deleteConditionMessage);
+                networkManager.SendMessageToMultiple(interestedClientList, deleteConditionMessage);
             }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
 
             // Remove the condition
             if (condition.IsInCollection)

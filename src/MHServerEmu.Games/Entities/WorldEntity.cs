@@ -560,9 +560,9 @@ namespace MHServerEmu.Games.Entities
             {
                 bool excludeOwner = flags.HasFlag(ChangePositionFlags.DoNotSendToOwner);
 
-                var networkManager = Game.NetworkManager;
-                var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner);
-                if (interestedClients.Any())
+                PlayerConnectionManager networkManager = Game.NetworkManager;
+                List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+                if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner))
                 {
                     var entityPositionMessageBuilder = NetMessageEntityPosition.CreateBuilder()
                         .SetIdEntity(Id)
@@ -571,8 +571,10 @@ namespace MHServerEmu.Games.Entities
                     if (position.HasValue) entityPositionMessageBuilder.SetPosition(position.Value.ToNetStructPoint3());
                     if (orientation.HasValue) entityPositionMessageBuilder.SetOrientation(orientation.Value.ToNetStructPoint3());
 
-                    networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
+                    networkManager.SendMessageToMultiple(interestedClientList, entityPositionMessageBuilder.Build());
                 }
+
+                ListPool<PlayerConnection>.Instance.Return(interestedClientList);
             }
 
             // Update map location if needed
@@ -2321,12 +2323,17 @@ namespace MHServerEmu.Games.Entities
 
             // Send locomotion update to interested clients
             // NOTE: Avatars are locomoted on their local client independently, so they are excluded from locomotion updates.
-            var networkManager = Game.NetworkManager;
-            var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false);
-            if (interestedClients.Any() == false) return;
-            NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
-                this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
-            networkManager.SendMessageToMultiple(interestedClients, locomotionStateUpdateMessage);
+            PlayerConnectionManager networkManager = Game.NetworkManager;
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false))
+            {
+                NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
+                    this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
+
+                networkManager.SendMessageToMultiple(interestedClientList, locomotionStateUpdateMessage);
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
