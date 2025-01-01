@@ -75,16 +75,33 @@ namespace MHServerEmu.Games.Network
         public bool GetInterestedPlayers(List<Player> interestedPlayerList, Entity entity,
             AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            foreach (Player player in new PlayerIterator(entity.Game))
+            // Early out if we already know that none of the players match the interest channel filter
+            if ((entity.InterestedPoliciesUnion & interestFilter) == 0)
+                return false;
+
+            // Use InterestReferences to skip players that we know for sure are not interested in this entity
+            EntityManager entityManager = _game.EntityManager;
+            foreach (ulong playerId in entity.InterestReferences)
             {
-                if (skipOwner && entity.IsOwnedBy(player.Id))
+                Player player = entityManager.GetEntity<Player>(playerId);
+                if (player == null)
+                {
+                    Logger.Warn("GetInterestedPlayers(): player == null");
                     continue;
+                }
 
                 if (player.PlayerConnection == null)
                     continue;  // This can happen during packet parsing
 
-                if (player.AOI.InterestedInEntity(entity.Id, interestFilter))
-                    interestedPlayerList.Add(player);
+                // Check ownership
+                if (skipOwner && entity.IsOwnedBy(playerId))
+                    continue;
+
+                // Check channel filter
+                if (player.AOI.InterestedInEntity(entity.Id, interestFilter) == false)
+                    continue;
+
+                interestedPlayerList.Add(player);
             }
 
             return interestedPlayerList.Count > 0;
