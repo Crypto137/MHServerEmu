@@ -4582,6 +4582,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null || blackboard == null) return;
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long summonCooldown = currentTime + game.Random.Next(SummonHydraMinCooldownMS, SummonHydraMaxCooldownMS);
+            summonCooldown = long.MaxValue; // REMOVEME: Disabled summon/invul phases until we have summons working
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = summonCooldown;
         }
 
