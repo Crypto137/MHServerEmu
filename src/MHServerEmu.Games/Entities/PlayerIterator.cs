@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.Entities
 
         public Enumerator GetEnumerator()
         {
-            return new(_game.EntityManager.Players, _region);
+            return new(_game?.EntityManager.Players, _region);
         }
 
         // NOTE: Missions and MetaGames rely on PlayerIterator being IEnumerable for things like ToArray(). Consider optimizing this.
@@ -64,11 +64,14 @@ namespace MHServerEmu.Games.Entities
                 _players = players;
                 _region = region;
 
-                _playerEnumerator = _players.GetEnumerator();
+                _playerEnumerator = _players != null ? _players.GetEnumerator() : default;
             }
 
             public bool MoveNext()
             {
+                if (_players == null)
+                    return false;
+
                 while (_playerEnumerator.MoveNext())
                 {
                     Player player = _playerEnumerator.Current;
@@ -84,7 +87,7 @@ namespace MHServerEmu.Games.Entities
 
             public void Reset()
             {
-                _playerEnumerator = _players.GetEnumerator();
+                _playerEnumerator = _players != null ? _players.GetEnumerator() : default;
             }
 
             public void Dispose()
