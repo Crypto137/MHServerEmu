@@ -1654,7 +1654,7 @@ namespace MHServerEmu.Games.Entities
 
         #region Procs
 
-        public void TryActivateOnConditionEndProcs(Condition condition)
+        public void TryActivateOnConditionEndProcs(Condition condition) // 8
         {
             if (IsInWorld == false)
                 return;
@@ -1669,6 +1669,10 @@ namespace MHServerEmu.Games.Entities
                 PowerActivationSettings settings = new(Id, default, RegionLocation.Position);
                 ActivatePower((PrototypeId)10152747549179582463, ref settings);
             }
+        }
+
+        public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
+        {
         }
 
         #endregion

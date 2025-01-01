@@ -110,14 +110,25 @@ namespace MHServerEmu.Games.Powers
 
         }
 
-        public void HandleTriggerPowerEventOnMissileHit()               // 13
+        public void HandleTriggerPowerEventOnMissileHit(WorldEntity target) // 13
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = target != null ? target.Id : Entity.InvalidId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnMissileHit, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnMissileKilled()            // 14
+        public void HandleTriggerPowerEventOnMissileKilled(WorldEntity killer, Vector3 position)    // 14
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = killer != null ? killer.Id : Entity.InvalidId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.TargetPosition = position;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnMissileKilled, ref settings);
         }
 
         public void HandleTriggerPowerEventOnHotspotNegated()           // 15
