@@ -97,26 +97,25 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Disconnects the specified client connection.
         /// </summary>
-        public virtual void DisconnectClient(TcpClientConnection connection)
+        public void DisconnectClient(TcpClientConnection connection)
         {
             if (connection == null) throw new ArgumentNullException(nameof(connection));
-            if (connection.Connected == false) return;
-
-            connection.Socket.Disconnect(false);
-            RemoveClientConnection(connection);
+            DisconnectClientInternal(connection);
         }
 
         /// <summary>
         /// Disconnects all connected clients.
         /// </summary>
-        public virtual void DisconnectAllClients()
+        public void DisconnectAllClients()
         {
-            // Disconnect all clients within a single lock to prevent new clients from connecting while we do it
+            // Disconnect all clients within a single lock to prevent new clients from being added while we do it
             lock (_connectionLock)
             {
                 foreach (TcpClientConnection connection in _connectionDict.Values)
                 {
-                    if (connection.Connected == false) continue;
+                    if (connection.Connected == false)
+                        continue;
+
                     connection.Socket.Disconnect(false);
                     OnClientDisconnected(connection);
                 }
@@ -155,7 +154,7 @@ namespace MHServerEmu.Core.Network.Tcp
             }
             catch (SocketException)
             {
-                RemoveClientConnection(connection);
+                DisconnectClientInternal(connection);
             }
             catch (Exception e)
             {
@@ -185,7 +184,21 @@ namespace MHServerEmu.Core.Network.Tcp
         #endregion
 
         /// <summary>
-        /// Removes the specified client connection from the server's connection dictionary.
+        /// Disconnects and removes the provided <see cref="TcpClientConnection"/>.
+        /// </summary>
+        private void DisconnectClientInternal(TcpClientConnection connection)
+        {
+            // No null check for connection because this should have already been validated
+
+            Socket socket = connection.Socket;
+            if (socket.Connected)
+                socket.Disconnect(false);
+
+            RemoveClientConnection(connection);
+        }
+
+        /// <summary>
+        /// Removes the provided <see cref="TcpClientConnection"/> and raises the <see cref="OnClientDisconnected(TcpClientConnection)"/> event.
         /// </summary>
         private void RemoveClientConnection(TcpClientConnection connection)
         {
@@ -248,15 +261,28 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task ReceiveDataAsync(TcpClientConnection connection)
         {
+            // The client should send ping messages every 10 seconds, so if we receive no data for 60 seconds,
+            // the connection is pretty much guaranteed to be dead.
+            const int TimeoutMS = 1000 * 60;
+
             while (true)
             {
                 try
                 {
-                    int bytesReceived = await connection.ReceiveAsync().WaitAsync(_cts.Token);
+                    Task<int> receiveTask = connection.ReceiveAsync();
+                    await Task.WhenAny(receiveTask, Task.Delay(TimeoutMS, _cts.Token));
+
+                    if (_cts.Token.IsCancellationRequested)
+                        return;
+
+                    if (receiveTask.IsCompleted == false)
+                        throw new TimeoutException();
+
+                    int bytesReceived = await receiveTask;
 
                     if (bytesReceived == 0)             // Connection lost
                     {
-                        RemoveClientConnection(connection);
+                        DisconnectClientInternal(connection);
                         return;
                     }
 
@@ -273,16 +299,19 @@ namespace MHServerEmu.Core.Network.Tcp
                 }
                 catch (SocketException)
                 {
-                    RemoveClientConnection(connection);
+                    DisconnectClientInternal(connection);
                     return;
                 }
-                catch (TaskCanceledException)
+                catch (TimeoutException)
                 {
+                    Logger.Warn($"ReceiveDataAsync(): Connection to {connection} timed out");
+                    DisconnectClientInternal(connection);
                     return;
                 }
                 catch (Exception e)
                 {
                     Logger.ErrorException(e, nameof(ReceiveDataAsync));
+                    DisconnectClientInternal(connection);
                     return;
                 }
             }
