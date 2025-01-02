@@ -364,6 +364,41 @@ namespace MHServerEmu.Games.Entities
             OnKilled(killer, killFlags, directKiller);   
         }
 
+        public virtual bool OnKilledOther(PowerResults powerResults)
+        {
+            if (powerResults == null) return Logger.WarnReturn(false, "OnKilledOther(): powerResults == null");
+
+            if (IsInWorld == false)
+                return false;
+
+            // Trigger power events
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            if (powerProto != null)
+            {
+                Power power = GetPower(powerProto.DataRef);
+                power?.HandleTriggerPowerEventOnTargetKill(powerResults);
+            }
+
+            // Try activate procs
+            TryActivateOnKillProcs(ProcTriggerType.OnKillOther, powerResults);
+
+            if (powerResults.TestFlag(PowerResultFlags.Critical))
+                TryActivateOnKillProcs(ProcTriggerType.OnKillOtherCritical, powerResults);
+            else if (powerResults.TestFlag(PowerResultFlags.SuperCritical))
+                TryActivateOnKillProcs(ProcTriggerType.OnKillOtherSuperCrit, powerResults);
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.TargetId);
+            if (target != null)
+            {
+                if (target.IsDestructible)
+                    TryActivateOnKillProcs(ProcTriggerType.OnKillDestructible, powerResults);
+                else if (IsFriendlyTo(target))
+                    TryActivateOnKillProcs(ProcTriggerType.OnKillAlly, powerResults);
+            }
+
+            return true;
+        }
+
         public override void Destroy()
         {
             if (Game == null) return;
@@ -560,9 +595,9 @@ namespace MHServerEmu.Games.Entities
             {
                 bool excludeOwner = flags.HasFlag(ChangePositionFlags.DoNotSendToOwner);
 
-                var networkManager = Game.NetworkManager;
-                var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner);
-                if (interestedClients.Any())
+                PlayerConnectionManager networkManager = Game.NetworkManager;
+                List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+                if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, excludeOwner))
                 {
                     var entityPositionMessageBuilder = NetMessageEntityPosition.CreateBuilder()
                         .SetIdEntity(Id)
@@ -571,8 +606,10 @@ namespace MHServerEmu.Games.Entities
                     if (position.HasValue) entityPositionMessageBuilder.SetPosition(position.Value.ToNetStructPoint3());
                     if (orientation.HasValue) entityPositionMessageBuilder.SetOrientation(orientation.Value.ToNetStructPoint3());
 
-                    networkManager.SendMessageToMultiple(interestedClients, entityPositionMessageBuilder.Build());
+                    networkManager.SendMessageToMultiple(interestedClientList, entityPositionMessageBuilder.Build());
                 }
+
+                ListPool<PlayerConnection>.Instance.Return(interestedClientList);
             }
 
             // Update map location if needed
@@ -1306,18 +1343,46 @@ namespace MHServerEmu.Games.Entities
 
             if (IsInWorld)
             {
-                success = ApplyPowerResultsInternal(powerResults);
+                WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+                powerOwner ??= Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
-                // TODO: Procs
+                if (powerResults.IsAtMaxRecursionDepth() == false)
+                {
+                    if (powerResults.IsAvoided == false && powerResults.TestFlag(PowerResultFlags.Hostile) && powerOwner?.IsInWorld == true)
+                        TriggerOnHitEffects(powerResults, powerOwner);
+
+                    if (powerResults.IsBlocked)
+                        TryActivateOnBlockProcs(powerResults);
+
+                    if (powerResults.IsDodged)
+                        TryActivateOnDodgeProcs(powerResults);
+                }
+
+                // Check if this entity was destroyed by procs
+                if (IsInWorld == false || TestStatus(EntityStatus.Destroyed))
+                    success = true;
+                else // Apply the actual results if not
+                    success = ApplyPowerResultsInternal(powerResults);
             }
 
             powerResults.Clear();   // Clear to prevent leaking (TODO: PowerResults pooling)
             return success;
         }
 
+        private bool TriggerOnHitEffects(PowerResults powerResults, WorldEntity powerOwner)
+        {
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TriggerOnHitEffects(): powerProto == null");
+
+            // TODO: Procs / power events
+
+            return true;
+        }
+
         private bool ApplyPowerResultsInternal(PowerResults powerResults)
         {
             // TODO: More stuff
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
             if (powerResults.IsAvoided == false)
             {
@@ -1331,7 +1396,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Adjust health
-            ApplyHealthPowerResults(powerResults);
+            ApplyHealthPowerResults(powerResults, ultimateOwner);
 
             return true;
         }
@@ -1404,7 +1469,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private bool ApplyHealthPowerResults(PowerResults powerResults)
+        private bool ApplyHealthPowerResults(PowerResults powerResults, WorldEntity ultimateOwner)
         {
             Region region = Region;
             if (region == null) return Logger.WarnReturn(false, "ApplyHealthPowerResults(): region == null");
@@ -1413,7 +1478,7 @@ namespace MHServerEmu.Games.Entities
             // NOTE: Health can be > 2147483647, so we have to use 64-bit integers here to avoid overflows
             long health = Properties[PropertyEnum.Health];
             long startHealth = health;
-            float healthDelta = 0f;
+            long healthDelta = 0;
 
             if (powerResults.Flags.HasFlag(PowerResultFlags.InstantKill))
             {
@@ -1423,13 +1488,42 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 // Calculate damage delta normally
-                healthDelta -= powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
-                healthDelta -= powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
-                healthDelta -= powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
-                healthDelta += powerResults.Properties[PropertyEnum.Healing];
+                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
+                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
+                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
+                healthDelta += (long)(float)powerResults.Properties[PropertyEnum.Healing];
             }
 
-            // Apply health delta
+            // Check for invulnerability
+            if (powerResults.TestFlag(PowerResultFlags.Hostile) && Properties[PropertyEnum.Invulnerable])
+                healthDelta = 0;
+
+            // Check procs (even if invulnerable)
+            if (powerResults.TestFlag(PowerResultFlags.Hostile) && powerResults.IsAtMaxRecursionDepth() == false)
+            {
+                TryActivateOnGotAttackedProcs(powerResults);
+                EnterCombat();
+                OnGotHit(ultimateOwner);
+            }
+
+            // Abort if not valid
+            // Case 1: No health change
+            if (healthDelta == 0)
+                return false;
+
+            // Case 2: you are already dead (NANI)
+            if (healthDelta <= 0 && health <= 0)
+                return false;
+
+            // Case 3: Ignores damage from alliance
+            if (ultimateOwner != null)
+            {
+                PrototypeId allianceProtoRef = Properties[PropertyEnum.DamageIgnoreFromAlliance];
+                if (allianceProtoRef != PrototypeId.Invalid && allianceProtoRef == ultimateOwner.Alliance.DataRef)
+                    return false;
+            }
+
+            // Now apply the health delta
             health += (long)MathF.Round(healthDelta);
             health = Math.Clamp(health, Properties[PropertyEnum.HealthMin], Properties[PropertyEnum.HealthMaxOther]);
 
@@ -1441,17 +1535,16 @@ namespace MHServerEmu.Games.Entities
 
             // Change health to the new value
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
-            WorldEntity ultimatePowerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
             long adjustHealth = health - startHealth;
 
-            var avatar = ultimatePowerUser?.GetMostResponsiblePowerUser<Avatar>();
+            var avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
 
             if (region != null)
             {
                 var player = avatar?.GetOwnerOfType<Player>();
                 bool isDodged = powerResults.TestFlag(PowerResultFlags.Dodged);
-                region.AdjustHealthEvent.Invoke(new(this, ultimatePowerUser, player, adjustHealth, isDodged));
+                region.AdjustHealthEvent.Invoke(new(this, ultimateOwner, player, adjustHealth, isDodged));
             }
 
             bool killed = false;
@@ -1461,7 +1554,7 @@ namespace MHServerEmu.Games.Entities
                 if (this is Avatar killedAvatar)
                 {
                     var killedPlayer = GetOwnerOfType<Player>();
-                    region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimatePowerUser);
+                    region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimateOwner);
 
                     killedPlayer.OnScoringEvent(new(ScoringEventType.AvatarDeath));
                     var killer = avatar?.GetOwnerOfType<Player>();
@@ -1477,27 +1570,34 @@ namespace MHServerEmu.Games.Entities
 
                 if (powerResults.PowerOwnerId != powerResults.TargetId)
                 {
-                    ultimatePowerUser?.TriggerEntityActionEvent(EntitySelectorActionEventType.OnKilledOther);
+                    if (powerUser != null && powerUser != ultimateOwner)
+                        powerUser.OnKilledOther(powerResults);
+                    else
+                        ultimateOwner?.OnKilledOther(powerResults);
+
+                    ultimateOwner?.TriggerEntityActionEvent(EntitySelectorActionEventType.OnKilledOther);
 
                     if (IsControlledEntity == false)
-                        TriggerOnDeath(powerResults, ultimatePowerUser);
+                        TryActivateOnDeathProcs(powerResults);
                 }
 
-                Kill(ultimatePowerUser, KillFlags.None, powerUser);
+                Kill(ultimateOwner, KillFlags.None, powerUser);
                 killed = true;
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
             else
             {
                 Properties[PropertyEnum.Health] = health;
-                if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
-                    OnGotHit(ultimatePowerUser);
+
+                // Procs
+                if (adjustHealth < 0 && powerResults.IsAtMaxRecursionDepth() == false)
+                    TryActivateOnGotDamagedProcs(powerResults);
 
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
 
             if (this is Agent agent && adjustHealth < 0 && CanBePlayerOwned() == false)
-                agent.AIController?.OnAIGotDamaged(ultimatePowerUser, adjustHealth);
+                agent.AIController?.OnAIGotDamaged(ultimateOwner, adjustHealth);
 
             if (killed)
             {
@@ -1527,48 +1627,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
-        }
-
-        private void TriggerOnDeath(PowerResults powerResults, WorldEntity killer)
-        {
-            // TODO Rewrite this
-
-            if (this is not Agent) return;
-            Power power = null;
-
-            // Get OnDeath ProcPower
-            foreach (var kvp in PowerCollection)
-            {
-                var proto = kvp.Value.PowerPrototype;
-                if (proto.Activation != PowerActivationType.Passive) continue;
-
-                string protoName = kvp.Key.GetNameFormatted();
-                if (protoName.Contains("OnDeath"))
-                {
-                    power = kvp.Value.Power;
-                    break;
-                }
-            }
-
-            if (power == null) return;
-
-            // Get OnDead power
-            var conditions = power.Prototype.AppliesConditions;
-            if (conditions.Count != 1) return;
-            var conditionProto = conditions[0].Prototype as ConditionPrototype;
-
-            // Get summon power
-            SummonPowerPrototype summonPower = null;
-            foreach (var kvp in conditionProto.Properties.IteratePropertyRange(PropertyEnum.Proc))
-            {
-                Property.FromParam(kvp.Key, 0, out int procEnum);
-                if ((ProcTriggerType)procEnum != ProcTriggerType.OnDeath) continue;
-                Property.FromParam(kvp.Key, 1, out PrototypeId summonPowerRef);
-                summonPower = GameDatabase.GetPrototype<SummonPowerPrototype>(summonPowerRef);
-                if (summonPower != null) break;
-            }
-
-            if (summonPower != null) EntityHelper.OnDeathSummonFromPowerPrototype(this, summonPower);
         }
 
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
@@ -1628,23 +1686,16 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
-        #region Procs
+        #region Combat State
 
-        public void TryActivateOnConditionEndProcs(Condition condition)
+        public virtual void EnterCombat()
         {
-            if (IsInWorld == false)
-                return;
+            // TODO
+        }
 
-            // TODO: Proper implementation
-
-            // HACK: Activate cooldown for Moon Knight's signature
-            if (condition.CreatorPowerPrototypeRef == (PrototypeId)924314278184884866)
-            {
-                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
-                AssignPower((PrototypeId)10152747549179582463, indexProps);
-                PowerActivationSettings settings = new(Id, default, RegionLocation.Position);
-                ActivatePower((PrototypeId)10152747549179582463, ref settings);
-            }
+        public virtual void ExitCombat()
+        {
+            // TODO
         }
 
         #endregion
@@ -2293,12 +2344,17 @@ namespace MHServerEmu.Games.Entities
 
             // Send locomotion update to interested clients
             // NOTE: Avatars are locomoted on their local client independently, so they are excluded from locomotion updates.
-            var networkManager = Game.NetworkManager;
-            var interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false);
-            if (interestedClients.Any() == false) return;
-            NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
-                this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
-            networkManager.SendMessageToMultiple(interestedClients, locomotionStateUpdateMessage);
+            PlayerConnectionManager networkManager = Game.NetworkManager;
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, IsMovementAuthoritative == false))
+            {
+                NetMessageLocomotionStateUpdate locomotionStateUpdateMessage = ArchiveMessageBuilder.BuildLocomotionStateUpdateMessage(
+                    this, oldLocomotionState, newLocomotionState, pathNodeSyncRequired);
+
+                networkManager.SendMessageToMultiple(interestedClientList, locomotionStateUpdateMessage);
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         public virtual void OnPreGeneratePath(Vector3 start, Vector3 end, List<WorldEntity> entities) { }
@@ -3011,10 +3067,10 @@ namespace MHServerEmu.Games.Entities
             ScheduleEntityEvent(scheduledUnassignPower, TimeSpan.FromMilliseconds(1), powerProtoRef);
         }
 
-        public void ScheduleApplyPowerResultsEvent(PowerResults powerResults)
+        public bool ScheduleApplyPowerResultsEvent(PowerResults powerResults)
         {
             if (IsSimulated == false)
-                return;
+                return false;
 
             if (powerResults.PowerPrototype.ApplyResultsImmediately)
             {
@@ -3025,6 +3081,8 @@ namespace MHServerEmu.Games.Entities
                 EventPointer<ScheduledPowerResultsEvent> scheduledPowerResults = new();
                 ScheduleEntityEvent(scheduledPowerResults, TimeSpan.Zero, powerResults);
             }
+
+            return true;
         }
 
         public void CancelExitWorldEvent()

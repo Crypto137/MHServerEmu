@@ -625,19 +625,21 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Notify clients
             PlayerConnectionManager networkManager = Game.NetworkManager;
-            IEnumerable<PlayerConnection> interestedClients = networkManager.GetInterestedClients(this, AOINetworkPolicyValues.AOIChannelProximity, notifyOwner == false);
-            if (interestedClients.Any() == false) return;
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelProximity, notifyOwner == false))
+            {
+                var continuousPowerUpdateMessage = NetMessageContinuousPowerUpdateToClient.CreateBuilder()
+                    .SetIdAvatar(Id)
+                    .SetPowerPrototypeId((ulong)powerProtoRef)
+                    .SetIdTargetEntity(targetId)
+                    .SetTargetPosition(targetPosition.ToNetStructPoint3())
+                    .SetRandomSeed(randomSeed)
+                    .Build();
 
-            // NOTE: Although NetMessageCancelPower is not an archive, it uses power prototype enums
-            var continuousPowerUpdateMessage = NetMessageContinuousPowerUpdateToClient.CreateBuilder()
-                .SetIdAvatar(Id)
-                .SetPowerPrototypeId((ulong)powerProtoRef)
-                .SetIdTargetEntity(targetId)
-                .SetTargetPosition(targetPosition.ToNetStructPoint3())
-                .SetRandomSeed(randomSeed)
-                .Build();
+                networkManager.SendMessageToMultiple(interestedClientList, continuousPowerUpdateMessage);
+            }
 
-            networkManager.SendMessageToMultiple(interestedClients, continuousPowerUpdateMessage);
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         public void ClearContinuousPower()
@@ -1043,6 +1045,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Progression table powers
+            indexProps = new(1, CharacterLevel, CombatLevel);   // use rank 1 for power progression (todo: remove this when we have everything working properly)
+
             foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
                 AssignPower(powerProgressionEntry.PowerAssignment.Ability, indexProps);
 
@@ -1073,6 +1077,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                 foreach (PrototypeId stealablePowerInfoProtoRef in avatarPrototype.StealablePowersAllowed)
                 {
                     var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
+                    
+                    // Skip assigning stealable passives for now
+                    PowerPrototype powerProto = stealablePowerInfo.Power.As<PowerPrototype>();
+                    if (powerProto.Activation == PowerActivationType.Passive)
+                        continue;
+
                     AssignPower(stealablePowerInfo.Power, indexProps);
                 }
             }

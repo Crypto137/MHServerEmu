@@ -110,6 +110,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         public ConditionCancelOnFlags CancelOnFlags { get => _cancelOnFlags; }
 
         public bool IsInCollection { get => Collection != null; }
+        public bool IsInPool { get; set; }
 
         public bool IsPaused { get => _pauseTime != TimeSpan.Zero; }
         public TimeSpan ElapsedTime { get => IsPaused ? _pauseTime - _startTime : Game.Current.CurrentTime - _startTime; }

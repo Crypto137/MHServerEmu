@@ -148,18 +148,21 @@ namespace MHServerEmu.Games.Properties
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
-            IEnumerable<PlayerConnection> interestedClients = _messageDispatcher.GetInterestedClients(interestFilter);
-            if (interestedClients.Any() == false) return;
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (_messageDispatcher.GetInterestedClients(interestedClientList, interestFilter))
+            {
+                // Send update to interested
+                //Logger.Trace($"MarkPropertyChanged(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
+                var setPropertyMessage = NetMessageSetProperty.CreateBuilder()
+                    .SetReplicationId(ReplicationId)
+                    .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
+                    .SetValueBits(ConvertValueToBits(value, propertyInfo.DataType))
+                    .Build();
 
-            // Send update to interested
-            //Logger.Trace($"MarkPropertyChanged(): [{ReplicationId}] {id}: {value.Print(propertyInfo.DataType)}");
-            var setPropertyMessage = NetMessageSetProperty.CreateBuilder()
-                .SetReplicationId(ReplicationId)
-                .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageSetProperty all bits are reversed rather than bytes
-                .SetValueBits(ConvertValueToBits(value, propertyInfo.DataType))
-                .Build();
+                _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClientList, setPropertyMessage);
+            }
 
-            _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClients, setPropertyMessage);
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         private void MarkPropertyRemoved(PropertyId id)
@@ -172,17 +175,20 @@ namespace MHServerEmu.Games.Properties
             if (interestFilter == AOINetworkPolicyValues.AOIChannelNone) return;
 
             // Check if any there are any interested clients
-            IEnumerable<PlayerConnection> interestedClients = _messageDispatcher.GetInterestedClients(interestFilter);
-            if (interestedClients.Any() == false) return;
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (_messageDispatcher.GetInterestedClients(interestedClientList, interestFilter))
+            {
+                // Send update to interested
+                //Logger.Trace($"MarkPropertyRemoved(): [{ReplicationId}] {id}");
+                var removePropertyMessage = NetMessageRemoveProperty.CreateBuilder()
+                    .SetReplicationId(ReplicationId)
+                    .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageRemoveProperty all bits are reversed rather than bytes
+                    .Build();
 
-            // Send update to interested
-            //Logger.Trace($"MarkPropertyRemoved(): [{ReplicationId}] {id}");
-            var removePropertyMessage = NetMessageRemoveProperty.CreateBuilder()
-                .SetReplicationId(ReplicationId)
-                .SetPropertyId(id.Raw.ReverseBits())    // In NetMessageRemoveProperty all bits are reversed rather than bytes
-                .Build();
+                _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClientList, removePropertyMessage);
+            }
 
-            _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedClients, removePropertyMessage);
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
@@ -68,48 +69,93 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
-        /// Returns <see cref="Player"/> instances that are interested in the provided <see cref="Entity"/>.
+        /// Adds all <see cref="Player"/> instances that are interested in the provided <see cref="Entity"/> to the provided <see cref="List{T}"/>.
+        /// Returns <see langword="true"/> if the number of interested players is > 0.
         /// </summary>
-        public IEnumerable<Player> GetInterestedPlayers(Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
+        public bool GetInterestedPlayers(List<Player> interestedPlayerList, Entity entity,
+            AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            foreach (Player player in new PlayerIterator(entity.Game))
-            {
-                if (skipOwner && entity.IsOwnedBy(player.Id)) continue;
-                if (player.PlayerConnection == null) continue;  // This can happen during packet parsing
+            // Early out if we already know that none of the players match the interest channel filter
+            if ((entity.InterestedPoliciesUnion & interestFilter) == 0)
+                return false;
 
-                if (player.AOI.InterestedInEntity(entity.Id, interestFilter))
-                    yield return player;
+            // Use InterestReferences to skip players that we know for sure are not interested in this entity
+            EntityManager entityManager = _game.EntityManager;
+            foreach (ulong playerId in entity.InterestReferences)
+            {
+                Player player = entityManager.GetEntity<Player>(playerId);
+                if (player == null)
+                {
+                    Logger.Warn("GetInterestedPlayers(): player == null");
+                    continue;
+                }
+
+                if (player.PlayerConnection == null)
+                    continue;  // This can happen during packet parsing
+
+                // Check ownership
+                if (skipOwner && entity.IsOwnedBy(playerId))
+                    continue;
+
+                // Check channel filter
+                if (player.AOI.InterestedInEntity(entity.Id, interestFilter) == false)
+                    continue;
+
+                interestedPlayerList.Add(player);
             }
+
+            return interestedPlayerList.Count > 0;
         }
 
         /// <summary>
-        /// Returns <see cref="Player"/> instances that are interested in the provided <see cref="Region"/>.
+        /// Adds all <see cref="Player"/> instances that are interested in the provided <see cref="Region"/> to the provided <see cref="List{T}"/>.
+        /// Returns <see langword="true"/> if the number of interested players is > 0.
         /// </summary>
-        public IEnumerable<Player> GetInterestedPlayers(Region region)
+        public bool GetInterestedPlayers(List<Player> interestedPlayerList, Region region)
         {
             foreach (Player player in new PlayerIterator(region))
             {
                 if (player.AOI.Region == region)
-                    yield return player;
+                    interestedPlayerList.Add(player);
             }
+
+            return interestedPlayerList.Count > 0;
         }
 
         /// <summary>
-        /// Returns <see cref="PlayerConnection"/> instances that are bound to players that are interested in the provided <see cref="Entity"/>.
+        /// Adds all <see cref="PlayerConnection"/> instances that are interested in the provided <see cref="Entity"/> to the provided <see cref="List{T}"/>.
+        /// Returns <see langword="true"/> if the number of interested player connections is > 0.
         /// </summary>
-        public IEnumerable<PlayerConnection> GetInterestedClients(Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
+        public bool GetInterestedClients(List<PlayerConnection> interestedClientList, Entity entity,
+            AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            foreach (Player player in GetInterestedPlayers(entity, interestFilter, skipOwner))
-                yield return player.PlayerConnection;
+            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            GetInterestedPlayers(interestedPlayerList, entity, interestFilter, skipOwner);
+
+            foreach (Player player in interestedPlayerList)
+                interestedClientList.Add(player.PlayerConnection);
+
+            ListPool<Player>.Instance.Return(interestedPlayerList);
+            return interestedClientList.Count > 0;
         }
 
         /// <summary>
         /// Returns <see cref="PlayerConnection"/> instances that are bound to players that are interested in the provided <see cref="Region"/>.
         /// </summary>
-        public IEnumerable<PlayerConnection> GetInterestedClients(Region region)
+        /// <summary>
+        /// Adds all <see cref="PlayerConnection"/> instances that are interested in the provided <see cref="Region"/> to the provided <see cref="List{T}"/>.
+        /// Returns <see langword="true"/> if the number of interested clients is > 0.
+        /// </summary>
+        public bool GetInterestedClients(List<PlayerConnection> interestedClientList, Region region)
         {
-            foreach (Player player in GetInterestedPlayers(region))
-                yield return player.PlayerConnection;
+            List<Player> interestedPlayerList = ListPool<Player>.Instance.Get();
+            GetInterestedPlayers(interestedPlayerList, region);
+
+            foreach (Player player in interestedPlayerList)
+                interestedClientList.Add(player.PlayerConnection);
+
+            ListPool<Player>.Instance.Return(interestedPlayerList);
+            return interestedClientList.Count > 0;
         }
 
         public void Update()
@@ -206,11 +252,11 @@ namespace MHServerEmu.Games.Network
         }
 
         /// <summary>
-        /// Sends the provided <see cref="IMessage"/> over all <see cref="PlayerConnection"/> instaces in the provided collection.
+        /// Sends the provided <see cref="IMessage"/> over all <see cref="PlayerConnection"/> instaces in the provided <see cref="List{T}"/>.
         /// </summary>
-        public void SendMessageToMultiple(IEnumerable<PlayerConnection> playerConnections, IMessage message)
+        public void SendMessageToMultiple(List<PlayerConnection> clientList, IMessage message)
         {
-            foreach (PlayerConnection playerConnection in playerConnections)
+            foreach (PlayerConnection playerConnection in clientList)
                 playerConnection.SendMessage(message);
         }
 
@@ -219,8 +265,13 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessageToInterested(IMessage message, Region region)
         {
-            foreach (PlayerConnection playerConnection in GetInterestedClients(region))
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClientList, region);
+
+            foreach (PlayerConnection playerConnection in interestedClientList)
                 playerConnection.SendMessage(message);
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         /// <summary>
@@ -228,8 +279,13 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessageToInterested(IMessage message, Entity entity, AOINetworkPolicyValues interestFilter = AOINetworkPolicyValues.AllChannels, bool skipOwner = false)
         {
-            foreach (PlayerConnection playerConnection in GetInterestedClients(entity, interestFilter, skipOwner))
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            GetInterestedClients(interestedClientList, entity, interestFilter, skipOwner);
+
+            foreach (PlayerConnection playerConnection in interestedClientList)
                 playerConnection.SendMessage(message);
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         /// <summary>

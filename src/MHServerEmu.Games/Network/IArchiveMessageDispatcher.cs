@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.Network
         public Game Game { get; }
         public bool CanSendArchiveMessages { get => true; }
 
-        public ulong RegisterMessageHandler(IArchiveMessageHandler handler, ref ulong replicationId)
+        public ulong RegisterMessageHandler<T>(T handler, ref ulong replicationId) where T: IArchiveMessageHandler
         {
             // NOTE: We pass a ref to the replicationId field along with the handler so that we don't have to expose it via a public setter.
 
@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.Network
             return replicationId;
         }
 
-        public bool UnregisterMessageHandler(IArchiveMessageHandler handler)
+        public bool UnregisterMessageHandler<T>(T handler) where T: IArchiveMessageHandler
         {
             if (Game.MessageHandlerDict.Remove(handler.ReplicationId) == false)
                 return Logger.WarnReturn(false, $"UnregisterMessageHandler(): ReplicationId {handler.ReplicationId} not found");
@@ -35,6 +35,6 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies);
+        public bool GetInterestedClients(List<PlayerConnection> interestedClientList, AOINetworkPolicyValues interestPolicies);
     }
 }

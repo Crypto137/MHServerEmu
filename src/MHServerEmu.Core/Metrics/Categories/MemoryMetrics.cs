@@ -42,7 +42,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             _gcCounts[memoryInfo.Generation]++;
 
             TimeSpan combinedPauseDuration = memoryInfo.PauseDurations[0] + memoryInfo.PauseDurations[1];
-            _pauseDurationTracker.Track(combinedPauseDuration);
+            _pauseDurationTracker.Track(new(combinedPauseDuration));
 
             if (gcKind != GCKind.Ephemeral)
                 Logger.Trace($"{gcKind} GC recorded: Index={memoryInfo.Index}, Generation={memoryInfo.Generation}, PauseDuration={combinedPauseDuration.TotalMilliseconds} ms");

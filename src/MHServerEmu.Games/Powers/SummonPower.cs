@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -9,6 +10,8 @@ namespace MHServerEmu.Games.Powers
 {
     public class SummonPower : Power
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
         }
@@ -26,6 +29,10 @@ namespace MHServerEmu.Games.Powers
 
             Item item = Game.EntityManager.GetEntity<Item>(settings.ItemSourceId);
             if (item == null)
+                return base.Activate(ref settings);
+
+            // Also pass passive summons from items, we don't have proper cleanup for those
+            if (GetActivationType() == PowerActivationType.Passive || IsItemPower() == false)
                 return base.Activate(ref settings);
 
             // Do the hackery

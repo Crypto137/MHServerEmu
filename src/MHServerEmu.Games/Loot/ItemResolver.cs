@@ -37,6 +37,8 @@ namespace MHServerEmu.Games.Loot
         public Player Player { get => _context.Player; }
         public Region Region { get => _context.Region; }
 
+        public bool IsInPool { get; set; }
+
         public ItemResolver()
         {
             // Cache item level limits from the ItemLevel property prototype

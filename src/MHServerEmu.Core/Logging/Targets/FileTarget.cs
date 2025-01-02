@@ -27,7 +27,7 @@ namespace MHServerEmu.Core.Logging.Targets
         /// <summary>
         /// Outputs a <see cref="LogMessage"/> instance to the <see cref="FileStream"/>.
         /// </summary>
-        public override void ProcessLogMessage(LogMessage message)
+        public override void ProcessLogMessage(in LogMessage message)
         {
             if (_disposed == false)
                 _writer.WriteLine(message.ToString(IncludeTimestamps));

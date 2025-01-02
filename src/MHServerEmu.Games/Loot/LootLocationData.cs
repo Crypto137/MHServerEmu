@@ -18,6 +18,8 @@ namespace MHServerEmu.Games.Loot
         public bool DropInPlace { get; set; }
         public Vector3 Offset { get; set; }
 
+        public bool IsInPool { get; set; }
+
         public void Initialize(Game game, Vector3 position, WorldEntity recipient = null)
         {
             Game = game;

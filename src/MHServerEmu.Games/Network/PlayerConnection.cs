@@ -1155,6 +1155,7 @@ namespace MHServerEmu.Games.Network
 
         private bool OnGracefulDisconnect(MailboxMessage message)   // 98
         {
+            Logger.Trace($"OnGracefulDisconnect(): Player=[{Player}]");
             SendMessage(NetMessageGracefulDisconnectAck.DefaultInstance);
             return true;
         }

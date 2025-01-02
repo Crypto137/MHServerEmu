@@ -11,14 +11,13 @@ namespace MHServerEmu.Games.Entities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Game _game = null;
-        private readonly Region _region = null;
-        private readonly IEnumerable<Player> _players = Array.Empty<Player>();
+        private readonly Game _game;
+        private readonly Region _region;
 
         public PlayerIterator(Game game)
         {
             _game = game;
-            _players = _game.EntityManager.Players;
+            _region = null;
         }
 
         public PlayerIterator(Region region)
@@ -31,20 +30,70 @@ namespace MHServerEmu.Games.Entities
 
             _game = region.Game;
             _region = region;
-            _players = _game.EntityManager.Players;
         }
 
-        public IEnumerator<Player> GetEnumerator()
+        public Enumerator GetEnumerator()
         {
-            foreach (Player player in _players)
-            {
-                if (_region != null && player.GetRegion() != _region)
-                    continue;
+            return new(_game?.EntityManager.Players, _region);
+        }
 
-                yield return player;
+        // NOTE: Missions and MetaGames rely on PlayerIterator being IEnumerable for things like ToArray(). Consider optimizing this.
+
+        IEnumerator<Player> IEnumerable<Player>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public struct Enumerator : IEnumerator<Player>
+        {
+            private readonly HashSet<Player> _players;
+            private readonly Region _region;
+
+            private HashSet<Player>.Enumerator _playerEnumerator;
+
+            public Player Current { get; private set; }
+            object IEnumerator.Current { get => Current; }
+
+            public Enumerator(HashSet<Player> players, Region region)
+            {
+                _players = players;
+                _region = region;
+
+                _playerEnumerator = _players != null ? _players.GetEnumerator() : default;
+            }
+
+            public bool MoveNext()
+            {
+                if (_players == null)
+                    return false;
+
+                while (_playerEnumerator.MoveNext())
+                {
+                    Player player = _playerEnumerator.Current;
+                    if (_region != null && player.GetRegion() != _region)
+                        continue;
+
+                    Current = player;
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void Reset()
+            {
+                _playerEnumerator = _players != null ? _players.GetEnumerator() : default;
+            }
+
+            public void Dispose()
+            {
+                _playerEnumerator.Dispose();
             }
         }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

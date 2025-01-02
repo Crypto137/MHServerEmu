@@ -155,7 +155,7 @@ namespace MHServerEmu.Games.Entities
         public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
             NotifyCreatorPowerEnd();
-            // TODO PropertyEnum.CreatorPowerPrototype HandleTriggerPowerEvent PowerEventType.OnMissileKilled
+            NotifyCreatorPowerEvent(PowerEventType.OnMissileKilled, killer);
             base.OnKilled(killer, killFlags, directKiller);
         }
 
@@ -483,7 +483,7 @@ namespace MHServerEmu.Games.Entities
 
         private void OnValidTargetHit(WorldEntity collidedWith)
         {
-            // TODO PropertyEnum.CreatorPowerPrototype HandleTriggerPowerEvent PowerEventType.OnMissileHit
+            NotifyCreatorPowerEvent(PowerEventType.OnMissileHit, collidedWith);
         }
 
         private bool CheckAndApplyMissileReflection(WorldEntity collidedWith, Vector3 position)
@@ -653,6 +653,37 @@ namespace MHServerEmu.Games.Entities
                         }
                     }
                 }
+            }
+        }
+
+        private void NotifyCreatorPowerEvent(PowerEventType eventType, WorldEntity other)
+        {
+            WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(Properties[PropertyEnum.PowerUserOverrideID]);
+            if (powerUser == null)
+                return;
+
+            PrototypeId creatorPowerProtoRef = Properties[PropertyEnum.CreatorPowerPrototype];
+            if (creatorPowerProtoRef == PrototypeId.Invalid)
+                return;
+
+            Power power = powerUser.GetPower(creatorPowerProtoRef);
+            if (power == null)
+                return;
+
+            switch (eventType)
+            {
+                case PowerEventType.OnMissileHit:
+                    powerUser.TryActivateOnMissileHitProcs(power, other);
+                    power.HandleTriggerPowerEventOnMissileHit(other);
+                    break;
+
+                case PowerEventType.OnMissileKilled:
+                    power.HandleTriggerPowerEventOnMissileKilled(other, RegionLocation.Position);
+                    break;
+
+                default:
+                    Logger.Warn($"NotifyCreatorPowerEvent(): Unhandled event type {eventType}");
+                    break;
             }
         }
 

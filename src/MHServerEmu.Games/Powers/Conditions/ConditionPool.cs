@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Games.Powers.Conditions
 {
@@ -35,7 +36,7 @@ namespace MHServerEmu.Games.Powers.Conditions
 
             if (_conditionStack.Count == 0 && AllocateChunk() == false)
             {
-                Logger.WarnReturn(new Condition(), $"Get(): Exceeded maximum capacity ({this})");
+                Logger.Warn($"Get(): Exceeded maximum capacity ({this})");
                 condition = new();
             }
             else
@@ -43,6 +44,7 @@ namespace MHServerEmu.Games.Powers.Conditions
                 condition = _conditionStack.Pop();
             }
 
+            condition.IsInPool = false;
             _activeConditions.Add(condition);
             //Logger.Debug($"Get(): {this}");
             return condition;
@@ -57,6 +59,7 @@ namespace MHServerEmu.Games.Powers.Conditions
                 return false;
 
             condition.Clear();
+            condition.IsInPool = true;
             _conditionStack.Push(condition);
             return true;
         }
@@ -65,8 +68,10 @@ namespace MHServerEmu.Games.Powers.Conditions
         {
             StringBuilder sb = new();
 
-            foreach (Condition condition in _activeConditions)
-                sb.AppendLine(condition.ToString());
+            sb.AppendLine("StartTime\tCondition\tIsInCollection");
+
+            foreach (Condition condition in _activeConditions.OrderBy(condition => condition.StartTime))
+                sb.AppendLine($"{Clock.GameTimeToDateTime(condition.StartTime):yyyy.MM.dd HH:mm:ss.fff}\t{condition}\t{condition.IsInCollection}");
 
             return sb.ToString();
         }
@@ -83,7 +88,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             _activeConditions.EnsureCapacity(_allocatedCount);
 
             for (int i = 0; i < ChunkSize; i++)
-                _conditionStack.Push(new());
+                _conditionStack.Push(new() { IsInPool = true });
 
             Logger.Trace($"AllocateChunk(): {this}");
             return true;

@@ -9,6 +9,8 @@ namespace MHServerEmu.Core.Logging
     {
         private const string TimeFormat = "yyyy.MM.dd HH:mm:ss.fff";
 
+        private static readonly StringBuilder StringBuilder = new();
+
         public DateTime Timestamp { get; }
         public LoggingLevel Level { get; }
         public string Logger { get; }
@@ -19,7 +21,7 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         public LogMessage(LoggingLevel level, string logger, string message)
         {
-            Timestamp = DateTime.Now;
+            Timestamp = LogManager.LogTimeNow;
             Level = level;
             Logger = logger;
             Message = message;
@@ -35,10 +37,18 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         public string ToString(bool includeTimestamps)
         {
-            StringBuilder sb = new();
-            if (includeTimestamps) sb.Append($"[{Timestamp.ToString(TimeFormat)}] ");
-            sb.Append($"[{Level,5}] [{Logger}] {Message}");
-            return sb.ToString();
+            lock (StringBuilder)    // This shouldn't be called from multiple threads, but adding a lock here just in case
+            {
+                if (includeTimestamps)
+                    StringBuilder.Append($"[{Timestamp.ToString(TimeFormat)}] ");
+
+                StringBuilder.Append($"[{Level,5}] [{Logger}] {Message}");
+
+                string str = StringBuilder.ToString();
+                StringBuilder.Clear();
+
+                return str;
+            }
         }
     }
 }

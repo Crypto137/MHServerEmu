@@ -22,6 +22,6 @@
         /// <summary>
         /// Processes a <see cref="LogMessage"/>.
         /// </summary>
-        public abstract void ProcessLogMessage(LogMessage message);
+        public abstract void ProcessLogMessage(in LogMessage message);
     }
 }

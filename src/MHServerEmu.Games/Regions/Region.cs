@@ -1563,9 +1563,9 @@ namespace MHServerEmu.Games.Regions
             ListPool<PrototypeId>.Instance.Return(timerRefList);
         }
 
-        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
+        public bool GetInterestedClients(List<PlayerConnection> interestedClientList, AOINetworkPolicyValues interestPolicies)
         {
-            return Game.NetworkManager.GetInterestedClients(this);
+            return Game.NetworkManager.GetInterestedClients(interestedClientList, this);
         }
 
         public bool HasKeyword(KeywordPrototype keywordProto)

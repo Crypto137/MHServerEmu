@@ -77,6 +77,8 @@ namespace MHServerEmu.Games.Entities
         public uint VariationSeed { get; set; }
         public bool IsPopulation { get; set; }
 
+        public bool IsInPool { get; set; }
+
         public EntitySettings() { }     // Use pooling instead of calling this directly
 
         public void ResetForPool()

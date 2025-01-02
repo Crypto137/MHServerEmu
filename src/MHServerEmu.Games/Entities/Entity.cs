@@ -486,9 +486,9 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public IEnumerable<PlayerConnection> GetInterestedClients(AOINetworkPolicyValues interestPolicies)
+        public bool GetInterestedClients(List<PlayerConnection> interestedClientList, AOINetworkPolicyValues interestPolicies)
         {
-            return Game.NetworkManager.GetInterestedClients(this, interestPolicies);
+            return Game.NetworkManager.GetInterestedClients(interestedClientList, this, interestPolicies);
         }
 
         #endregion

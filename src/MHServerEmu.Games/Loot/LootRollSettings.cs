@@ -42,6 +42,8 @@ namespace MHServerEmu.Games.Loot
         public Dictionary<PrototypeId, short> AffixLimitByCategoryModifierDict { get; } = new();
         public PrototypeId MissionRef { get; set; }
 
+        public bool IsInPool { get; set; }
+
         public LootRollSettings() { }   // Use pooling instead of calling this directly
 
         public void Set(LootRollSettings other)
