@@ -525,6 +525,9 @@ namespace MHServerEmu.Games.Powers
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "Activate(): powerProto == null");
 
+            if (IsOnExtraActivation())
+                return RunExtraActivation(ref settings);
+
             WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
 
             // Hold and release (variable activation time) powers
@@ -1005,6 +1008,20 @@ namespace MHServerEmu.Games.Powers
             OnEndPowerConditionalRemove(flags);     // Remove one-offs, like throwables
 
             return true;
+        }
+
+        protected virtual PowerUseResult RunExtraActivation(ref PowerActivationSettings settings)
+        {
+            if (Prototype?.ExtraActivation == null) return Logger.WarnReturn(PowerUseResult.ExtraActivationFailed, "RunExtraActivation(): Prototype?.ExtraActivation == null");
+
+            CancelExtraActivationTimeout();
+
+            Owner.Properties.AdjustProperty(1, new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
+
+            StartCooldown();
+            EndPower(EndPowerFlags.None);
+
+            return PowerUseResult.Success;
         }
 
         #region Delayed / Variable Time Activation
@@ -2681,11 +2698,7 @@ namespace MHServerEmu.Games.Powers
                 return false;
 
             int powerActivationCount = owner.Properties[PropertyEnum.PowerActivationCount, powerProto.DataRef];
-
-            if (extraActivate.ExtraActivateEffect != SubsequentActivateType.DestroySummonedEntity || powerActivationCount % 2 != 1)
-                return false;
-
-            return true;
+            return extraActivate.ExtraActivateEffect == SubsequentActivateType.DestroySummonedEntity && powerActivationCount % 2 == 1;
         }
 
         public bool IsToggled()
