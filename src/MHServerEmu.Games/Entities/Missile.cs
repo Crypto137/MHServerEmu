@@ -274,6 +274,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
+            base.OnOverlapBegin(whom, whoPos, whomPos);
+
             if (whom != null) OnCollide(whom, whoPos);
         }
 

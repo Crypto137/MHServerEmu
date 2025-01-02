@@ -195,9 +195,15 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
+        public void TryActivateOnOverlapBeginProcs(WorldEntity other, Vector3 position, Vector3 otherPosition)  // 49
+        {
+            // TODO
+            //Logger.Debug($"TryActivateOnOverlapBeginProcs(): With [{other}] at [{position}]");
+        }
+
         public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
         {
-
+            // TODO
         }
 
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72

@@ -921,6 +921,17 @@ namespace MHServerEmu.Games.Entities
             AIController?.OnAIOnCollide(whom);
         }
 
+        public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        {
+            base.OnOverlapBegin(whom, whoPos, whomPos);
+
+            // Trigger procs
+            TryActivateOnOverlapBeginProcs(whom, whoPos, whomPos);
+
+            // Notify AI
+            AIController?.OnAIOverlapBegin(whom);
+        }
+
         #endregion
 
         #region Event Handlers
