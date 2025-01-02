@@ -909,8 +909,15 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnCollide(WorldEntity whom, Vector3 whoPos)
         {
-            // TODO ProcTriggerType.OnCollide
+            // Trigger procs
+            TryActivateOnCollideProcs(ProcTriggerType.OnCollide, whom, whoPos);
 
+            if (whom != null)
+                TryActivateOnCollideProcs(ProcTriggerType.OnCollideEntity, whom, whoPos);
+            else
+                TryActivateOnCollideProcs(ProcTriggerType.OnCollideWorldGeo, whom, whoPos);
+
+            // Notify AI
             AIController?.OnAIOnCollide(whom);
         }
 

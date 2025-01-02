@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.PowerCollections;
+﻿using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -100,6 +101,12 @@ namespace MHServerEmu.Games.Entities
         public void TryActivateOnBlockProcs(PowerResults powerResults)  // 4
         {
             // TODO
+        }
+
+        public void TryActivateOnCollideProcs(ProcTriggerType triggerType, WorldEntity other, Vector3 position)
+        {
+            // TODO
+            //Logger.Debug($"TryActivateOnCollideProcs(): {triggerType} with [{other}] at [{position}]");
         }
 
         public void TryActivateOnConditionEndProcs(Condition condition) // 8
