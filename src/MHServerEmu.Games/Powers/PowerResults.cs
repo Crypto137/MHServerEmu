@@ -25,6 +25,7 @@ namespace MHServerEmu.Games.Powers
         public IReadOnlyList<Condition> ConditionAddList { get => _conditionAddList; }
         public IReadOnlyList<ulong> ConditionRemoveList { get => _conditionRemoveList; }
 
+        public bool IsBlocked { get => Flags.HasFlag(PowerResultFlags.Blocked); }
         public bool IsDodged { get => Flags.HasFlag(PowerResultFlags.Dodged); }
         public bool IsAvoided { get => Flags.HasFlag(PowerResultFlags.Dodged) || Flags.HasFlag(PowerResultFlags.Unaffected); }
 
@@ -176,6 +177,17 @@ namespace MHServerEmu.Games.Powers
                 return false;
 
             return powerProto.HUDMessage != PrototypeId.Invalid || powerProto.PowerUnrealClass != AssetId.Invalid;
+        }
+
+        public bool IsAtMaxRecursionDepth()
+        {
+            const int MaxRecursionDepth = 3;
+
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null)
+                return false;
+
+            return powerProto.PowerCategory == PowerCategoryType.ProcEffect && Properties[PropertyEnum.ProcRecursionDepth] >= MaxRecursionDepth;
         }
     }
 }

@@ -1343,13 +1343,40 @@ namespace MHServerEmu.Games.Entities
 
             if (IsInWorld)
             {
-                success = ApplyPowerResultsInternal(powerResults);
+                WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
+                powerOwner ??= Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
-                // TODO: Procs
+                if (powerResults.IsAtMaxRecursionDepth() == false)
+                {
+                    if (powerResults.IsAvoided == false && powerResults.TestFlag(PowerResultFlags.Hostile) && powerOwner?.IsInWorld == true)
+                        TriggerOnHitEffects(powerResults, powerOwner);
+
+                    if (powerResults.IsBlocked)
+                        TryActivateOnBlockProcs(powerResults);
+
+                    if (powerResults.IsDodged)
+                        TryActivateOnDodgeProcs(powerResults);
+                }
+
+                // Check if this entity was destroyed by procs
+                if (IsInWorld == false || TestStatus(EntityStatus.Destroyed))
+                    success = true;
+                else // Apply the actual results if not
+                    success = ApplyPowerResultsInternal(powerResults);
             }
 
             powerResults.Clear();   // Clear to prevent leaking (TODO: PowerResults pooling)
             return success;
+        }
+
+        private bool TriggerOnHitEffects(PowerResults powerResults, WorldEntity powerOwner)
+        {
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TriggerOnHitEffects(): powerProto == null");
+
+            // TODO: Procs / power events
+
+            return true;
         }
 
         private bool ApplyPowerResultsInternal(PowerResults powerResults)
@@ -1471,7 +1498,13 @@ namespace MHServerEmu.Games.Entities
             if (powerResults.TestFlag(PowerResultFlags.Hostile) && Properties[PropertyEnum.Invulnerable])
                 healthDelta = 0;
 
-            // todo: procs
+            // Check procs (even if invulnerable)
+            if (powerResults.TestFlag(PowerResultFlags.Hostile) && powerResults.IsAtMaxRecursionDepth() == false)
+            {
+                TryActivateOnGotAttackedProcs(powerResults);
+                EnterCombat();
+                OnGotHit(ultimateOwner);
+            }
 
             // Abort if not valid
             // Case 1: No health change
@@ -1555,8 +1588,10 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 Properties[PropertyEnum.Health] = health;
-                if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
-                    OnGotHit(ultimateOwner);
+
+                // Procs
+                if (adjustHealth < 0 && powerResults.IsAtMaxRecursionDepth() == false)
+                    TryActivateOnGotDamagedProcs(powerResults);
 
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
@@ -1647,6 +1682,20 @@ namespace MHServerEmu.Games.Entities
                 || IsInWorld == false || IsSimulated == false
                 || IsDormant || IsUnaffectable || IsHotspot) return false;
             return true;
+        }
+
+        #endregion
+
+        #region Combat State
+
+        public virtual void EnterCombat()
+        {
+            // TODO
+        }
+
+        public virtual void ExitCombat()
+        {
+            // TODO
         }
 
         #endregion

@@ -461,16 +461,25 @@ namespace MHServerEmu.Games.Entities
 
                 condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
 
-                // Trigger additional effects (TODO: procs)
+                // Trigger additional effects
                 WorldEntity creator = _owner.Game.EntityManager.GetEntity<WorldEntity>(condition.CreatorId);
                 PowerPrototype powerProto = condition.CreatorPowerPrototype;
 
+                // Power Events
                 if (creator != null && powerProto != null)
                 {
                     Power power = creator.GetPower(powerProto.DataRef);
                     power?.HandleTriggerPowerEventOnStackCount(_owner, stackCount);
                 }
 
+                // Procs
+                if (handle.Valid())
+                    _owner.TryActivateOnConditionStackCountProcs(condition);
+
+                if (handle.Valid() && stackCount == 1 && condition.IsANegativeStatusEffect())
+                    _owner.OnNegativeStatusEffectApplied(condition.Id);
+
+                // Check stacking behavior
                 if (powerProto != null)
                 {
                     if (stackingBehaviorProto == null)
