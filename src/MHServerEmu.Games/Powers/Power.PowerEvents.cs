@@ -95,9 +95,14 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnStackCount, ref settings, stackCount, MathComparisonType.Equals);
         }
 
-        public void HandleTriggerPowerEventOnTargetKill()               // 10
+        public void HandleTriggerPowerEventOnTargetKill(PowerResults powerResults)               // 10
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnTargetKill, ref settings);
         }
 
         public void HandleTriggerPowerEventOnSummonEntity()             // 11
@@ -421,7 +426,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool CanTriggerPowerEventType(PowerEventType eventType, ref PowerActivationSettings settings)
         {
-            // TODO: Recheck this when we have a proper PowerEffectsPacket / PowerResults implementation
             if (settings.PowerResults != null && settings.PowerResults.TargetId != Entity.InvalidId)
             {
                 WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.PowerResults.TargetId);

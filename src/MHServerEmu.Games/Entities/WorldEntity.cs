@@ -364,6 +364,41 @@ namespace MHServerEmu.Games.Entities
             OnKilled(killer, killFlags, directKiller);   
         }
 
+        public virtual bool OnKilledOther(PowerResults powerResults)
+        {
+            if (powerResults == null) return Logger.WarnReturn(false, "OnKilledOther(): powerResults == null");
+
+            if (IsInWorld == false)
+                return false;
+
+            // Trigger power events
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            if (powerProto != null)
+            {
+                Power power = GetPower(powerProto.DataRef);
+                power?.HandleTriggerPowerEventOnTargetKill(powerResults);
+            }
+
+            // Try activate procs
+            TryActivateOnKillProcs(ProcTriggerType.OnKillOther, powerResults);
+
+            if (powerResults.TestFlag(PowerResultFlags.Critical))
+                TryActivateOnKillProcs(ProcTriggerType.OnKillOtherCritical, powerResults);
+            else if (powerResults.TestFlag(PowerResultFlags.SuperCritical))
+                TryActivateOnKillProcs(ProcTriggerType.OnKillOtherSuperCrit, powerResults);
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.TargetId);
+            if (target != null)
+            {
+                if (target.IsDestructible)
+                    TryActivateOnKillProcs(ProcTriggerType.OnKillDestructible, powerResults);
+                else if (IsFriendlyTo(target))
+                    TryActivateOnKillProcs(ProcTriggerType.OnKillAlly, powerResults);
+            }
+
+            return true;
+        }
+
         public override void Destroy()
         {
             if (Game == null) return;
@@ -1467,17 +1502,16 @@ namespace MHServerEmu.Games.Entities
 
             // Change health to the new value
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
-            WorldEntity ultimatePowerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
             long adjustHealth = health - startHealth;
 
-            var avatar = ultimatePowerUser?.GetMostResponsiblePowerUser<Avatar>();
+            var avatar = ultimateOwner?.GetMostResponsiblePowerUser<Avatar>();
 
             if (region != null)
             {
                 var player = avatar?.GetOwnerOfType<Player>();
                 bool isDodged = powerResults.TestFlag(PowerResultFlags.Dodged);
-                region.AdjustHealthEvent.Invoke(new(this, ultimatePowerUser, player, adjustHealth, isDodged));
+                region.AdjustHealthEvent.Invoke(new(this, ultimateOwner, player, adjustHealth, isDodged));
             }
 
             bool killed = false;
@@ -1487,7 +1521,7 @@ namespace MHServerEmu.Games.Entities
                 if (this is Avatar killedAvatar)
                 {
                     var killedPlayer = GetOwnerOfType<Player>();
-                    region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimatePowerUser);
+                    region?.OnRecordPlayerDeath(killedPlayer, killedAvatar, ultimateOwner);
 
                     killedPlayer.OnScoringEvent(new(ScoringEventType.AvatarDeath));
                     var killer = avatar?.GetOwnerOfType<Player>();
@@ -1503,13 +1537,18 @@ namespace MHServerEmu.Games.Entities
 
                 if (powerResults.PowerOwnerId != powerResults.TargetId)
                 {
-                    ultimatePowerUser?.TriggerEntityActionEvent(EntitySelectorActionEventType.OnKilledOther);
+                    if (powerUser != null && powerUser != ultimateOwner)
+                        powerUser.OnKilledOther(powerResults);
+                    else
+                        ultimateOwner?.OnKilledOther(powerResults);
+
+                    ultimateOwner?.TriggerEntityActionEvent(EntitySelectorActionEventType.OnKilledOther);
 
                     if (IsControlledEntity == false)
-                        TriggerOnDeath(powerResults, ultimatePowerUser);
+                        TryActivateOnDeathProcs(powerResults);
                 }
 
-                Kill(ultimatePowerUser, KillFlags.None, powerUser);
+                Kill(ultimateOwner, KillFlags.None, powerUser);
                 killed = true;
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
@@ -1517,13 +1556,13 @@ namespace MHServerEmu.Games.Entities
             {
                 Properties[PropertyEnum.Health] = health;
                 if (powerResults.Flags.HasFlag(PowerResultFlags.Hostile))
-                    OnGotHit(ultimatePowerUser);
+                    OnGotHit(ultimateOwner);
 
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
 
             if (this is Agent agent && adjustHealth < 0 && CanBePlayerOwned() == false)
-                agent.AIController?.OnAIGotDamaged(ultimatePowerUser, adjustHealth);
+                agent.AIController?.OnAIGotDamaged(ultimateOwner, adjustHealth);
 
             if (killed)
             {
@@ -1553,48 +1592,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
-        }
-
-        private void TriggerOnDeath(PowerResults powerResults, WorldEntity killer)
-        {
-            // TODO Rewrite this
-
-            if (this is not Agent) return;
-            Power power = null;
-
-            // Get OnDeath ProcPower
-            foreach (var kvp in PowerCollection)
-            {
-                var proto = kvp.Value.PowerPrototype;
-                if (proto.Activation != PowerActivationType.Passive) continue;
-
-                string protoName = kvp.Key.GetNameFormatted();
-                if (protoName.Contains("OnDeath"))
-                {
-                    power = kvp.Value.Power;
-                    break;
-                }
-            }
-
-            if (power == null) return;
-
-            // Get OnDead power
-            var conditions = power.Prototype.AppliesConditions;
-            if (conditions.Count != 1) return;
-            var conditionProto = conditions[0].Prototype as ConditionPrototype;
-
-            // Get summon power
-            SummonPowerPrototype summonPower = null;
-            foreach (var kvp in conditionProto.Properties.IteratePropertyRange(PropertyEnum.Proc))
-            {
-                Property.FromParam(kvp.Key, 0, out int procEnum);
-                if ((ProcTriggerType)procEnum != ProcTriggerType.OnDeath) continue;
-                Property.FromParam(kvp.Key, 1, out PrototypeId summonPowerRef);
-                summonPower = GameDatabase.GetPrototype<SummonPowerPrototype>(summonPowerRef);
-                if (summonPower != null) break;
-            }
-
-            if (summonPower != null) EntityHelper.OnDeathSummonFromPowerPrototype(this, summonPower);
         }
 
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
@@ -1673,8 +1670,56 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void TryActivateOnDeathProcs(PowerResults powerResults)  // 12
+        {
+            // TODO Rewrite this
+
+            if (this is not Agent) return;
+            Power power = null;
+
+            // Get OnDeath ProcPower
+            foreach (var kvp in PowerCollection)
+            {
+                var proto = kvp.Value.PowerPrototype;
+                if (proto.Activation != PowerActivationType.Passive) continue;
+
+                string protoName = kvp.Key.GetNameFormatted();
+                if (protoName.Contains("OnDeath"))
+                {
+                    power = kvp.Value.Power;
+                    break;
+                }
+            }
+
+            if (power == null) return;
+
+            // Get OnDead power
+            var conditions = power.Prototype.AppliesConditions;
+            if (conditions.Count != 1) return;
+            var conditionProto = conditions[0].Prototype as ConditionPrototype;
+
+            // Get summon power
+            SummonPowerPrototype summonPower = null;
+            foreach (var kvp in conditionProto.Properties.IteratePropertyRange(PropertyEnum.Proc))
+            {
+                Property.FromParam(kvp.Key, 0, out int procEnum);
+                if ((ProcTriggerType)procEnum != ProcTriggerType.OnDeath) continue;
+                Property.FromParam(kvp.Key, 1, out PrototypeId summonPowerRef);
+                summonPower = GameDatabase.GetPrototype<SummonPowerPrototype>(summonPowerRef);
+                if (summonPower != null) break;
+            }
+
+            if (summonPower != null) EntityHelper.OnDeathSummonFromPowerPrototype(this, summonPower);
+        }
+
+        public void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
+        {
+            // TODO
+        }
+
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
         {
+            // TODO
         }
 
         #endregion
