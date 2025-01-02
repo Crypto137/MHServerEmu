@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -140,7 +141,9 @@ namespace MHServerEmu.Games.Entities.Physics
         private void UpdateAttachedEntityPositions(PhysicsContext physicsContext, WorldEntity parentEntity)
         {
             if (parentEntity == null) return;
-            if (parentEntity.Physics.GetAttachedEntities(out ulong[] attachedEntities))
+
+            List<ulong> attachedEntities = ListPool<ulong>.Instance.Get();
+            if (parentEntity.Physics.GetAttachedEntities(attachedEntities))
             {
                 Vector3 parentEntityPosition = parentEntity.RegionLocation.Position;
                 Orientation parentEntityOrientation = parentEntity.Orientation;
@@ -165,6 +168,7 @@ namespace MHServerEmu.Games.Entities.Physics
                     }
                 }
             }
+            ListPool<ulong>.Instance.Return(attachedEntities);
         }
 
         private void ApplyForceSystems()

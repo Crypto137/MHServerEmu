@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -119,7 +120,8 @@ namespace MHServerEmu.Games.Network
                 LocomotionState locomotionState = null;
                 PrototypeId activePowerPrototypeRef = PrototypeId.Invalid;
 
-                if (entity is WorldEntity worldEntity)
+                WorldEntity worldEntity = entity as WorldEntity;
+                if (worldEntity != null)
                 {
                     // Make sure that the world entity in proximity is in world, because items in other players' inventories
                     // (e.g. equipment) are also considered to be in proximity.
@@ -142,7 +144,8 @@ namespace MHServerEmu.Games.Network
                     if (activePowerPrototypeRef != PrototypeId.Invalid)
                         fieldFlags |= EntityCreateMessageFlags.HasActivePowerPrototypeRef;
 
-                    // TODO: worldEntity.Physics.HasAttachedEntities();
+                    if (worldEntity.Physics.HasAttachedEntities())
+                        fieldFlags |= EntityCreateMessageFlags.HasAttachedEntities;
 
                     if (worldEntity.ShouldSnapToFloorOnSpawn != worldEntity.WorldEntityPrototype.SnapToFloorOnSpawn)
                         fieldFlags |= EntityCreateMessageFlags.OverrideSnapToFloorOnSpawn;
@@ -252,8 +255,10 @@ namespace MHServerEmu.Games.Network
 
                 if (fieldFlags.HasFlag(EntityCreateMessageFlags.HasAttachedEntities))
                 {
-                    List<ulong> attachedEntityList = new();
+                    List<ulong> attachedEntityList = ListPool<ulong>.Instance.Get();
+                    worldEntity.Physics.GetAttachedEntities(attachedEntityList);
                     Serializer.Transfer(archive, ref attachedEntityList);
+                    ListPool<ulong>.Instance.Return(attachedEntityList);
                 }
 
                 baseData = archive.ToByteString();
@@ -555,11 +560,9 @@ namespace MHServerEmu.Games.Network
                     extraFieldFlags |= EnterGameWorldMessageFlags.IsClientEntityHidden;
             }
 
-            // TODO: HasAttachedEntities
-            /*
+            // Attached entities
             if (worldEntity.Physics.HasAttachedEntities())
                 extraFieldFlags |= EnterGameWorldMessageFlags.HasAttachedEntities;
-            */
 
             // Serialize
             // NOTE: EntityEnterGameWorld always uses AOIChannelProximity
@@ -593,9 +596,10 @@ namespace MHServerEmu.Games.Network
 
             if (extraFieldFlags.HasFlag(EnterGameWorldMessageFlags.HasAttachedEntities))
             {
-                //TODO: worldEntity.Physics.GetAttachedEntities(out List<ulong> attachedEntityList);
-                List<ulong> attachedEntityList = new();
+                List<ulong> attachedEntityList = ListPool<ulong>.Instance.Get();
+                worldEntity.Physics.GetAttachedEntities(attachedEntityList);
                 Serializer.Transfer(archive, ref attachedEntityList);
+                ListPool<ulong>.Instance.Return(attachedEntityList);
             }
 
             return NetMessageEntityEnterGameWorld.CreateBuilder().SetArchiveData(archive.ToByteString()).Build();

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Entities.Physics
@@ -77,15 +78,15 @@ namespace MHServerEmu.Games.Entities.Physics
             _hasExternalForces[index] = false;
         }
 
-        public bool GetAttachedEntities(out ulong[] attachedEntities)
+        public bool GetAttachedEntities(List<ulong> attachedEntities)
         {
             if (AttachedEntities == null)
-            {
-                attachedEntities = null;
                 return false;
-            }
-            attachedEntities = AttachedEntities.ToArray();
-            return attachedEntities.Length > 0;
+
+            foreach (ulong entityId in AttachedEntities)
+                attachedEntities.Add(entityId);
+
+            return attachedEntities.Count > 0;
         }
 
         public void AddRepulsionForce(Vector3 force)
@@ -123,7 +124,9 @@ namespace MHServerEmu.Games.Entities.Physics
         {
             if (Entity == null) return;
             var manager = Entity.Game.EntityManager;
-            if (GetAttachedEntities(out var attachedEntities))
+
+            List<ulong> attachedEntities = ListPool<ulong>.Instance.Get();
+            if (GetAttachedEntities(attachedEntities))
                 foreach (var entityId in attachedEntities)
                 {
                     var childEntity = manager.GetEntity<WorldEntity>(entityId);
@@ -131,6 +134,7 @@ namespace MHServerEmu.Games.Entities.Physics
                         DetachChild(childEntity.Physics);
                 }
             AttachedEntities?.Clear();
+            ListPool<ulong>.Instance.Return(attachedEntities);
         }
 
         private void DetachChild(EntityPhysics physics)
