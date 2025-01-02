@@ -107,7 +107,11 @@ namespace MHServerEmu.Games.Powers
 
         public void HandleTriggerPowerEventOnHoldBegin()                // 12
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHoldBegin, ref settings);
         }
 
         public void HandleTriggerPowerEventOnMissileHit(WorldEntity target) // 13

@@ -523,24 +523,20 @@ namespace MHServerEmu.Games.Powers
 
             WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
 
-            // Charging (variable activation time) powers
+            // Hold and release (variable activation time) powers
             if (powerProto.ExtraActivation != null)
             {
                 if (powerProto.ExtraActivation is SecondaryActivateOnReleasePrototype secondaryActivation)
                 {
-                    // If this is not a release yet, send pre-activation message to clients
+                    // If this is not a release yet, just prepare for it
                     if (settings.VariableActivationRelease == false)
                     {
-                        var preActivatePower = NetMessagePreActivatePower.CreateBuilder()
-                            .SetIdUserEntity(Owner.Id)
-                            .SetPowerPrototypeId((ulong)PrototypeDataRef)
-                            .SetIdTargetEntity(settings.TargetEntityId)
-                            .SetTargetPosition(settings.TargetPosition.ToNetStructPoint3())
-                            .Build();
-
-                        Game.NetworkManager.SendMessageToInterested(preActivatePower, Owner, AOINetworkPolicyValues.AOIChannelProximity, true);
-                        return PowerUseResult.Success;
+                        HandleTriggerPowerEventOnHoldBegin();
+                        return PreActivate(ref settings, secondaryActivation);
                     }
+
+                    if (settings.VariableActivationTime == TimeSpan.Zero)
+                        settings.VariableActivationTime = Game.CurrentTime - settings.CreationTime;
 
                     if (secondaryActivation.MaxReleaseTimeMS > 0)
                     {
@@ -1014,9 +1010,21 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        // NOTE: Charging and channeling methods need to be public because they interact with scheduled events
+        private PowerUseResult PreActivate(ref PowerActivationSettings settings, SecondaryActivateOnReleasePrototype secondaryActivationProto)
+        {
+            // Send pre-activation message to nearby clients
+            var preActivatePower = NetMessagePreActivatePower.CreateBuilder()
+                .SetIdUserEntity(Owner.Id)
+                .SetPowerPrototypeId((ulong)PrototypeDataRef)
+                .SetIdTargetEntity(settings.TargetEntityId)
+                .SetTargetPosition(settings.TargetPosition.ToNetStructPoint3())
+                .Build();
 
-        public bool StartCharging()
+            Game.NetworkManager.SendMessageToInterested(preActivatePower, Owner, AOINetworkPolicyValues.AOIChannelProximity, true);
+            return PowerUseResult.Success;
+        }
+
+        private bool StartCharging()
         {
             //Logger.Debug("StartCharging()");
 
