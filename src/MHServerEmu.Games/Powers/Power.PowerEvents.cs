@@ -31,14 +31,26 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnContactTime, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnCriticalHit()              // 2
+        public void HandleTriggerPowerEventOnCriticalHit(PowerResults powerResults)              // 2
         {
+            PowerActivationSettings settings = powerResults.ActivationSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnCriticalHit, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHitKeyword()               // 3
+        public void HandleTriggerPowerEventOnHitKeyword(PowerResults powerResults)               // 3
         {
+            PowerActivationSettings settings = powerResults.ActivationSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHitKeyword, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerApply(ref PowerActivationSettings payloadSettings)  // 4
@@ -80,9 +92,14 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnPowerStart, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnProjectileHit()            // 8
+        public void HandleTriggerPowerEventOnProjectileHit(PowerResults powerResults)            // 8
         {
+            PowerActivationSettings settings = powerResults.ActivationSettings;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnProjectileHit, ref settings);
         }
 
         public void HandleTriggerPowerEventOnStackCount(WorldEntity target, int stackCount)    // 9

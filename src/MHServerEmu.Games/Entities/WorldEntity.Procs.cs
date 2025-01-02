@@ -92,6 +92,11 @@ namespace MHServerEmu.Games.Entities
     {
         // Handlers are ordered by ProcTriggerType enum
 
+        public void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
+        {
+
+        }
+
         public void TryActivateOnBlockProcs(PowerResults powerResults)  // 4
         {
             // TODO
@@ -181,6 +186,11 @@ namespace MHServerEmu.Games.Entities
         public void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
         {
             // TODO
+        }
+
+        public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
+        {
+
         }
 
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72

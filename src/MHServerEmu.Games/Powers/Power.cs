@@ -843,6 +843,7 @@ namespace MHServerEmu.Games.Powers
             PowerResults ownerResults = new();
             ulong ownerId = payload.PowerOwnerId;
             ownerResults.Init(ownerId, ownerId, ownerId, payload.PowerOwnerPosition, powerProto, payload.PowerAssetRefOverride, false);
+            ownerResults.ActivationSettings = activationSettings;
 
             // Calculate and apply results for each target
             int payloadCombatLevel = payload.CombatLevel;
@@ -861,6 +862,7 @@ namespace MHServerEmu.Games.Powers
 
                 PowerResults targetResults = new();
                 payload.InitPowerResultsForTarget(targetResults, target);
+                targetResults.ActivationSettings = activationSettings;
                 payload.CalculatePowerResults(targetResults, ownerResults, target, true);
                 
                 if (player != null && powerProto.CanCauseTag)

@@ -22,6 +22,8 @@ namespace MHServerEmu.Games.Powers
         public PowerResultFlags Flags { get; set; }
         public ulong TransferToId { get; set; }
 
+        public PowerActivationSettings ActivationSettings { get; set; }
+
         public IReadOnlyList<Condition> ConditionAddList { get => _conditionAddList; }
         public IReadOnlyList<ulong> ConditionRemoveList { get => _conditionRemoveList; }
 
@@ -54,6 +56,8 @@ namespace MHServerEmu.Games.Powers
                 if (condition.IsInPool == false && condition.IsInCollection == false)
                     ConditionCollection.DeleteCondition(condition);
             }
+
+            ActivationSettings = default;
 
             _conditionAddList.Clear();
             _conditionRemoveList.Clear();

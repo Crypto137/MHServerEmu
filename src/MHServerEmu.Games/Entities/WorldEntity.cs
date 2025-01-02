@@ -1371,10 +1371,91 @@ namespace MHServerEmu.Games.Entities
 
         private bool TriggerOnHitEffects(PowerResults powerResults, WorldEntity powerOwner)
         {
+            // powerOwner has been null checked above in ApplyPowerResults()
+
             PowerPrototype powerProto = powerResults.PowerPrototype;
             if (powerProto == null) return Logger.WarnReturn(false, "TriggerOnHitEffects(): powerProto == null");
 
-            // TODO: Procs / power events
+            Avatar avatar = powerOwner.GetMostResponsiblePowerUser<Avatar>(true);
+
+            // TODO: Set LastInflictedDamageTime for avatars
+
+            // Enter combat if this is not an over time effect
+            if (powerResults.TestFlag(PowerResultFlags.OverTime) == false)
+            {
+                powerOwner.EnterCombat();
+                if (avatar != null && avatar != powerOwner && avatar.IsInWorld)
+                    avatar.EnterCombat();
+            }
+
+            Power power = powerOwner.GetPower(powerProto.DataRef);
+
+            // Trigger OnProjectileHit power events (projectiles are non-missile powers that have projectile speed)
+            if (power != null && powerProto is not MissilePowerPrototype &&
+                (powerProto.ProjectileTimeToImpactOverride > 0f || powerProto.GetProjectileSpeed(power.Properties, powerOwner.Properties) > 0f))
+            {
+                power.HandleTriggerPowerEventOnProjectileHit(powerResults);
+            }
+
+            // Trigger OnAnyHit procs
+            powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnAnyHit, powerResults);
+            powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnAnyHitForPctHealth, powerResults);
+            powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnAnyHitTargetHealthBelowPct, powerResults);
+
+            // Trigger OnHitKeyword power events
+            power?.HandleTriggerPowerEventOnHitKeyword(powerResults);
+
+            // Trigger OnPetHit procs for the summoner if needed
+            ulong powerUserOverrideId = powerOwner.Properties[PropertyEnum.PowerUserOverrideID];
+            if (powerUserOverrideId != InvalidId)
+            {
+                WorldEntity summoner = Game.EntityManager.GetEntity<WorldEntity>(powerUserOverrideId);
+                if (summoner != null && summoner.IsInWorld)
+                    summoner.TryActivateOnPetHitProcs(powerResults, powerOwner);
+            }
+
+            // OnPowerHitPhysical / OnPowerHitEnergy / OnPowerHitMental
+            foreach (var kvp in powerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                Property.FromParam(kvp.Key, 0, out int damageType);
+
+                ProcTriggerType triggerType = (DamageType)damageType switch
+                {
+                    DamageType.Physical => ProcTriggerType.OnPowerHitPhysical,
+                    DamageType.Energy   => ProcTriggerType.OnPowerHitEnergy,
+                    DamageType.Mental   => ProcTriggerType.OnPowerHitMental,
+                    _                   => ProcTriggerType.None
+                };
+
+                if (triggerType == ProcTriggerType.None)
+                {
+                    Logger.Warn("TriggerOnHitEffects(): triggerType == ProcTriggerType.None");
+                    continue;
+                }
+
+                TryActivateOnHitProcs(triggerType, powerResults);
+            }
+
+            // OnPowerHit / OnPowerHitNormal
+            powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnPowerHit, powerResults);
+
+            if (powerProto.PowerCategory == PowerCategoryType.NormalPower)
+                powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnPowerHitNormal, powerResults);
+
+            // OnCrit / OnSuperCrit procs and OnCriticalHit power events
+            if (powerResults.TestFlag(PowerResultFlags.Critical))
+            {
+                powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnCrit, powerResults);
+                power?.HandleTriggerPowerEventOnCriticalHit(powerResults);
+            }
+            else if (powerResults.TestFlag(PowerResultFlags.SuperCritical))
+            {
+                powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnSuperCrit, powerResults);
+            }
+
+            // OnPowerHitNotOverTime
+            if (powerResults.TestFlag(PowerResultFlags.OverTime) == false)
+                powerOwner.TryActivateOnHitProcs(ProcTriggerType.OnPowerHitNotOverTime, powerResults);
 
             return true;
         }
