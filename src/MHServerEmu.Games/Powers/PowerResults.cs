@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Powers
         public PowerResultFlags Flags { get; set; }
         public ulong TransferToId { get; set; }
 
+        public Vector3 TeleportPosition { get; set; }
         public Vector3 KnockbackSourcePosition { get; set; }
 
         public PowerActivationSettings ActivationSettings { get; set; }
@@ -59,6 +60,7 @@ namespace MHServerEmu.Games.Powers
                     ConditionCollection.DeleteCondition(condition);
             }
 
+            TeleportPosition = default;
             KnockbackSourcePosition = default;
 
             ActivationSettings = default;

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Memory;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -6,6 +7,8 @@ namespace MHServerEmu.Games.Entities.Physics
 {
     public class EntityPhysics
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public WorldEntity Entity;
         public uint RegisteredPhysicsFrameId { get; set; }
         public int CollisionId { get; private set; }
@@ -108,6 +111,12 @@ namespace MHServerEmu.Games.Entities.Physics
         public void ApplyInternalForce(Vector3 force)
         {
             ApplyForce(force, false);
+        }
+
+        public void ApplyKnockbackForce(Vector3 source, float time, float speed, float acceleration)
+        {
+            // TODO
+            //Logger.Debug($"ApplyKnockbackForce(): source=[{source}], time={time}, acceleration={acceleration}");
         }
 
         private void ApplyForce(Vector3 force, bool external)

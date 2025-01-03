@@ -1346,6 +1346,8 @@ namespace MHServerEmu.Games.Entities
                 WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
                 powerOwner ??= Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
+                ApplyMovementPowerResults(powerResults);
+
                 if (powerResults.IsAtMaxRecursionDepth() == false)
                 {
                     if (powerResults.IsAvoided == false && powerResults.TestFlag(PowerResultFlags.Hostile) && powerOwner?.IsInWorld == true)
@@ -1478,6 +1480,40 @@ namespace MHServerEmu.Games.Entities
 
             // Adjust health
             ApplyHealthPowerResults(powerResults, ultimateOwner);
+
+            return true;
+        }
+
+        private bool ApplyMovementPowerResults(PowerResults powerResults)
+        {
+            if (Locomotor == null)
+                return false;
+
+            if (Properties[PropertyEnum.NoForcedMovement] && powerResults.PowerOwnerId != Id)
+                return false;
+
+            // Teleport
+            if (powerResults.TestFlag(PowerResultFlags.Teleport))
+            {
+                Vector3 teleportPosition = FloorToCenter(RegionLocation.ProjectToFloor(Region, Cell, powerResults.TeleportPosition));
+                ChangeRegionPosition(teleportPosition, null, ChangePositionFlags.Force);
+                return true;
+            }
+
+            // Knockback
+            float knockbackTime = powerResults.Properties[PropertyEnum.KnockbackTimeResult];
+            if (Segment.IsNearZero(knockbackTime))
+                return false;
+
+            Vector3 knockbackSource = powerResults.KnockbackSourcePosition;
+            float knockbackSpeed = powerResults.Properties[PropertyEnum.KnockbackSpeedResult];
+            float knockbackAcceleration = powerResults.Properties[PropertyEnum.KnockbackAccelerationResult];
+            Physics.ApplyKnockbackForce(knockbackSource, knockbackTime, knockbackSpeed, knockbackAcceleration);
+
+            if (powerResults.PowerOwnerId != Id)
+            {
+                // TODO: Orient for forced movement
+            }
 
             return true;
         }
