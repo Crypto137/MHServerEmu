@@ -701,6 +701,8 @@ namespace MHServerEmu.Games.Powers
         // 4
         private bool DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
+            // Disabled until we have summon powers working to reduce log spam
+            /*
             PowerEventContextPrototype contextProto = triggeredPowerEvent.PowerEventContext;
             if (contextProto == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): contextProto == null");
 
@@ -740,6 +742,7 @@ namespace MHServerEmu.Games.Powers
             {
                 contextCallbackProto.HandlePowerEvent(Owner, target, targetPosition);
             }
+            */
 
             return true;
         }

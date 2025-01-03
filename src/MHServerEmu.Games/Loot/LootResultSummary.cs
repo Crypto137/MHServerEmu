@@ -88,19 +88,16 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 case LootType.CallbackNode:
-                    Logger.Debug($"Add(): callbackNode=[{lootResult.CallbackNodeProto.GetType()}]");
                     CallbackNodes.Add(lootResult.CallbackNodeProto);
                     Types |= LootType.CallbackNode;
                     break;
 
                 case LootType.VanityTitle:
-                    Logger.Debug($"Add(): vanityTitle=[{lootResult.VanityTitleProtoRef.GetName()}]");
                     VanityTitles.Add(lootResult.VanityTitleProtoRef);
                     Types |= LootType.VanityTitle;
                     break;
 
                 case LootType.VendorXP:
-                    Logger.Debug($"Add(): vendorXPSummary=[{lootResult.VendorXPSummary}]");
                     VendorXP.Add(lootResult.VendorXPSummary);
                     Types |= LootType.VendorXP;
                     break;

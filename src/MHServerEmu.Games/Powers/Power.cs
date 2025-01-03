@@ -4565,8 +4565,6 @@ namespace MHServerEmu.Games.Powers
 
             foreach (EvalPrototype evalProto in powerProto.EvalOnPreApply)
             {
-                Logger.Debug($"RunPreApplyEval(): Eval: [{evalProto.ExpressionString()}]\nPower: [{powerProto}]");
-
                 bool evalSuccess = Eval.RunBool(evalProto, evalContext);
                 success &= evalSuccess;
                 if (evalSuccess == false)
