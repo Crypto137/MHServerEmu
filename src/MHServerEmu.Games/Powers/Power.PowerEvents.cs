@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Memory;
@@ -6,12 +7,12 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -854,9 +855,35 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 12
-        private void DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionShowBannerMessage(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextShowBannerMessagePrototype showBannerContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionShowBannerMessage(): triggeredPowerEvent.PowerEventContext is not PowerEventContextShowBannerMessagePrototype showBannerContext");
+
+            BannerMessagePrototype bannerMessageProto = showBannerContext.BannerMessage.As<BannerMessagePrototype>();
+            if (bannerMessageProto == null) return Logger.WarnReturn(false, "DoPowerEventActionShowBannerMessage(): bannerMessageProto == null");
+
+            NetMessageBannerMessage bannerMessage = NetMessageBannerMessage.CreateBuilder()
+                .SetBannerText((ulong)bannerMessageProto.BannerText)
+                .SetTextStyle((ulong)bannerMessageProto.TextStyle)
+                .SetTimeToLiveMS((uint)bannerMessageProto.TimeToLiveMS)
+                .SetMessageStyle((uint)bannerMessageProto.MessageStyle)
+                .SetDoNotQueue(bannerMessageProto.DoNotQueue)
+                .SetShowImmediately(bannerMessageProto.ShowImmediately)
+                .Build();
+
+            if (showBannerContext.SendToPrimaryTarget)
+            {
+                Avatar target = Game.EntityManager.GetEntity<Avatar>(settings.TargetEntityId);
+                if (target != null)
+                    Game.NetworkManager.SendMessageToInterested(bannerMessage, target, AOINetworkPolicyValues.AOIChannelOwner);
+            }
+            else
+            {
+                Game.NetworkManager.SendMessageToInterested(bannerMessage, Owner, AOINetworkPolicyValues.AOIChannelOwner);
+            }
+
+            return true;
         }
 
         // 13
