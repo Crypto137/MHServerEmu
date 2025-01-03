@@ -261,9 +261,9 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task ReceiveDataAsync(TcpClientConnection connection)
         {
-            // The client should send ping messages every 10 seconds, so if we receive no data for 60 seconds,
+            // The client should send ping messages every 10 seconds, so if we receive no data for 30 seconds,
             // the connection is pretty much guaranteed to be dead.
-            const int TimeoutMS = 1000 * 60;
+            const int TimeoutMS = 1000 * 30;
 
             while (true)
             {
