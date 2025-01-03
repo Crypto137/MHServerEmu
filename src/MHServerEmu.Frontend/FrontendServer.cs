@@ -22,6 +22,10 @@ namespace MHServerEmu.Frontend
         {
             var config = ConfigManager.Instance.GetConfig<FrontendConfig>();
 
+            // -1 indicates infinite duration for both Task.Delay() and Socket.SendTimeout
+            _receiveTimeoutMS = config.ReceiveTimeoutMS > 0 ? config.ReceiveTimeoutMS : -1;
+            _sendTimeoutMS = config.SendTimeoutMS > 0 ? config.SendTimeoutMS : -1;
+
             if (Start(config.BindIP, int.Parse(config.Port)) == false) return;
             Logger.Info($"FrontendServer is listening on {config.BindIP}:{config.Port}...");
 
