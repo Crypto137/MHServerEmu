@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -28,7 +29,9 @@ namespace MHServerEmu.Games.Powers
         public PrototypeId PowerProtoRef { get; private set; }
         public AssetId PowerAssetRefOverride { get; private set; }
 
+        public Vector3 UltimateOwnerPosition { get; private set; }
         public Vector3 TargetPosition { get; private set; }
+        public Vector3 TargetEntityPosition { get; private set; }
         public TimeSpan MovementTime { get; private set; }
         public TimeSpan VariableActivationTime { get; private set; }
         public int PowerRandomSeed { get; private set; }
@@ -76,12 +79,20 @@ namespace MHServerEmu.Games.Powers
             {
                 UltimateOwnerId = ultimateOwner.Id;
                 IsPlayerPayload = ultimateOwner.CanBePlayerOwned();
+
+                if (ultimateOwner.IsInWorld)
+                    UltimateOwnerPosition = ultimateOwner.RegionLocation.Position;
             }
             else
             {
                 UltimateOwnerId = powerOwner.Id;
                 IsPlayerPayload = powerOwner.CanBePlayerOwned();
             }
+
+            // Record that current position of the target (which may be different from the target position of this power)
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(TargetId);
+            if (target != null && target.IsInWorld)
+                TargetEntityPosition = target.RegionLocation.Position;
 
             // NOTE: Due to how physics work, user may no longer be where they were when collision / combo / proc activated.
             // In these cases we use application position for validation checks to work.
@@ -749,6 +760,10 @@ namespace MHServerEmu.Games.Powers
             if (Game.Random.NextFloat() >= chanceToApply)
                 return false;
 
+            // Calculate conditions properties (these will be shared by all stacks)
+            using PropertyCollection conditionProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner ?? ultimateOwner, target, Game);
+
             // Calculate duration
             if (CalculateConditionDuration(conditionProto, owner, target, out TimeSpan duration) == false)
                 return false;
@@ -760,9 +775,107 @@ namespace MHServerEmu.Games.Powers
             for (int i = 0; i < numStacksToApply; i++)
             {
                 Condition condition = ConditionCollection.AllocateCondition();
-                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration);
+                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration, conditionProperties);
+                CalculateResultConditionExtraProperties(results, target, condition);    // Sets properties specific to this stack
                 results.AddConditionToAdd(condition);
             }
+
+            return true;
+        }
+
+        private bool CalculateResultConditionExtraProperties(PowerResults results, WorldEntity target, Condition condition)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultConditionExtraProperties(): powerProto == null");
+
+            // TODO: Add more properties to set
+            PropertyCollection conditionProps = condition.Properties;
+
+            // NoEntityCollideException
+            if (powerProto is MovementPowerPrototype movementPowerProto)
+            {
+                if (movementPowerProto.UserNoEntityCollide && movementPowerProto.NoCollideIncludesTarget == false)
+                    conditionProps[PropertyEnum.NoEntityCollideException] = TargetId;
+            }
+
+            // Knockback
+            if (conditionProps[PropertyEnum.Knockback])
+                CalculateResultConditionKnockbackProperties(results, target, condition);
+
+            return true;
+        }
+
+        private bool CalculateResultConditionKnockbackProperties(PowerResults results, WorldEntity target, Condition condition)
+        {
+            // powerProto is validated in CalculateResultConditionExtraProperties() above
+            PowerPrototype powerProto = PowerPrototype;
+
+            float knockbackDistance = 0f;
+            Vector3 knockbackSourcePosition = Vector3.Zero;
+
+            if (powerProto is MovementPowerPrototype)
+            {
+                if (target.Id != PowerOwnerId)
+                {
+                    Vector3 offsetFromTarget = TargetPosition - TargetEntityPosition;
+                    knockbackDistance = Vector3.Length2D(offsetFromTarget);
+                    knockbackSourcePosition = TargetEntityPosition - offsetFromTarget;
+                }
+            }
+            else
+            {
+                knockbackDistance = Power.GetKnockbackDistance(target, PowerOwnerId, powerProto, Properties);
+
+                if (Power.TargetsAOE(powerProto) && Power.IsOwnerCenteredAOE(powerProto) == false)
+                    knockbackSourcePosition = TargetPosition;
+                else
+                    knockbackSourcePosition = Properties[PropertyEnum.KnockbackSourceUseUltimateOwner] ? UltimateOwnerPosition : PowerOwnerPosition;
+            }
+
+            float movementSpeedOverrideBase = Properties[PropertyEnum.MovementSpeedOverride];
+            if (movementSpeedOverrideBase <= 0f) return Logger.WarnReturn(false, "CalculateResultConditionExtraProperties(): movementSpeedOverrideBase <= 0f");
+
+            float knockbackTimeBase = MathF.Abs(knockbackDistance) / movementSpeedOverrideBase;
+            if (Segment.IsNearZero(knockbackTimeBase))
+                return false;
+
+            // knockbackTime is adjusted for condition resistance compared to base
+            float knockbackTimeResult = MathF.Min((float)condition.Duration.TotalSeconds, knockbackTimeBase);
+            float knockbackSpeedResult;
+            float knockbackAccelerationResult;
+
+            float conditionMovementSpeedOverride;
+
+            switch ((int)Properties[PropertyEnum.KnockbackMovementType])
+            {
+                default:    // Constant
+                    knockbackAccelerationResult = 0f;
+                    knockbackSpeedResult = knockbackDistance / knockbackTimeBase;
+                    conditionMovementSpeedOverride = movementSpeedOverrideBase;
+                    break;
+
+                case 1:     // Accelerate
+                    knockbackAccelerationResult = 2f * knockbackDistance / (knockbackTimeBase * knockbackTimeBase);
+                    knockbackSpeedResult = 0f;
+                    conditionMovementSpeedOverride = MathF.Abs(knockbackAccelerationResult * knockbackTimeResult);
+                    break;
+
+                case 2:     // Decelerate
+                    knockbackAccelerationResult = -2f * knockbackDistance / (knockbackTimeBase * knockbackTimeBase);
+                    knockbackSpeedResult = -knockbackAccelerationResult * knockbackTimeResult;
+                    conditionMovementSpeedOverride = movementSpeedOverrideBase;
+                    break;
+            }
+
+            // Record knockback in the results for it to be applied via entity physics
+            results.Properties[PropertyEnum.Knockback] = true;
+            results.Properties[PropertyEnum.KnockbackTimeResult] = knockbackTimeResult;
+            results.Properties[PropertyEnum.KnockbackSpeedResult] = knockbackSpeedResult;
+            results.Properties[PropertyEnum.KnockbackAccelerationResult] = knockbackAccelerationResult;
+            results.Properties.CopyProperty(Properties, PropertyEnum.KnockbackReverseTargetOri);
+            results.KnockbackSourcePosition = knockbackSourcePosition;
+
+            condition.Properties[PropertyEnum.MovementSpeedOverride] = conditionMovementSpeedOverride;
 
             return true;
         }
@@ -969,7 +1082,7 @@ namespace MHServerEmu.Games.Powers
             ConditionCollection.StackId stackId = ConditionCollection.MakeConditionStackId(PowerPrototype,
                 conditionProto, UltimateOwnerId, creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto);
 
-            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateResultConditionNumStacksToApply(): ");
+            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateConditionNumStacksToApply(): ");
 
             List<ulong> refreshList = ListPool<ulong>.Instance.Get();
             List<ulong> removeList = ListPool<ulong>.Instance.Get();

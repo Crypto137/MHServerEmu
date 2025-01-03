@@ -22,6 +22,8 @@ namespace MHServerEmu.Games.Powers
         public PowerResultFlags Flags { get; set; }
         public ulong TransferToId { get; set; }
 
+        public Vector3 KnockbackSourcePosition { get; set; }
+
         public PowerActivationSettings ActivationSettings { get; set; }
 
         public IReadOnlyList<Condition> ConditionAddList { get => _conditionAddList; }
@@ -56,6 +58,8 @@ namespace MHServerEmu.Games.Powers
                 if (condition.IsInPool == false && condition.IsInCollection == false)
                     ConditionCollection.DeleteCondition(condition);
             }
+
+            KnockbackSourcePosition = default;
 
             ActivationSettings = default;
 
