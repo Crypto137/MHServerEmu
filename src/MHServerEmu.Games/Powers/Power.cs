@@ -4104,10 +4104,18 @@ namespace MHServerEmu.Games.Powers
 
         private void ComputePowerMovementSettings(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
         {
-            if (movementPowerProto != null && movementPowerProto.TeleportMethod == TeleportMethodType.None)
-                GenerateMovementPathToTarget(movementPowerProto, ref settings);
+            bool isMovementAuthoritative = Owner.IsMovementAuthoritative;
+            bool isContinuous = settings.Flags.HasFlag(PowerActivationSettingsFlags.Continuous);
+            bool isCombo = movementPowerProto?.PowerCategory == PowerCategoryType.ComboEffect;
+            bool isHoldAndReleaseMovementPower = movementPowerProto?.ExtraActivation is SecondaryActivateOnReleasePrototype;
 
-            ComputeTimeForPowerMovement(movementPowerProto, ref settings);
+            if (isMovementAuthoritative || isContinuous || isCombo || isHoldAndReleaseMovementPower)
+            {
+                if (movementPowerProto != null && movementPowerProto.TeleportMethod == TeleportMethodType.None)
+                    GenerateMovementPathToTarget(movementPowerProto, ref settings);
+
+                ComputeTimeForPowerMovement(movementPowerProto, ref settings);
+            }
         }
 
         private void GenerateMovementPathToTarget(MovementPowerPrototype movementPowerProto, ref PowerActivationSettings settings)
@@ -4137,7 +4145,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (Owner == null) return Logger.WarnReturn(false, "ComputeTimeForPowerMovement(): Owner == null");
 
-            // Claer movement time for non-movement powers
+            // Clear movement time for non-movement powers
             if (movementPowerProto == null)
             {
                 settings.MovementSpeed = 0f;
