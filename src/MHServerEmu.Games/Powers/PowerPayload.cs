@@ -31,8 +31,8 @@ namespace MHServerEmu.Games.Powers
         public Vector3 TargetPosition { get; private set; }
         public TimeSpan MovementTime { get; private set; }
         public TimeSpan VariableActivationTime { get; private set; }
-        public uint PowerRandomSeed { get; private set; }
-        public uint FXRandomSeed { get; private set; }
+        public int PowerRandomSeed { get; private set; }
+        public int FXRandomSeed { get; private set; }
 
         public float Range { get; private set; }
         public ulong RegionId { get; private set; }

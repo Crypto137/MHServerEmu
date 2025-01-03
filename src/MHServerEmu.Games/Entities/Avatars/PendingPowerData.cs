@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public Vector3 TargetPosition { get; protected set; }
         public ulong SourceItemId { get; protected set; }
 
-        public uint RandomSeed { get; set; }
+        public int RandomSeed { get; set; }
         public bool Interrupted { get; set; }
 
         public virtual bool SetData(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, ulong sourceItemId)

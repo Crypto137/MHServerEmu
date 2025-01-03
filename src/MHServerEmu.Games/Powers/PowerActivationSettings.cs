@@ -16,9 +16,9 @@ namespace MHServerEmu.Games.Powers
 
         public float MovementSpeed = 0f;
         public TimeSpan MovementTime = TimeSpan.Zero;
-        public uint PowerRandomSeed = 0;
+        public int PowerRandomSeed = 0;
         public ulong ItemSourceId = 0;
-        public uint FXRandomSeed = 0;
+        public int FXRandomSeed = 0;
         public PrototypeId TriggeringPowerRef = PrototypeId.Invalid;
 
         public PowerActivationSettingsFlags Flags = PowerActivationSettingsFlags.None;
@@ -57,12 +57,12 @@ namespace MHServerEmu.Games.Powers
                 MovementTime = TimeSpan.FromMilliseconds(tryActivatePower.MovementTimeMS);
 
             if (tryActivatePower.HasPowerRandomSeed)
-                PowerRandomSeed = tryActivatePower.PowerRandomSeed;
+                PowerRandomSeed = (int)tryActivatePower.PowerRandomSeed;
 
             if (tryActivatePower.HasItemSourceId)
                 ItemSourceId = tryActivatePower.ItemSourceId;
 
-            FXRandomSeed = tryActivatePower.FxRandomSeed;
+            FXRandomSeed = (int)tryActivatePower.FxRandomSeed;
 
             if (tryActivatePower.HasTriggeringPowerPrototypeId)
                 TriggeringPowerRef = (PrototypeId)tryActivatePower.TriggeringPowerPrototypeId;

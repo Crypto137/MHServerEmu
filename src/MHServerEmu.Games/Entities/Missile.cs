@@ -729,7 +729,7 @@ namespace MHServerEmu.Games.Entities
                     var powerSettings = new PowerActivationSettings(targetId, targetPos, position)
                     {
                         VariableActivationTime = Properties[PropertyEnum.VariableActivationTimeMS],
-                        FXRandomSeed = (uint)Properties[PropertyEnum.VariationSeed]
+                        FXRandomSeed = Properties[PropertyEnum.VariationSeed]
                     };
 
                     // EntityHelper.CrateOrb(EntityHelper.TestOrb.Blue, RegionLocation.Position, Region);

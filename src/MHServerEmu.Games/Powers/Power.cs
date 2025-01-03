@@ -525,6 +525,10 @@ namespace MHServerEmu.Games.Powers
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "Activate(): powerProto == null");
 
+            // Assign a random seed to all powers that are activated on the server (if there isn't one already for whatever reason)
+            if (settings.PowerRandomSeed == 0)
+                settings.PowerRandomSeed = Game.Random.Next(1, 10000);
+
             if (IsOnExtraActivation())
                 return RunExtraActivation(ref settings);
 

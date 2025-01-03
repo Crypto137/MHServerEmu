@@ -365,7 +365,7 @@ namespace MHServerEmu.Games.Powers
 
                 // Copy settings and generate a new seed
                 PowerActivationSettings newSettings = initialSettings;
-                newSettings.PowerRandomSeed = (uint)random.Next(1, 10000);
+                newSettings.PowerRandomSeed = random.Next(1, 10000);
 
                 // Run trigger chance check
                 float eventTriggerChance = triggeredPowerEvent.GetEventTriggerChance(Properties, Owner, target);
@@ -559,7 +559,7 @@ namespace MHServerEmu.Games.Powers
                 if (triggeredPowerEvent.ResetFXRandomSeed)
                 {
                     if (Game == null) return Logger.WarnReturn(false, "DoActivateComboPower(): Game == null");
-                    settings.FXRandomSeed = (uint)Game.Random.Next(1, 10000);
+                    settings.FXRandomSeed = Game.Random.Next(1, 10000);
                 }
 
                 // Try activating the combo

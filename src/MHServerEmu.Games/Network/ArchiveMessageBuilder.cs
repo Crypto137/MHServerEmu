@@ -350,7 +350,7 @@ namespace MHServerEmu.Games.Network
                 flags |= ActivatePowerMessageFlags.HasPowerRandomSeed;
 
             // NOTE: FXRandomSeed is marked as required in the NetMessageTryActivatePower protobuf, so it should probably always be present
-            uint fxRandomSeed = settings.FXRandomSeed != 0 ? settings.FXRandomSeed : (uint)power.Game.Random.Next(1, 10000);
+            uint fxRandomSeed = settings.FXRandomSeed != 0 ? (uint)settings.FXRandomSeed : (uint)power.Game.Random.Next(1, 10000);
             flags |= ActivatePowerMessageFlags.HasFXRandomSeed;
 
             // Serialize
@@ -403,7 +403,7 @@ namespace MHServerEmu.Games.Network
             // Random seeds for keeping server / client in sync
             if (flags.HasFlag(ActivatePowerMessageFlags.HasPowerRandomSeed))
             {
-                uint powerRandomSeed = settings.PowerRandomSeed;
+                uint powerRandomSeed = (uint)settings.PowerRandomSeed;
                 Serializer.Transfer(archive, ref powerRandomSeed);
             }
 
