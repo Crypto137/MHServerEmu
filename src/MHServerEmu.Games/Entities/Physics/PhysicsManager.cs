@@ -651,6 +651,49 @@ namespace MHServerEmu.Games.Entities.Physics
             }
         }
 
+        public void AddKnockbackForce(WorldEntity entity, Vector3 position, float time, float speed, float acceleration)
+        {
+            ForceSystem pendingForce = GetPendingForceSystem(position);
+            var epicenter = pendingForce.Epicenter;
+
+            var member = new ForceSystemMember
+            {
+                EntityId = entity.Id,
+                Position = entity.RegionLocation.Position,
+                Time = time,
+                Speed = speed,
+                Acceleration = acceleration
+            };
+
+            var direction = (member.Position - epicenter).To2D();
+            if (Vector3.IsNearZero(direction))
+                member.Direction = entity.Forward;
+            else
+                member.Direction = Vector3.Normalize(direction);
+
+            float distanceSq = Vector3.DistanceSquared(epicenter, member.Position);
+            var pendingMembers = pendingForce.Members;
+
+            foreach (var pendingMember in pendingMembers.Iterate())
+                if (distanceSq > Vector3.DistanceSquared(epicenter, pendingMember.Position))
+                {
+                    pendingForce.Members.InsertBefore(member, pendingMember);
+                    break;
+                }
+
+            if (pendingMembers.Contains(member) == false) pendingMembers.AddBack(member);
+        }
+
+        private ForceSystem GetPendingForceSystem(Vector3 position)
+        {
+            foreach (var pendingForce in _pendingForceSystems)
+                if (Vector3.EpsilonSphereTest(pendingForce.Epicenter, position, 0.1f)) 
+                    return pendingForce;
+
+            ForceSystem newForce = new(position);
+            _pendingForceSystems.Add(newForce);
+            return newForce;
+        }
     }
 
     [Flags]
