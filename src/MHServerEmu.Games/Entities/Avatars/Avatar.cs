@@ -2311,6 +2311,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        public override string ToString()
+        {
+            return $"{base.ToString()}, Player={_playerName?.Get()} (0x{_ownerPlayerDbId:X})";
+        }
+
         protected override void BuildString(StringBuilder sb)
         {
             base.BuildString(sb);
