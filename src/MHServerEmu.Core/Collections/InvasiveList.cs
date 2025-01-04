@@ -88,6 +88,34 @@ namespace MHServerEmu.Core.Collections
             if (Count > 0) Count--;
         }
 
+        public void InsertBefore(T element, T oldElement)
+        {
+            if (oldElement == null || Contains(oldElement) == false) return;
+            if (element == null || Contains(element)) return;
+
+            var node = GetInvasiveListNode(element, Id);
+            if (node == null) return;
+
+            var oldNode = GetInvasiveListNode(oldElement, Id);
+            if (oldNode == null) return;
+
+            var oldPrev = oldNode.Prev;
+            oldNode.Prev = element;
+            node.Next = oldElement;
+            node.Prev = oldPrev;
+
+            if (oldPrev != null)
+            {
+                var oldPrevNode = GetInvasiveListNode(oldPrev, Id);
+                if (oldPrevNode == null) return;
+                oldPrevNode.Next = element;
+            }
+            else
+                Head = element;
+
+            Count++;
+        }
+
         public void AddBack(T element)
         {
             if (element == null || Contains(element)) return;
@@ -99,8 +127,8 @@ namespace MHServerEmu.Core.Collections
             if (Tail != null)
             {
                 var tailNode = GetInvasiveListNode(Tail, Id);
-                if (tailNode != null)
-                    tailNode.Next = element;
+                if (tailNode == null) return;
+                tailNode.Next = element;
             }
             else
                 Head = element;
