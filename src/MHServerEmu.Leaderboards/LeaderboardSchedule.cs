@@ -35,7 +35,7 @@ namespace MHServerEmu.Leaderboards
                 && Scheduler.Frequency == (LeaderboardResetFrequency)dbLeaderboard.Frequency 
                 && Scheduler.Interval == dbLeaderboard.Interval 
                 && Scheduler.StartEvent == dbLeaderboard.GetStartDateTime() 
-                && Scheduler.EndEvent == dbLeaderboard.GeEndDateTime();
+                && Scheduler.EndEvent == dbLeaderboard.GetEndDateTime();
         }
 
         public LeaderboardSchedule(DBLeaderboard dbLeaderboard)
@@ -71,7 +71,7 @@ namespace MHServerEmu.Leaderboards
             ResetFrequency = (LeaderboardResetFrequency)dbLeaderboard.Frequency;
             Interval = dbLeaderboard.Interval;
             StartEvent = dbLeaderboard.GetStartDateTime();
-            EndEvent = dbLeaderboard.GeEndDateTime();
+            EndEvent = dbLeaderboard.GetEndDateTime();
         }
 
         public void InitFromProto(LeaderboardPrototype proto)

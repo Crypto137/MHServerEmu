@@ -16,22 +16,22 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public DateTime GetStartDateTime()
         {
-            return Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(StartEvent));
+            return Clock.TimestampToDateTime(StartEvent);
         }
 
         public void SetStartDateTime(DateTime dateTime)
         {
-            StartEvent = (long)Clock.DateTimeToUnixTime(dateTime).TotalSeconds;
+            StartEvent = Clock.DateTimeToTimestamp(dateTime);
         }
 
-        public DateTime GeEndDateTime()
+        public DateTime GetEndDateTime()
         {
-            return Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(EndEvent));
+            return Clock.TimestampToDateTime(EndEvent);
         }
 
         public void SetEndDateTime(DateTime dateTime)
         {
-            EndEvent = (long)Clock.DateTimeToUnixTime(dateTime).TotalSeconds;
+            EndEvent = Clock.DateTimeToTimestamp(dateTime);
         }
     }
 
@@ -45,12 +45,12 @@ namespace MHServerEmu.DatabaseAccess.Models
 
         public DateTime GetActivationDateTime() 
         { 
-            return Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(ActivationDate)); 
+            return Clock.TimestampToDateTime(ActivationDate); 
         }
 
         public void SetActivationDateTime(DateTime dateTime)
         {
-            ActivationDate = (long)Clock.DateTimeToUnixTime(dateTime).TotalSeconds;
+            ActivationDate = Clock.DateTimeToTimestamp(dateTime);
         }
     }
 
@@ -135,13 +135,13 @@ namespace MHServerEmu.DatabaseAccess.Models
             GameId = gameId;
             Rank = rank;
 
-            CreationDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
+            CreationDate = Clock.UtcNowTimestamp;
             RewardedDate = 0;
         }
 
         public void Rewarded()
         {
-            RewardedDate = (long)Clock.DateTimeToUnixTime(Clock.UtcNowPrecise).TotalSeconds;
+            RewardedDate = Clock.UtcNowTimestamp;
         }
     }
 }

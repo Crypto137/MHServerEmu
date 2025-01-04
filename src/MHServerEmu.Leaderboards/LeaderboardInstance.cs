@@ -82,8 +82,8 @@ namespace MHServerEmu.Leaderboards
             return LeaderboardInstanceData.CreateBuilder()
                     .SetInstanceId(InstanceId)
                     .SetState(State)
-                    .SetActivationTimestamp((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
-                    .SetExpirationTimestamp((long)Clock.DateTimeToUnixTime(ExpirationTime).TotalSeconds)
+                    .SetActivationTimestamp(Clock.DateTimeToTimestamp(ActivationTime))
+                    .SetExpirationTimestamp(Clock.DateTimeToTimestamp(ExpirationTime))
                     .SetVisible(Visible)
                     .Build();
         }
@@ -97,8 +97,8 @@ namespace MHServerEmu.Leaderboards
                     .SetLeaderboardId((ulong)LeaderboardId)
                     .SetInstanceId(InstanceId)
                     .SetState(State)
-                    .SetActivationTimestampUtc((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
-                    .SetExpirationTimestampUtc((long)Clock.DateTimeToUnixTime(ExpirationTime).TotalSeconds)
+                    .SetActivationTimestampUtc(Clock.DateTimeToTimestamp(ActivationTime))
+                    .SetExpirationTimestampUtc(Clock.DateTimeToTimestamp(ExpirationTime))
                     .SetVisible(Visible)
                     .Build();
         }

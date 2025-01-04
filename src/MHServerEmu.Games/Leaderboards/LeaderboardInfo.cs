@@ -46,8 +46,8 @@ namespace MHServerEmu.Games.Leaderboards
                 .SetLeaderboardId((ulong)LeaderboardId)
                 .SetInstanceId(InstanceId)
                 .SetNewState(State)
-                .SetActivationTimestamp((long)Clock.DateTimeToUnixTime(ActivationTime).TotalSeconds)
-                .SetExpirationTimestamp((long)Clock.DateTimeToUnixTime(ExpirationTime).TotalSeconds)
+                .SetActivationTimestamp(Clock.DateTimeToTimestamp(ActivationTime))
+                .SetExpirationTimestamp(Clock.DateTimeToTimestamp(ExpirationTime))
                 .SetVisible(Visible)
                 .Build();
         }
