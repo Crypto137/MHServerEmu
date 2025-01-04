@@ -36,7 +36,7 @@ namespace MHServerEmu.Core.System.Time
         /// <summary>
         /// Returns a Timestamp representing the current precise date and time, expressed as the Coordinated Universal Time (UTC).
         /// </summary>
-        public static long UtcNowTimestamp { get => (UtcNowPrecise - UnixEpoch).Seconds; }
+        public static long UtcNowTimestamp { get => (long)(UtcNowPrecise - UnixEpoch).TotalSeconds; }
 
         /// <summary>
         /// Returns a <see cref="TimeSpan"/> representing the current calendar Unix time (epoch Jan 01 1970 00:00:00 GMT+0000).
@@ -103,7 +103,7 @@ namespace MHServerEmu.Core.System.Time
         /// </summary>
         public static long DateTimeToTimestamp(DateTime dateTime)
         {
-            return (dateTime - UnixEpoch).Seconds;
+            return (long)(dateTime - UnixEpoch).TotalSeconds;
         }
 
         /// <summary>
