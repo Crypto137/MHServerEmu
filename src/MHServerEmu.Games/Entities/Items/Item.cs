@@ -838,7 +838,7 @@ namespace MHServerEmu.Games.Entities.Items
             else
             {
                 // The client doesn't have assignment for bool properties here for some reason
-                Logger.Warn($"OnBuiltInPropertyRoll(): Unhandled property data type {propDataType}");
+                Logger.Warn($"OnBuiltInPropertyRoll(): Unhandled property data type {propDataType} in [{this}]");
             }
 
             return true;

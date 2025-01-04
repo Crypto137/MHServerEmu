@@ -395,8 +395,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            Logger.Debug($"OnResultsEvaluation(): BannerMessage={BannerMessage.GetName()}");
-
             player.SendBannerMessage(BannerMessage.As<BannerMessagePrototype>());
         }
 
@@ -416,8 +414,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            Logger.Debug($"OnResultsEvaluation(): Power={Power.GetName()}");
-
             if (dropper == null)
             {
                 Logger.Warn("OnResultsEvaluation(): dropper == null");
@@ -460,8 +456,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            Logger.Debug($"OnResultsEvaluation(): RecipientVisualEffect={RecipientVisualEffect.GetName()}, DropperVisualEffect={DropperVisualEffect.GetName()}");
-
             Game game = player?.Game;
             if (game == null) return;
 
@@ -506,8 +500,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            Logger.Debug($"OnResultsEvaluation(): ChatMessage={ChatMessage}, MessageScope={MessageScope}");
-
             // TODO: Use MessageScope
             NetMessageChatFromGameSystem chatFromGameSystem = NetMessageChatFromGameSystem.CreateBuilder()
                 .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)

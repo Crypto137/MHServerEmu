@@ -20,6 +20,11 @@ namespace MHServerEmu.Core.Network.Tcp
         private bool _isListening;
         private bool _isDisposed;
 
+        // The client should send ping messages every 10 seconds, so if we receive no data for 30 seconds, the connection is very likely to be dead.
+        // Send timeouts are more aggressive because it affects for how long game instances can potentially lag when send buffers overflow.
+        protected int _receiveTimeoutMS = 30000;
+        protected int _sendTimeoutMS = 6000;
+
         protected bool _isRunning;
 
         public int ConnectionCount { get => _connectionDict.Count; }
@@ -214,8 +219,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task AcceptConnectionsAsync()
         {
-            const int SendTimeout = 6000;           // Exile-like
-            const int SendBufferSize = 1024 * 512;  // 512 KB
+            const int SendBufferSize = 1024 * 512;  // 512 KB, enough to fit region loading packets + extra
 
             const int MaxErrorCount = 100;
             int errorCount = 0;
@@ -226,7 +230,7 @@ namespace MHServerEmu.Core.Network.Tcp
                 {
                     // Wait for a connection
                     Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
-                    socket.SendTimeout = SendTimeout;
+                    socket.SendTimeout = _sendTimeoutMS;
                     socket.SendBufferSize = SendBufferSize;
 
                     // Establish a new client connection
@@ -261,16 +265,12 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task ReceiveDataAsync(TcpClientConnection connection)
         {
-            // The client should send ping messages every 10 seconds, so if we receive no data for 60 seconds,
-            // the connection is pretty much guaranteed to be dead.
-            const int TimeoutMS = 1000 * 60;
-
             while (true)
             {
                 try
                 {
                     Task<int> receiveTask = connection.ReceiveAsync();
-                    await Task.WhenAny(receiveTask, Task.Delay(TimeoutMS, _cts.Token));
+                    await Task.WhenAny(receiveTask, Task.Delay(_receiveTimeoutMS, _cts.Token));
 
                     if (_cts.Token.IsCancellationRequested)
                         return;

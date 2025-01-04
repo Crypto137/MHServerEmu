@@ -597,7 +597,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return power.CheckCanTriggerEval();
         }
 
-        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, uint randomSeed, bool notifyOwner = false)
+        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, int randomSeed, bool notifyOwner = false)
         {
             // Validate client input
             Power power = GetPower(powerProtoRef);
@@ -633,7 +633,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     .SetPowerPrototypeId((ulong)powerProtoRef)
                     .SetIdTargetEntity(targetId)
                     .SetTargetPosition(targetPosition.ToNetStructPoint3())
-                    .SetRandomSeed(randomSeed)
+                    .SetRandomSeed((uint)randomSeed)
                     .Build();
 
                 networkManager.SendMessageToMultiple(interestedClientList, continuousPowerUpdateMessage);
@@ -728,8 +728,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                             settings.Flags |= PowerActivationSettingsFlags.Continuous;
 
                             // Update random seed
-                            GRandom random = new((int)_continuousPowerData.RandomSeed);
-                            _continuousPowerData.RandomSeed = (uint)random.Next(0, 10000);
+                            GRandom random = new(_continuousPowerData.RandomSeed);
+                            _continuousPowerData.RandomSeed = random.Next(0, 10000);
 
                             // We omit ActivateContinuousPower(), continuousPower.UpdateContinuousPowerActivationSettings()
                             // and onContinuousPowerResumed becaused they are not really needed on the server.

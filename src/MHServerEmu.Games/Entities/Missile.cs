@@ -274,6 +274,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
         {
+            base.OnOverlapBegin(whom, whoPos, whomPos);
+
             if (whom != null) OnCollide(whom, whoPos);
         }
 
@@ -727,7 +729,7 @@ namespace MHServerEmu.Games.Entities
                     var powerSettings = new PowerActivationSettings(targetId, targetPos, position)
                     {
                         VariableActivationTime = Properties[PropertyEnum.VariableActivationTimeMS],
-                        FXRandomSeed = (uint)Properties[PropertyEnum.VariationSeed]
+                        FXRandomSeed = Properties[PropertyEnum.VariationSeed]
                     };
 
                     // EntityHelper.CrateOrb(EntityHelper.TestOrb.Blue, RegionLocation.Position, Region);

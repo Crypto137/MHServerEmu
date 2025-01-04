@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.PowerCollections;
+﻿using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -92,9 +93,20 @@ namespace MHServerEmu.Games.Entities
     {
         // Handlers are ordered by ProcTriggerType enum
 
+        public void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
+        {
+
+        }
+
         public void TryActivateOnBlockProcs(PowerResults powerResults)  // 4
         {
             // TODO
+        }
+
+        public void TryActivateOnCollideProcs(ProcTriggerType triggerType, WorldEntity other, Vector3 position)
+        {
+            // TODO
+            //Logger.Debug($"TryActivateOnCollideProcs(): {triggerType} with [{other}] at [{position}]");
         }
 
         public void TryActivateOnConditionEndProcs(Condition condition) // 8
@@ -179,6 +191,17 @@ namespace MHServerEmu.Games.Entities
         }
 
         public void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
+        {
+            // TODO
+        }
+
+        public void TryActivateOnOverlapBeginProcs(WorldEntity other, Vector3 position, Vector3 otherPosition)  // 49
+        {
+            // TODO
+            //Logger.Debug($"TryActivateOnOverlapBeginProcs(): With [{other}] at [{position}]");
+        }
+
+        public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
         {
             // TODO
         }

@@ -257,7 +257,7 @@ namespace MHServerEmu.Games.Powers
             if (missileContext.InitialDirectionAxisRotation == null) return false;
             if (missileContext.InitialDirectionRandomVariance == null) return false;
 
-            var random = new GRandom((int)powerApplication.PowerRandomSeed + missileIndex * 10);
+            var random = new GRandom(powerApplication.PowerRandomSeed + missileIndex * 10);
             var angleVector = Vector3.NextVector3(random, missileContext.InitialDirectionAxisRotation.ToVector3(), missileContext.InitialDirectionRandomVariance.ToVector3());
 
             if (!Vector3.IsNearZero(angleVector))
@@ -430,7 +430,7 @@ namespace MHServerEmu.Games.Powers
 
             if (powerApplication.PowerRandomSeed != 0)
             {
-                int seed = (int)powerApplication.PowerRandomSeed * (contextIndex + 1) * 10;
+                int seed = powerApplication.PowerRandomSeed * (contextIndex + 1) * 10;
                 extraProperties[PropertyEnum.MissileSeed] = seed;
             }
 

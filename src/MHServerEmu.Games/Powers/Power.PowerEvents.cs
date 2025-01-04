@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Memory;
@@ -6,12 +7,12 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -31,14 +32,26 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnContactTime, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnCriticalHit()              // 2
+        public void HandleTriggerPowerEventOnCriticalHit(PowerResults powerResults)              // 2
         {
+            PowerActivationSettings settings = powerResults.ActivationSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnCriticalHit, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHitKeyword()               // 3
+        public void HandleTriggerPowerEventOnHitKeyword(PowerResults powerResults)               // 3
         {
+            PowerActivationSettings settings = powerResults.ActivationSettings;
+            settings.TargetEntityId = powerResults.TargetId;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHitKeyword, ref settings);
         }
 
         public void HandleTriggerPowerEventOnPowerApply(ref PowerActivationSettings payloadSettings)  // 4
@@ -80,9 +93,14 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnPowerStart, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnProjectileHit()            // 8
+        public void HandleTriggerPowerEventOnProjectileHit(PowerResults powerResults)            // 8
         {
+            PowerActivationSettings settings = powerResults.ActivationSettings;
+            settings.PowerResults = powerResults;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnProjectileHit, ref settings);
         }
 
         public void HandleTriggerPowerEventOnStackCount(WorldEntity target, int stackCount)    // 9
@@ -347,7 +365,7 @@ namespace MHServerEmu.Games.Powers
 
                 // Copy settings and generate a new seed
                 PowerActivationSettings newSettings = initialSettings;
-                newSettings.PowerRandomSeed = (uint)random.Next(1, 10000);
+                newSettings.PowerRandomSeed = random.Next(1, 10000);
 
                 // Run trigger chance check
                 float eventTriggerChance = triggeredPowerEvent.GetEventTriggerChance(Properties, Owner, target);
@@ -541,7 +559,7 @@ namespace MHServerEmu.Games.Powers
                 if (triggeredPowerEvent.ResetFXRandomSeed)
                 {
                     if (Game == null) return Logger.WarnReturn(false, "DoActivateComboPower(): Game == null");
-                    settings.FXRandomSeed = (uint)Game.Random.Next(1, 10000);
+                    settings.FXRandomSeed = Game.Random.Next(1, 10000);
                 }
 
                 // Try activating the combo
@@ -684,6 +702,8 @@ namespace MHServerEmu.Games.Powers
         // 4
         private bool DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
+            // Disabled until we have summon powers working to reduce log spam
+            /*
             PowerEventContextPrototype contextProto = triggeredPowerEvent.PowerEventContext;
             if (contextProto == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): contextProto == null");
 
@@ -723,6 +743,7 @@ namespace MHServerEmu.Games.Powers
             {
                 contextCallbackProto.HandlePowerEvent(Owner, target, targetPosition);
             }
+            */
 
             return true;
         }
@@ -834,9 +855,35 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 12
-        private void DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionShowBannerMessage(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionShowBannerMessage(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextShowBannerMessagePrototype showBannerContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionShowBannerMessage(): triggeredPowerEvent.PowerEventContext is not PowerEventContextShowBannerMessagePrototype showBannerContext");
+
+            BannerMessagePrototype bannerMessageProto = showBannerContext.BannerMessage.As<BannerMessagePrototype>();
+            if (bannerMessageProto == null) return Logger.WarnReturn(false, "DoPowerEventActionShowBannerMessage(): bannerMessageProto == null");
+
+            NetMessageBannerMessage bannerMessage = NetMessageBannerMessage.CreateBuilder()
+                .SetBannerText((ulong)bannerMessageProto.BannerText)
+                .SetTextStyle((ulong)bannerMessageProto.TextStyle)
+                .SetTimeToLiveMS((uint)bannerMessageProto.TimeToLiveMS)
+                .SetMessageStyle((uint)bannerMessageProto.MessageStyle)
+                .SetDoNotQueue(bannerMessageProto.DoNotQueue)
+                .SetShowImmediately(bannerMessageProto.ShowImmediately)
+                .Build();
+
+            if (showBannerContext.SendToPrimaryTarget)
+            {
+                Avatar target = Game.EntityManager.GetEntity<Avatar>(settings.TargetEntityId);
+                if (target != null)
+                    Game.NetworkManager.SendMessageToInterested(bannerMessage, target, AOINetworkPolicyValues.AOIChannelOwner);
+            }
+            else
+            {
+                Game.NetworkManager.SendMessageToInterested(bannerMessage, Owner, AOINetworkPolicyValues.AOIChannelOwner);
+            }
+
+            return true;
         }
 
         // 13
