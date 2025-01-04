@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
         public void ApplyKnockbackForce(in Vector3 position, float time, float speed, float acceleration)
         {
-            //Logger.Debug($"ApplyKnockbackForce(): source=[{position}], time={time}, acceleration={acceleration}");
+            // Logger.Debug($"ApplyKnockbackForce(): entity=[{Entity.PrototypeName}] source=[{position}], time={time}, acceleration={acceleration}");
 
             var physicsMgr = GetPhysicsManager();
             if (physicsMgr == null || Entity.IsInWorld == false) return;
