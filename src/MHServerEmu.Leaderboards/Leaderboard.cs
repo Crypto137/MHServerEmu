@@ -3,7 +3,6 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
-using Cronos;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -16,8 +15,7 @@ namespace MHServerEmu.Leaderboards
         public LeaderboardInstance ActiveInstance { get; protected set; }
         public bool IsActive { get => ActiveInstance != null && ActiveInstance.State == LeaderboardState.eLBS_Active; }
         public bool CanReset { get => Prototype != null && Prototype.ResetFrequency != LeaderboardResetFrequency.NeverReset; }
-        public CronExpression Schedule { get; protected set; }
-        public CronExpression ResetSchedule { get; protected set; }
+        public LeaderboardScheduler Scheduler { get; protected set; }
 
         public Leaderboard(LeaderboardPrototype proto, DBLeaderboard dbLeaderboard)
         {
@@ -25,7 +23,12 @@ namespace MHServerEmu.Leaderboards
             LeaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
             Instances = new();
 
-            if (CanReset) InitSchedule(dbLeaderboard);
+            Scheduler = new();
+            if (CanReset)
+            {
+                Scheduler.InitFromProto(proto);
+                Scheduler.Initialize(dbLeaderboard);
+            }
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             var instanceList = dbManager.GetInstances(dbLeaderboard.LeaderboardId, proto.MaxArchivedInstances);
@@ -110,7 +113,7 @@ namespace MHServerEmu.Leaderboards
                             {
                                 instance.SetState(LeaderboardState.eLBS_Expired);
 
-                                if (CanReset && newInstanceDb == null)
+                                if (CanReset && newInstanceDb == null && IsActive)
                                 {
                                     var nextActivationTime = CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
                                     if (nextActivationTime == instance.ActivationTime) continue;
@@ -193,26 +196,12 @@ namespace MHServerEmu.Leaderboards
             SetActiveInstance((ulong)dbInstance.InstanceId, dbInstance.State, true);
         }
 
-        private void InitSchedule(DBLeaderboard dbLeaderboard)
-        {
-            SetSchedule(dbLeaderboard);
-            ResetSchedule = LeaderboardSchedule.GetResetSchedule(Prototype.ResetFrequency);
-        }
-
-        public void SetSchedule(DBLeaderboard dbLeaderboard)
-        {
-            if (dbLeaderboard.IsActive && LeaderboardSchedule.IsValidSchedule(dbLeaderboard.Schedule))
-                Schedule = CronExpression.Parse(dbLeaderboard.Schedule);
-            else
-                Schedule = CronExpression.EveryMinute;
-        }
-
         public DateTime CalcNextUtcActivationDate(DateTime activationTime, DateTime currentTime)
         {
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 
                 currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
 
-            var nextReset = GetNextUtcResetDatetime(activationTime);
+            var nextReset = Scheduler.GetNextUtcResetDatetime(activationTime);
 
             if (nextReset < currentTime)
             {
@@ -221,22 +210,16 @@ namespace MHServerEmu.Leaderboards
                     nextReset.Hour, nextReset.Minute, nextReset.Second, DateTimeKind.Utc);
 
                 if (nextReset < currentTime)
-                    nextReset = GetNextUtcResetDatetime(currentTime);
+                    nextReset = Scheduler.GetNextUtcResetDatetime(nextReset);
             }
 
             var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
 
-            var nextActivation = Schedule.GetNextOccurrence(nextResetDay, true);
+            var nextActivation = Scheduler.GetNextActivationDate(currentTime);
             if (nextActivation.HasValue == false)
                 return activationTime;
             else
                 return nextActivation > nextResetDay ? nextActivation.Value : nextReset;
-        }
-
-        private DateTime GetNextUtcResetDatetime(DateTime activationTime)
-        {
-            var nextReset = ResetSchedule.GetNextOccurrence(activationTime);
-            return nextReset ?? activationTime;
         }
 
         public void OnStateChange(ulong instanceId, LeaderboardState state)

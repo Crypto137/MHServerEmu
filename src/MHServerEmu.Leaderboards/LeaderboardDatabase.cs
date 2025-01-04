@@ -82,21 +82,20 @@ namespace MHServerEmu.Leaderboards
                     // Skip old
                     var oldLeaderboard = oldDbLeaderboards.First(lb => lb.LeaderboardId == leaderboard.LeaderboardId);
                     if (oldLeaderboard == null) continue;
-                    if (oldLeaderboard.IsActive == leaderboard.IsActive 
-                        && oldLeaderboard.Schedule == leaderboard.Schedule) continue;
+                    if (leaderboard.Compare(oldLeaderboard)) continue;
                     
                     var activeLeaderboard = leaderboard.ToDBLeaderboard();
                     activeLeaderboard.ActiveInstanceId = oldLeaderboard.ActiveInstanceId;
                     activeLeaderboards.Add(activeLeaderboard);
 
-                    if (leaderboard.IsActive)
+                    if (leaderboard.Scheduler.IsActive)
                         dbInstances.Add(new DBLeaderboardInstance
                         {
                             InstanceId = oldLeaderboard.ActiveInstanceId + 1,
                             LeaderboardId = leaderboard.LeaderboardId,
                             State = LeaderboardState.eLBS_Created,
                             ActivationDate = 0,
-                            Visible = leaderboard.IsActive
+                            Visible = leaderboard.Scheduler.IsActive
                         });
                 }
             }
@@ -133,7 +132,7 @@ namespace MHServerEmu.Leaderboards
                 
                 if (activeLeaderboard.IsActive)
                 {
-                    leaderboard.SetSchedule(activeLeaderboard);
+                    leaderboard.Scheduler.Initialize(activeLeaderboard);
 
                     // Add new instances
                     var dbNewInstance = new DBLeaderboardInstance
@@ -233,11 +232,17 @@ namespace MHServerEmu.Leaderboards
                     PrototypeName = dataRef.GetNameFormatted(),
                     ActiveInstanceId = instanceId,
                     IsActive = isActive,
-                    Schedule = "* * * * *"
+                    Frequency = (int)LeaderboardResetFrequency.Weekly,
+                    Interval = 1,
+                    StartEvent = 1735689600,
+                    EndEvent = 1767225600
                 };
 
+                var dbSchedule = new LeaderboardSchedule(dbLeaderboard);
+                dbSchedule.Scheduler.InitFromProto(proto);
+
                 dbLeaderboards.Add(dbLeaderboard);
-                jsonLeaderboards.Add(new LeaderboardSchedule(dbLeaderboard));
+                jsonLeaderboards.Add(dbSchedule);
 
                 dbInstances.Add(new DBLeaderboardInstance
                 {

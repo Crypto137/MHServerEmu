@@ -9,7 +9,30 @@ namespace MHServerEmu.DatabaseAccess.Models
         public string PrototypeName { get; set; }
         public long ActiveInstanceId { get; set; }
         public bool IsActive { get; set; }
-        public string Schedule { get; set; }
+        public int Frequency { get; set; }
+        public int Interval { get; set; }
+        public long StartEvent { get; set; }
+        public long EndEvent { get; set; }
+
+        public DateTime GetStartDateTime()
+        {
+            return Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(StartEvent));
+        }
+
+        public void SetStartDateTime(DateTime dateTime)
+        {
+            StartEvent = (long)Clock.DateTimeToUnixTime(dateTime).TotalSeconds;
+        }
+
+        public DateTime GeEndDateTime()
+        {
+            return Clock.UnixTimeToDateTime(TimeSpan.FromSeconds(EndEvent));
+        }
+
+        public void SetEndDateTime(DateTime dateTime)
+        {
+            EndEvent = (long)Clock.DateTimeToUnixTime(dateTime).TotalSeconds;
+        }
     }
 
     public class DBLeaderboardInstance 

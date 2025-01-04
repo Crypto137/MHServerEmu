@@ -7,7 +7,10 @@ CREATE TABLE "Leaderboards" (
 	"PrototypeName"	TEXT,
 	"ActiveInstanceId"	INTEGER,
 	"IsActive"	INTEGER,
-	"Schedule" TEXT
+	"Frequency"	INTEGER,
+	"Interval"	INTEGER,
+	"StartEvent"	INTEGER,
+	"EndEvent"	INTEGER
 );
 
 CREATE TABLE "Instances" (

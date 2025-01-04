@@ -70,8 +70,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var transaction = connection.BeginTransaction();
 
             connection.Execute(@"
-                INSERT INTO Leaderboards (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive, Schedule)
-                VALUES (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive, @Schedule)", dbLeaderboards, transaction);
+                INSERT INTO Leaderboards 
+                (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive, Frequency, Interval, StartEvent, EndEvent)
+                VALUES 
+                (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive, @Frequency, @Interval, @StartEvent, @EndEvent)",
+                dbLeaderboards, transaction);
 
             transaction.Commit();
         }
@@ -82,8 +85,13 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using SQLiteConnection connection = GetConnection();
             connection.Execute(@"
                 UPDATE Leaderboards 
-                SET ActiveInstanceId = @ActiveInstanceId,
-                IsActive = @IsActive, Schedule = @Schedule
+                SET 
+                    ActiveInstanceId = @ActiveInstanceId,
+                    IsActive = @IsActive,
+                    Frequency = @Frequency,
+                    Interval = @Interval,
+                    StartEvent = @StartEvent,
+                    EndEvent = @EndEvent
                 WHERE LeaderboardId = @LeaderboardId",
                 dbLeaderboards);
         }
