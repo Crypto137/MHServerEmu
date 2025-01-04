@@ -194,7 +194,7 @@ namespace MHServerEmu.Games.Entities.Physics
 
                 WorldEntity entity = entityManager.GetEntity<WorldEntity>(member.EntityId);
                 if (entity != null && entity.IsInWorld)
-                    if (entity.TestStatus(EntityStatus.Destroyed))
+                    if (entity.TestStatus(EntityStatus.Destroyed) == false)
                     {
                         float deltaTime = Math.Min((float)_game.FixedTimeBetweenUpdates.TotalSeconds, member.Time);
                         float distance = member.Speed * deltaTime + member.Acceleration * deltaTime * deltaTime / 2;
