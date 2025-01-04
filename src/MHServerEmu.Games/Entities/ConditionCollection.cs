@@ -155,6 +155,20 @@ namespace MHServerEmu.Games.Entities
                     OnInsertCondition(condition);           // Apply this condition to the owner
             }
 
+            // Validate stacks
+            foreach (Condition condition in this)
+            {
+                StackingBehaviorPrototype stackingBehaviorProto = condition.GetStackingBehaviorPrototype();
+                if (stackingBehaviorProto == null)
+                    continue;
+
+                if (GetNumberOfStacks(condition) > stackingBehaviorProto.MaxNumStacks)
+                {
+                    Logger.Warn($"OnUnpackComplete(): The number of stacks for condition [{condition}] exceeds the maximum of {stackingBehaviorProto.MaxNumStacks} for owner [{_owner}]");
+                    RemoveStack(condition.StackId);
+                }
+            }
+
             return true;
         }
 
