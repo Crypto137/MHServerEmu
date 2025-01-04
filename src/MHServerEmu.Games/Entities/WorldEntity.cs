@@ -1510,9 +1510,20 @@ namespace MHServerEmu.Games.Entities
             float knockbackAcceleration = powerResults.Properties[PropertyEnum.KnockbackAccelerationResult];
             Physics.ApplyKnockbackForce(knockbackSource, knockbackTime, knockbackSpeed, knockbackAcceleration);
 
+            // Orient this entity for forced movement
             if (powerResults.PowerOwnerId != Id)
             {
-                // TODO: Orient for forced movement
+                Orientation orientation;
+
+                bool isMovingAway = knockbackSpeed > 0f || (knockbackSpeed == 0f && knockbackAcceleration > 0f);
+                bool reverseOrientation = powerResults.Properties[PropertyEnum.KnockbackReverseTargetOri];
+
+                if ((isMovingAway && reverseOrientation == false) || (isMovingAway == false && reverseOrientation))
+                    orientation = Orientation.FromDeltaVector(powerResults.KnockbackSourcePosition - RegionLocation.Position);  // Face away from source
+                else
+                    orientation = Orientation.FromDeltaVector(RegionLocation.Position - powerResults.KnockbackSourcePosition);  // Face towards source
+
+                ChangeRegionPosition(null, orientation, ChangePositionFlags.Orientation);
             }
 
             return true;
