@@ -755,9 +755,53 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 6
-        private void DoPowerEventActionChargesIncrement(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionChargesIncrement(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionChargesIncrement(): Not implemented");
+            WorldEntity ultimateOwner = GetUltimateOwner();
+            if (ultimateOwner == null) return Logger.WarnReturn(false, "DoPowerEventActionChargesIncrement(): ultimateOwner == null");
+
+            // Team-ups should not be ble to increment charges
+            if (Owner.IsTeamUpAgent || ultimateOwner.IsTeamUpAgent || ultimateOwner is not Avatar)
+                return false;
+
+            int delta = (int)triggeredPowerEvent.GetEventParam(Properties, ultimateOwner);
+            if (delta == 0)
+                return false;
+
+            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
+            if (GetPowersToOperateOnForPowerEvent(ultimateOwner, triggeredPowerEvent, ref settings, powersToOperateOnList))
+            {
+                foreach (Power power in powersToOperateOnList)
+                {
+                    PrototypeId powerProtoRef = power.PrototypeDataRef;
+                    PropertyCollection properties = power.Owner.Properties;
+
+                    int chargesAvailable = properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+                    int chargesMax = properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+
+                    if (chargesAvailable >= chargesMax)
+                        continue;
+
+                    chargesAvailable += delta;
+
+                    if (chargesAvailable >= chargesMax)
+                    {
+                        properties[PropertyEnum.PowerChargesAvailable, powerProtoRef] = chargesMax;
+                        power.EndCooldown();
+                    }
+                    else if (chargesAvailable <= 0)
+                    {
+                        properties[PropertyEnum.PowerChargesAvailable, powerProtoRef] = 0;
+                    }
+                    else
+                    {
+                        properties.AdjustProperty(delta, new(PropertyEnum.PowerChargesAvailable, powerProtoRef));
+                    }
+                }
+            }
+
+            ListPool<Power>.Instance.Return(powersToOperateOnList);
+            return true;
         }
 
         // 7
