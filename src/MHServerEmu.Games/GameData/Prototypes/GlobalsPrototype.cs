@@ -1001,6 +1001,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId TUSynergyBonusPerLvl { get; protected set; }
         public PrototypeId TUSynergyBonusPerMaxLvlTU { get; protected set; }
 
+        //--
+
+        [DoNotCopy]
+        public EvalPrototype EvalNegStatusResistPctFormulaPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            EvalNegStatusResistPctFormulaPrototype = EvalNegStatusResistPctFormula.As<EvalPrototype>();
+        }
+
         public float GetHardcoreAttenuationFactor(PropertyCollection properties)
         {
             int numberOfDeaths = properties[PropertyEnum.NumberOfDeaths];

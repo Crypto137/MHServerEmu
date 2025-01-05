@@ -25,6 +25,7 @@ using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -1328,6 +1329,20 @@ namespace MHServerEmu.Games.Entities
         public bool UpdateProcEffectPowers(PropertyCollection properties, bool assignPowers)
         {
             return true;
+        }
+
+        public float GetNegStatusResistPercent(int ccResistScore, PropertyCollection otherProperties)
+        {
+            EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormulaPrototype;
+            if (evalNegStatusResistPctFormula == null) return Logger.WarnReturn(0f, "GetNegStatusResistPercent(): evalNegStatusResistPctFormula == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, otherProperties);
+            evalContext.SetVar_Int(EvalContext.Var1, ccResistScore);
+
+            float resistPercent = Eval.RunFloat(evalNegStatusResistPctFormula, evalContext);
+            return Math.Clamp(resistPercent, 0f, 1f);
         }
 
         public bool ApplyPowerResults(PowerResults powerResults)

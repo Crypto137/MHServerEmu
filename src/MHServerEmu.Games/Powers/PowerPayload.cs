@@ -840,7 +840,7 @@ namespace MHServerEmu.Games.Powers
                     else
                     {
                         results.SetFlag(PowerResultFlags.Resisted, true);
-                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Finite condition {PowerPrototype} resisted by [{owner}]"); ;
+                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Finite condition {PowerPrototype} resisted by [{target}]"); ;
                     }
                 }
 
@@ -868,7 +868,7 @@ namespace MHServerEmu.Games.Powers
 
                     ListPool<PrototypeId>.Instance.Return(negativeStatusList);
                     if (canApply == false)
-                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Infinite condition {PowerPrototype} resisted by [{owner}]");
+                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Infinite condition {PowerPrototype} resisted by [{target}]");
                 }
 
                 // Needs to have an owner that can remove it
@@ -1251,7 +1251,33 @@ namespace MHServerEmu.Games.Powers
                 goto end;
             }
 
-            // TODO: Calculate and apply CCResistScore
+            // Calculate and apply CCResistScore (tenacity)
+
+            // Start with resist to all
+            int ccResistScore = targetProperties[PropertyEnum.CCResistScoreAll];
+
+            // Add resistances to specific negative statuses
+            foreach (PrototypeId negativeStatus in negativeStatusList)
+                ccResistScore += targetProperties[PropertyEnum.CCResistScore, negativeStatus];
+            
+            // Add resistances to specific keywords
+            if (conditionProto.Keywords.HasValue())
+            {
+                foreach (PrototypeId keywordProtoRef in conditionProto.Keywords)
+                    ccResistScore += targetProperties[PropertyEnum.CCResistScoreKwd, keywordProtoRef];
+            }
+
+            // Adjust CCResistScore for conditions applied by players based on difficulty
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+            if (ultimateOwner != null && ultimateOwner.GetOwnerOfType<Player> != null)
+            {
+                // TODO
+            }
+
+            // Apply resist score
+            float resistMult = 1f - target.GetNegStatusResistPercent(ccResistScore, Properties);
+            duration *= resistMult;
+            
             // TODO: Calculate and apply StatusResist
 
             end:
