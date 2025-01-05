@@ -760,7 +760,7 @@ namespace MHServerEmu.Games.Powers
             WorldEntity ultimateOwner = GetUltimateOwner();
             if (ultimateOwner == null) return Logger.WarnReturn(false, "DoPowerEventActionChargesIncrement(): ultimateOwner == null");
 
-            // Team-ups should not be ble to increment charges
+            // Team-ups should not be able to increment charges
             if (Owner.IsTeamUpAgent || ultimateOwner.IsTeamUpAgent || ultimateOwner is not Avatar)
                 return false;
 
@@ -1095,12 +1095,10 @@ namespace MHServerEmu.Games.Powers
         // 24
         private void DoPowerEventActionCooldownStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            //Logger.Debug($"DoPowerEventActionCooldownStart()");
-
             if (settings.Flags.HasFlag(PowerActivationSettingsFlags.AutoActivate))
                 return;
 
-            List<Power> powersToOperateOnList = new();
+            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan cooldownDuration = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
@@ -1115,14 +1113,14 @@ namespace MHServerEmu.Games.Powers
                     power.StartCooldown(cooldownDuration);
                 }
             }
+
+            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 25
         private void DoPowerEventActionCooldownEnd(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            //Logger.Debug($"DoPowerEventActionCooldownEnd()");
-
-            List<Power> powersToOperateOnList = new();
+            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 foreach (Power power in powersToOperateOnList)
@@ -1136,14 +1134,14 @@ namespace MHServerEmu.Games.Powers
                     power.EndCooldown();
                 }
             }
+
+            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 26
         private void DoPowerEventActionCooldownModifySecs(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            //Logger.Debug($"DoPowerEventActionCooldownModifySecs()");
-
-            List<Power> powersToOperateOnList = new();
+            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 TimeSpan offset = TimeSpan.FromSeconds(triggeredPowerEvent.GetEventParam(Properties, Owner));
@@ -1159,14 +1157,14 @@ namespace MHServerEmu.Games.Powers
                     power.ModifyCooldown(offset);
                 }
             }
+
+            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 27
         private void DoPowerEventActionCooldownModifyPct(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            //Logger.Debug($"DoPowerEventActionCooldownModifyPct()");
-
-            List<Power> powersToOperateOnList = new();
+            List<Power> powersToOperateOnList = ListPool<Power>.Instance.Get();
             if (GetPowersToOperateOnForPowerEvent(Owner, triggeredPowerEvent, ref settings, powersToOperateOnList))
             {
                 float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
@@ -1182,6 +1180,8 @@ namespace MHServerEmu.Games.Powers
                     power.ModifyCooldownByPercentage(eventParam);
                 }
             }
+
+            ListPool<Power>.Instance.Return(powersToOperateOnList);
         }
 
         // 28
