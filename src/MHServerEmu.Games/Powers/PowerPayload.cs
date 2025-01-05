@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -826,7 +827,25 @@ namespace MHServerEmu.Games.Powers
             {
                 // Finite conditions
 
-                // TODO: Resist / duration bonus
+                if (calculateForTarget)
+                {
+                    // Resist only targeted conditions
+                    ApplyConditionDurationResistances(target, conditionProto, conditionProperties, ref conditionDuration);
+
+                    if (conditionDuration > TimeSpan.Zero)
+                    {
+                        // Make sure the condition is at least 1 ms long to avoid rounding to 0, turning it into an infinite condition
+                        conditionDuration = Clock.Max(conditionDuration, TimeSpan.FromMilliseconds(1));
+                    }
+                    else
+                    {
+                        results.SetFlag(PowerResultFlags.Resisted, true);
+                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Finite condition {PowerPrototype} resisted by [{owner}]"); ;
+                    }
+                }
+
+                // Apply bonuses to everything
+                ApplyConditionDurationBonuses(ref conditionDuration);
             }
             else if (conditionDuration == TimeSpan.Zero)
             {
@@ -842,14 +861,14 @@ namespace MHServerEmu.Games.Powers
                     {
                         if (CanApplyConditionToTarget(target, conditionProperties, negativeStatusList) == false)
                         {
-                            canApply = false;
                             results.SetFlag(PowerResultFlags.Resisted, true);
+                            canApply = false;
                         }
                     }
 
                     ListPool<PrototypeId>.Instance.Return(negativeStatusList);
                     if (canApply == false)
-                        return Logger.DebugReturn(false, $"Condition {PowerPrototype} resisted by [{owner}]");
+                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Infinite condition {PowerPrototype} resisted by [{owner}]");
                 }
 
                 // Needs to have an owner that can remove it
@@ -1210,6 +1229,48 @@ namespace MHServerEmu.Games.Powers
 
             // All good, can apply
             return true;
+        }
+
+        private void ApplyConditionDurationResistances(WorldEntity target, ConditionPrototype conditionProto, PropertyCollection conditionProperties, ref TimeSpan duration)
+        {
+            PropertyCollection targetProperties = target.Properties;
+
+            // Do not resist conditions without negative status effects
+            List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+            if (Condition.IsANegativeStatusEffect(conditionProperties, negativeStatusList) == false)
+                goto end;
+
+            // Do not resist if the condition ignores resists and the target isn't immune to resist ignores
+            if (conditionProperties[PropertyEnum.IgnoreNegativeStatusResist] && targetProperties[PropertyEnum.CCAlwaysCheckResist] == false)
+                goto end;
+
+            // Check for immunities
+            if (CanApplyConditionToTarget(target, conditionProperties, negativeStatusList) == false)
+            {
+                duration = TimeSpan.Zero;
+                goto end;
+            }
+
+            // TODO: Calculate and apply CCResistScore
+            // TODO: Calculate and apply StatusResist
+
+            end:
+            ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+        }
+
+        private void ApplyConditionDurationBonuses(ref TimeSpan duration)
+        {
+            if (PowerPrototype?.OmniDurationBonusExclude == false)
+            {
+                WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+                if (ultimateOwner != null)
+                {
+                    duration *= 1f + ultimateOwner.Properties[PropertyEnum.OmniDurationBonusPct];
+                    duration = Clock.Max(duration, TimeSpan.FromMilliseconds(1));
+                }
+            }
+
+            duration += TimeSpan.FromMilliseconds((int)Properties[PropertyEnum.StatusDurationBonusMS]);
         }
 
         private int CalculateConditionNumStacksToApply(WorldEntity target, WorldEntity ultimateOwner,
