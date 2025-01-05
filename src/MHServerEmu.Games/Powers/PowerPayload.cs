@@ -782,19 +782,93 @@ namespace MHServerEmu.Games.Powers
             Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner ?? ultimateOwner, target, Game);
 
             // Calculate duration
-            if (CalculateConditionDuration(conditionProto, owner, target, movementDuration, out TimeSpan duration) == false)
+            if (CalculateResultConditionDuration(results, target, owner, calculateForTarget, conditionProto, conditionProperties, movementDuration, out TimeSpan conditionDuration) == false)
                 return false;
 
             // Calculate the number of stacks to apply and modify duration if needed
-            int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref duration);
+            int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref conditionDuration);
 
             // Apply the calculated number of stacks
             for (int i = 0; i < numStacksToApply; i++)
             {
                 Condition condition = ConditionCollection.AllocateCondition();
-                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration, conditionProperties);
+                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, conditionDuration, conditionProperties);
                 CalculateResultConditionExtraProperties(results, target, condition);    // Sets properties specific to this stack
                 results.AddConditionToAdd(condition);
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultConditionDuration(PowerResults results, WorldEntity target, WorldEntity owner, bool calculateForTarget,
+            ConditionPrototype conditionProto, PropertyCollection conditionProperties, TimeSpan? movementDuration, out TimeSpan conditionDuration)
+        {
+            conditionDuration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+
+            if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
+                (conditionProto.Properties != null && conditionProto.Properties[PropertyEnum.Knockback]))
+            {
+                // Movement and knockback condition last for as long as the movement is happening
+                if (movementDuration.HasValue)
+                {
+                    if (movementDuration <= TimeSpan.Zero)
+                        return Logger.WarnReturn(false, $"CalculateResultConditionDuration(): Calculated movement duration is <= TimeSpan.Zero, which would result in an infinite condition.\nowner=[{owner}]\ntarget=[{target}]");
+
+                    conditionDuration = movementDuration.Value;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (conditionDuration > TimeSpan.Zero)
+            {
+                // Finite conditions
+
+                // TODO: Resist / duration bonus
+            }
+            else if (conditionDuration == TimeSpan.Zero)
+            {
+                // Infinite conditions
+
+                // Check if this condition can be applied (for targeted conditions only)
+                if (calculateForTarget)
+                {
+                    bool canApply = true;
+
+                    List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+                    if (Condition.IsANegativeStatusEffect(conditionProperties, negativeStatusList))
+                    {
+                        if (CanApplyConditionToTarget(target, conditionProperties, negativeStatusList) == false)
+                        {
+                            canApply = false;
+                            results.SetFlag(PowerResultFlags.Resisted, true);
+                        }
+                    }
+
+                    ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+                    if (canApply == false)
+                        return Logger.DebugReturn(false, $"Condition {PowerPrototype} resisted by [{owner}]");
+                }
+
+                // Needs to have an owner that can remove it
+                if (owner == null)
+                    return false;
+
+                // If this is a hotspot condition, make sure the target is still being overlapped
+                if (owner is Hotspot hotspot && hotspot.IsOverlappingPowerTarget(target.Id) == false)
+                    return false;
+
+                // Do not apply self-targeted conditions if its creator power is no longer available and it removes conditions on end
+                PowerPrototype powerProto = PowerPrototype;
+                if (owner.Id == target.Id && owner.GetPower(PowerProtoRef) == null && (powerProto.CancelConditionsOnEnd || powerProto.CancelConditionsOnUnassign))
+                    return false;
+            }
+            else
+            {
+                // Negative duration should never happen
+                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
             }
 
             return true;
@@ -1102,59 +1176,39 @@ namespace MHServerEmu.Games.Powers
             return movementDuration > TimeSpan.Zero;
         }
 
-        private bool CalculateConditionDuration(ConditionPrototype conditionProto, WorldEntity owner, WorldEntity target,
-            TimeSpan? movementDuration, out TimeSpan conditionDuration)
+        private bool CanApplyConditionToTarget(WorldEntity target, PropertyCollection conditionProperties, List<PrototypeId> negativeStatusList)
         {
-            conditionDuration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+            PropertyCollection targetProperties = target.Properties;
 
-            if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
-                (conditionProto.Properties != null && conditionProto.Properties[PropertyEnum.Knockback]))
+            // Skip checks if the condition ignores resists and the target isn't immune to resist ignores
+            if (conditionProperties[PropertyEnum.IgnoreNegativeStatusResist] && targetProperties[PropertyEnum.CCAlwaysCheckResist] == false)
+                return true;
+
+            // Check for general invulnerability
+            if (targetProperties[PropertyEnum.Invulnerable])
+                return false;
+
+            // Check for immunity to all negative status effects
+            if (targetProperties[PropertyEnum.NegStatusImmunity] || targetProperties[PropertyEnum.CCResistAlwaysAll])
+                return false;
+
+            // Check for immunity to negative status effects applied by this condition
+            foreach (PrototypeId negativeStatus in negativeStatusList)
             {
-                // Movement and knockback condition last for as long as the movement is happening
-                if (movementDuration.HasValue)
-                {
-                    if (movementDuration <= TimeSpan.Zero)
-                        return Logger.WarnReturn(false, $"CalculateConditionDuration(): Calculated movement duration is <= TimeSpan.Zero, which would result in an infinite condition.\nowner=[{owner}]\ntarget=[{target}]");
-
-                    conditionDuration = movementDuration.Value;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            // TODO: Resistances / bonuses
-
-            if (conditionDuration > TimeSpan.Zero)
-            {
-                // Finite conditions
-
-                // TODO
-            }
-            else if (conditionDuration == TimeSpan.Zero)
-            {
-                // Infinite conditions
-
-                // Needs to have an owner that can remove it
-                if (owner == null)
-                    return false;
-
-                // If this is a hotspot condition, make sure the target is still being overlapped
-                if (owner is Hotspot hotspot && hotspot.IsOverlappingPowerTarget(target.Id) == false)
-                    return false;
-
-                // Do not apply self-targeted conditions if its creator power is no longer available and removes conditions on end
-                PowerPrototype powerProto = PowerPrototype;
-                if (owner.Id == target.Id && owner.GetPower(PowerProtoRef) == null && (powerProto.CancelConditionsOnEnd || powerProto.CancelConditionsOnUnassign))
+                if (targetProperties[PropertyEnum.CCResistAlways, negativeStatus])
                     return false;
             }
-            else
-            {
-                // Negative duration should never happen
-                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
-            }
 
+            // Do not apply knockbacks when a target is immobilized
+            if (conditionProperties[PropertyEnum.Knockback] && (target.IsImmobilized || target.IsSystemImmobilized))
+                return false;
+
+            // Make sure the target is targetable
+            Player player = target.GetOwnerOfType<Player>();
+            if (player != null && player.IsTargetable(OwnerAlliance) == false)
+                return false;
+
+            // All good, can apply
             return true;
         }
 
