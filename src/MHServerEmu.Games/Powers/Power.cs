@@ -3415,6 +3415,10 @@ namespace MHServerEmu.Games.Powers
 
             scheduler.CancelAllEvents(_pendingActivationPhaseEvents);
             CancelAllScheduledActivations();
+
+            scheduler.CancelEvent(_reapplyIndexPropertiesEvent);
+            CancelDelayedActivation();
+
             return true;
         }
 
