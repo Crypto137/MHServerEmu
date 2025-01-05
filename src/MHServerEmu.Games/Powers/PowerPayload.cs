@@ -1112,15 +1112,48 @@ namespace MHServerEmu.Games.Powers
             {
                 // Movement and knockback condition last for as long as the movement is happening
                 if (movementDuration.HasValue)
+                {
+                    if (movementDuration <= TimeSpan.Zero)
+                        return Logger.WarnReturn(false, $"CalculateConditionDuration(): Calculated movement duration is <= TimeSpan.Zero, which would result in an infinite condition.\nowner=[{owner}]\ntarget=[{target}]");
+
                     conditionDuration = movementDuration.Value;
+                }
                 else
+                {
                     return false;
+                }
             }
 
-            if (conditionDuration < TimeSpan.Zero)
-                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
+            // TODO: Resistances / bonuses
 
-            // TODO: duration resist / bonus
+            if (conditionDuration > TimeSpan.Zero)
+            {
+                // Finite conditions
+
+                // TODO
+            }
+            else if (conditionDuration == TimeSpan.Zero)
+            {
+                // Infinite conditions
+
+                // Needs to have an owner that can remove it
+                if (owner == null)
+                    return false;
+
+                // If this is a hotspot condition, make sure the target is still being overlapped
+                if (owner is Hotspot hotspot && hotspot.IsOverlappingPowerTarget(target.Id) == false)
+                    return false;
+
+                // Do not apply self-targeted conditions if its creator power is no longer available and removes conditions on end
+                PowerPrototype powerProto = PowerPrototype;
+                if (owner.Id == target.Id && owner.GetPower(PowerProtoRef) == null && (powerProto.CancelConditionsOnEnd || powerProto.CancelConditionsOnUnassign))
+                    return false;
+            }
+            else
+            {
+                // Negative duration should never happen
+                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
+            }
 
             return true;
         }
