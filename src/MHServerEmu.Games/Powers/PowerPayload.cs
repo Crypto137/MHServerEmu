@@ -402,17 +402,20 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // Apply damage type-specific bonuses
-            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
-            {
-                damagePct += ownerProperties[PropertyEnum.DamagePctBonusByType, damageType];
-                damageRating += ownerProperties[PropertyEnum.DamageRatingBonusByType, damageType];
-            }
-
             // Set all damage bonus properties
             Properties[PropertyEnum.PayloadDamageMultTotal, DamageType.Any] = damageMult;
             Properties[PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any] = damagePct;
             Properties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any] = damageRating;
+
+            // Apply damage type-specific bonuses
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+            {
+                float damagePctBonusByType = ownerProperties[PropertyEnum.DamagePctBonusByType, damageType];
+                Properties.AdjustProperty(damagePctBonusByType, new(PropertyEnum.PayloadDamagePctModifierTotal, damageType));
+
+                float damageRatingBonusByType = ownerProperties[PropertyEnum.DamageRatingBonusByType, damageType];
+                Properties.AdjustProperty(damageRatingBonusByType, new(PropertyEnum.PayloadDamageRatingTotal, damageType));
+            }
 
             return true;
         }
