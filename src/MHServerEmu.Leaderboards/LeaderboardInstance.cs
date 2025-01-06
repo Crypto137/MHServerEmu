@@ -40,38 +40,18 @@ namespace MHServerEmu.Leaderboards
             if (dbInstance.ActivationDate == 0 && leaderboard.CanReset)
             {
                 var currentTime = Clock.UtcNowPrecise;
-                var activationDate = _leaderboard.CalcNextUtcActivationDate(currentTime, currentTime);
+                var activationDate = _leaderboard.Scheduler.CalcNextUtcActivationDate(currentTime, currentTime);
                 dbInstance.SetActivationDateTime(activationDate);
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.UpdateInstanceActivationDate(dbInstance);
             }
 
             ActivationTime = dbInstance.GetActivationDateTime();
-            ExpirationTime = CalcExpirationTime();
+            ExpirationTime = _leaderboard.Scheduler.CalcExpirationTime(ActivationTime);
             Visible = dbInstance.Visible;
             Entries = new();
 
             InitPercentileBuckets();
-        }
-
-        private DateTime CalcExpirationTime()
-        {
-            return LeaderboardPrototype.Duration switch
-            {
-                LeaderboardDurationType._10minutes => ActivationTime.AddMinutes(10),
-                LeaderboardDurationType._15minutes => ActivationTime.AddMinutes(15),
-                LeaderboardDurationType._30minutes => ActivationTime.AddMinutes(30),
-                LeaderboardDurationType._1hour => ActivationTime.AddHours(1),
-                LeaderboardDurationType._2hours => ActivationTime.AddHours(2),
-                LeaderboardDurationType._3hours => ActivationTime.AddHours(3),
-                LeaderboardDurationType._4hours => ActivationTime.AddHours(4),
-                LeaderboardDurationType._8hours => ActivationTime.AddHours(8),
-                LeaderboardDurationType._12hours => ActivationTime.AddHours(12),
-                LeaderboardDurationType.Day => ActivationTime.AddDays(1),
-                LeaderboardDurationType.Week => ActivationTime.AddDays(7),
-                LeaderboardDurationType.Month => ActivationTime.AddMonths(1),
-                _ => ActivationTime,
-            };
         }
 
         /// <summary>

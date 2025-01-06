@@ -146,9 +146,18 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
-            connection.Execute(@"
+            var updateCommand = @"
+                UPDATE Instances
+                SET State = @State, ActivationDate = @ActivationDate, Visible = @Visible
+                WHERE InstanceId = @InstanceId";
+
+            var insertCommand = @"
                 INSERT INTO Instances (InstanceId, LeaderboardId, State, ActivationDate, Visible) 
-                VALUES (@InstanceId, @LeaderboardId, @State, @ActivationDate, @Visible)", dbInstances, transaction);
+                VALUES (@InstanceId, @LeaderboardId, @State, @ActivationDate, @Visible)";
+
+            foreach (var instance in dbInstances)
+                if (connection.Execute(updateCommand, instance, transaction) == 0)
+                    connection.Execute(insertCommand, instance, transaction);
 
             transaction.Commit();
         }

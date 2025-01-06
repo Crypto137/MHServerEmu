@@ -57,7 +57,8 @@ namespace MHServerEmu.Leaderboards
 
             // load ActiveLeaderboards
             List<DBLeaderboard> activeLeaderboards = new();
-            LoadJsonConfig(jsonConfigPath, activeLeaderboards);
+            List<DBLeaderboardInstance> refreshInstances = new();
+            LoadJsonConfig(jsonConfigPath, activeLeaderboards, refreshInstances);
             LoadLeaderboards();
 
             // send to LeaderboardGameDatabase
@@ -67,9 +68,8 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        private bool LoadJsonConfig(string jsonConfigPath, List<DBLeaderboard> activeLeaderboards)
+        private bool LoadJsonConfig(string jsonConfigPath, List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
         {
-            List<DBLeaderboardInstance> dbInstances = new();
             string leaderboardsJson = File.ReadAllText(jsonConfigPath);
 
             try
@@ -80,23 +80,86 @@ namespace MHServerEmu.Leaderboards
                 foreach (LeaderboardSchedule leaderboard in leaderboards)
                 {
                     // Skip old
-                    var oldLeaderboard = oldDbLeaderboards.First(lb => lb.LeaderboardId == leaderboard.LeaderboardId);
-                    if (oldLeaderboard == null) continue;
-                    if (leaderboard.Compare(oldLeaderboard)) continue;
+                    var oldLeaderboard = oldDbLeaderboards.FirstOrDefault(lb => lb.LeaderboardId == leaderboard.LeaderboardId);
+                    if (oldLeaderboard == null || leaderboard.Compare(oldLeaderboard)) continue;
                     
+                    // Add changed leaderboards
                     var activeLeaderboard = leaderboard.ToDBLeaderboard();
                     activeLeaderboard.ActiveInstanceId = oldLeaderboard.ActiveInstanceId;
                     activeLeaderboards.Add(activeLeaderboard);
 
-                    if (leaderboard.Scheduler.IsActive)
-                        dbInstances.Add(new DBLeaderboardInstance
+                    if (oldLeaderboard.IsActive == false)
+                    {
+                        if (leaderboard.Scheduler.IsActive)
                         {
-                            InstanceId = oldLeaderboard.ActiveInstanceId + 1,
-                            LeaderboardId = leaderboard.LeaderboardId,
-                            State = LeaderboardState.eLBS_Created,
-                            ActivationDate = 0,
-                            Visible = leaderboard.Scheduler.IsActive
-                        });
+                            // Add new instance
+
+                            var currentTime = Clock.UtcNowPrecise;
+                            var activationDate = leaderboard.Scheduler.CalcNextUtcActivationDate(currentTime, currentTime);
+
+                            refreshInstances.Add(new DBLeaderboardInstance
+                            {
+                                InstanceId = oldLeaderboard.ActiveInstanceId + 1,
+                                LeaderboardId = leaderboard.LeaderboardId,
+                                State = LeaderboardState.eLBS_Created,
+                                ActivationDate = Clock.DateTimeToTimestamp(activationDate),
+                                Visible = true
+                            });
+                        }
+                        else
+                        {
+                            // Deactivate active instances
+
+                            var instances = DBManager.GetInstances(leaderboard.LeaderboardId, 0);
+                            foreach (var instance in instances)
+                                refreshInstances.Add(new DBLeaderboardInstance
+                                {
+                                    InstanceId = instance.InstanceId,
+                                    LeaderboardId = instance.LeaderboardId,
+                                    State = LeaderboardState.eLBS_Rewarded,
+                                    ActivationDate = instance.ActivationDate,
+                                    Visible = false
+                                });
+                        }
+                    }
+                    else // old Instande inactive
+                    {
+                        var instances = DBManager.GetInstances(leaderboard.LeaderboardId, 0);
+                        foreach (var instance in instances)
+                        {
+                            if (leaderboard.Scheduler.IsActive)
+                            {
+                                // Update instances
+
+                                var oldActivation = instance.GetActivationDateTime().AddSeconds(-1);
+                                var nextActivation = leaderboard.Scheduler.GetNextActivationDate(oldActivation);
+                                var activationDate = nextActivation ?? leaderboard.Scheduler.StartEvent;
+
+                                refreshInstances.Add(new DBLeaderboardInstance
+                                {
+                                    InstanceId = instance.InstanceId,
+                                    LeaderboardId = instance.LeaderboardId,
+                                    State = instance.State,
+                                    ActivationDate = Clock.DateTimeToTimestamp(activationDate),
+                                    Visible = true
+                                });
+                            }
+                            else
+                            {
+                                // Deactivate active instances
+
+                                refreshInstances.Add(new DBLeaderboardInstance
+                                {
+                                    InstanceId = instance.InstanceId,
+                                    LeaderboardId = instance.LeaderboardId,
+                                    State = LeaderboardState.eLBS_Rewarded,
+                                    ActivationDate = instance.ActivationDate,
+                                    Visible = false
+                                });
+                            }
+                        }
+                    }
+                    
                 }
             }
             catch (Exception e)
@@ -105,7 +168,7 @@ namespace MHServerEmu.Leaderboards
             }
 
             DBManager.UpdateLeaderboards(activeLeaderboards);
-            DBManager.SetInstances(dbInstances);
+            DBManager.SetInstances(refreshInstances);
 
             return activeLeaderboards.Count > 0;
         }
@@ -118,53 +181,24 @@ namespace MHServerEmu.Leaderboards
                 string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
                 
                 List<DBLeaderboard> activeLeaderboards = new();
-                if (LoadJsonConfig(jsonConfigPath, activeLeaderboards))
-                    ReloadActiveLeaderboards(activeLeaderboards);
+                List<DBLeaderboardInstance> refreshInstances = new();
+                if (LoadJsonConfig(jsonConfigPath, activeLeaderboards, refreshInstances))
+                    ReloadActiveLeaderboards(activeLeaderboards, refreshInstances);
             }
         }
 
-        private void ReloadActiveLeaderboards(List<DBLeaderboard> activeLeaderboards)
+        private void ReloadActiveLeaderboards(List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
         {            
             foreach (var activeLeaderboard in activeLeaderboards)
             {
                 var leaderboard = GetLeaderboard((PrototypeGuid)activeLeaderboard.LeaderboardId);
-                if (leaderboard == null) continue;
-                
-                if (activeLeaderboard.IsActive)
-                {
-                    leaderboard.Scheduler.Initialize(activeLeaderboard);
+                if (leaderboard == null) continue;                
 
-                    // Add new instances
-                    var dbNewInstance = new DBLeaderboardInstance
-                    {
-                        InstanceId = activeLeaderboard.ActiveInstanceId + 1,
-                        LeaderboardId = activeLeaderboard.LeaderboardId,
-                        State = LeaderboardState.eLBS_Created,
-                        ActivationDate = 0,
-                        Visible = true
-                    };
+                if (activeLeaderboard.IsActive) leaderboard.Scheduler.Initialize(activeLeaderboard);
 
-                    if (leaderboard.Prototype.IsMetaLeaderboard)
-                    {
-                        var metaInstance = leaderboard.GetInstance((ulong)activeLeaderboard.ActiveInstanceId);
-                        // add new MetaInstances
-                        metaInstance?.AddMetaInstances(dbNewInstance.InstanceId);
-                    }
-
-                    leaderboard.AddInstance(dbNewInstance, false);
-                    leaderboard.OnStateChange((ulong)dbNewInstance.InstanceId, LeaderboardState.eLBS_Created);
-                }
-                else
-                {
-                    var activeInstance = leaderboard.ActiveInstance;
-                    if (activeInstance == null) continue;
-
-                    // disable active instance
-                    activeInstance.Visible = false;
-                    activeInstance.State = LeaderboardState.eLBS_Rewarded;
-                    activeInstance.UpdateDBState(LeaderboardState.eLBS_Rewarded);
-                    leaderboard.OnStateChange(leaderboard.ActiveInstance.InstanceId, LeaderboardState.eLBS_Rewarded);
-                }
+                var leaderboarInstances = refreshInstances.Where(inst => inst.LeaderboardId == activeLeaderboard.LeaderboardId);
+                foreach (var refreshInstance in leaderboarInstances)
+                    leaderboard.RefreshInstance(refreshInstance);
             }
         }
 
@@ -172,8 +206,6 @@ namespace MHServerEmu.Leaderboards
         {
             foreach (var dbLeaderboard in DBManager.GetLeaderboards())
             {
-                if (dbLeaderboard.IsActive == false) continue;
-
                 PrototypeGuid leaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
                 PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardId);
                 if (dataRef == PrototypeId.Invalid)

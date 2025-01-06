@@ -115,7 +115,7 @@ namespace MHServerEmu.Leaderboards
 
                                 if (CanReset && newInstanceDb == null && IsActive)
                                 {
-                                    var nextActivationTime = CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
+                                    var nextActivationTime = Scheduler.CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
                                     if (nextActivationTime == instance.ActivationTime) continue;
 
                                     newInstanceDb = new()
@@ -196,32 +196,6 @@ namespace MHServerEmu.Leaderboards
             SetActiveInstance((ulong)dbInstance.InstanceId, dbInstance.State, true);
         }
 
-        public DateTime CalcNextUtcActivationDate(DateTime activationTime, DateTime currentTime)
-        {
-            currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 
-                currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
-
-            var nextReset = Scheduler.GetNextUtcResetDatetime(activationTime);
-
-            if (nextReset < currentTime)
-            {
-                nextReset = new DateTime(
-                    currentTime.Year, currentTime.Month, currentTime.Day,
-                    nextReset.Hour, nextReset.Minute, nextReset.Second, DateTimeKind.Utc);
-
-                if (nextReset < currentTime)
-                    nextReset = Scheduler.GetNextUtcResetDatetime(nextReset);
-            }
-
-            var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
-
-            var nextActivation = Scheduler.GetNextActivationDate(currentTime);
-            if (nextActivation.HasValue == false)
-                return activationTime;
-            else
-                return nextActivation > nextResetDay ? nextActivation.Value : nextReset;
-        }
-
         public void OnStateChange(ulong instanceId, LeaderboardState state)
         {
             var instance = GetInstance(instanceId);
@@ -238,6 +212,55 @@ namespace MHServerEmu.Leaderboards
             {
                 instancesInfo.Add(instance.ToInstanceInfo());
                 if (--maxInstances < 0) break;
+            }
+        }
+
+        public void RefreshInstance(DBLeaderboardInstance refreshInstance)
+        {
+            var instance = GetInstance((ulong)refreshInstance.InstanceId);
+
+            if (instance == null)
+            {
+                // Add new instances
+
+                if (Prototype.IsMetaLeaderboard)
+                {
+                    var metaInstance = GetInstance((ulong)refreshInstance.InstanceId - 1);
+                    // add new MetaInstances
+                    metaInstance?.AddMetaInstances(refreshInstance.InstanceId);
+                }
+
+                AddInstance(refreshInstance, false);
+                OnStateChange((ulong)refreshInstance.InstanceId, LeaderboardState.eLBS_Created);
+            }
+            else
+            {
+                // update Instance
+
+                bool changed = false;
+
+                if (instance.Visible != refreshInstance.Visible)
+                {
+                    instance.Visible = refreshInstance.Visible;
+                    changed = true;
+                }
+
+                if (instance.State != refreshInstance.State)
+                {
+                    instance.State = refreshInstance.State;
+                    changed = true;
+                }
+
+                var newActivationTime = refreshInstance.GetActivationDateTime();
+                if (instance.ActivationTime != newActivationTime)
+                {
+                    instance.ActivationTime = newActivationTime;
+                    instance.ExpirationTime = Scheduler.CalcExpirationTime(newActivationTime);
+                    changed = true;
+                }
+
+                if (changed) OnStateChange(instance.InstanceId, instance.State);
+
             }
         }
     }

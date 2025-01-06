@@ -80,6 +80,26 @@ namespace MHServerEmu.Leaderboards
             Duration = proto.Duration;
         }
 
+        public DateTime CalcExpirationTime(DateTime activationTime)
+        {
+            return Duration switch
+            {
+                LeaderboardDurationType._10minutes => activationTime.AddMinutes(10),
+                LeaderboardDurationType._15minutes => activationTime.AddMinutes(15),
+                LeaderboardDurationType._30minutes => activationTime.AddMinutes(30),
+                LeaderboardDurationType._1hour => activationTime.AddHours(1),
+                LeaderboardDurationType._2hours => activationTime.AddHours(2),
+                LeaderboardDurationType._3hours => activationTime.AddHours(3),
+                LeaderboardDurationType._4hours => activationTime.AddHours(4),
+                LeaderboardDurationType._8hours => activationTime.AddHours(8),
+                LeaderboardDurationType._12hours => activationTime.AddHours(12),
+                LeaderboardDurationType.Day => activationTime.AddDays(1),
+                LeaderboardDurationType.Week => activationTime.AddDays(7),
+                LeaderboardDurationType.Month => activationTime.AddMonths(1),
+                _ => activationTime,
+            };
+        }
+
         public DateTime NextReset(DateTime activationTime)
         {
             return ResetFrequency switch
@@ -109,6 +129,32 @@ namespace MHServerEmu.Leaderboards
                 LeaderboardResetFrequency.Monthly => activationTime.AddMonths(Interval),
                 _ => activationTime.AddYears(1),
             };
+        }
+
+        public DateTime CalcNextUtcActivationDate(DateTime activationTime, DateTime currentTime)
+        {
+            currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
+                currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
+
+            var nextReset = GetNextUtcResetDatetime(activationTime);
+
+            if (nextReset < currentTime)
+            {
+                nextReset = new DateTime(
+                    currentTime.Year, currentTime.Month, currentTime.Day,
+                    nextReset.Hour, nextReset.Minute, nextReset.Second, DateTimeKind.Utc);
+
+                if (nextReset < currentTime)
+                    nextReset = GetNextUtcResetDatetime(nextReset);
+            }
+
+            var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
+
+            var nextActivation = GetNextActivationDate(currentTime);
+            if (nextActivation.HasValue == false)
+                return activationTime;
+            else
+                return nextActivation > nextResetDay ? nextActivation.Value : nextReset;
         }
 
         public DateTime? GetNextActivationDate(DateTime currentTime)
