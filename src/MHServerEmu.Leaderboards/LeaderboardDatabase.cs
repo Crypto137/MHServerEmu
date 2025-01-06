@@ -263,6 +263,10 @@ namespace MHServerEmu.Leaderboards
             List<DBLeaderboardInstance> dbInstances = new();
             List<LeaderboardSchedule> jsonLeaderboards = new();
 
+            var currentYear = new DateTime(DateTime.Now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var startEvent = Clock.DateTimeToTimestamp(currentYear);
+            var endEvent = Clock.DateTimeToTimestamp(currentYear.AddYears(1));
+
             foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
                 var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
@@ -282,8 +286,8 @@ namespace MHServerEmu.Leaderboards
                     IsActive = isActive,
                     Frequency = (int)LeaderboardResetFrequency.Weekly,
                     Interval = 1,
-                    StartEvent = 1735689600,
-                    EndEvent = 1767225600
+                    StartEvent = startEvent,
+                    EndEvent = endEvent
                 };
 
                 var dbSchedule = new LeaderboardSchedule(dbLeaderboard);
