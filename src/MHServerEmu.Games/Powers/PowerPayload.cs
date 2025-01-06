@@ -24,6 +24,8 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private ulong _propertySourceEntityId;
+
         public Game Game { get; private set; }
 
         public bool IsPlayerPayload { get; private set; }
@@ -102,7 +104,13 @@ namespace MHServerEmu.Games.Powers
                 : powerOwner.RegionLocation.Position;
 
             // Snapshot properties of the power and its owner
-            Power.SerializeEntityPropertiesForPowerPayload(power.GetPayloadPropertySourceEntity(), Properties);
+            WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity();
+            if (propertySourceEntity == null) return Logger.WarnReturn(false, "Init(): propertySourceEntity == null");
+
+            // Save property source owner id for later calculations
+            _propertySourceEntityId = propertySourceEntity != powerOwner ? propertySourceEntity.Id : powerOwner.Id;
+
+            Power.SerializeEntityPropertiesForPowerPayload(propertySourceEntity, Properties);
             Power.SerializePowerPropertiesForPowerPayload(power, Properties);
 
             // Snapshot additional data used to determine targets
@@ -278,7 +286,7 @@ namespace MHServerEmu.Games.Powers
         /// </remarks>
         private bool CalculateInitialDamageBonuses(Power power)
         {
-            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(_propertySourceEntityId);
             if (powerOwner == null) return Logger.WarnReturn(false, "CalculateInitialDamageBonuses(): powerOwner == null");
 
             PropertyCollection ownerProperties = powerOwner.Properties;

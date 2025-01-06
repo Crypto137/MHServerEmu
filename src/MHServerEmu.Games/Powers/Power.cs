@@ -3075,7 +3075,11 @@ namespace MHServerEmu.Games.Powers
 
         public WorldEntity GetPayloadPropertySourceEntity()
         {
-            // TODO: team-up when away powers
+            if (_isTeamUpPassivePowerWhileAway)
+            {
+                // TODO: team-up when away powers
+            }
+
             return Owner;
         }
 
