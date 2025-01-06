@@ -86,5 +86,16 @@ namespace MHServerEmu.Commands.Implementations
 
             return string.Empty;
         }
+
+        [Command("info", "Prints info for the current region.\nUsage: region info")]
+        public string Info(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Region region = playerConnection.Player.GetRegion();
+
+            return region?.ToString();
+        }
     }
 }

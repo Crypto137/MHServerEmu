@@ -178,6 +178,7 @@ namespace MHServerEmu.Games.Regions
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): Failed to get difficulty tier for region {regionProto}");
 
             regionContext.DifficultyTierRef = difficultyTierProtoRef;
+            regionContext.Level = regionProto.Level;
 
             if (regionProto.HasEndless() && regionContext.EndlessLevel == 0)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): DangerRoom {regionProtoRef} with EndlessLevel = 0");
