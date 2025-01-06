@@ -1275,12 +1275,10 @@ namespace MHServerEmu.Games.Powers
                     ccResistScore += targetProperties[PropertyEnum.CCResistScoreKwd, keywordProtoRef];
             }
 
-            // Adjust CCResistScore for conditions applied by players based on difficulty
+            // Adjust CCResistScore for region difficulty
             WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
             if (ultimateOwner != null && ultimateOwner.GetOwnerOfType<Player> != null)
-            {
-                // TODO
-            }
+                ccResistScore += CalculateRegionCCResistScore(target, conditionProperties);
 
             // Apply resist score
             float resistMult = 1f - target.GetNegStatusResistPercent(ccResistScore, Properties);
@@ -1290,6 +1288,45 @@ namespace MHServerEmu.Games.Powers
 
             end:
             ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+        }
+
+        /// <summary>
+        /// Returns CCResistScore for the provided <see cref="WorldEntity"/> target based on its rank and region difficulty.
+        /// </summary>
+        private int CalculateRegionCCResistScore(WorldEntity target, PropertyCollection conditionProperties)
+        {
+            // Entities have varying difficulty modifiers to their CCResistScore based on their rank
+            RankPrototype rankProto = target?.GetRankPrototype();
+            if (rankProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): rankProto == null");
+
+            TuningPrototype tuningProto = target.Region?.TuningTable?.Prototype;
+            if (tuningProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): tuningProto == null");
+
+            if (tuningProto.NegativeStatusCurves.HasValue() == false)
+                return 0;
+
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            // Find all curves relevant to this condition and pick the highest resist score out of them
+            int score = 0;
+            foreach (NegStatusPropCurveEntryPrototype entry in tuningProto.NegativeStatusCurves)
+            {
+                PropertyEnum statusProperty = propertyInfoTable.GetPropertyEnumFromPrototype(entry.NegStatusProp);
+                if (conditionProperties[statusProperty] == false)
+                    continue;
+
+                CurveId curveRef = entry.GetCurveRefForRank(rankProto.Rank);
+                if (curveRef == CurveId.Invalid)
+                    continue;
+
+                Curve curve = curveRef.AsCurve();
+                if (curve == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): curve == null");
+
+                int level = Math.Clamp(target.CombatLevel, curve.MinPosition, curve.MaxPosition);
+                score = Math.Max(curve.GetIntAt(level), score);
+            }
+
+            return score;
         }
 
         private void ApplyConditionDurationBonuses(ref TimeSpan duration)
