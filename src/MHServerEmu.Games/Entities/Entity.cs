@@ -265,6 +265,13 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnPostInit(EntitySettings settings)
         {
+            if (settings.ArchiveData == null)
+            {
+                // Initialize health for new entities
+                if (Properties.HasProperty(PropertyEnum.HealthBase) && Properties.HasProperty(PropertyEnum.Health) == false)
+                    Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
+            }
+
             if (Prototype.EvalOnCreate?.Length > 0)
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
@@ -290,13 +297,6 @@ namespace MHServerEmu.Games.Entities
         }
 
         public virtual bool ApplyInitialReplicationState(ref EntitySettings settings) => true;
-
-        public void TEMP_ReplacePrototype(PrototypeId prototypeRef)
-        {
-            // Temp method for hacks that replace entity prototype after creation - use with caution and remove this later
-            Prototype = prototypeRef.As<EntityPrototype>();
-            PrototypeDataRef = prototypeRef;
-        }
 
         protected virtual void BindReplicatedFields()
         {
@@ -598,6 +598,14 @@ namespace MHServerEmu.Games.Entities
                     SetFlag(EntityFlags.EncounterResource, newValue != PrototypeId.Invalid);
                     break;
 
+                case PropertyEnum.Health:
+                    OnHealthPropertyChange(newValue, Properties[PropertyEnum.HealthMax]);
+                    break;
+
+                case PropertyEnum.HealthMax:
+                    OnHealthPropertyChange(Properties[PropertyEnum.Health], newValue);
+                    break;
+
                 case PropertyEnum.IgnoreMissionOwnerForTargeting:
                     SetFlag(EntityFlags.IgnoreMissionOwnerForTargeting, newValue);
                     break;
@@ -721,6 +729,15 @@ namespace MHServerEmu.Games.Entities
                 if (newStatus != prevStatus)
                     SetFlag(EntityFlags.HasMovementPreventionStatus, newStatus);
             }
+        }
+
+        private void OnHealthPropertyChange(long health, long healthMax)
+        {
+            // Update death flag whenever health changes
+            bool isDead = healthMax > 0 && health <= 0;
+            bool isFlaggedDead = _flags.HasFlag(EntityFlags.IsDead);
+            if (isDead != isFlaggedDead)
+                Properties[PropertyEnum.IsDead] = isDead;
         }
 
         #endregion

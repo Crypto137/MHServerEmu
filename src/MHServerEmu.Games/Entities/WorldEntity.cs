@@ -206,13 +206,6 @@ namespace MHServerEmu.Games.Entities
         public override void OnPostInit(EntitySettings settings)
         {
             base.OnPostInit(settings);
-
-            if (CanBePlayerOwned() == false && this is not Missile) // REMOVEME
-            {
-                Properties[PropertyEnum.CharacterLevel] = 60;
-                Properties[PropertyEnum.CombatLevel] = 60;
-                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            }
         }
 
         public void ClearSpawnSpec()

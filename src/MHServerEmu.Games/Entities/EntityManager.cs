@@ -171,7 +171,6 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            // TODO: Apply replication state
             entity.ApplyInitialReplicationState(ref settings);
 
             // Finish deserialization
