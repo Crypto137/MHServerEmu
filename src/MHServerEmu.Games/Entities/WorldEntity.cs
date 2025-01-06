@@ -1845,6 +1845,21 @@ namespace MHServerEmu.Games.Entities
 
         #region Stats
 
+        public int GetDynamicLevel(int levelToScaleTo)
+        {
+            Region region = Region;
+            if (region == null)
+                return levelToScaleTo;
+
+            Area area = Area;
+            if (area == null)
+                return levelToScaleTo;
+
+            // Do not allow scaling below the area level
+            int areaLevel = region.GetAreaLevel(area);
+            return Math.Max(areaLevel, levelToScaleTo);
+        }
+
         public RankPrototype GetRankPrototype()
         {
             var rankRef = Properties[PropertyEnum.Rank];
