@@ -21,7 +21,7 @@ namespace MHServerEmu.Games.Loot
 
         public const int GridSize = 128;
         public const int GridCenter = GridSize / 2;
-        public const float CellRadius = 32f;
+        public const float CellRadius = 24f;
         public const float CellDiameter = CellRadius * 2f;
         public const float MaxSpiralRadius = 960f;
 
