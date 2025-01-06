@@ -77,6 +77,7 @@ namespace MHServerEmu.Leaderboards
                 JsonSerializerOptions options = new();
                 var leaderboards = JsonSerializer.Deserialize<IEnumerable<LeaderboardSchedule>>(leaderboardsJson, options);
                 var oldDbLeaderboards = DBManager.GetLeaderboards();
+
                 foreach (LeaderboardSchedule leaderboard in leaderboards)
                 {
                     // Skip old
@@ -122,31 +123,46 @@ namespace MHServerEmu.Leaderboards
                                 });
                         }
                     }
-                    else // old Instande inactive
+                    else
                     {
+                        // old Instance inactive
                         var instances = DBManager.GetInstances(leaderboard.LeaderboardId, 0);
                         foreach (var instance in instances)
                         {
                             if (leaderboard.Scheduler.IsActive)
                             {
-                                // Update instances
+                                // Update instance
+                                long activationDate = instance.ActivationDate;
 
-                                var oldActivation = instance.GetActivationDateTime().AddSeconds(-1);
-                                var nextActivation = leaderboard.Scheduler.GetNextActivationDate(oldActivation);
-                                var activationDate = nextActivation ?? leaderboard.Scheduler.StartEvent;
+                                if (leaderboard.Scheduler.StartEvent != oldLeaderboard.GetStartDateTime())
+                                {
+                                    // Find next activation time
+                                    var oldActivation = instance.GetActivationDateTime().AddSeconds(-1);
+                                    var nextActivation = leaderboard.Scheduler.GetNextActivationDate(oldActivation);
+                                    if (nextActivation.HasValue)
+                                    {
+                                        var nextEvent = nextActivation.Value;
+
+                                        var currentTime = Clock.UtcNowPrecise;
+                                        if (leaderboard.Scheduler.CalcExpirationTime(nextEvent) < currentTime)
+                                            nextEvent = leaderboard.Scheduler.CalcNextUtcActivationDate(currentTime, currentTime);
+
+                                        activationDate = Clock.DateTimeToTimestamp(nextEvent);
+                                    }
+                                }
 
                                 refreshInstances.Add(new DBLeaderboardInstance
                                 {
                                     InstanceId = instance.InstanceId,
                                     LeaderboardId = instance.LeaderboardId,
                                     State = instance.State,
-                                    ActivationDate = Clock.DateTimeToTimestamp(activationDate),
+                                    ActivationDate = activationDate,
                                     Visible = true
                                 });
                             }
                             else
                             {
-                                // Deactivate active instances
+                                // Deactivate active instance
 
                                 refreshInstances.Add(new DBLeaderboardInstance
                                 {
@@ -194,7 +210,7 @@ namespace MHServerEmu.Leaderboards
                 var leaderboard = GetLeaderboard((PrototypeGuid)activeLeaderboard.LeaderboardId);
                 if (leaderboard == null) continue;                
 
-                if (activeLeaderboard.IsActive) leaderboard.Scheduler.Initialize(activeLeaderboard);
+                leaderboard.Scheduler.Initialize(activeLeaderboard);
 
                 var leaderboarInstances = refreshInstances.Where(inst => inst.LeaderboardId == activeLeaderboard.LeaderboardId);
                 foreach (var refreshInstance in leaderboarInstances)
