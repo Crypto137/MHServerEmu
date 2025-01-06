@@ -25,6 +25,7 @@ using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
@@ -1330,6 +1331,20 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public float GetNegStatusResistPercent(int ccResistScore, PropertyCollection otherProperties)
+        {
+            EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormulaPrototype;
+            if (evalNegStatusResistPctFormula == null) return Logger.WarnReturn(0f, "GetNegStatusResistPercent(): evalNegStatusResistPctFormula == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, otherProperties);
+            evalContext.SetVar_Int(EvalContext.Var1, ccResistScore);
+
+            float resistPercent = Eval.RunFloat(evalNegStatusResistPctFormula, evalContext);
+            return Math.Clamp(resistPercent, 0f, 1f);
+        }
+
         public bool ApplyPowerResults(PowerResults powerResults)
         {
             // Send power results to clients
@@ -1510,9 +1525,20 @@ namespace MHServerEmu.Games.Entities
             float knockbackAcceleration = powerResults.Properties[PropertyEnum.KnockbackAccelerationResult];
             Physics.ApplyKnockbackForce(knockbackSource, knockbackTime, knockbackSpeed, knockbackAcceleration);
 
+            // Orient this entity for forced movement
             if (powerResults.PowerOwnerId != Id)
             {
-                // TODO: Orient for forced movement
+                Orientation orientation;
+
+                bool isMovingAway = knockbackSpeed > 0f || (knockbackSpeed == 0f && knockbackAcceleration > 0f);
+                bool reverseOrientation = powerResults.Properties[PropertyEnum.KnockbackReverseTargetOri];
+
+                if ((isMovingAway && reverseOrientation == false) || (isMovingAway == false && reverseOrientation))
+                    orientation = Orientation.FromDeltaVector(powerResults.KnockbackSourcePosition - RegionLocation.Position);  // Face away from source
+                else
+                    orientation = Orientation.FromDeltaVector(RegionLocation.Position - powerResults.KnockbackSourcePosition);  // Face towards source
+
+                ChangeRegionPosition(null, orientation, ChangePositionFlags.Orientation);
             }
 
             return true;

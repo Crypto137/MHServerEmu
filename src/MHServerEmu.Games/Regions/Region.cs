@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Regions
 
         public override string ToString()
         {
-            return $"{GameDatabase.GetPrototypeName(PrototypeDataRef)}, ID=0x{Id:X} ({Id}), DIFF={GameDatabase.GetFormattedPrototypeName(Settings.DifficultyTierRef)}, SEED={RandomSeed}, GAMEID={Game}";
+            return $"{PrototypeDataRef.GetName()}, ID=0x{Id:X} ({Id}), DIFF={Settings.DifficultyTierRef.GetNameFormatted()}[{RegionLevel}], SEED={RandomSeed}, GAMEID={Game}";
         }
 
         public bool Initialize(RegionSettings settings)
@@ -859,7 +859,8 @@ namespace MHServerEmu.Games.Regions
 
         private void SetRegionLevel()
         {
-            if (RegionLevel == 0) return;
+            if (RegionLevel != 0) return;
+
             RegionPrototype regionProto = Prototype;
             if (regionProto == null) return;
 

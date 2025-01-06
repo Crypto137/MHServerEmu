@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.Regions
             Affixes = new();
             Properties = new();
             EndlessLevel = 0;
-            Level = 60;
+            Level = 1;
             PlayerGuidParty = 0;
         }
 

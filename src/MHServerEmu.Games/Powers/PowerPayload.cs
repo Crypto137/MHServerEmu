@@ -3,6 +3,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -22,6 +23,8 @@ namespace MHServerEmu.Games.Powers
     public class PowerPayload : PowerEffectsPacket
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private ulong _propertySourceEntityId;
 
         public Game Game { get; private set; }
 
@@ -101,7 +104,13 @@ namespace MHServerEmu.Games.Powers
                 : powerOwner.RegionLocation.Position;
 
             // Snapshot properties of the power and its owner
-            Power.SerializeEntityPropertiesForPowerPayload(power.GetPayloadPropertySourceEntity(), Properties);
+            WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity();
+            if (propertySourceEntity == null) return Logger.WarnReturn(false, "Init(): propertySourceEntity == null");
+
+            // Save property source owner id for later calculations
+            _propertySourceEntityId = propertySourceEntity != powerOwner ? propertySourceEntity.Id : powerOwner.Id;
+
+            Power.SerializeEntityPropertiesForPowerPayload(propertySourceEntity, Properties);
             Power.SerializePowerPropertiesForPowerPayload(power, Properties);
 
             // Snapshot additional data used to determine targets
@@ -277,8 +286,8 @@ namespace MHServerEmu.Games.Powers
         /// </remarks>
         private bool CalculateInitialDamageBonuses(Power power)
         {
-            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
-            if (powerOwner == null) return Logger.WarnReturn(false, "CalculateUserDamageBonuses(): powerOwner == null");
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(_propertySourceEntityId);
+            if (powerOwner == null) return Logger.WarnReturn(false, "CalculateInitialDamageBonuses(): powerOwner == null");
 
             PropertyCollection ownerProperties = powerOwner.Properties;
 
@@ -318,7 +327,7 @@ namespace MHServerEmu.Games.Powers
                     Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
                     if (protoRefToCheck == PrototypeId.Invalid)
                     {
-                        Logger.Warn($"CalculateOwnerDamageBonuses(): Invalid param proto ref for {propertyEnum}");
+                        Logger.Warn($"CalculateInitialDamageBonuses(): Invalid param proto ref for {propertyEnum}");
                         continue;
                     }
 
@@ -372,7 +381,7 @@ namespace MHServerEmu.Games.Powers
                     Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                     if (keywordProtoRef == PrototypeId.Invalid)
                     {
-                        Logger.Warn($"CalculateOwnerDamageBonuses(): Invalid keyword param proto ref for {kvp.Key.Enum}");
+                        Logger.Warn($"CalculateInitialDamageBonuses(): Invalid keyword param proto ref for {kvp.Key.Enum}");
                         continue;
                     }
 
@@ -401,11 +410,11 @@ namespace MHServerEmu.Games.Powers
             // Apply damage type-specific bonuses
             for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
             {
-                float damagePctBonusByType = powerOwner.Properties[PropertyEnum.DamagePctBonusByType, damageType];
-                float damageRatingBonusByType = powerOwner.Properties[PropertyEnum.DamageRatingBonusByType, damageType];
+                float damagePctBonusByType = ownerProperties[PropertyEnum.DamagePctBonusByType, damageType];
+                Properties.AdjustProperty(damagePctBonusByType, new(PropertyEnum.PayloadDamagePctModifierTotal, damageType));
 
-                Properties[PropertyEnum.PayloadDamagePctModifierTotal, damageType] = damagePctBonusByType;
-                Properties[PropertyEnum.PayloadDamageRatingTotal, damageType] = damageRatingBonusByType;
+                float damageRatingBonusByType = ownerProperties[PropertyEnum.DamageRatingBonusByType, damageType];
+                Properties.AdjustProperty(damageRatingBonusByType, new(PropertyEnum.PayloadDamageRatingTotal, damageType));
             }
 
             return true;
@@ -782,19 +791,111 @@ namespace MHServerEmu.Games.Powers
             Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner ?? ultimateOwner, target, Game);
 
             // Calculate duration
-            if (CalculateConditionDuration(conditionProto, owner, target, movementDuration, out TimeSpan duration) == false)
+            if (CalculateResultConditionDuration(results, target, owner, calculateForTarget, conditionProto, conditionProperties, movementDuration, out TimeSpan conditionDuration) == false)
                 return false;
 
             // Calculate the number of stacks to apply and modify duration if needed
-            int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref duration);
+            int numStacksToApply = CalculateConditionNumStacksToApply(target, ultimateOwner, conditionCollection, conditionProto, ref conditionDuration);
 
             // Apply the calculated number of stacks
             for (int i = 0; i < numStacksToApply; i++)
             {
                 Condition condition = ConditionCollection.AllocateCondition();
-                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration, conditionProperties);
+                condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, conditionDuration, conditionProperties);
                 CalculateResultConditionExtraProperties(results, target, condition);    // Sets properties specific to this stack
                 results.AddConditionToAdd(condition);
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultConditionDuration(PowerResults results, WorldEntity target, WorldEntity owner, bool calculateForTarget,
+            ConditionPrototype conditionProto, PropertyCollection conditionProperties, TimeSpan? movementDuration, out TimeSpan conditionDuration)
+        {
+            conditionDuration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+
+            if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
+                (conditionProto.Properties != null && conditionProto.Properties[PropertyEnum.Knockback]))
+            {
+                // Movement and knockback condition last for as long as the movement is happening
+                if (movementDuration.HasValue)
+                {
+                    if (movementDuration <= TimeSpan.Zero)
+                        return Logger.WarnReturn(false, $"CalculateResultConditionDuration(): Calculated movement duration is <= TimeSpan.Zero, which would result in an infinite condition.\nowner=[{owner}]\ntarget=[{target}]");
+
+                    conditionDuration = movementDuration.Value;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (conditionDuration > TimeSpan.Zero)
+            {
+                // Finite conditions
+
+                if (calculateForTarget)
+                {
+                    // Resist only targeted conditions
+                    ApplyConditionDurationResistances(target, conditionProto, conditionProperties, ref conditionDuration);
+
+                    if (conditionDuration > TimeSpan.Zero)
+                    {
+                        // Make sure the condition is at least 1 ms long to avoid rounding to 0, turning it into an infinite condition
+                        conditionDuration = Clock.Max(conditionDuration, TimeSpan.FromMilliseconds(1));
+                    }
+                    else
+                    {
+                        results.SetFlag(PowerResultFlags.Resisted, true);
+                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Finite condition {PowerPrototype} resisted by [{target}]"); ;
+                    }
+                }
+
+                // Apply bonuses to everything
+                ApplyConditionDurationBonuses(ref conditionDuration);
+            }
+            else if (conditionDuration == TimeSpan.Zero)
+            {
+                // Infinite conditions
+
+                // Check if this condition can be applied (for targeted conditions only)
+                if (calculateForTarget)
+                {
+                    bool canApply = true;
+
+                    List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+                    if (Condition.IsANegativeStatusEffect(conditionProperties, negativeStatusList))
+                    {
+                        if (CanApplyConditionToTarget(target, conditionProperties, negativeStatusList) == false)
+                        {
+                            results.SetFlag(PowerResultFlags.Resisted, true);
+                            canApply = false;
+                        }
+                    }
+
+                    ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+                    if (canApply == false)
+                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Infinite condition {PowerPrototype} resisted by [{target}]");
+                }
+
+                // Needs to have an owner that can remove it
+                if (owner == null)
+                    return false;
+
+                // If this is a hotspot condition, make sure the target is still being overlapped
+                if (owner is Hotspot hotspot && hotspot.IsOverlappingPowerTarget(target.Id) == false)
+                    return false;
+
+                // Do not apply self-targeted conditions if its creator power is no longer available and it removes conditions on end
+                PowerPrototype powerProto = PowerPrototype;
+                if (owner.Id == target.Id && owner.GetPower(PowerProtoRef) == null && (powerProto.CancelConditionsOnEnd || powerProto.CancelConditionsOnUnassign))
+                    return false;
+            }
+            else
+            {
+                // Negative duration should never happen
+                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
             }
 
             return true;
@@ -1102,27 +1203,108 @@ namespace MHServerEmu.Games.Powers
             return movementDuration > TimeSpan.Zero;
         }
 
-        private bool CalculateConditionDuration(ConditionPrototype conditionProto, WorldEntity owner, WorldEntity target,
-            TimeSpan? movementDuration, out TimeSpan conditionDuration)
+        private bool CanApplyConditionToTarget(WorldEntity target, PropertyCollection conditionProperties, List<PrototypeId> negativeStatusList)
         {
-            conditionDuration = conditionProto.GetDuration(Properties, owner, PowerProtoRef, target);
+            PropertyCollection targetProperties = target.Properties;
 
-            if ((PowerPrototype is MovementPowerPrototype movementPowerProto && movementPowerProto.IsTravelPower == false) ||
-                (conditionProto.Properties != null && conditionProto.Properties[PropertyEnum.Knockback]))
+            // Skip checks if the condition ignores resists and the target isn't immune to resist ignores
+            if (conditionProperties[PropertyEnum.IgnoreNegativeStatusResist] && targetProperties[PropertyEnum.CCAlwaysCheckResist] == false)
+                return true;
+
+            // Check for general invulnerability
+            if (targetProperties[PropertyEnum.Invulnerable])
+                return false;
+
+            // Check for immunity to all negative status effects
+            if (targetProperties[PropertyEnum.NegStatusImmunity] || targetProperties[PropertyEnum.CCResistAlwaysAll])
+                return false;
+
+            // Check for immunity to negative status effects applied by this condition
+            foreach (PrototypeId negativeStatus in negativeStatusList)
             {
-                // Movement and knockback condition last for as long as the movement is happening
-                if (movementDuration.HasValue)
-                    conditionDuration = movementDuration.Value;
-                else
+                if (targetProperties[PropertyEnum.CCResistAlways, negativeStatus])
                     return false;
             }
 
-            if (conditionDuration < TimeSpan.Zero)
-                return Logger.WarnReturn(false, $"CalculateConditionDuration(): Negative duration for {PowerPrototype}");
+            // Do not apply knockbacks when a target is immobilized
+            if (conditionProperties[PropertyEnum.Knockback] && (target.IsImmobilized || target.IsSystemImmobilized))
+                return false;
 
-            // TODO: duration resist / bonus
+            // Make sure the target is targetable
+            Player player = target.GetOwnerOfType<Player>();
+            if (player != null && player.IsTargetable(OwnerAlliance) == false)
+                return false;
 
+            // All good, can apply
             return true;
+        }
+
+        private void ApplyConditionDurationResistances(WorldEntity target, ConditionPrototype conditionProto, PropertyCollection conditionProperties, ref TimeSpan duration)
+        {
+            PropertyCollection targetProperties = target.Properties;
+
+            // Do not resist conditions without negative status effects
+            List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+            if (Condition.IsANegativeStatusEffect(conditionProperties, negativeStatusList) == false)
+                goto end;
+
+            // Do not resist if the condition ignores resists and the target isn't immune to resist ignores
+            if (conditionProperties[PropertyEnum.IgnoreNegativeStatusResist] && targetProperties[PropertyEnum.CCAlwaysCheckResist] == false)
+                goto end;
+
+            // Check for immunities
+            if (CanApplyConditionToTarget(target, conditionProperties, negativeStatusList) == false)
+            {
+                duration = TimeSpan.Zero;
+                goto end;
+            }
+
+            // Calculate and apply CCResistScore (tenacity)
+
+            // Start with resist to all
+            int ccResistScore = targetProperties[PropertyEnum.CCResistScoreAll];
+
+            // Add resistances to specific negative statuses
+            foreach (PrototypeId negativeStatus in negativeStatusList)
+                ccResistScore += targetProperties[PropertyEnum.CCResistScore, negativeStatus];
+            
+            // Add resistances to specific keywords
+            if (conditionProto.Keywords.HasValue())
+            {
+                foreach (PrototypeId keywordProtoRef in conditionProto.Keywords)
+                    ccResistScore += targetProperties[PropertyEnum.CCResistScoreKwd, keywordProtoRef];
+            }
+
+            // Adjust CCResistScore for conditions applied by players based on difficulty
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+            if (ultimateOwner != null && ultimateOwner.GetOwnerOfType<Player> != null)
+            {
+                // TODO
+            }
+
+            // Apply resist score
+            float resistMult = 1f - target.GetNegStatusResistPercent(ccResistScore, Properties);
+            duration *= resistMult;
+            
+            // TODO: Calculate and apply StatusResist
+
+            end:
+            ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+        }
+
+        private void ApplyConditionDurationBonuses(ref TimeSpan duration)
+        {
+            if (PowerPrototype?.OmniDurationBonusExclude == false)
+            {
+                WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+                if (ultimateOwner != null)
+                {
+                    duration *= 1f + ultimateOwner.Properties[PropertyEnum.OmniDurationBonusPct];
+                    duration = Clock.Max(duration, TimeSpan.FromMilliseconds(1));
+                }
+            }
+
+            duration += TimeSpan.FromMilliseconds((int)Properties[PropertyEnum.StatusDurationBonusMS]);
         }
 
         private int CalculateConditionNumStacksToApply(WorldEntity target, WorldEntity ultimateOwner,

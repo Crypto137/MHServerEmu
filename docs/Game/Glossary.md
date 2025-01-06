@@ -4,6 +4,8 @@ This page provides definitions for terms used by the game internally.
 
 - **Agent** - a world entity that can perform actions.
 
+- **AkEvent** - a Wwise sound event, Ak stands for Audiokinetic.
+
 - **Archive** - a proprietary data serialization format developed by Gazillion based on the underlying encoding used for protobufs.
 
 - **Area** - an arrangement of cells.
@@ -149,5 +151,7 @@ This page provides definitions for terms used by the game internally.
 - **Varint** - a variable-width unsigned integer that can take 1-10 bytes. This is the primary data type used for encoding in protobufs. See [here](https://protobuf.dev/programming-guides/encoding/) for more information.
 
 - **World Entity** - an entity that can physically exist in a game world.
+
+- **Wwise** - Wave Works Interactive Sound Engine, audio middleware developed by Audiokinetic.
 
 - **ZigZag** - a way of encoding signed values in unsigned integers used in protobufs. See [here](https://protobuf.dev/programming-guides/encoding/) for more information.

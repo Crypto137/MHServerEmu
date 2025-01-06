@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -92,7 +93,7 @@ namespace MHServerEmu.Games.Entities.Physics
             return attachedEntities.Count > 0;
         }
 
-        public void AddRepulsionForce(Vector3 force)
+        public void AddRepulsionForce(in Vector3 force)
         {
             if (Entity == null) return;
             if (Entity.Locomotor != null)
@@ -108,18 +109,24 @@ namespace MHServerEmu.Games.Entities.Physics
             return AttachedEntities != null && AttachedEntities.Count > 0;
         }
 
-        public void ApplyInternalForce(Vector3 force)
+        public void ApplyInternalForce(in Vector3 force)
         {
             ApplyForce(force, false);
         }
 
-        public void ApplyKnockbackForce(Vector3 source, float time, float speed, float acceleration)
+        public void ApplyKnockbackForce(in Vector3 position, float time, float speed, float acceleration)
         {
-            // TODO
-            //Logger.Debug($"ApplyKnockbackForce(): source=[{source}], time={time}, acceleration={acceleration}");
+            // Logger.Debug($"ApplyKnockbackForce(): entity=[{Entity.PrototypeName}] source=[{position}], time={time}, acceleration={acceleration}");
+
+            var physicsMgr = GetPhysicsManager();
+            if (physicsMgr == null || Entity.IsInWorld == false) return;
+            if (Segment.IsNearZero(speed) && Segment.IsNearZero(acceleration)) return;
+            if (time <= 0) return;
+
+            physicsMgr.AddKnockbackForce(Entity, position, time, speed, acceleration);
         }
 
-        private void ApplyForce(Vector3 force, bool external)
+        private void ApplyForce(in Vector3 force, bool external)
         {
             if (!Vector3.IsFinite(force) || Vector3.IsNearZero(force) || !Entity.IsInWorld || Entity.Locomotor == null)
                 return;

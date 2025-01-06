@@ -484,6 +484,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageVendorRequestDonateItemTo:         OnVendorRequestDonateItemTo(message); break;        // 104
                 case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
+                case ClientToGameServerMessage.NetMessageAkEvent:                           OnAkEvent(message); break;                          // 109
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
@@ -1221,6 +1222,38 @@ namespace MHServerEmu.Games.Network
             if (vendorRequestRefresh == null) return Logger.WarnReturn(false, $"OnVendorRequestRefresh(): Failed to retrieve message");
 
             Player?.RefreshVendorInventory(vendorRequestRefresh.VendorId);
+            return true;
+        }
+
+        private bool OnAkEvent(MailboxMessage message) // 109
+        {
+            var akEvent = message.As<NetMessageAkEvent>();
+            if (akEvent == null) return Logger.WarnReturn(false, $"OnAkEvent(): Failed to retrieve message");
+
+            // AkEvent is a Wwise audio event, Ak stands for Audiokinetic. One thing these are used for is audio emotes.
+
+            Avatar avatar = Player?.CurrentAvatar;
+            if (avatar == null)
+                return false;
+
+            // Replicate this AkEvent to nearby players
+            PlayerConnectionManager networkManager = Game.NetworkManager;
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, avatar, AOINetworkPolicyValues.AOIChannelProximity, true))
+            {
+                var builder = NetMessageRecvAkEventFromEntity.CreateBuilder()
+                    .SetAkEventId(akEvent.AkEventId)
+                    .SetIsVO(akEvent.IsVO)
+                    .SetEntityId(avatar.Id)
+                    .SetEventType(akEvent.EventType);
+
+                if (akEvent.HasCooldownMS)
+                    builder.SetCooldownMS(akEvent.CooldownMS);
+
+                networkManager.SendMessageToMultiple(interestedClientList, builder.Build());
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
             return true;
         }
 

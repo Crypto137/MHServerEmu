@@ -188,6 +188,12 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public bool IsOverlappingPowerTarget(ulong targetId)
+        {
+            // TODO
+            return false;
+        }
+
         private void HandleOverlapBegin_Missile(Missile missile, Vector3 missilePosition)
         {
             //Logger.Trace($"HandleOverlapBegin_Missile {this} {missile} {missilePosition}");

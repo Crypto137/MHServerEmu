@@ -439,7 +439,11 @@ namespace MHServerEmu.Games.Powers
             extraProperties.CopyProperty(Properties, PropertyEnum.DamageMult);
             extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultForPower);
 
-            SerializeEntityPropertiesForPowerPayload(GetPayloadPropertySourceEntity(), Properties);    // todo: team-up away powers
+            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity();
+            if (propertySourceEntity == null)
+                return;
+
+            SerializeEntityPropertiesForPowerPayload(propertySourceEntity, extraProperties);
         }
 
         private void TransferMissilePierceChance(PropertyCollection extraProperties)
