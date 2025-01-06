@@ -491,7 +491,7 @@ namespace MHServerEmu.Leaderboards
 
         public bool IsActive(DateTime currentTime)
         {
-            return currentTime >= ActivationTime;
+            return currentTime >= ActivationTime || _leaderboard.CanReset == false;
         }
 
         public bool SetState(LeaderboardState state)

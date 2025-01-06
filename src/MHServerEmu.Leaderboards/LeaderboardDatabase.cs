@@ -10,6 +10,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MHServerEmu.Leaderboards
 {   
@@ -74,7 +75,11 @@ namespace MHServerEmu.Leaderboards
 
             try
             {
-                JsonSerializerOptions options = new();
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() }
+                };
+
                 var leaderboards = JsonSerializer.Deserialize<IEnumerable<LeaderboardSchedule>>(leaderboardsJson, options);
                 var oldDbLeaderboards = DBManager.GetLeaderboards();
 
@@ -324,7 +329,12 @@ namespace MHServerEmu.Leaderboards
                 }
             }
 
-            var options = new JsonSerializerOptions { WriteIndented = true };
+            var options = new JsonSerializerOptions 
+            { 
+                Converters = { new JsonStringEnumConverter() },
+                WriteIndented = true 
+            };
+
             string json = JsonSerializer.Serialize<IEnumerable<LeaderboardSchedule>>(jsonLeaderboards, options);
             File.WriteAllText(jsonConfigPath, json);
 
