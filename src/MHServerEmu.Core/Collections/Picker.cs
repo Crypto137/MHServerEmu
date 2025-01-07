@@ -32,8 +32,14 @@ namespace MHServerEmu.Core.Collections
 
         public Picker(Picker<T> other)
         {
-            _elements = new(other._elements);
-            _random = new(other._random.GetSeed());
+            _elements = new(other._elements.Count);
+            foreach (WeightedElement element in other._elements)
+                _elements.Add(element);
+
+            // IMPORTANT: The copy needs to use the same instance of random as the original to preserve the RNG sequence,
+            // otherwise PickValidItem() and PickWeightTryAll() will keep picking the same things.
+            _random = other._random;
+
             _weightMode = other._weightMode;
             _weights = other._weights;
         }
