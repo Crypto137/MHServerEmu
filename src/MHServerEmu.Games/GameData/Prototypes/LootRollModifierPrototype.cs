@@ -232,7 +232,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 settings.AffixLimitMinByPositionModifierDict.TryGetValue(Position, out short currentMinValue);
                 settings.AffixLimitMinByPositionModifierDict[Position] = (short)(currentMinValue + ModifyMinBy);
 
-                settings.AffixLimitMinByPositionModifierDict.TryGetValue(Position, out short currentMaxValue);
+                settings.AffixLimitMaxByPositionModifierDict.TryGetValue(Position, out short currentMaxValue);
                 settings.AffixLimitMaxByPositionModifierDict[Position] = (short)(currentMaxValue + ModifyMaxBy);
             }
             else if (Category != PrototypeId.Invalid)
