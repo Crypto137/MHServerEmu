@@ -25,10 +25,11 @@ namespace MHServerEmu.Games.Loot
             DropFilterArguments.Initialize(args, proto, rollFor, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, lootContext);
 
             args._affixRecordList.Clear();
-            if (itemSpec.AffixSpecs.Any())
+            IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
+            for (int i = 0; i < affixSpecs.Count; i++)
             {
-                foreach (AffixSpec affixSpec in itemSpec.AffixSpecs)
-                    args._affixRecordList.Add(new(affixSpec));
+                AffixSpec affixSpec = affixSpecs[i];
+                args._affixRecordList.Add(new(affixSpec));
             }
 
             ItemPrototype itemProto = proto as ItemPrototype;

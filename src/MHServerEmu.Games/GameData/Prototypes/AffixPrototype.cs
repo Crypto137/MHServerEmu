@@ -135,6 +135,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual bool HasBonusPropertiesToApply { get => Properties != null || PropertyEntries != null; }
 
         [DoNotCopy]
+        public bool IsPetTechAffix { get => Position >= AffixPosition.PetTech1 && Position <= AffixPosition.PetTech5; }
+
+        [DoNotCopy]
         public bool IsGemAffix { get => Position >= AffixPosition.Socket1 && Position <= AffixPosition.Socket3; }
 
         public override void PostProcess()

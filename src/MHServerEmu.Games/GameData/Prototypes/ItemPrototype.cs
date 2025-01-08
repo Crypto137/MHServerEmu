@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -99,6 +100,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         // ---
 
+        private const int TargetNumPetTechAffixes = 5;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
@@ -152,9 +155,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return PrototypeId.Invalid;
         }
 
-        public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
+        public bool OnApplyItemSpec(Item item, ItemSpec itemSpec)
         {
-            // TODO
+            ItemPrototype itemProto = item.ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "OnApplyItemSpec(): itemProto == null");
+
+            if (itemProto.IsPetItem == false)
+                return true;
+
+            // Roll new pet tech affixes if there aren't enough of them
+            int numPetTechAffixes = 0;
+
+            IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
+            for (int i = 0; i < affixSpecs.Count; i++)
+            {
+                AffixSpec affixSpec = affixSpecs[i];
+                if (affixSpec.AffixProto.IsPetTechAffix)
+                    numPetTechAffixes++;
+            }
+
+            if (numPetTechAffixes < TargetNumPetTechAffixes)
+                UpdatePetTechAffixes(item.Game.Random, item.GetBoundAgentProtoRef(), itemSpec);
+
+            return true;
+        }
+
+        public MutationResults UpdatePetTechAffixes(GRandom random, PrototypeId rollFor, ItemSpec itemSpec)
+        {
+            //Logger.Debug($"UpdatePetTechAffixes(): {itemSpec.ItemProtoRef.GetName()}");
+            return MutationResults.None;
         }
 
         public TimeSpan GetExpirationTime(PrototypeId rarityProtoRef)

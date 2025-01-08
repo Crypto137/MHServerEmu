@@ -143,11 +143,9 @@ namespace MHServerEmu.Games.Loot
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "UpdateAffixesHelper(): itemProto == null");
 
+            // Pet affixes are rolled separately
             if (itemProto.IsPetItem)
-            {
-                // TODO: ItemPrototype::UpdatePetTechAffixes()
-                return Logger.WarnReturn(MutationResults.None, "UpdateAffixesHelper(): Pet affixes are not yet implemented");
-            }
+                return itemProto.UpdatePetTechAffixes(resolver.Random, args.RollFor, itemSpec);
 
             MutationResults result = MutationResults.None;
 

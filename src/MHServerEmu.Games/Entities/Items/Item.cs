@@ -213,6 +213,12 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public PrototypeId GetBoundAgentProtoRef()
+        {
+            _itemSpec.GetBindingState(out PrototypeId agentProtoRef);
+            return agentProtoRef;
+        }
+
         public bool GetPowerGranted(out PrototypeId powerProtoRef)
         {
             powerProtoRef = PrototypeId.Invalid;
@@ -354,7 +360,7 @@ namespace MHServerEmu.Games.Entities.Items
             if (ApplyItemSpecProperties() == false)
                 return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
 
-            itemProto.OnApplyItemSpec(this, _itemSpec);     // TODO (needed for PetTech affixes)
+            itemProto.OnApplyItemSpec(this, _itemSpec);
 
             GRandom random = new(_itemSpec.Seed);
 
@@ -391,8 +397,11 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             // Apply rolled affixes
-            foreach (AffixSpec affixSpec in _itemSpec.AffixSpecs)
+            IReadOnlyList<AffixSpec> affixSpecs = _itemSpec.AffixSpecs;
+            for (int i = 0; i < affixSpecs.Count; i++)
             {
+                AffixSpec affixSpec = affixSpecs[i];
+
                 if (affixSpec.Seed == 0) return Logger.WarnReturn(false, "ApplyItemSpec(): affixSpec.Seed == 0");
                 random.Seed(affixSpec.Seed);
                 
