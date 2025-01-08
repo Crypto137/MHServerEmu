@@ -162,7 +162,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return KeywordPrototype.TestKeywordBit(_categoryKeywordsMask, affixCategoryProto);
         }
 
-        public AffixCategoryPrototype GetFirstCategoryMatch(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
+        public AffixCategoryPrototype GetFirstCategoryMatch(AffixCategoryPrototype[] affixCategoryProtos)
         {
             foreach (AffixCategoryPrototype affixCategoryProto in affixCategoryProtos)
             {
@@ -173,9 +173,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
-        public bool HasAnyCategory(IEnumerable<AffixCategoryPrototype> affixCategoryProtos)
+        public bool HasAnyCategory(AffixCategoryPrototype[] affixCategoryProtos)
         {
-            if (affixCategoryProtos == null || affixCategoryProtos.Any() == false)
+            if (affixCategoryProtos.IsNullOrEmpty())
                 return true;
 
             return GetFirstCategoryMatch(affixCategoryProtos) != null;
@@ -195,9 +195,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
-        public bool HasKeywords(IEnumerable<AssetId> keywordsToCheck, bool hasAll = false)
+        public bool HasKeywords(AssetId[] keywordsToCheck, bool hasAll = false)
         {
-            if (keywordsToCheck == null || keywordsToCheck.Any() == false)
+            if (keywordsToCheck.IsNullOrEmpty())
                 return true;
 
             if (Keywords.IsNullOrEmpty())
