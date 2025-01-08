@@ -197,7 +197,7 @@ namespace MHServerEmu.Games.Entities.Items
             resolver.Initialize(Game.Random);
             resolver.SetContext(LootContext.MysteryChest, player);
 
-            LootRollResult result = lootTableProto.Roll(inputSettings.LootRollSettings, resolver);
+            LootRollResult result = lootTableProto.RollLootTable(inputSettings.LootRollSettings, resolver);
             if (result == LootRollResult.NoRoll || result == LootRollResult.Failure)
             {
                 player.SendMessage(NetMessageLootRollFailed.DefaultInstance);

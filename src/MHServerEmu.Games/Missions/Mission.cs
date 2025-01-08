@@ -2135,7 +2135,7 @@ namespace MHServerEmu.Games.Missions
             settings.LootRollSettings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
             foreach (LootTablePrototype reward in rewards)
-                reward.Roll(settings.LootRollSettings, resolver);
+                reward.RollLootTable(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
             Logger.Trace($"RollLootSummaryForPrototype [{missionProto}] Rewards {lootSummary}");
@@ -2165,7 +2165,7 @@ namespace MHServerEmu.Games.Missions
                 settings.LootRollSettings.DropChanceModifiers |= LootDropChanceModifiers.PreviewOnly;
 
             foreach (LootTablePrototype reward in rewards)
-                reward.Roll(settings.LootRollSettings, resolver);
+                reward.RollLootTable(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
             
