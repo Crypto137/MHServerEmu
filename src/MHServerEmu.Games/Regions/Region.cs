@@ -1569,6 +1569,13 @@ namespace MHServerEmu.Games.Regions
             return Game.NetworkManager.GetInterestedClients(interestedClientList, this);
         }
 
+        public bool HasKeywords()
+        {
+            RegionPrototype regionProto = Prototype;
+            if (regionProto == null) return Logger.WarnReturn(false, "HasKeywords(): regionProto == null");
+            return regionProto.HasKeywords;
+        }
+
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && Prototype.HasKeyword(keywordProto);

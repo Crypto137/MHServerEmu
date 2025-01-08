@@ -284,9 +284,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (RequiredRegion != PrototypeId.Invalid && region.PrototypeDataRef == RequiredRegion)
                 return true;
 
-            if (RequiredRegionKeywords.HasValue())
+            if (RequiredRegionKeywords.HasValue() && region.HasKeywords())
             {
-                Logger.Warn("MatchesRegion(): Keyword region matching is not yet implemented");
+                // Seems to be deprecated in 1.52, but may be useful for older versions
+                foreach (PrototypeId keywordProtoRef in RequiredRegionKeywords)
+                {
+                    if (region.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
+                        return true;
+                }
             }
 
             return false;

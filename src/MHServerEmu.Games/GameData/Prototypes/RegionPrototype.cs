@@ -148,6 +148,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; private set; }
         [DoNotCopy]
+        public bool HasKeywords { get => Keywords.HasValue(); }
+        [DoNotCopy]
         public DifficultyTierMask DifficultyTierMask { get; private set; }
         [DoNotCopy]
         public bool HasPvPMetaGame { get; private set; }
