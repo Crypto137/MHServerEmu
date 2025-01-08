@@ -1,13 +1,16 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
+using System.Text;
 
 namespace MHServerEmu.Leaderboards
 {
     public class Leaderboard
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private readonly object _lock = new object();
         public PrototypeGuid LeaderboardId { get; }
         public LeaderboardPrototype Prototype { get; }
@@ -185,6 +188,7 @@ namespace MHServerEmu.Leaderboards
 
         private void AddNewInstance(DBLeaderboardInstance dbInstance, LeaderboardInstance metaInstance)
         {
+            if (LeaderboardManager.Debug) Logger.Debug($"AddNewInstance {Prototype.DataRef.GetNameFormatted()} {dbInstance.InstanceId}");
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             dbManager.SetInstance(dbInstance);
 
@@ -222,6 +226,7 @@ namespace MHServerEmu.Leaderboards
             if (instance == null)
             {
                 // Add new instances
+                if (LeaderboardManager.Debug) Logger.Debug($"RefreshInstance Add New {Prototype.DataRef.GetNameFormatted()} {refreshInstance.InstanceId}");
 
                 if (Prototype.IsMetaLeaderboard)
                 {
@@ -236,6 +241,7 @@ namespace MHServerEmu.Leaderboards
             else
             {
                 // update Instance
+                if (LeaderboardManager.Debug) Logger.Debug($"RefreshInstance Update {Prototype.DataRef.GetNameFormatted()} {refreshInstance.InstanceId}");
 
                 bool changed = false;
 
@@ -254,6 +260,7 @@ namespace MHServerEmu.Leaderboards
                 var newActivationTime = refreshInstance.GetActivationDateTime();
                 if (instance.ActivationTime != newActivationTime)
                 {
+                    if (LeaderboardManager.Debug) Logger.Debug($"RefreshInstance ActivationTime {instance.ActivationTime} => {newActivationTime}");
                     instance.ActivationTime = newActivationTime;
                     instance.ExpirationTime = Scheduler.CalcExpirationTime(newActivationTime);
                     changed = true;
@@ -262,6 +269,20 @@ namespace MHServerEmu.Leaderboards
                 if (changed) OnStateChange(instance.InstanceId, instance.State);
 
             }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"LeaderboardId: {LeaderboardId}");
+            sb.AppendLine($"Prototype: {Prototype}");
+            sb.AppendLine("Instances:");
+            foreach (var instance in Instances)
+                sb.AppendLine($"  Instance[{instance.InstanceId}]: {instance.State}");
+
+            sb.AppendLine($"ActiveInstance: {(ActiveInstance != null ? ActiveInstance.InstanceId : 0)}");
+            sb.AppendLine($"Scheduler: {Scheduler}");
+            return sb.ToString();
         }
     }
 }

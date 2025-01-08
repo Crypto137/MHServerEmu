@@ -1,16 +1,19 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Leaderboards;
+using System.Text;
 
 namespace MHServerEmu.Leaderboards
 {
     public class LeaderboardInstance
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private Leaderboard _leaderboard; 
         private readonly object _lock = new object();
         private LeaderboardTableData _cachedTableData;
@@ -542,6 +545,7 @@ namespace MHServerEmu.Leaderboards
 
                 if (changed)
                 {
+                    if (LeaderboardManager.Debug) Logger.Debug($"SetState {LeaderboardPrototype.DataRef.GetNameFormatted()} {InstanceId} [{State}] => [{state}]");
                     State = state;
                     _leaderboard.OnStateChange(InstanceId, state);
                 }
@@ -564,6 +568,18 @@ namespace MHServerEmu.Leaderboards
             int intervalMinutes = config.AutoSaveIntervalMinutes;
             if (_lastSaveTime.AddMinutes(intervalMinutes) < Clock.UtcNowPrecise)
                 SaveEntries();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"Instance {InstanceId}");
+            sb.AppendLine($"Leaderboard Prototype: {LeaderboardPrototype.DataRef.GetNameFormatted()}");
+            sb.AppendLine($"State: {State}");
+            sb.AppendLine($"Activation Time: {ActivationTime}");
+            sb.AppendLine($"Expiration Time: {ExpirationTime}");
+            sb.AppendLine($"Visible: {Visible}");
+            return sb.ToString();
         }
     }
 

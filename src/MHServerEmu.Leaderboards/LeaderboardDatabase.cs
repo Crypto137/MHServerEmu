@@ -515,33 +515,38 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void UpdateState()
+        public List<Leaderboard> GetLeaderboards()
         {
             List<Leaderboard> leaderboards = new();
-            var updateTime = Clock.UtcNowPrecise;
-
             lock (_lock)
             {
                 leaderboards.AddRange(_leaderboards.Values);
                 leaderboards.AddRange(_metaLeaderboards.Values);
             }
+            return leaderboards;
+        }
 
-            foreach (var leaderboard in leaderboards)
+        public void UpdateState()
+        {
+            var updateTime = Clock.UtcNowPrecise;
+            foreach (var leaderboard in GetLeaderboards())
                 leaderboard.UpdateState(updateTime);
         }
 
         public void Save()
         {
-            List<Leaderboard> leaderboards = new();
-
-            lock (_lock)
-            {
-                leaderboards.AddRange(_leaderboards.Values);
-                leaderboards.AddRange(_metaLeaderboards.Values);
-            }
-
-            foreach (var leaderboard in leaderboards)                
+            foreach (var leaderboard in GetLeaderboards())                
                 leaderboard.ActiveInstance?.SaveEntries(true);
+        }
+
+        public LeaderboardInstance FindInstance(ulong instanceId)
+        {
+            foreach (var leaderboard in GetLeaderboards())
+                foreach (var instance in leaderboard.Instances)
+                    if (instance.InstanceId == instanceId)
+                        return instance;
+
+            return null;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData.Prototypes;
+using System.Text;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -176,6 +177,19 @@ namespace MHServerEmu.Leaderboards
                 nextTime = NextReset(nextTime);
 
             return nextTime;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"IsActive: {IsActive}");
+            sb.AppendLine($"Reset Frequency: {ResetFrequency}");
+            sb.AppendLine($"Duration: {Duration}");
+            sb.AppendLine($"Frequency: {Frequency}");
+            sb.AppendLine($"Interval: {Interval}");
+            sb.AppendLine($"Start Event: {StartEvent}");
+            sb.AppendLine($"End Event: {EndEvent}");
+            return sb.ToString();
         }
     }
 }
