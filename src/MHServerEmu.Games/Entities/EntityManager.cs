@@ -470,17 +470,14 @@ namespace MHServerEmu.Games.Entities
             if (_game == null) return Logger.WarnReturn(false, "ProcessDestroyed(): _game == null");
 
             // Delete all destroyed entities
-            while (_entitiesPendingDestruction.Any())
+            while (_entitiesPendingDestruction.Count > 0)
             {
                 ulong entityId = _entitiesPendingDestruction.First.Value;
 
-                if (_entityDict.TryGetValue(entityId, out Entity entity) == false)
-                    Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
-                else
-                {
-                    //Logger.Trace($"Deleting entity {entity}");
+                if (_entityDict.TryGetValue(entityId, out Entity entity))
                     DeleteEntity(entity);
-                }
+                else
+                    Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
 
                 _entitiesPendingDestruction.RemoveFirst();
             }
