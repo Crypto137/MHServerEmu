@@ -128,6 +128,7 @@ namespace MHServerEmu.Leaderboards
 
         public DateTime CalcNextUtcActivationDate(DateTime activationTime, DateTime currentTime)
         {
+            // reset seconds
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
                 currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
 
@@ -135,6 +136,7 @@ namespace MHServerEmu.Leaderboards
 
             if (nextReset < currentTime)
             {
+                // get reset DateTime from current day
                 nextReset = new DateTime(
                     currentTime.Year, currentTime.Month, currentTime.Day,
                     nextReset.Hour, nextReset.Minute, nextReset.Second, DateTimeKind.Utc);
@@ -143,16 +145,18 @@ namespace MHServerEmu.Leaderboards
                     nextReset = GetNextUtcResetDatetime(nextReset);
             }
 
+            // get reset day from reset DateTime
             var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
 
-            var nextActivation = GetNextActivationDate(currentTime);
+            // get next Date include reset day
+            var nextActivation = GetNextActivationDate(nextResetDay, true);
             if (nextActivation.HasValue == false)
                 return activationTime;
             else
                 return nextActivation > nextResetDay ? nextActivation.Value : nextReset;
         }
 
-        public DateTime? GetNextActivationDate(DateTime currentTime)
+        public DateTime? GetNextActivationDate(DateTime currentTime, bool includeCurrent = false)
         {
             if (IsActive == false || Interval == 0) return null;
 
@@ -162,8 +166,12 @@ namespace MHServerEmu.Leaderboards
             DateTime nextTime = StartEvent;
             if (Frequency == LeaderboardResetFrequency.NeverReset) return currentTime;
 
-            while (nextTime <= currentTime)
+            while (nextTime < currentTime)
+            {
                 nextTime = NextActivation(nextTime);
+                if (includeCurrent && nextTime == currentTime)
+                    break;
+            }
 
             if (nextTime > EndEvent) return null;
 

@@ -142,8 +142,8 @@ namespace MHServerEmu.Leaderboards
                                 if (leaderboard.Scheduler.StartEvent != oldLeaderboard.GetStartDateTime())
                                 {
                                     // Find next activation time
-                                    var oldActivation = instance.GetActivationDateTime().AddSeconds(-1);
-                                    var nextActivation = leaderboard.Scheduler.GetNextActivationDate(oldActivation);
+                                    var oldActivation = instance.GetActivationDateTime();
+                                    var nextActivation = leaderboard.Scheduler.GetNextActivationDate(oldActivation, true);
                                     if (nextActivation.HasValue)
                                     {
                                         var nextEvent = nextActivation.Value;
