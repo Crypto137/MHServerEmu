@@ -383,18 +383,24 @@ namespace MHServerEmu.Games.Entities.Items
             // NOTE: RNG is reseeded for each affix individually
 
             // Apply built-in affixes
-            foreach (BuiltInAffixDetails builtInAffixDetails in itemProto.GenerateBuiltInAffixDetails(_itemSpec))
+            List<BuiltInAffixDetails> detailsList = ListPool<BuiltInAffixDetails>.Instance.Get();
+            if (itemProto.GenerateBuiltInAffixDetails(_itemSpec, detailsList))
             {
-                AffixPrototype affixProto = builtInAffixDetails.AffixEntryProto.Affix.As<AffixPrototype>();
-                if (affixProto == null)
+                foreach (BuiltInAffixDetails builtInAffixDetails in detailsList)
                 {
-                    Logger.Warn("ApplyItemSpec(): affixProto == null");
-                    continue;
-                }
+                    AffixPrototype affixProto = builtInAffixDetails.AffixEntryProto.Affix.As<AffixPrototype>();
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("ApplyItemSpec(): affixProto == null");
+                        continue;
+                    }
 
-                random.Seed(builtInAffixDetails.Seed);
-                OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
+                    random.Seed(builtInAffixDetails.Seed);
+                    OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
+                }
             }
+
+            ListPool<BuiltInAffixDetails>.Instance.Return(detailsList);
 
             // Apply rolled affixes
             IReadOnlyList<AffixSpec> affixSpecs = _itemSpec.AffixSpecs;
