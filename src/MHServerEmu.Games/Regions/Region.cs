@@ -864,7 +864,7 @@ namespace MHServerEmu.Games.Regions
             RegionPrototype regionProto = Prototype;
             if (regionProto == null) return;
 
-            if (Settings.DebugLevel == true)
+            if (Settings.ApplyLevelOverride == true)
                 RegionLevel = Settings.Level;
             else if (regionProto.Level > 0)
                 RegionLevel = regionProto.Level;

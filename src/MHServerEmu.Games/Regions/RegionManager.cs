@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -178,12 +179,18 @@ namespace MHServerEmu.Games.Regions
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): Failed to get difficulty tier for region {regionProto}");
 
             regionContext.DifficultyTierRef = difficultyTierProtoRef;
-            regionContext.Level = regionProto.Level;
+            regionContext.Level = 0;
+
+            // HACK: Force level 63 for the Daily Bugle terminal if the current avatar is level 60 (wtf is wrong with it)
+            if (regionProtoRef == (PrototypeId)6538624689610759291)
+            {
+                Avatar avatar = playerConnection.Player?.CurrentAvatar;
+                if (avatar != null && avatar.CharacterLevel == 60)
+                    regionContext.Level = 63;
+            }
 
             if (regionProto.HasEndless() && regionContext.EndlessLevel == 0)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): DangerRoom {regionProtoRef} with EndlessLevel = 0");
-
-            //prototype = RegionPrototypeId.NPEAvengersTowerHUBRegion;
 
             Region region = null;
 
