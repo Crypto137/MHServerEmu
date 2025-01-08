@@ -50,6 +50,13 @@ namespace MHServerEmu.Games.Powers
             }
             else
             {
+                // Fix for holo crafter / vendor spam
+                if (avatar.Properties[summonedEntityCountProp] > 0)
+                {
+                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
+                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
+                }
+
                 EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, item);
 
                 if (IsToggled())  // Check for Danger Room scenarios that are not toggled
