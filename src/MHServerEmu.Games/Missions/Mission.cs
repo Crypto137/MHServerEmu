@@ -2181,18 +2181,11 @@ namespace MHServerEmu.Games.Missions
             if (avatar == null)
                 return (int)Prototype.Level;
 
-            // For open missions use region level
+            // Scale open mission rewards to region level
             if (IsOpenMission)
-            {
-                RegionLocation regionLocation = avatar.RegionLocation;
-                Region region = regionLocation.Region;
-                Area area = regionLocation.Area;
+                return avatar.GetDynamicLevel(avatar.CharacterLevel);
 
-                if (region != null && area != null)
-                    return region.GetAreaLevel(area);
-            }
-
-            // Use avatar level for regular missions
+            // For regular missions use avatar level as is
             return avatar.CharacterLevel;
         }
 
