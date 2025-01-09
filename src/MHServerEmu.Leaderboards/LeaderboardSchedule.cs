@@ -126,65 +126,71 @@ namespace MHServerEmu.Leaderboards
             };
         }
 
-        public DateTime CalcNextUtcActivationDate(DateTime activationTime, DateTime currentTime)
+        public DateTime CalcNextUtcActivationDate(DateTime? activationTime = null, DateTime? updateTime = null)
         {
-            // reset seconds
-            currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
-                currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
+            // Determine the current time without seconds
+            var currentTime = updateTime ?? DateTime.UtcNow;
+            currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
 
-            var nextReset = GetNextUtcResetDatetime(activationTime);
+            // Use StartEvent as the base reference for resets if activationTime is not provided
+            var referenceTime = activationTime ?? StartEvent;
 
-            if (nextReset < currentTime)
-            {
-                // get reset DateTime from current day
-                nextReset = new DateTime(
-                    currentTime.Year, currentTime.Month, currentTime.Day,
-                    nextReset.Hour, nextReset.Minute, nextReset.Second, DateTimeKind.Utc);
+            // Calculate the next reset time relative to the reference time
+            DateTime nextReset = GetNextUtcResetDatetime(referenceTime, currentTime);
 
-                if (nextReset < currentTime)
-                    nextReset = GetNextUtcResetDatetime(nextReset);
-            }
+            // Calculate the next activation time relative to the current time
+            var nextActivationDay = GetNextActivationDay(currentTime);
+            if (nextActivationDay == null) return nextReset;
 
             // get reset day from reset DateTime
             var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
 
-            // get next Date include reset day
-            var nextActivation = GetNextActivationDate(nextResetDay, true);
-            if (nextActivation.HasValue == false)
-                return activationTime;
-            else
-                return nextActivation > nextResetDay ? nextActivation.Value : nextReset;
+            if (nextResetDay != nextActivationDay.Value)
+            {
+                // find the next valid activation day
+                nextActivationDay = GetNextActivationDay(nextResetDay);
+                if (nextActivationDay == null) return nextReset;
+
+                if (CalcExpirationTime(nextActivationDay.Value) > currentTime)
+                    return nextActivationDay.Value;
+            }
+
+            return nextReset;
         }
 
-        public DateTime? GetNextActivationDate(DateTime currentTime, bool includeCurrent = false)
+        public DateTime? GetNextActivationDay(DateTime currentTime)
         {
             if (IsActive == false || Interval == 0) return null;
 
-            if (currentTime < StartEvent)
+            var currentDay = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 0, 0, 0, DateTimeKind.Utc);
+
+            if (currentDay <= StartEvent)
                 return StartEvent;
 
-            DateTime nextTime = StartEvent;
-            if (Frequency == LeaderboardResetFrequency.NeverReset) return currentTime;
+            var nextDay = StartEvent;
+            if (Frequency == LeaderboardResetFrequency.NeverReset) return null;
 
-            while (nextTime < currentTime)
-            {
-                nextTime = NextActivation(nextTime);
-                if (includeCurrent && nextTime == currentTime)
-                    break;
-            }
+            while (nextDay < currentDay)
+                nextDay = NextActivation(nextDay);
 
-            if (nextTime > EndEvent) return null;
+            if (nextDay > EndEvent) return null;
 
-            return nextTime;
+            return nextDay;
         }
 
-        public DateTime GetNextUtcResetDatetime(DateTime currentTime)
+        public DateTime GetNextUtcResetDatetime(DateTime resetTime, DateTime currentTime)
         {
-            DateTime nextTime = currentTime;
-            while (nextTime <= currentTime)
-                nextTime = NextReset(nextTime);
+            var expirationTime = currentTime;
+            if (resetTime == currentTime)
+                expirationTime = CalcExpirationTime(resetTime);
 
-            return nextTime;
+            while (expirationTime <= currentTime)
+            {
+                resetTime = NextReset(resetTime);
+                expirationTime = CalcExpirationTime(resetTime);
+            }
+
+            return resetTime;
         }
 
         public override string ToString()

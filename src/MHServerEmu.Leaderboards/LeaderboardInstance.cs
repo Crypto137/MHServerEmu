@@ -42,8 +42,7 @@ namespace MHServerEmu.Leaderboards
 
             if (dbInstance.ActivationDate == 0 && leaderboard.CanReset)
             {
-                var currentTime = Clock.UtcNowPrecise;
-                var activationDate = _leaderboard.Scheduler.CalcNextUtcActivationDate(currentTime, currentTime);
+                var activationDate = _leaderboard.Scheduler.CalcNextUtcActivationDate();
                 dbInstance.SetActivationDateTime(activationDate);
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.UpdateInstanceActivationDate(dbInstance);

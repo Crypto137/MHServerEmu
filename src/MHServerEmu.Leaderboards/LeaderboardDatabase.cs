@@ -99,9 +99,7 @@ namespace MHServerEmu.Leaderboards
                         if (leaderboard.Scheduler.IsActive)
                         {
                             // Add new instance
-
-                            var currentTime = Clock.UtcNowPrecise;
-                            var activationDate = leaderboard.Scheduler.CalcNextUtcActivationDate(currentTime, currentTime);
+                            var activationDate = leaderboard.Scheduler.CalcNextUtcActivationDate();
 
                             refreshInstances.Add(new DBLeaderboardInstance
                             {
@@ -142,18 +140,8 @@ namespace MHServerEmu.Leaderboards
                                 if (leaderboard.Scheduler.StartEvent != oldLeaderboard.GetStartDateTime())
                                 {
                                     // Find next activation time
-                                    var oldActivation = instance.GetActivationDateTime();
-                                    var nextActivation = leaderboard.Scheduler.GetNextActivationDate(oldActivation, true);
-                                    if (nextActivation.HasValue)
-                                    {
-                                        var nextEvent = nextActivation.Value;
-
-                                        var currentTime = Clock.UtcNowPrecise;
-                                        if (leaderboard.Scheduler.CalcExpirationTime(nextEvent) < currentTime)
-                                            nextEvent = leaderboard.Scheduler.CalcNextUtcActivationDate(currentTime, currentTime);
-
-                                        activationDate = Clock.DateTimeToTimestamp(nextEvent);
-                                    }
+                                    var nextEvent = leaderboard.Scheduler.CalcNextUtcActivationDate();
+                                    activationDate = Clock.DateTimeToTimestamp(nextEvent);
                                 }
 
                                 refreshInstances.Add(new DBLeaderboardInstance
