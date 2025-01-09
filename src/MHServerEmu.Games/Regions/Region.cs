@@ -1644,7 +1644,7 @@ namespace MHServerEmu.Games.Regions
                 return;
             }
 
-            Properties[startPropId] = (long)Clock.GameTime.TotalMilliseconds;
+            Properties[startPropId] = Clock.GameTime;
 
             var widget = GetScoringTimerWidget(timerRef);
             if (widget == null) return;
@@ -1660,14 +1660,14 @@ namespace MHServerEmu.Games.Regions
 
             var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
             if (Properties.HasProperty(accumPropId))
-                time = TimeSpan.FromMilliseconds(Properties[accumPropId]);
+                time = Properties[accumPropId];
 
             var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
             if (Properties.HasProperty(startPropId))
             {
-                long startTime = Properties[startPropId];
-                if (startTime > 0)
-                    time += Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
+                TimeSpan startTime = Properties[startPropId];
+                if (startTime > TimeSpan.Zero)
+                    time += Clock.GameTime - startTime;
             }
 
             return (long)time.TotalMilliseconds;
@@ -1685,8 +1685,8 @@ namespace MHServerEmu.Games.Regions
         {
             if (timerRef == PrototypeId.Invalid) return;
             var startPropId = new PropertyId(PropertyEnum.ScoringEventTimerStartTimeMS, timerRef);
-            if (Properties.HasProperty(startPropId) == false) return;
-            ScoringEventTimerStop(timerRef);
+            if (Properties.HasProperty(startPropId))
+                ScoringEventTimerStop(timerRef);
 
             long time = GetScoringEventTimeMS(timerRef);
             if (time == 0) return;
@@ -1702,10 +1702,10 @@ namespace MHServerEmu.Games.Regions
             var accumPropId = new PropertyId(PropertyEnum.ScoringEventTimerAccumTimeMS, timerRef);
             if (Properties.HasProperty(startPropId) == false) return;
 
-            int startTime = Properties[startPropId];
-            if (startTime > 0)
+            TimeSpan startTime = Properties[startPropId];
+            if (startTime > TimeSpan.Zero)
             {
-                var time = Clock.GameTime - TimeSpan.FromMilliseconds(startTime);
+                var time = Clock.GameTime - startTime;
                 Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
                 Properties.RemoveProperty(startPropId);
             }
