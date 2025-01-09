@@ -140,16 +140,21 @@ namespace MHServerEmu.Leaderboards
 
             // Calculate the next activation time relative to the current time
             var nextActivationDay = GetNextActivationDay(currentTime);
-            if (nextActivationDay == null) return nextReset;
+            if (nextActivationDay == null) return referenceTime;
 
-            // get reset day from reset DateTime
+            // Get reset day from reset DateTime
             var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
 
+            // Get first day for new event
+            if (activationTime == null && nextActivationDay.Value < nextResetDay) 
+                return nextActivationDay.Value;
+
+            // Compare reset and activation days
             if (nextResetDay != nextActivationDay.Value)
             {
                 // find the next valid activation day
                 nextActivationDay = GetNextActivationDay(nextResetDay);
-                if (nextActivationDay == null) return nextReset;
+                if (nextActivationDay == null) return referenceTime;
 
                 if (CalcExpirationTime(nextActivationDay.Value) > currentTime)
                     return nextActivationDay.Value;
