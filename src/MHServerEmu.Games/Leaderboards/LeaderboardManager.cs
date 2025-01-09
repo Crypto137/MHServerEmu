@@ -203,7 +203,7 @@ namespace MHServerEmu.Games.Leaderboards
                         var eventProto = ruleProto?.Event;
                         if (eventProto == null) continue;
 
-                        if (ScoringEvents.GetMethod(eventProto.Type) == ScoringMethod.Add)
+                        if (ScoringEvents.GetMethod(eventProto.Type) != ScoringMethod.Add)
                         {                            
                             var playerContext = new ScoringPlayerContext
                             {
