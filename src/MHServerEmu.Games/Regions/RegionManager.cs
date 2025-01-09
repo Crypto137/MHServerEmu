@@ -181,14 +181,6 @@ namespace MHServerEmu.Games.Regions
             regionContext.DifficultyTierRef = difficultyTierProtoRef;
             regionContext.Level = 0;
 
-            // HACK: Force level 63 for the Daily Bugle terminal if the current avatar is level 60 (wtf is wrong with it)
-            if (regionProtoRef == (PrototypeId)6538624689610759291)
-            {
-                Avatar avatar = playerConnection.Player?.CurrentAvatar;
-                if (avatar != null && avatar.CharacterLevel == 60)
-                    regionContext.Level = 63;
-            }
-
             if (regionProto.HasEndless() && regionContext.EndlessLevel == 0)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): DangerRoom {regionProtoRef} with EndlessLevel = 0");
 
