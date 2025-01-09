@@ -5,6 +5,7 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Missions;
@@ -28,6 +29,7 @@ namespace MHServerEmu.Games.Loot
 
         private readonly ItemResolverContext _context = new();
 
+        private Picker<int> _levelOffsetPicker;
         private Picker<AvatarPrototype> _avatarPicker;
 
         public GRandom Random { get; private set; }
@@ -52,9 +54,17 @@ namespace MHServerEmu.Games.Loot
         {
             Random = random;
 
+            // NOTE: We have to rebuild pickers on each initialization because they use the same GRandom as the resolver.
+            // TODO: Move this to the constructor when we implement poolable pickers with reassignable GRandom instances.
+
+            // Cache mob level to item level offset picker
+            // NOTE: In version 1.52 the only possible offset is 3, but it's more varied in older versions of the game (e.g. 1.10).
+            _levelOffsetPicker = new(random);
+            Curve curve = GameDatabase.LootGlobalsPrototype.LootLevelDistribution.AsCurve();
+            for (int i = curve.MinPosition; i <= curve.MaxPosition; i++)
+                _levelOffsetPicker.Add(i, curve.GetIntAt(i));
+
             // Cache avatar picker for smart loot
-            // NOTE: We have to rebuild the avatar picker on each initialization because it uses the same GRandom as the resolver.
-            // TODO: Move this back to the constructor when we implement poolable pickers with reassignable GRandom instances.
             _avatarPicker = new(random);
             foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -277,8 +287,9 @@ namespace MHServerEmu.Games.Loot
 
         public int ResolveLevel(int level, bool useLevelVerbatim)
         {
-            // NOTE: In version 1.52 MobLevelToItemLevel.curve is empty, so we can always treat this as if useLevelVerbatim is set.
-            // If we were to support older versions (most likely predating level scaling) we would have to properly implement this.
+            // NOTE: In 1.52 this offsets by +3 if not using level verbatim
+            if (useLevelVerbatim == false && _levelOffsetPicker.Pick(out int offset))
+                level += offset;
 
             // Clamp to the range defined in the property info because some modifiers apply a bigger offset (e.g. Doom artifacts with +99 to level)
             level = Math.Clamp(level, _itemLevelMin, _itemLevelMax);

@@ -65,14 +65,7 @@ namespace MHServerEmu.Games.Loot
             int level = 1;
 
             if (lootContext == LootContext.Drop && avatar != null)
-            {
-                level = avatar.GetDynamicLevel(avatar.CharacterLevel);
-
-                // HACK: Force level 63 if the avatar is level 60 to make drops ilvl 63 for regions that are not level 63
-                // (e.g. non-cosmic Midtown Patrol, the Daily Bugle terminal). How the hell is it supposed to actually work?!
-                if (level == 60)
-                    level = 63;
-            }
+                level = avatar.CharacterLevel;
 
             Initialize(lootContext, player, sourceEntity, level, positionOverride);
         }

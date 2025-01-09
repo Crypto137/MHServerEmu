@@ -1151,7 +1151,7 @@ namespace MHServerEmu.Games.Powers
             // Override target level if needed
             int targetLevelOverride = -1;
             if (IsPlayerPayload && target.CanBePlayerOwned() == false)
-                targetLevelOverride = target.GetDynamicLevel(CombatLevel);
+                targetLevelOverride = target.GetDynamicCombatLevel(CombatLevel);
 
             // Calculate and check crit chance
             float critChance = Power.GetCritChance(PowerPrototype, Properties, target, PowerOwnerId, PrototypeId.Invalid, targetLevelOverride);            
@@ -1166,7 +1166,7 @@ namespace MHServerEmu.Games.Powers
             // Override target level if needed
             int targetLevelOverride = -1;
             if (IsPlayerPayload && target.CanBePlayerOwned() == false)
-                targetLevelOverride = target.GetDynamicLevel(CombatLevel);
+                targetLevelOverride = target.GetDynamicCombatLevel(CombatLevel);
 
             // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
@@ -1497,7 +1497,7 @@ namespace MHServerEmu.Games.Powers
                 healthMaxProperties.CopyProperty(target.Properties, dependencyPropertyId);
 
             // Set CombatLevel to the level we are scaling to
-            healthMaxProperties[PropertyEnum.CombatLevel] = target.GetDynamicLevel(combatLevel);
+            healthMaxProperties[PropertyEnum.CombatLevel] = target.GetDynamicCombatLevel(combatLevel);
 
             // Set the HealthBase curve used by the target
             PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);

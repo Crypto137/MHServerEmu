@@ -1838,7 +1838,7 @@ namespace MHServerEmu.Games.Entities
 
         #region Stats
 
-        public int GetDynamicLevel(int levelToScaleTo)
+        public int GetDynamicCombatLevel(int levelToScaleTo)
         {
             Region region = Region;
             if (region == null)
