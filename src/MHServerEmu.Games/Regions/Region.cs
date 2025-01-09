@@ -1644,7 +1644,7 @@ namespace MHServerEmu.Games.Regions
                 return;
             }
 
-            Properties[startPropId] = Clock.GameTime;
+            Properties[startPropId] = Game.CurrentTime;
 
             var widget = GetScoringTimerWidget(timerRef);
             if (widget == null) return;
@@ -1667,7 +1667,7 @@ namespace MHServerEmu.Games.Regions
             {
                 TimeSpan startTime = Properties[startPropId];
                 if (startTime > TimeSpan.Zero)
-                    time += Clock.GameTime - startTime;
+                    time += Game.CurrentTime - startTime;
             }
 
             return (long)time.TotalMilliseconds;
@@ -1706,7 +1706,7 @@ namespace MHServerEmu.Games.Regions
             TimeSpan startTime = Properties[startPropId];
             if (startTime > TimeSpan.Zero)
             {
-                var time = Clock.GameTime - startTime;
+                var time = Game.CurrentTime - startTime;
                 Properties.AdjustProperty((int)time.TotalMilliseconds, accumPropId);
                 Properties.RemoveProperty(startPropId);
             }

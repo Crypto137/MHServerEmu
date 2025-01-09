@@ -94,7 +94,7 @@ namespace MHServerEmu.Games.UI
                 _timeEnd = 0;
             }
 
-            _timeStart = (long)Clock.GameTime.TotalMilliseconds - timeElapsedMS;
+            _timeStart = (long)Game.Current.CurrentTime.TotalMilliseconds - timeElapsedMS;
             UpdateUI();
         }
 
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.UI
                 _timeStart = 0;
             }
 
-            _timeEnd = (long)Clock.GameTime.TotalMilliseconds + timeRemainingMS;
+            _timeEnd = (long)Game.Current.CurrentTime.TotalMilliseconds + timeRemainingMS;
             UpdateUI();
         }
 
