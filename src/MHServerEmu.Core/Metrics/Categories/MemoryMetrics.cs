@@ -1,7 +1,5 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Metrics.Entries;
-using MHServerEmu.Core.Metrics.Trackers;
 
 namespace MHServerEmu.Core.Metrics.Categories
 {
@@ -14,7 +12,7 @@ namespace MHServerEmu.Core.Metrics.Categories
         private long[] _gcCounts = new long[GC.MaxGeneration + 1];
         private long _totalCommittedBytes;
         private double _pauseTimePercentage;
-        private readonly TimeTracker _pauseDurationTracker = new(512);
+        private readonly MetricTracker _pauseDurationTracker = new(512);
 
         public void Update()
         {
@@ -42,7 +40,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             _gcCounts[memoryInfo.Generation]++;
 
             TimeSpan combinedPauseDuration = memoryInfo.PauseDurations[0] + memoryInfo.PauseDurations[1];
-            _pauseDurationTracker.Track(new(combinedPauseDuration));
+            _pauseDurationTracker.Track(combinedPauseDuration);
 
             if (gcKind != GCKind.Ephemeral)
                 Logger.Trace($"{gcKind} GC recorded: Index={memoryInfo.Index}, Generation={memoryInfo.Generation}, PauseDuration={combinedPauseDuration.TotalMilliseconds} ms");
@@ -64,7 +62,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             public long GCCountGen2 { get; }
             public long TotalCommittedBytes { get; }
             public double PauseTimePercentage { get; }
-            public ReportTimeEntry PauseDuration { get; }
+            public MetricTracker.ReportEntry PauseDuration { get; }
 
             public Report(MemoryMetrics metrics)
             {
