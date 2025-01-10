@@ -715,7 +715,10 @@ namespace MHServerEmu.Games.Loot
             float startOrientation = rng.NextFloat(MathHelper.TwoPi);
             float orientation = startOrientation;
 
-            float radius = MathF.Max(bounds.Radius, lootLocationData.MinRadius) + LootSpawnGrid.CellRadius;
+            float cellRadius = _lootSpawnGrid.CellRadius;
+            float cellDiameter = _lootSpawnGrid.CellDiameter;
+
+            float radius = MathF.Max(bounds.Radius, lootLocationData.MinRadius) + cellRadius;
 
             while (radius < LootSpawnGrid.MaxSpiralRadius)
             {
@@ -728,7 +731,7 @@ namespace MHServerEmu.Games.Loot
                     return dropPosition;
 
                 // Move further along the circumference of the current radius randomly
-                float orientationStep = MathF.Asin(LootSpawnGrid.CellRadius / (LootSpawnGrid.CellRadius + radius)) * 2f;
+                float orientationStep = MathF.Asin(cellRadius / (cellRadius + radius)) * 2f;
                 int numSteps = rng.Next(1, (int)(MathHelper.TwoPi / orientationStep));
                 orientation += orientationStep * numSteps;
 
@@ -736,7 +739,7 @@ namespace MHServerEmu.Games.Loot
                 if (orientation - startOrientation > MathHelper.TwoPi)
                 {
                     orientation = startOrientation;
-                    radius += LootSpawnGrid.CellDiameter;
+                    radius += cellDiameter;
                 }
             }
 

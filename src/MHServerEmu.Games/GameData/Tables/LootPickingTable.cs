@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.GameData.Tables
             }
         }
 
-        public IEnumerable<AffixPrototype> GetAffixesByPosition(AffixPosition position)
+        public IReadOnlyList<AffixPrototype> GetAffixesByPosition(AffixPosition position)
         {
             if (_affixPositionDict.TryGetValue(position, out List<AffixPrototype> affixList) == false)
                 return null;
@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.GameData.Tables
             return affixList;
         }
 
-        public IEnumerable<AffixPrototype> GetAffixesByKeyword(AssetId keywordAssetRef)
+        public IReadOnlyList<AffixPrototype> GetAffixesByKeyword(AssetId keywordAssetRef)
         {
             if (_affixKeywordDict.TryGetValue(keywordAssetRef, out List<AffixPrototype> affixList) == false)
                 return null;
@@ -81,7 +81,7 @@ namespace MHServerEmu.Games.GameData.Tables
             return affixList;
         }
 
-        public IEnumerable<AffixPrototype> GetAffixesByCategory(AffixCategoryPrototype categoryProto)
+        public IReadOnlyList<AffixPrototype> GetAffixesByCategory(AffixCategoryPrototype categoryProto)
         {
             if (_affixCategoryDict.TryGetValue(categoryProto.DataRef, out List<AffixPrototype> affixList) == false)
                 return null;

@@ -206,13 +206,6 @@ namespace MHServerEmu.Games.Entities
         public override void OnPostInit(EntitySettings settings)
         {
             base.OnPostInit(settings);
-
-            if (CanBePlayerOwned() == false && this is not Missile) // REMOVEME
-            {
-                Properties[PropertyEnum.CharacterLevel] = 60;
-                Properties[PropertyEnum.CombatLevel] = 60;
-                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-            }
         }
 
         public void ClearSpawnSpec()
@@ -1844,6 +1837,21 @@ namespace MHServerEmu.Games.Entities
         #endregion
 
         #region Stats
+
+        public int GetDynamicCombatLevel(int levelToScaleTo)
+        {
+            Region region = Region;
+            if (region == null)
+                return levelToScaleTo;
+
+            Area area = Area;
+            if (area == null)
+                return levelToScaleTo;
+
+            // Do not allow scaling below the area level
+            int areaLevel = region.GetAreaLevel(area);
+            return Math.Max(areaLevel, levelToScaleTo);
+        }
 
         public RankPrototype GetRankPrototype()
         {

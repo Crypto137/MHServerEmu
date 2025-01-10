@@ -213,6 +213,12 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public PrototypeId GetBoundAgentProtoRef()
+        {
+            _itemSpec.GetBindingState(out PrototypeId agentProtoRef);
+            return agentProtoRef;
+        }
+
         public bool GetPowerGranted(out PrototypeId powerProtoRef)
         {
             powerProtoRef = PrototypeId.Invalid;
@@ -354,7 +360,7 @@ namespace MHServerEmu.Games.Entities.Items
             if (ApplyItemSpecProperties() == false)
                 return Logger.WarnReturn(false, "ApplyItemSpec(): Failed to apply ItemSpec properties");
 
-            itemProto.OnApplyItemSpec(this, _itemSpec);     // TODO (needed for PetTech affixes)
+            itemProto.OnApplyItemSpec(this, _itemSpec);
 
             GRandom random = new(_itemSpec.Seed);
 
@@ -377,22 +383,31 @@ namespace MHServerEmu.Games.Entities.Items
             // NOTE: RNG is reseeded for each affix individually
 
             // Apply built-in affixes
-            foreach (BuiltInAffixDetails builtInAffixDetails in itemProto.GenerateBuiltInAffixDetails(_itemSpec))
+            List<BuiltInAffixDetails> detailsList = ListPool<BuiltInAffixDetails>.Instance.Get();
+            if (itemProto.GenerateBuiltInAffixDetails(_itemSpec, detailsList))
             {
-                AffixPrototype affixProto = builtInAffixDetails.AffixEntryProto.Affix.As<AffixPrototype>();
-                if (affixProto == null)
+                foreach (BuiltInAffixDetails builtInAffixDetails in detailsList)
                 {
-                    Logger.Warn("ApplyItemSpec(): affixProto == null");
-                    continue;
-                }
+                    AffixPrototype affixProto = builtInAffixDetails.AffixEntryProto.Affix.As<AffixPrototype>();
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("ApplyItemSpec(): affixProto == null");
+                        continue;
+                    }
 
-                random.Seed(builtInAffixDetails.Seed);
-                OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
+                    random.Seed(builtInAffixDetails.Seed);
+                    OnAffixAdded(random, affixProto, builtInAffixDetails.ScopeProtoRef, builtInAffixDetails.AvatarProtoRef, builtInAffixDetails.LevelRequirement);
+                }
             }
 
+            ListPool<BuiltInAffixDetails>.Instance.Return(detailsList);
+
             // Apply rolled affixes
-            foreach (AffixSpec affixSpec in _itemSpec.AffixSpecs)
+            IReadOnlyList<AffixSpec> affixSpecs = _itemSpec.AffixSpecs;
+            for (int i = 0; i < affixSpecs.Count; i++)
             {
+                AffixSpec affixSpec = affixSpecs[i];
+
                 if (affixSpec.Seed == 0) return Logger.WarnReturn(false, "ApplyItemSpec(): affixSpec.Seed == 0");
                 random.Seed(affixSpec.Seed);
                 

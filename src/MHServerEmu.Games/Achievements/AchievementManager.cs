@@ -515,7 +515,7 @@ namespace MHServerEmu.Games.Achievements
             resolver.SetContext(LootContext.AchievementReward, Owner);
 
             var reward = info.RewardPrototype as LootTablePrototype;
-            if (reward.Roll(settings.LootRollSettings, resolver) != LootRollResult.NoRoll)
+            if (reward.RollLootTable(settings.LootRollSettings, resolver) != LootRollResult.NoRoll)
             {
                 //Logger.Debug($"GiveAchievementReward [{info.Id}] {info.RewardPrototype}");
                 using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();

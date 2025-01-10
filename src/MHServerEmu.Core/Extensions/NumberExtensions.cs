@@ -60,7 +60,7 @@ namespace MHServerEmu.Core.Extensions
         }
 
         /// <summary>
-        /// Calculates the median value of a collection of <see cref="TimeSpan"/>.
+        /// Calculates the median value of a collection of <see cref="float"/>.
         /// </summary>
         public static float ToMedian(this IEnumerable<float> values)
         {

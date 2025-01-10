@@ -8,6 +8,7 @@ namespace MHServerEmu.Games
         public int RegionUnvisitedThresholdMS { get; private set; } = 1000 * 60 * 5;    // 5 minutes
         public bool DisableMovementPowerChargeCost { get; private set; } = true;
         public bool DisableInstancedLoot { get; private set; } = false;
+        public float LootSpawnGridCellRadius { get; private set; } = 20f;
 
         [ConfigIgnore]
         public TimeSpan RegionCleanupInterval { get => TimeSpan.FromMilliseconds(RegionCleanupIntervalMS); }

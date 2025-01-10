@@ -101,7 +101,7 @@ namespace MHServerEmu.Games.Entities
         public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto, Item item = null)
         {
             AssetId creatorAsset = avatar.GetEntityWorldAsset();
-            PrototypeId allianceRef = avatar.Alliance.DataRef;
+            PrototypeId allianceRef = (PrototypeId)15452561577132953366;    // Entity/Alliances/NPCNeutral.prototype, should be set by EvalOnSummon
 
             if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
             PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;

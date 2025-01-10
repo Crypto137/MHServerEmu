@@ -855,7 +855,7 @@ namespace MHServerEmu.Games.Powers
             for (int i = 0; i < targetList.Count; i++)
             {
                 WorldEntity target = targetList[i];
-                int targetCombatLevel = target.CombatLevel;
+                int targetCombatLevel = target.GetDynamicCombatLevel(target.CombatLevel);
 
                 // Recalculate initial damage for each enemy -> player result
                 if (payloadCombatLevel != targetCombatLevel && payload.IsPlayerPayload == false && target.CanBePlayerOwned())

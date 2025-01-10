@@ -2135,7 +2135,7 @@ namespace MHServerEmu.Games.Missions
             settings.LootRollSettings.DropChanceModifiers = LootDropChanceModifiers.PreviewOnly | LootDropChanceModifiers.IgnoreCooldown;
 
             foreach (LootTablePrototype reward in rewards)
-                reward.Roll(settings.LootRollSettings, resolver);
+                reward.RollLootTable(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
             Logger.Trace($"RollLootSummaryForPrototype [{missionProto}] Rewards {lootSummary}");
@@ -2149,7 +2149,7 @@ namespace MHServerEmu.Games.Missions
                 return false;
 
             Avatar avatar = player.CurrentAvatar;
-            int lootLevel = GetAvatarLevel(avatar);
+            int lootLevel = GetLootLevel(avatar);
 
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(new(lootSeed));
@@ -2165,7 +2165,7 @@ namespace MHServerEmu.Games.Missions
                 settings.LootRollSettings.DropChanceModifiers |= LootDropChanceModifiers.PreviewOnly;
 
             foreach (LootTablePrototype reward in rewards)
-                reward.Roll(settings.LootRollSettings, resolver);
+                reward.RollLootTable(settings.LootRollSettings, resolver);
 
             resolver.FillLootResultSummary(lootSummary);
             
@@ -2175,9 +2175,13 @@ namespace MHServerEmu.Games.Missions
             return lootSummary.HasAnyResult;
         }
 
-        private int GetAvatarLevel(Avatar avatar)
+        private int GetLootLevel(Avatar avatar)
         {
-            return avatar != null ? avatar.CharacterLevel : (int)Prototype.Level;
+            if (avatar != null)
+                return avatar.CharacterLevel;
+
+            // Default to prototype level is we have no valid avatar
+            return (int)Prototype.Level;
         }
 
         public static void OnRequestRewardsForPrototype(Player player, PrototypeId missionRef, ulong entityId, int lootSeed)

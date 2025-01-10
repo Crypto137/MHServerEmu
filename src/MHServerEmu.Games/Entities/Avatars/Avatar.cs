@@ -116,10 +116,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             Properties[PropertyEnum.CombatLevel] = CharacterLevel;
 
-            // HACK: Set health to max for new avatars
-            if (Properties[PropertyEnum.Health] == 0)
-                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-
             // Resources
             // Ger primary resources defaults from PrimaryResourceBehaviors
             foreach (PrototypeId manaBehaviorId in avatarProto.PrimaryResourceBehaviors)
@@ -183,6 +179,18 @@ namespace MHServerEmu.Games.Entities.Avatars
                 abilityKeyMapping.SlotDefaultAbilities(this);
                 _abilityKeyMappingList.Add(abilityKeyMapping);
             }
+        }
+
+        public override bool ApplyInitialReplicationState(ref EntitySettings settings)
+        {
+            if (base.ApplyInitialReplicationState(ref settings) == false)
+                return false;
+
+            // Resurrect if dead
+            if (IsDead)
+                Resurrect();
+
+            return true;
         }
 
         protected override void BindReplicatedFields()

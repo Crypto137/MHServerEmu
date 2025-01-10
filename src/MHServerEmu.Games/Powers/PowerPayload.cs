@@ -848,7 +848,7 @@ namespace MHServerEmu.Games.Powers
                     else
                     {
                         results.SetFlag(PowerResultFlags.Resisted, true);
-                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Finite condition {PowerPrototype} resisted by [{target}]"); ;
+                        return false;
                     }
                 }
 
@@ -876,7 +876,7 @@ namespace MHServerEmu.Games.Powers
 
                     ListPool<PrototypeId>.Instance.Return(negativeStatusList);
                     if (canApply == false)
-                        return Logger.DebugReturn(false, $"CalculateResultConditionDuration(): Infinite condition {PowerPrototype} resisted by [{target}]");
+                        return false;
                 }
 
                 // Needs to have an owner that can remove it
@@ -1151,7 +1151,7 @@ namespace MHServerEmu.Games.Powers
             // Override target level if needed
             int targetLevelOverride = -1;
             if (IsPlayerPayload && target.CanBePlayerOwned() == false)
-                targetLevelOverride = CombatLevel;
+                targetLevelOverride = target.GetDynamicCombatLevel(CombatLevel);
 
             // Calculate and check crit chance
             float critChance = Power.GetCritChance(PowerPrototype, Properties, target, PowerOwnerId, PrototypeId.Invalid, targetLevelOverride);            
@@ -1166,7 +1166,7 @@ namespace MHServerEmu.Games.Powers
             // Override target level if needed
             int targetLevelOverride = -1;
             if (IsPlayerPayload && target.CanBePlayerOwned() == false)
-                targetLevelOverride = CombatLevel;
+                targetLevelOverride = target.GetDynamicCombatLevel(CombatLevel);
 
             // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
@@ -1275,21 +1275,132 @@ namespace MHServerEmu.Games.Powers
                     ccResistScore += targetProperties[PropertyEnum.CCResistScoreKwd, keywordProtoRef];
             }
 
-            // Adjust CCResistScore for conditions applied by players based on difficulty
+            // Adjust CCResistScore for region difficulty
             WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
             if (ultimateOwner != null && ultimateOwner.GetOwnerOfType<Player> != null)
-            {
-                // TODO
-            }
+                ccResistScore += CalculateRegionCCResistScore(target, conditionProperties);
 
             // Apply resist score
             float resistMult = 1f - target.GetNegStatusResistPercent(ccResistScore, Properties);
             duration *= resistMult;
-            
-            // TODO: Calculate and apply StatusResist
+
+            // Apply StatusResistByDuration properties
+            ApplyStatusResistByDuration(target, conditionProto, conditionProperties, ref duration);
 
             end:
             ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+        }
+
+        /// <summary>
+        /// Returns CCResistScore for the provided <see cref="WorldEntity"/> target based on its rank and region difficulty.
+        /// </summary>
+        private int CalculateRegionCCResistScore(WorldEntity target, PropertyCollection conditionProperties)
+        {
+            // Entities have varying difficulty modifiers to their CCResistScore based on their rank
+            RankPrototype rankProto = target?.GetRankPrototype();
+            if (rankProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): rankProto == null");
+
+            TuningPrototype tuningProto = target.Region?.TuningTable?.Prototype;
+            if (tuningProto == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): tuningProto == null");
+
+            if (tuningProto.NegativeStatusCurves.HasValue() == false)
+                return 0;
+
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            // Find all curves relevant to this condition and pick the highest resist score out of them
+            int score = 0;
+            foreach (NegStatusPropCurveEntryPrototype entry in tuningProto.NegativeStatusCurves)
+            {
+                PropertyEnum statusProperty = propertyInfoTable.GetPropertyEnumFromPrototype(entry.NegStatusProp);
+                if (conditionProperties[statusProperty] == false)
+                    continue;
+
+                CurveId curveRef = entry.GetCurveRefForRank(rankProto.Rank);
+                if (curveRef == CurveId.Invalid)
+                    continue;
+
+                Curve curve = curveRef.AsCurve();
+                if (curve == null) return Logger.WarnReturn(0, "CalculateRegionCCResistScore(): curve == null");
+
+                int level = Math.Clamp(target.CombatLevel, curve.MinPosition, curve.MaxPosition);
+                score = Math.Max(curve.GetIntAt(level), score);
+            }
+
+            return score;
+        }
+
+        private void ApplyStatusResistByDuration(WorldEntity target, ConditionPrototype conditionProto, PropertyCollection conditionProperties, ref TimeSpan duration)
+        {
+            // Need a valid duration
+            if (duration <= TimeSpan.Zero)
+                return;
+
+            // Get non-conditional resistance
+            long resistMS = target.Properties[PropertyEnum.StatusResistByDurationMSAll];
+            float resistPct = target.Properties[PropertyEnum.StatusResistByDurationPctAll];
+
+            // Find the highest conditional bonuses
+            long resistMSBonus = 0;
+            float resistPctBonus = 0f;
+
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in target.Properties.IteratePropertyRange(Property.StatusResistByDurationConditional))
+            {
+                PropertyEnum propertyEnum = kvp.Key.Enum;
+                Property.FromParam(kvp.Key, 0, out PrototypeId protoRefToCheck);
+
+                // Check if this property is applicable
+                switch (propertyEnum)
+                {
+                    case PropertyEnum.StatusResistByDurationMS:
+                    case PropertyEnum.StatusResistByDurationPct:
+                        // Validate that this is boolean property
+                        PropertyInfoPrototype propertyInfoProto = protoRefToCheck.As<PropertyInfoPrototype>();
+                        if (propertyInfoProto == null || propertyInfoProto.Type != PropertyDataType.Boolean)
+                        {
+                            Logger.Warn("ApplyStatusResistByDuration(): propertyInfoProto == null || propertyInfoProto.Type != PropertyDataType.Boolean");
+                            continue;
+                        }
+
+                        // Check for the specified flag property
+                        PropertyEnum paramProperty = propertyInfoTable.GetPropertyEnumFromPrototype(protoRefToCheck);
+                        if (conditionProperties[paramProperty] == false)
+                            continue;
+
+                        break;
+
+                    case PropertyEnum.StatusResistByDurationMSKwd:
+                    case PropertyEnum.StatusResistByDurationPctKwd:
+                        // Check for the specified keyword
+                        if (conditionProto.HasKeyword(protoRefToCheck) == false)
+                            continue;
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                // Update bonus values (pick the highest one)
+                switch (propertyEnum)
+                {
+                    case PropertyEnum.StatusResistByDurationMS:
+                    case PropertyEnum.StatusResistByDurationMSKwd:
+                        resistMSBonus = Math.Max(kvp.Value, resistMSBonus);
+                        break;
+
+                    case PropertyEnum.StatusResistByDurationPct:
+                    case PropertyEnum.StatusResistByDurationPctKwd:
+                        resistPctBonus = MathF.Max(kvp.Value, resistPctBonus);
+                        break;
+                }
+            }
+
+            // Apply status resist
+            duration -= TimeSpan.FromMilliseconds(resistMS + resistMSBonus);
+            duration *= 1f - (resistPct + resistPctBonus);
+            duration = Clock.Max(duration, TimeSpan.Zero);
         }
 
         private void ApplyConditionDurationBonuses(ref TimeSpan duration)
@@ -1386,7 +1497,7 @@ namespace MHServerEmu.Games.Powers
                 healthMaxProperties.CopyProperty(target.Properties, dependencyPropertyId);
 
             // Set CombatLevel to the level we are scaling to
-            healthMaxProperties[PropertyEnum.CombatLevel] = combatLevel;
+            healthMaxProperties[PropertyEnum.CombatLevel] = target.GetDynamicCombatLevel(combatLevel);
 
             // Set the HealthBase curve used by the target
             PropertyInfo healthBasePropertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.HealthBase);

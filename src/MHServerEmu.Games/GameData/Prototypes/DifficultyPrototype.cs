@@ -55,6 +55,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId NegStatusProp { get; protected set; }
         public NegStatusRankCurveEntryPrototype[] RankEntries { get; protected set; }
+
+        //---
+
+        public CurveId GetCurveRefForRank(Rank rank)
+        {
+            int index = (int)rank;
+            if (index < 0 || index >= RankEntries.Length)
+                return CurveId.Invalid;
+
+            NegStatusRankCurveEntryPrototype entry = RankEntries[index];
+            if (entry.Rank != rank)
+                return CurveId.Invalid;
+
+            return entry.TenacityModifierCurve;
+        }
     }
 
     public class RankAffixTableByDifficultyEntryPrototype : Prototype

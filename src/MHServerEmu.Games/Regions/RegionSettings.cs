@@ -19,7 +19,7 @@ namespace MHServerEmu.Games.Regions
         public PropertyCollection Properties { get; set; }
         public ulong PlayerGuidParty { get; set; }
 
-        public bool DebugLevel { get; set; }
+        public bool ApplyLevelOverride { get; set; }
         public bool GenerateLog { get; set; }
         public bool GenerateEntities { get; set; }
         public bool GenerateAreas { get; set; }
@@ -31,7 +31,13 @@ namespace MHServerEmu.Games.Regions
         public RegionSettings(RegionContext regionContext)
         {
             RegionDataRef = regionContext.RegionDataRef;
-            Level = regionContext.Level;
+
+            if (regionContext.Level != 0)
+            {
+                ApplyLevelOverride = true;
+                Level = regionContext.Level;
+            }
+
             DifficultyTierRef = regionContext.DifficultyTierRef;
             Seed = regionContext.Seed;
             Affixes = new(regionContext.Affixes);
@@ -70,7 +76,7 @@ namespace MHServerEmu.Games.Regions
             Affixes = new();
             Properties = new();
             EndlessLevel = 0;
-            Level = 1;
+            Level = 0;
             PlayerGuidParty = 0;
         }
 

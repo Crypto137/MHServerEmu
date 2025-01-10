@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -99,6 +100,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         // ---
 
+        private const int TargetNumPetTechAffixes = 5;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
@@ -152,9 +155,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return PrototypeId.Invalid;
         }
 
-        public void OnApplyItemSpec(Item item, ItemSpec itemSpec)
+        public bool OnApplyItemSpec(Item item, ItemSpec itemSpec)
         {
-            // TODO
+            ItemPrototype itemProto = item.ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "OnApplyItemSpec(): itemProto == null");
+
+            if (itemProto.IsPetItem == false)
+                return true;
+
+            // Roll new pet tech affixes if there aren't enough of them
+            int numPetTechAffixes = 0;
+
+            IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
+            for (int i = 0; i < affixSpecs.Count; i++)
+            {
+                AffixSpec affixSpec = affixSpecs[i];
+                if (affixSpec.AffixProto.IsPetTechAffix)
+                    numPetTechAffixes++;
+            }
+
+            if (numPetTechAffixes < TargetNumPetTechAffixes)
+                UpdatePetTechAffixes(item.Game.Random, item.GetBoundAgentProtoRef(), itemSpec);
+
+            return true;
+        }
+
+        public MutationResults UpdatePetTechAffixes(GRandom random, PrototypeId rollFor, ItemSpec itemSpec)
+        {
+            //Logger.Debug($"UpdatePetTechAffixes(): {itemSpec.ItemProtoRef.GetName()}");
+            return MutationResults.None;
         }
 
         public TimeSpan GetExpirationTime(PrototypeId rarityProtoRef)
@@ -271,60 +300,60 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return args.Rank;
         }
 
-        public IEnumerable<BuiltInAffixDetails> GenerateBuiltInAffixDetails(ItemSpec itemSpec)
+        public bool GenerateBuiltInAffixDetails(ItemSpec itemSpec, List<BuiltInAffixDetails> detailsList)
         {
-            IEnumerable<AffixEntryPrototype> builtInAffixEntries = GetBuiltInAffixEntries(itemSpec.RarityProtoRef);
-            if (builtInAffixEntries.Any() == false) yield break;    // Early break so that we don't create a dictionary instance when we don't have any affix entries
-
-            Dictionary<ulong, int> affixSeedDict = new();
-
-            foreach (AffixEntryPrototype affixEntryProto in builtInAffixEntries)
+            List<AffixEntryPrototype> affixEntryList = ListPool<AffixEntryPrototype>.Instance.Get();
+            if (GetBuiltInAffixEntries(affixEntryList, itemSpec.RarityProtoRef))
             {
-                if (affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid)
+                Dictionary<ulong, int> affixSeedDict = DictionaryPool<ulong, int>.Instance.Get();
+
+                foreach (AffixEntryPrototype affixEntryProto in affixEntryList)
                 {
-                    Logger.Warn("affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid");
-                    continue;
+                    if (affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("affixEntryProto == null || affixEntryProto.Affix == PrototypeId.Invalid");
+                        continue;
+                    }
+
+                    BuiltInAffixDetails builtInAffixDetails = new(affixEntryProto);
+
+                    if (GeneratePowerModifierRefFromBuiltInAffix(affixEntryProto, itemSpec, ref builtInAffixDetails) == false)
+                        continue;
+
+                    builtInAffixDetails.Seed = GenAffixRandomSeed(affixSeedDict, itemSpec.Seed, itemSpec.ItemProtoRef, affixEntryProto.Affix, affixEntryProto.Power);
+
+                    detailsList.Add(builtInAffixDetails);
                 }
 
-                BuiltInAffixDetails builtInAffixDetails = new(affixEntryProto);
-
-                if (GeneratePowerModifierRefFromBuiltInAffix(affixEntryProto, itemSpec, ref builtInAffixDetails) == false)
-                    continue;
-
-                builtInAffixDetails.Seed = GenAffixRandomSeed(affixSeedDict, itemSpec.Seed, itemSpec.ItemProtoRef, affixEntryProto.Affix, affixEntryProto.Power);
-
-                yield return builtInAffixDetails;
+                DictionaryPool<ulong, int>.Instance.Return(affixSeedDict);
             }
+
+            ListPool<AffixEntryPrototype>.Instance.Return(affixEntryList);
+            return detailsList.Count > 0;
         }
 
-        public IEnumerable<AffixEntryPrototype> GetBuiltInAffixEntries(PrototypeId rarityProtoRef)
+        public bool GetBuiltInAffixEntries(List<AffixEntryPrototype> entryList, PrototypeId rarityProtoRef)
         {
-            // This static function is under Item in the client, but it makes more sense for it to be here
+            // This is an Item:: static function in the client, but it makes more sense for it to be here
 
-            if (rarityProtoRef == PrototypeId.Invalid)
-            {
-                Logger.Warn("GetBuiltInAffixEntries(): rarityProtoRef == PrototypeId.Invalid");
-                yield break;
-            }
+            if (rarityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetBuiltInAffixEntries(): rarityProtoRef == PrototypeId.Invalid");
 
             RarityPrototype rarityProto = rarityProtoRef.As<RarityPrototype>();
-            if (rarityProto == null)
-            {
-                Logger.Warn("GetBuiltInAffixEntries(): rarityProto == null");
-                yield break;
-            }
+            if (rarityProto == null) return Logger.WarnReturn(false, "GetBuiltInAffixEntries(): rarityProto == null");
 
             if (AffixesBuiltIn.HasValue())
             {
                 foreach (AffixEntryPrototype affixEntryProto in AffixesBuiltIn)
-                    yield return affixEntryProto;
+                    entryList.Add(affixEntryProto);
             }
 
             if (rarityProto.AffixesBuiltIn.HasValue())
             {
                 foreach (AffixEntryPrototype affixEntryProto in rarityProto.AffixesBuiltIn)
-                    yield return affixEntryProto;
+                    entryList.Add(affixEntryProto);
             }
+
+            return entryList.Count > 0;
         }
 
         public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)

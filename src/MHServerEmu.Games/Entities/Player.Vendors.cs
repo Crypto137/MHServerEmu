@@ -675,7 +675,7 @@ namespace MHServerEmu.Games.Entities
                     resolver.Initialize(new(rollSeed));
                     resolver.SetContext(LootContext.Vendor, this);
 
-                    LootRollResult rollResult = lootTableProto.Roll(rollSettings, resolver);
+                    LootRollResult rollResult = lootTableProto.RollLootTable(rollSettings, resolver);
                     if (rollResult == LootRollResult.Failure)
                     {
                         // Skip the rest of this table if nothing rolled at all

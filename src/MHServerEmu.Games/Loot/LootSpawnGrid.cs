@@ -19,10 +19,11 @@ namespace MHServerEmu.Games.Loot
             // Values > 0 are cells occupied by instanced loot belonging to specific players
         }
 
+        private const float CellRadiusMin = 16f;
+        private const float CellRadiusMax = 128f;
+
         public const int GridSize = 128;
         public const int GridCenter = GridSize / 2;
-        public const float CellRadius = 32f;
-        public const float CellDiameter = CellRadius * 2f;
         public const float MaxSpiralRadius = 960f;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -32,9 +33,15 @@ namespace MHServerEmu.Games.Loot
 
         private Context _context;
 
+        public float CellRadius { get; }
+        public float CellDiameter { get; }
+
         public LootSpawnGrid(Game game)
         {
             _game = game;
+
+            CellRadius = Math.Clamp(game.CustomGameOptions.LootSpawnGridCellRadius, CellRadiusMin, CellRadiusMax);
+            CellDiameter = CellRadius * 2f;
         }
 
         public bool SetContext(Region region, Vector3 position, WorldEntity sourceEntity = null)

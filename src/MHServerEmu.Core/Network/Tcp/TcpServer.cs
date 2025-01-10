@@ -12,7 +12,6 @@ namespace MHServerEmu.Core.Network.Tcp
         protected static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<Socket, TcpClientConnection> _connectionDict = new();
-        private readonly object _connectionLock = new();
 
         private CancellationTokenSource _cts;
 
@@ -114,7 +113,7 @@ namespace MHServerEmu.Core.Network.Tcp
         public void DisconnectAllClients()
         {
             // Disconnect all clients within a single lock to prevent new clients from being added while we do it
-            lock (_connectionLock)
+            lock (_connectionDict)
             {
                 foreach (TcpClientConnection connection in _connectionDict.Values)
                 {
@@ -207,11 +206,13 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private void RemoveClientConnection(TcpClientConnection connection)
         {
-            lock (_connectionLock)
-            {
-                if (_connectionDict.Remove(connection.Socket))
-                    OnClientDisconnected(connection);
-            }
+            bool removed;
+
+            lock (_connectionDict)
+                removed = _connectionDict.Remove(connection.Socket);
+
+            if (removed)
+                OnClientDisconnected(connection);
         }
 
         /// <summary>
@@ -229,13 +230,18 @@ namespace MHServerEmu.Core.Network.Tcp
                 try
                 {
                     // Wait for a connection
+                    Logger.Trace("Listening for connections...");
                     Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
                     socket.SendTimeout = _sendTimeoutMS;
                     socket.SendBufferSize = SendBufferSize;
 
                     // Establish a new client connection
+                    Logger.Trace("Accepting connection...");
                     TcpClientConnection connection = new(this, socket);
-                    lock (_connectionLock) _connectionDict.Add(socket, connection);
+
+                    lock (_connectionDict)
+                        _connectionDict.Add(socket, connection);
+
                     OnClientConnected(connection);
 
                     // Begin receiving data from our new connection
@@ -254,7 +260,7 @@ namespace MHServerEmu.Core.Network.Tcp
 
                     // Limit the number of errors in a row to prevent the server from infinitely writing error messages when it's stuck in an error loop.
                     // We have only a single report of this happening so far, which was on Linux, but better safe than sorry.
-                    if (errorCount >= MaxErrorCount)
+                    if (++errorCount >= MaxErrorCount)
                         throw new($"AcceptConnectionsAsync: Maximum error count ({MaxErrorCount}) reached.");
                 }
             }

@@ -126,8 +126,9 @@ namespace MHServerEmu.Games.Loot
 
             if (affixCountBehavior == AffixCountBehavior.Roll)
             {
-                HashSet<ScopedAffixRef> affixSet = new();
+                HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
                 result = UpdateAffixesHelper(resolver, settings, args, itemSpec, affixSet);
+                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
             }
 
             if (result.HasFlag(MutationResults.Error) == false)
@@ -142,11 +143,9 @@ namespace MHServerEmu.Games.Loot
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "UpdateAffixesHelper(): itemProto == null");
 
+            // Pet affixes are rolled separately
             if (itemProto.IsPetItem)
-            {
-                // TODO: ItemPrototype::UpdatePetTechAffixes()
-                return Logger.WarnReturn(MutationResults.None, "UpdateAffixesHelper(): Pet affixes are not yet implemented");
-            }
+                return itemProto.UpdatePetTechAffixes(resolver.Random, args.RollFor, itemSpec);
 
             MutationResults result = MutationResults.None;
 
@@ -156,7 +155,7 @@ namespace MHServerEmu.Games.Loot
             if ((affixLimits != null && affixLimits.CategorizedAffixes.HasValue()) ||
                 (settings != null && settings.AffixLimitByCategoryModifierDict.Count > 0))
             {
-                Dictionary<PrototypeId, short> affixCategoryDict = new();
+                Dictionary<PrototypeId, short> affixCategoryDict = DictionaryPool<PrototypeId, short>.Instance.Get();
 
                 // Get category limits from the prototype
                 if (affixLimits != null)
@@ -188,6 +187,8 @@ namespace MHServerEmu.Games.Loot
                     if (numAffixesNeeded > 0)
                         result |= AddCategorizedAffixesToItemSpec(resolver, args, categoryProto, numAffixesNeeded, itemSpec, affixSet);
                 }
+
+                DictionaryPool<PrototypeId, short>.Instance.Return(affixCategoryDict);
             }
 
             // Apply affixes by position
@@ -225,11 +226,11 @@ namespace MHServerEmu.Games.Loot
         }
 
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
-            int numAffixesNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, IEnumerable<AssetId> keywords = null)
+            int numAffixesNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
         {
             //Logger.Trace($"AddCategorizedAffixesToItemSpec(): {categoryProto} (x{numAffixesNeeded})");
 
-            IEnumerable<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByCategory(categoryProto);
+            IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByCategory(categoryProto);
             if (affixPool == null)
                 return Logger.WarnReturn(MutationResults.Error, $"AddCategorizedAffixesToItemSpec(): Failed to get available affixes in category: {categoryProto}.");
 
@@ -256,12 +257,11 @@ namespace MHServerEmu.Games.Loot
         }
 
         private static MutationResults AddPositionAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixPosition affixPosition,
-            int numAffixesNeeded,  ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, IEnumerable<AssetId> keywords = null,
-            IEnumerable<AffixCategoryPrototype> categories = null)
+            int numAffixesNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null, AffixCategoryPrototype[] categories = null)
         {
             //Logger.Trace($"AddPositionAffixesToItemSpec(): {affixPosition} (x{numAffixesNeeded})");
 
-            IEnumerable<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(affixPosition);
+            IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(affixPosition);
             if (affixPool == null)
                 return Logger.WarnReturn(MutationResults.Error, $"AddCategorizedAffixesToItemSpec(): Failed to get available affixes in position: {affixPosition}.");
 
@@ -287,11 +287,15 @@ namespace MHServerEmu.Games.Loot
             return result;
         }
 
-        private static void TryAddAffixesToPicker(DropFilterArguments args, IEnumerable<AffixCategoryPrototype> categories, IEnumerable<AssetId> keywords,
-            Region region, IEnumerable<AffixPrototype> affixPool, Picker<AffixPrototype> affixPicker)
+        private static void TryAddAffixesToPicker(DropFilterArguments args, AffixCategoryPrototype[] categories, AssetId[] keywords,
+            Region region, IReadOnlyList<AffixPrototype> affixPool, Picker<AffixPrototype> affixPicker)
         {
-            foreach (AffixPrototype affixProto in affixPool)
+            int count = affixPool.Count;
+
+            for (int i = 0; i < count; i++)
             {
+                AffixPrototype affixProto = affixPool[i];
+
                 if (affixProto.Weight <= 0)
                     continue;
 
