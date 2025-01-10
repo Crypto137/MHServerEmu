@@ -127,17 +127,52 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     ORDER BY InstanceId DESC",
                     new { LeaderboardId = leaderboardId }));
 
-            if (maxArchivedInstances > 0)
-            {
-                instanceList.AddRange(
-                    connection.Query<DBLeaderboardInstance>(@"
-                        SELECT * FROM Instances 
-                        WHERE LeaderboardId = @LeaderboardId AND State > 1 
-                        ORDER BY InstanceId DESC LIMIT @MaxArchivedInstances",
-                        new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances}));
-            }
+            List<DBLeaderboardInstance> archivedInstances = GetAndProcessArchivedInstances(connection, leaderboardId, maxArchivedInstances);
+            if (archivedInstances.Count > 0)
+                instanceList.AddRange(archivedInstances);
 
             return instanceList;
+        }
+
+        private List<DBLeaderboardInstance> GetAndProcessArchivedInstances(SQLiteConnection connection, long leaderboardId, int maxArchivedInstances)
+        {
+            connection.Execute(@"
+                UPDATE Instances 
+                SET Visible = 0 
+                WHERE LeaderboardId = @LeaderboardId AND State > 1 AND Visible = 1
+                  AND NOT EXISTS (
+                      SELECT 1 FROM Entries 
+                      WHERE Entries.InstanceId = Instances.InstanceId
+                  )",
+                new { LeaderboardId = leaderboardId });
+
+            List<long> excludedInstanceIds = connection.Query<long>(@"
+                SELECT InstanceId 
+                FROM Instances 
+                WHERE LeaderboardId = @LeaderboardId AND State > 1 AND Visible = 1
+                ORDER BY InstanceId DESC
+                LIMIT @MaxArchivedInstances",
+                new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances }).ToList();
+
+            connection.Execute(@"
+                UPDATE Instances 
+                SET Visible = 0 
+                WHERE LeaderboardId = @LeaderboardId AND State > 1 AND Visible = 1
+                  AND InstanceId NOT IN @ExcludedInstanceIds
+                  AND NOT EXISTS (
+                      SELECT 1 FROM Rewards 
+                      WHERE Rewards.LeaderboardId = Instances.LeaderboardId 
+                        AND Rewards.InstanceId = Instances.InstanceId 
+                        AND Rewards.RewardedDate IS NOT NULL
+                  )",
+                new { LeaderboardId = leaderboardId, ExcludedInstanceIds = excludedInstanceIds });
+
+            return connection.Query<DBLeaderboardInstance>(@"
+                SELECT * FROM Instances 
+                WHERE LeaderboardId = @LeaderboardId AND State > 1 AND Visible = 1
+                ORDER BY InstanceId DESC
+                LIMIT @MaxArchivedInstances",
+                new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances }).ToList();
         }
 
         public void SetInstances(List<DBLeaderboardInstance> dbInstances)
