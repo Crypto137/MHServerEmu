@@ -665,6 +665,24 @@ namespace MHServerEmu.Games.Entities
         }
 
         /// <summary>
+        /// Enables or disables all conditions created by the specified power.
+        /// </summary>
+        public bool EnablePowerConditions(PrototypeId powerProtoRef, bool enable)
+        {
+            bool success = true;
+
+            foreach (Condition condition in this)
+            {
+                if (condition.CreatorPowerPrototypeRef != powerProtoRef)
+                    continue;
+
+                success &= EnableCondition(condition, enable);
+            }
+
+            return success;
+        }
+
+        /// <summary>
         /// Attempts to readd a condition to the <see cref="Power"/> that created it.
         /// Returns <see langword="false"/> if condition is no longer valid.
         /// </summary>
@@ -980,9 +998,49 @@ namespace MHServerEmu.Games.Entities
             DecrementStackCountCache(condition);
         }
 
-        private void EnableCondition(Condition condition, bool enable)
+        private bool EnableCondition(Condition condition, bool enable)
         {
-            // TODO
+            Logger.Debug($"EnableCondition(): {condition} = {enable}");
+
+            PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
+
+            // Notify clients
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, _owner))
+            {
+                NetMessageEnableCondition enableConditionMessage = NetMessageEnableCondition.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .SetEnable(enable)
+                    .Build();
+
+                networkManager.SendMessageToMultiple(interestedClientList, enableConditionMessage);
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
+
+            // Enable/disable the condition
+            if (enable && condition.IsEnabled == false)
+            {
+                condition.IsEnabled = true;
+
+                if (_owner.Properties.AddChildCollection(condition.Properties) == false)
+                    return Logger.WarnReturn(false, $"EnableCondition(): Failed to attach properties for condition=[{condition}], owner=[{_owner}])");
+
+                StartTicker(condition);
+
+            }
+            else if (enable == false && condition.IsEnabled)
+            {
+                condition.IsEnabled = false;
+
+                if (condition.Properties.RemoveFromParent(_owner.Properties) == false)
+                    return Logger.WarnReturn(false, $"EnableCondition(): Failed to detach properties for condition=[{condition}], owner=[{_owner}])");
+
+                StopTicker(condition);
+            }
+
+            return true;
         }
 
         private void StartTicker(Condition condition)

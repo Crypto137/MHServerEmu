@@ -2339,6 +2339,21 @@ namespace MHServerEmu.Games.Entities
 
                     break;
 
+                case PropertyEnum.DisablePowerEffects:
+                    Property.FromParam(id, 0, out PrototypeId disablePowerRef);
+                    if (disablePowerRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("OnPropertyChange(): disablePowerRef == PrototypeId.Invalid");
+                        break;
+                    }
+
+                    bool enable = newValue == false;    // !doDisable
+
+                    if (ConditionCollection?.EnablePowerConditions(disablePowerRef, enable) == false)
+                        Logger.Warn($"OnPropertyChange(): EnablePowerConditions failed to [{(enable ? "enable" : "disable")}] conditions of creatorPower=[{disablePowerRef.GetName()}] on owner=[{this}]");
+
+                    break;
+
                 case PropertyEnum.EnemyBoost:
                     if (IsSimulated)
                     {
