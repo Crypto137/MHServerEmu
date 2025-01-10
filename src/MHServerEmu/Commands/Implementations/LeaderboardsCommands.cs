@@ -3,7 +3,6 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using System.Text;
 
@@ -47,7 +46,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"{leaderboard}";
         }
 
-        [Command("now", "Show all active leaderboards.\nUsage: leaderboards now")]
+        [Command("now", "Show all active instances.\nUsage: leaderboards now")]
         public string Now(string[] @params, FrontendClient client)
         {
             var sb = new StringBuilder();
@@ -55,10 +54,45 @@ namespace MHServerEmu.Commands.Implementations
             var leaderboards = LeaderboardDatabase.Instance.GetLeaderboards();
             foreach (var leaderboard in leaderboards)
                 if (leaderboard.IsActive)
-                    sb.AppendLine($"{leaderboard.Prototype.DataRef.GetNameFormatted()}" +
+                    sb.AppendLine(
+                        $"{leaderboard.Prototype.DataRef.GetNameFormatted()}" +
                         $"[{leaderboard.ActiveInstance.InstanceId}] = " +
                         $"{leaderboard.ActiveInstance.ActivationTime} - " +
                         $"{leaderboard.ActiveInstance.ExpirationTime}");
+
+            return sb.ToString();
+        }
+
+        [Command("active", "Show all IsActive leaderboards.\nUsage: leaderboards active")]
+        public string Active(string[] @params, FrontendClient client)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
+            var leaderboards = LeaderboardDatabase.Instance.GetLeaderboards();
+            foreach (var leaderboard in leaderboards)
+                if (leaderboard.Scheduler.IsActive)
+                    sb.AppendLine(
+                        $"{leaderboard.Prototype.DataRef.GetNameFormatted()}" +
+                        $"[{leaderboard.ActiveInstance.InstanceId}][{leaderboard.ActiveInstance.State}] = " +
+                        $"{leaderboard.ActiveInstance.ActivationTime} - " +
+                        $"{leaderboard.ActiveInstance.ExpirationTime}");
+
+            return sb.ToString();
+        }
+
+        [Command("all", "Show all leaderboards.\nUsage: leaderboards all")]
+        public string All(string[] @params, FrontendClient client)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
+            var leaderboards = LeaderboardDatabase.Instance.GetLeaderboards();
+            foreach (var leaderboard in leaderboards)
+                sb.AppendLine(
+                    $"[{(leaderboard.Scheduler.IsActive ? "+" : "-")}]" +
+                    $"[{(long)leaderboard.LeaderboardId}] " +
+                    $"{leaderboard.Prototype.DataRef.GetNameFormatted()} = " +
+                    $"{leaderboard.Scheduler.StartEvent} - " +
+                    $"{leaderboard.Scheduler.EndEvent}");
 
             return sb.ToString();
         }
