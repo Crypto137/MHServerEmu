@@ -872,6 +872,13 @@ namespace MHServerEmu.Games.Entities
             _owner.OnConditionRemoved(condition);
             _owner.TryActivateOnConditionEndProcs(condition);
 
+            Handle handle = new(this, condition);
+            StopTicker(condition);
+
+            // Check if stopping the ticker removed this condition
+            if (handle.Valid() == false)
+                return true;
+
             // Notify interested clients if any
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
@@ -891,7 +898,6 @@ namespace MHServerEmu.Games.Entities
             // Remove the condition
             if (condition.IsInCollection)
             {
-                Handle handle = new(this, condition);
                 UnaccrueCondition(condition);
 
                 // Early return if this condition was deleted by unaccruement
@@ -1000,7 +1006,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool EnableCondition(Condition condition, bool enable)
         {
-            Logger.Debug($"EnableCondition(): {condition} = {enable}");
+            Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
 
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
@@ -1046,16 +1052,19 @@ namespace MHServerEmu.Games.Entities
         private void StartTicker(Condition condition)
         {
             // TODO
+            //Logger.Debug($"StartTicker(): {condition}");
         }
 
         private void StopTicker(Condition condition)
         {
             // TODO
+            //Logger.Debug($"StopTicker(): {condition}");
         }
 
         private void UpdateTicker(Condition condition)
         {
             // TODO
+            //Logger.Debug($"UpdateTicker(): {condition}");
         }
 
         private void SendConditionPauseTimeMessage(Condition condition)
