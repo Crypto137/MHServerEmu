@@ -154,6 +154,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 LIMIT @MaxArchivedInstances",
                 new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances }).ToList();
 
+            if (excludedInstanceIds.Count == 0) excludedInstanceIds.Add(0);
+
             connection.Execute(@"
                 UPDATE Instances 
                 SET Visible = 0 
