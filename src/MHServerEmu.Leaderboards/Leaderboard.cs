@@ -116,7 +116,7 @@ namespace MHServerEmu.Leaderboards
                             {
                                 instance.SetState(LeaderboardState.eLBS_Expired);
 
-                                if (CanReset && newInstanceDb == null && IsActive)
+                                if (CanReset && newInstanceDb == null && Scheduler.IsActive)
                                 {
                                     var nextActivationTime = Scheduler.CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
                                     if (nextActivationTime == instance.ActivationTime) continue;
