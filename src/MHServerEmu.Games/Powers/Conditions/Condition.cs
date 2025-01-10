@@ -425,6 +425,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
 
             _durationMS = (long)duration.TotalMilliseconds;
+            _updateIntervalMS = conditionProto.UpdateIntervalMS;
             _cancelOnFlags = conditionProto.CancelOnFlags;
 
             if (properties != null)
