@@ -2218,6 +2218,8 @@ namespace MHServerEmu.Games.Entities
             if (Bounds.CollisionType != BoundsCollisionType.None)
                 RegisterForPendingPhysicsResolve();
 
+            ConditionCollection?.OnOwnerEnteredWorld();
+
             UpdateInterestPolicies(true, settings);
             region.EntityTracker.ConsiderForTracking(this);
             UpdateSimulationState();
@@ -2257,6 +2259,8 @@ namespace MHServerEmu.Games.Entities
                     player.UndiscoverEntity(this, false);   // Skip interest update for undiscover because we are doing an update below anyway
                 }
             }
+
+            ConditionCollection?.OnOwnerExitedWorld();
 
             PowerCollection?.OnOwnerExitedWorld();
 
@@ -2865,6 +2869,8 @@ namespace MHServerEmu.Games.Entities
                         Region.EntitySetUnSimulatedEvent.Invoke(new(this));
                 }
                 SpawnSpec?.OnUpdateSimulation();
+
+                ConditionCollection?.OnOwnerSimulationStateChanged(simulated);
             }
 
             return result;

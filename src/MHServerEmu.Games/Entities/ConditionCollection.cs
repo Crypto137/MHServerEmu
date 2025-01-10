@@ -4,6 +4,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -529,6 +530,9 @@ namespace MHServerEmu.Games.Entities
             Condition condition = GetCondition(conditionId);
             if (condition == null) return Logger.WarnReturn(false, "RefreshCondition(): condition == null");
 
+            Game game = _owner.Game;
+            if (game == null) return Logger.WarnReturn(false, "RefreshCondition(): game == null");
+
             // Modify duration if needed
             if (durationDelta != default)
             {
@@ -543,20 +547,36 @@ namespace MHServerEmu.Games.Entities
             condition.ResetStartTime();
             condition.PauseTime = TimeSpan.Zero;
 
-            // TODO: paused conditions
-            CancelScheduledConditionEnd(condition);
-            Handle handle = new(this, condition);
-            // TODO: reset ticker
-            conditionIsActive = handle.Valid() && ScheduleConditionEnd(condition);
+            if (condition.ShouldStartPaused(_owner.Region))
+            {
+                PauseCondition(condition, true);
+
+                if (condition.IsPauseDurationCountdown() && condition.CreatorId != creatorId)
+                {
+                    WorldEntity creator = game.EntityManager.GetEntity<WorldEntity>(creatorId);
+                    TryRestorePowerCondition(condition, creator);
+                }
+            }
+            else
+            {
+                CancelScheduledConditionEnd(condition);
+                Handle handle = new(this, condition);
+                UpdateTicker(condition);
+                conditionIsActive = handle.Valid() && ScheduleConditionEnd(condition);
+            }
 
             // Notify the owner player if needed
+            // NOTE: We don't need to notify other players because condition time is visual only client-side.
             Player player = _owner.GetOwnerOfType<Player>();
-            player?.SendMessage(NetMessageChangeConditionDuration.CreateBuilder()
-                .SetIdEntity(_owner.Id)
-                .SetKey(condition.Id)
-                .SetDuration((long)condition.Duration.TotalMilliseconds)
-                .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
-                .Build());
+            if (player != null && player.InterestedInEntity(_owner, AOINetworkPolicyValues.AOIChannelOwner))
+            {
+                player.SendMessage(NetMessageChangeConditionDuration.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .SetDuration((long)condition.Duration.TotalMilliseconds)
+                    .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
+                    .Build());
+            }
 
             return conditionIsActive;
         }
@@ -600,6 +620,46 @@ namespace MHServerEmu.Games.Entities
                 
                 RemoveCondition(condition);
             }
+
+            return true;
+        }
+
+        public bool PauseCondition(Condition condition, bool notifyClient)
+        {
+            Logger.Debug($"PauseCondition(): {condition}");
+
+            if (condition.IsPaused)
+                return Logger.WarnReturn(false, $"PauseCondition(): Condition [{condition}] is already paused");
+
+            CancelScheduledConditionEnd(condition);
+
+            condition.PauseTime = Game.Current.CurrentTime;
+
+            UpdateTicker(condition);
+
+            if (notifyClient)
+                SendConditionPauseTimeMessage(condition);
+
+            return true;
+        }
+
+        public bool UnpauseCondition(Condition condition, bool notifyClient)
+        {
+            Logger.Debug($"UnpauseCondition(): {condition}");
+
+            if (condition.IsPaused == false)    // return true to indicate that condition wasn't removed
+                return Logger.WarnReturn(true, $"UnpauseCondition(): Condition [{condition}] is not paused");
+
+            condition.ResetStartTimeFromPaused();
+            condition.PauseTime = TimeSpan.Zero;
+
+            if (ScheduleConditionEnd(condition) == false)
+                return Logger.WarnReturn(false, $"UnpauseCondition(): Failed to reschedule paused condition [{condition}]");
+
+            UpdateTicker(condition);
+
+            if (notifyClient)
+                SendConditionPauseTimeMessage(condition);
 
             return true;
         }
@@ -717,6 +777,35 @@ namespace MHServerEmu.Games.Entities
             ConditionPool.Instance.Return(condition);
 
             return true;
+        }
+
+        public void OnOwnerEnteredWorld()
+        {
+            foreach (Condition condition in this)
+            {
+                StartTicker(condition);
+                _owner?.UpdateProcEffectPowers(condition.Properties, true);
+            }
+        }
+
+        public void OnOwnerExitedWorld()
+        {
+            foreach (Condition condition in this)
+                StopTicker(condition);
+        }
+
+        public void OnOwnerSimulationStateChanged(bool isSimulated)
+        {
+            if (isSimulated)
+            {
+                foreach (Condition condition in this)
+                    StartTicker(condition);
+            }
+            else
+            {
+                foreach (Condition condition in this)
+                    StopTicker(condition);
+            }
         }
 
         public void OnOwnerDeallocate()
@@ -841,8 +930,26 @@ namespace MHServerEmu.Games.Entities
         {
             IncrementStackCountCache(condition);
 
-            if (ScheduleConditionEnd(condition) == false)
-                return;
+            if (condition.ShouldStartPaused(_owner.Region))
+            {
+                // Pause straight away if it should be paused
+                PauseCondition(condition, true);
+            }
+            else if (condition.IsPaused == false)
+            {
+                // Try to schedule this condition's end if it's not paused
+                if (ScheduleConditionEnd(condition) == false)
+                    return;
+            }
+
+            // Disable this condition if needed
+            PrototypeId powerProtoRef = condition.CreatorPowerPrototypeRef;
+            if (powerProtoRef != PrototypeId.Invalid && _owner.Properties[PropertyEnum.DisablePowerEffects, powerProtoRef])
+                EnableCondition(condition, false);
+
+            // Start the ticker if it wasn't disabled above
+            if (condition.IsEnabled)
+                StartTicker(condition);
         }
 
         private void UnaccrueCondition(Condition condition)
@@ -871,6 +978,41 @@ namespace MHServerEmu.Games.Entities
         {
             RebuildConditionKeywordsMask(condition.Id);
             DecrementStackCountCache(condition);
+        }
+
+        private void EnableCondition(Condition condition, bool enable)
+        {
+            // TODO
+        }
+
+        private void StartTicker(Condition condition)
+        {
+            // TODO
+        }
+
+        private void StopTicker(Condition condition)
+        {
+            // TODO
+        }
+
+        private void UpdateTicker(Condition condition)
+        {
+            // TODO
+        }
+
+        private void SendConditionPauseTimeMessage(Condition condition)
+        {
+            // NOTE: We don't need to notify other players because condition time is visual only client-side.
+            Player player = _owner.GetOwnerOfType<Player>();
+            if (player != null && player.InterestedInEntity(_owner, AOINetworkPolicyValues.AOIChannelOwner))
+            {
+                player.SendMessage(NetMessageChangeConditionPauseTime.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .SetPauseTime((ulong)Game.GetTimeFromStart(condition.PauseTime))
+                    .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
+                    .Build());
+            }
         }
 
         private bool ScheduleConditionEnd(Condition condition)

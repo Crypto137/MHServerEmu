@@ -1224,6 +1224,43 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Conditions
+
+        /// <summary>
+        /// Pauses or unpauses boost <see cref="Condition"/> instances applied to this <see cref="Avatar"/>.
+        /// </summary>
+        public void UpdateBoostConditionPauseState(bool pause)
+        {
+            if (pause)
+            {
+                foreach (Condition condition in ConditionCollection)
+                {
+                    if (condition.IsBoost() == false)
+                        continue;
+
+                    if (condition.IsPaused)
+                        continue;
+
+                    ConditionCollection.PauseCondition(condition, true);
+                }
+            }
+            else
+            {
+                foreach (Condition condition in ConditionCollection)
+                {
+                    if (condition.IsBoost() == false)
+                        continue;
+
+                    if (condition.IsPaused == false)
+                        continue;
+
+                    ConditionCollection.UnpauseCondition(condition, true);
+                }
+            }
+        }
+
+        #endregion
+
         #region Progression
 
         public override long AwardXP(long amount, bool showXPAwardedText)
@@ -2213,6 +2250,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return;
             }
 
+            Region region = Region;
+            if (region == null)
+            {
+                Logger.Warn("OnEnteredWorld(): region == null");
+                return;
+            }
+
             player.UpdateScoringEventContext();
 
             base.OnEnteredWorld(settings);
@@ -2222,13 +2266,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignDefaultAvatarPowers();
 
             RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
+            UpdateBoostConditionPauseState(region.PausesBoostConditions());
 
             // Unlock chapters and waypoints that should be unlocked by default
             player.UnlockChapters();
             player.UnlockWaypoints();
 
-            var region = Region;
-            var regionProto = region?.Prototype;
+            RegionPrototype regionProto = region.Prototype;
             if (regionProto != null)
             {
                 var waypointRef = regionProto.WaypointAutoUnlock;
@@ -2295,6 +2339,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player != null) player.Properties[PropertyEnum.AvatarTotalTimePlayed] = player.TimePlayed();
             Properties[PropertyEnum.AvatarTotalTimePlayed] = TimePlayed();
             Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
+
+            // Pause boosts while not in the world
+            UpdateBoostConditionPauseState(true);
 
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);

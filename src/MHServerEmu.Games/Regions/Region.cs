@@ -1611,6 +1611,17 @@ namespace MHServerEmu.Games.Regions
             return Prototype.BonusItemFindMultiplier * difficultyMult * liveTuningMult;
         }
 
+        public bool PausesBoostConditions()
+        {
+            RegionPrototype regionProto = Prototype;
+            if (regionProto == null) return Logger.WarnReturn(false, "PausesBoostConditions(): regionProto == null");
+
+            // Check if boosts are globally paused by live tuning
+            bool boostTimersRunning = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_BoostTimersRunning) != 0f;
+
+            return regionProto.PausesBoostConditions || boostTimersRunning == false;
+        }
+
         private bool InitDividedStartLocations(DividedStartLocationPrototype[] dividedStartLocations)
         {
             ClearDividedStartLocations();
