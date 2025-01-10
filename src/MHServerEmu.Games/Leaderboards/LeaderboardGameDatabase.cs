@@ -18,6 +18,7 @@ namespace MHServerEmu.Games.Leaderboards
         private Queue<LeaderboardQueue> _updateQueue = new(); 
         private readonly object _lock = new object();
         public static LeaderboardGameDatabase Instance { get; } = new();
+        public Game Game { get; set; }
 
         private LeaderboardGameDatabase() { }
 
@@ -115,10 +116,9 @@ namespace MHServerEmu.Games.Leaderboards
                 if (sendClient)
                     message = instanceInfo.ToLeaderboardStateChange();
 
-                var game = Game.Current;
-                if (game == null) return;
+                if (Game == null) return;
 
-                var activePlayers = new PlayerIterator(game).ToArray();
+                var activePlayers = new PlayerIterator(Game).ToArray();
                 foreach (var player in activePlayers)
                 {
                     player.LeaderboardManager.OnUpdateEventContext();
@@ -126,8 +126,12 @@ namespace MHServerEmu.Games.Leaderboards
                     if (rewarded)
                         player.LeaderboardManager.CheckRewards = true;
 
-                    if (sendClient) 
+                    if (sendClient)
+                    {
+                        if (LeaderboardManager.Debug) 
+                            Logger.Debug($"OnLeaderboardStateChange Send [{instanceInfo.InstanceId}][{state}] to {player.GetName()}");
                         player.SendMessage(message);
+                    }
                 }
             }
         }

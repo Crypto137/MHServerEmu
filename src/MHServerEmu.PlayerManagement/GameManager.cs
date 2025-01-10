@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games;
+using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -35,6 +36,10 @@ namespace MHServerEmu.PlayerManagement
             ulong id = _idGenerator.Generate();
             Game game = new(id);
             _gameDict.Add(id, game);
+
+            // TODO Remake this
+            LeaderboardGameDatabase.Instance.Game = game;
+
             game.Run();
             return game;
         }
