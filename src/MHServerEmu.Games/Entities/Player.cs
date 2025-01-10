@@ -2363,6 +2363,13 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public PublicEventTeamPrototype GetPublicEventTeamPrototype()
+        {
+            // TODO PropertyEnum.PublicEventTeamAssignment
+            // GetPublicEventTeam(ActivePublicEvent).As<PublicEventTeamPrototype>()
+            return null;
+        }
+
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as Player).ResetHUDTutorial();

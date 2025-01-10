@@ -238,8 +238,9 @@ namespace MHServerEmu.Games.Events
                 DifficultyTier = region.DifficultyTierRef.As<DifficultyTierPrototype>();
             }
 
+            PublicEventTeam = player.GetPublicEventTeamPrototype();
+
             // TODO: Party
-            // TODO: PublicEventTeam
         }
 
         public bool HasContext()
@@ -257,9 +258,14 @@ namespace MHServerEmu.Games.Events
                 && ScoringEvents.FilterPrototype(TeamUp, ownerContext.TeamUp, false)
                 && FilterOwnerItem(owner)
                 && FilterDifficultyTier(ownerContext.DifficultyTier)
-                && FilterParty(owner);
+                && FilterParty(owner)
+                && FilterPublicEventTeam(ownerContext.PublicEventTeam);
+        }
 
-            // TODO: PublicEventTeam test
+        private bool FilterPublicEventTeam(Prototype publicEventTeam)
+        {
+            if (PublicEventTeam == null) return true;
+            return PublicEventTeam == publicEventTeam;
         }
 
         private bool FilterParty(Player owner)
@@ -305,7 +311,6 @@ namespace MHServerEmu.Games.Events
 
     public class ScoringEvents
     {
-
         public static ScoringEventType GetScoringEventTypeFromInt(uint eventType)
         {
             return eventType < (uint)ScoringEventType.Max
