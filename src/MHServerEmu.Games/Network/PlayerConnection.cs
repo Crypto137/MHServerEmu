@@ -1162,7 +1162,7 @@ namespace MHServerEmu.Games.Network
         {
             var setDialogTarget = message.As<NetMessageSetDialogTarget>();
             if (setDialogTarget == null) return Logger.WarnReturn(false, $"OnSetDialogTarget(): Failed to retrieve message");
-            Player.SetDialogTarget(setDialogTarget.TargetId, setDialogTarget.InteractorId);
+            Player.SetDialogTargetId(setDialogTarget.TargetId, setDialogTarget.InteractorId);
             return true;
         }
 

@@ -1760,16 +1760,17 @@ namespace MHServerEmu.Games.Entities
             return target;
         }
 
-        public bool SetDialogTarget(ulong targetId, ulong interactorId)
+        public bool SetDialogTargetId(ulong targetId, ulong interactorId)
         {
             if (targetId != InvalidId && interactorId != InvalidId)
             {
                 var interactor = Game.EntityManager.GetEntity<WorldEntity>(interactorId);
-                if (interactor == null || interactor.IsInWorld == false) return false;
+                if (interactor == null || interactor.IsInWorld == false)
+                    return false;
 
                 var target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
                 if (ValidateDialogTarget(target, interactorId) == false)
-                    return Logger.WarnReturn(false, $"ValidateDialogTarget false for {target.PrototypeName} with {interactor.PrototypeName}");
+                    return Logger.WarnReturn(false, $"SetDialogTargetId(): Failed to validate dialog target for target=[{target}], interactor=[{interactor}]");
             }
 
             DialogTargetId = targetId;

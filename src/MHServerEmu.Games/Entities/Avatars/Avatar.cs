@@ -2285,7 +2285,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Clear dialog target
             Player player = GetOwnerOfType<Player>();
-            player?.SetDialogTarget(InvalidId, InvalidId);
+            player?.SetDialogTargetId(InvalidId, InvalidId);
 
             DeactivateTeamUpAgent();
 
