@@ -624,6 +624,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void RemoveConditionsWithKeyword(PrototypeId keywordProtoRef)
+        {
+            KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+            RemoveConditionsFiltered(ConditionFilter.IsConditionWithKeywordFunc, keywordProto);
+        }
+
         public bool PauseCondition(Condition condition, bool notifyClient)
         {
             Logger.Debug($"PauseCondition(): {condition}");
@@ -913,6 +919,28 @@ namespace MHServerEmu.Games.Entities
 
             DeleteCondition(condition);
             return true;
+        }
+
+        private void RemoveConditionsFiltered(ConditionFilter.Func filterFunc)
+        {
+            foreach (Condition condition in this)
+            {
+                if (filterFunc(condition) == false)
+                    continue;
+
+                RemoveCondition(condition);
+            }
+        }
+
+        private void RemoveConditionsFiltered<T>(ConditionFilter.Func<T> filterFunc, T filterArg)
+        {
+            foreach (Condition condition in this)
+            {
+                if (filterFunc(condition, filterArg) == false)
+                    continue;
+
+                RemoveCondition(condition);
+            }
         }
 
         private bool OnInsertCondition(Condition condition)

@@ -9,10 +9,11 @@ namespace MHServerEmu.Games.Powers.Conditions
     /// </summary>
     public static class ConditionFilter
     {
-        public delegate bool Func<T>(Condition condition, T param);
+        public delegate bool Func(Condition condition);
+        public delegate bool Func<T>(Condition condition, T arg);
 
         public static Func<PrototypeId> IsConditionOfPowerFunc { get; } = IsConditionOfPower;
-        public static Func<PrototypeId> IsConditionWithKeywordFunc { get; } = IsConditionWithKeyword;
+        public static Func<KeywordPrototype> IsConditionWithKeywordFunc { get; } = IsConditionWithKeyword;
         public static Func<PropertyEnum> IsConditionWithPropertyOfTypeFunc { get; } = IsConditionWithPropertyOfType;
         public static Func<ConditionType> IsConditionOfTypeFunc { get; } = IsConditionOfType;
 
@@ -27,9 +28,9 @@ namespace MHServerEmu.Games.Powers.Conditions
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="Condition"/> has the specified keyword.
         /// </summary>
-        private static bool IsConditionWithKeyword(Condition condition, PrototypeId keywordProtoRef)
+        private static bool IsConditionWithKeyword(Condition condition, KeywordPrototype keywordProto)
         {
-            return condition.HasKeyword(keywordProtoRef);
+            return condition.HasKeyword(keywordProto);
         }
 
         /// <summary>

@@ -17,16 +17,13 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             var keywordRef = _proto.Keyword;
             if (keywordRef == PrototypeId.Invalid) return;
-            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
+
             foreach (Player player in GetDistributors(_proto.SendTo))
             {
                 var conditions = player.CurrentAvatar?.ConditionCollection;
                 if (conditions == null) continue;
-                foreach (var condition in conditions) 
-                {
-                    if (condition.HasKeyword(keywordProto))
-                        conditions.RemoveCondition(condition.Id);
-                }
+
+                conditions.RemoveConditionsWithKeyword(keywordRef);
             }
         }
     }
