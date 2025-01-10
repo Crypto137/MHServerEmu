@@ -349,8 +349,8 @@ namespace MHServerEmu.Leaderboards
                 if (info.Prototype == null) return false;
 
                 int maxInstances = info.Prototype.MaxArchivedInstances;
-
-                foreach (var instance in info.Instances)
+                var sortedInstances = info.Instances.OrderByDescending(instance => instance.InstanceId);
+                foreach (var instance in sortedInstances)
                 {
                     instances.Add(instance);
                     if (--maxInstances < 0) break;
