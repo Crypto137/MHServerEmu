@@ -1019,7 +1019,7 @@ namespace MHServerEmu.Games.Powers
         private bool CheckEnduranceCost()
         {
             // TODO
-            return true;
+            return (float)Owner.Properties[PropertyEnum.Endurance] >= Properties[PropertyEnum.EnduranceCost];
         }
 
         private bool CanStartCooldowns()

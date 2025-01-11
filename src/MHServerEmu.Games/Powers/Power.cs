@@ -1486,8 +1486,6 @@ namespace MHServerEmu.Games.Powers
             if (powerApplication.IsFree)
                 return;
 
-            // TODO: mana costs and others
-
             // Item cost
             if (powerApplication.ItemSourceId != Entity.InvalidId && IsItemPower())
             {
@@ -1505,6 +1503,31 @@ namespace MHServerEmu.Games.Powers
                 if (Prototype is not MovementPowerPrototype || Game.CustomGameOptions.DisableMovementPowerChargeCost == false)
                     Owner.Properties.AdjustProperty(-1, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
             }
+
+            // Endurance (spirit / other primary resources)
+            if (Owner.Prototype is AvatarPrototype avatarProto && avatarProto.PrimaryResourceBehaviors.HasValue())
+            {
+                foreach (PrototypeId primaryManaBehaviorProtoRef in avatarProto.PrimaryResourceBehaviors)
+                {
+                    var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
+                    if (primaryManaBehaviorProto == null)
+                    {
+                        Logger.Warn("PayCost(): primaryManaBehaviorProto == null");
+                        continue;
+                    }
+
+                    float endurance = Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
+                    float cost = GetEnduranceCost(primaryManaBehaviorProto.ManaType, true);
+
+                    endurance = MathF.Max(endurance - cost, 0f);
+
+                    Owner.Properties[PropertyEnum.Endurance] = endurance;
+                }
+
+                // TODO: recurring endurance cost
+            }
+
+            // TODO: Other costs
         }
 
         #endregion
@@ -1821,7 +1844,7 @@ namespace MHServerEmu.Games.Powers
             WorldEntity owner, bool useSecondaryResource)
         {
             // TODO
-            return 0f;
+            return powerProperties[PropertyEnum.EnduranceCost, manaType];
         }
 
         public bool HasEnduranceCostRecurring()

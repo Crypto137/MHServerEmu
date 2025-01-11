@@ -115,27 +115,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             Properties[PropertyEnum.CombatLevel] = CharacterLevel;
 
-            // Resources
-            // Ger primary resources defaults from PrimaryResourceBehaviors
-            foreach (PrototypeId manaBehaviorId in avatarProto.PrimaryResourceBehaviors)
-            {
-                var behaviorPrototype = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(manaBehaviorId);
-                Curve manaCurve = GameDatabase.GetCurve(behaviorPrototype.BaseEndurancePerLevel);
-                Properties[PropertyEnum.EnduranceBase, (int)behaviorPrototype.ManaType] = manaCurve.GetAt(60);
-            }
-;
-            // Set primary resources
-            Properties[PropertyEnum.EnduranceMaxOther] = Properties[PropertyEnum.EnduranceBase];
-            Properties[PropertyEnum.EnduranceMax] = Properties[PropertyEnum.EnduranceMaxOther];
-            Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
-            Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceBase, (int)ManaType.Type2];
-            Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMaxOther, (int)ManaType.Type2];
-            Properties[PropertyEnum.Endurance, (int)ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, (int)ManaType.Type2];
-
-            // Secondary resource base is already present in the prototype's property collection as a curve property
-            Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
-            Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
-
             // Stats
             foreach (PrototypeId entryId in avatarProto.StatProgressionTable)
             {
@@ -584,13 +563,12 @@ namespace MHServerEmu.Games.Entities.Avatars
                     continue;
                 }
 
-                float endurance = Properties[PropertyEnum.Endurance, (int)primaryManaBehaviorProto.ManaType];
+                float endurance = Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
                 float enduranceCost = power.GetEnduranceCost(primaryManaBehaviorProto.ManaType, true);
 
                 if (endurance < enduranceCost)
                 {
-                    flags |= EndPowerFlags.ExplicitCancel;
-                    flags |= EndPowerFlags.NotEnoughEndurance;
+                    flags |= EndPowerFlags.ExplicitCancel | EndPowerFlags.NotEnoughEndurance;
                     return false;
                 }
             }
@@ -1030,6 +1008,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(avatarPrototype.StatsPower, indexProps);
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
+            // Initialize resources (TODO: Separate AssignDefaultAvatarPowers() into multiple methods and move this out of here)
+            InitializePrimaryResources();
+            InitializeSecondaryResources();
+
+            // Item Powers
             AssignItemPowers();
 
             // Emotes
@@ -1220,6 +1203,40 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Make sure our inventory list is returned to the pool for reuse when we are done
                 ListPool<Inventory>.Instance.Return(inventoryList);
             }
+        }
+
+        #endregion
+
+        #region Resources
+
+        private bool InitializePrimaryResources()
+        {
+            // Ger primary resources defaults from PrimaryResourceBehaviors
+            foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
+            {
+                var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
+                Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
+                Properties[PropertyEnum.EnduranceBase, primaryManaBehaviorProto.ManaType] = manaCurve.GetAt(60);
+            }
+;
+            // Set primary resources
+            Properties[PropertyEnum.EnduranceMaxOther] = Properties[PropertyEnum.EnduranceBase];
+            Properties[PropertyEnum.EnduranceMax] = Properties[PropertyEnum.EnduranceMaxOther];
+            Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
+            Properties[PropertyEnum.EnduranceMaxOther, ManaType.Type2] = Properties[PropertyEnum.EnduranceBase, ManaType.Type2];
+            Properties[PropertyEnum.EnduranceMax, ManaType.Type2] = Properties[PropertyEnum.EnduranceMaxOther, ManaType.Type2];
+            Properties[PropertyEnum.Endurance, ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, ManaType.Type2];
+
+            return true;
+        }
+
+        private bool InitializeSecondaryResources()
+        {
+            // Secondary resource base is already present in the prototype's property collection as a curve property
+            Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
+            Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
+
+            return true;
         }
 
         #endregion

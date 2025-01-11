@@ -168,8 +168,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
                     if (primaryManaBehaviorProto == null) continue;
 
-                    float endurance = avatar.Properties[PropertyEnum.EnduranceMax, (int)primaryManaBehaviorProto.ManaType];
-                    avatar.Properties[PropertyEnum.Endurance, (int)primaryManaBehaviorProto.ManaType] = endurance;
+                    float endurance = avatar.Properties[PropertyEnum.EnduranceMax, primaryManaBehaviorProto.ManaType];
+                    avatar.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = endurance;
                 }
 
                 avatar.Properties[PropertyEnum.Health] = avatar.Properties[PropertyEnum.HealthMax];
