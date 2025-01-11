@@ -1534,9 +1534,9 @@ namespace MHServerEmu.Games.Powers
             return _trackedConditionList.Contains(trackedCondition);
         }
 
-        private void RemoveTrackedConditions(bool allowReset)
+        private void RemoveTrackedConditions(bool allowUnpause)
         {
-            List<TrackedCondition> resetConditionList = ListPool<TrackedCondition>.Instance.Get();
+            List<TrackedCondition> unpausedConditionList = ListPool<TrackedCondition>.Instance.Get();
 
             EntityManager entityManager = Game.EntityManager;
 
@@ -1552,10 +1552,10 @@ namespace MHServerEmu.Games.Powers
                 if (conditionCollection == null)
                     continue;
 
-                if (allowReset)
+                if (allowUnpause)
                 {
-                    if (conditionCollection.ResetOrRemoveCondition(trackedCondition.ConditionId) == false)
-                        resetConditionList.Add(trackedCondition);
+                    if (conditionCollection.RemoveOrUnpauseCondition(trackedCondition.ConditionId) == false)
+                        unpausedConditionList.Add(trackedCondition);
                 }
                 else
                 {
@@ -1563,15 +1563,15 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            if (allowReset)
+            if (allowUnpause)
             {
-                // Readd conditions that were reset
-                foreach (TrackedCondition resetCondition in resetConditionList)
-                    _trackedConditionList.Add(resetCondition);
+                // Readd conditions that were unpaused
+                foreach (TrackedCondition unpausedCondition in unpausedConditionList)
+                    _trackedConditionList.Add(unpausedCondition);
             }
 
             RefreshConditionIndexProperties();
-            ListPool<TrackedCondition>.Instance.Return(resetConditionList);
+            ListPool<TrackedCondition>.Instance.Return(unpausedConditionList);
         }
 
         private void RefreshConditionIndexProperties()

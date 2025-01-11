@@ -589,21 +589,34 @@ namespace MHServerEmu.Games.Entities
             return RemoveCondition(condition);
         }
 
-        public bool ResetOrRemoveCondition(ulong conditionId)
+        public bool RemoveOrUnpauseCondition(ulong conditionId)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "ResetOrRemoveCondition(): _owner == null");
+            if (_owner == null) return Logger.WarnReturn(false, "RemoveOrUnpauseCondition(): _owner == null");
 
             Condition condition = GetCondition(conditionId);
             if (condition == null) return false;
 
-            return ResetOrRemoveCondition(condition);
+            return RemoveOrUnpauseCondition(condition);
         }
 
-        public bool ResetOrRemoveCondition(Condition condition)
+        /// <summary>
+        /// Removes the provided <see cref="Condition"/> or unpauses it if it is currently paused.
+        /// Returns <see langword="true"/> if the condition was removed.
+        /// </summary>
+        public bool RemoveOrUnpauseCondition(Condition condition)
         {
-            // TODO: reset
+            if (_owner.IsInWorld && _owner.IsSimulated)
+            {
+                // Unpause if currently paused (will be removed once the duration runs out)
+                if (condition.IsPaused)
+                    return UnpauseCondition(condition, false) == false;
+                
+                // Do not remove PauseDurationCountdown conditions that still have time remaining
+                if (condition.IsPauseDurationCountdown() && condition.TimeRemaining > TimeSpan.Zero)
+                    return false;
+            }
 
-            // Removing by id also checks to make sure this condition is in this collection
+            // Remove if not paused
             RemoveCondition(condition.Id);
             return true;
         }
@@ -632,8 +645,6 @@ namespace MHServerEmu.Games.Entities
 
         public bool PauseCondition(Condition condition, bool notifyClient)
         {
-            Logger.Debug($"PauseCondition(): {condition}");
-
             if (condition.IsPaused)
                 return Logger.WarnReturn(false, $"PauseCondition(): Condition [{condition}] is already paused");
 
@@ -649,10 +660,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        /// <summary>
+        /// Unpauses the provided <see cref="Condition"/>.
+        /// Returns <see langword="false"/> if the condition was removed as a result of being unpaused.
+        /// </summary>
         public bool UnpauseCondition(Condition condition, bool notifyClient)
         {
-            Logger.Debug($"UnpauseCondition(): {condition}");
-
             if (condition.IsPaused == false)    // return true to indicate that condition wasn't removed
                 return Logger.WarnReturn(true, $"UnpauseCondition(): Condition [{condition}] is not paused");
 
