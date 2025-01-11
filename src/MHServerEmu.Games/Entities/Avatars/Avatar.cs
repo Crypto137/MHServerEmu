@@ -1211,21 +1211,39 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool InitializePrimaryResources()
         {
-            // Ger primary resources defaults from PrimaryResourceBehaviors
+            // Check if there are any primary resources to initialize (there should be!)
+            if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
+                return Logger.WarnReturn(false, $"InitializePrimaryResources(): Prototype for avatar [{this}] does not have primary resource behaviors defined");
+
             foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
             {
                 var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
+                if (primaryManaBehaviorProto == null)
+                {
+                    Logger.Warn("InitializePrimaryResources(): primaryManaBehaviorProto == null");
+                    continue;
+                }
+
+                // Set base value
                 Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
-                Properties[PropertyEnum.EnduranceBase, primaryManaBehaviorProto.ManaType] = manaCurve.GetAt(60);
+                if (manaCurve == null)
+                {
+                    Logger.Warn("InitializePrimaryResources(): manaCurve == null");
+                    continue;
+                }
+
+                Properties[PropertyEnum.EnduranceBase, primaryManaBehaviorProto.ManaType] = manaCurve.GetAt(CharacterLevel);
+
+                // Restore to full if needed
+                if (primaryManaBehaviorProto.StartsEmpty == false)
+                    Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = Properties[PropertyEnum.EnduranceMax];
+
+                // Start regen
+                Properties[PropertyEnum.DisableEnduranceRegen, primaryManaBehaviorProto.ManaType] = primaryManaBehaviorProto.StartsWithRegenEnabled == false;
+
+                // Do common mana init
+                InitializeManaBehaviorCommon(primaryManaBehaviorProto);
             }
-;
-            // Set primary resources
-            Properties[PropertyEnum.EnduranceMaxOther] = Properties[PropertyEnum.EnduranceBase];
-            Properties[PropertyEnum.EnduranceMax] = Properties[PropertyEnum.EnduranceMaxOther];
-            Properties[PropertyEnum.Endurance] = Properties[PropertyEnum.EnduranceMax];
-            Properties[PropertyEnum.EnduranceMaxOther, ManaType.Type2] = Properties[PropertyEnum.EnduranceBase, ManaType.Type2];
-            Properties[PropertyEnum.EnduranceMax, ManaType.Type2] = Properties[PropertyEnum.EnduranceMaxOther, ManaType.Type2];
-            Properties[PropertyEnum.Endurance, ManaType.Type2] = Properties[PropertyEnum.EnduranceMax, ManaType.Type2];
 
             return true;
         }
@@ -1233,10 +1251,36 @@ namespace MHServerEmu.Games.Entities.Avatars
         private bool InitializeSecondaryResources()
         {
             // Secondary resource base is already present in the prototype's property collection as a curve property
-            Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase];
-            Properties[PropertyEnum.SecondaryResource] = Properties[PropertyEnum.SecondaryResourceMax];
+            SecondaryResourceManaBehaviorPrototype secondaryManaBehaviorProto = GetSecondaryResourceManaBehavior();
+            if (secondaryManaBehaviorProto == null)
+                return false;
+
+            InitializeManaBehaviorCommon(secondaryManaBehaviorProto);
+            return true;
+        }
+
+        private bool InitializeManaBehaviorCommon(ManaBehaviorPrototype manaBehaviorProto)
+        {
 
             return true;
+        }
+
+        private SecondaryResourceManaBehaviorPrototype GetSecondaryResourceManaBehavior()
+        {
+            PrototypeId secondaryResourceOverrideProtoRef = Properties[PropertyEnum.SecondaryResourceOverride];
+            if (secondaryResourceOverrideProtoRef != PrototypeId.Invalid)
+                return secondaryResourceOverrideProtoRef.As<SecondaryResourceManaBehaviorPrototype>();
+
+            return AvatarPrototype?.SecondaryResourceBehavior.As<SecondaryResourceManaBehaviorPrototype>();
+        }
+
+        private float GetEnduranceMax(ManaType manaType)
+        {
+            float enduranceMax = Properties[PropertyEnum.EnduranceBase, manaType];
+            enduranceMax *= 1f + Properties[PropertyEnum.EndurancePctBonus, manaType];
+            enduranceMax += Properties[PropertyEnum.EnduranceAddBonus, manaType];
+            enduranceMax += Properties[PropertyEnum.EnduranceAddBonus, ManaType.TypeAll];
+            return enduranceMax;
         }
 
         #endregion
@@ -2202,6 +2246,70 @@ namespace MHServerEmu.Games.Entities.Avatars
         #endregion
 
         #region Event Handlers
+
+        public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            base.OnPropertyChange(id, newValue, oldValue, flags);
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            int manaTypeValue;
+            ManaType manaType;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.EnduranceAddBonus:
+                case PropertyEnum.EnduranceBase:
+                case PropertyEnum.EndurancePctBonus:
+                    Property.FromParam(id, 0, out manaTypeValue);
+                    manaType = (ManaType)manaTypeValue;
+
+                    if (manaType == ManaType.TypeAll)
+                    {
+                        // Update max for all mana types
+                        if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
+                        {
+                            Logger.Warn($"OnPropertyChange(): Prototype for avatar [{this}] does not have primary resource behaviors defined");
+                            break;
+                        }
+
+                        foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
+                        {
+                            var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
+                            if (primaryManaBehaviorProto == null)
+                            {
+                                Logger.Warn("OnPropertyChange(): primaryManaBehaviorProto == null");
+                                continue;
+                            }
+
+                            ManaType protoManaType = primaryManaBehaviorProto.ManaType;
+                            Properties[PropertyEnum.EnduranceMax, protoManaType] = GetEnduranceMax(protoManaType);
+                        }
+                    }
+                    else
+                    {
+                        // Update max just for the mana type that was affected
+                        Properties[PropertyEnum.EnduranceMax, manaType] = GetEnduranceMax(manaType);
+                    }
+
+                    break;
+
+                case PropertyEnum.EnduranceMax:
+                    Property.FromParam(id, 0, out manaTypeValue);
+                    manaType = (ManaType)manaTypeValue;
+
+                    // Rescale current endurance
+                    if (IsAliveInWorld && flags.HasFlag(SetPropertyFlags.Deserialized) == false)
+                    {
+                        float endurance = Properties[PropertyEnum.Endurance, manaType];
+                        float ratio = oldValue > 0f ? Math.Min(endurance / oldValue, 1f) : 1f;
+                        Properties[PropertyEnum.Endurance, manaType] = newValue * ratio;
+                    }
+
+                    // Update client value
+                    Properties[PropertyEnum.EnduranceMaxOther, manaType] = newValue;
+                    break;
+            }
+        }
 
         public override void OnAreaChanged(RegionLocation oldLocation, RegionLocation newLocation)
         {
