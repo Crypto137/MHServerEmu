@@ -4,6 +4,7 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -529,6 +530,9 @@ namespace MHServerEmu.Games.Entities
             Condition condition = GetCondition(conditionId);
             if (condition == null) return Logger.WarnReturn(false, "RefreshCondition(): condition == null");
 
+            Game game = _owner.Game;
+            if (game == null) return Logger.WarnReturn(false, "RefreshCondition(): game == null");
+
             // Modify duration if needed
             if (durationDelta != default)
             {
@@ -543,20 +547,36 @@ namespace MHServerEmu.Games.Entities
             condition.ResetStartTime();
             condition.PauseTime = TimeSpan.Zero;
 
-            // TODO: paused conditions
-            CancelScheduledConditionEnd(condition);
-            Handle handle = new(this, condition);
-            // TODO: reset ticker
-            conditionIsActive = handle.Valid() && ScheduleConditionEnd(condition);
+            if (condition.ShouldStartPaused(_owner.Region))
+            {
+                PauseCondition(condition, true);
+
+                if (condition.IsPauseDurationCountdown() && condition.CreatorId != creatorId)
+                {
+                    WorldEntity creator = game.EntityManager.GetEntity<WorldEntity>(creatorId);
+                    TryRestorePowerCondition(condition, creator);
+                }
+            }
+            else
+            {
+                CancelScheduledConditionEnd(condition);
+                Handle handle = new(this, condition);
+                UpdateTicker(condition);
+                conditionIsActive = handle.Valid() && ScheduleConditionEnd(condition);
+            }
 
             // Notify the owner player if needed
+            // NOTE: We don't need to notify other players because condition time is visual only client-side.
             Player player = _owner.GetOwnerOfType<Player>();
-            player?.SendMessage(NetMessageChangeConditionDuration.CreateBuilder()
-                .SetIdEntity(_owner.Id)
-                .SetKey(condition.Id)
-                .SetDuration((long)condition.Duration.TotalMilliseconds)
-                .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
-                .Build());
+            if (player != null && player.InterestedInEntity(_owner, AOINetworkPolicyValues.AOIChannelOwner))
+            {
+                player.SendMessage(NetMessageChangeConditionDuration.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .SetDuration((long)condition.Duration.TotalMilliseconds)
+                    .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
+                    .Build());
+            }
 
             return conditionIsActive;
         }
@@ -569,21 +589,34 @@ namespace MHServerEmu.Games.Entities
             return RemoveCondition(condition);
         }
 
-        public bool ResetOrRemoveCondition(ulong conditionId)
+        public bool RemoveOrUnpauseCondition(ulong conditionId)
         {
-            if (_owner == null) return Logger.WarnReturn(false, "ResetOrRemoveCondition(): _owner == null");
+            if (_owner == null) return Logger.WarnReturn(false, "RemoveOrUnpauseCondition(): _owner == null");
 
             Condition condition = GetCondition(conditionId);
             if (condition == null) return false;
 
-            return ResetOrRemoveCondition(condition);
+            return RemoveOrUnpauseCondition(condition);
         }
 
-        public bool ResetOrRemoveCondition(Condition condition)
+        /// <summary>
+        /// Removes the provided <see cref="Condition"/> or unpauses it if it is currently paused.
+        /// Returns <see langword="true"/> if the condition was removed.
+        /// </summary>
+        public bool RemoveOrUnpauseCondition(Condition condition)
         {
-            // TODO: reset
+            if (_owner.IsInWorld && _owner.IsSimulated)
+            {
+                // Unpause if currently paused (will be removed once the duration runs out)
+                if (condition.IsPaused)
+                    return UnpauseCondition(condition, false) == false;
+                
+                // Do not remove PauseDurationCountdown conditions that still have time remaining
+                if (condition.IsPauseDurationCountdown() && condition.TimeRemaining > TimeSpan.Zero)
+                    return false;
+            }
 
-            // Removing by id also checks to make sure this condition is in this collection
+            // Remove if not paused
             RemoveCondition(condition.Id);
             return true;
         }
@@ -602,6 +635,70 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        public void RemoveConditionsWithKeyword(PrototypeId keywordProtoRef)
+        {
+            KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+            RemoveConditionsFiltered(ConditionFilter.IsConditionWithKeywordFunc, keywordProto);
+        }
+
+        public bool PauseCondition(Condition condition, bool notifyClient)
+        {
+            if (condition.IsPaused)
+                return Logger.WarnReturn(false, $"PauseCondition(): Condition [{condition}] is already paused");
+
+            CancelScheduledConditionEnd(condition);
+
+            condition.PauseTime = Game.Current.CurrentTime;
+
+            UpdateTicker(condition);
+
+            if (notifyClient)
+                SendConditionPauseTimeMessage(condition);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Unpauses the provided <see cref="Condition"/>.
+        /// Returns <see langword="false"/> if the condition was removed as a result of being unpaused.
+        /// </summary>
+        public bool UnpauseCondition(Condition condition, bool notifyClient)
+        {
+            if (condition.IsPaused == false)    // return true to indicate that condition wasn't removed
+                return Logger.WarnReturn(true, $"UnpauseCondition(): Condition [{condition}] is not paused");
+
+            condition.ResetStartTimeFromPaused();
+            condition.PauseTime = TimeSpan.Zero;
+
+            if (ScheduleConditionEnd(condition) == false)
+                return Logger.WarnReturn(false, $"UnpauseCondition(): Failed to reschedule paused condition [{condition}]");
+
+            UpdateTicker(condition);
+
+            if (notifyClient)
+                SendConditionPauseTimeMessage(condition);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Enables or disables all conditions created by the specified power.
+        /// </summary>
+        public bool EnablePowerConditions(PrototypeId powerProtoRef, bool enable)
+        {
+            bool success = true;
+
+            foreach (Condition condition in this)
+            {
+                if (condition.CreatorPowerPrototypeRef != powerProtoRef)
+                    continue;
+
+                success &= EnableCondition(condition, enable);
+            }
+
+            return success;
         }
 
         /// <summary>
@@ -719,6 +816,35 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void OnOwnerEnteredWorld()
+        {
+            foreach (Condition condition in this)
+            {
+                StartTicker(condition);
+                _owner?.UpdateProcEffectPowers(condition.Properties, true);
+            }
+        }
+
+        public void OnOwnerExitedWorld()
+        {
+            foreach (Condition condition in this)
+                StopTicker(condition);
+        }
+
+        public void OnOwnerSimulationStateChanged(bool isSimulated)
+        {
+            if (isSimulated)
+            {
+                foreach (Condition condition in this)
+                    StartTicker(condition);
+            }
+            else
+            {
+                foreach (Condition condition in this)
+                    StopTicker(condition);
+            }
+        }
+
         public void OnOwnerDeallocate()
         {
             _owner.Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
@@ -765,6 +891,13 @@ namespace MHServerEmu.Games.Entities
             _owner.OnConditionRemoved(condition);
             _owner.TryActivateOnConditionEndProcs(condition);
 
+            Handle handle = new(this, condition);
+            StopTicker(condition);
+
+            // Check if stopping the ticker removed this condition
+            if (handle.Valid() == false)
+                return true;
+
             // Notify interested clients if any
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
@@ -784,7 +917,6 @@ namespace MHServerEmu.Games.Entities
             // Remove the condition
             if (condition.IsInCollection)
             {
-                Handle handle = new(this, condition);
                 UnaccrueCondition(condition);
 
                 // Early return if this condition was deleted by unaccruement
@@ -800,6 +932,28 @@ namespace MHServerEmu.Games.Entities
 
             DeleteCondition(condition);
             return true;
+        }
+
+        private void RemoveConditionsFiltered(ConditionFilter.Func filterFunc)
+        {
+            foreach (Condition condition in this)
+            {
+                if (filterFunc(condition) == false)
+                    continue;
+
+                RemoveCondition(condition);
+            }
+        }
+
+        private void RemoveConditionsFiltered<T>(ConditionFilter.Func<T> filterFunc, T filterArg)
+        {
+            foreach (Condition condition in this)
+            {
+                if (filterFunc(condition, filterArg) == false)
+                    continue;
+
+                RemoveCondition(condition);
+            }
         }
 
         private bool OnInsertCondition(Condition condition)
@@ -841,8 +995,26 @@ namespace MHServerEmu.Games.Entities
         {
             IncrementStackCountCache(condition);
 
-            if (ScheduleConditionEnd(condition) == false)
-                return;
+            if (condition.ShouldStartPaused(_owner.Region))
+            {
+                // Pause straight away if it should be paused
+                PauseCondition(condition, true);
+            }
+            else if (condition.IsPaused == false)
+            {
+                // Try to schedule this condition's end if it's not paused
+                if (ScheduleConditionEnd(condition) == false)
+                    return;
+            }
+
+            // Disable this condition if needed
+            PrototypeId powerProtoRef = condition.CreatorPowerPrototypeRef;
+            if (powerProtoRef != PrototypeId.Invalid && _owner.Properties[PropertyEnum.DisablePowerEffects, powerProtoRef])
+                EnableCondition(condition, false);
+
+            // Start the ticker if it wasn't disabled above
+            if (condition.IsEnabled)
+                StartTicker(condition);
         }
 
         private void UnaccrueCondition(Condition condition)
@@ -871,6 +1043,84 @@ namespace MHServerEmu.Games.Entities
         {
             RebuildConditionKeywordsMask(condition.Id);
             DecrementStackCountCache(condition);
+        }
+
+        private bool EnableCondition(Condition condition, bool enable)
+        {
+            Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
+
+            PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
+
+            // Notify clients
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            if (networkManager.GetInterestedClients(interestedClientList, _owner))
+            {
+                NetMessageEnableCondition enableConditionMessage = NetMessageEnableCondition.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .SetEnable(enable)
+                    .Build();
+
+                networkManager.SendMessageToMultiple(interestedClientList, enableConditionMessage);
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
+
+            // Enable/disable the condition
+            if (enable && condition.IsEnabled == false)
+            {
+                condition.IsEnabled = true;
+
+                if (_owner.Properties.AddChildCollection(condition.Properties) == false)
+                    return Logger.WarnReturn(false, $"EnableCondition(): Failed to attach properties for condition=[{condition}], owner=[{_owner}])");
+
+                StartTicker(condition);
+
+            }
+            else if (enable == false && condition.IsEnabled)
+            {
+                condition.IsEnabled = false;
+
+                if (condition.Properties.RemoveFromParent(_owner.Properties) == false)
+                    return Logger.WarnReturn(false, $"EnableCondition(): Failed to detach properties for condition=[{condition}], owner=[{_owner}])");
+
+                StopTicker(condition);
+            }
+
+            return true;
+        }
+
+        private void StartTicker(Condition condition)
+        {
+            // TODO
+            //Logger.Debug($"StartTicker(): {condition}");
+        }
+
+        private void StopTicker(Condition condition)
+        {
+            // TODO
+            //Logger.Debug($"StopTicker(): {condition}");
+        }
+
+        private void UpdateTicker(Condition condition)
+        {
+            // TODO
+            //Logger.Debug($"UpdateTicker(): {condition}");
+        }
+
+        private void SendConditionPauseTimeMessage(Condition condition)
+        {
+            // NOTE: We don't need to notify other players because condition time is visual only client-side.
+            Player player = _owner.GetOwnerOfType<Player>();
+            if (player != null && player.InterestedInEntity(_owner, AOINetworkPolicyValues.AOIChannelOwner))
+            {
+                player.SendMessage(NetMessageChangeConditionPauseTime.CreateBuilder()
+                    .SetIdEntity(_owner.Id)
+                    .SetKey(condition.Id)
+                    .SetPauseTime((ulong)Game.GetTimeFromStart(condition.PauseTime))
+                    .SetStartTime((ulong)condition.StartTime.TotalMilliseconds)
+                    .Build());
+            }
         }
 
         private bool ScheduleConditionEnd(Condition condition)

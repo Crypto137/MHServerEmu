@@ -10,6 +10,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 using StackId = MHServerEmu.Games.Entities.ConditionCollection.StackId;
 
@@ -424,6 +425,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
 
             _durationMS = (long)duration.TotalMilliseconds;
+            _updateIntervalMS = conditionProto.UpdateIntervalMS;
             _cancelOnFlags = conditionProto.CancelOnFlags;
 
             if (properties != null)
@@ -657,12 +659,31 @@ namespace MHServerEmu.Games.Powers.Conditions
             _startTime = Game.Current.CurrentTime;
         }
 
+        public void ResetStartTimeFromPaused()
+        {
+            if (IsPaused == false)
+                return;
+
+            _startTime += Game.Current.CurrentTime - _pauseTime;
+        }
+
         public void SetDuration(long duration)
         {
             if (duration <= 0)
                 Logger.Warn("SetDuration(): duration <= 0");
 
             _durationMS = duration < 0 ? 0 : duration;
+        }
+
+        public bool ShouldStartPaused(Region region)
+        {
+            if (IsPauseDurationCountdown())
+                return true;
+
+            if (region?.PausesBoostConditions() == true && IsBoost())
+                return true;
+
+            return false;
         }
 
         public bool IsPersistToDB()
@@ -695,11 +716,15 @@ namespace MHServerEmu.Games.Powers.Conditions
             return _conditionPrototype.TransferToCurrentAvatar;
         }
 
+        public bool IsPauseDurationCountdown()
+        {
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPauseDurationCountdown(): _conditionPrototype == null");
+            return _conditionPrototype.PauseDurationCountdown;
+        }
+
         public PrototypeId[] GetKeywords()
         {
-            if (_conditionPrototype == null)
-                return Logger.WarnReturn<PrototypeId[]>(null, "GetKeywords(): _conditionPrototype == null");
-
+            if (_conditionPrototype == null) return Logger.WarnReturn<PrototypeId[]>(null, "GetKeywords(): _conditionPrototype == null");
             return _conditionPrototype.Keywords;
         }
 

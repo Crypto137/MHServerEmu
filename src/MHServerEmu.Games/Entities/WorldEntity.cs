@@ -2218,6 +2218,8 @@ namespace MHServerEmu.Games.Entities
             if (Bounds.CollisionType != BoundsCollisionType.None)
                 RegisterForPendingPhysicsResolve();
 
+            ConditionCollection?.OnOwnerEnteredWorld();
+
             UpdateInterestPolicies(true, settings);
             region.EntityTracker.ConsiderForTracking(this);
             UpdateSimulationState();
@@ -2257,6 +2259,8 @@ namespace MHServerEmu.Games.Entities
                     player.UndiscoverEntity(this, false);   // Skip interest update for undiscover because we are doing an update below anyway
                 }
             }
+
+            ConditionCollection?.OnOwnerExitedWorld();
 
             PowerCollection?.OnOwnerExitedWorld();
 
@@ -2332,6 +2336,21 @@ namespace MHServerEmu.Games.Entities
                     }
 
                     GetPower(powerProtoRef)?.OnOwnerCastSpeedChange();
+
+                    break;
+
+                case PropertyEnum.DisablePowerEffects:
+                    Property.FromParam(id, 0, out PrototypeId disablePowerRef);
+                    if (disablePowerRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("OnPropertyChange(): disablePowerRef == PrototypeId.Invalid");
+                        break;
+                    }
+
+                    bool enable = newValue == false;    // !doDisable
+
+                    if (ConditionCollection?.EnablePowerConditions(disablePowerRef, enable) == false)
+                        Logger.Warn($"OnPropertyChange(): EnablePowerConditions failed to [{(enable ? "enable" : "disable")}] conditions of creatorPower=[{disablePowerRef.GetName()}] on owner=[{this}]");
 
                     break;
 
@@ -2865,6 +2884,8 @@ namespace MHServerEmu.Games.Entities
                         Region.EntitySetUnSimulatedEvent.Invoke(new(this));
                 }
                 SpawnSpec?.OnUpdateSimulation();
+
+                ConditionCollection?.OnOwnerSimulationStateChanged(simulated);
             }
 
             return result;
