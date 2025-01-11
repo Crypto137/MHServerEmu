@@ -1021,7 +1021,9 @@ namespace MHServerEmu.Games.Powers
                 Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
                 Property.FromParam(kvp.Key, 1, out int maxStacksToRemove);
 
-                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionWithKeywordFunc, keywordProtoRef, maxStacksToRemove);
+                KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+
+                removedAny |= CalculateResultConditionsToRemoveHelper(results, conditionCollection, ConditionFilter.IsConditionWithKeywordFunc, keywordProto, maxStacksToRemove);
             }
 
             // Remove conditions that have specified properties
