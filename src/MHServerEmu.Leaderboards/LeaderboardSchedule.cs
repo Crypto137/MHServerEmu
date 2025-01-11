@@ -178,7 +178,7 @@ namespace MHServerEmu.Leaderboards
             while (nextDay < currentDay)
                 nextDay = NextActivation(nextDay);
 
-            if (nextDay > EndEvent) return null;
+            if (nextDay >= EndEvent) return null;
 
             return nextDay;
         }
@@ -186,7 +186,7 @@ namespace MHServerEmu.Leaderboards
         public DateTime GetNextUtcResetDatetime(DateTime resetTime, DateTime currentTime)
         {
             var expirationTime = currentTime;
-            if (resetTime == currentTime)
+            if (resetTime == currentTime || resetTime == StartEvent)
                 expirationTime = CalcExpirationTime(resetTime);
 
             while (expirationTime <= currentTime)

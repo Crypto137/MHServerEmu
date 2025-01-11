@@ -119,7 +119,7 @@ namespace MHServerEmu.Leaderboards
                                 if (CanReset && newInstanceDb == null && Scheduler.IsActive)
                                 {
                                     var nextActivationTime = Scheduler.CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
-                                    if (nextActivationTime == instance.ActivationTime) continue;
+                                    if (nextActivationTime == instance.ActivationTime || nextActivationTime >= Scheduler.EndEvent) continue;
 
                                     newInstanceDb = new()
                                     {
