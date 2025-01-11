@@ -1009,8 +1009,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
             // Initialize resources (TODO: Separate AssignDefaultAvatarPowers() into multiple methods and move this out of here)
-            InitializePrimaryResources();
-            InitializeSecondaryResources();
+            InitializePrimaryManaBehaviors();
+            InitializeSecondaryManaBehaviors();
 
             // Item Powers
             AssignItemPowers();
@@ -1038,7 +1038,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (avatarPrototype.HiddenPassivePowers.HasValue())
             {
                 foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
-                    AssignPower(abilityAssignmentProto.Ability, indexProps);
+                {
+                    if (GetPower(abilityAssignmentProto.Ability) == null)
+                        AssignPower(abilityAssignmentProto.Ability, indexProps);
+                }
             }
 
             // Progression table powers
@@ -1209,7 +1212,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Resources
 
-        private bool InitializePrimaryResources()
+        private bool InitializePrimaryManaBehaviors()
         {
             // Check if there are any primary resources to initialize (there should be!)
             if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
@@ -1242,25 +1245,39 @@ namespace MHServerEmu.Games.Entities.Avatars
                 Properties[PropertyEnum.DisableEnduranceRegen, primaryManaBehaviorProto.ManaType] = primaryManaBehaviorProto.StartsWithRegenEnabled == false;
 
                 // Do common mana init
-                InitializeManaBehaviorCommon(primaryManaBehaviorProto);
+                AssignManaBehaviorPowers(primaryManaBehaviorProto);
             }
 
             return true;
         }
 
-        private bool InitializeSecondaryResources()
+        private bool InitializeSecondaryManaBehaviors()
         {
             // Secondary resource base is already present in the prototype's property collection as a curve property
             SecondaryResourceManaBehaviorPrototype secondaryManaBehaviorProto = GetSecondaryResourceManaBehavior();
             if (secondaryManaBehaviorProto == null)
                 return false;
 
-            InitializeManaBehaviorCommon(secondaryManaBehaviorProto);
+            AssignManaBehaviorPowers(secondaryManaBehaviorProto);
             return true;
         }
 
-        private bool InitializeManaBehaviorCommon(ManaBehaviorPrototype manaBehaviorProto)
+        private bool AssignManaBehaviorPowers(ManaBehaviorPrototype manaBehaviorProto)
         {
+            if (manaBehaviorProto.Powers.IsNullOrEmpty())
+                return true;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+
+            foreach (PrototypeId powerProtoRef in manaBehaviorProto.Powers)
+            {
+                if (GetPower(powerProtoRef) == null)
+                {
+                    Logger.Debug($"InitializeManaBehaviorPowers(): {powerProtoRef.GetName()}");
+                    if (AssignPower(powerProtoRef, indexProps) == null)
+                        Logger.Warn($"InitializeManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
+                }
+            }
 
             return true;
         }
