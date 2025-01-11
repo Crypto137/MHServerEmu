@@ -21,6 +21,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         Type1 = 0,
         Type2 = 1,
+        NumTypes = 2,
         TypeAll = 3,
     }
 

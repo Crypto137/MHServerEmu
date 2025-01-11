@@ -1489,6 +1489,9 @@ namespace MHServerEmu.Games.Entities
             // Adjust health
             ApplyHealthPowerResults(powerResults, ultimateOwner);
 
+            if (powerResults.IsAvoided == false)
+                ApplyResourcePowerResults(powerResults);
+
             return true;
         }
 
@@ -1763,6 +1766,47 @@ namespace MHServerEmu.Games.Entities
             }
 
             return true;
+        }
+
+        private void ApplyResourcePowerResults(PowerResults powerResults)
+        {
+            // Primary resource (endurance / spirit)
+            foreach (var kvp in powerResults.Properties.IteratePropertyRange(PropertyEnum.EnduranceChange))
+            {
+                Property.FromParam(kvp.Key, 0, out int manaType);
+                float enduranceChange = kvp.Value;
+
+                // Check if the resource change is within margin of error
+                if (Segment.IsNearZero(enduranceChange))
+                    continue;
+
+                // Make sure we can gain endurance if we are gaining
+                if (enduranceChange > 0f && Properties[PropertyEnum.DisableEnduranceGain, manaType])
+                    continue;
+
+                // Adjust
+                float endurance = Properties[PropertyEnum.Endurance, manaType];
+                endurance += enduranceChange;
+                endurance = Math.Clamp(endurance, 0f, Properties[PropertyEnum.EnduranceMax, manaType]);
+                Properties[PropertyEnum.Endurance, manaType] = endurance;
+            }
+
+            // Secondary resource
+            float secondaryResourceChange = powerResults.Properties[PropertyEnum.SecondaryResourceChange];
+
+            // Check if the resource change is within margin of error
+            if (Segment.IsNearZero(secondaryResourceChange))
+                return;
+
+            // Make sure we can gain secondary resource if we are gaining
+            if (secondaryResourceChange > 0f && Properties[PropertyEnum.DisableSecondaryResourceGain])
+                return;
+
+            // Adjust
+            float secondaryResource = Properties[PropertyEnum.SecondaryResource];
+            secondaryResource += secondaryResourceChange;
+            secondaryResource = Math.Clamp(secondaryResource, 0f, Properties[PropertyEnum.SecondaryResourceMax]);
+            Properties[PropertyEnum.SecondaryResource] = secondaryResource;
         }
 
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)

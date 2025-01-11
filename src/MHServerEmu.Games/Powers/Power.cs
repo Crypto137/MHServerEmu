@@ -1521,7 +1521,7 @@ namespace MHServerEmu.Games.Powers
 
                     endurance = MathF.Max(endurance - cost, 0f);
 
-                    Owner.Properties[PropertyEnum.Endurance] = endurance;
+                    Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = endurance;
                 }
 
                 // TODO: recurring endurance cost

@@ -201,6 +201,7 @@ namespace MHServerEmu.Games.Powers
             {
                 CalculateResultDamage(targetResults, target);
                 CalculateResultHealing(targetResults, target);
+                CalculateResultResourceChanges(targetResults, target);
 
                 CalculateResultConditionsToRemove(targetResults, target);
             }
@@ -687,6 +688,35 @@ namespace MHServerEmu.Games.Powers
                 results.Properties[PropertyEnum.Healing] = healing;
                 results.HealingForClient = healing;
             }
+
+            return true;
+        }
+
+        private bool CalculateResultResourceChanges(PowerResults results, WorldEntity target)
+        {
+            // Primary resource (endurance / spirit)
+            for (ManaType manaType = 0; manaType < ManaType.NumTypes; manaType++)
+            {
+                float enduranceChange = Properties[PropertyEnum.EnduranceChange, manaType];
+                enduranceChange += Properties[PropertyEnum.EnduranceChange, ManaType.TypeAll];
+
+                float enduranceChangePct = Properties[PropertyEnum.EnduranceChangePct, manaType];
+                enduranceChangePct += Properties[PropertyEnum.EnduranceChangePct, ManaType.TypeAll];
+
+                if (enduranceChangePct != 0f)
+                    enduranceChange += target.Properties[PropertyEnum.EnduranceMax] * enduranceChangePct;
+
+                results.Properties[PropertyEnum.EnduranceChange, manaType] = enduranceChange;
+            }
+
+            // Secondary resource
+            float secondaryResourceChange = Properties[PropertyEnum.SecondaryResourceChange];
+
+            float secondaryResourceChangePct = Properties[PropertyEnum.SecondaryResourceChangePct];
+            if (secondaryResourceChangePct != 0f)
+                secondaryResourceChange += target.Properties[PropertyEnum.SecondaryResourceMax] * secondaryResourceChangePct;
+
+            results.Properties[PropertyEnum.SecondaryResourceChange] = secondaryResourceChange;
 
             return true;
         }
