@@ -1276,6 +1276,10 @@ namespace MHServerEmu.Games.Entities
             if (CurrentAvatar.EnterWorld(region, CurrentAvatar.FloorToCenter(position), orientation, settings) == false)
                 return false;
 
+            // Reset resources AFTER entering world because entering world initializes resources
+            if (withSwapInPower)
+                CurrentAvatar.ResetResources(true);
+
             OnChangeActiveAvatar(0, lastCurrentAvatarId);
             return true;
         }

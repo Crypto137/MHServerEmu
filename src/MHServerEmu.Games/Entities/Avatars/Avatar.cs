@@ -164,6 +164,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (base.ApplyInitialReplicationState(ref settings) == false)
                 return false;
 
+            ResetResources(false);
+
             // Resurrect if dead
             if (IsDead)
                 Resurrect();
@@ -1211,6 +1213,40 @@ namespace MHServerEmu.Games.Entities.Avatars
         #endregion
 
         #region Resources
+
+        public bool ResetResources(bool avatarSwap)
+        {
+            if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
+                return Logger.WarnReturn(false, $"ResetResources(): Prototype for avatar [{this}] does not have primary resource behaviors defined");
+
+            // Primary resources
+            foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
+            {
+                var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
+                if (primaryManaBehaviorProto == null)
+                {
+                    Logger.Warn("ResetResources(): primaryManaBehaviorProto == null");
+                    continue;
+                }
+
+                ManaType manaType = primaryManaBehaviorProto.ManaType;
+                float endurance = primaryManaBehaviorProto.StartsEmpty ? 0f : Properties[PropertyEnum.EnduranceMax, manaType];
+                Properties[PropertyEnum.Endurance, manaType] = endurance;
+            }
+
+            // Secondary resources
+            SecondaryResourceManaBehaviorPrototype secondaryResourceManaBehaviorProto = GetSecondaryResourceManaBehavior();
+            if (secondaryResourceManaBehaviorProto == null)
+                return true;
+            
+            if (avatarSwap == false || secondaryResourceManaBehaviorProto.ResetOnAvatarSwap)
+            {
+                float secondaryResource = secondaryResourceManaBehaviorProto.StartsEmpty ? 0f : Properties[PropertyEnum.SecondaryResourceMax];
+                Properties[PropertyEnum.SecondaryResource] = secondaryResource;
+            }
+
+            return true;
+        }
 
         private bool InitializePrimaryManaBehaviors()
         {
@@ -2318,7 +2354,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (IsAliveInWorld && flags.HasFlag(SetPropertyFlags.Deserialized) == false)
                     {
                         float endurance = Properties[PropertyEnum.Endurance, manaType];
-                        float ratio = oldValue > 0f ? Math.Min(endurance / oldValue, 1f) : 1f;
+                        float ratio = oldValue > 0f ? Math.Min(endurance / oldValue, 1f) : 0f;
                         Properties[PropertyEnum.Endurance, manaType] = newValue * ratio;
                     }
 
