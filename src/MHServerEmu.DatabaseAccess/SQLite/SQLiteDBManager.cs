@@ -404,7 +404,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         /// </summary>
         public bool TryGetPlayerNames(Dictionary<ulong, string> playerNames)
         {
-            if (_connectionString == string.Empty) return false;
+            if (_connectionString == null) return false;
 
             using SQLiteConnection connection = GetConnection();
             var playersList = connection.Query<DBPlayerName>("SELECT Id, PlayerName FROM Account");
@@ -420,7 +420,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         public string UpdatePlayerName(Dictionary<ulong, string> playerNames, ulong id)
         {
             string playerName = $"Player{id}";
-            if (_connectionString == string.Empty) return playerName;
+            if (_connectionString == null) return playerName;
 
             using SQLiteConnection connection = GetConnection();
             var result = connection.Query<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)id });
