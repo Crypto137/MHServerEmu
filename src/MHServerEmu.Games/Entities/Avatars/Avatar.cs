@@ -2361,6 +2361,29 @@ namespace MHServerEmu.Games.Entities.Avatars
                     // Update client value
                     Properties[PropertyEnum.EnduranceMaxOther, manaType] = newValue;
                     break;
+
+                case PropertyEnum.SecondaryResourceMax:
+                    // Clamp current value to new max
+                    float secondaryResourceMax = newValue;
+                    if (secondaryResourceMax != 0f && secondaryResourceMax < Properties[PropertyEnum.SecondaryResource])
+                        Properties[PropertyEnum.SecondaryResource] = secondaryResourceMax;
+                    break;
+
+                case PropertyEnum.SecondaryResourceMaxBase:
+                    Properties[PropertyEnum.SecondaryResourceMax] = newValue + Properties[PropertyEnum.SecondaryResourceMaxChange];
+                    break;
+
+                case PropertyEnum.SecondaryResourceMaxChange:
+                    Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase] + newValue;
+                    break;
+
+                case PropertyEnum.SecondaryResourceMaxPipsBase:
+                    Properties[PropertyEnum.SecondaryResourceMaxPips] = newValue + Properties[PropertyEnum.SecondaryResourceMaxPipsChg];
+                    break;
+
+                case PropertyEnum.SecondaryResourceMaxPipsChg:
+                    Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + newValue;
+                    break;
             }
         }
 
