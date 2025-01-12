@@ -137,6 +137,9 @@ namespace MHServerEmu.Games.Populations
             settings.SpawnSpec = this;
             settings.IsPopulation = true;
 
+            if (entityProto is ItemPrototype)
+                settings.ItemSpec = Game.LootManager.CreateItemSpec(EntityRef, LootContext.CashShop, null);
+
             ActiveEntity = manager.CreateEntity(settings) as WorldEntity;
 
             var twinBoost = GameDatabase.PopulationGlobalsPrototype.TwinEnemyBoost;
