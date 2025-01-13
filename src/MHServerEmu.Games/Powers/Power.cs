@@ -17,6 +17,7 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers.Conditions;
@@ -1834,10 +1835,30 @@ namespace MHServerEmu.Games.Powers
         }
 
         public static float GetEnduranceCost(PropertyCollection powerProperties, ManaType manaType, PowerPrototype powerProto, 
-            WorldEntity owner, bool useSecondaryResource)
+            WorldEntity powerOwner, bool canSkipCost)
         {
-            // TODO
-            return powerProperties[PropertyEnum.EnduranceCost, manaType];
+            if (canSkipCost && CanUseSecondaryResourceEffects(powerProperties, powerOwner.Properties) && powerProperties[PropertyEnum.SecondaryResourceNoEndurance])
+                return 0f;
+
+            float cost = powerProperties[PropertyEnum.EnduranceCost, manaType];
+
+            return ModifyEnduranceCost(cost, manaType, powerProto, powerProperties, powerOwner, canSkipCost);
+        }
+
+        private static float ModifyEnduranceCost(float cost, ManaType manaType, PowerPrototype powerProto, PropertyCollection powerProperties,
+            WorldEntity powerOwner, bool canSkipCost)
+        {
+            if (powerOwner == null) return Logger.WarnReturn(cost, "ModifyEnduranceCost(): owner == null");
+
+            cost *= powerOwner.GetEnduranceCostMultiplier(manaType, powerProto, canSkipCost);
+            cost *= LiveTuningManager.GetLivePowerTuningVar(powerProto, PowerTuningVar.ePTV_PowerCost);
+
+            float minCost = 0f;
+
+            if (powerProperties[PropertyEnum.EnduranceCostAllRemaining, manaType] || powerProperties[PropertyEnum.EnduranceCostAllRemaining, ManaType.TypeAll])
+                minCost = powerOwner.Properties[PropertyEnum.Endurance];
+
+            return MathF.Max(cost, minCost);
         }
 
         public bool HasEnduranceCostRecurring()

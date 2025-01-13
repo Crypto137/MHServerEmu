@@ -1992,6 +1992,12 @@ namespace MHServerEmu.Games.Entities
             return castSpeedPct;
         }
 
+        public float GetEnduranceCostMultiplier(ManaType manaType, PowerPrototype powerProto, bool canSkipCost)
+        {
+            // TODO
+            return 1f;
+        }
+
         #endregion
 
         #region Mods
