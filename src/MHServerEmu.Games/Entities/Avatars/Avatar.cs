@@ -551,20 +551,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (power == null) return Logger.WarnReturn(false, "ShouldContinueRecurringPower(): power == null");
 
-            AvatarPrototype avatarPrototype = AvatarPrototype;
-            if (avatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
-                return Logger.WarnReturn(false, "ShouldContinueRecurringPower(): avatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty()");
-
             // Check endurance (mana) costs
-            foreach (PrototypeId primaryManaBehaviorProtoRef in avatarPrototype.PrimaryResourceBehaviors)
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
             {
-                var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
-                if (primaryManaBehaviorProto == null)
-                {
-                    Logger.Warn("ShouldContinueRecurringPower(): primaryManaBehaviorProto == null");
-                    continue;
-                }
-
                 float endurance = Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
                 float enduranceCost = power.GetEnduranceCost(primaryManaBehaviorProto.ManaType, true);
 
@@ -587,7 +576,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return false;
             }
 
-            // Check power's CanTriggerEval
+            // Check the power's CanTriggerEval
             return power.CheckCanTriggerEval();
         }
 
@@ -1216,19 +1205,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool ResetResources(bool avatarSwap)
         {
-            if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
-                return Logger.WarnReturn(false, $"ResetResources(): Prototype for avatar [{this}] does not have primary resource behaviors defined");
-
             // Primary resources
-            foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
             {
-                var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
-                if (primaryManaBehaviorProto == null)
-                {
-                    Logger.Warn("ResetResources(): primaryManaBehaviorProto == null");
-                    continue;
-                }
-
                 ManaType manaType = primaryManaBehaviorProto.ManaType;
                 float endurance = primaryManaBehaviorProto.StartsEmpty ? 0f : Properties[PropertyEnum.EnduranceMax, manaType];
                 Properties[PropertyEnum.Endurance, manaType] = endurance;
@@ -1250,19 +1229,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool InitializePrimaryManaBehaviors()
         {
-            // Check if there are any primary resources to initialize (there should be!)
-            if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
-                return Logger.WarnReturn(false, $"InitializePrimaryResources(): Prototype for avatar [{this}] does not have primary resource behaviors defined");
-
-            foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
             {
-                var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
-                if (primaryManaBehaviorProto == null)
-                {
-                    Logger.Warn("InitializePrimaryResources(): primaryManaBehaviorProto == null");
-                    continue;
-                }
-
                 // Set base value
                 Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
                 if (manaCurve == null)
@@ -1318,13 +1286,24 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public PrimaryResourceManaBehaviorPrototype[] GetPrimaryResourceManaBehaviors()
+        {
+            PrimaryResourceManaBehaviorPrototype[] behaviors = AvatarPrototype?.PrimaryResourceBehaviorsCache;
+
+            // Check if there are any primary resource behaviors (there should be!)
+            if (behaviors.IsNullOrEmpty())
+                return Logger.WarnReturn(Array.Empty<PrimaryResourceManaBehaviorPrototype>(), $"GetPrimaryResourceManaBehaviors(): behaviors.IsNullOrEmpty()");
+
+            return behaviors;
+        }
+
         private SecondaryResourceManaBehaviorPrototype GetSecondaryResourceManaBehavior()
         {
             PrototypeId secondaryResourceOverrideProtoRef = Properties[PropertyEnum.SecondaryResourceOverride];
             if (secondaryResourceOverrideProtoRef != PrototypeId.Invalid)
                 return secondaryResourceOverrideProtoRef.As<SecondaryResourceManaBehaviorPrototype>();
 
-            return AvatarPrototype?.SecondaryResourceBehavior.As<SecondaryResourceManaBehaviorPrototype>();
+            return AvatarPrototype?.SecondaryResourceBehaviorCache;
         }
 
         private float GetEnduranceMax(ManaType manaType)
@@ -2319,21 +2298,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (manaType == ManaType.TypeAll)
                     {
                         // Update max for all mana types
-                        if (AvatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty())
+                        foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
                         {
-                            Logger.Warn($"OnPropertyChange(): Prototype for avatar [{this}] does not have primary resource behaviors defined");
-                            break;
-                        }
-
-                        foreach (PrototypeId primaryManaBehaviorProtoRef in AvatarPrototype.PrimaryResourceBehaviors)
-                        {
-                            var primaryManaBehaviorProto = GameDatabase.GetPrototype<PrimaryResourceManaBehaviorPrototype>(primaryManaBehaviorProtoRef);
-                            if (primaryManaBehaviorProto == null)
-                            {
-                                Logger.Warn("OnPropertyChange(): primaryManaBehaviorProto == null");
-                                continue;
-                            }
-
                             ManaType protoManaType = primaryManaBehaviorProto.ManaType;
                             Properties[PropertyEnum.EnduranceMax, protoManaType] = GetEnduranceMax(protoManaType);
                         }

@@ -1505,17 +1505,10 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Endurance (spirit / other primary resources)
-            if (Owner.Prototype is AvatarPrototype avatarProto && avatarProto.PrimaryResourceBehaviors.HasValue())
+            if (Owner is Avatar avatar)
             {
-                foreach (PrototypeId primaryManaBehaviorProtoRef in avatarProto.PrimaryResourceBehaviors)
+                foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
                 {
-                    var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
-                    if (primaryManaBehaviorProto == null)
-                    {
-                        Logger.Warn("PayCost(): primaryManaBehaviorProto == null");
-                        continue;
-                    }
-
                     float endurance = Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
                     float cost = GetEnduranceCost(primaryManaBehaviorProto.ManaType, true);
 

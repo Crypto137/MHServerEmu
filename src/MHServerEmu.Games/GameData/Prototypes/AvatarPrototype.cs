@@ -66,6 +66,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public override int LiveTuneEternitySplinterCost { get => (int)LiveTuningManager.GetLiveAvatarTuningVar(this, AvatarEntityTuningVar.eAETV_EternitySplinterPrice); }
 
+        [DoNotCopy]
+        public PrimaryResourceManaBehaviorPrototype[] PrimaryResourceBehaviorsCache { get; private set; }
+        [DoNotCopy]
+        public SecondaryResourceManaBehaviorPrototype SecondaryResourceBehaviorCache { get; private set; }
+
         public override bool ApprovedForUse()
         {
             if (base.ApprovedForUse() == false) return false;
@@ -118,6 +123,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // TODO: StealablePowersAllowed
 
             AvatarPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAvatarBlueprintDataRef());
+
+            // Validate and cache resource behaviors
+            if (PrimaryResourceBehaviors.HasValue())
+            {
+                PrimaryResourceBehaviorsCache = new PrimaryResourceManaBehaviorPrototype[PrimaryResourceBehaviors.Length];
+                for (int i = 0; i < PrimaryResourceBehaviors.Length; i++)
+                    PrimaryResourceBehaviorsCache[i] = PrimaryResourceBehaviors[i].As<PrimaryResourceManaBehaviorPrototype>();
+            }
+            else
+            {
+                Logger.Warn($"PostProcess(): [{this}] does not have primary resource behaviors defined");
+            }
+
+            // Not having a secondary resource is valid for avatars
+            SecondaryResourceBehaviorCache = SecondaryResourceBehavior.As<SecondaryResourceManaBehaviorPrototype>();
         }
 
         /// <summary>

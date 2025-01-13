@@ -160,14 +160,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 // reset avatar status
                 if (avatar.IsDead) avatar.Resurrect();
 
-                var avatarPrototype = avatar.AvatarPrototype;
-                if (avatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty()) continue;
-
-                foreach (PrototypeId primaryManaBehaviorProtoRef in avatarPrototype.PrimaryResourceBehaviors)
+                foreach (var primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
                 {
-                    var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
-                    if (primaryManaBehaviorProto == null) continue;
-
                     float endurance = avatar.Properties[PropertyEnum.EnduranceMax, primaryManaBehaviorProto.ManaType];
                     avatar.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = endurance;
                 }
