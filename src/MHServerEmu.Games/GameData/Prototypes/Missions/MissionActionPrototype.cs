@@ -16,15 +16,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Contributors,
     }
 
-    [AssetEnum((int)Type1)]
-    public enum ManaType
-    {
-        Type1 = 0,
-        Type2 = 1,
-        NumTypes = 2,
-        TypeAll = 3,
-    }
-
     [AssetEnum((int)Undefined)]
     public enum TriBool
     {
