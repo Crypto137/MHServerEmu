@@ -305,6 +305,22 @@ namespace MHServerEmu.Games.Entities.Avatars
             return result;
         }
 
+        public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
+        {
+            base.OnKilled(killer, killFlags, directKiller);
+
+            // Deplete resources if needed
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
+            {
+                if (primaryManaBehaviorProto.DepleteOnDeath)
+                    Properties.RemoveProperty(new(PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType));
+            }
+
+            SecondaryResourceManaBehaviorPrototype secondaryManaBehaviorProto = GetSecondaryResourceManaBehavior();
+            if (secondaryManaBehaviorProto != null && secondaryManaBehaviorProto.DepleteOnDeath)
+                Properties.RemoveProperty(PropertyEnum.SecondaryResource);
+        }
+
         public bool DoDeathRelease(DeathReleaseRequestType requestType)
         {
             // Resurrect
