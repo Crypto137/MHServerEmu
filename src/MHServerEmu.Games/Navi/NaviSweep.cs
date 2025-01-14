@@ -137,8 +137,8 @@ namespace MHServerEmu.Games.Navi
             float x1 = Math.Clamp(end.X / cellWidth * mapX, 0.0f, mapX - 1);
             float y1 = Math.Clamp(end.Y / cellLength * mapY, 0.0f, mapY - 1);
 
-            if (MathF.Round(x0) == MathF.Round(x1) 
-                && MathF.Round(y0) == MathF.Round(y1))
+            if (MathHelper.Round(x0) == MathHelper.Round(x1) 
+                && MathHelper.Round(y0) == MathHelper.Round(y1))
                 return CheckHeightMapAtPoint(MathHelper.RoundDownToInt(x0), MathHelper.RoundDownToInt(y0), 
                     heightMap, ref height, cell, line, ref resultPosition, ref resultNormal, ref resultDist);
 

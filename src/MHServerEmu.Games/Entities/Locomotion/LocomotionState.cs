@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
@@ -124,7 +125,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             success &= Serializer.TransferVectorFixed(archive, ref offset, 3);
 
             // Pack vertex side + radius into a single value
-            int vertexSideRadius = (int)MathF.Round(pathNode.Radius);
+            int vertexSideRadius = MathHelper.RoundUpToInt(pathNode.Radius);
             if (pathNode.VertexSide == NaviSide.Left) vertexSideRadius = -vertexSideRadius;
             success &= Serializer.Transfer(archive, ref vertexSideRadius);
 
