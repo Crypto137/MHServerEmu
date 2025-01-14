@@ -69,6 +69,12 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                         {
                             AddTargetNode(origin, target);
                         }
+
+                        // HardFix for XManhattanRegionBand
+                        if (region == (PrototypeId)3713088487362009794 && protoRef == (PrototypeId)10122849607717693516)
+                        {
+                            AddTargetNode(target, origin);
+                        }
                     }
                 }
             }
