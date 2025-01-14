@@ -1474,7 +1474,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Live tuning
             xpMult *= GetLiveTuningXPMultiplier();
 
-            return (long)MathF.Round(xp * xpMult);
+            return (long)(xp * xpMult);
         }
 
         protected override bool OnLevelUp(int oldLevel, int newLevel)

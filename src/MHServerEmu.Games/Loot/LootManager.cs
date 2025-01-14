@@ -488,7 +488,7 @@ namespace MHServerEmu.Games.Loot
 
             _resolver.SetContext(lootContext, player);
 
-            AvatarPrototype avatarProto = player.CurrentAvatar?.AvatarPrototype;
+            AvatarPrototype avatarProto = player?.CurrentAvatar?.AvatarPrototype;
 
             using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
             filterArgs.ItemProto = itemProto;

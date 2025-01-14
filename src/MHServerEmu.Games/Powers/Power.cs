@@ -3149,7 +3149,7 @@ namespace MHServerEmu.Games.Powers
 
             // Prepare int arguments for context data
             int critRating = (int)(critRatingAdd * MathF.Max(critRatingMult, 0f));
-            int critChancePctAddInt = (int)MathF.Round(critChancePctAdd * 100f);
+            int critChancePctAddInt = MathHelper.RoundToInt(critChancePctAdd * 100f);
             int userLevel = Math.Max(1, userProperties[PropertyEnum.CombatLevel]);
             int targetLevel = targetLevelOverride >= 0 ? targetLevelOverride : target.CombatLevel;
 
@@ -3192,7 +3192,7 @@ namespace MHServerEmu.Games.Powers
 
             // Prepare arguments for context data
             float superCritRating = superCritRatingAdd * MathF.Max(superCritRatingMult, 0f);
-            int superCritChancePctAddInt = (int)MathF.Round(superCritChancePctAdd * 100f);
+            int superCritChancePctAddInt = MathHelper.RoundToInt(superCritChancePctAdd * 100f);
             int userLevel = userProperties[PropertyEnum.CombatLevel];
             int targetLevel = targetLevelOverride >= 0 ? targetLevelOverride : target.CombatLevel;
 

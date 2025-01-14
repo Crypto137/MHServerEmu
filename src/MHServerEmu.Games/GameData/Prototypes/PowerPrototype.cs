@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
@@ -1029,7 +1030,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Curve curve = CurveDirectory.Instance.GetCurve(NumActivatesBeforeCooldown);
             if (curve == null) return Logger.WarnReturn(0, "GetNumActivatesBeforeCooldown(): curve == null");
 
-            return (int)MathF.Floor(curve.GetAt(powerRank));
+            return MathHelper.RoundDownToInt(curve.GetAt(powerRank));
         }
 
         public int GetTimeoutLengthMS(int powerRank)
@@ -1042,7 +1043,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             Curve curve = CurveDirectory.Instance.GetCurve(TimeoutLengthMS);
             if (curve == null) return Logger.WarnReturn(0, "GetTimeoutLengthMS(): curve == null");
 
-            return (int)MathF.Floor(curve.GetAt(powerRank));
+            return MathHelper.RoundDownToInt(curve.GetAt(powerRank));
         }
     }
 
