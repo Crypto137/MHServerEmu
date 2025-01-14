@@ -486,7 +486,8 @@ namespace MHServerEmu.Games.Powers
         {
             foreach (var kvp in properties1.IteratePropertyRange(propertyEnum, param0))
             {
-                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                // Keyword param index is shifted by 1 because we have another param
+                Property.FromParam(kvp.Key, 1, out PrototypeId keywordProtoRef);
                 if (keywordProtoRef == PrototypeId.Invalid) continue;
 
                 int powerKeywordChange = properties2[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
