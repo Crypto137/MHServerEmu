@@ -165,6 +165,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GamepadSettings { get; protected set; }
         public EvalPrototype BreaksStealthOverrideEval { get; protected set; }
 
+        //---
+
+        // See GetRecurringCostInterval() for why we use 500 ms here.
+        private static readonly TimeSpan RecurringCostIntervalDefault = TimeSpan.FromMilliseconds(500);
 
         [DoNotCopy]
         public float DamageTuningScore { get; private set; }
@@ -515,6 +519,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             score *= DamageBaseTuningEnduranceCost * DamageBaseTuningEnduranceRatio + (DamageBaseTuningAnimTimeMS / 1000f);
             return score;
+        }
+
+        public TimeSpan GetRecurringCostInterval()
+        {
+            // Most powers use either 250 or 500 ms intervals, with 2/3 of them using 500 ms.
+            // A single power (Powers/Player/DrDoom/ChanneledBeam.prototype) uses a 200 ms interval.
+            if (RecurringCostIntervalMS > 0)
+                return TimeSpan.FromMilliseconds(RecurringCostIntervalMS);
+
+            // Default to 500 ms since it seems to be the most common value.
+            return RecurringCostIntervalDefault;
         }
     }
 

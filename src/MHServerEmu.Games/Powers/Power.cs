@@ -59,6 +59,7 @@ namespace MHServerEmu.Games.Powers
         private readonly EventPointer<PowerSubsequentActivationTimeoutEvent> _subsequentActivationTimeoutEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
         private readonly EventPointer<ReapplyIndexPropertiesEvent> _reapplyIndexPropertiesEvent = new();
+        private readonly EventPointer<PayRecurringCostEvent> _payRecurringCostEvent = new();
 
         private List<EventPointer<ScheduledActivateEvent>> _scheduledActivateEventList;     // Initialized on demand
 
@@ -1527,6 +1528,8 @@ namespace MHServerEmu.Games.Powers
             // Endurance (spirit / other primary resources)
             if (Owner is Avatar avatar)
             {
+                bool hasRecurringCost = false;
+
                 foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
                 {
                     float endurance = Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
@@ -1534,9 +1537,12 @@ namespace MHServerEmu.Games.Powers
 
                     endurance = MathF.Max(endurance - cost, 0f);
                     Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = endurance;
+
+                    hasRecurringCost |= GetEnduranceCostRecurring(primaryManaBehaviorProto.ManaType, false, false) > 0f;
                 }
 
-                // TODO: recurring endurance cost
+                if (hasRecurringCost)
+                    ScheduleRecurringCostEvent();
             }
 
             // Secondary resource cost (the ultimate owner pays the bill for those)
@@ -1554,7 +1560,56 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            // TODO: Other costs
+            // TODO: health cost, returning weapon
+        }
+
+        private bool PayRecurringCost()
+        {
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "PayRecurringCost(): Owner is not Avatar");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "PayRecurringCost(): powerProto == null");
+
+            // NOTE: There shouldn't be more than one recurring endurance cost for a single power.
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
+            {
+                float enduranceCostRecurring = GetEnduranceCostRecurring(primaryManaBehaviorProto.ManaType, true, true);
+
+                if (enduranceCostRecurring <= 0f)
+                {
+                    // If this recurring cost payment was reduced to zero by modifiers, don't pay and schedule the next tick straight away.
+                    if (GetEnduranceCostRecurring(primaryManaBehaviorProto.ManaType, false, false) > 0f)
+                    {
+                        ScheduleRecurringCostEvent();
+                        return true;
+                    }
+
+                    // Continue to the next mana type (if any)
+                    continue;
+                }
+
+                // EnduranceCostRecurring is cost per second, so we need to multiply it by the number of seconds in our interval
+                enduranceCostRecurring *= (float)powerProto.GetRecurringCostInterval().TotalSeconds;
+
+                // Recurring endurance cost may be optional for this power (by default it is required)
+                bool enduranceCostRequired = Properties[PropertyEnum.EnduranceCostRequired];
+
+                // Check if we have endurance to continue
+                float endurance = avatar.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
+                if (endurance <= 0f || (enduranceCostRequired && enduranceCostRecurring > endurance))
+                {
+                    EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.NotEnoughEndurance);
+                    return true;
+                }
+
+                // Schedule the next tick and pay the cost.
+                // Schedule before paying because changing the endurance property may end the power.
+                ScheduleRecurringCostEvent();
+                avatar.Properties.AdjustProperty(-enduranceCostRecurring, new(PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType));
+                return true;
+            }
+
+            return true;
         }
 
         #endregion
@@ -1878,6 +1933,13 @@ namespace MHServerEmu.Games.Powers
             return ModifyEnduranceCost(cost, manaType, powerProto, powerProperties, powerOwner, canSkipCost);
         }
 
+        private float ModifyEnduranceCost(float cost, ManaType manaType, bool canSkipCost)
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(0f, "ModifyEnduranceCost(): powerProto == null");
+            return ModifyEnduranceCost(cost, manaType, powerProto, Properties, Owner, canSkipCost);
+        }
+
         private static float ModifyEnduranceCost(float cost, ManaType manaType, PowerPrototype powerProto, PropertyCollection powerProperties,
             WorldEntity powerOwner, bool canSkipCost)
         {
@@ -1914,10 +1976,25 @@ namespace MHServerEmu.Games.Powers
             return secondaryResourceCost;
         }
 
+        /// <summary>
+        /// Returns the amount of endurance per second this <see cref="Power"/> costs as long as it is active.
+        /// </summary>
+        public float GetEnduranceCostRecurring(ManaType manaType, bool applyModifiers, bool canSkipCost)
+        {
+            float powerRecurringCost = Properties[PropertyEnum.PowerRecurringCost, manaType];
+
+            if (applyModifiers == false)
+                return powerRecurringCost;
+
+            return ModifyEnduranceCost(powerRecurringCost, manaType, canSkipCost);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="Power"/> has a recurring cost for any <see cref="ManaType"/>.
+        /// </summary>
         public bool HasEnduranceCostRecurring()
         {
-            // TODO
-            return false;
+            return GetEnduranceCostRecurring(ManaType.Type1, false, false) > 0f || GetEnduranceCostRecurring(ManaType.Type2, false, false) > 0f;
         }
 
         public bool IsOnCooldown()
@@ -3510,6 +3587,7 @@ namespace MHServerEmu.Games.Powers
             scheduler.CancelAllEvents(_pendingActivationPhaseEvents);
             CancelAllScheduledActivations();
 
+            scheduler.CancelEvent(_payRecurringCostEvent);
             scheduler.CancelEvent(_reapplyIndexPropertiesEvent);
             CancelDelayedActivation();
 
@@ -3789,6 +3867,9 @@ namespace MHServerEmu.Games.Powers
 
                 if (doNotStartCooldown == false)
                     StartCooldown();
+
+                if (HasEnduranceCostRecurring())
+                    Game.GameEventScheduler?.CancelEvent(_payRecurringCostEvent);
 
                 RemoveTrackedConditions(false);
             }
@@ -4951,6 +5032,26 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        private bool ScheduleRecurringCostEvent()
+        {
+            EventScheduler scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, "ScheduleRecurringCostEvent(): scheduler == null");
+
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "ScheduleRecurringCostEvent(): powerProto == null");
+
+            if (_payRecurringCostEvent.IsValid)
+            {
+                Logger.Warn($"ScheduleRecurringCostEvent(): Overwriting recurring cost event for power [{this}]");
+                scheduler.CancelEvent(_payRecurringCostEvent);
+            }
+
+            scheduler.ScheduleEvent(_payRecurringCostEvent, powerProto.GetRecurringCostInterval(), _pendingEvents);
+            _payRecurringCostEvent.Get().Initialize(this);
+
+            return true;
+        }
+
         private class ScheduledActivateEvent : TargetedScheduledEvent<Power>
         {
             private static readonly Logger Logger = LogManager.CreateLogger();
@@ -5066,6 +5167,11 @@ namespace MHServerEmu.Games.Powers
         {
             public PowerIndexPropertyFlags Flags { get => _param1; set => _param1 = value; }
             protected override CallbackDelegate GetCallback() => (t, p1) => t.ReapplyIndexProperties(p1);
+        }
+
+        private class PayRecurringCostEvent : CallMethodEvent<Power>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.PayRecurringCost();
         }
 
         #endregion
