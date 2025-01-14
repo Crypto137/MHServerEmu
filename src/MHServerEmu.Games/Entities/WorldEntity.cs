@@ -1967,7 +1967,7 @@ namespace MHServerEmu.Games.Entities
                 // Apply tab bonuses for avatars
                 if (Prototype is AvatarPrototype avatarProto)
                 {
-                    var powerProgTableRef = avatarProto.GetPowerProgressionTableTabRefForPower(powerProto.DataRef);
+                    PrototypeId powerProgTableRef = avatarProto.GetPowerProgressionTableTabRefForPower(powerProto.DataRef);
                     if (powerProgTableRef != PrototypeId.Invalid)
                         castSpeedPct += Properties[PropertyEnum.CastSpeedIncrPctTab, powerProgTableRef, avatarProto.DataRef];
                 }
@@ -1994,8 +1994,51 @@ namespace MHServerEmu.Games.Entities
 
         public float GetEnduranceCostMultiplier(ManaType manaType, PowerPrototype powerProto, bool canSkipCost)
         {
-            // TODO
-            return 1f;
+            // NOTE: CombatGlobalsPrototype.EnduranceCostChangePctMin is 0f, which is what prevents the multiplier from going negative.
+            CombatGlobalsPrototype combatGlobals = GameDatabase.CombatGlobalsPrototype;
+            if (combatGlobals == null) return Logger.WarnReturn(1f, "GetEnduranceCostMultiplier(): combatGlobals == null");
+
+            // Check for endurance cost skips
+            if (canSkipCost && Properties[PropertyEnum.NoEnduranceCosts, manaType])
+                return 0f;
+
+            // Check for overrides
+            // NOTE: The default value for EnduranceCostChangePctOverride is -1f, which indicates no override
+            // Mana type specific override takes priority over the global one
+            float enduranceCostChangePctOverride = Properties[PropertyEnum.EnduranceCostChangePctOverride, manaType];
+
+            if (enduranceCostChangePctOverride < 0f)
+                enduranceCostChangePctOverride = Properties[PropertyEnum.EnduranceCostChangePctOverride, ManaType.TypeAll];
+
+            if (enduranceCostChangePctOverride >= 0f)
+                return MathF.Max(1f + enduranceCostChangePctOverride, combatGlobals.EnduranceCostChangePctMin);
+
+            // Accumulate modifiers
+            float multiplier = 1f;
+
+            if (manaType != ManaType.TypeAll)
+                multiplier += Properties[PropertyEnum.EnduranceCostChangePct, manaType];
+
+            multiplier += Properties[PropertyEnum.EnduranceCostChangePct, ManaType.TypeAll];
+
+            if (powerProto != null)
+            {
+                // Keyword modifiers
+                if (manaType != ManaType.TypeAll)
+                    Power.AccumulateKeywordProperties(ref multiplier, powerProto, Properties, Properties, PropertyEnum.EnduranceCostChangePctKeywrd, (int)manaType);
+
+                Power.AccumulateKeywordProperties(ref multiplier, powerProto, Properties, Properties, PropertyEnum.EnduranceCostChangePctKeywrd, (int)ManaType.TypeAll);
+
+                // Apply tab modifiers for avatars
+                if (Prototype is AvatarPrototype avatarProto)
+                {
+                    PrototypeId powerProgTableRef = avatarProto.GetPowerProgressionTableTabRefForPower(powerProto.DataRef);
+                    if (powerProgTableRef != PrototypeId.Invalid)
+                        multiplier += Properties[PropertyEnum.EnduranceCostChangePctTab, powerProgTableRef, avatarProto.DataRef];
+                }
+            }
+
+            return MathF.Max(multiplier, combatGlobals.EnduranceCostChangePctMin);
         }
 
         #endregion
