@@ -1532,11 +1532,25 @@ namespace MHServerEmu.Games.Powers
                     float cost = GetEnduranceCost(primaryManaBehaviorProto.ManaType, true);
 
                     endurance = MathF.Max(endurance - cost, 0f);
-
                     Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = endurance;
                 }
 
                 // TODO: recurring endurance cost
+            }
+
+            // Secondary resource cost (the ultimate owner pays the bill for those)
+            WorldEntity ultimateOwner = GetUltimateOwner();
+            if (ultimateOwner != null)
+            {
+                float secondaryResource = ultimateOwner.Properties[PropertyEnum.SecondaryResource];
+                float cost = GetSecondaryResourceCost();
+
+                // Secondary costs are paid only if we have enough of them
+                if (cost <= secondaryResource)
+                {
+                    secondaryResource = MathF.Max(secondaryResource - cost, 0f);
+                    ultimateOwner.Properties[PropertyEnum.SecondaryResource] = secondaryResource;
+                }
             }
 
             // TODO: Other costs
@@ -1877,6 +1891,26 @@ namespace MHServerEmu.Games.Powers
                 minCost = powerOwner.Properties[PropertyEnum.Endurance];
 
             return MathF.Max(cost, minCost);
+        }
+        
+        public float GetSecondaryResourceCost()
+        {
+            WorldEntity ultimateOwner = GetUltimateOwner();
+            if (ultimateOwner == null)
+                return 0f;
+
+            return GetSecondaryResourceCost(Properties, ultimateOwner.Properties);
+        }
+
+        public static float GetSecondaryResourceCost(PropertyCollection powerProperties, PropertyCollection ownerProperties)
+        {
+            float secondaryResourceCost = powerProperties[PropertyEnum.SecondaryResourceCost];
+
+            int secondaryResourceCostPips = powerProperties[PropertyEnum.SecondaryResourceCostPips];
+            float secondaryResourceCostPerPip = ownerProperties[PropertyEnum.SecondaryResourceCostPerPip];
+            secondaryResourceCost += secondaryResourceCostPips * secondaryResourceCostPerPip;
+
+            return secondaryResourceCost;
         }
 
         public bool HasEnduranceCostRecurring()

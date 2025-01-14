@@ -258,8 +258,7 @@ namespace MHServerEmu.Games.Powers
 
         public static bool CanUseSecondaryResourceEffects(PropertyCollection powerProperties, PropertyCollection ownerProperties)
         {
-            // TODO
-            return true;
+            return GetSecondaryResourceCost(powerProperties, ownerProperties) <= ownerProperties[PropertyEnum.SecondaryResource];
         }
 
         private static (bool, bool) IsValidTargetNoCasterEntityChecks(PowerPrototype powerProto, ulong userEntityId,
