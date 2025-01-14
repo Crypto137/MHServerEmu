@@ -165,8 +165,8 @@ namespace MHServerEmu.Core.Collisions
 
         public void RoundToNearestInteger()
         {
-            Min = new (MathF.Round(Min.X), MathF.Round(Min.Y), MathF.Round(Min.Z));
-            Max = new (MathF.Round(Max.X), MathF.Round(Max.Y), MathF.Round(Max.Z));
+            Min = new (MathHelper.Round(Min.X), MathHelper.Round(Min.Y), MathHelper.Round(Min.Z));
+            Max = new (MathHelper.Round(Max.X), MathHelper.Round(Max.Y), MathHelper.Round(Max.Z));
         }
 
         public bool IntersectsXY(in Vector3 point)
