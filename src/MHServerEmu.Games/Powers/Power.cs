@@ -1545,22 +1545,33 @@ namespace MHServerEmu.Games.Powers
                     ScheduleRecurringCostEvent();
             }
 
-            // Secondary resource cost (the ultimate owner pays the bill for those)
+            // Check costs for the ultimate owner
             WorldEntity ultimateOwner = GetUltimateOwner();
             if (ultimateOwner != null)
             {
+                // Secondary resource cost
                 float secondaryResource = ultimateOwner.Properties[PropertyEnum.SecondaryResource];
                 float cost = GetSecondaryResourceCost();
 
-                // Secondary costs are paid only if we have enough of them
+                // Secondary resource costs are paid only if we have enough of them
                 if (cost <= secondaryResource)
                 {
                     secondaryResource = MathF.Max(secondaryResource - cost, 0f);
                     ultimateOwner.Properties[PropertyEnum.SecondaryResource] = secondaryResource;
                 }
+
+                // Health cost
+                float powerHealthCost = Properties[PropertyEnum.PowerHealthCost];
+                if (powerHealthCost > 0f)
+                {
+                    long health = ultimateOwner.Properties[PropertyEnum.Health];
+                    health -= MathHelper.RoundToInt64(powerHealthCost);
+                    health = Math.Max(health, 1);   // Should not be able to kill self with a health cost
+                    ultimateOwner.Properties[PropertyEnum.Health] = health;
+                }
             }
 
-            // TODO: health cost, returning weapon
+            // TODO: remove weapon if needed (e.g. Cap's shield)
         }
 
         private bool PayRecurringCost()
