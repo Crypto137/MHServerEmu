@@ -561,7 +561,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (power == null)
                 return PowerUseResult.AbilityMissing;
 
-            PowerUseResult result = base.ActivatePower(powerRef, ref settings);
+            return base.ActivatePower(powerRef, ref settings);
+        }
+
+        protected override PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
+        {
+            PrototypeId powerRef = power.PrototypeDataRef;
+
+            // TODO: Edge case handling for continuous powers
+
+            PowerUseResult result = base.ActivatePower(power, ref settings);
 
             if (result == PowerUseResult.Success)
             {
@@ -585,8 +594,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (player != null)
                     Region?.AvatarUsedPowerEvent.Invoke(new(player, this, powerRef, settings.TargetEntityId));
             }
-
-            // TODO: NetMessageActivatePowerFailed
+            else
+            {
+                SendActivatePowerFailedMessage(powerRef, result);
+            }
 
             return result;
         }
@@ -1278,6 +1289,25 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Make sure our inventory list is returned to the pool for reuse when we are done
                 ListPool<Inventory>.Instance.Return(inventoryList);
             }
+        }
+
+        private bool SendActivatePowerFailedMessage(PrototypeId powerProtoRef, PowerUseResult result)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "SendActivatePowerFailedMessage(): player == null");
+
+            if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+            {
+                NetMessageActivatePowerFailed activatePowerFailedMessage = NetMessageActivatePowerFailed.CreateBuilder()
+                    .SetAvatarIndex(0)  // TODO: Console couch co-op
+                    .SetPowerPrototypeId((ulong)powerProtoRef)
+                    .SetReason((uint)result)
+                    .Build();
+
+                player.SendMessage(activatePowerFailedMessage);
+            }
+
+            return true;
         }
 
         #endregion
