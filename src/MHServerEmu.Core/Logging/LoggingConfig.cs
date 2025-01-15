@@ -12,13 +12,13 @@ namespace MHServerEmu.Core.Logging
         public bool ConsoleIncludeTimestamps { get; private set; } = true;
         public LoggingLevel ConsoleMinLevel { get; private set; } = LoggingLevel.Trace;
         public LoggingLevel ConsoleMaxLevel { get; private set; } = LoggingLevel.Fatal;
-        public string ConsoleChannels { get; private set; } = "+All";
+        public string ConsoleChannels { get; private set; } = "+Default";
 
         public bool EnableFile { get; private set; } = false;
         public bool FileIncludeTimestamps { get; private set; } = true;
         public LoggingLevel FileMinLevel { get; private set; } = LoggingLevel.Trace;
         public LoggingLevel FileMaxLevel { get; private set; } = LoggingLevel.Fatal;
-        public string FileChannels { get; private set; } = "+All";
+        public string FileChannels { get; private set; } = "+Default";
         public bool FileSplitOutput { get; private set; } = false;
 
         public LogTargetSettings GetConsoleSettings()

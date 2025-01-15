@@ -20,8 +20,11 @@
     public enum LogChannels : ulong
     {
         None,
-        Default,
-        All = unchecked((ulong)-1L)
+        General     = 1ul << 0,
+
+        // Add channels here to enable them by default
+        Default     = General,
+        All         = unchecked((ulong)-1L)
     }
 
     /// <summary>
@@ -29,7 +32,7 @@
     /// </summary>
     public enum LogCategory
     {
-        General,
+        Common,
         NumCategories
     }
 }
