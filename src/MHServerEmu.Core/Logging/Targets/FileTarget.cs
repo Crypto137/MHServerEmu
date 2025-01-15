@@ -13,8 +13,7 @@ namespace MHServerEmu.Core.Logging.Targets
         /// <summary>
         /// Constructs a new <see cref="FileTarget"/> instance with the specified parameters and initializes a <see cref="FileStream"/> to output to.
         /// </summary>
-        public FileTarget(bool includeTimestamps, LoggingLevel minimumLevel, LoggingLevel maximumLevel, string fileName, bool reset = false)
-            : base(includeTimestamps, minimumLevel, maximumLevel)
+        public FileTarget(LogTargetSettings settings, string fileName, bool reset = false) : base(settings)
         {
             string logDirectory = Path.Combine(FileHelper.ServerRoot, "Logs");
             if (Directory.Exists(logDirectory) == false)

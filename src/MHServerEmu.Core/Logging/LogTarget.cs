@@ -5,18 +5,19 @@
     /// </summary>
     public abstract class LogTarget
     {
-        public bool IncludeTimestamps { get; protected set; }
-        public LoggingLevel MinimumLevel { get; protected set; }
-        public LoggingLevel MaximumLevel { get; protected set; }
+        private readonly LogTargetSettings _settings;
+
+        public bool IncludeTimestamps { get => _settings.IncludeTimestamps; }
+        public LoggingLevel MinimumLevel { get => _settings.MinimumLevel; }
+        public LoggingLevel MaximumLevel { get => _settings.MaximumLevel; }
+        public LogChannels Channels { get => _settings.Channels; }
 
         /// <summary>
-        /// Constructs a new <see cref="LogTarget"/> instance with the specified parameters.
+        /// Constructs a new <see cref="LogTarget"/> instance with the specified <see cref="LogTargetSettings"/>.
         /// </summary>
-        public LogTarget(bool includeTimestamps, LoggingLevel minimumLevel, LoggingLevel maximumLevel)
+        public LogTarget(LogTargetSettings settings)
         {
-            IncludeTimestamps = includeTimestamps;
-            MinimumLevel = minimumLevel;
-            MaximumLevel = maximumLevel;
+            _settings = settings;
         }
 
         /// <summary>

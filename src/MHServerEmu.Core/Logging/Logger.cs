@@ -2,16 +2,6 @@
 
 namespace MHServerEmu.Core.Logging
 {
-    public enum LoggingLevel
-    {
-        Trace,
-        Debug,
-        Info,
-        Warn,
-        Error,
-        Fatal
-    }
-
     /// <summary>
     /// Provides logging capabilities.
     /// </summary>
@@ -32,32 +22,50 @@ namespace MHServerEmu.Core.Logging
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Trace"/> message.
         /// </summary>
-        public void Trace(string message) => Log(LoggingLevel.Trace, message);
+        public void Trace(string message, LogChannels channels = LogChannels.Default, LogCategory category = LogCategory.General)
+        {
+            Log(LoggingLevel.Trace, message, channels, category);
+        }
 
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Debug"/> message.
         /// </summary>
-        public void Debug(string message) => Log(LoggingLevel.Debug, message);
+        public void Debug(string message, LogChannels channels = LogChannels.Default, LogCategory category = LogCategory.General)
+        {
+            Log(LoggingLevel.Debug, message, channels, category);
+        }
 
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Info"/> message.
         /// </summary>
-        public void Info(string message) => Log(LoggingLevel.Info, message);
+        public void Info(string message, LogChannels channels = LogChannels.Default, LogCategory category = LogCategory.General)
+        {
+            Log(LoggingLevel.Info, message, channels, category);
+        }
 
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Warn"/> message.
         /// </summary>
-        public void Warn(string message) => Log(LoggingLevel.Warn, message);
+        public void Warn(string message, LogChannels channels = LogChannels.Default, LogCategory category = LogCategory.General)
+        {
+            Log(LoggingLevel.Warn, message, channels, category);
+        }
 
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Error"/> message.
         /// </summary>
-        public void Error(string message) => Log(LoggingLevel.Error, message);
+        public void Error(string message, LogChannels channels = LogChannels.Default, LogCategory category = LogCategory.General)
+        {
+            Log(LoggingLevel.Error, message, channels, category);
+        }
 
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Fatal"/> message.
         /// </summary>
-        public void Fatal(string message) => Log(LoggingLevel.Fatal, message);
+        public void Fatal(string message, LogChannels channels = LogChannels.All, LogCategory category = LogCategory.General)
+        {
+            Log(LoggingLevel.Fatal, message, channels, category);
+        }
 
         #endregion
 
@@ -133,9 +141,9 @@ namespace MHServerEmu.Core.Logging
         /// Logs a message on the specified <see cref="LoggingLevel"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Log(LoggingLevel level, string message)
+        private void Log(LoggingLevel level, string message, LogChannels channels = LogChannels.Default, LogCategory category = LogCategory.General)
         {
-            LogRouter.AddMessage(level, _name, message);
+            LogRouter.AddMessage(level, _name, message, channels, category);
         }
 
         /// <summary>

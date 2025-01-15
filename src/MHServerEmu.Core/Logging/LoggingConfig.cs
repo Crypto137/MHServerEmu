@@ -17,5 +17,27 @@ namespace MHServerEmu.Core.Logging
         public bool FileIncludeTimestamps { get; private set; } = true;
         public LoggingLevel FileMinLevel { get; private set; } = LoggingLevel.Trace;
         public LoggingLevel FileMaxLevel { get; private set; } = LoggingLevel.Fatal;
+
+        public LogTargetSettings GetConsoleSettings()
+        {
+            return new()
+            {
+                IncludeTimestamps = ConsoleIncludeTimestamps,
+                MinimumLevel = ConsoleMinLevel,
+                MaximumLevel = ConsoleMaxLevel,
+                Channels = LogChannels.All  // TODO
+            };
+        }
+
+        public LogTargetSettings GetFileSettings()
+        {
+            return new()
+            {
+                IncludeTimestamps = FileIncludeTimestamps,
+                MinimumLevel = FileMinLevel,
+                MaximumLevel = FileMaxLevel,
+                Channels = LogChannels.All  // TODO
+            };
+        }
     }
 }
