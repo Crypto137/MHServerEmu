@@ -568,9 +568,60 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             PrototypeId powerRef = power.PrototypeDataRef;
 
-            // TODO: Edge case handling for continuous powers
+            // Handle edge cases related to continuous powers and conflicting inputs.
+            // In many ways this mirrors the behavior of CAvatar::TryActivatePower().
 
-            PowerUseResult result = base.ActivatePower(power, ref settings);
+            PowerUseResult result = CanActivatePower(power, settings.TargetEntityId, settings.TargetPosition, settings.Flags, settings.ItemSourceId);
+
+            Power activePower = ActivePower;
+
+            // This is a continuous power that will be activated later
+            if (result == PowerUseResult.MinimumReactivateTime && activePower != null && powerRef == ContinuousPowerDataRef)
+                return result;
+
+            if ((result == PowerUseResult.PowerInProgress || result == PowerUseResult.MinimumReactivateTime) && activePower != null)
+            {
+                // Another continuous power case that will be activated on its own later
+                if (powerRef == activePower.PrototypeDataRef && powerRef == ContinuousPowerDataRef)
+                    return result;
+
+                // Try to end the current power if it's different
+                if (powerRef != activePower.PrototypeDataRef)
+                {
+                    EndPowerFlags endPowerFlags = EndPowerFlags.ExplicitCancel | EndPowerFlags.ClientRequest;
+
+                    // Interrupt movement client-side (the client is movement authoritative for avatars)
+                    if (IsMovementAuthoritative == false && power.IsPartOfAMovementPower())
+                        endPowerFlags |= EndPowerFlags.Interrupting;
+
+                    activePower.EndPower(endPowerFlags);
+                }
+
+                // Now do this again
+                PowerUseResult secondTryResult = CanActivatePower(power, settings.TargetEntityId, settings.TargetPosition, settings.Flags, settings.ItemSourceId);
+                if (secondTryResult != PowerUseResult.Success)
+                {
+                    // If we failed to cancel the current power, try to delay the activation of the new power
+
+                    // TODO: delayActivatePower()
+                }
+                else
+                {
+                    result = secondTryResult;
+                }
+            }
+
+            // TODO: More handling
+
+            // Failed validation
+            if (result != PowerUseResult.Success)
+            {
+                SendActivatePowerFailedMessage(powerRef, result);
+                return result;
+            }
+
+            // Now do the actual activation
+            result = base.ActivatePower(power, ref settings);
 
             if (result == PowerUseResult.Success)
             {
