@@ -276,11 +276,10 @@ namespace MHServerEmu.Games.Entities
             EntityActionComponent?.CancelAll();
 
             bool notMissile = this is not Missile;
-            // HACK: LOOT AND XP
+            
+            // Loot and XP
             if (this is Agent agent && notMissile && agent is not Avatar && agent.IsTeamUpAgent == false)
-            {
                 AwardKillLoot(killer, killFlags, directKiller);
-            }
 
             var region = Region;
 
@@ -291,13 +290,14 @@ namespace MHServerEmu.Games.Entities
                 region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
 
-            // Set death state properties
-            Properties[PropertyEnum.IsDead] = true;
-
+            // Remove navi influence if needed
             if (worldEntityProto.RemoveNavInfluenceOnKilled)
                 Properties[PropertyEnum.NoEntityCollide] = true;
 
             SpawnSpec?.OnDefeat(killer, false);
+
+            // Remove conditions
+            ConditionCollection?.RemoveCancelOnKilledConditions();
 
             // Send kill message to clients
             var killMessage = NetMessageEntityKill.CreateBuilder()

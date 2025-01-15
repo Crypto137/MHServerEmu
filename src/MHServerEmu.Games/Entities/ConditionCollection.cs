@@ -643,6 +643,16 @@ namespace MHServerEmu.Games.Entities
             RemoveConditionsFiltered(ConditionFilter.IsConditionWithKeywordFunc, keywordProto);
         }
 
+        public void RemoveCancelOnHitConditions()
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnHitFunc);
+        }
+
+        public void RemoveCancelOnKilledConditions()
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnKilledFunc);
+        }
+
         public bool PauseCondition(Condition condition, bool notifyClient)
         {
             if (condition.IsPaused)

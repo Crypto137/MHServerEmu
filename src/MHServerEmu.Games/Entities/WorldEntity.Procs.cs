@@ -95,7 +95,9 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
         {
+            // TODO
 
+            ConditionCollection?.RemoveCancelOnHitConditions();
         }
 
         public void TryActivateOnBlockProcs(PowerResults powerResults)  // 4

@@ -17,6 +17,9 @@ namespace MHServerEmu.Games.Powers.Conditions
         public static Func<PropertyEnum> IsConditionWithPropertyOfTypeFunc { get; } = IsConditionWithPropertyOfType;
         public static Func<ConditionType> IsConditionOfTypeFunc { get; } = IsConditionOfType;
 
+        public static Func IsConditionCancelOnHitFunc { get; } = IsConditionCancelOnHit;
+        public static Func IsConditionCancelOnKilledFunc { get; } = IsConditionCancelOnKilled;        
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="Condition"/> was created by the specified <see cref="Power"/>.
         /// </summary>
@@ -47,6 +50,16 @@ namespace MHServerEmu.Games.Powers.Conditions
         private static bool IsConditionOfType(Condition condition, ConditionType conditionType)
         {
             return condition.ConditionPrototype.ConditionType == conditionType;
+        }
+
+        private static bool IsConditionCancelOnHit(Condition condition)
+        {
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnHit);
+        }
+
+        private static bool IsConditionCancelOnKilled(Condition condition)
+        {
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnKilled);
         }
     }
 }
