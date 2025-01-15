@@ -139,12 +139,12 @@ namespace MHServerEmu.Games.Entities
             CancelKillEvent();
             CancelDestroyEvent();
 
-            // Reset health
+            // Reset properties
             Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-
-            // Remove death state properties
-            Properties[PropertyEnum.IsDead] = false;
+            Properties[PropertyEnum.WeaponMissing] = false;
             Properties[PropertyEnum.NoEntityCollide] = false;
+
+            // Reset state
             SetState(PrototypeId.Invalid);
 
             // Send resurrection message

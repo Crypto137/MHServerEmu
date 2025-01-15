@@ -1569,9 +1569,12 @@ namespace MHServerEmu.Games.Powers
                     health = Math.Max(health, 1);   // Should not be able to kill self with a health cost
                     ultimateOwner.Properties[PropertyEnum.Health] = health;
                 }
-            }
 
-            // TODO: remove weapon if needed (e.g. Cap's shield)
+                // Weapon cost for bounce powers
+                // NOTE: Weapon costs for non-bounce powers are handled by missiles themselves.
+                if (Properties[PropertyEnum.PowerUsesReturningWeapon] && Properties[PropertyEnum.BounceCount] > 0)
+                    ultimateOwner.Properties[PropertyEnum.WeaponMissing] = true;
+            }
         }
 
         private bool PayRecurringCost()
@@ -4626,7 +4629,18 @@ namespace MHServerEmu.Games.Powers
 
                 game.NetworkManager.SendMessageToInterested(bounceMessageBuilder.Build(), ultimateOwner, AOINetworkPolicyValues.AOIChannelProximity);
 
-                // TODO: Return weapon to the owner (shield, etc.)
+                // Return bouncing weapon to the owner (shield, etc.)
+                if (payload.PowerPrototype.Properties[PropertyEnum.PowerUsesReturningWeapon])
+                {
+                    TimeSpan delay = TimeSpan.Zero;
+                    if (ultimateOwner.IsInWorld)
+                    {
+                        float distance = Vector3.Length(ultimateOwner.RegionLocation.Position - payload.TargetPosition);
+                        delay = TimeSpan.FromSeconds(distance / speed);
+                    }
+
+                    ultimateOwner.ScheduleWeaponReturnEvent(delay);
+                }
             }
 
             // Bouncing over, proceed to ending the power

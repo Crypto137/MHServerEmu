@@ -3350,6 +3350,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void ScheduleWeaponReturnEvent(TimeSpan delay)
+        {
+            EventPointer<ScheduledWeaponReturnEvent> scheduledWeaponReturn = new();
+            ScheduleEntityEvent(scheduledWeaponReturn, delay);
+        }
+
         public void CancelExitWorldEvent()
         {
             if (_exitWorldEvent.IsValid)
@@ -3386,6 +3392,12 @@ namespace MHServerEmu.Games.Entities
                 _param1.Clear();    // Clear to prevent leaking (TODO: PowerResults pooling)
                 return true;
             }
+        }
+
+        private class ScheduledWeaponReturnEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => t.Properties[PropertyEnum.WeaponMissing] = false;
+            public override bool OnCancelled() => _eventTarget.Properties[PropertyEnum.WeaponMissing] = false;
         }
 
         private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>
