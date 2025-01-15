@@ -1270,7 +1270,17 @@ namespace MHServerEmu.Games.Entities
             {
                 if (power.IsComboEffect())
                 {
-                    // TODO
+                    // Restore the triggering power as the active one if its exclusive activation
+                    PrototypeId triggeringPowerRef = power.Properties[PropertyEnum.TriggeringPowerRef, powerProtoRef];
+                    if (triggeringPowerRef != PrototypeId.Invalid)
+                    {
+                        Power triggeringPower = GetPower(triggeringPowerRef);
+                        if (triggeringPower != null && triggeringPower.IsActive && triggeringPower.IsExclusiveActivation())
+                        {
+                            ActivePowerRef = triggeringPowerRef;
+                            return;
+                        }
+                    }
                 }
 
                 ActivePowerRef = PrototypeId.Invalid;
