@@ -34,13 +34,13 @@ namespace MHServerEmu.Games.Populations
         public SpawnEvent SpawnEvent;
         public SpawnScheduler Scheduler;
 
-        public bool SpawnByMarker()
+        public bool SpawnByMarker(List<WorldEntity> entities)
         {
             SpawnTarget spawnTarget = new(SpawnLocation.Region)
             {
                 Type = SpawnTargetType.Marker
             };
-            return SpawnObject(spawnTarget, new());
+            return SpawnObject(spawnTarget, entities);
         }
 
         public bool SpawnInCell(Cell cell)

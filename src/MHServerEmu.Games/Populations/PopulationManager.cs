@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Populations
             if (eventTime == TimeSpan.MaxValue) return false;
 
             if (eventTime != TimeSpan.Zero)
-                timeOffset = Clock.Max(Game.CurrentTime - eventTime, maxTimeOffset);
+                timeOffset = Clock.Max(eventTime - Game.RealGameTime, maxTimeOffset);
             else
                 timeOffset = maxTimeOffset;
 
@@ -181,10 +181,13 @@ namespace MHServerEmu.Games.Populations
                 {
                     scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
                     markerEvent.Get().Initialize(this, markerRef);
-                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{_scheduledCount++}]");
+                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
                 }
                 else if (markerEvent.Get().FireTime > eventTime)
+                {
+                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
                     scheduler.RescheduleEvent(markerEvent, timeOffset);
+                }
             }
         }
 
@@ -218,6 +221,9 @@ namespace MHServerEmu.Games.Populations
                     schedulerPicker.Add(scheduler);
             }
 
+            foreach (var scheduler in LocationSchedulers)
+                if (scheduler.Count == 0) scheduler.PopFailedObjects();
+
             LocationSchedule();
         }
 
@@ -243,6 +249,9 @@ namespace MHServerEmu.Games.Populations
                         if (scheduler.CanSpawn(currentTime, critical))
                             scheduler.ScheduleMarkerObject(critical);
                 }
+
+                foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
+                    if (scheduler.Count == 0) scheduler.PopFailedObjects();
             }
 
             MarkerSchedule(markerRef);
