@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.GameData.Calligraphy
 {
@@ -50,8 +51,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         {
             if (position < MinPosition)
                 Logger.Warn($"GetAt(): Curve position {position} below min of {MinPosition}, curve {this}");
-
-            if (position > MaxPosition)
+            else if (position > MaxPosition)
                 Logger.Warn($"GetAt(): Curve position {position} above max of {MaxPosition}, curve {this}");
 
             position = Math.Clamp(position, MinPosition, MaxPosition);
@@ -64,13 +64,29 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         public int GetIntAt(int position)
         {
-            return (int)MathF.Round(GetAt(position));
+            return MathHelper.RoundToInt(GetAt(position));
         }
 
         public bool GetIntAt(int position, out int value)
         {
-            value = GetIntAt(position);
-            return true;
+            bool isValid = true;
+
+            if (position < MinPosition)
+            {
+                Logger.Warn($"GetAt(): Curve position {position} below min of {MinPosition}, curve {this}");
+                isValid = false;
+            }
+            else if (position > MaxPosition)
+            {
+                Logger.Warn($"GetAt(): Curve position {position} above max of {MaxPosition}, curve {this}");
+                isValid = false;
+            }
+
+            position = Math.Clamp(position, MinPosition, MaxPosition);
+            int index = position - MinPosition;
+            value = MathHelper.RoundToInt(_values[index]);
+
+            return isValid;
         }
 
         /// <summary>
@@ -78,13 +94,29 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         public long GetInt64At(int position)
         {
-            return (long)MathF.Round(GetAt(position));
+            return MathHelper.RoundToInt64(GetAt(position));
         }
 
         public bool GetInt64At(int position, out long value)
         {
-            value = GetInt64At(position);
-            return true;
+            bool isValid = true;
+
+            if (position < MinPosition)
+            {
+                Logger.Warn($"GetAt(): Curve position {position} below min of {MinPosition}, curve {this}");
+                isValid = false;
+            }
+            else if (position > MaxPosition)
+            {
+                Logger.Warn($"GetAt(): Curve position {position} above max of {MaxPosition}, curve {this}");
+                isValid = false;
+            }
+
+            position = Math.Clamp(position, MinPosition, MaxPosition);
+            int index = position - MinPosition;
+            value = MathHelper.RoundToInt64(_values[index]);
+
+            return isValid;
         }
 
         /// <summary>
@@ -115,7 +147,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// </summary>
         public int IntegrateDiscreteInt(int start, int end)
         {
-            return (int)MathF.Round(IntegrateDiscrete(start, end));
+            return MathHelper.RoundToInt(IntegrateDiscrete(start, end));
         }
 
         /// <summary>

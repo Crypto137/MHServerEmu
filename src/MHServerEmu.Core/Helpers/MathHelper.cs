@@ -73,7 +73,15 @@
             return value & ~(value - 1);
         }
 
-        public static int RoundToInt(float value) // TODO check where it used
+        public static float Round(float value)
+        {
+            if (value < 0.0f)
+                return (int)(value - 0.5f);
+            else
+                return (int)(value + 0.5f);
+        }
+
+        public static int RoundToInt(float value)
         {
             if (value < 0.0f)
                 return (int)(value - 0.5f);

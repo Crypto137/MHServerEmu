@@ -1624,10 +1624,10 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 // Calculate damage delta normally
-                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical];
-                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy];
-                healthDelta -= (long)(float)powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental];
-                healthDelta += (long)(float)powerResults.Properties[PropertyEnum.Healing];
+                healthDelta -= MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical]);
+                healthDelta -= MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy]);
+                healthDelta -= MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental]);
+                healthDelta += MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Healing]);
             }
 
             // Check for invulnerability
@@ -1660,7 +1660,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Now apply the health delta
-            health += (long)MathF.Round(healthDelta);
+            health += healthDelta;
             health = Math.Clamp(health, Properties[PropertyEnum.HealthMin], Properties[PropertyEnum.HealthMaxOther]);
 
             // HACK: Avatars should be invulnerable during the tutorial via a region-wide passive power that sets HealthMin
@@ -2379,7 +2379,7 @@ namespace MHServerEmu.Games.Entities
                     {
                         long oldHealthMax = oldValue;
                         float ratio = Math.Min(MathHelper.Ratio(health, oldHealthMax), 1f);
-                        long newHealth = (long)Math.Round((long)newValue * ratio);
+                        long newHealth = MathHelper.RoundToInt64((long)newValue * ratio);
 
                         Properties[PropertyEnum.Health] = newHealth;
                     }
