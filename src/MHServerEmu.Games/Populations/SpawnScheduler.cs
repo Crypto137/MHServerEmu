@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -96,8 +97,14 @@ namespace MHServerEmu.Games.Populations
             var populationObject = Pop(critical);
             if (populationObject != null)
             {
-                if (populationObject.SpawnByMarker())
+                List<WorldEntity> entities = new();
+                if (populationObject.SpawnByMarker(entities))
+                {
+                    if (PopulationManager.Debug && entities.Count > 0) 
+                        Logger.Warn($"SpawnByMarker {entities[0].RegionLocation.Position} {_criticalQueue.Count} {_regularQueue.Count}");
+                    
                     OnSpawnedPopulation(populationObject);
+                }
                 else if (populationObject.RemoveOnSpawnFail == false)
                     PushFailedObject(populationObject);
             }
@@ -146,7 +153,7 @@ namespace MHServerEmu.Games.Populations
 
             IEnumerable<Area> spawnAreas;
             if (populationObject.SpawnEvent is PopulationAreaSpawnEvent popEvent)
-                spawnAreas = new Area[] { popEvent.Area };
+                spawnAreas = [popEvent.Area];
             else
                 spawnAreas = region.IterateAreas();
 
@@ -169,14 +176,23 @@ namespace MHServerEmu.Games.Populations
         public void PushFailedObject(PopulationObject populationObject)
         {
             if (PopulationManager.Debug) Logger.Trace($"Failed Spawn {populationObject}");
-            // FailedObjects.Enqueue(populationObject);
+            FailedObjects.Enqueue(populationObject);
         }
 
         public void PopFailedObjects()
         {
-            // we can retry spawn failed object but do we need to???
+            if (PopulationManager.Debug && FailedObjects.Count > 0) 
+                Logger.Trace($"PopFailedObjects [{FailedObjects.Count}]");
+
+            var game = SpawnEvent.Game;
+
             while (FailedObjects.Count > 0)
-                Push(FailedObjects.Dequeue());
+            {
+                var popObject = FailedObjects.Dequeue();
+                var spawnTime = TimeSpan.FromMilliseconds(game.Random.Next(1000));
+                popObject.Time = game.CurrentTime + spawnTime;
+                Push(popObject);
+            }
         }
     }
 
