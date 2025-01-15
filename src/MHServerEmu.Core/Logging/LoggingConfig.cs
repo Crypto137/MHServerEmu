@@ -12,11 +12,14 @@ namespace MHServerEmu.Core.Logging
         public bool ConsoleIncludeTimestamps { get; private set; } = true;
         public LoggingLevel ConsoleMinLevel { get; private set; } = LoggingLevel.Trace;
         public LoggingLevel ConsoleMaxLevel { get; private set; } = LoggingLevel.Fatal;
+        public string ConsoleChannels { get; private set; } = "+All";
 
         public bool EnableFile { get; private set; } = false;
         public bool FileIncludeTimestamps { get; private set; } = true;
         public LoggingLevel FileMinLevel { get; private set; } = LoggingLevel.Trace;
         public LoggingLevel FileMaxLevel { get; private set; } = LoggingLevel.Fatal;
+        public string FileChannels { get; private set; } = "+All";
+        public bool FileSplitOutput { get; private set; } = false;
 
         public LogTargetSettings GetConsoleSettings()
         {
@@ -25,7 +28,7 @@ namespace MHServerEmu.Core.Logging
                 IncludeTimestamps = ConsoleIncludeTimestamps,
                 MinimumLevel = ConsoleMinLevel,
                 MaximumLevel = ConsoleMaxLevel,
-                Channels = LogChannels.All  // TODO
+                Channels = ParseChannels(ConsoleChannels)
             };
         }
 
@@ -36,8 +39,34 @@ namespace MHServerEmu.Core.Logging
                 IncludeTimestamps = FileIncludeTimestamps,
                 MinimumLevel = FileMinLevel,
                 MaximumLevel = FileMaxLevel,
-                Channels = LogChannels.All  // TODO
+                Channels = ParseChannels(FileChannels)
             };
+        }
+
+        private LogChannels ParseChannels(string channelString)
+        {
+            LogChannels channels = LogChannels.None;
+
+            string[] tokens = channelString.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (string token in tokens)
+            {
+                ReadOnlySpan<char> tokenChannelName = token.AsSpan(1, token.Length - 1);
+                if (Enum.TryParse(tokenChannelName, true, out LogChannels tokenChannel) == false)
+                    continue;
+
+                switch (token[0])
+                {
+                    case '+':
+                        channels |= tokenChannel;
+                        break;
+
+                    case '-':
+                        channels &= ~tokenChannel;
+                        break;
+                }
+            }
+
+            return channels;
         }
     }
 }
