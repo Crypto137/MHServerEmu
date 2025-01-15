@@ -455,20 +455,57 @@ namespace MHServerEmu.Games.Entities
 
         protected override PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
-            var result = base.ActivatePower(power, ref settings);
-            if (result != PowerUseResult.Success && result != PowerUseResult.ExtraActivationFailed)
+            PowerUseResult result = base.ActivatePower(power, ref settings);
+
+            if (result == PowerUseResult.Success)
             {
-                Logger.Warn($"ActivatePower(): Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
-                ActivePowerRef = PrototypeId.Invalid;
+                // Set power as active
+                if (power.IsExclusiveActivation())
+                {
+                    if (IsInWorld)
+                        ActivePowerRef = power.PrototypeDataRef;
+                    else
+                        Logger.Warn($"ActivatePower(): Trying to set the active power for an Agent that is not in the world. " +
+                            $"Check to see if there's *anything* that can happen in the course of executing the power that can take them out of the world.\n Agent: {this}");
+                }
+
+                // Try to activate OnPowerUse procs
+                if (settings.Flags.HasFlag(PowerActivationSettingsFlags.NoOnPowerUseProcs) == false)
+                {
+                    switch (power.GetPowerCategory())
+                    {
+                        case PowerCategoryType.ComboEffect:
+                            TryActivateOnPowerUseProcs(ProcTriggerType.OnPowerUseComboEffect, power, ref settings);
+                            break;
+
+                        case PowerCategoryType.ItemPower:
+                            TryActivateOnPowerUseProcs(ProcTriggerType.OnPowerUseConsumable, power, ref settings);
+                            break;
+
+                        case PowerCategoryType.GameFunctionPower:
+                            TryActivateOnPowerUseProcs(ProcTriggerType.OnPowerUseGameFunction, power, ref settings);
+                            break;
+
+                        case PowerCategoryType.NormalPower:
+                            TryActivateOnPowerUseProcs(ProcTriggerType.OnPowerUseNormal, power, ref settings);
+                            break;
+                    }
+                }
             }
-            else if (power.IsExclusiveActivation())
+            else
             {
-                if (IsInWorld)
-                    ActivePowerRef = power.PrototypeDataRef;
-                else
-                    Logger.Warn($"ActivatePower(): Trying to set the active power for an Agent that is not in the world. " +
-                        $"Check to see if there's *anything* that can happen in the course of executing the power that can take them out of the world.\n Agent: {this}");
+                // Extra activation failing is valid
+                if (result != PowerUseResult.ExtraActivationFailed)
+                {
+                    Logger.Warn($"ActivatePower(): Power [{power}] for entity [{this}] failed to properly activate. Result = {result}");
+                    ActivePowerRef = PrototypeId.Invalid;
+                }
+
+                // Recover from throwing if failed to throw for whatever reason
+                if (power == GetThrowablePower())
+                    UnassignPower(power.PrototypeDataRef);
             }
+
             return result;
         }
 

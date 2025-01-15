@@ -208,6 +208,11 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
+        public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power power, ref PowerActivationSettings settings)  // 58-61
+        {
+            // TODO
+        }
+
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
         {
             // TODO
