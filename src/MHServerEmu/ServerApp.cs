@@ -185,7 +185,7 @@ namespace MHServerEmu
             // Attach file log target
             if (config.EnableFile)
             {
-                FileTarget target = new(config.GetFileSettings(), $"MHServerEmu_{StartupTime.ToString(FileHelper.FileNameDateFormat)}.log", false);
+                FileTarget target = new(config.GetFileSettings(), $"MHServerEmu_{StartupTime.ToString(FileHelper.FileNameDateFormat)}", config.FileSplitOutput, false);
                 LogManager.AttachTarget(target);
             }
 

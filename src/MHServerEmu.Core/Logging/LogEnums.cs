@@ -33,6 +33,7 @@
     public enum LogCategory
     {
         Common,
+        Chat,
         NumCategories
     }
 }
