@@ -7,21 +7,40 @@ namespace MHServerEmu.Core.Logging.Targets
     /// </summary>
     public class FileTarget : LogTarget, IDisposable
     {
-        private FileStream _fileStream;
-        private StreamWriter _writer;
+        private bool _splitOutput;
+        private StreamWriter[] _writers;
 
         /// <summary>
-        /// Constructs a new <see cref="FileTarget"/> instance with the specified parameters and initializes a <see cref="FileStream"/> to output to.
+        /// Constructs a new <see cref="FileTarget"/> instance with the specified parameters.
         /// </summary>
-        public FileTarget(bool includeTimestamps, LoggingLevel minimumLevel, LoggingLevel maximumLevel, string fileName, bool reset = false)
-            : base(includeTimestamps, minimumLevel, maximumLevel)
+        public FileTarget(LogTargetSettings settings, string fileName, bool splitOutput, bool append = true) : base(settings)
         {
+            _splitOutput = splitOutput;
+
             string logDirectory = Path.Combine(FileHelper.ServerRoot, "Logs");
             if (Directory.Exists(logDirectory) == false)
                 Directory.CreateDirectory(logDirectory);
 
-            _fileStream = new(Path.Combine(logDirectory, fileName), reset ? FileMode.Create : FileMode.Append, FileAccess.Write, FileShare.Read);
-            _writer = new(_fileStream) { AutoFlush = true };
+            FileMode fileMode = append ? FileMode.Append : FileMode.Create;
+
+            if (splitOutput)
+            {
+                // Create separate writers for each category
+                _writers = new StreamWriter[(int)LogCategory.NumCategories];
+                for (LogCategory category = 0; category < LogCategory.NumCategories; category++)
+                {
+                    string filePath = Path.Combine(logDirectory, $"{fileName}_{category}.log");
+                    FileStream fs = new(filePath, fileMode, FileAccess.Write, FileShare.Read);
+                    _writers[(int)category] = new(fs) { AutoFlush = true };
+                }
+            }
+            else
+            {
+                // Create a single writer for all categories
+                string filePath = Path.Combine(logDirectory, $"{fileName}.log");
+                FileStream fs = new(filePath, fileMode, FileAccess.Write, FileShare.Read);
+                _writers = [new(fs) { AutoFlush = true }];
+            }
         }
 
         /// <summary>
@@ -29,8 +48,11 @@ namespace MHServerEmu.Core.Logging.Targets
         /// </summary>
         public override void ProcessLogMessage(in LogMessage message)
         {
-            if (_disposed == false)
-                _writer.WriteLine(message.ToString(IncludeTimestamps));
+            if (_disposed)
+                return;
+
+            int index = _splitOutput ? (int)message.Category : 0;
+            _writers[index].WriteLine(message.ToString(IncludeTimestamps));
         }
 
         #region IDisposable Implementation
@@ -49,14 +71,11 @@ namespace MHServerEmu.Core.Logging.Targets
 
             if (disposing)
             {
-                _writer.Close();
-                _writer.Dispose();
-                _fileStream.Close();
-                _fileStream.Dispose();
-            }
+                foreach (StreamWriter writer in _writers)
+                    writer.Close();
 
-            _writer = null;
-            _fileStream = null;
+                _writers = Array.Empty<StreamWriter>();
+            }
 
             _disposed = true;
         }

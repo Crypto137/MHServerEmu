@@ -16,15 +16,22 @@ namespace MHServerEmu.Core.Logging
         public string Logger { get; }
         public string Message { get; }
 
+        // Additional metadata for filtering
+        public LogChannels Channels { get; }
+        public LogCategory Category { get; }
+
         /// <summary>
         /// Constructs a new <see cref="LogMessage"/> instance with the specified parameters.
         /// </summary>
-        public LogMessage(LoggingLevel level, string logger, string message)
+        public LogMessage(LoggingLevel level, string logger, string message, LogChannels channels, LogCategory category)
         {
             Timestamp = LogManager.LogTimeNow;
             Level = level;
             Logger = logger;
             Message = message;
+
+            Channels = channels;
+            Category = category;
         }
 
         public override string ToString()
@@ -37,7 +44,7 @@ namespace MHServerEmu.Core.Logging
         /// </summary>
         public string ToString(bool includeTimestamps)
         {
-            lock (StringBuilder)    // This shouldn't be called from multiple threads, but adding a lock here just in case
+            lock (StringBuilder)    // This shouldn't be called from multiple threads unless in synchronous mode
             {
                 if (includeTimestamps)
                     StringBuilder.Append($"[{Timestamp.ToString(TimeFormat)}] ");
