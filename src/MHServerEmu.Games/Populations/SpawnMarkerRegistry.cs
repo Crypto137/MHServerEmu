@@ -305,7 +305,7 @@ namespace MHServerEmu.Games.Populations
                     foreach (var testReservation in list)
                     {
                         if (spawnAreas.Count > 0 && spawnAreas.Contains(spawnArea) == false) continue;
-                        if (TestReservation(testReservation, flag))
+                        if (TestReservation(testReservation, flag, true))
                             picker.Add(testReservation);
                     }
                 }
@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.Populations
                     if (_areaLookup.TryGetValue(spawnAreaRef, out var spawnMap) == false || spawnMap == null) continue;
                     if (spawnMap.TryGetValue(markerRef, out var list) == false || list == null) continue;
                     foreach (var testReservation in list)
-                        if (TestReservation(testReservation, flag))
+                        if (TestReservation(testReservation, flag, true))
                             picker.Add(testReservation);
                 }
             }
@@ -326,7 +326,7 @@ namespace MHServerEmu.Games.Populations
             {
                 if (_regionLookup.TryGetValue(markerRef, out var list) && list != null)
                     foreach (var testReservation in list)
-                        if (TestReservation(testReservation, flag))
+                        if (TestReservation(testReservation, flag, true))
                             picker.Add(testReservation);
             }
             return picker.Empty() == false;
@@ -372,12 +372,16 @@ namespace MHServerEmu.Games.Populations
             return null;
         }
 
-        public static bool TestReservation(SpawnReservation reservation, SpawnFlags flag)
+        public static bool TestReservation(SpawnReservation reservation, SpawnFlags flag, bool checkRespawn = false)
         {
             if (reservation.State != MarkerState.Free) return false;
             if (flag.HasFlag(SpawnFlags.IgnoreSimulated) && reservation.Simulated) return false;
             if (flag.HasFlag(SpawnFlags.IgnoreBlackout) == false && reservation.BlackOutZones > 0) return false;
-            // TODO other flags;
+            if (checkRespawn && reservation.RespawnDelay != TimeSpan.Zero)
+            {
+                var reservationTime = Game.Current.CurrentTime - reservation.LastFreeTime;
+                if (reservationTime < reservation.RespawnDelay) return false;
+            }
             return true;
         }
 

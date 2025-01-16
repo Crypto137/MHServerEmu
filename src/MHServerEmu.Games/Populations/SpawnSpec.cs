@@ -473,6 +473,7 @@ namespace MHServerEmu.Games.Populations
         private void ReleaseRespawn()
         {
             var manager = PopulationManager;
+            var game = manager.Game;
 
             // Clear reserved place
             if (Reservation != null) Reservation.State = MarkerState.Free;
@@ -488,8 +489,10 @@ namespace MHServerEmu.Games.Populations
             // Reschedule SpawnEvent
             if (SpawnEvent != null && SpawnEvent.RespawnObject)
             {
-                var game = manager.Game;
                 var spawnTime = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS + game.Random.Next(1000));
+
+                Reservation.RespawnDelay = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS);
+                Reservation.LastFreeTime = game.CurrentTime;
 
                 if (PopulationManager.Debug) 
                     Logger.Debug($"Reschedule SpawnEvent {PopulationObject.MarkerRef.GetNameFormatted()} {spawnTime}");

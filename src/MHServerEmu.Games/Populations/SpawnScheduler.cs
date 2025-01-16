@@ -184,8 +184,15 @@ namespace MHServerEmu.Games.Populations
             if (PopulationManager.Debug && FailedObjects.Count > 0) 
                 Logger.Trace($"PopFailedObjects [{FailedObjects.Count}]");
 
+            var game = SpawnEvent.Game;
+
             while (FailedObjects.Count > 0)
-                Push(FailedObjects.Dequeue());
+            {
+                var popObject = FailedObjects.Dequeue();
+                var spawnTime = TimeSpan.FromMilliseconds(game.Random.Next(1000));
+                popObject.Time = game.CurrentTime + spawnTime;
+                Push(popObject);
+            }
         }
     }
 
