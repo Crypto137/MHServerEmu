@@ -613,10 +613,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // TODO: More handling
 
-            // Failed validation
-            if (result != PowerUseResult.Success)
+            // Failed validation despite everything above, clean up and bail out
+            if (result != PowerUseResult.Success && result != PowerUseResult.TargetIsMissing)
             {
+                // Notify the client
                 SendActivatePowerFailedMessage(powerRef, result);
+
+                // Clean up throwable powers
+                if (power.IsThrowablePower() || power.GetPowerCategory() == PowerCategoryType.ThrowableCancelPower)
+                    UnassignPower(powerRef);
+
                 return result;
             }
 
@@ -626,11 +632,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (result == PowerUseResult.Success)
             {
                 PowerPrototype powerProto = power.Prototype;
+
+                // Stop endurance regen if needed
                 if (powerProto.DisableEnduranceRegenTypes.HasValue() && powerProto.DisableEnduranceRegenOnActivate)
                 {
                     foreach (ManaType manaType in powerProto.DisableEnduranceRegenTypes)
                     {
-                        // Disable endurance regen
                         Properties[PropertyEnum.DisableEnduranceRegen, manaType] = true;
 
                         // Cancel scheduled re-enablement (this will be rescheduled after the power is over)
@@ -641,12 +648,15 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
                 }
 
+                // Invoke the AvatarUsedPowerEvent
                 var player = GetOwnerOfType<Player>();
                 if (player != null)
                     Region?.AvatarUsedPowerEvent.Invoke(new(player, this, powerRef, settings.TargetEntityId));
             }
             else
             {
+                // Activation failed despite the validation, something went wrong
+                Logger.Warn($"ActivatePower(): Activation failed for power [{power}] on [{this}] despite passing preliminary validation!");
                 SendActivatePowerFailedMessage(powerRef, result);
             }
 
@@ -1340,6 +1350,30 @@ namespace MHServerEmu.Games.Entities.Avatars
                 // Make sure our inventory list is returned to the pool for reuse when we are done
                 ListPool<Inventory>.Instance.Return(inventoryList);
             }
+        }
+
+        protected override bool CanThrow(WorldEntity throwableEntity)
+        {
+            if (throwableEntity == null) return Logger.WarnReturn(false, "CanThrow(): throwableEntity == null");
+
+            PrototypeId throwablePowerProtoRef = throwableEntity.Properties[PropertyEnum.ThrowablePower];
+            PowerPrototype throwablePowerProto = throwablePowerProtoRef.As<PowerPrototype>();
+            if (throwablePowerProto == null) return Logger.WarnReturn(false, "CanThrow(): throwableEntity == null");
+
+            bool success = true;
+
+            // Validate
+            success &= IsAliveInWorld;
+            success &= IsExecutingPower == false;
+            success &= throwableEntity.IsThrowableBy(this);
+            success &= InInteractRange(throwableEntity, InteractionMethod.Throw);
+            success &= CanTriggerPower(throwablePowerProto, null, PowerActivationSettingsFlags.None) == PowerUseResult.Success;
+
+            // Cancel the throw power on the client to prevent it from getting stuck
+            if (success == false)
+                SendActivatePowerFailedMessage(throwablePowerProtoRef, PowerUseResult.GenericError);
+            
+            return success;
         }
 
         private bool SendActivatePowerFailedMessage(PrototypeId powerProtoRef, PowerUseResult result)

@@ -401,6 +401,10 @@ namespace MHServerEmu.Games.Entities
             if (throwableCancelPower != null)
                 UnassignPower(throwableCancelPower.PrototypeDataRef);
 
+            // Do avatar-specific validation for the entity we are about to throw
+            if (CanThrow(throwableEntity) == false)
+                return false;
+
             // Record throwable entity in agent's properties
             Properties[PropertyEnum.ThrowableOriginatorEntity] = entityId;
             Properties[PropertyEnum.ThrowableOriginatorAssetRef] = throwableEntity.GetEntityWorldAsset();
@@ -450,6 +454,12 @@ namespace MHServerEmu.Games.Entities
             Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
             Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
 
+            return true;
+        }
+
+        protected virtual bool CanThrow(WorldEntity throwableEntity)
+        {
+            // Overriden in Avatar
             return true;
         }
 
