@@ -347,6 +347,66 @@ namespace MHServerEmu.Games.Entities
             return power.CanActivate(target, targetPosition, flags);
         }
 
+        public override PowerUseResult CanTriggerPower(PowerPrototype powerProto, Power power, PowerActivationSettingsFlags flags)
+        {
+            // Agent-specific validation
+            if (powerProto.Activation != PowerActivationType.Passive &&
+                Power.IsProcEffect(powerProto) == false &&
+                Power.IsComboEffect(powerProto) == false)
+            {
+                // Check if in world (NOTE: This is validated in a separate method called CanExecutePowers() in the client)
+                if (IsInWorld == false)
+                    return PowerUseResult.RestrictiveCondition;
+
+                // Check for power-specific locks
+                if (Properties[PropertyEnum.SinglePowerLock, powerProto.DataRef])
+                    return PowerUseResult.RestrictiveCondition;
+
+                // Check for status effects that would prevent using this power
+                if (powerProto.Properties == null)
+                    return Logger.WarnReturn(PowerUseResult.GenericError, "CanTriggerPower(): powerProto.Properties == null");
+
+                if ((HasPowerPreventionStatus() || HasAIControlPowerLock) &&
+                    powerProto.Properties[PropertyEnum.NegStatusUsable] == false &&
+                    powerProto.PowerCategory != PowerCategoryType.ThrowablePower &&
+                    powerProto.PowerCategory != PowerCategoryType.ThrowableCancelPower)
+                {
+                    return PowerUseResult.RestrictiveCondition;
+                }
+
+                // Check for tutorial locks
+                if (IsInTutorialPowerLock && powerProto.PowerCategory != PowerCategoryType.GameFunctionPower)
+                    return PowerUseResult.RestrictiveCondition;
+
+                // Check for keyword locks
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerLockForPowerKeyword))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+
+                    if (HasPowerWithKeyword(powerProto, keywordProtoRef))
+                        return PowerUseResult.RestrictiveCondition;
+                }
+            }
+
+            PowerUseResult result = base.CanTriggerPower(powerProto, power, flags);
+            if (result != PowerUseResult.Success)
+                return result;
+
+            // Do not allow user input to activate powers during fullscreen movies
+            if (flags.HasFlag(PowerActivationSettingsFlags.Item) == false &&
+                powerProto.Activation != PowerActivationType.Passive &&
+                powerProto.PowerCategory != PowerCategoryType.ComboEffect &&
+                powerProto.PowerCategory != PowerCategoryType.ProcEffect &&
+                (powerProto.IsToggled && flags.HasFlag(PowerActivationSettingsFlags.AutoActivate)) == false)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player != null && player.IsFullscreenObscured)
+                    return PowerUseResult.FullscreenMovie;
+            }
+
+            return PowerUseResult.Success;
+        }
+
         public bool HasPowerPreventionStatus()
         {
             return IsInKnockback

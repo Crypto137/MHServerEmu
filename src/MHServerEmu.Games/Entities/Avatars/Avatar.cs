@@ -663,6 +663,30 @@ namespace MHServerEmu.Games.Entities.Avatars
             return result;
         }
 
+        public override PowerUseResult CanTriggerPower(PowerPrototype powerProto, Power power, PowerActivationSettingsFlags flags)
+        {
+            if (PendingActionState == PendingActionState.FindingLandingSpot)
+                return PowerUseResult.NoFlyingUse;
+
+            if (powerProto.Activation != PowerActivationType.Passive)
+            {
+                // Do not allow any non-passive powers other than throw cancel when we are throwing
+                Power throwablePower = GetThrowablePower();
+                if (throwablePower != null && throwablePower.Prototype != powerProto)
+                {
+                    Power throwCancelPower = GetThrowableCancelPower();
+                    if (throwCancelPower == null) return Logger.WarnReturn(PowerUseResult.GenericError, "CanTriggerPower(): throwCancelPower == null");
+                    
+                    if (throwCancelPower.Prototype != powerProto)
+                        return PowerUseResult.PowerInProgress;
+                }
+            }
+
+            // TODO: IsPowerAllowedInCurrentTransformMode()
+
+            return base.CanTriggerPower(powerProto, power, flags);
+        }
+
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
             base.ActivatePostPowerAction(power, flags);
