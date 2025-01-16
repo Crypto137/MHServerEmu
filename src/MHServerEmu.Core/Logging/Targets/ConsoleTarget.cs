@@ -8,7 +8,9 @@
         /// <summary>
         /// Constructs a new <see cref="ConsoleTarget"/> instance with the specified parameters.
         /// </summary>
-        public ConsoleTarget(bool includeTimestamps, LoggingLevel minimumLevel, LoggingLevel maximumLevel) : base(includeTimestamps, minimumLevel, maximumLevel) { }
+        public ConsoleTarget(LogTargetSettings settings) : base(settings)
+        {
+        }
 
         /// <summary>
         /// Outputs a <see cref="LogMessage"/> instance to the <see cref="Console"/>.

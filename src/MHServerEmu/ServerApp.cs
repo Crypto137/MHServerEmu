@@ -178,15 +178,14 @@ namespace MHServerEmu
             // Attach console log target
             if (config.EnableConsole)
             {
-                ConsoleTarget target = new(config.ConsoleIncludeTimestamps, config.ConsoleMinLevel, config.ConsoleMaxLevel);
+                ConsoleTarget target = new(config.GetConsoleSettings());
                 LogManager.AttachTarget(target);
             }
 
             // Attach file log target
             if (config.EnableFile)
             {
-                FileTarget target = new(config.FileIncludeTimestamps, config.FileMinLevel, config.FileMaxLevel,
-                    $"MHServerEmu_{StartupTime.ToString(FileHelper.FileNameDateFormat)}.log", false);
+                FileTarget target = new(config.GetFileSettings(), $"MHServerEmu_{StartupTime.ToString(FileHelper.FileNameDateFormat)}", config.FileSplitOutput, false);
                 LogManager.AttachTarget(target);
             }
 

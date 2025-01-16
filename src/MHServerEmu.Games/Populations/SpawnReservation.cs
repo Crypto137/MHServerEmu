@@ -36,6 +36,8 @@ namespace MHServerEmu.Games.Populations
         public PrototypeId MissionRef { get; set; }
         public int BlackOutZones { get; set; }
         public bool Simulated { get; set; }
+        public TimeSpan LastFreeTime { get; set; }
+        public TimeSpan RespawnDelay { get; set; }
 
         public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Orientation rotation, Cell cell, int id)
         {
@@ -48,6 +50,8 @@ namespace MHServerEmu.Games.Populations
             Cell = cell;
             Id = id;
             SpatialPartitionLocation = new(this);
+            LastFreeTime = cell.Game.CurrentTime;
+            RespawnDelay = TimeSpan.Zero;
             CalculateRegionInfo();
         }
 

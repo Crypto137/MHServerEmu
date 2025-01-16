@@ -304,6 +304,7 @@ namespace MHServerEmu.Games.Populations
 
     public class SpawnGroup
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public const ulong InvalidId = 0;
         private EventPointer<ClearClusterEvent> _clearClusterEvent = new();
         private Vector3 _killPosition;
@@ -472,6 +473,7 @@ namespace MHServerEmu.Games.Populations
         private void ReleaseRespawn()
         {
             var manager = PopulationManager;
+            var game = manager.Game;
 
             // Clear reserved place
             if (Reservation != null) Reservation.State = MarkerState.Free;
@@ -487,9 +489,15 @@ namespace MHServerEmu.Games.Populations
             // Reschedule SpawnEvent
             if (SpawnEvent != null && SpawnEvent.RespawnObject)
             {
-                var game = manager.Game;
-                int spawnTimeMS = SpawnEvent.RespawnDelayMS + game.Random.Next(1000);
-                PopulationObject.Time = game.CurrentTime + TimeSpan.FromMilliseconds(spawnTimeMS);
+                var spawnTime = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS + game.Random.Next(1000));
+
+                Reservation.RespawnDelay = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS);
+                Reservation.LastFreeTime = game.CurrentTime;
+
+                if (PopulationManager.Debug) 
+                    Logger.Debug($"Reschedule SpawnEvent {PopulationObject.MarkerRef.GetNameFormatted()} {spawnTime}");
+
+                PopulationObject.Time = game.CurrentTime + spawnTime;
                 SpawnEvent.AddToScheduler(PopulationObject);
 
                 if (PopulationObject.IsMarker)
