@@ -2859,11 +2859,12 @@ namespace MHServerEmu.Games.Powers
             return powerProto.CooldownOnPlayer;
         }
 
-        public bool TriggersComboPowerOnEvent(PowerEventType onPowerEnd)
+        public bool TriggersComboPowerOnEvent(PowerEventType eventType)
         {
             PowerPrototype powerProto = Prototype;
             if (powerProto == null) return Logger.WarnReturn(false, "TriggersComboPowerOnEvent(): powerProto == null");
-            return powerProto.ExtraActivation != null && powerProto.ExtraActivation is SecondaryActivateOnReleasePrototype;
+
+            return powerProto.TriggersComboPowerOnEvent(eventType, Properties, Owner);
         }
 
         public bool IsOnExtraActivation()

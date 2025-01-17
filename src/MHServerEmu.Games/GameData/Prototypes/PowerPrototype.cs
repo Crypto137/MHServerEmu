@@ -504,6 +504,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return TimeSpan.FromMilliseconds(cooldownTimeMS);
         }
 
+        public bool TriggersComboPowerOnEvent(PowerEventType eventType, PropertyCollection powerProperties, WorldEntity owner)
+        {
+            if (ActionsTriggeredOnPowerEvent.IsNullOrEmpty())
+                return false;
+
+            foreach (PowerEventActionPrototype triggeredPowerEvent in ActionsTriggeredOnPowerEvent)
+            {
+                if (triggeredPowerEvent.PowerEvent != eventType)
+                    continue;
+
+                if (triggeredPowerEvent.GetEventTriggerChance(powerProperties, owner, owner) < 0f)
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
         public virtual void OnEndPower(Power power, WorldEntity owner)
         {
             // Overriden in MovementPowerPrototype

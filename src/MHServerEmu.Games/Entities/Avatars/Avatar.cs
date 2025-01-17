@@ -37,6 +37,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private readonly EventPointer<ActivateSwapInPowerEvent> _activateSwapInPowerEvent = new();
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
+        private readonly EventPointer<DelayedPowerActivationEvent> _delayedPowerActivationEvent = new();
         private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
@@ -603,7 +604,38 @@ namespace MHServerEmu.Games.Entities.Avatars
                 {
                     // If we failed to cancel the current power, try to delay the activation of the new power
 
-                    // TODO: delayActivatePower()
+                    if (power.GetPowerCategory() == PowerCategoryType.NormalPower)
+                    {
+                        // This messy thing is coming straight from the client.
+                        // The end result is that we set pending action that will be activated in ActivatePostPowerAction().
+                        if (powerRef != ActivePowerRef || _pendingAction.PendingActionState != PendingActionState.WaitingForPrevPower)
+                        {
+                            // Activate the power that's non-recurring and different from the current one after the current one ends (see )
+                            if (powerRef != ActivePowerRef || power.IsRecurring() == false)
+                            {
+                                if (_pendingAction.PendingActionState != PendingActionState.WaitingForPrevPower || power.IsChannelingPower() == false || power.IsContinuous() == false)
+                                {
+                                    if (_pendingAction.PendingActionState != PendingActionState.WaitingForPrevPower || GetPowerSlot(powerRef) != AbilitySlot.PrimaryAction)
+                                    {
+                                        Vector3 targetPosition = settings.TargetPosition;
+                                        if (power.IsMovementPower())
+                                            targetPosition -= RegionLocation.Position;
+
+                                        _pendingAction.SetData(PendingActionState.WaitingForPrevPower, powerRef, settings.TargetEntityId, targetPosition, settings.ItemSourceId);
+                                        return result;
+                                    }
+                                }
+                            }
+                        }
+                        else if (secondTryResult == PowerUseResult.MinimumReactivateTime)
+                        {
+                            // Delay reactivation of this power until it's over
+                            TimeSpan timeSinceActivation = Game.CurrentTime - power.LastActivateGameTime;
+                            TimeSpan delay = power.GetActivationTime() - timeSinceActivation;
+                            DelayActivatePower(powerRef, delay, settings.TargetEntityId, settings.TargetPosition, settings.ItemSourceId);
+                            return result;
+                        }
+                    }
                 }
                 else
                 {
@@ -689,8 +721,36 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
+            // Try to activate pending action (see CAvatar::ActivatePostPowerAction() for reference)
+            if (ActivePowerRef == PrototypeId.Invalid && power.IsProcEffect() == false && power.TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd) == false)
+            {
+                PrototypeId pendingPowerProtoRef = _pendingAction.PowerProtoRef;
+                if (pendingPowerProtoRef != PrototypeId.Invalid && IsInPendingActionState(PendingActionState.WaitingForPrevPower))
+                {
+                    Power nextPower = GetPower(pendingPowerProtoRef);
+                    if (nextPower == null)
+                    {
+                        Logger.Warn("ActivatePostPowerAction(): nextPower == null");
+                        return;
+                    }
+
+                    PowerActivationSettings settings = new();
+                    FixupPendingActivateSettings(nextPower, ref settings);
+
+                    CancelPendingAction();
+
+                    PowerUseResult result = CanActivatePower(nextPower, settings.TargetEntityId, settings.TargetPosition);
+                    if (result == PowerUseResult.Success)
+                        ActivatePower(nextPower, ref settings);
+                    else
+                        SendActivatePowerFailedMessage(nextPower.PrototypeDataRef, result);
+                }
+            }
+
+            // Base implementation from common code below
             base.ActivatePostPowerAction(power, flags);
 
+            // Try to reactivate the current continuous power
             if (_continuousPowerData.PowerProtoRef == PrototypeId.Invalid)
                 return;
 
@@ -917,7 +977,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void CancelPendingAction()
         {
-            //Logger.Debug("CancelPendingAction()");
             _pendingAction.Clear();
         }
 
@@ -925,6 +984,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // TODO: Check PropertyEnum.LastInflictedDamageTime
             return true;
+        }
+
+        public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
+        {
+            // TODO
+            return AbilitySlot.Invalid;
         }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
@@ -1398,6 +1463,80 @@ namespace MHServerEmu.Games.Entities.Avatars
                 SendActivatePowerFailedMessage(throwablePowerProtoRef, PowerUseResult.GenericError);
             
             return success;
+        }
+
+        private bool FixupPendingActivateSettings(Power power, ref PowerActivationSettings settings)
+        {
+            settings.TargetEntityId = _pendingAction.TargetId;
+            settings.TargetPosition = _pendingAction.TargetPosition;
+            settings.UserPosition = RegionLocation.Position;
+            settings.PowerRandomSeed = Game.Random.Next(1, 10000);
+
+            if (power.Prototype is MovementPowerPrototype movementPowerProto)
+            {
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                if (target == null)
+                    settings.TargetPosition += RegionLocation.Position;
+                else
+                    settings.TargetPosition = target.RegionLocation.Position;
+            }
+
+            if (power.IsInRange(settings.TargetPosition, RangeCheckType.Activation) == false)
+            {
+                PowerPrototype powerProto = power.Prototype;
+                if (powerProto == null) return Logger.WarnReturn(false, "FixupPendingActivateSettings(): powerProto == null");
+
+                if (powerProto.WhenOutOfRange == WhenOutOfRangeType.ActivateInDirection ||
+                    (powerProto.WhenOutOfRange == WhenOutOfRangeType.MoveIfTargetingMOB && settings.TargetEntityId == InvalidId))
+                {
+                    Vector3 userPosition = RegionLocation.Position;
+                    Vector3 direction = Vector3.SafeNormalize(settings.TargetPosition - userPosition);
+                    settings.TargetPosition = userPosition + (direction * power.GetRange());
+                }
+            }
+
+            return true;
+        }
+
+        private bool DelayActivatePower(PrototypeId powerProtoRef, TimeSpan delay, ulong targetId, Vector3 targetPosition, ulong sourceItemId)
+        {
+            if (_pendingAction.SetData(PendingActionState.DelayedPowerActivate, powerProtoRef, targetId, targetPosition, sourceItemId) == false)
+                return false;
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+
+            if (_delayedPowerActivationEvent.IsValid)
+                scheduler.CancelEvent(_delayedPowerActivationEvent);
+
+            ScheduleEntityEvent(_delayedPowerActivationEvent, delay);
+
+            return true;
+        }
+
+        private bool DelayedPowerActivation()
+        {
+            if (IsInPendingActionState(PendingActionState.DelayedPowerActivate) == false)
+                return false;
+
+            ulong targetId = _pendingAction.TargetId;
+            Vector3 targetPosition = _pendingAction.TargetPosition;
+            ulong sourceItemId = _pendingAction.SourceItemId;
+            Power power = GetPower(_pendingAction.PowerProtoRef);
+
+            CancelPendingAction();
+
+            if (power == null)
+                return false;
+
+            if (CanActivatePower(power, targetId, targetPosition, PowerActivationSettingsFlags.None, sourceItemId) != PowerUseResult.Success)
+                return false;
+
+            PowerActivationSettings settings = new(targetId, targetPosition, RegionLocation.Position);
+            settings.ItemSourceId = sourceItemId;
+
+            ActivatePower(power.PrototypeDataRef, ref settings);
+
+            return true;
         }
 
         private bool SendActivatePowerFailedMessage(PrototypeId powerProtoRef, PowerUseResult result)
@@ -2607,6 +2746,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             switch (id.Enum)
             {
+                case PropertyEnum.Knockback:
+                case PropertyEnum.Knockdown:
+                case PropertyEnum.Knockup:
+                case PropertyEnum.Mesmerized:
+                case PropertyEnum.Stunned:
+                case PropertyEnum.StunnedByHitReact:
+                    if (newValue == true && (IsInPendingActionState(PendingActionState.WaitingForPrevPower) || IsInPendingActionState(PendingActionState.AfterPowerMove)))
+                        CancelPendingAction();
+                    break;
+
                 case PropertyEnum.EnduranceAddBonus:
                 case PropertyEnum.EnduranceBase:
                 case PropertyEnum.EndurancePctBonus:
@@ -2918,6 +3067,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).CheckContinuousPower();
+        }
+
+        private class DelayedPowerActivationEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DelayedPowerActivation();
         }
 
         private class ActivateSwapInPowerEvent : TargetedScheduledEvent<Entity>
