@@ -1062,8 +1062,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Progression table powers
             indexProps = new(1, CharacterLevel, CombatLevel);   // use rank 1 for power progression (todo: remove this when we have everything working properly)
 
-            foreach (var powerProgressionEntry in avatarPrototype.GetPowersUnlockedAtLevel(-1, true))
-                AssignPower(powerProgressionEntry.PowerAssignment.Ability, indexProps);
+            List<PowerProgressionEntryPrototype> powerProgEntryList = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
+            if (avatarPrototype.GetPowersUnlockedAtLevel(powerProgEntryList, -1, true))
+            {
+                foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
+                    AssignPower(powerProgEntry.PowerAssignment.Ability, indexProps);
+            }
+
+            ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntryList);
 
             // Mapped powers (power replacements from talents)
             // AvatarPrototype -> TalentGroups -> Talents -> Talent -> ActionsTriggeredOnPowerEvent -> PowerEventContext -> MappedPower
@@ -1377,11 +1383,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             AbilityKeyMapping currentAbilityKeyMapping = CurrentAbilityKeyMapping;
             if (CurrentAbilityKeyMapping != null)
             {
-                foreach (HotkeyData hotkeyData in currentAbilityKeyMapping.GetDefaultAbilities(this, oldLevel))
+                List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
+                if (currentAbilityKeyMapping.GetDefaultAbilities(hotkeyDataList, this, oldLevel))
                 {
-                    Logger.Debug($"OnLevelUp(): {hotkeyData}");
-                    currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                    // TODO: Avatar.SlotAbility()
+                    foreach (HotkeyData hotkeyData in hotkeyDataList)
+                        currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
                 }
+
+                ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
             }
 
             SendLevelUpMessage();
@@ -1614,10 +1624,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 {
                     Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {this}");
                     return;
-                }
-
-                OnChangeInventory(item);
+                }                
             }
+            
+            OnChangeInventory(item);
         }
 
         public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)

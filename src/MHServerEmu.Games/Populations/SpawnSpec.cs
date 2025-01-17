@@ -491,8 +491,11 @@ namespace MHServerEmu.Games.Populations
             {
                 var spawnTime = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS + game.Random.Next(1000));
 
-                Reservation.RespawnDelay = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS);
-                Reservation.LastFreeTime = game.CurrentTime;
+                if (Reservation != null)
+                {
+                    Reservation.RespawnDelay = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS);
+                    Reservation.LastFreeTime = game.CurrentTime;
+                }
 
                 if (PopulationManager.Debug) 
                     Logger.Debug($"Reschedule SpawnEvent {PopulationObject.MarkerRef.GetNameFormatted()} {spawnTime}");

@@ -63,39 +63,44 @@ namespace MHServerEmu.Core.Logging
         }
 
         /// <summary>
-        /// Iterates through all attached <see cref="LogTarget"/> instances that accept the specified <see cref="LoggingLevel"/>.
+        /// Iterates through all attached <see cref="LogTarget"/> instances that accepts the provided <see cref="LogMessage"/>.
         /// </summary>
-        internal static Iterator IterateTargets(LoggingLevel loggingLevel)
+        internal static Iterator IterateTargets(in LogMessage message)
         {
-            return new(loggingLevel);
+            return new(message.Level, message.Channels);
         }
 
         internal readonly struct Iterator
         {
             private readonly LoggingLevel _loggingLevel;
+            private readonly LogChannels _channels;
 
-            public Iterator(LoggingLevel loggingLevel)
+            public Iterator(LoggingLevel loggingLevel, LogChannels channels)
             {
                 _loggingLevel = loggingLevel;
+                _channels = channels;
             }
 
             public readonly Enumerator GetEnumerator()
             {
-                return new(_loggingLevel);
+                return new(_loggingLevel, _channels);
             }
 
             public struct Enumerator : IEnumerator<LogTarget>
             {
                 private readonly LoggingLevel _loggingLevel;
+                private readonly LogChannels _channels;
 
                 private HashSet<LogTarget>.Enumerator _targetEnumerator;
 
                 public LogTarget Current { get; private set; }
                 object IEnumerator.Current { get => Current; }
 
-                public Enumerator(LoggingLevel loggingLevel)
+                public Enumerator(LoggingLevel loggingLevel, LogChannels channels)
                 {
                     _loggingLevel = loggingLevel;
+                    _channels = channels;
+
                     _targetEnumerator = _targets.GetEnumerator();
                 }
 
@@ -104,11 +109,15 @@ namespace MHServerEmu.Core.Logging
                     while (_targetEnumerator.MoveNext())
                     {
                         LogTarget target = _targetEnumerator.Current;
-                        if (_loggingLevel >= target.MinimumLevel && _loggingLevel <= target.MaximumLevel)
-                        {
-                            Current = target;
-                            return true;
-                        }
+
+                        if (_loggingLevel < target.MinimumLevel || _loggingLevel > target.MaximumLevel)
+                            continue;
+
+                        if ((_channels & target.Channels) == LogChannels.None)
+                            continue;
+
+                        Current = target;
+                        return true;
                     }
 
                     return false;

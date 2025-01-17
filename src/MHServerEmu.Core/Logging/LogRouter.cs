@@ -8,8 +8,6 @@ namespace MHServerEmu.Core.Logging
     /// </summary>
     internal static class LogRouter
     {
-        // NOTE: This is internal is case we ever move logging to a library
-
         private static readonly ConcurrentQueue<LogMessage> MessageQueue;
 
         /// <summary>
@@ -29,11 +27,11 @@ namespace MHServerEmu.Core.Logging
         /// <summary>
         /// Creates a new <see cref="LogMessage"/> instance from the provided arguments and processes it.
         /// </summary>
-        internal static void AddMessage(LoggingLevel level, string logger, string message)
+        internal static void AddMessage(LoggingLevel level, string logger, string message, LogChannels channels, LogCategory category)
         {
             if (LogManager.Enabled == false) return;
 
-            LogMessage logMessage = new(level, logger, message);
+            LogMessage logMessage = new(level, logger, message, channels, category);
 
             if (MessageQueue != null)
                 MessageQueue.Enqueue(logMessage);   // Add the message to the queue to be processed asynchronously
@@ -44,9 +42,9 @@ namespace MHServerEmu.Core.Logging
         /// <summary>
         /// Routes the provided <see cref="LogMessage"/> instance to all relevant targets.
         /// </summary>
-        private static void RouteMessage(LogMessage message)
+        private static void RouteMessage(in LogMessage message)
         {
-            foreach (LogTarget target in LogManager.IterateTargets(message.Level))
+            foreach (LogTarget target in LogManager.IterateTargets(message))
                 target.ProcessLogMessage(message);
         }
 
