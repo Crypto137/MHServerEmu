@@ -188,9 +188,12 @@ namespace MHServerEmu.Games.Entities.Items
             int powerUnlockLevelMax = Eval.RunInt(powerAffixProto.PowerUnlockLevelMax, evalContext);
             powerUnlockLevelMax = Math.Max(powerUnlockLevelMin, powerUnlockLevelMax);
 
-            var powerProgEntries = avatarProto.GetPowersUnlockedAtLevel(powerUnlockLevelMax, true);
-            if (powerProgEntries.Any() == false)
+            List<PowerProgressionEntryPrototype> powerProgEntries = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
+            if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntries, powerUnlockLevelMax, true) == false)
+            {
+                ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntries);
                 return MutationResults.Error | MutationResults.ErrorReasonAffixScopePower;
+            }
 
             // Build scope picker
             Picker<PrototypeId> scopePicker = new(random);
@@ -271,7 +274,10 @@ namespace MHServerEmu.Games.Entities.Items
                 if (powerProto.DataRef == _scopeProtoRef)
                 {
                     if (behaviorOnPowerMatch == BehaviorOnPowerMatch.Cancel)
+                    {
+                        ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntries);
                         return MutationResults.None;
+                    }
                     
                     if (behaviorOnPowerMatch == BehaviorOnPowerMatch.Skip)
                         continue;
@@ -279,6 +285,8 @@ namespace MHServerEmu.Games.Entities.Items
 
                 scopePicker.Add(powerProto.DataRef, 1);
             }
+
+            ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntries);
 
             // Pick affix scope
             PrototypeId scopeProtoRefBefore = _scopeProtoRef;

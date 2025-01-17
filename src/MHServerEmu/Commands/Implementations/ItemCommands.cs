@@ -12,6 +12,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -133,6 +134,31 @@ namespace MHServerEmu.Commands.Implementations
             stopwatch.Stop();
 
             return $"Finished rolling {numLootTables} loot tables in {stopwatch.Elapsed.TotalMilliseconds} ms, see the server console for results.";
+        }
+
+        [Command("creditchest", "Converts 500k credits to a sellable chest item.\nUsage: item creditchest")]
+        public string CreditChest(string[] @params, FrontendClient client)
+        {
+            const PrototypeId CreditItemProtoRef = (PrototypeId)13983056721138685632;
+            const int CreditItemPrice = 500000;
+
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            PropertyId creditsProperty = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits);
+
+            if (player.Properties[creditsProperty] < CreditItemPrice)
+                return "You need at least 500 000 credits to use this command.";
+
+            // Entity/Items/Crafting/Ingredients/CreditItem500k.prototype
+            player.Properties.AdjustProperty(-CreditItemPrice, creditsProperty);
+            player.Game.LootManager.GiveItem(CreditItemProtoRef, LootContext.CashShop, player);
+
+            Logger.Trace($"CreditChest(): {player}");
+
+            return $"Converted 500 000 credits to a Credit Chest.";
         }
     }
 }
