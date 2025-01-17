@@ -106,6 +106,23 @@ namespace MHServerEmu.Games.Entities.Avatars
             return _actionKeys[index];
         }
 
+        public void GetActiveAbilitySlotsContainingProtoRef(PrototypeId powerProtoRef, List<AbilitySlot> abilitySlotList)
+        {
+            if (_primaryAction == powerProtoRef)
+                abilitySlotList.Add(AbilitySlot.PrimaryAction);
+
+            if (_secondaryAction == powerProtoRef)
+                abilitySlotList.Add(AbilitySlot.SecondaryAction);
+
+            // TODO: DedicatedHealSlot, DedicatedPetTechSlot, DedicatedTeamUpSlot, DedicatedUltimateSlot
+
+            for (int i = 0; i < _actionKeys.Length; i++)
+            {
+                if (_actionKeys[i] == powerProtoRef)
+                    abilitySlotList.Add(AbilitySlot.ActionKey0 + i);
+            }
+        }
+
         /// <summary>
         /// Sets the ability <see cref="PrototypeId"/> to the specified <see cref="AbilitySlot"/>.
         /// </summary>

@@ -988,8 +988,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
         {
-            // TODO
-            return AbilitySlot.Invalid;
+            AbilityKeyMapping keyMapping = CurrentAbilityKeyMapping;
+            if (keyMapping == null)
+                return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
+
+            List<AbilitySlot> abilitySlotList = ListPool<AbilitySlot>.Instance.Get();
+            keyMapping.GetActiveAbilitySlotsContainingProtoRef(powerProtoRef, abilitySlotList);
+            AbilitySlot result = abilitySlotList.Count > 0 ? abilitySlotList[0] : AbilitySlot.Invalid;
+
+            ListPool<AbilitySlot>.Instance.Return(abilitySlotList);
+            return result;
         }
 
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
