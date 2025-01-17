@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -149,32 +150,54 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public void SlotDefaultAbilities(Avatar avatar)
         {
-            foreach (HotkeyData hotkeyData in GetDefaultAbilities(avatar))
-                SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+            AvatarPrototype avatarProto = avatar.AvatarPrototype;
+
+            List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
+
+            if (GetDefaultAbilities(hotkeyDataList, avatar))
+            {
+                foreach (HotkeyData hotkeyData in hotkeyDataList)
+                    SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+            }
+
+            ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
         }
 
-        public IEnumerable<HotkeyData> GetDefaultAbilities(Avatar avatar, int startingLevel = -1)
+        public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
         {
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
 
-            foreach (PowerProgressionEntryPrototype powerProgEntry in avatarProto.GetPowersUnlockedAtLevel(avatar.CharacterLevel, true, startingLevel))
+            List<PowerProgressionEntryPrototype> powerProgEntryList = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
+            if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntryList, avatar.CharacterLevel, true, startingLevel))
             {
-                if (powerProgEntry.IsTrait) continue;       // Skip traits
-                var autoAssignmentSlot = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
-                if (autoAssignmentSlot == null) continue;   // Skip powers that don't have auto-assignment defined
+                foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
+                {
+                    // Skip traits
+                    if (powerProgEntry.IsTrait)
+                        continue;
 
-                // Get ability slot 
-                GamepadSlotBindingPrototype gamepadSlotBinding = GameDatabase.GetPrototype<GamepadSlotBindingPrototype>(autoAssignmentSlot.Slot);
-                var abilitySlot = (AbilitySlot)gamepadSlotBinding.PCSlotNumber;  // Avatar::ChooseGamePadSlot()
+                    // Skip powers that don't have auto-assignment defined
+                    AbilityAutoAssignmentSlotPrototype autoAssignmentSlot = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
+                    if (autoAssignmentSlot == null)
+                        continue;
 
-                // Override only empty slots
-                if (GetAbilityInAbilitySlot(abilitySlot) != PrototypeId.Invalid) continue;
+                    // Get ability slot 
+                    GamepadSlotBindingPrototype gamepadSlotBinding = GameDatabase.GetPrototype<GamepadSlotBindingPrototype>(autoAssignmentSlot.Slot);
+                    var abilitySlot = (AbilitySlot)gamepadSlotBinding.PCSlotNumber;  // Avatar::ChooseGamePadSlot()
 
-                // TODO: Avatar::GetMappedPowerFromOriginalPower()
-                // TODO: Avatar::CheckAbilitySlotRestrictions()
+                    // Override only empty slots
+                    if (GetAbilityInAbilitySlot(abilitySlot) != PrototypeId.Invalid)
+                        continue;
 
-                yield return new HotkeyData(autoAssignmentSlot.Ability, abilitySlot);
+                    // TODO: Avatar::GetMappedPowerFromOriginalPower()
+                    // TODO: Avatar::CheckAbilitySlotRestrictions()
+
+                    hotkeyDataList.Add(new HotkeyData(autoAssignmentSlot.Ability, abilitySlot));
+                }
             }
+
+            ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntryList);
+            return hotkeyDataList.Count > 0;
         }
 
         // In the client these ability slot checks are in Avatar, but they make more sense here

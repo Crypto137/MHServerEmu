@@ -151,32 +151,41 @@ namespace MHServerEmu.Games.GameData.Prototypes
         /// <summary>
         /// Retrieves <see cref="PowerProgressionEntryPrototype"/> instances for powers that would be unlocked at the specified level or level range.
         /// </summary>
-        public IEnumerable<PowerProgressionEntryPrototype> GetPowersUnlockedAtLevel(int level = -1, bool retrieveForLevelRange = false, int startingLevel = -1)
+        public bool GetPowersUnlockedAtLevel(List<PowerProgressionEntryPrototype> powerProgEntryList, int level = -1, bool retrieveForLevelRange = false, int startingLevel = -1)
         {
-            if (PowerProgressionTables == null) yield break;
+            if (PowerProgressionTables.IsNullOrEmpty())
+                return false;
 
             foreach (PowerProgressionTablePrototype table in PowerProgressionTables)
             {
-                if (table.PowerProgressionEntries == null) continue;
+                if (table.PowerProgressionEntries.IsNullOrEmpty())
+                    continue;
 
-                foreach (PowerProgressionEntryPrototype entry in table.PowerProgressionEntries)
+                foreach (PowerProgressionEntryPrototype powerProgEntry in table.PowerProgressionEntries)
                 {
-                    if (entry.PowerAssignment == null) continue;
-                    if (entry.PowerAssignment.Ability == PrototypeId.Invalid) continue;
-
-                    bool match = true;
+                    AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
+                    if (abilityAssignmentProto == null)
+                    {
+                        Logger.Warn("GetPowersUnlockedAtLevel(): abilityAssignmentProto == null");
+                        continue;
+                    }
 
                     // If the specified level is set to -1 it means we need to include all levels.
-                    match &= level < 0 || entry.Level <= level;
 
                     // retrieveForLevelRange means to retrieve all abilities that would be unlocked
                     // if you got from startingLevel to level. Otherwise retrieve just the abilities
                     // for the specified level.
-                    match &= retrieveForLevelRange && entry.Level > startingLevel || entry.Level == level;
 
-                    if (match) yield return entry;
+                    if (abilityAssignmentProto.Ability != PrototypeId.Invalid &&
+                        (level < 0 || level >= powerProgEntry.Level) &&
+                        ((retrieveForLevelRange && powerProgEntry.Level > startingLevel) || powerProgEntry.Level == level))
+                    {
+                        powerProgEntryList.Add(powerProgEntry);
+                    }
                 }
             }
+
+            return powerProgEntryList.Count > 0;
         }
 
         /// <summary>
