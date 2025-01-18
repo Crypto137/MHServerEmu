@@ -493,6 +493,9 @@ namespace MHServerEmu.Games.Powers
             // Copy settings
             PowerActivationSettings settings = initialSettings;
 
+            // Select random target if needed
+            DoRandomTargetSelection(triggeredPower, ref settings);
+
             // Check target
             bool needsTarget = triggeredPower.NeedsTarget();
 

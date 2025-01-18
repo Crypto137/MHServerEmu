@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -1118,7 +1119,8 @@ namespace MHServerEmu.Games.Powers
             _delayedActivationSettings = settings;
             _delayedActivationSettings.VariableActivationRelease = true;
 
-            // TODO: Costs
+            // TODO: Implement EnduranceCostIncreasePerSecond if needed for older versions of the game
+            // (1.52 uses EnduranceCostRank0NoCost for all hold and release powers).
 
             return PowerUseResult.Success;
         }
@@ -1728,7 +1730,7 @@ namespace MHServerEmu.Games.Powers
 
             return GetTargets(targetList, payload.Game, payload.PowerPrototype, payload.Properties, primaryTarget, payload.TargetPosition, payload.PowerOwnerPosition,
                 payload.Range, payload.RegionId, payload.PowerOwnerId, payload.UltimateOwnerId, payload.OwnerAlliance, payload.BeamSweepSlice,
-                payload.ExecutionTime, (int)payload.PowerRandomSeed);
+                payload.ExecutionTime, payload.PowerRandomSeed);
         }
 
         public static bool GetTargets(List<WorldEntity> targetList, Game game, PowerPrototype powerProto, PropertyCollection properties,
@@ -1875,6 +1877,40 @@ namespace MHServerEmu.Games.Powers
             }
 
             return Math.Max(numPlayersMin, numPlayers);
+        }
+
+        public WorldEntity GetRandomTarget()
+        {
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn<WorldEntity>(null, "GetRandomTarget(): powerProto == null");
+
+            Region region = Owner?.Region;
+            if (region == null) return Logger.WarnReturn<WorldEntity>(null, "GetRandomTarget(): region == null");
+
+            // Populate potential target picker
+            Picker<WorldEntity> picker = new(Game.Random);
+            bool requiresLineOfSight = RequiresLineOfSight(powerProto);
+            Sphere bounds = new(Owner.RegionLocation.Position, powerProto.Radius);
+
+            foreach (WorldEntity entity in region.IterateEntitiesInVolume(bounds, new(EntityRegionSPContextFlags.ActivePartition)))
+            {
+                if (IsValidTarget(entity) == false)
+                    continue;
+
+                if (entity.IsTargetable(Owner) == false)
+                    continue;
+
+                if (requiresLineOfSight)
+                {
+                    Vector3? resultPosition = null;
+                    if (PowerLOSCheck(Owner.RegionLocation, entity.RegionLocation.Position, entity.Id, ref resultPosition, LOSCheckAlongGround()) == false)
+                        continue;
+                }
+
+                picker.Add(entity);
+            }
+
+            return picker.Empty() == false ? picker.Pick() : null;
         }
 
         #region State Accessors
@@ -3820,7 +3856,7 @@ namespace MHServerEmu.Games.Powers
 
                 if (style.RandomPositionRadius > 0)
                 {
-                    GRandom random = new((int)settings.PowerRandomSeed);
+                    GRandom random = new(settings.PowerRandomSeed);
                     actualTargetPosition += Vector3.RandomUnitVector2D(random) * (random.NextFloat() * style.RandomPositionRadius);
                 }
 
@@ -3859,7 +3895,7 @@ namespace MHServerEmu.Games.Powers
 
                 if (style.RandomPositionRadius > 0)
                 {
-                    GRandom random = new((int)settings.PowerRandomSeed);
+                    GRandom random = new(settings.PowerRandomSeed);
                     actualTargetPosition += Vector3.RandomUnitVector2D(random) * (random.NextFloat() * style.RandomPositionRadius);
                     actualTargetPosition = RegionLocation.ProjectToFloor(Owner.Region, Owner.Cell, actualTargetPosition);
                 }
@@ -4742,14 +4778,25 @@ namespace MHServerEmu.Games.Powers
 
         private void DoRandomTargetSelection(Power triggeredPower, ref PowerActivationSettings settings)
         {
-            // TODO
-            Logger.Debug("DoRandomTargetSelection()");
+            // Not all powers need random targets
+            if (triggeredPower.GetTargetingShape() != TargetingShapeType.SingleTargetRandom)
+                return;
+
+            // Find a valid random target
+            WorldEntity target = triggeredPower.GetRandomTarget();
+            if (target == null)
+                return;
+
+            // If found, update settings
+            settings.TargetEntityId = target.Id;
+            settings.TargetPosition = target.RegionLocation.Position;
+            settings.Flags |= PowerActivationSettingsFlags.NotifyOwner | PowerActivationSettingsFlags.ServerCombo;
         }
 
         private bool FillOutProcEffectPowerApplication(WorldEntity target, ref PowerActivationSettings settings, PowerApplication powerApplication)
         {
             // TODO
-            Logger.Debug("FillOutProcEffectPowerApplication()");
+            Logger.Debug($"FillOutProcEffectPowerApplication(): {this}");
             return true;
         }
 
