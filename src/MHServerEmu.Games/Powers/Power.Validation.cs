@@ -1015,10 +1015,86 @@ namespace MHServerEmu.Games.Powers
             return clipped ? PowerPositionSweepResult.Clipped : PowerPositionSweepResult.Success;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the owner of this <see cref="Power"/> has enough endurance to trigger it.
+        /// </summary>
         private bool CheckEnduranceCost()
         {
-            // TODO
-            return (float)Owner.Properties[PropertyEnum.Endurance] >= Properties[PropertyEnum.EnduranceCost];
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CheckEnduranceCost(): powerProto == null");
+
+            // Only avatars have endurance costs
+            if (Owner.Prototype is not AvatarPrototype avatarProto)
+                return true;
+
+            TimeSpan channelTime = TimeSpan.Zero;
+            bool hasChannelTime = false;
+
+            // Flag that makes endurance costs optional (still requires >0 endurance to trigger)
+            bool enduranceCostRequired = Properties[PropertyEnum.EnduranceCostRequired];
+
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatarProto.PrimaryResourceBehaviorsCache)
+            {
+                float endurance = Owner.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType];
+                float cost = GetEnduranceCost(Properties, primaryManaBehaviorProto.ManaType, powerProto, Owner, true);
+
+                if (cost > 0f)
+                {
+                    // Do not allow
+                    if (Owner.Properties[PropertyEnum.DisableEnduranceUsage, primaryManaBehaviorProto.ManaType])
+                        return false;
+
+                    // Powers are not allowed to be triggered if the avatar has 0 endurance, even if the cost is optional
+                    if ((enduranceCostRequired || endurance <= 0f) && cost > endurance)
+                        return false;
+                }
+
+                // Check recurring costs for channeled powers
+                if (hasChannelTime == false || channelTime > TimeSpan.Zero)
+                {
+                    float recurringCost = 0f;
+
+                    // NOTE: Recurring power is not the same thing as a recurring cost.
+                    // - Recurring power is a power that keeps reapplying. Its cost are calculated per application.
+                    // - Recurring cost is for powers that are active for as long as the player holds the button down (e.g. beam powers). These costs are paid on a timer.
+                    if (IsRecurring())
+                    {
+                        // NOTE: The client calls GetEnduranceCost() here again, but it makes no sense since we are doing it above already
+                        float timeBetweenApplicationsSeconds = (float)GetChannelLoopTime().TotalSeconds;
+                        if (timeBetweenApplicationsSeconds <= 0f) return Logger.WarnReturn(false, "CheckEnduranceCost(): timeBetweenApplicationsSeconds <= 0f");
+                        recurringCost = cost / timeBetweenApplicationsSeconds;
+                    }
+                    else
+                    {
+                        recurringCost = GetEnduranceCostRecurring(primaryManaBehaviorProto.ManaType, true, true);
+                    }
+
+                    // Skip check if no recurring cost
+                    if (recurringCost <= 0f)
+                        continue;
+
+                    // Never allow recurring costs if the avatar doesn't have any endurance
+                    if (endurance <= 0f)
+                        return false;
+
+                    // Cache channel time
+                    if (hasChannelTime == false)
+                    {
+                        channelTime = GetChannelMinTime() - GetChannelStartTime();
+                        hasChannelTime = true;
+                    }
+
+                    // Skip check if no channel time
+                    if (channelTime <= TimeSpan.Zero)
+                        continue;
+
+                    // Now do the check
+                    if (enduranceCostRequired && endurance < (recurringCost * (float)channelTime.TotalSeconds))
+                        return false;
+                }
+            }
+
+            return true;
         }
 
         private bool CanStartCooldowns()
