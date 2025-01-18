@@ -2448,6 +2448,14 @@ namespace MHServerEmu.Games.Entities
 
                     break;
 
+                case PropertyEnum.Endurance:
+                    if (IsInWorld)
+                    {
+                        Property.FromParam(id, 0, out int manaTypeValue);
+                        TryActivateOnEnduranceProcs((ManaType)manaTypeValue);
+                    }
+                    break;
+
                 case PropertyEnum.EnemyBoost:
                     if (IsSimulated)
                     {
@@ -2461,6 +2469,12 @@ namespace MHServerEmu.Games.Entities
 
                         ModChangeModEffects(modProtoRef, newValue);
                     }
+
+                    break;
+
+                case PropertyEnum.Health:
+                    if (IsInWorld && TestStatus(EntityStatus.EnteringWorld) == false)
+                        TryActivateOnHealthProcs();
 
                     break;
 

@@ -182,12 +182,22 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
+        public void TryActivateOnEnduranceProcs(ManaType manaType)  // 14-15
+        {
+            // TODO
+        }
+
         public void TryActivateOnGotAttackedProcs(PowerResults powerResults)    // 16
         {
             // TODO
         }
 
         public void TryActivateOnGotDamagedProcs(PowerResults powerResults) // 11, 17-27
+        {
+            // TODO
+        }
+
+        public void TryActivateOnHealthProcs()  // 28-31
         {
             // TODO
         }
