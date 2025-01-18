@@ -299,6 +299,7 @@ namespace MHServerEmu.Games.Loot
                         goto end;
                     }
 
+                    item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
                     itemList.Add(item);
                 }
             }

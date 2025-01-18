@@ -2181,10 +2181,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 {
                     Logger.Warn($"OnOtherEntityAddedToMyInventory(): Failed to assign item power {powerProtoRef.GetName()} to avatar {this}");
                     return;
-                }
-
-                OnChangeInventory(item);
+                }                
             }
+            
+            OnChangeInventory(item);
         }
 
         public override void OnOtherEntityRemovedFromMyInventory(Entity entity, InventoryLocation invLoc)
