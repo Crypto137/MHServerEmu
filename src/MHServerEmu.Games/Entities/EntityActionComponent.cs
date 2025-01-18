@@ -111,9 +111,14 @@ namespace MHServerEmu.Games.Entities
             CancelActions(eventType);
             if (ActionTable.TryGetValue(eventType, out ActionSet actionSet))
             {
-                List<EntitySelectorActionPrototype> actions = new(actionSet);
+                List<EntitySelectorActionPrototype> actions = ListPool<EntitySelectorActionPrototype>.Instance.Get();
+                foreach (var action in actionSet)
+                    actions.Add(action);
+
                 foreach (var action in actions)
                     ScheduleAction(action, eventType);
+
+                ListPool<EntitySelectorActionPrototype>.Instance.Return(actions);
             }
             return true;
         }
