@@ -4795,8 +4795,25 @@ namespace MHServerEmu.Games.Powers
 
         private bool FillOutProcEffectPowerApplication(WorldEntity target, ref PowerActivationSettings settings, PowerApplication powerApplication)
         {
-            // TODO
-            Logger.Debug($"FillOutProcEffectPowerApplication(): {this}");
+            // NOTE: We don't need anything other than properties from these results,
+            // so we can potentially get rid of them if we implement results pooling.
+            powerApplication.PowerResults = settings.PowerResults;
+
+            if (Prototype.GetTargetingStyle().TargetingShape == TargetingShapeType.Self)
+            {
+                powerApplication.TargetEntityId = Owner.Id;
+                powerApplication.TargetPosition = Owner.RegionLocation.Position;
+            }
+            else
+            {
+                powerApplication.TargetEntityId = target != null ? target.Id : Entity.InvalidId;
+                powerApplication.TargetPosition = settings.TargetPosition;
+            }
+
+            PrototypeId triggeringPowerRef = settings.TriggeringPowerRef;
+            if (triggeringPowerRef != PrototypeId.Invalid)
+                Properties[PropertyEnum.TriggeringPowerRef, PrototypeDataRef] = triggeringPowerRef;
+
             return true;
         }
 

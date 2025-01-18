@@ -1375,7 +1375,8 @@ namespace MHServerEmu.Games.Entities
                     success = ApplyPowerResultsInternal(powerResults);
             }
 
-            powerResults.Clear();   // Clear to prevent leaking (TODO: PowerResults pooling)
+            // Clear only conditions here because these results may still be used for procs
+            powerResults.ClearConditionInstances();
             return success;
         }
 
@@ -3389,7 +3390,7 @@ namespace MHServerEmu.Games.Entities
 
             public override bool OnCancelled()
             {
-                _param1.Clear();    // Clear to prevent leaking (TODO: PowerResults pooling)
+                _param1.Clear();    // Clear to prevent conditions leaking from their pool
                 return true;
             }
         }

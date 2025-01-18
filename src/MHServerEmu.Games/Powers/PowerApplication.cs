@@ -25,6 +25,8 @@ namespace MHServerEmu.Games.Powers
 
         public bool IsFree { get; set; }
 
+        public PowerResults PowerResults { get; set; }
+
         public PowerApplication() { }
 
         public PowerApplication(PowerApplication other)
