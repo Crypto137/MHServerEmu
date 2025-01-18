@@ -38,6 +38,8 @@ namespace MHServerEmu.Games.Entities
 
         private readonly EventPointer<WakeStartEvent> _wakeStartEvent = new();
         private readonly EventPointer<WakeEndEvent> _wakeEndEvent = new();
+        private readonly EventPointer<ExitCombatEvent> _exitCombatEvent = new();
+
         public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
@@ -590,6 +592,50 @@ namespace MHServerEmu.Games.Entities
                 return true;
 
             return power.IsInRange(position, RangeCheckType.Activation);
+        }
+
+        #endregion
+
+        #region Combat State
+
+        public override bool EnterCombat()
+        {
+            if (TestStatus(EntityStatus.ExitingWorld))
+                return false;
+
+            AgentPrototype agentProto = AgentPrototype;
+            TimeSpan inCombatTime = TimeSpan.FromMilliseconds(agentProto.InCombatTimerMS);
+            
+            // If already in combat, restart combat timer
+            if (Properties[PropertyEnum.IsInCombat])
+            {
+                Game.GameEventScheduler.RescheduleEvent(_exitCombatEvent, inCombatTime);
+                return true;
+            }
+
+            // Enter combat if not currently in combat
+            ScheduleEntityEvent(_exitCombatEvent, inCombatTime);
+
+            Properties[PropertyEnum.IsInCombat] = true;
+            TryActivateOnInCombatProcs();
+            TriggerEntityActionEvent(EntitySelectorActionEventType.OnEnteredCombat);
+
+            return true;
+        }
+
+        public bool ExitCombat()
+        {
+            if (Properties[PropertyEnum.IsInCombat] == false)
+                return Logger.WarnReturn(false, $"ExitCombat(): Agent [{this}] is not in combat");
+
+            if (_exitCombatEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_exitCombatEvent);
+
+            Properties[PropertyEnum.IsInCombat] = false;
+            TryActivateOnOutOfCombatProcs();
+            TriggerEntityActionEvent(EntitySelectorActionEventType.OnExitedCombat);
+
+            return true;
         }
 
         #endregion
@@ -1214,6 +1260,9 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnExitedWorld()
         {
+            if (Properties[PropertyEnum.IsInCombat])
+                ExitCombat();
+
             base.OnExitedWorld();
             AIController?.OnAIExitedWorld();
 
@@ -1673,6 +1722,11 @@ namespace MHServerEmu.Games.Entities
         protected class WakeEndEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => (t as Agent)?.WakeEndCallback();
+        }
+
+        private class ExitCombatEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Agent)t).ExitCombat();
         }
 
         #endregion

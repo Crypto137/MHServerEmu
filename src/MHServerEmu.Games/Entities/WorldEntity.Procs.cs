@@ -202,7 +202,17 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
+        public void TryActivateOnInCombatProcs()    // 32
+        {
+            // TODO
+        }
+
         public void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
+        {
+            // TODO
+        }
+
+        public void TryActivateOnOutOfCombatProcs()
         {
             // TODO
         }

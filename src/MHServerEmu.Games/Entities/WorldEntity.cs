@@ -1869,14 +1869,10 @@ namespace MHServerEmu.Games.Entities
 
         #region Combat State
 
-        public virtual void EnterCombat()
+        public virtual bool EnterCombat()
         {
-            // TODO
-        }
-
-        public virtual void ExitCombat()
-        {
-            // TODO
+            // Overriden in Agent
+            return true;
         }
 
         #endregion

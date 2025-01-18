@@ -200,6 +200,19 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
+        public override bool EnterCombat()
+        {
+            ulong missileCreatorId = Properties[PropertyEnum.MissileCreatorId];
+            if (missileCreatorId == InvalidId)
+                return false;
+
+            WorldEntity missileCreator = Game.EntityManager.GetEntity<WorldEntity>(missileCreatorId);
+            if (missileCreator == null || missileCreator.IsInWorld == false)
+                return false;
+
+            return missileCreator.EnterCombat();
+        }
+
         private void StartMovement()
         {           
             if (_contextPrototype == null) return;
