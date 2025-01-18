@@ -287,6 +287,11 @@ namespace MHServerEmu.Games.Populations
             bool critical = notOpen || missionProto.PopulationRequired;
             var difficultyRef = Region.DifficultyTierRef;
 
+            var time = TimeSpan.Zero;
+
+            // Fix conflict CH04TRChestController vs CH04TR02HauntedWarehouse
+            if (missionProto.DataRef == (PrototypeId)937322365109346758) time = TimeSpan.FromSeconds(1);
+
             if (missionProto.PopulationSpawns.HasValue())            
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
@@ -306,7 +311,7 @@ namespace MHServerEmu.Games.Populations
 
                     var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
                     for (var i = 0; i < entry.Count; i++)                        
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef, spawnCleanup);
+                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef, spawnCleanup, time);
                 }
         }
 
