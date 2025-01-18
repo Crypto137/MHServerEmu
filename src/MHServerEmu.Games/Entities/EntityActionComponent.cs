@@ -217,12 +217,18 @@ namespace MHServerEmu.Games.Entities
         {
             var scheduler = Game.Current.GameEventScheduler;
             if (scheduler == null) return;
-            List<EntitySelectorActionPrototype> actions = new(_pendingActions.Keys);
+
+            List<EntitySelectorActionPrototype> actions = ListPool<EntitySelectorActionPrototype>.Instance.Get();
+            foreach (var action in _pendingActions.Keys)
+                actions.Add(action);            
+            
             foreach (var action in actions)
             {
                 CancelAction(action);
                 RegisterAction(action);
             }
+
+            ListPool<EntitySelectorActionPrototype>.Instance.Return(actions);
         }
 
         public void CancelAll()
