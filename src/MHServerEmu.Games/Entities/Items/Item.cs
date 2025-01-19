@@ -691,7 +691,7 @@ namespace MHServerEmu.Games.Entities.Items
             return Eval.RunInt(itemProto.EvalDisplayLevel, evalContext);
         }
 
-        protected override void InitializeProcs()
+        protected override void InitializeProcEffectPowers()
         {
             // Don't do anything for items because they are not supposed to do any procs on their own
         }

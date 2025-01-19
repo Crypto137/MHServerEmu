@@ -525,9 +525,9 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        protected override void InitializeProcs()
+        protected override void InitializeProcEffectPowers()
         {
-            base.InitializeProcs();
+            base.InitializeProcEffectPowers();
 
             // Initialize equipment procs
             EntityManager entityManager = Game.EntityManager;
@@ -539,12 +539,12 @@ namespace MHServerEmu.Games.Entities
                     Item item = entityManager.GetEntity<Item>(entry.Id);
                     if (item == null)
                     {
-                        Logger.Warn("InitializeProcs(): item == null");
+                        Logger.Warn("InitializeProcEffectPowers(): item == null");
                         continue;
                     }
 
                     if (UpdateProcEffectPowers(item.Properties, true) == false)
-                        Logger.Warn($"InitializeProcs(): UpdateProcEffectPowers failed when initializing item=[{item}] owner=[{this}]");
+                        Logger.Warn($"InitializeProcEffectPowers(): UpdateProcEffectPowers failed when initializing item=[{item}] owner=[{this}]");
                 }
             }
         }

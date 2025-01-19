@@ -17,6 +17,7 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Navi;
@@ -1321,13 +1322,81 @@ namespace MHServerEmu.Games.Entities
 
         public bool UpdateProcEffectPowers(PropertyCollection properties, bool assignPowers)
         {
-            return true;
+            // Cannot assign proc powers is not in world
+            if (IsInWorld == false)
+                return true;
+
+            bool success = true;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var kvp in properties.IteratePropertyRange(Property.ProcPropertyTypesAll))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
+                if (procPowerProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("UpdateProcEffectPowers(): procPowerProtoRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                WorldEntity caster = this;
+
+                // Check if we have a caster override for this
+                ulong procCasterOverrideId = properties[PropertyEnum.ProcCasterOverride, procPowerProtoRef];
+                if (procCasterOverrideId != InvalidId)
+                {
+                    caster = entityManager.GetEntity<WorldEntity>(procCasterOverrideId);
+                    if (caster == null || caster.IsInWorld == false)
+                        continue;
+                }
+
+                if (assignPowers)
+                {
+                    Logger.Trace($"UpdateProcEffectPowers(): Assigning {kvp.Key}");
+
+                    PowerIndexProperties indexProps = new(0, caster.CharacterLevel, caster.CombatLevel);
+                    PrototypeId triggeringPowerRef = properties[PropertyEnum.TriggeringPowerRef, procPowerProtoRef];
+
+                    if (caster.AssignPower(procPowerProtoRef, indexProps, true, triggeringPowerRef) == null)
+                    {
+                        Logger.Warn($"UpdateProcEffectPowers(): Failed to assign {procPowerProtoRef.GetName()} to [{this}]");
+                        success = false;
+                    }
+                }
+                else
+                {
+                    Logger.Trace($"UpdateProcEffectPowers(): Unassigning {kvp.Key}");
+                    UnassignPower(procPowerProtoRef);
+                }
+
+                // Try to active certain proc trigger types right away
+                Property.FromParam(kvp.Key, 0, out AssetId procTriggerTypeAssetRef);
+                ProcTriggerType procTriggerType = (ProcTriggerType)AssetDirectory.Instance.GetEnumValue(procTriggerTypeAssetRef);
+                switch (procTriggerType)
+                {
+                    case ProcTriggerType.OnHealthAbove:
+                    case ProcTriggerType.OnHealthAboveToggle:
+                    case ProcTriggerType.OnHealthBelow:
+                    case ProcTriggerType.OnHealthBelowToggle:
+                        // Activate health procs at the end of the frame (for cases when we don't have our health yet)
+                        EventPointer<ScheduledHealthProcUpdateEvent> healthProcUpdate = new();
+                        ScheduleEntityEvent(healthProcUpdate, TimeSpan.Zero, procPowerProtoRef);
+                        break;
+
+                    case ProcTriggerType.OnOverlapBegin:
+                        // Check overlaps that began before this proc was assigned
+                        TryActivateOnOverlapBeginProcs(kvp.Key);
+                        break;
+                }
+            }
+
+            return success;
         }
 
-        protected virtual void InitializeProcs()
+        protected virtual void InitializeProcEffectPowers()
         {
             if (UpdateProcEffectPowers(Properties, true) == false)
-                Logger.Warn($"InitializeProcs(): UpdateProcEffectPowers failed when initializing entity=[{this}]");
+                Logger.Warn($"InitializeProcEffectPowers(): UpdateProcEffectPowers failed when initializing entity=[{this}]");
         }
 
         protected override void OnAttachedPropertiesPreAdd(PropertyCollection properties)
@@ -2328,6 +2397,8 @@ namespace MHServerEmu.Games.Entities
 
             if (Bounds.CollisionType != BoundsCollisionType.None)
                 RegisterForPendingPhysicsResolve();
+
+            InitializeProcEffectPowers();
 
             ConditionCollection?.OnOwnerEnteredWorld();
 
@@ -3413,6 +3484,11 @@ namespace MHServerEmu.Games.Entities
         private class ScheduledUnassignPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).UnassignPower(p1);
+        }
+
+        private class ScheduledHealthProcUpdateEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).TryActivateOnHealthProcs(p1);
         }
 
         private class ScheduledPowerResultsEvent : CallMethodEventParam1<Entity, PowerResults>

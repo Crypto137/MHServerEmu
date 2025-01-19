@@ -197,7 +197,7 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
-        public void TryActivateOnHealthProcs()  // 28-31
+        public void TryActivateOnHealthProcs(PrototypeId procPowerProtoRef = PrototypeId.Invalid)  // 28-31
         {
             // TODO
         }
@@ -221,6 +221,11 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO
             //Logger.Debug($"TryActivateOnOverlapBeginProcs(): With [{other}] at [{position}]");
+        }
+
+        public void TryActivateOnOverlapBeginProcs(PropertyId propertyId)
+        {
+            // override for checking overlaps that are already happening when this proc is assigned
         }
 
         public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
