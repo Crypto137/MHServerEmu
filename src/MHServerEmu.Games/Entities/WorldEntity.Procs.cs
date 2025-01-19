@@ -1,5 +1,5 @@
-﻿using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Entities.PowerCollections;
+﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -331,8 +331,60 @@ namespace MHServerEmu.Games.Entities
 
         private bool CheckProcChance(in KeyValuePair<PropertyId, PropertyValue> procProperty, float procChanceMultiplier)
         {
-            // TODO
-            return true;
+            Property.FromParam(procProperty.Key, 1, out PrototypeId procPowerProtoRef);
+
+            // See if we have a proc chance override for this power
+            float procChance = Properties[PropertyEnum.ProcChanceOverride, procPowerProtoRef];
+            
+            // If not, calculate proc chance taking into account the multiplier we have
+            if (procChance <= 0f)
+            {
+                procChance = Properties[procProperty.Key];
+
+                if (Segment.EpsilonTest(procChanceMultiplier, 1f) == false)
+                {
+                    PowerPrototype powerProto = procPowerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null) return Logger.WarnReturn(false, "CheckProcChance(): powerProto == null");
+
+                    switch (powerProto.ProcChanceMultiplierBehavior)
+                    {
+                        case ProcChanceMultiplierBehaviorType.AllowProcChanceMultiplier:
+                            procChance *= procChanceMultiplier;
+                            break;
+
+                        case ProcChanceMultiplierBehaviorType.IgnoreProcChanceMultiplier:
+                            // ignore without warning
+                            break;
+
+                        case ProcChanceMultiplierBehaviorType.IgnoreProcChanceMultiplierUnlessZero:
+                            if (Segment.IsNearZero(procChanceMultiplier))
+                                return false;
+                            break;
+
+                        default:
+                            Logger.Warn($"CheckProcChance(): Unhandled ProcChanceMultiplierBehaviorType {powerProto.ProcChanceMultiplierBehavior} in [{powerProto}]");
+                            break;
+                    }
+                }
+            }
+
+            // Check if we have a counter that guarantees procs
+            if (Properties.HasProperty(PropertyEnum.ProcAlwaysSucceedCount))
+            {
+                if (ConditionCollection != null)
+                {
+                    // Decrement the counter on all conditions that grant us guaranteed procs
+                    foreach (Condition condition in ConditionCollection)
+                    {
+                        if (condition.Properties.HasProperty(PropertyEnum.ProcAlwaysSucceedCount))
+                            condition.Properties.AdjustProperty(-1, PropertyEnum.ProcAlwaysSucceedCount);
+                    }
+                }
+
+                return true;
+            }
+
+            return Game.Random.NextFloat() < procChance;
         }
 
         private Power GetProcPower(in KeyValuePair<PropertyId, PropertyValue> procProperty)
