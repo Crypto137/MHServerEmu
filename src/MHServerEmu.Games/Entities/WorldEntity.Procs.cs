@@ -257,7 +257,7 @@ namespace MHServerEmu.Games.Entities
             if (target != null && target.CanTriggerOtherProcs(triggerType) == false)
                 return;
 
-            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.Proc))
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
             {
                 if (CheckProc(kvp, out Power procPower) == false)
                     continue;
@@ -292,18 +292,67 @@ namespace MHServerEmu.Games.Entities
         {
             procPower = null;
 
-            procPower = GetProcEffectPower(procProperty);
+            // Check param threshold
+            Property.FromParam(procProperty.Key, 0, out int triggerTypeValue);
+            Property.FromParam(procProperty.Key, 2, out int paramThreshold);
+
+            bool passedThreshold;
+            switch ((ProcTriggerType)triggerTypeValue)
+            {
+                case ProcTriggerType.OnAnyHitTargetHealthBelowPct:
+                case ProcTriggerType.OnEnduranceBelow:
+                case ProcTriggerType.OnGotDamagedHealthBelowPct:
+                case ProcTriggerType.OnHealthBelow:
+                case ProcTriggerType.OnHealthBelowToggle:
+                    passedThreshold = param <= paramThreshold;
+                    break;
+
+                case ProcTriggerType.OnConditionStackCount:
+                    passedThreshold = param == paramThreshold;
+                    break;
+
+                default:
+                    passedThreshold = param >= paramThreshold;                    
+                    break;
+            }
+
+            if (passedThreshold == false)
+                return false;
+
+            if (CheckProcChance(procProperty, procChanceMultiplier) == false)
+                return false;
+
+            procPower = GetProcPower(procProperty);
             if (procPower == null)
                 return false;
 
             return procPower.CanTrigger() == PowerUseResult.Success;
         }
 
-        private Power GetProcEffectPower(in KeyValuePair<PropertyId, PropertyValue> procProperty)
+        private bool CheckProcChance(in KeyValuePair<PropertyId, PropertyValue> procProperty, float procChanceMultiplier)
         {
-            // TODO: More validation
+            // TODO
+            return true;
+        }
+
+        private Power GetProcPower(in KeyValuePair<PropertyId, PropertyValue> procProperty)
+        {
+            if (IsInWorld == false) return Logger.WarnReturn<Power>(null, "GetProcPower(): IsInWorld == false");
+
             Property.FromParam(procProperty.Key, 1, out PrototypeId procPowerProtoRef);
-            return PowerCollection.GetPower(procPowerProtoRef);
+
+            WorldEntity caster = this;
+
+            // Check if we have a caster override for this
+            ulong procCasterOverrideId = Properties[PropertyEnum.ProcCasterOverride, procPowerProtoRef];
+            if (procCasterOverrideId != InvalidId)
+            {
+                caster = Game.EntityManager.GetEntity<WorldEntity>(procCasterOverrideId);
+                if (caster == null || caster.IsInWorld == false)
+                    return null;
+            }
+
+            return caster.GetPower(procPowerProtoRef);
         }
 
         #endregion
