@@ -177,7 +177,7 @@ namespace MHServerEmu.Games.Loot
         {
             return DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours) ||
                    DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerRollover) ||
-                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownOncePerXHours);
+                   DropChanceModifiers.HasFlag(LootDropChanceModifiers.CooldownByChannel);
         }
     }
 }
