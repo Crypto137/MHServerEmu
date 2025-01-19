@@ -91,6 +91,8 @@ namespace MHServerEmu.Games.Entities
 
     public partial class WorldEntity
     {
+        #region Handlers
+
         // Handlers are ordered by ProcTriggerType enum
 
         public void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
@@ -116,9 +118,12 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return;
 
+            TryActivateProcsCommon(ProcTriggerType.OnConditionEnd, condition.Properties);
+
             // TODO: Proper implementation
 
             // HACK: Activate cooldown for Moon Knight's signature
+            /*
             if (condition.CreatorPowerPrototypeRef == (PrototypeId)924314278184884866)
             {
                 PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
@@ -126,6 +131,7 @@ namespace MHServerEmu.Games.Entities
                 PowerActivationSettings settings = new(Id, default, RegionLocation.Position);
                 ActivatePower((PrototypeId)10152747549179582463, ref settings);
             }
+            */
         }
 
         public void TryActivateOnConditionStackCountProcs(Condition condition)  // 9
@@ -233,7 +239,7 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
-        public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power power, ref PowerActivationSettings settings)  // 58-61
+        public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power power, ref PowerActivationSettings settings)  // 58-62
         {
             // TODO
         }
@@ -242,5 +248,64 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO
         }
+
+        private void TryActivateProcsCommon(ProcTriggerType triggerType, PropertyCollection properties, WorldEntity target = null, float procChanceMultiplier = 1f)
+        {
+            if (IsInWorld == false)
+                return;
+
+            if (target != null && target.CanTriggerOtherProcs(triggerType) == false)
+                return;
+
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.Proc))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateProcsCommon(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+                procPower.Properties.CopyProperty(properties, PropertyEnum.CharacterLevel);
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            // TODO: Remove CancelOnProcTriggers conditions
+        }
+
+        #endregion
+
+        #region Helpers
+
+        public bool CanTriggerOtherProcs(ProcTriggerType triggerType)
+        {
+            return Properties[PropertyEnum.DontTriggerOtherProcs, (int)triggerType] == false;
+        }
+
+        private bool CheckProc(in KeyValuePair<PropertyId, PropertyValue> procProperty, out Power procPower,
+            int param = 0, float procChanceMultiplier = 1f, Power triggeringPower = null)
+        {
+            procPower = null;
+
+            procPower = GetProcEffectPower(procProperty);
+            if (procPower == null)
+                return false;
+
+            return procPower.CanTrigger() == PowerUseResult.Success;
+        }
+
+        private Power GetProcEffectPower(in KeyValuePair<PropertyId, PropertyValue> procProperty)
+        {
+            // TODO: More validation
+            Property.FromParam(procProperty.Key, 1, out PrototypeId procPowerProtoRef);
+            return PowerCollection.GetPower(procPowerProtoRef);
+        }
+
+        #endregion
     }
 }

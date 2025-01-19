@@ -1932,6 +1932,85 @@ namespace MHServerEmu.Games.Entities
             return power.Activate(ref settings);
         }
 
+        protected PowerUseResult ActivateProcPower(Power procPower, ref PowerActivationSettings settings, WorldEntity owner, bool interruptActivePower = false)
+        {
+            if (IsSimulated == false)
+                return PowerUseResult.OwnerNotSimulated;
+
+            PrototypeId procPowerProtoRef = procPower.PrototypeDataRef;
+            Logger.Debug($"ActivateProcPower(): {procPowerProtoRef.GetName()} on [{this}]");
+
+            // Apply target override if there is one
+            ulong procTargetOverrideId = owner.Properties[PropertyEnum.ProcTargetOverride, procPowerProtoRef];
+            if (procTargetOverrideId != InvalidId)
+            {
+                WorldEntity procTargetOverride = Game.EntityManager.GetEntity<WorldEntity>(procTargetOverrideId);
+                if (procTargetOverride != null && procTargetOverride.IsInWorld)
+                {
+                    settings.TargetEntityId = procTargetOverride.Id;
+                    settings.TargetPosition = procTargetOverride.RegionLocation.Position;
+                }
+            }
+
+            // Find the target
+            WorldEntity target = null;
+            switch (procPower.GetTargetingShape())
+            {
+                case TargetingShapeType.Self:
+                    target = procPower.Owner;
+                    break;
+
+                case TargetingShapeType.SingleTargetRandom:
+                    target = procPower.GetRandomTarget();
+                    if (target != null)
+                    {
+                        settings.TargetEntityId = target.Id;
+                        settings.TargetPosition = target.RegionLocation.Position;
+                    }
+                    break;
+
+                default:
+                    target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                    break;
+            }
+
+            // Pre-validate activation
+            PowerUseResult result = procPower.CanActivate(target, settings.TargetPosition, settings.Flags);
+            if (result != PowerUseResult.Success)
+                return result;
+
+            // Interrupt the current power if requested
+            if (interruptActivePower && procPower.IsExclusiveActivation())
+            {
+                Power activePower = GetActivePower();
+                activePower?.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting);
+            }
+
+            // Set index properties on the proc power
+            procPower.Properties[PropertyEnum.PowerRank] = Properties.HasProperty(PropertyEnum.PowerRank)
+                ? Properties[PropertyEnum.PowerRank]
+                : owner.Properties[PropertyEnum.ProcPowerRank, procPowerProtoRef];
+
+            procPower.Properties[PropertyEnum.CharacterLevel] = CharacterLevel;
+            procPower.Properties[PropertyEnum.CombatLevel] = CombatLevel;
+            procPower.Properties[PropertyEnum.ItemLevel] = Properties[PropertyEnum.ProcPowerItemLevel, procPowerProtoRef];
+            procPower.Properties[PropertyEnum.ItemVariation] = Properties[PropertyEnum.ProcPowerItemVariation, procPowerProtoRef];
+            procPower.Properties[PropertyEnum.InventoryStackCount] = Properties[PropertyEnum.ProcPowerInvStackCount, procPowerProtoRef];
+            procPower.Properties[PropertyEnum.SpawnGroupId] = Properties[PropertyEnum.SpawnGroupId];
+
+            // Set additional settings.
+            // NOTE: TriggeringPowerRef is applied to the owner by conditions that also grant the procs.
+            settings.TriggeringPowerRef = Properties[PropertyEnum.TriggeringPowerRef, procPowerProtoRef];
+            settings.FXRandomSeed = Game.Random.Next(1, 10000);
+
+            // Activate the proc power
+            result = procPower.Activate(ref settings);
+            if (result == PowerUseResult.Success && settings.Flags.HasFlag(PowerActivationSettingsFlags.NoOnPowerUseProcs) == false)
+                TryActivateOnPowerUseProcs(ProcTriggerType.OnPowerUseProcEffect, procPower, ref settings);
+
+            return result;
+        }
+
         private Power GetActivePower()
         {
             if (ActivePowerRef != PrototypeId.Invalid)
