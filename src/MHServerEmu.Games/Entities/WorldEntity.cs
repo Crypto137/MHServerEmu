@@ -1324,6 +1324,27 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        protected virtual void InitializeProcs()
+        {
+            if (UpdateProcEffectPowers(Properties, true) == false)
+                Logger.Warn($"InitializeProcs(): UpdateProcEffectPowers failed when initializing entity=[{this}]");
+        }
+
+        protected override void OnAttachedPropertiesPreAdd(PropertyCollection properties)
+        {
+            base.OnAttachedPropertiesPreAdd(properties);
+
+            if (UpdateProcEffectPowers(properties, true) == false)
+                Logger.Warn($"OnAttachedPropertiesPreAdd(): UpdateProcEffectPowers failed when attaching properties to entity=[{this}]");
+        }
+
+        protected override void OnAttachedPropertiesPostRemove(PropertyCollection properties)
+        {
+            base.OnAttachedPropertiesPostRemove(properties);
+
+            UpdateProcEffectPowers(properties, false);
+        }
+
         public float GetNegStatusResistPercent(int ccResistScore, PropertyCollection otherProperties)
         {
             EvalPrototype evalNegStatusResistPctFormula = GameDatabase.CombatGlobalsPrototype?.EvalNegStatusResistPctFormulaPrototype;

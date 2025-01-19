@@ -1053,6 +1053,12 @@ namespace MHServerEmu.Games.Entities
         {
             RebuildConditionKeywordsMask(condition.Id);
             DecrementStackCountCache(condition);
+
+            // Remove proc powers
+            Handle handle = new(this, condition);
+            _owner.UpdateProcEffectPowers(condition.Properties, false);
+            if (handle.Valid() == false)
+                return;
         }
 
         private bool EnableCondition(Condition condition, bool enable)

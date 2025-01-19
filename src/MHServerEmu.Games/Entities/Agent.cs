@@ -525,6 +525,30 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        protected override void InitializeProcs()
+        {
+            base.InitializeProcs();
+
+            // Initialize equipment procs
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                foreach (var entry in inventory)
+                {
+                    Item item = entityManager.GetEntity<Item>(entry.Id);
+                    if (item == null)
+                    {
+                        Logger.Warn("InitializeProcs(): item == null");
+                        continue;
+                    }
+
+                    if (UpdateProcEffectPowers(item.Properties, true) == false)
+                        Logger.Warn($"InitializeProcs(): UpdateProcEffectPowers failed when initializing item=[{item}] owner=[{this}]");
+                }
+            }
+        }
+
         protected override PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
             PowerUseResult result = base.ActivatePower(power, ref settings);
@@ -894,7 +918,8 @@ namespace MHServerEmu.Games.Entities
                 if (entity is not Item) { Logger.Warn("OnOtherEntityAddedToMyInventory(): entity is not Item"); return; }
                 if (invLoc.ContainerId != Id) { Logger.Warn("OnOtherEntityAddedToMyInventory(): invLoc.ContainerId != Id"); return; }
 
-                // TODO: Assign proc powers
+                if (UpdateProcEffectPowers(entity.Properties, true) == false)
+                    Logger.Warn($"OnOtherEntityAddedToMyInventory(): UpdateProcEffectPowers failed when equipping item=[{entity}] owner=[{this}]");
 
                 Properties.AddChildCollection(entity.Properties);
             }
@@ -916,7 +941,7 @@ namespace MHServerEmu.Games.Entities
 
                 entity.Properties.RemoveFromParent(Properties);
 
-                // TODO: Unassign proc powers
+                UpdateProcEffectPowers(entity.Properties, false);
             }
 
             base.OnOtherEntityRemovedFromMyInventory(entity, invLoc);

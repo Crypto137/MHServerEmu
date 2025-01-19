@@ -691,6 +691,11 @@ namespace MHServerEmu.Games.Entities.Items
             return Eval.RunInt(itemProto.EvalDisplayLevel, evalContext);
         }
 
+        protected override void InitializeProcs()
+        {
+            // Don't do anything for items because they are not supposed to do any procs on their own
+        }
+
         private bool TryLevelUpAffix(bool isDeserializing)
         {
             if (Prototype is not LegendaryPrototype)
