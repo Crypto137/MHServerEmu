@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
@@ -95,7 +96,7 @@ namespace MHServerEmu.Games.Entities
 
         // Handlers are ordered by ProcTriggerType enum
 
-        public virtual void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
+        public virtual void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-57, 71
         {
             if (IsInWorld == false)
                 return;
@@ -103,7 +104,105 @@ namespace MHServerEmu.Games.Entities
             if (TryForwardOnHitProcsToOwner(triggerType, powerResults))
                 return;
 
-            // TODO
+            // Check if our target can trigger procs
+            WorldEntity target = null;
+            if (powerResults.TargetId != InvalidId)
+            {
+                target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.TargetId);
+                if (target != null && target.CanTriggerOtherProcs(triggerType) == false)
+                    return;
+            }
+
+            // Get proc chance multiplier for this power
+            float procChanceMultiplier = powerResults.PowerPrototype.OnHitProcChanceMultiplier;
+
+            // Non-keyword procs
+
+            // NOTE: Activating procs will most likely modify the property collection,
+            // so we need to copy proc properties to a temp collection for iteration.
+            using PropertyCollection tempProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            tempProperties.CopyPropertyRange(Properties, PropertyEnum.Proc);
+
+            foreach (var kvp in tempProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                int param;
+
+                // Calculate param value
+                switch (triggerType)
+                {
+                    case ProcTriggerType.OnAnyHitForPctHealth:
+                        if (target == null)
+                            continue;
+
+                        float damage = 0f;
+                        foreach (var damageKvp in powerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
+                            damage += damageKvp.Value;
+
+                        float pctHealth = damage / Math.Max(target.Properties[PropertyEnum.HealthMax], 1L);
+                        param = (int)(pctHealth * 100f);
+
+                        break;
+
+                    case ProcTriggerType.OnAnyHitTargetHealthBelowPct:
+                        if (target == null)
+                            continue;
+
+                        damage = 0f;
+                        foreach (var damageKvp in powerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
+                            damage += damageKvp.Value;
+
+                        float healthAfterDamage = (long)target.Properties[PropertyEnum.Health] - damage;
+                        if (healthAfterDamage > 0f)
+                        {
+                            pctHealth = healthAfterDamage / Math.Max(target.Properties[PropertyEnum.HealthMax], 1L);
+                            param = (int)(pctHealth * 100f);
+                        }
+                        else
+                        {
+                            param = 100;
+                        }
+
+                        break;
+
+                    default:
+                        param = 0;
+                        break;
+                }
+
+                if (CheckProc(kvp, out Power procPower, param, procChanceMultiplier) == false)
+                    continue;
+
+                // TODO: Recursion checks
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnHitProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                if (target != null && target.IsInWorld)
+                {
+                    settings.TargetEntityId = target.Id;
+                    settings.TargetPosition = target.RegionLocation.Position;
+                }
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            // Keyword procs
+            foreach (var kvp in Properties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != triggerType)
+                    continue;
+
+                // TODO
+            }
 
             ConditionCollection?.RemoveCancelOnHitConditions();
         }
