@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -146,9 +147,10 @@ namespace MHServerEmu.Games.Entities
 
         private void OnOutOfWorld()
         {
-            List<Power> powerList = new();
+            List<Power> powerList = ListPool<Power>.Instance.Get();
             GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnOutOfWorld);
             ActivateMissilePowers(powerList, null, RegionLocation.Position);
+            ListPool<Power>.Instance.Return(powerList);
             Kill();
         }
 
@@ -164,9 +166,10 @@ namespace MHServerEmu.Games.Entities
             if (Game == null) return;
             if (IsInWorld)
             {
-                List<Power> powerList = new();
+                List<Power> powerList = ListPool<Power>.Instance.Get();
                 GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnLifespanExpired);
                 ActivateMissilePowers(powerList, null, RegionLocation.Position);
+                ListPool<Power>.Instance.Return(powerList);
             }
             if (IsReturningMissile && IsSimulated)
                 ReturnMissile();
@@ -298,14 +301,20 @@ namespace MHServerEmu.Games.Entities
             }
 
             bool collideWithWhom = false;
-            List<Power> collisionPowers = GetCollisionPowers(collidedWith);
+            List<Power> collisionPowers = ListPool<Power>.Instance.Get();
+            GetCollisionPowers(collisionPowers, collidedWith);
 
             if (collisionPowers.Count > 0 || missileAlwaysCollides)
             {
                 collideWithWhom = true;
                 if (collidedWith != null)
                 {
-                    if (CheckAndApplyMissileReflection(collidedWith, position)) return;
+                    if (CheckAndApplyMissileReflection(collidedWith, position))
+                    {
+                        ListPool<Power>.Instance.Return(collisionPowers);
+                        return;
+                    }
+
                     OnValidTargetHit(collidedWith);
                 }
             }
@@ -346,6 +355,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (kill) Kill(collidedWith);
+
+            ListPool<Power>.Instance.Return(collisionPowers);
         }
 
         private bool OnCollideWithWorldGeometry()
@@ -456,9 +467,8 @@ namespace MHServerEmu.Games.Entities
             return Random.NextFloat() <= Properties[PropertyEnum.MissilePierceChance];
         }
 
-        private List<Power> GetCollisionPowers(WorldEntity collidedWith)
+        private void GetCollisionPowers(List<Power> powerList, WorldEntity collidedWith)
         {
-            List<Power> powerList = new();
             bool isOwner = collidedWith != null && collidedWith.Id == Properties[PropertyEnum.PowerUserOverrideID];
 
             if (IsReturningMissile && Properties[PropertyEnum.MissileReturning])
@@ -479,8 +489,6 @@ namespace MHServerEmu.Games.Entities
                 else
                     GetMissilePowersWithActivationEvent(powerList, collidedWith, MissilePowerActivationEventType.OnCollide);
             }
-
-            return powerList;
         }
 
         private void OnValidTargetHit(WorldEntity collidedWith)
@@ -694,9 +702,10 @@ namespace MHServerEmu.Games.Entities
             var gravitatedContext = GravitatedContext;
             if (gravitatedContext == null) return false;
 
-            List<Power> powerList = new();
+            List<Power> powerList = ListPool<Power>.Instance.Get();
             GetMissilePowersWithActivationEvent(powerList, null, MissilePowerActivationEventType.OnBounce);
             ActivateMissilePowers(powerList, null, position);
+            ListPool<Power>.Instance.Return(powerList);
 
             int numBounces = Properties[PropertyEnum.NumMissileBounces];
             if (++numBounces >= gravitatedContext.NumBounces)
