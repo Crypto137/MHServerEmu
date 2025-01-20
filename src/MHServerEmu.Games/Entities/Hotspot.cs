@@ -12,6 +12,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -186,6 +187,18 @@ namespace MHServerEmu.Games.Entities
                         missile.Properties.AddChildCollection(_directApplyToMissileProperties);
                 }
             }
+        }
+
+        // Never activate OnHit / OnKill procs on the hotspot itself
+
+        public override void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            TryForwardOnHitProcsToOwner(triggerType, powerResults);
+        }
+
+        public override void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            TryForwardOnKillProcsToOwner(triggerType, powerResults);
         }
 
         public bool IsOverlappingPowerTarget(ulong targetId)

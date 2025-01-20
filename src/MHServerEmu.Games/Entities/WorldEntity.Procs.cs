@@ -95,8 +95,14 @@ namespace MHServerEmu.Games.Entities
 
         // Handlers are ordered by ProcTriggerType enum
 
-        public void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
+        public virtual void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-56, 71
         {
+            if (IsInWorld == false)
+                return;
+
+            if (TryForwardOnHitProcsToOwner(triggerType, powerResults))
+                return;
+
             // TODO
 
             ConditionCollection?.RemoveCancelOnHitConditions();
@@ -224,8 +230,14 @@ namespace MHServerEmu.Games.Entities
             TryActivateProcsCommon(ProcTriggerType.OnInCombat, Properties);
         }
 
-        public void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
+        public virtual void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
         {
+            if (IsInWorld == false)
+                return;
+
+            if (TryForwardOnKillProcsToOwner(triggerType, powerResults))
+                return;
+
             // TODO
         }
 
@@ -347,6 +359,42 @@ namespace MHServerEmu.Games.Entities
             }
 
             ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
+        }
+
+        #endregion
+
+        #region Proc Forwarding
+
+        public bool TryForwardOnHitProcsToOwner(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
+            if (worldEntityProto == null) return Logger.WarnReturn(false, "ForwardOnHitProcsToOwner(): worldEntityProto == null");
+
+            if (worldEntityProto.ForwardOnHitProcsToOwner == false)
+                return false;
+
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
+            if (owner == null || owner.IsInWorld == false)
+                return false;
+
+            owner.TryActivateOnHitProcs(triggerType, powerResults);
+            return true;
+        }
+
+        public bool TryForwardOnKillProcsToOwner(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            WorldEntityPrototype worldEntityProto = WorldEntityPrototype;
+            if (worldEntityProto == null) return Logger.WarnReturn(false, "TryForwardOnKillProcsToOwner(): worldEntityProto == null");
+
+            if (worldEntityProto.ForwardOnHitProcsToOwner == false)
+                return false;
+
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
+            if (owner == null || owner.IsInWorld == false)
+                return false;
+
+            owner.TryActivateOnKillProcs(triggerType, powerResults);
+            return true;
         }
 
         #endregion

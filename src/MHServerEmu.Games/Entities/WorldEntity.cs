@@ -1534,7 +1534,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
                 }
 
-                TryActivateOnHitProcs(triggerType, powerResults);
+                powerOwner.TryActivateOnHitProcs(triggerType, powerResults);
             }
 
             // OnPowerHit / OnPowerHitNormal

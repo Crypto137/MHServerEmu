@@ -213,6 +213,18 @@ namespace MHServerEmu.Games.Entities
             return missileCreator.EnterCombat();
         }
 
+        // Never activate OnHit / OnKill procs on the missile itself
+
+        public override void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            TryForwardOnHitProcsToOwner(triggerType, powerResults);
+        }
+
+        public override void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            TryForwardOnKillProcsToOwner(triggerType, powerResults);
+        }
+
         private void StartMovement()
         {           
             if (_contextPrototype == null) return;
