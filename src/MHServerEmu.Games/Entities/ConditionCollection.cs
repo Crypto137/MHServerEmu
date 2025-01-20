@@ -32,6 +32,8 @@ namespace MHServerEmu.Games.Entities
         private readonly SortedDictionary<ulong, Condition> _currentConditions = new();
         private readonly Dictionary<StackId, int> _stackCountCache = new();
 
+        private readonly Dictionary<ProcTriggerType, HashSet<ulong>> _cancelOnProcTriggerCache = new();
+
         private readonly EventGroup _pendingEvents = new();
 
         private uint _version = 0;
@@ -653,6 +655,15 @@ namespace MHServerEmu.Games.Entities
             RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnKilledFunc);
         }
 
+        public void RemoveCancelOnProcTriggerConditions(ProcTriggerType triggerType)
+        {
+            if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
+                return;
+
+            foreach (ulong conditionId in conditionIds)
+                RemoveCondition(conditionId);
+        }
+
         public bool PauseCondition(Condition condition, bool notifyClient)
         {
             if (condition.IsPaused)
@@ -1004,6 +1015,7 @@ namespace MHServerEmu.Games.Entities
         private void OnPostAccrueCondition(Condition condition)
         {
             IncrementStackCountCache(condition);
+            CacheCancelOnProcTriggers(condition);
 
             if (condition.ShouldStartPaused(_owner.Region))
             {
@@ -1053,6 +1065,7 @@ namespace MHServerEmu.Games.Entities
         {
             RebuildConditionKeywordsMask(condition.Id);
             DecrementStackCountCache(condition);
+            RemoveCachedCancelOnProcTriggers(condition);
 
             // Remove proc powers
             Handle handle = new(this, condition);
@@ -1260,6 +1273,48 @@ namespace MHServerEmu.Games.Entities
             }
 
             return count;
+        }
+
+        private bool CacheCancelOnProcTriggers(Condition condition)
+        {
+            ConditionPrototype conditionProto = condition?.ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn(false, "CacheCancelOnProcTriggers(): conditionProto == null");
+
+            if (conditionProto.CancelOnProcTriggers.IsNullOrEmpty())
+                return true;
+
+            foreach (ProcTriggerType triggerType in conditionProto.CancelOnProcTriggers)
+            {
+                if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
+                {
+                    conditionIds = new();
+                    _cancelOnProcTriggerCache.Add(triggerType, conditionIds);
+                }
+
+                Logger.Debug($"CacheCancelOnProcTriggers(): {condition} - {triggerType}");
+                conditionIds.Add(condition.Id);
+            }
+
+            return true;
+        }
+
+        private bool RemoveCachedCancelOnProcTriggers(Condition condition)
+        {
+            ConditionPrototype conditionProto = condition?.ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn(false, "RemoveCachedCancelOnProcTriggers(): conditionProto == null");
+
+            if (conditionProto.CancelOnProcTriggers.IsNullOrEmpty())
+                return true;
+
+            foreach (ProcTriggerType triggerType in conditionProto.CancelOnProcTriggers)
+            {
+                if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
+                    continue;
+
+                conditionIds.Remove(condition.Id);
+            }
+
+            return true;
         }
 
         public readonly struct StackId : IEquatable<StackId>

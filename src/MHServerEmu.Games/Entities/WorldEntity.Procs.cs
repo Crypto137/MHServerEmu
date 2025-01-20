@@ -286,7 +286,7 @@ namespace MHServerEmu.Games.Entities
                 procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
 
-            // TODO: Remove CancelOnProcTriggers conditions
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
         }
 
         #endregion
