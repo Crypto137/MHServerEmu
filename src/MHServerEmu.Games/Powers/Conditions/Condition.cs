@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         OnIntraRegionTeleport   = 1 << 5
     }
 
-    public class Condition
+    public class Condition : IKeyworded
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 

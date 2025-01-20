@@ -99,6 +99,12 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum.ProcNotKeyword
         };
 
+        public static readonly PropertyEnum[] ProcPropertyTypesKeyword = new PropertyEnum[]
+        {
+            PropertyEnum.ProcKeyword,
+            PropertyEnum.ProcNotKeyword
+        };
+
         public static readonly PropertyEnum[] StatusResistByDurationConditional = new PropertyEnum[]
         {
             PropertyEnum.StatusResistByDurationMS,

@@ -118,20 +118,31 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return;
 
+            // Run common proc logic
             TryActivateProcsCommon(ProcTriggerType.OnConditionEnd, condition.Properties);
 
-            // TODO: Proper implementation
-
-            // HACK: Activate cooldown for Moon Knight's signature
-            /*
-            if (condition.CreatorPowerPrototypeRef == (PrototypeId)924314278184884866)
+            // Check keyword procs
+            foreach (var kvp in Properties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
             {
-                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
-                AssignPower((PrototypeId)10152747549179582463, indexProps);
-                PowerActivationSettings settings = new(Id, default, RegionLocation.Position);
-                ActivatePower((PrototypeId)10152747549179582463, ref settings);
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnConditionEnd)
+                    continue;
+
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                if (CheckKeywordProc(kvp, out Power procPower, condition, requiredKeywordState) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnConditionEndProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
-            */
         }
 
         public void TryActivateOnConditionStackCountProcs(Condition condition)  // 9
@@ -317,6 +328,28 @@ namespace MHServerEmu.Games.Entities
             }
 
             if (passedThreshold == false)
+                return false;
+
+            if (CheckProcChance(procProperty, procChanceMultiplier) == false)
+                return false;
+
+            procPower = GetProcPower(procProperty);
+            if (procPower == null)
+                return false;
+
+            return procPower.CanTrigger() == PowerUseResult.Success;
+        }
+
+        private bool CheckKeywordProc<T>(in KeyValuePair<PropertyId, PropertyValue> procProperty, out Power procPower,
+            T keywordedObject, bool requiredKeywordState, float procChanceMultiplier = 1f) where T: IKeyworded
+        {
+            procPower = null;
+
+            Property.FromParam(procProperty.Key, 2, out PrototypeId keywordProtoRef);
+            KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+            if (keywordProto == null) return Logger.WarnReturn(false, "CheckKeywordProc(): keywordProto == null");
+
+            if (keywordedObject.HasKeyword(keywordProto) != requiredKeywordState)
                 return false;
 
             if (CheckProcChance(procProperty, procChanceMultiplier) == false)

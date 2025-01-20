@@ -72,7 +72,7 @@ namespace MHServerEmu.Games.Entities
         Teleport
     }
 
-    public partial class WorldEntity : Entity
+    public partial class WorldEntity : Entity, IKeyworded
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 

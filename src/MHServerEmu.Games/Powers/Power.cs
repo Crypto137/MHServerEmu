@@ -28,7 +28,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
-    public partial class Power
+    public partial class Power : IKeyworded
     {
         private const float PowerPositionSweepPadding = Locomotor.MovementSweepPadding;
         private const float PowerPositionSweepPaddingSquared = PowerPositionSweepPadding * PowerPositionSweepPadding;
