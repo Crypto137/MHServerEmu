@@ -824,6 +824,7 @@ namespace MHServerEmu.Games.Network
             // Try to pick up the item as currency
             if (Player.AcquireCurrencyItem(item))
             {
+                Player.CurrentAvatar?.TryActivateOnLootPickupProcs(item);
                 item.Destroy();
                 return true;
             }
@@ -866,6 +867,8 @@ namespace MHServerEmu.Games.Network
 
             // Remove instanced loot restriction
             item.Properties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
+
+            Player.CurrentAvatar?.TryActivateOnLootPickupProcs(item);
 
             return true;
         }

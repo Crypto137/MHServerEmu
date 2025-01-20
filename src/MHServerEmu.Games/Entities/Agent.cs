@@ -1170,6 +1170,10 @@ namespace MHServerEmu.Games.Entities
                             UnassignPower(throwablePower.PrototypeDataRef);
                         }
                     }
+
+                    if (id.Enum == PropertyEnum.Knockdown && newValue == false && oldValue)
+                        TryActivateOnKnockdownEndProcs();
+
                     break;
 
                 case PropertyEnum.Immobilized:

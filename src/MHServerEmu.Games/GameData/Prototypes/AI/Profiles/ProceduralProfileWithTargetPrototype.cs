@@ -641,7 +641,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             // Credits / currency
-            player.AcquireCurrencyItem(agent);
+            if (player.AcquireCurrencyItem(agent))
+            {
+                avatar.TryActivateOnLootPickupProcs(agent);
+
+                if (agent.Properties.HasProperty(PropertyEnum.RunestonesAmount))
+                    avatar.TryActivateOnRunestonePickupProcs();
+            }
 
             // Invoke OrbPickUp event
             agent.Region?.OrbPickUpEvent.Invoke(new(player, agent));            

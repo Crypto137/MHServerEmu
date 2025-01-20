@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnInCombatProcs()    // 32
         {
-            // TODO
+            TryActivateProcsCommon(ProcTriggerType.OnInCombat, Properties);
         }
 
         public void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
@@ -229,9 +229,34 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
-        public void TryActivateOnOutOfCombatProcs()
+        public void TryActivateOnKnockdownEndProcs()    // 40
         {
-            // TODO
+            TryActivateProcsCommon(ProcTriggerType.OnKnockdownEnd, Properties);
+        }
+
+        public void TryActivateOnLifespanExpiredProcs() // 41
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnLifespanExpired, Properties);
+        }
+
+        public void TryActivateOnLootPickupProcs(WorldEntity item)  // 42
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnLootPickup, Properties, item);
+        }
+
+        public void TryActivateOnMissileAbsorbedProcs() // 43
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnMissileAbsorbed, Properties);
+        }
+
+        public void TryActivateOnNegStatusAppliedProcs()  // 46
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnNegStatusApplied, Properties);
+        }
+
+        public void TryActivateOnOutOfCombatProcs() // 48
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnOutCombat, Properties);
         }
 
         public void TryActivateOnOverlapBeginProcs(WorldEntity other, Vector3 position, Vector3 otherPosition)  // 49
@@ -253,6 +278,11 @@ namespace MHServerEmu.Games.Entities
         public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power power, ref PowerActivationSettings settings)  // 58-62
         {
             // TODO
+        }
+
+        public void TryActivateOnRunestonePickupProcs()
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnRunestonePickup, Properties);
         }
 
         public void TryActivateOnSecondaryResourceValueChangeProcs(float newValue)  // 64
@@ -278,6 +308,11 @@ namespace MHServerEmu.Games.Entities
                 TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipMax, Properties);
             else if (newPips == 0)
                 TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipZero, Properties);
+        }
+
+        public void TryActivateOnSkillshotReflectProcs()   // 69
+        {
+            TryActivateProcsCommon(ProcTriggerType.OnSkillshotReflect, Properties);
         }
 
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72

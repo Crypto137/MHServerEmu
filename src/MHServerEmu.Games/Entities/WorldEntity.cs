@@ -2535,6 +2535,12 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection?.OnOwnerDeallocate();
         }
 
+        public override void OnLifespanExpired()
+        {
+            TryActivateOnLifespanExpiredProcs();
+            Kill();
+        }
+
         public virtual void OnDramaticEntranceEnd() { }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -2830,12 +2836,20 @@ namespace MHServerEmu.Games.Entities
         public virtual bool OnPowerUnassigned(Power power) { return true; }
         public virtual void OnPowerEnded(Power power, EndPowerFlags flags) { }
         public virtual void OnConditionRemoved(Condition condition) { }
-        public virtual void OnNegativeStatusEffectApplied(ulong conditionId) { }
+
+        public virtual void OnNegativeStatusEffectApplied(ulong conditionId)
+        {
+            TryActivateOnNegStatusAppliedProcs();
+        }
 
         public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
-        public virtual void OnSkillshotReflected(Missile missile) { }
+
+        public virtual void OnSkillshotReflected(Missile missile)
+        {
+            TryActivateOnSkillshotReflectProcs();
+        }
 
         #endregion
 

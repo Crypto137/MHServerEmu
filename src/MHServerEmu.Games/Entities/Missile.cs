@@ -430,7 +430,7 @@ namespace MHServerEmu.Games.Entities
                 if (Game == null) return false;
                 if (Random.NextFloat() < absorbChancePct)
                 {
-                    // TODO checkAbsorb for collidedWith
+                    collidedWith.TryActivateOnMissileAbsorbedProcs();
                     return true; 
                 }
             }
