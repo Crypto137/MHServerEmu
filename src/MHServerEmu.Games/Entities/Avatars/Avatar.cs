@@ -2813,6 +2813,14 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Properties[PropertyEnum.EnduranceMaxOther, manaType] = newValue;
                     break;
 
+                case PropertyEnum.SecondaryResource:
+                    TryActivateOnSecondaryResourceValueChangeProcs(newValue);
+                    break;
+
+                case PropertyEnum.SecondaryResourcePips:
+                    TryActivateOnSecondaryResourcePipsChangeProcs(newValue, oldValue);
+                    break;
+
                 case PropertyEnum.SecondaryResourceMax:
                     // Clamp current value to new max
                     float secondaryResourceMax = newValue;

@@ -255,6 +255,31 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
+        public void TryActivateOnSecondaryResourceValueChangeProcs(float newValue)  // 64
+        {
+            if (IsInWorld == false)
+                return;
+
+            if (newValue == 0f)
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourceEmpty, Properties);
+        }
+
+        public void TryActivateOnSecondaryResourcePipsChangeProcs(int newPips, int oldPips) // 65-68
+        {
+            if (IsInWorld == false)
+                return;
+
+            if (newPips > oldPips)
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipGain, Properties);
+            else
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipLoss, Properties);
+
+            if (newPips == Properties[PropertyEnum.SecondaryResourceMaxPips])
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipMax, Properties);
+            else if (newPips == 0)
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipZero, Properties);
+        }
+
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
         {
             // TODO
