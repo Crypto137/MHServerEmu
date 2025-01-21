@@ -96,6 +96,12 @@ namespace MHServerEmu.Games.Entities
 
         // Handlers are ordered by ProcTriggerType enum
 
+        // NOTE: Activating procs will likely modify the property collections of affected entities and conditions,
+        // so we need to copy proc properties to a temporary collection for iteration.
+
+        // Potentially this can be optimized by refactoring property collections to allow modification during iteration,
+        // but this may create unnecessary garbage collection pressure, so more investigation is required before doing this.
+
         public virtual void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)   // 1-3, 10, 52-57, 71
         {
             if (IsInWorld == false)
@@ -116,14 +122,11 @@ namespace MHServerEmu.Games.Entities
             // Get proc chance multiplier for this power
             float procChanceMultiplier = powerResults.PowerPrototype.OnHitProcChanceMultiplier;
 
+            // Copy proc properties to a temporary collection for iteration
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
             // Non-keyword procs
-
-            // NOTE: Activating procs will most likely modify the property collection,
-            // so we need to copy proc properties to a temp collection for iteration.
-            using PropertyCollection tempProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            tempProperties.CopyPropertyRange(Properties, PropertyEnum.Proc);
-
-            foreach (var kvp in tempProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
             {
                 int param;
 
@@ -195,7 +198,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Keyword procs
-            foreach (var kvp in Properties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
             {
                 Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
                 if ((ProcTriggerType)triggerTypeValue != triggerType)
@@ -223,11 +226,13 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return;
 
+            using PropertyCollection procProperties = GetProcProperties(condition.Properties);
+
             // Run common proc logic
-            TryActivateProcsCommon(ProcTriggerType.OnConditionEnd, condition.Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnConditionEnd, procProperties);
 
             // Check keyword procs
-            foreach (var kvp in Properties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
             {
                 Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
                 if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnConditionEnd)
@@ -326,7 +331,8 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnInCombatProcs()    // 32
         {
-            TryActivateProcsCommon(ProcTriggerType.OnInCombat, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnInCombat, procProperties);
         }
 
         public virtual void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
@@ -342,32 +348,38 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnKnockdownEndProcs()    // 40
         {
-            TryActivateProcsCommon(ProcTriggerType.OnKnockdownEnd, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnKnockdownEnd, procProperties);
         }
 
         public void TryActivateOnLifespanExpiredProcs() // 41
         {
-            TryActivateProcsCommon(ProcTriggerType.OnLifespanExpired, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnLifespanExpired, procProperties);
         }
 
         public void TryActivateOnLootPickupProcs(WorldEntity item)  // 42
         {
-            TryActivateProcsCommon(ProcTriggerType.OnLootPickup, Properties, item);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnLootPickup, procProperties, item);
         }
 
         public void TryActivateOnMissileAbsorbedProcs() // 43
         {
-            TryActivateProcsCommon(ProcTriggerType.OnMissileAbsorbed, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnMissileAbsorbed, procProperties);
         }
 
         public void TryActivateOnNegStatusAppliedProcs()  // 46
         {
-            TryActivateProcsCommon(ProcTriggerType.OnNegStatusApplied, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnNegStatusApplied, procProperties);
         }
 
         public void TryActivateOnOutOfCombatProcs() // 48
         {
-            TryActivateProcsCommon(ProcTriggerType.OnOutCombat, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnOutCombat, procProperties);
         }
 
         public void TryActivateOnOverlapBeginProcs(WorldEntity other, Vector3 position, Vector3 otherPosition)  // 49
@@ -393,7 +405,8 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnRunestonePickupProcs()
         {
-            TryActivateProcsCommon(ProcTriggerType.OnRunestonePickup, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnRunestonePickup, procProperties);
         }
 
         public void TryActivateOnSecondaryResourceValueChangeProcs(float newValue)  // 64
@@ -402,7 +415,10 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             if (newValue == 0f)
-                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourceEmpty, Properties);
+            {
+                using PropertyCollection procProperties = GetProcProperties(Properties);
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourceEmpty, procProperties);
+            }
         }
 
         public void TryActivateOnSecondaryResourcePipsChangeProcs(int newPips, int oldPips) // 65-68
@@ -410,20 +426,23 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false)
                 return;
 
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
             if (newPips > oldPips)
-                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipGain, Properties);
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipGain, procProperties);
             else
-                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipLoss, Properties);
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipLoss, procProperties);
 
             if (newPips == Properties[PropertyEnum.SecondaryResourceMaxPips])
-                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipMax, Properties);
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipMax, procProperties);
             else if (newPips == 0)
-                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipZero, Properties);
+                TryActivateProcsCommon(ProcTriggerType.OnSecondaryResourcePipZero, procProperties);
         }
 
         public void TryActivateOnSkillshotReflectProcs()   // 69
         {
-            TryActivateProcsCommon(ProcTriggerType.OnSkillshotReflect, Properties);
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            TryActivateProcsCommon(ProcTriggerType.OnSkillshotReflect, procProperties);
         }
 
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
@@ -645,6 +664,19 @@ namespace MHServerEmu.Games.Entities
             }
 
             return caster.GetPower(procPowerProtoRef);
+        }
+
+        private static PropertyCollection GetProcProperties(PropertyCollection source)
+        {
+            PropertyCollection destination = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            foreach (PropertyEnum propertyEnum in Property.ProcPropertyTypesAll)
+                destination.CopyPropertyRange(source, propertyEnum);
+
+            // Needed for the common handler
+            destination.CopyProperty(source, PropertyEnum.CharacterLevel);
+
+            return destination;
         }
 
         #endregion
