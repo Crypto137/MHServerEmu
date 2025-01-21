@@ -93,6 +93,17 @@ namespace MHServerEmu.Games.Entities.Physics
             return attachedEntities.Count > 0;
         }
 
+        public bool GetOverlappingEntities(List<ulong> overlappingEntities)
+        {
+            foreach (var kvp in OverlappedEntities)
+            {
+                if (kvp.Value.Overlapped)
+                    overlappingEntities.Add(kvp.Key);
+            }
+
+            return overlappingEntities.Count > 0;
+        }
+
         public void AddRepulsionForce(in Vector3 force)
         {
             if (Entity == null) return;

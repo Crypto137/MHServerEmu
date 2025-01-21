@@ -399,15 +399,42 @@ namespace MHServerEmu.Games.Entities
             TryActivateProcsCommon(ProcTriggerType.OnOutCombat, procProperties);
         }
 
-        public void TryActivateOnOverlapBeginProcs(WorldEntity other, Vector3 position, Vector3 otherPosition)  // 49
+        public void TryActivateOnOverlapBeginProcs(WorldEntity target, Vector3 overlapPosition)  // 49
         {
-            // TODO
-            //Logger.Debug($"TryActivateOnOverlapBeginProcs(): With [{other}] at [{position}]");
+            if (IsInWorld == false)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnOverlapBegin))
+                TryActivateOnOverlapBeginProcHelper(kvp, target, overlapPosition);
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnOverlapBegin);
         }
 
         public void TryActivateOnOverlapBeginProcs(PropertyId propertyId)
         {
-            // override for checking overlaps that are already happening when this proc is assigned
+            // Check overlaps that are already happening when this proc is assigned
+            if (propertyId.Enum != PropertyEnum.Proc)
+                return;
+
+            List<ulong> overlappingEntities = ListPool<ulong>.Instance.Get();
+            if (Physics.GetOverlappingEntities(overlappingEntities))
+            {
+                KeyValuePair<PropertyId, PropertyValue> procProperty = new(propertyId, Properties[propertyId]);
+                Vector3 overlapPosition = RegionLocation.Position;
+                EntityManager entityManager = Game.EntityManager;
+
+                foreach (ulong entityId in overlappingEntities)
+                {
+                    WorldEntity target = entityManager.GetEntity<WorldEntity>(entityId);
+                    if (target == null)
+                        continue;
+
+                    TryActivateOnOverlapBeginProcHelper(procProperty, target, overlapPosition);
+                }
+            }
+
+            ListPool<ulong>.Instance.Return(overlappingEntities);
         }
 
         public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
@@ -494,6 +521,26 @@ namespace MHServerEmu.Games.Entities
             }
 
             ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
+        }
+
+        private void TryActivateOnOverlapBeginProcHelper(in KeyValuePair<PropertyId, PropertyValue> procProperty, WorldEntity target, Vector3 overlapPosition)
+        {
+            if (IsInWorld == false)
+                return;
+
+            if (CheckProc(procProperty, out Power procPower) == false)
+                return;
+
+            if (procPower == null)
+                return;
+
+            if (procPower.IsValidTarget(target) == false)
+                return;
+
+            WorldEntity procPowerOwner = procPower.Owner;
+
+            PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, overlapPosition);
+            procPowerOwner.ActivateProcPower(procPower, ref settings, this);
         }
 
         #endregion

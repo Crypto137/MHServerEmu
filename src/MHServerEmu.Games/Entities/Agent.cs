@@ -1104,7 +1104,7 @@ namespace MHServerEmu.Games.Entities
             base.OnOverlapBegin(whom, whoPos, whomPos);
 
             // Trigger procs
-            TryActivateOnOverlapBeginProcs(whom, whoPos, whomPos);
+            TryActivateOnOverlapBeginProcs(whom, whoPos);
 
             // Notify AI
             AIController?.OnAIOverlapBegin(whom);
