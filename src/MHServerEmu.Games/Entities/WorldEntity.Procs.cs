@@ -329,7 +329,45 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnEnduranceProcs(ManaType manaType)  // 14-15
         {
-            // TODO
+            if (IsInWorld == false)
+                return;
+
+            if (TestStatus(EntityStatus.ExitingWorld))
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties)
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                ProcTriggerType triggerType = (ProcTriggerType)triggerTypeValue;
+                if (triggerType != ProcTriggerType.OnEnduranceAbove && triggerType != ProcTriggerType.OnEnduranceBelow)
+                    continue;
+
+                // Check mana type
+                Property.FromParam(kvp.Key, 3, out int manaTypeValue);
+                if ((ManaType)manaTypeValue != manaType)
+                    continue;
+
+                float enduranceMax = Properties[PropertyEnum.EnduranceMax, manaType];
+                if (enduranceMax <= 0f)
+                    continue;
+
+                int param = (int)(Properties[PropertyEnum.Endurance, manaType] / enduranceMax * 100f);
+
+                if (CheckProc(kvp, out Power procPower, param) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnEnduranceProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
         }
 
         public void TryActivateOnGotAttackedProcs(PowerResults powerResults)    // 16
