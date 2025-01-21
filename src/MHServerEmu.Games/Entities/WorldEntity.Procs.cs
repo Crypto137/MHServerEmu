@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.PowerCollections;
@@ -341,9 +342,96 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
-        public void TryActivateOnHealthProcs(PrototypeId procPowerProtoRef = PrototypeId.Invalid)  // 28-31
+        public bool TryActivateOnHealthProcs(PrototypeId procPowerProtoRef = PrototypeId.Invalid)  // 28-31
         {
-            // TODO
+            if (IsInWorld == false)
+                return false;
+
+            if (TestStatus(EntityStatus.ExitingWorld))
+                return false;
+
+            long healthMax = Properties[PropertyEnum.HealthMax];
+            if (healthMax <= 0)
+                return Logger.WarnReturn(false, "TryActivateOnHealthProcs(): healthMax <= 0");
+
+            int param = (int)(MathHelper.Ratio(Properties[PropertyEnum.Health], healthMax) * 100f);
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                switch ((ProcTriggerType)triggerTypeValue)
+                {
+                    case ProcTriggerType.OnHealthAbove:
+                    case ProcTriggerType.OnHealthBelow:
+                        if (procPowerProtoRef != PrototypeId.Invalid)
+                        {
+                            Property.FromParam(kvp.Key, 1, out PrototypeId paramProcPowerProtoRef);
+                            if (paramProcPowerProtoRef != procPowerProtoRef)
+                                continue;
+                        }
+
+                        if (CheckProc(kvp, out Power procPower, param) == false)
+                            continue;
+
+                        if (procPower == null)
+                        {
+                            Logger.Warn("TryActivateOnHealthProcs(): procPower == null");
+                            continue;
+                        }
+
+                        WorldEntity procPowerOwner = procPower.Owner;
+
+                        PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                        procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+
+                        break;
+
+                    case ProcTriggerType.OnHealthAboveToggle:
+                    case ProcTriggerType.OnHealthBelowToggle:
+                        if (procPowerProtoRef != PrototypeId.Invalid)
+                        {
+                            Property.FromParam(kvp.Key, 1, out PrototypeId paramProcPowerProtoRef);
+                            if (paramProcPowerProtoRef != procPowerProtoRef)
+                                continue;
+                        }
+
+                        // false return here is valid and indicates that the power needs to be toggled off
+                        bool toggle = CheckProc(kvp, out procPower, param);
+
+                        if (procPower == null)
+                        {
+                            procPower = GetProcPower(kvp);
+                            if (procPower == null)
+                                continue;
+                        }
+
+                        if (procPower.IsToggled() == false)
+                        {
+                            Logger.Warn($"TryActivateOnHealthProcs(): Proc power [{procPower}] is not a toggled power");
+                            continue;
+                        }
+
+                        procPowerOwner = procPower.Owner;
+
+                        settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+
+                        if (toggle)
+                        {
+                            if (procPower.IsToggledOn() == false)
+                                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+                        }
+                        else
+                        {
+                            if (procPower.IsToggledOn())
+                                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+                        }
+
+                        break;
+                }
+            }
+
+            return true;
         }
 
         public void TryActivateOnInCombatProcs()    // 32
