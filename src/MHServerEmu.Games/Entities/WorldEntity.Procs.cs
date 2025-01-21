@@ -120,7 +120,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Get proc chance multiplier for this power
-            float procChanceMultiplier = powerResults.PowerPrototype.OnHitProcChanceMultiplier;
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            float procChanceMultiplier = powerProto.OnHitProcChanceMultiplier;
 
             // Copy proc properties to a temporary collection for iteration
             using PropertyCollection procProperties = GetProcProperties(Properties);
@@ -204,7 +205,30 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != triggerType)
                     continue;
 
-                // TODO
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                if (CheckKeywordProc(kvp, out Power procPower, powerProto.KeywordsMask, requiredKeywordState, procChanceMultiplier) == false)
+                    continue;
+
+                // TODO: Recursion checks
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnHitProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                if (target != null && target.IsInWorld)
+                {
+                    settings.TargetEntityId = target.Id;
+                    settings.TargetPosition = target.RegionLocation.Position;
+                }
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
 
             ConditionCollection?.RemoveCancelOnHitConditions();
