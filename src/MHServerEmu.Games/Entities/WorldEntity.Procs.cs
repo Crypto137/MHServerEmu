@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -176,13 +177,9 @@ namespace MHServerEmu.Games.Entities
                 if (CheckProc(kvp, out Power procPower, param, procChanceMultiplier) == false)
                     continue;
 
-                // TODO: Recursion checks
-
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnHitProcs(): procPower == null");
+                // Check for recursion (this will also null check procPower)
+                if (CheckOnHitRecursion(procPower, powerResults.PowerPrototype) == false)
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -209,13 +206,9 @@ namespace MHServerEmu.Games.Entities
                 if (CheckKeywordProc(kvp, out Power procPower, powerProto.KeywordsMask, requiredKeywordState, procChanceMultiplier) == false)
                     continue;
 
-                // TODO: Recursion checks
-
-                if (procPower == null)
-                {
-                    Logger.Warn("TryActivateOnHitProcs(): procPower == null");
+                // Check for recursion (this will also null check procPower)
+                if (CheckOnHitRecursion(procPower, powerResults.PowerPrototype) == false)
                     continue;
-                }
 
                 WorldEntity procPowerOwner = procPower.Owner;
 
@@ -668,6 +661,57 @@ namespace MHServerEmu.Games.Entities
             }
 
             return Game.Random.NextFloat() < procChance;
+        }
+
+        private bool CheckOnHitRecursion(Power procPower, PowerPrototype triggeringPowerProto)
+        {
+            if (triggeringPowerProto == null) return Logger.WarnReturn(false, "CheckOnHitRecursion(): triggeringPowerProto == null");
+
+            PowerPrototype procPowerProto = procPower?.Prototype;
+            if (procPowerProto == null) return Logger.WarnReturn(false, "CheckOnHitRecursion(): procPowerProto == null");
+
+            // Do not allow self-trigger
+            if (triggeringPowerProto == procPowerProto)
+                return false;
+
+            PowerCollection powerCollection = procPower.Owner?.PowerCollection;
+            if (powerCollection == null) return Logger.WarnReturn(false, "CheckOnHitRecursion(): powerCollection == null");
+
+            // Triggering power may not necessarily be on the owner of the proc (e.g. missile activated procs)
+            Power triggeringPower = powerCollection.GetPower(triggeringPowerProto.DataRef);
+            if (triggeringPower == null)
+                return true;
+
+            // Check for infinite loops
+            bool success = true;
+            HashSet<PrototypeId> triggeringPowers = HashSetPool<PrototypeId>.Instance.Get(); 
+
+            PrototypeId parentTriggeringPowerRef = triggeringPower.Properties[PropertyEnum.TriggeringPowerRef, triggeringPowerProto.DataRef];
+            while (parentTriggeringPowerRef != PrototypeId.Invalid)
+            {
+                PowerPrototype parentTriggeringPowerProto = parentTriggeringPowerRef.As<PowerPrototype>();
+                if (parentTriggeringPowerProto.HasRescheduleActivationEventWithInvalidPowerRef)
+                    break;
+
+                if (triggeringPowers.Contains(parentTriggeringPowerRef) || parentTriggeringPowerRef == procPowerProto.DataRef)
+                {
+                    success = false;
+                    break;
+                }
+
+                triggeringPowers.Add(parentTriggeringPowerRef);
+
+                Power parentTriggeringPower = powerCollection.GetPower(parentTriggeringPowerRef);
+                parentTriggeringPowerRef = parentTriggeringPower != null
+                    ? parentTriggeringPower.Properties[PropertyEnum.TriggeringPowerRef, parentTriggeringPowerRef]
+                    : PrototypeId.Invalid;
+            }
+
+            if (success == false)
+                Logger.Warn($"CheckOnHitRecursion(): Recursion check failed for procPower=[{procPower}], triggeringPower=[{triggeringPowerProto}]");
+
+            HashSetPool<PrototypeId>.Instance.Return(triggeringPowers);
+            return success;
         }
 
         private Power GetProcPower(in KeyValuePair<PropertyId, PropertyValue> procProperty)
