@@ -1101,7 +1101,7 @@ namespace MHServerEmu.Games.Powers
         {
             if (Owner == null) return Logger.WarnReturn(false, "Owner == null");
 
-            if (Owner.GetPowerChargesMax(PrototypeDataRef) <= 0)
+            if (Owner.GetPowerChargesMax(PrototypeDataRef) > 0)
             {
                 if (_endCooldownEvent.IsValid == false)
                     return true;

@@ -192,8 +192,7 @@ namespace MHServerEmu.Games.Properties
             _count--;
             _version++;
 
-            // TODO: Would it be more efficient to allow GC to clean up empty property arrays, or should we leave them in place?
-            // Also consider pooling for property arrays.
+            // Keep the allocated property array in case this property gets added again (TODO: pooling for property array lists?)
             //if (node.Count == 0)
             //    _nodeDict.Remove(propertyEnum);
 
@@ -224,7 +223,17 @@ namespace MHServerEmu.Games.Properties
         /// </summary>
         public void Clear()
         {
-            _nodeDict.Clear();
+            // Keep the lists we allocated for nodes for later reuse when we clear this property list
+            foreach (var kvp in _nodeDict)
+            {
+                PropertyArray? array = kvp.Value.PropertyArray;
+
+                if (array != null)
+                    array.Value.Clear();
+                else
+                    _nodeDict.Remove(kvp.Key);
+            }
+
             _count = 0;
         }
 
@@ -288,6 +297,11 @@ namespace MHServerEmu.Games.Properties
             public PropertyArray(int capacity = 0)
             {
                 _list = new(capacity);
+            }
+
+            public void Clear()
+            {
+                _list.Clear();
             }
 
             /// <summary>
