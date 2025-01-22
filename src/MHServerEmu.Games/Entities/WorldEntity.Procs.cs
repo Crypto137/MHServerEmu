@@ -300,7 +300,30 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnConditionStackCountProcs(Condition condition)  // 9
         {
-            // TODO
+            if (IsInWorld == false)
+                return;
+
+            int param = ConditionCollection.GetNumberOfStacks(condition);
+            if (param == 0)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(condition.Properties);
+            foreach (var kvp in procProperties)
+            {
+                if (CheckProc(kvp, out Power procPower, param) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnConditionStackCountProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
         }
 
         // See 17 below for OnGotDamagedByCrit
