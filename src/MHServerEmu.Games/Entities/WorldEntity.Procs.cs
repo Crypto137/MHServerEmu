@@ -446,7 +446,47 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnGotAttackedProcs(PowerResults powerResults)    // 16
         {
-            // TODO
+            if (powerResults == null)
+                return;
+
+            if (IsInWorld == false)
+                return;
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnGotAttacked))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnGotAttackedProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (target != null && target.IsInWorld)
+                {
+                    targetId = target.Id;
+                    targetPosition = target.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = powerResults.PowerOwnerPosition;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
         }
 
         public void TryActivateOnGotDamagedProcs(PowerResults powerResults) // 11, 17-27
