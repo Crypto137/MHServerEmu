@@ -233,10 +233,35 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
-        public void TryActivateOnCollideProcs(ProcTriggerType triggerType, WorldEntity other, Vector3 position)
+        public void TryActivateOnCollideProcs(ProcTriggerType triggerType, WorldEntity target, Vector3 collisionPosition)
         {
-            // TODO
-            //Logger.Debug($"TryActivateOnCollideProcs(): {triggerType} with [{other}] at [{position}]");
+            if (IsInWorld == false)
+                return;
+
+            // null target indicates terrain collision
+            if (target != null && target.CanTriggerOtherProcs(triggerType) == false)
+                return;
+
+            ulong targetId = target != null ? target.Id : 0;
+            Vector3 targetPosition = target != null ? target.RegionLocation.Position : collisionPosition;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnCollideProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(targetId, targetPosition, collisionPosition);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
         }
 
         public void TryActivateOnConditionEndProcs(Condition condition) // 8
