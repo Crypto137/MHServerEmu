@@ -225,7 +225,7 @@ namespace MHServerEmu.Games.Entities
                 procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
 
-            ConditionCollection?.RemoveCancelOnHitConditions();
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
         }
 
         public void TryActivateOnBlockProcs(PowerResults powerResults)  // 4
@@ -489,9 +489,9 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public void TryActivateOnGotDamagedProcs(PowerResults powerResults) // 11, 17-27
+        public void TryActivateOnGotDamagedProcs(ProcTriggerType triggerType, PowerResults powerResults, float healthDelta) // 17-27
         {
-            // TODO
+            //Logger.Debug($"TryActivateOnGotDamagedProcs(): {triggerType}");
         }
 
         public bool TryActivateOnHealthProcs(PrototypeId procPowerProtoRef = PrototypeId.Invalid)  // 28-31
@@ -677,6 +677,26 @@ namespace MHServerEmu.Games.Entities
             ListPool<ulong>.Instance.Return(overlappingEntities);
         }
 
+        private void TryActivateOnOverlapBeginProcHelper(in KeyValuePair<PropertyId, PropertyValue> procProperty, WorldEntity target, Vector3 overlapPosition)
+        {
+            if (IsInWorld == false)
+                return;
+
+            if (CheckProc(procProperty, out Power procPower) == false)
+                return;
+
+            if (procPower == null)
+                return;
+
+            if (procPower.IsValidTarget(target) == false)
+                return;
+
+            WorldEntity procPowerOwner = procPower.Owner;
+
+            PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, overlapPosition);
+            procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+        }
+
         public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
         {
             // TODO
@@ -761,26 +781,6 @@ namespace MHServerEmu.Games.Entities
             }
 
             ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
-        }
-
-        private void TryActivateOnOverlapBeginProcHelper(in KeyValuePair<PropertyId, PropertyValue> procProperty, WorldEntity target, Vector3 overlapPosition)
-        {
-            if (IsInWorld == false)
-                return;
-
-            if (CheckProc(procProperty, out Power procPower) == false)
-                return;
-
-            if (procPower == null)
-                return;
-
-            if (procPower.IsValidTarget(target) == false)
-                return;
-
-            WorldEntity procPowerOwner = procPower.Owner;
-
-            PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, overlapPosition);
-            procPowerOwner.ActivateProcPower(procPower, ref settings, this);
         }
 
         #endregion

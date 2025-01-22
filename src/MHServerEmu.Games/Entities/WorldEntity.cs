@@ -1561,6 +1561,61 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private bool TriggerOnDamagedEffects(PowerResults powerResults)
+        {
+            if (powerResults == null)
+                return false;
+
+            if (IsInWorld == false)
+                return false;
+
+            WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
+
+            float healthDelta = powerResults.Properties[PropertyEnum.Healing];
+
+            foreach (var kvp in powerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                float damage = kvp.Value;
+                healthDelta -= damage;
+
+                Property.FromParam(kvp.Key, 0, out int damageType);
+
+                ProcTriggerType triggerType = (DamageType)damageType switch
+                {
+                    DamageType.Physical => ProcTriggerType.OnGotDamagedPhysical,
+                    DamageType.Energy   => ProcTriggerType.OnGotDamagedEnergy,
+                    DamageType.Mental   => ProcTriggerType.OnGotDamagedMental,
+                    _                   => ProcTriggerType.None
+                };
+
+                if (triggerType == ProcTriggerType.None)
+                {
+                    Logger.Warn("TriggerOnDamagedEffects(): triggerType == ProcTriggerType.None");
+                    continue;
+                }
+
+                TryActivateOnGotDamagedProcs(triggerType, powerResults, -damage);
+            }
+
+            if (healthDelta < 0f)
+            {
+                // TODO: interrupt on damaged powers
+
+                TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamaged, powerResults, healthDelta);
+                TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedForPctHealth, powerResults, healthDelta);
+                TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedHealthBelowPct, powerResults, healthDelta);
+
+                if (powerResults.TestFlag(PowerResultFlags.Critical))
+                    TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedByCrit, powerResults, healthDelta);
+                else if (powerResults.TestFlag(PowerResultFlags.SuperCritical))
+                    TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedBySuperCrit, powerResults, healthDelta);
+
+                ConditionCollection?.RemoveCancelOnHitConditions();
+            }
+
+            return true;
+        }
+
         private bool ApplyPowerResultsInternal(PowerResults powerResults)
         {
             // TODO: More stuff
@@ -1821,7 +1876,7 @@ namespace MHServerEmu.Games.Entities
 
                 // Procs
                 if (adjustHealth < 0 && powerResults.IsAtMaxRecursionDepth() == false)
-                    TryActivateOnGotDamagedProcs(powerResults);
+                    TriggerOnDamagedEffects(powerResults);
 
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotDamaged);
             }
