@@ -332,44 +332,68 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnDeathProcs(PowerResults powerResults)  // 12
         {
-            // TODO Rewrite this
+            WorldEntity killer = null;
 
-            if (this is not Agent) return;
-            Power power = null;
-
-            // Get OnDeath ProcPower
-            foreach (var kvp in PowerCollection)
+            if (powerResults != null)
             {
-                var proto = kvp.Value.PowerPrototype;
-                if (proto.Activation != PowerActivationType.Passive) continue;
+                killer = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
+                if (killer != null && killer.CanTriggerOtherProcs(ProcTriggerType.OnDeath) == false)
+                    return;
+            }
 
-                string protoName = kvp.Key.GetNameFormatted();
-                if (protoName.Contains("OnDeath"))
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnDeath))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
                 {
-                    power = kvp.Value.Power;
-                    break;
+                    Logger.Warn("TryActivateOnDeathProcs(): procPower == null");
+                    continue;
                 }
+
+                if (procPower.NeedsTarget() && procPower.IsValidTarget(killer) == false)
+                    continue;
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                // Record PowerUserOverrideId to restore it later
+                ulong powerUserOverrideIdBefore = PowerUserOverrideId;
+
+                ulong targetId = InvalidId;
+                Vector3 targetPosition = Vector3.Zero;
+
+                if (killer != null)
+                {
+                    // If this is a transient power user (e.g. a destructible object that explodes on death),
+                    // attribute the proc activation to the killer (e.g. an avatar who exploded something).
+                    if (Properties[PropertyEnum.IsTransientPowerUser])
+                        Properties[PropertyEnum.PowerUserOverrideID] = killer.Id;
+
+                    targetId = killer.Id;
+                    targetPosition = killer.RegionLocation.Position;
+                }
+                else if (powerResults != null)
+                {
+                    targetPosition = powerResults.PowerOwnerPosition;
+                }
+
+                // Update spawn spec
+                if (SpawnSpec != null && procPower.Prototype.PostContactDelayMS > 0)
+                    SpawnSpec.PostContactDelayMS = TimeSpan.FromMilliseconds(procPower.Prototype.PostContactDelayMS);
+
+                // Activate
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this, true);
+
+                // Restore the power user override id from before this proc was activated
+                Properties[PropertyEnum.PowerUserOverrideID] = powerUserOverrideIdBefore;
             }
 
-            if (power == null) return;
-
-            // Get OnDead power
-            var conditions = power.Prototype.AppliesConditions;
-            if (conditions.Count != 1) return;
-            var conditionProto = conditions[0].Prototype as ConditionPrototype;
-
-            // Get summon power
-            SummonPowerPrototype summonPower = null;
-            foreach (var kvp in conditionProto.Properties.IteratePropertyRange(PropertyEnum.Proc))
-            {
-                Property.FromParam(kvp.Key, 0, out int procEnum);
-                if ((ProcTriggerType)procEnum != ProcTriggerType.OnDeath) continue;
-                Property.FromParam(kvp.Key, 1, out PrototypeId summonPowerRef);
-                summonPower = GameDatabase.GetPrototype<SummonPowerPrototype>(summonPowerRef);
-                if (summonPower != null) break;
-            }
-
-            if (summonPower != null) EntityHelper.OnDeathSummonFromPowerPrototype(this, summonPower);
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnDeath);
         }
 
         public void TryActivateOnDodgeProcs(PowerResults powerResults)  // 13
