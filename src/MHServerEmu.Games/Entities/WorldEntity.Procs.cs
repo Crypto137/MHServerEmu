@@ -262,6 +262,8 @@ namespace MHServerEmu.Games.Entities
                 PowerActivationSettings settings = new(targetId, targetPosition, collisionPosition);
                 procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
         }
 
         public void TryActivateOnConditionEndProcs(Condition condition) // 8
@@ -308,7 +310,7 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             using PropertyCollection procProperties = GetProcProperties(condition.Properties);
-            foreach (var kvp in procProperties)
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc))
             {
                 if (CheckProc(kvp, out Power procPower, param) == false)
                     continue;
