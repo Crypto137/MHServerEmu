@@ -491,7 +491,99 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnGotDamagedProcs(ProcTriggerType triggerType, PowerResults powerResults, float healthDelta) // 17-27
         {
-            //Logger.Debug($"TryActivateOnGotDamagedProcs(): {triggerType}");
+            if (powerResults == null)
+                return;
+
+            if (IsInWorld == false)
+                return;
+
+            // Check if the attacker is valid for procs of this trigger type
+            WorldEntity attacker = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
+            if (attacker != null && attacker.CanTriggerOtherProcs(triggerType) == false)
+                return;
+
+            // If this is a health threshold proc, make sure this entity has health
+            long healthMax = Properties[PropertyEnum.HealthMax];
+            if (healthMax == 0 && (triggerType == ProcTriggerType.OnGotDamagedForPctHealth || triggerType == ProcTriggerType.OnGotDamagedHealthBelowPct))
+                return;
+
+            // Get proc chance multiplier
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            float procChanceMultiplier = powerProto.OnHitProcChanceMultiplier;
+
+            // Calculate param
+            // NOTE: For OnGotDamagedHealthBelowPct we can use the health property because these procs are triggered after the health change occurs   
+            int param = triggerType switch
+            {
+                ProcTriggerType.OnGotDamagedForPctHealth    => (int)(-healthDelta / healthMax * 100f),
+                ProcTriggerType.OnGotDamagedHealthBelowPct  => (int)(MathHelper.Ratio(Properties[PropertyEnum.Health], healthMax) * 100f),
+                _                                           => (int)-healthDelta,
+            };
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                if (CheckProc(kvp, out Power procPower, param, procChanceMultiplier) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnGotDamagedProcs(): procPower == null");
+                    continue;
+                }
+
+                TryActivateOnGotDamagedProcHelper(procPower, powerResults);
+            }
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != triggerType)
+                    continue;
+
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                if (CheckKeywordProc(kvp, out Power procPower, powerProto.KeywordsMask, requiredKeywordState, procChanceMultiplier) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnGotDamagedProcs(): procPower == null");
+                    continue;
+                }
+
+                TryActivateOnGotDamagedProcHelper(procPower, powerResults);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
+        }
+
+        private void TryActivateOnGotDamagedProcHelper(Power procPower, PowerResults powerResults)
+        {
+            WorldEntity procPowerOwner = procPower.Owner;
+            Vector3 userPosition = procPowerOwner.RegionLocation.Position;
+
+            ulong targetId;
+            Vector3 targetPosition;
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
+            if (target != null && target.IsInWorld)
+            {
+                targetId = target.Id;
+                targetPosition = target.RegionLocation.Position;
+            }
+            else
+            {
+                targetId = InvalidId;
+                targetPosition = userPosition;
+            }
+
+            PowerActivationSettings settings = new(targetId, targetPosition, userPosition);
+            settings.PowerResults = powerResults;
+
+            procPowerOwner.ActivateProcPower(procPower, ref settings, this);
         }
 
         public bool TryActivateOnHealthProcs(PrototypeId procPowerProtoRef = PrototypeId.Invalid)  // 28-31
