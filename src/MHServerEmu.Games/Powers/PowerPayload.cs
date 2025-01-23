@@ -950,6 +950,9 @@ namespace MHServerEmu.Games.Powers
             if (conditionProps[PropertyEnum.Knockback])
                 CalculateResultConditionKnockbackProperties(results, target, condition);
 
+            // Procs
+            CalculateResultConditionProcProperties(results, target, condition.Properties);
+
             return true;
         }
 
@@ -1026,6 +1029,47 @@ namespace MHServerEmu.Games.Powers
             condition.Properties[PropertyEnum.MovementSpeedOverride] = conditionMovementSpeedOverride;
 
             return true;
+        }
+
+        private void CalculateResultConditionProcProperties(PowerResults results, WorldEntity target, PropertyCollection conditionProperties)
+        {
+            // Store properties to set in a temporary dictionary to avoid modifying property collections during iteration
+            Dictionary<PropertyId, PropertyValue> propertiesToSet = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+            // Triggering refs and ranks
+            int rank = conditionProperties[PropertyEnum.PowerRank];
+            foreach (var kvp in conditionProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
+                propertiesToSet.Add(new(PropertyEnum.TriggeringPowerRef, procPowerProtoRef), PowerProtoRef);
+                propertiesToSet.Add(new(PropertyEnum.ProcPowerRank, procPowerProtoRef), rank);
+            }
+
+            // Caster (user) overrides
+            foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.ProcActivatedByCondCreator))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId procPowerProtoRef);
+                propertiesToSet.Add(new(PropertyEnum.ProcCasterOverride, procPowerProtoRef), UltimateOwnerId);
+            }
+
+            // Target overrides
+            foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.ProcTargetsConditionCreator))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId procPowerProtoRef);
+                propertiesToSet.Add(new(PropertyEnum.ProcTargetOverride, procPowerProtoRef), UltimateOwnerId);
+            }
+
+            foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.ProcTargetsConditionOwner))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId procPowerProtoRef);
+                propertiesToSet.Add(new(PropertyEnum.ProcTargetOverride, procPowerProtoRef), target.Id);
+            }
+
+            // Set properties
+            foreach (var kvp in propertiesToSet)
+                conditionProperties[kvp.Key] = kvp.Value;
+
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(propertiesToSet);
         }
 
         private bool CalculateResultConditionsToRemove(PowerResults results, WorldEntity target)
