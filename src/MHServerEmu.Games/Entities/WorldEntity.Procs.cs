@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             using PropertyCollection procProperties = GetProcProperties(condition.Properties);
-            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc))
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnConditionStackCount))
             {
                 if (CheckProc(kvp, out Power procPower, param) == false)
                     continue;
