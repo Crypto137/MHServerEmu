@@ -794,9 +794,71 @@ namespace MHServerEmu.Games.Entities
             // TODO
         }
 
-        public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power power, ref PowerActivationSettings settings)  // 58-62
+        public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power onPowerUsePower, ref PowerActivationSettings onPowerUseSettings)  // 58-62
         {
-            // TODO
+            if (IsInWorld == false)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnPowerUseProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = onPowerUseSettings;
+                settings.UserPosition = procPowerOwner.RegionLocation.Position;
+
+                // Do not allow procs to trigger more on power use procs
+                if (triggerType == ProcTriggerType.OnPowerUseProcEffect)
+                    settings.Flags |= PowerActivationSettingsFlags.NoOnPowerUseProcs;
+
+                procPower.Properties[PropertyEnum.OnPowerUsePowerRef] = onPowerUsePower.PrototypeDataRef;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != triggerType)
+                    continue;
+
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                if (CheckKeywordProc(kvp, out Power procPower, onPowerUsePower, requiredKeywordState) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnPowerUseProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = onPowerUseSettings;
+                settings.UserPosition = procPowerOwner.RegionLocation.Position;
+
+                // Do not allow procs to trigger more on power use procs
+                if (triggerType == ProcTriggerType.OnPowerUseProcEffect)
+                    settings.Flags |= PowerActivationSettingsFlags.NoOnPowerUseProcs;
+
+                procPower.Properties[PropertyEnum.OnPowerUsePowerRef] = onPowerUsePower.PrototypeDataRef;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
         }
 
         public void TryActivateOnRunestonePickupProcs()
