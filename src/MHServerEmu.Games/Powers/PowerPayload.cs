@@ -1041,28 +1041,28 @@ namespace MHServerEmu.Games.Powers
             foreach (var kvp in conditionProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
-                propertiesToSet.Add(new(PropertyEnum.TriggeringPowerRef, procPowerProtoRef), PowerProtoRef);
-                propertiesToSet.Add(new(PropertyEnum.ProcPowerRank, procPowerProtoRef), rank);
+                propertiesToSet[new(PropertyEnum.TriggeringPowerRef, procPowerProtoRef)] = PowerProtoRef;
+                propertiesToSet[new(PropertyEnum.ProcPowerRank, procPowerProtoRef)] = rank;
             }
 
             // Caster (user) overrides
             foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.ProcActivatedByCondCreator))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId procPowerProtoRef);
-                propertiesToSet.Add(new(PropertyEnum.ProcCasterOverride, procPowerProtoRef), UltimateOwnerId);
+                propertiesToSet[new(PropertyEnum.ProcCasterOverride, procPowerProtoRef)] = UltimateOwnerId;
             }
 
             // Target overrides
             foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.ProcTargetsConditionCreator))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId procPowerProtoRef);
-                propertiesToSet.Add(new(PropertyEnum.ProcTargetOverride, procPowerProtoRef), UltimateOwnerId);
+                propertiesToSet[new(PropertyEnum.ProcTargetOverride, procPowerProtoRef)] = UltimateOwnerId;
             }
 
             foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.ProcTargetsConditionOwner))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId procPowerProtoRef);
-                propertiesToSet.Add(new(PropertyEnum.ProcTargetOverride, procPowerProtoRef), target.Id);
+                propertiesToSet[new(PropertyEnum.ProcTargetOverride, procPowerProtoRef)] = target.Id;
             }
 
             // Set properties
