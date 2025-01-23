@@ -780,7 +780,7 @@ namespace MHServerEmu.Games.Powers
                     PropertyCollection properties = power.Owner.Properties;
 
                     int chargesAvailable = properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
-                    int chargesMax = properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+                    int chargesMax = properties[PropertyEnum.PowerChargesMax, powerProtoRef];
 
                     if (chargesAvailable >= chargesMax)
                         continue;
