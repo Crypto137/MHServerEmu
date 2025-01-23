@@ -692,7 +692,109 @@ namespace MHServerEmu.Games.Entities
             if (TryForwardOnKillProcsToOwner(triggerType, powerResults))
                 return;
 
-            // TODO
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.TargetId);
+            if (target != null && target.CanTriggerOtherProcs(triggerType) == false)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnKillProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (target != null && target.IsInWorld)
+                {
+                    targetId = target.Id;
+                    targetPosition = target.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = Vector3.Zero;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            // Keyworded procs
+            KeywordGlobalsPrototype keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            DataDirectory dataDirectory = DataDirectory.Instance;
+
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != triggerType)
+                    continue;
+
+                Property.FromParam(kvp.Key, 2, out PrototypeId procPowerProtoRef);
+
+                // Keyworded OnKill procs check different keyword sources based on the type of proc of power
+                Power procPower;
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+
+                if (dataDirectory.PrototypeIsChildOfBlueprint(procPowerProtoRef, (BlueprintId)keywordGlobals.EntityKeywordPrototype))
+                {
+                    if (target == null)
+                        continue;
+
+                    if (CheckKeywordProc(kvp, out procPower, target, requiredKeywordState) == false)
+                        continue;
+                }
+                else
+                {
+                    PowerPrototype powerProto = powerResults.PowerPrototype;
+                    if (powerProto == null)
+                        continue;
+
+                    if (CheckKeywordProc(kvp, out procPower, powerProto.KeywordsMask, requiredKeywordState) == false)
+                        continue;
+                }
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnKillProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (target != null && target.IsInWorld)
+                {
+                    targetId = target.Id;
+                    targetPosition = target.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = Vector3.Zero;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
         }
 
         public void TryActivateOnKnockdownEndProcs()    // 40
