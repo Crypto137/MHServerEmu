@@ -1206,7 +1206,7 @@ namespace MHServerEmu.Games.Powers
 
             // Create, initialize, and add the condition
             Condition condition = ConditionCollection.AllocateCondition();
-            condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration, Properties);
+            condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration, conditionProperties);
             results.AddConditionToAdd(condition);
 
             targetAgent.StartHitReactionCooldown();
