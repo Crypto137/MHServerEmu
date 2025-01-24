@@ -3496,6 +3496,10 @@ namespace MHServerEmu.Games.Entities
             }
 
             bool lastUse = used && usesLeft == 0;
+            if (lastUse)
+                TryActivateOnInteractedWithProcs(ProcTriggerType.OnInteractedWithOutOfUses, interactorEntity);
+            else
+                TryActivateOnInteractedWithProcs(ProcTriggerType.OnInteractedWith, interactorEntity);
 
             if (HasLootDropEventType(LootDropEventType.OnInteractedWith))
             {

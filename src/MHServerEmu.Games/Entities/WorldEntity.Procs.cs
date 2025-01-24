@@ -684,6 +684,50 @@ namespace MHServerEmu.Games.Entities
             TryActivateProcsCommon(ProcTriggerType.OnInCombat, procProperties);
         }
 
+        public void TryActivateOnInteractedWithProcs(ProcTriggerType triggerType, WorldEntity interactor)   // 33-34
+        {
+            if (IsInWorld == false)
+                return;
+
+            if (interactor != null && interactor.CanTriggerOtherProcs(triggerType) == false)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnInteractedWithProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (interactor != null)
+                {
+                    targetId = interactor.Id;
+                    targetPosition = interactor.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = Vector3.Zero;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
+        }
+
         public virtual void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)    // 35-39
         {
             if (IsInWorld == false)
