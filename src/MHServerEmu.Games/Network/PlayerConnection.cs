@@ -785,7 +785,7 @@ namespace MHServerEmu.Games.Network
             Vector3 targetPosition = continuousPowerUpdate.HasTargetPosition ? new(continuousPowerUpdate.TargetPosition) : Vector3.Zero;
             int randomSeed = continuousPowerUpdate.HasRandomSeed ? (int)continuousPowerUpdate.RandomSeed : 0;
 
-            avatar.SetContinuousPower(powerProtoRef, targetId, targetPosition, randomSeed);
+            avatar.SetContinuousPower(powerProtoRef, targetId, targetPosition, randomSeed, false);
             return true;
         }
 

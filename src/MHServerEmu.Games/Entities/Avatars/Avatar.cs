@@ -817,7 +817,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             return power.CheckCanTriggerEval();
         }
 
-        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, int randomSeed, bool notifyOwner = false)
+        public void SetContinuousPower(PrototypeId powerProtoRef, ulong targetId, Vector3 targetPosition, int randomSeed, bool notifyOwner)
         {
             // Validate client input
             Power power = GetPower(powerProtoRef);
@@ -2770,8 +2770,15 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case PropertyEnum.Mesmerized:
                 case PropertyEnum.Stunned:
                 case PropertyEnum.StunnedByHitReact:
-                    if (newValue == true && (IsInPendingActionState(PendingActionState.WaitingForPrevPower) || IsInPendingActionState(PendingActionState.AfterPowerMove)))
-                        CancelPendingAction();
+                    if (newValue == true)
+                    {
+                        // Clear pending actions / continuous powers on loss of control
+                        if (IsInPendingActionState(PendingActionState.WaitingForPrevPower) || IsInPendingActionState(PendingActionState.AfterPowerMove))
+                            CancelPendingAction();
+
+                        SetContinuousPower(PrototypeId.Invalid, _continuousPowerData.TargetId, Vector3.Zero, 0, true);
+                    }
+                        
                     break;
 
                 case PropertyEnum.EnduranceAddBonus:
