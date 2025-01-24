@@ -1207,7 +1207,7 @@ namespace MHServerEmu.Games.Powers
             WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
 
             // Generate condition data
-            TimeSpan duration = conditionProto.GetDuration(Properties, ultimateOwner, PrototypeId.Invalid, null);
+            TimeSpan duration = conditionProto.GetDuration(Properties, ultimateOwner);
 
             using PropertyCollection conditionProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner, target, Game);

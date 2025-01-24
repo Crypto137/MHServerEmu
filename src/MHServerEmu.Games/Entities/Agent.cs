@@ -1440,6 +1440,55 @@ namespace MHServerEmu.Games.Entities
             AIController?.OnAIPowerEnded(power.PrototypeDataRef, flags);
         }
 
+        public override bool OnNegativeStatusEffectApplied(ulong conditionId)
+        {
+            base.OnNegativeStatusEffectApplied(conditionId);
+
+            // Apply CCReactCondition (if this agent has one)
+            PrototypeId ccReactConditionProtoRef = AgentPrototype.CCReactCondition;
+            if (ccReactConditionProtoRef == PrototypeId.Invalid)
+                return true;
+
+            Condition negativeStatusCondition = ConditionCollection.GetCondition(conditionId);
+            if (negativeStatusCondition == null) return Logger.WarnReturn(false, "OnNegativeStatusEffectApplied(): condition == null");
+
+            // Skip hit react conditions
+            if (negativeStatusCondition.IsHitReactCondition())
+                return true;
+
+            // Skip self-applied conditions
+            if (negativeStatusCondition.ConditionPrototype.Scope == ConditionScopeType.User)
+                return true;
+
+            ConditionPrototype ccReactConditionProto = ccReactConditionProtoRef.As<ConditionPrototype>();
+            if (ccReactConditionProto == null) return Logger.WarnReturn(false, "OnNegativeStatusEffectApplied(): ccReactConditionProto == null");
+
+            List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+            if (negativeStatusCondition.IsANegativeStatusEffect(negativeStatusList))
+            {
+                // Apply only when this negative status condition has movement / cast speed decreases and no other statuses
+                bool hasMovementSpeedDecrease = negativeStatusCondition.Properties.HasProperty(PropertyEnum.MovementSpeedDecrPct);
+                bool hasCastSpeedDecrease = negativeStatusCondition.Properties.HasProperty(PropertyEnum.CastSpeedDecrPct);
+
+                if (((hasMovementSpeedDecrease || hasCastSpeedDecrease) && negativeStatusList.Count == 1) ||
+                    ((hasMovementSpeedDecrease && hasCastSpeedDecrease) && negativeStatusList.Count == 2))
+                {
+                    TimeSpan duration = ccReactConditionProto.GetDuration(null, this);
+
+                    Condition ccReactCondition = ConditionCollection.AllocateCondition();
+                    ccReactCondition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, Id, Id, Id, ccReactConditionProto, duration);
+                    ConditionCollection.AddCondition(ccReactCondition);
+                }
+            }
+            else
+            {
+                Logger.Warn("OnNegativeStatusEffectApplied(): condition.IsANegativeStatusEffect(negativeStatusList) == false");
+            }
+
+            ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+            return true;
+        }
+
         protected override void OnDamaged(PowerResults powerResults)
         {
             // Interrupt active cancel on damage powers (e.g. bodyslide to town, avatar swap cast)
@@ -1468,7 +1517,7 @@ namespace MHServerEmu.Games.Entities
             ulong ultimateCreatorId = powerResults.UltimateOwnerId;
             ulong targetId = powerResults.TargetId;
 
-            TimeSpan duration = conditionProto.GetDuration(null, this, PrototypeId.Invalid, null);
+            TimeSpan duration = conditionProto.GetDuration(null, this);
 
             Condition condition = ConditionCollection.AllocateCondition();
             condition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, creatorId, ultimateCreatorId, targetId, conditionProto, duration);

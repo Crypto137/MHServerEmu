@@ -240,7 +240,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return unrealClassAssetRef;
         }
 
-        public TimeSpan GetDuration(PropertyCollection properties, WorldEntity owner, PrototypeId powerProtoRef, WorldEntity target)
+        public TimeSpan GetDuration(PropertyCollection properties = null, WorldEntity owner = null, PrototypeId powerProtoRef = PrototypeId.Invalid, WorldEntity target = null)
         {
             TimeSpan duration = TimeSpan.FromMilliseconds(DurationMS);
 
