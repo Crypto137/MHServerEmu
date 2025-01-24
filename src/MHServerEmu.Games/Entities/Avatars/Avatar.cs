@@ -1625,7 +1625,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Restore to full if needed
                 if (primaryManaBehaviorProto.StartsEmpty == false)
-                    Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = Properties[PropertyEnum.EnduranceMax];
+                    Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = Properties[PropertyEnum.EnduranceMax, primaryManaBehaviorProto.ManaType];
 
                 // Start regen
                 Properties[PropertyEnum.DisableEnduranceRegen, primaryManaBehaviorProto.ManaType] = primaryManaBehaviorProto.StartsWithRegenEnabled == false;
@@ -2805,7 +2805,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (IsAliveInWorld && flags.HasFlag(SetPropertyFlags.Deserialized) == false)
                     {
                         float endurance = Properties[PropertyEnum.Endurance, manaType];
-                        float ratio = oldValue > 0f ? Math.Min(endurance / oldValue, 1f) : 0f;
+
+                        // 0 max endurance is treated as having full endurance (this will be reset to 0 later if needed)
+                        float ratio = oldValue > 0f ? Math.Min(endurance / oldValue, 1f) : 1f;
                         Properties[PropertyEnum.Endurance, manaType] = newValue * ratio;
                     }
 
