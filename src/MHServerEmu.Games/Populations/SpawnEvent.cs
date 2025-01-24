@@ -19,6 +19,7 @@ namespace MHServerEmu.Games.Populations
         public PopulationManager PopulationManager;
         public HashSet<ulong> SpawnGroups;
         public HashSet<ulong> SpawnedEntities;
+        public SpawnMissionScheduler MissionScheduler;
         public Dictionary<PrototypeId, SpawnScheduler> SpawnMarkerSchedulers;
         public Dictionary<SpawnLocation, SpawnScheduler> SpawnLocationSchedulers;
         public bool RespawnObject;
@@ -74,7 +75,8 @@ namespace MHServerEmu.Games.Populations
         }
 
         public PopulationObject AddPopulationObject(PrototypeId populationMarkerRef, PopulationObjectPrototype population, bool critical,
-            SpawnLocation spawnLocation, PrototypeId missionRef, bool spawnCleanup = false, TimeSpan time = default, bool removeOnSpawnFail = false)
+            SpawnLocation spawnLocation, PrototypeId missionRef, bool spawnCleanup = false, TimeSpan time = default, 
+            bool removeOnSpawnFail = false, bool isMissionMarker = false)
         {
             var random = Game.Random;
             PropertyCollection properties = null;
@@ -98,6 +100,7 @@ namespace MHServerEmu.Games.Populations
             {
                 SpawnEvent = this,
                 IsMarker = populationMarkerRef != PrototypeId.Invalid,
+                IsMissionMarker = isMissionMarker,
                 MarkerRef = populationMarkerRef,
                 MissionRef = missionRef,
                 Random = random,
@@ -110,6 +113,7 @@ namespace MHServerEmu.Games.Populations
                 SpawnCleanup = spawnCleanup,
                 RemoveOnSpawnFail = removeOnSpawnFail
             };
+
             // Logger.Info($"AddPopulationObject {populationObject}");
             populationObject.Scheduler = AddToScheduler(populationObject);
             return populationObject;
@@ -120,14 +124,24 @@ namespace MHServerEmu.Games.Populations
             SpawnScheduler scheduler;
             if (populationObject.IsMarker)
             {
-                if (SpawnMarkerSchedulers.TryGetValue(populationObject.MarkerRef, out var markerScheduler))
+                var markerRef = populationObject.MarkerRef;
+
+                if (populationObject.IsMissionMarker)
                 {
-                    scheduler = markerScheduler;
+                    MissionScheduler ??= new SpawnMissionScheduler(this);
+                    scheduler = MissionScheduler;
                 }
                 else
                 {
-                    scheduler = new(this);
-                    SpawnMarkerSchedulers[populationObject.MarkerRef] = scheduler;
+                    if (SpawnMarkerSchedulers.TryGetValue(markerRef, out var markerScheduler))
+                    {
+                        scheduler = markerScheduler;
+                    }
+                    else
+                    {
+                        scheduler = new(this);
+                        SpawnMarkerSchedulers[markerRef] = scheduler;                      
+                    }
                 }
             }
             else
@@ -204,7 +218,7 @@ namespace MHServerEmu.Games.Populations
                     spawnPicker = found;
                 else
                 {
-                    int slots = registry.CalcFreeReservation(markerRef, Area.PrototypeDataRef);
+                    int slots = registry.CalcMarkerReservations(markerRef, Area.PrototypeDataRef);
 
                     if (slots == 0)
                         spawnPicker = new(null, 0);
@@ -309,9 +323,12 @@ namespace MHServerEmu.Games.Populations
                         if (foundArea == false) continue;
                     }
 
+                    bool isMissionMarker = entry.Population.UsePopulationMarker != PrototypeId.Invalid;
+
                     var spawnLocation = new SpawnLocation(Region, entry.RestrictToAreas, entry.RestrictToCells);
                     for (var i = 0; i < entry.Count; i++)                        
-                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, missionProto.DataRef, spawnCleanup, time);
+                        AddPopulationObject(entry.Population.UsePopulationMarker, entry.Population, critical, spawnLocation, 
+                            missionProto.DataRef, spawnCleanup, time, false, isMissionMarker);
                 }
         }
 
