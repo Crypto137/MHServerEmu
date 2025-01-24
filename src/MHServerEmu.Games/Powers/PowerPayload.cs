@@ -217,6 +217,10 @@ namespace MHServerEmu.Games.Powers
             targetResults.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
             targetResults.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
             targetResults.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
+
+            // Add hit reaction if needed (NOTE: some conditions applied before take priority over hit reactions)
+            if (calculateForTarget)
+                CalculateResultHitReaction(targetResults, target);
         }
 
         #region Initial Calculations
@@ -1143,6 +1147,71 @@ namespace MHServerEmu.Games.Powers
             }
 
             return numRemoved > 0;
+        }
+
+        private bool CalculateResultHitReaction(PowerResults results, WorldEntity target)
+        {
+            // Only agents can have hit reactions
+            if (target is not Agent targetAgent)
+                return false;
+
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultHitReaction(): powerProto == null");
+
+            // Check if this power can cause a hit react to this particular target
+            if (Power.CanCauseHitReact(powerProto, targetAgent) == false)
+                return false;
+
+            // Check if there are any conditions that will be added that override hit reacts
+            for (int i = 0; i < results.ConditionAddList.Count; i++)
+            {
+                if (results.ConditionAddList[i].OverridesHitReactConditions())
+                    return false;
+            }
+
+            // Check if there is any damage
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                if (kvp.Value > 0f)
+                    return false;
+            }
+
+            // Check eval
+            EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormulaPrototype; 
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, target.Properties);
+            evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, powerProto.Keywords);
+
+            if (Eval.RunBool(interruptChanceFormula, evalContext) == false)
+                return false;
+
+            // All checks passed, now we add the hit reaction condition
+
+            // agentProto should have already been validated in Power.CanCauseHitReact()
+            ConditionPrototype conditionProto = targetAgent.AgentPrototype.HitReactCondition.As<ConditionPrototype>();
+            if (conditionProto == null) return Logger.WarnReturn(false, "CalculateResultHitReaction(): conditionProto == null");
+
+            ConditionCollection conditionCollection = targetAgent.ConditionCollection;
+
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+
+            // Generate condition data
+            TimeSpan duration = conditionProto.GetDuration(Properties, ultimateOwner, PrototypeId.Invalid, null);
+
+            using PropertyCollection conditionProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            Condition.GenerateConditionProperties(conditionProperties, conditionProto, Properties, owner, target, Game);
+
+            // Create, initialize, and add the condition
+            Condition condition = ConditionCollection.AllocateCondition();
+            condition.InitializeFromPower(conditionCollection.NextConditionId, this, conditionProto, duration, Properties);
+            results.AddConditionToAdd(condition);
+
+            targetAgent.StartHitReactionCooldown();
+
+            return true;
         }
 
         #endregion

@@ -3101,6 +3101,23 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public static bool CanCauseHitReact(PowerPrototype powerProto, Agent target)
+        {
+            if (powerProto.CanCauseHitReact == false)
+                return false;
+
+            AgentPrototype agentProto = target.AgentPrototype;
+            if (agentProto == null) return Logger.WarnReturn(false, "CanCauseHitReact(): agentProto == null");
+
+            if (agentProto.HitReactCondition == PrototypeId.Invalid)
+                return false;
+
+            if (target.IsHitReactionOnCooldown())
+                return false;
+
+            return true;
+        }
+
         public static T FindPowerPrototype<T>(PowerPrototype powerProto) where T: PowerPrototype
         {
             if (powerProto == null) return Logger.WarnReturn<T>(null, "FindPowerPrototype(): powerProto == null");

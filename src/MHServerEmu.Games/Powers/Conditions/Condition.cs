@@ -710,6 +710,16 @@ namespace MHServerEmu.Games.Powers.Conditions
             return _conditionPrototype.IsHitReactCondition;
         }
 
+        public bool OverridesHitReactConditions()
+        {
+            return Properties[PropertyEnum.Knockback] ||
+                   Properties[PropertyEnum.Knockdown] ||
+                   Properties[PropertyEnum.Knockup] ||
+                   Properties[PropertyEnum.Stunned] ||
+                   Properties[PropertyEnum.Mesmerized] ||
+                   Properties[PropertyEnum.NPCAmbientLock];
+        }
+
         public bool IsTransferToCurrentAvatar()
         {
             if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsTransferToCurrentAvatar(): _conditionPrototype == null");

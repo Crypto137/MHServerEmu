@@ -1004,12 +1004,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //--
 
         [DoNotCopy]
+        public EvalPrototype EvalInterruptChanceFormulaPrototype { get; private set; }
+
+        [DoNotCopy]
         public EvalPrototype EvalNegStatusResistPctFormulaPrototype { get; private set; }
 
         public override void PostProcess()
         {
             base.PostProcess();
 
+            EvalInterruptChanceFormulaPrototype = EvalInterruptChanceFormula.As<EvalPrototype>();
             EvalNegStatusResistPctFormulaPrototype = EvalNegStatusResistPctFormula.As<EvalPrototype>();
         }
 

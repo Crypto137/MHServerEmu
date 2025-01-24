@@ -40,6 +40,8 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<WakeEndEvent> _wakeEndEvent = new();
         private readonly EventPointer<ExitCombatEvent> _exitCombatEvent = new();
 
+        private TimeSpan _hitReactionCooldownEnd = TimeSpan.Zero;
+
         public AIController AIController { get; private set; }
         public AgentPrototype AgentPrototype { get => Prototype as AgentPrototype; }
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
@@ -1687,6 +1689,16 @@ namespace MHServerEmu.Games.Entities
             }
 
             return result == PowerUseResult.Success;
+        }
+
+        public void StartHitReactionCooldown()
+        {
+            _hitReactionCooldownEnd = Game.CurrentTime + TimeSpan.FromMilliseconds(AgentPrototype.HitReactCooldownMS);
+        }
+
+        public bool IsHitReactionOnCooldown()
+        {
+            return _hitReactionCooldownEnd > Game.CurrentTime;
         }
 
         #region Scheduled Events
