@@ -1170,11 +1170,19 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Check if there is any damage
+            bool hasDamage = false;
+
             foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
             {
                 if (kvp.Value > 0f)
-                    return false;
+                {
+                    hasDamage = true;
+                    break;
+                }
             }
+
+            if (hasDamage == false)
+                return false;
 
             // Check eval
             EvalPrototype interruptChanceFormula = GameDatabase.CombatGlobalsPrototype.EvalInterruptChanceFormulaPrototype; 
