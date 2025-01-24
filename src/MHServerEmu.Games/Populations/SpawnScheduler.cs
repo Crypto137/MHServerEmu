@@ -124,7 +124,10 @@ namespace MHServerEmu.Games.Populations
                             {
                                 spawnObject.ResetMarker();
                                 ListPool<WorldEntity>.Instance.Return(entities);
-                                Logger.Warn($"ScheduleMissionObjects failed SpawnByMarker {spawnObject}");
+
+                                if (PopulationManager.DebugMarker(spawnObject.MarkerRef))
+                                    Logger.Warn($"ScheduleMissionObjects failed SpawnByMarker {spawnObject}");
+
                                 return;
                             }
 
@@ -155,11 +158,13 @@ namespace MHServerEmu.Games.Populations
             populationObject.CleanUpSpawnFlags();
 
             var reservation = region.SpawnMarkerRegistry.ReserveFreeReservation(markerRef, random, populationObject.SpawnLocation, populationObject.SpawnFlags, 0);
-            if (reservation == null || reservation.State == MarkerState.Reserved) return false;
+            if (reservation == null || reservation.State != MarkerState.Reserved) return false;
 
             reservation.State = MarkerState.Pending;
             reservation.Object = populationObject.Object;
             reservation.MissionRef = populationObject.MissionRef;
+
+            if (PopulationManager.DebugMarker(markerRef)) Logger.Warn($"ReservationMarker {reservation}");
 
             populationObject.MarkerReservation = reservation;
             if (missionObject.MissionObjects.Contains(populationObject) == false) return false;
