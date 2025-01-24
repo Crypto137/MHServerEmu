@@ -114,7 +114,8 @@ namespace MHServerEmu.Games.Populations
                 RemoveOnSpawnFail = removeOnSpawnFail
             };
 
-            // Logger.Info($"AddPopulationObject {populationObject}");
+            if (PopulationManager.DebugMarker(populationMarkerRef)) Logger.Info($"AddPopulationObject [{critical}] {populationObject}");
+
             populationObject.Scheduler = AddToScheduler(populationObject);
             return populationObject;
         }

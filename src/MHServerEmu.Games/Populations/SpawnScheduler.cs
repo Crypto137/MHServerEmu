@@ -115,7 +115,10 @@ namespace MHServerEmu.Games.Populations
                         {
                             if (spawnObject.SpawnByMarker(entities))
                             {
-                                OnSpawnedPopulation(populationObject);
+                                if (PopulationManager.DebugMarker(spawnObject.MarkerRef) && entities.Count > 0)
+                                    Logger.Warn($"Spawn MissionObjects {entities[0].RegionLocation.Position} {critical} {Count}");
+
+                                OnSpawnedPopulation(spawnObject);
                             }
                             else
                             {
@@ -255,7 +258,7 @@ namespace MHServerEmu.Games.Populations
                 if (populationObject.SpawnByMarker(entities))
                 {
                     if (PopulationManager.DebugMarker(populationObject.MarkerRef) && entities.Count > 0) 
-                        Logger.Warn($"SpawnByMarker {entities[0].RegionLocation.Position} {_criticalQueue.Count} {_regularQueue.Count}");
+                        Logger.Warn($"Spawn MarkerObject {entities[0].RegionLocation.Position} {_criticalQueue.Count} {_regularQueue.Count}");
                     
                     OnSpawnedPopulation(populationObject);
                 }

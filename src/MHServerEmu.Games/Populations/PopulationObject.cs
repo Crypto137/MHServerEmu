@@ -118,6 +118,8 @@ namespace MHServerEmu.Games.Populations
             if (success && SpawnEvent != null)
                 SpawnEvent.SetSpawnData(SpawnGroupId, entities);
 
+            if (PopulationManager.DebugMarker(MarkerRef)) Logger.Warn($"SpawnObject {MarkerRef.GetNameFormatted()}");
+
             return success;
         }
 

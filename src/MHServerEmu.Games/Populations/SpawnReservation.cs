@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.GameData;
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Populations
     public class SpawnReservation
     {
         private SpawnMarkerRegistry _registry;
-
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public MarkerType Type { get; private set; }
         public int Id { get; private set; }
         public Cell Cell { get; private set; }
@@ -88,6 +89,8 @@ namespace MHServerEmu.Games.Populations
 
         public void ResetReservation(bool updateTime)
         {
+            if (PopulationManager.DebugMarker(MarkerRef)) Logger.Debug($"ResetReservation {MarkerRef.GetNameFormatted()} [{updateTime}]");
+
             State = MarkerState.Free;
             if (updateTime) LastFreeTime = Game.Current.CurrentTime;
 
