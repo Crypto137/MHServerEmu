@@ -1599,7 +1599,8 @@ namespace MHServerEmu.Games.Entities
 
             if (healthDelta < 0f)
             {
-                // TODO: interrupt on damaged powers
+                // Agent-only: interrupt on cancel on damaged powers
+                OnDamaged(powerResults);
 
                 TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamaged, powerResults, healthDelta);
                 TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedForPctHealth, powerResults, healthDelta);
@@ -2905,6 +2906,8 @@ namespace MHServerEmu.Games.Entities
         {
             TryActivateOnSkillshotReflectProcs();
         }
+
+        protected virtual void OnDamaged(PowerResults powerResults) { }
 
         #endregion
 

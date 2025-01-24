@@ -18,6 +18,7 @@ using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -1437,6 +1438,41 @@ namespace MHServerEmu.Games.Entities
             }
 
             AIController?.OnAIPowerEnded(power.PrototypeDataRef, flags);
+        }
+
+        protected override void OnDamaged(PowerResults powerResults)
+        {
+            // Interrupt active cancel on damage powers (e.g. bodyslide to town, avatar swap cast)
+
+            // Check if this power can cause cancellation (non-power payloads, like DoTs, can always cause cancellation)
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            if (powerProto != null && powerProto.CanCauseCancelOnDamage == false)
+                return;
+
+            // Check if there is anything to cancel
+            Power activePower = ActivePower;
+            if (activePower == null)
+                return;
+
+            // Check if the active power is cancelled on damage
+            if (activePower.IsCancelledOnDamage() == false)
+                return;
+
+            // Cancel the power
+            activePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting);
+
+            // Apply channel interrupt condition (hit reaction)
+            ConditionPrototype conditionProto = GameDatabase.CombatGlobalsPrototype.ChannelInterruptConditionPrototype;
+
+            ulong creatorId = powerResults.PowerOwnerId;
+            ulong ultimateCreatorId = powerResults.UltimateOwnerId;
+            ulong targetId = powerResults.TargetId;
+
+            TimeSpan duration = conditionProto.GetDuration(null, this, PrototypeId.Invalid, null);
+
+            Condition condition = ConditionCollection.AllocateCondition();
+            condition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, creatorId, ultimateCreatorId, targetId, conditionProto, duration);
+            ConditionCollection.AddCondition(condition);
         }
 
         #endregion

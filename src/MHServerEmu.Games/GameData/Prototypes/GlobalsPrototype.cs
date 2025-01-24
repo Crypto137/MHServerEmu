@@ -1009,12 +1009,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public EvalPrototype EvalNegStatusResistPctFormulaPrototype { get; private set; }
 
+        [DoNotCopy]
+        public ConditionPrototype ChannelInterruptConditionPrototype { get; private set; }
+
         public override void PostProcess()
         {
             base.PostProcess();
 
             EvalInterruptChanceFormulaPrototype = EvalInterruptChanceFormula.As<EvalPrototype>();
             EvalNegStatusResistPctFormulaPrototype = EvalNegStatusResistPctFormula.As<EvalPrototype>();
+
+            ChannelInterruptConditionPrototype = ChannelInterruptCondition.As<ConditionPrototype>();
         }
 
         public float GetHardcoreAttenuationFactor(PropertyCollection properties)

@@ -444,6 +444,54 @@ namespace MHServerEmu.Games.Powers.Conditions
             return true;
         }
 
+        public bool InitializeFromConditionPrototype(ulong conditionId, Game game, ulong creatorId, ulong ultimateCreatorId, ulong targetId,
+            ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
+        {
+            _conditionId = conditionId;
+
+            _creatorId = creatorId;
+            _ultimateCreatorId = ultimateCreatorId != Entity.InvalidId ? ultimateCreatorId : creatorId;
+
+            WorldEntity ultimateCreator = game.EntityManager.GetEntity<WorldEntity>(_ultimateCreatorId);
+            if (ultimateCreator != null)
+            {
+                if (ultimateCreator is Avatar avatar)
+                {
+                    Player player = avatar.GetOwnerOfType<Player>();
+                    if (player != null)
+                        CreatorPlayerId = player.DatabaseUniqueId;
+                }
+
+                _ownerAssetRef = DetermineAssetRefByOwner(ultimateCreator, conditionProto);
+            }
+
+            _conditionPrototype = conditionProto;
+            _creatorPowerPrototype = null;
+            _creatorPowerPrototypeRef = PrototypeId.Invalid;
+
+            _conditionPrototypeRef = conditionProto.DataRef;
+            _creatorPowerIndex = -1;
+
+            _durationMS = (long)duration.TotalMilliseconds;
+            _updateIntervalMS = conditionProto.UpdateIntervalMS;
+            _cancelOnFlags = conditionProto.CancelOnFlags;
+
+            if (properties != null)
+            {
+                Properties.FlattenCopyFrom(properties, true);
+            }
+            else
+            {
+                WorldEntity creator = game.EntityManager.GetEntity<WorldEntity>(_creatorId);
+                WorldEntity target = game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+                if (GenerateConditionProperties(Properties, conditionProto, null, creator, target, game) == false)
+                    Logger.Warn($"InitializeFromConditionPrototype(): Failed to generate properties for [{this}]");
+            }
+
+            return true;
+        }
+
         public bool InitializeFromOtherCondition(ulong conditionId, Condition other, WorldEntity owner)
         {
             _conditionId = conditionId;
