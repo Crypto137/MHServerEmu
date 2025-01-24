@@ -20,6 +20,7 @@ namespace MHServerEmu.Games.Populations
     public class PopulationManager
     {
         public static bool Debug { get; set; }
+        public static PrototypeId MarkerRef;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Game Game { get; }
@@ -231,14 +232,21 @@ namespace MHServerEmu.Games.Populations
                 {
                     scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
                     markerEvent.Get().Initialize(this, markerRef);
-                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
+                    if (DebugMarker(markerRef)) Logger.Debug($"Marker ScheduleEvent [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
                 }
                 else if (markerEvent.Get().FireTime > eventTime)
                 {
-                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
+                    if (DebugMarker(markerRef)) Logger.Debug($"Marker RescheduleEvent [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
                     scheduler.RescheduleEvent(markerEvent, timeOffset);
                 }
             }
+        }
+
+        public static bool DebugMarker(PrototypeId markerRef)
+        {
+            if (Debug == false) return false;
+            if (MarkerRef != PrototypeId.Invalid && MarkerRef != markerRef) return false;
+            return true;
         }
 
         public bool[] Priority = [true, false];

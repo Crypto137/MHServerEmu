@@ -254,7 +254,7 @@ namespace MHServerEmu.Games.Populations
 
                 if (populationObject.SpawnByMarker(entities))
                 {
-                    if (PopulationManager.Debug && entities.Count > 0) 
+                    if (PopulationManager.DebugMarker(populationObject.MarkerRef) && entities.Count > 0) 
                         Logger.Warn($"SpawnByMarker {entities[0].RegionLocation.Position} {_criticalQueue.Count} {_regularQueue.Count}");
                     
                     OnSpawnedPopulation(populationObject);
@@ -335,14 +335,14 @@ namespace MHServerEmu.Games.Populations
 
         public void AddFailedObject(PopulationObject populationObject)
         {
-            if (PopulationManager.Debug) Logger.Trace($"Failed Spawn {populationObject}");
+            if (PopulationManager.DebugMarker(populationObject.MarkerRef)) Logger.Trace($"Failed Spawn {populationObject}");
             FailedObjects.Add(populationObject);
         }
 
         public void PushFailedObjects()
         {
             if (FailedObjects.Count == 0) return;
-            if (PopulationManager.Debug) Logger.Trace($"PushFailedObjects [{FailedObjects.Count}]");
+            // if (PopulationManager.Debug) Logger.Trace($"PushFailedObjects [{FailedObjects.Count}]");
 
             foreach (var popObject in FailedObjects)
                 Push(popObject);

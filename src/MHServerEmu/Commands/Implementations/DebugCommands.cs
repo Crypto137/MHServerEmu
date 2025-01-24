@@ -99,6 +99,19 @@ namespace MHServerEmu.Commands.Implementations
             On
         }
 
+        [Command("setmarker", "Usage: debug setmarker [MarkerRef].", AccountUserLevel.Admin)]
+        public string SetMarker(string[] @params, FrontendClient client)
+        {
+            if (@params.Length == 0) return "Invalid arguments. Type 'help debug setmarker' to get help.";
+
+            if (PrototypeId.TryParse(@params[0], out PrototypeId markerRef) == false)
+                return $"Failed to parse MarkerRef {@params[0]}";
+
+            PopulationManager.MarkerRef = markerRef;
+
+            return $"SetMarker [{markerRef.GetNameFormatted()}]";
+        }
+
         [Command("spawn", "Usage: debug spawn [on|off].", AccountUserLevel.Admin)]
         public string Spawn(string[] @params, FrontendClient client)
         {
