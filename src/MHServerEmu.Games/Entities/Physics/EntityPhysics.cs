@@ -186,15 +186,15 @@ namespace MHServerEmu.Games.Entities.Physics
         }
     }
 
-    public class OverlapEntityEntry
+    public readonly struct OverlapEntityEntry
     {
-        public bool Overlapped;
-        public uint Frame;
+        public readonly bool Overlapped;
+        public readonly uint Frame;
 
-        public OverlapEntityEntry()
+        public OverlapEntityEntry(bool overlapped = false, uint frame = 0)
         {
-            Overlapped = false;
-            Frame = 0;
+            Overlapped = overlapped;
+            Frame = frame;
         }
     }
 }
