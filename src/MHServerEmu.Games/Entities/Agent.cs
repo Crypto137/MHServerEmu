@@ -831,28 +831,6 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private bool TestAI()
-        {
-            if (this is Missile) return true;
-            var behaviorProfile = AgentPrototype?.BehaviorProfile;
-            if (behaviorProfile == null) return false;
-            var brain = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(behaviorProfile.Brain);
-            if (brain == null) return false;
-            if (brain is ProceduralProfileVanityPetPrototype || brain is ProceduralProfileTeamUpPrototype) return true; // Pet and TeamUp only
-            return false;
-        }
-
-        public void AITestOn()
-        {
-            if (AIController == null && Properties.HasProperty(PropertyEnum.AICombatIdling) == false)
-            {
-                InitAI(null);
-                ActivateAI();
-                Properties[PropertyEnum.AICombatIdling] = true; // AI tried On
-            }
-            else Think();
-        }
-
         public override SimulateResult SetSimulated(bool simulated)
         {
             SimulateResult result = base.SetSimulated(simulated);

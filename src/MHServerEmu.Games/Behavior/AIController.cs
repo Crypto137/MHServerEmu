@@ -335,6 +335,8 @@ namespace MHServerEmu.Games.Behavior
         {
             if (IsOwnerValid() == false || Owner.IsDead || IsEnabled == false ) return;
 
+            if (EntityManager.AI == false) return;
+
             if (Brain.LastThinkQTime == Game.NumQuantumFixedTimeUpdates)
                 Brain.ThinkCountPerFrame++;
             else
