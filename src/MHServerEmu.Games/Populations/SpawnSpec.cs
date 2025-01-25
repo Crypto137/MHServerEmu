@@ -475,8 +475,11 @@ namespace MHServerEmu.Games.Populations
             var manager = PopulationManager;
             var game = manager.Game;
 
+            bool respawn = SpawnEvent != null && SpawnEvent.RespawnObject;
+
             // Clear reserved place
-            if (Reservation != null) Reservation.State = MarkerState.Free;
+            if (Region != null && Region.TestStatus(RegionStatus.Shutdown) == false) 
+                Reservation?.ResetReservation(true);
 
             if (BlackOutId != BlackOutZone.InvalidId)
             {
@@ -486,28 +489,32 @@ namespace MHServerEmu.Games.Populations
 
             SpawnHeat?.Return();
 
+            if (PopulationObject == null) return;
+            
             // Reschedule SpawnEvent
-            if (SpawnEvent != null && SpawnEvent.RespawnObject)
+            if (respawn)
             {
                 var spawnTime = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS + game.Random.Next(1000));
 
-                if (Reservation != null)
-                {
-                    Reservation.RespawnDelay = TimeSpan.FromMilliseconds(SpawnEvent.RespawnDelayMS);
-                    Reservation.LastFreeTime = game.CurrentTime;
-                }
-
-                if (PopulationManager.Debug) 
+                if (PopulationManager.DebugMarker(PopulationObject.MarkerRef))
                     Logger.Debug($"Reschedule SpawnEvent {PopulationObject.MarkerRef.GetNameFormatted()} {spawnTime}");
 
                 PopulationObject.Time = game.CurrentTime + spawnTime;
                 SpawnEvent.AddToScheduler(PopulationObject);
+
+                PopulationObject.SpawnGroupId = InvalidId;
 
                 if (PopulationObject.IsMarker)
                     manager.MarkerSchedule(PopulationObject.MarkerRef);
                 else
                     manager.LocationSchedule();
             }
+            else
+            {
+                PopulationObject.ResetMarker(); // We need reset marker here?
+            }
+
+            PopulationObject = null;            
         }
 
         private void Defeat(bool loot, ulong entityId = Entity.InvalidId, ulong killerId = Entity.InvalidId)

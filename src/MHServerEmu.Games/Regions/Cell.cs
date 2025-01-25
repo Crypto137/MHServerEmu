@@ -543,6 +543,8 @@ namespace MHServerEmu.Games.Regions
             } 
             else
                 SpawnSpecScheduler.Spawn(true);
+
+            Region.SpawnMarkerRegistry.OnSimulation(this, _numInterestedPlayers);
         }
 
         public void OnRemovedFromAOI()

@@ -41,6 +41,8 @@ namespace MHServerEmu.Games.Entities
         // NOTE: We can use machine id argument if we ever implement multi-GIS architecture
         private static readonly IdGenerator EntityDbGuidGenerator = new(IdType.Entity, 0);
 
+        public static bool AI = true;
+
         private readonly Game _game;
 
         private readonly Dictionary<ulong, Entity> _entityDict = new();
@@ -504,6 +506,20 @@ namespace MHServerEmu.Games.Entities
             _entityDict.Remove(entity.Id);
             entity.OnDeallocate();
             return true;
+        }
+
+        public void EnableAI(bool enable)
+        {
+            if (AI == enable) return;
+            AI = enable;
+
+            if (enable)
+                foreach (var entity in SimulatedEntities.Iterate())
+                    if (entity is Agent agent) agent.AIController?.SetIsEnabled(true);
+
+            foreach (var entity in _entityDict.Values)
+                if (entity is WorldEntity worldEntity && entity is not Missile && worldEntity.IsInWorld)
+                    worldEntity.Locomotor?.Stop();
         }
     }
 }

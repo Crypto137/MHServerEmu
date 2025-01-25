@@ -99,6 +99,19 @@ namespace MHServerEmu.Commands.Implementations
             On
         }
 
+        [Command("setmarker", "Usage: debug setmarker [MarkerRef].", AccountUserLevel.Admin)]
+        public string SetMarker(string[] @params, FrontendClient client)
+        {
+            if (@params.Length == 0) return "Invalid arguments. Type 'help debug setmarker' to get help.";
+
+            if (PrototypeId.TryParse(@params[0], out PrototypeId markerRef) == false)
+                return $"Failed to parse MarkerRef {@params[0]}";
+
+            PopulationManager.MarkerRef = markerRef;
+
+            return $"SetMarker [{markerRef.GetNameFormatted()}]";
+        }
+
         [Command("spawn", "Usage: debug spawn [on|off].", AccountUserLevel.Admin)]
         public string Spawn(string[] @params, FrontendClient client)
         {
@@ -108,6 +121,21 @@ namespace MHServerEmu.Commands.Implementations
             PopulationManager.Debug = (flags == Switch.On) ? true : false;
 
             return $"Spawn Log [{flags}]";
+        }
+
+        [Command("ai", "Usage: debug ai [on|off].", AccountUserLevel.Admin)]
+        public string AI(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
+                flags = Switch.Off;   // Default Off
+
+            playerConnection.Game.EntityManager.EnableAI(flags == Switch.On);
+
+            return $"AI [{flags}]";
         }
 
         [Command("mission", "Usage: debug mission [on|off].", AccountUserLevel.Admin)]

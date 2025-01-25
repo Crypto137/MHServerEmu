@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -36,6 +37,147 @@ namespace MHServerEmu.Games.Populations
         }
     }
 
+    public class SpawnMissionObject
+    {
+        public HashSet<PopulationObject> MissionObjects = new();
+
+        public void Destroy()
+        {
+            List<SpawnReservation> reservations = ListPool<SpawnReservation>.Instance.Get();
+            foreach (var popObj in MissionObjects)
+                if (popObj.MarkerReservation != null && popObj.MarkerReservation.State == MarkerState.Pending)
+                    reservations.Add(popObj.MarkerReservation);
+
+            MissionObjects.Clear();
+
+            foreach (var reservation in reservations)
+                reservation.ResetReservation(false);
+
+            ListPool<SpawnReservation>.Instance.Return(reservations);
+        }
+
+        public bool Pending()
+        {
+            int pendingMarkers = 0;
+            foreach(var popObj in MissionObjects)
+            {
+                var reservation = popObj.MarkerReservation;
+                if (reservation != null && reservation.State == MarkerState.Pending)
+                    pendingMarkers++;
+            }
+
+            return pendingMarkers >= MissionObjects.Count;
+        }
+    }
+
+    public class SpawnMissionScheduler : SpawnScheduler
+    {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+        public Dictionary<PrototypeId, SpawnMissionObject> SpawnMissionObjects { get; }
+        public int Priority { get; }
+
+        public SpawnMissionScheduler(SpawnEvent spawnEvent) : base(spawnEvent)
+        {
+            Priority = spawnEvent.Game.Random.Next(100);
+            SpawnMissionObjects = new();
+        }
+
+        public override void Push(PopulationObject popObject)
+        {
+            base.Push(popObject);
+
+            var markerRef = popObject.MarkerRef;
+            if (SpawnMissionObjects.TryGetValue(markerRef, out var missionObject) == false)
+            {
+                missionObject = new();
+                SpawnMissionObjects[markerRef] = missionObject;
+            }
+            missionObject.MissionObjects.Add(popObject);
+        }
+
+        public void ScheduleMissionObjects(bool critical, PrototypeId markerRef)
+        {
+            var populationObject = Pop(critical);
+            if (populationObject != null)
+            {
+                if (ReservationMarker(populationObject, markerRef) == false)
+                    AddFailedObject(populationObject);
+
+                if (CanSpawnMissionMarkers(critical))
+                {
+                    List<WorldEntity> entities = ListPool<WorldEntity>.Instance.Get();
+
+                    foreach(var missionObject in SpawnMissionObjects.Values)
+                        foreach (var spawnObject in missionObject.MissionObjects)
+                        {
+                            if (spawnObject.SpawnByMarker(entities))
+                            {
+                                if (PopulationManager.DebugMarker(spawnObject.MarkerRef) && entities.Count > 0)
+                                    Logger.Warn($"Spawn MissionObjects {entities[0].RegionLocation.Position} {critical} {Count}");
+
+                                OnSpawnedPopulation(spawnObject);
+                            }
+                            else
+                            {
+                                spawnObject.ResetMarker();
+                                ListPool<WorldEntity>.Instance.Return(entities);
+
+                                if (PopulationManager.DebugMarker(spawnObject.MarkerRef))
+                                    Logger.Warn($"ScheduleMissionObjects failed SpawnByMarker {spawnObject}");
+
+                                return;
+                            }
+
+                            entities.Clear();
+                        }
+
+
+                    foreach (var missionObject in SpawnMissionObjects.Values)
+                        missionObject.Destroy();
+
+                    SpawnMissionObjects.Clear();
+
+                    ListPool<WorldEntity>.Instance.Return(entities);
+                }
+            }
+        }
+
+        private bool ReservationMarker(PopulationObject populationObject, PrototypeId markerRef)
+        {
+            if (populationObject == null || populationObject.MarkerRef != markerRef) return false;
+            if (SpawnMissionObjects.TryGetValue(markerRef, out var missionObject) == false) return false;
+            if (missionObject.Pending()) return false;
+
+            var region = SpawnEvent.Region;
+            if (region == null) return false;
+
+            var random = region.Game.Random;
+            populationObject.CleanUpSpawnFlags();
+
+            var reservation = region.SpawnMarkerRegistry.ReserveFreeReservation(markerRef, random, populationObject.SpawnLocation, populationObject.SpawnFlags, 0);
+            if (reservation == null || reservation.State != MarkerState.Reserved) return false;
+
+            reservation.State = MarkerState.Pending;
+            reservation.Object = populationObject.Object;
+            reservation.MissionRef = populationObject.MissionRef;
+
+            if (PopulationManager.DebugMarker(markerRef)) Logger.Warn($"ReservationMarker {reservation}");
+
+            populationObject.MarkerReservation = reservation;
+            if (missionObject.MissionObjects.Contains(populationObject) == false) return false;
+
+            return true;
+        }
+
+        private bool CanSpawnMissionMarkers(bool critical)
+        {
+            foreach (var missionMarker in SpawnMissionObjects.Values)
+                if (missionMarker.Pending() == false) return false;
+
+            return Empty(critical) && SpawnMissionObjects.Count > 0;
+        }
+    }
+
     public class SpawnScheduler
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -43,7 +185,8 @@ namespace MHServerEmu.Games.Populations
         private readonly PopulationObjectQueue _criticalQueue = new();
         private readonly PopulationObjectQueue _regularQueue = new();
 
-        public Queue<PopulationObject> FailedObjects { get; }
+        public HashSet<ulong> SpawnedGroups { get; } 
+        public List<PopulationObject> FailedObjects { get; }
         public int Count => _criticalQueue.Count + _regularQueue.Count;
         public bool Any => _criticalQueue.Count > 0 || _regularQueue.Count > 0;
 
@@ -51,16 +194,31 @@ namespace MHServerEmu.Games.Populations
 
         public SpawnScheduler(SpawnEvent spawnEvent)
         {
+            SpawnedGroups = new();
             FailedObjects = new();
             SpawnEvent = spawnEvent;
         }
 
-        public void Push(PopulationObject popObject)
+        public void Destroy()
+        {
+            var manager = SpawnEvent.PopulationManager;
+            if (manager == null) return;
+
+            foreach (var groupId in SpawnedGroups)
+                manager.RemoveSpawnGroup(groupId);
+        }
+
+        public virtual void Push(PopulationObject popObject)
         {
             if (popObject.Critical)
                 _criticalQueue.Push(popObject);
             else
                 _regularQueue.Push(popObject);
+        }
+
+        public bool Empty(bool critical)
+        {
+            return critical ? _criticalQueue.Count == 0 : _regularQueue.Count == 0;
         }
 
         public PopulationObject Pop(bool critical)
@@ -97,25 +255,32 @@ namespace MHServerEmu.Games.Populations
             var populationObject = Pop(critical);
             if (populationObject != null)
             {
-                List<WorldEntity> entities = new();
+                List<WorldEntity> entities = ListPool<WorldEntity>.Instance.Get();
+
                 if (populationObject.SpawnByMarker(entities))
                 {
-                    if (PopulationManager.Debug && entities.Count > 0) 
-                        Logger.Warn($"SpawnByMarker {entities[0].RegionLocation.Position} {_criticalQueue.Count} {_regularQueue.Count}");
+                    if (PopulationManager.DebugMarker(populationObject.MarkerRef) && entities.Count > 0) 
+                        Logger.Warn($"Spawn MarkerObject {entities[0].RegionLocation.Position} {_criticalQueue.Count} {_regularQueue.Count}");
                     
                     OnSpawnedPopulation(populationObject);
                 }
                 else if (populationObject.RemoveOnSpawnFail == false)
-                    PushFailedObject(populationObject);
+                    AddFailedObject(populationObject);
+
+                ListPool<WorldEntity>.Instance.Return(entities);
             }
         }
 
-        private void OnSpawnedPopulation(PopulationObject populationObject)
+        public void OnSpawnedPopulation(PopulationObject populationObject)
         {
             if (populationObject == null || populationObject.SpawnGroupId == SpawnGroup.InvalidId) return;
 
             var group = SpawnEvent.PopulationManager.GetSpawnGroup(populationObject.SpawnGroupId);
-            if (group != null) group.PopulationObject = populationObject;
+            if (group != null)
+            {
+                group.PopulationObject = populationObject;
+                SpawnedGroups.Add(populationObject.SpawnGroupId);
+            }
             SpawnEvent.OnSpawnedPopulation();
         }
 
@@ -140,7 +305,7 @@ namespace MHServerEmu.Games.Populations
                         if (populationObject.RemoveOnSpawnFail)
                             populationObject.SpawnHeat?.Return();
                         else
-                            PushFailedObject(populationObject);
+                            AddFailedObject(populationObject);
                     }
                 }
             }
@@ -173,26 +338,21 @@ namespace MHServerEmu.Games.Populations
             return picker;
         }
 
-        public void PushFailedObject(PopulationObject populationObject)
+        public void AddFailedObject(PopulationObject populationObject)
         {
-            if (PopulationManager.Debug) Logger.Trace($"Failed Spawn {populationObject}");
-            FailedObjects.Enqueue(populationObject);
+            if (PopulationManager.DebugMarker(populationObject.MarkerRef)) Logger.Trace($"Failed Spawn {populationObject}");
+            FailedObjects.Add(populationObject);
         }
 
-        public void PopFailedObjects()
+        public void PushFailedObjects()
         {
-            if (PopulationManager.Debug && FailedObjects.Count > 0) 
-                Logger.Trace($"PopFailedObjects [{FailedObjects.Count}]");
+            if (FailedObjects.Count == 0) return;
+            // if (PopulationManager.Debug) Logger.Trace($"PushFailedObjects [{FailedObjects.Count}]");
 
-            var game = SpawnEvent.Game;
-
-            while (FailedObjects.Count > 0)
-            {
-                var popObject = FailedObjects.Dequeue();
-                var spawnTime = TimeSpan.FromMilliseconds(game.Random.Next(1000));
-                popObject.Time = game.CurrentTime + spawnTime;
+            foreach (var popObject in FailedObjects)
                 Push(popObject);
-            }
+
+            FailedObjects.Clear();
         }
     }
 
