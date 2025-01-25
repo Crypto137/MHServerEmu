@@ -1994,7 +1994,7 @@ namespace MHServerEmu.Games.Entities
                 return PowerUseResult.OwnerNotSimulated;
 
             PrototypeId procPowerProtoRef = procPower.PrototypeDataRef;
-            Logger.Debug($"ActivateProcPower(): {procPowerProtoRef.GetName()} on [{this}]");
+            //Logger.Debug($"ActivateProcPower(): {procPowerProtoRef.GetName()} on [{this}]");
 
             // Apply target override if there is one
             ulong procTargetOverrideId = owner.Properties[PropertyEnum.ProcTargetOverride, procPowerProtoRef];
