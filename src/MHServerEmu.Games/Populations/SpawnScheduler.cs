@@ -74,7 +74,6 @@ namespace MHServerEmu.Games.Populations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Dictionary<PrototypeId, SpawnMissionObject> SpawnMissionObjects { get; }
-        public PrototypeId[] MissionMarkers => [.. SpawnMissionObjects.Keys];
         public int Priority { get; }
 
         public SpawnMissionScheduler(SpawnEvent spawnEvent) : base(spawnEvent)

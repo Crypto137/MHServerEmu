@@ -99,7 +99,7 @@ namespace MHServerEmu.Games.Populations
         {
             if (spawnEvent.MissionScheduler != null)
             {
-                foreach (var markerRef in spawnEvent.MissionScheduler.MissionMarkers)
+                foreach (var markerRef in spawnEvent.MissionScheduler.SpawnMissionObjects.Keys)
                 {
                     if (MarkerSchedulers.ContainsKey(markerRef) == false)
                         MarkerSchedulers[markerRef] = new();
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.Populations
         {
             if (spawnEvent is MissionSpawnEvent)
             {
-                foreach (var markerRef in spawnEvent.MissionScheduler.MissionMarkers)
+                foreach (var markerRef in spawnEvent.MissionScheduler.SpawnMissionObjects.Keys)
                     if (MarkerSchedulers.TryGetValue(markerRef, out var scheduler))
                         scheduler.MissionSchedulers.Remove(spawnEvent.MissionScheduler);
 
