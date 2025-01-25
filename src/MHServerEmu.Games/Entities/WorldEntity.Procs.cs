@@ -205,8 +205,7 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != triggerType)
                     continue;
 
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, requiredKeywordState, procChanceMultiplier) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, procChanceMultiplier) == false)
                     continue;
 
                 // Check for recursion (this will also null check procPower)
@@ -285,8 +284,7 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnConditionEnd)
                     continue;
 
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, condition, requiredKeywordState) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, condition) == false)
                     continue;
 
                 if (procPower == null)
@@ -548,8 +546,7 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != triggerType)
                     continue;
 
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, requiredKeywordState, procChanceMultiplier) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, procChanceMultiplier) == false)
                     continue;
 
                 if (procPower == null)
@@ -794,14 +791,13 @@ namespace MHServerEmu.Games.Entities
 
                 // Keyworded OnKill procs check different keyword sources based on the type of proc of power
                 Power procPower;
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
 
                 if (dataDirectory.PrototypeIsChildOfBlueprint(procPowerProtoRef, (BlueprintId)keywordGlobals.EntityKeywordPrototype))
                 {
                     if (target == null)
                         continue;
 
-                    if (CheckKeywordProc(kvp, out procPower, target, requiredKeywordState) == false)
+                    if (CheckKeywordProc(kvp, out procPower, target) == false)
                         continue;
                 }
                 else
@@ -811,7 +807,7 @@ namespace MHServerEmu.Games.Entities
                         continue;
 
                     KeywordsMask keywordsMask = powerResults.KeywordsMask != null ? powerResults.KeywordsMask : powerProto.KeywordsMask;
-                    if (CheckKeywordProc(kvp, out procPower, powerProto.KeywordsMask, requiredKeywordState) == false)
+                    if (CheckKeywordProc(kvp, out procPower, powerProto.KeywordsMask) == false)
                         continue;
                 }
 
@@ -985,8 +981,7 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != triggerType)
                     continue;
 
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, onPowerUsePower, requiredKeywordState) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, onPowerUsePower) == false)
                     continue;
 
                 if (procPower == null)
@@ -1070,8 +1065,7 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnMissileHit)
                     continue;
 
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, power, requiredKeywordState, procChanceMultiplier) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, power, procChanceMultiplier) == false)
                     continue;
 
                 if (procPower == null)
@@ -1174,8 +1168,7 @@ namespace MHServerEmu.Games.Entities
                 if ((ProcTriggerType)triggerTypeValue != triggerType)
                     continue;
 
-                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, requiredKeywordState) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask) == false)
                     continue;
 
                 if (procPower == null)
@@ -1297,9 +1290,15 @@ namespace MHServerEmu.Games.Entities
         }
 
         private bool CheckKeywordProc<T>(in KeyValuePair<PropertyId, PropertyValue> procProperty, out Power procPower,
-            T keywordedObject, bool requiredKeywordState, float procChanceMultiplier = 1f) where T: IKeyworded
+            T keywordedObject, float procChanceMultiplier = 1f) where T: IKeyworded
         {
             procPower = null;
+
+            PropertyEnum propertyEnum = procProperty.Key.Enum;
+            if (propertyEnum != PropertyEnum.ProcKeyword && propertyEnum != PropertyEnum.ProcNotKeyword)
+                return Logger.WarnReturn(false, $"CheckKeywordProc(): Attempted to check non-keyword proc property {procProperty.Key} for [{this}]");
+
+            bool requiredKeywordState = propertyEnum == PropertyEnum.ProcKeyword;  // true for ProcKeyword, false for ProcNotKeyword
 
             Property.FromParam(procProperty.Key, 2, out PrototypeId keywordProtoRef);
             KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
