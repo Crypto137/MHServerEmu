@@ -3360,10 +3360,17 @@ namespace MHServerEmu.Games.Entities
 
         public bool HasConditionWithKeyword(PrototypeId keywordRef)
         {
-            var keywordProto = GameDatabase.GetPrototype<KeywordPrototype>(keywordRef);
-            if (keywordProto == null) return false;
-            if (keywordProto is not PowerKeywordPrototype) return false;
-            return HasConditionWithKeyword(GameDatabase.DataDirectory.GetPrototypeEnumValue(keywordRef, GameDatabase.DataDirectory.KeywordBlueprint));
+            return HasConditionWithKeyword(keywordRef.As<KeywordPrototype>());
+        }
+
+        public bool HasConditionWithKeyword(KeywordPrototype keywordProto)
+        {
+            if (keywordProto == null) return Logger.WarnReturn(false, "HasConditionWithKeyword(): keywordProto == null");
+
+            if (keywordProto is not PowerKeywordPrototype)
+                return false;
+
+            return HasConditionWithKeyword(GameDatabase.DataDirectory.GetPrototypeEnumValue(keywordProto.DataRef, GameDatabase.DataDirectory.KeywordBlueprint));
         }
 
         private bool HasConditionWithKeyword(int keyword)

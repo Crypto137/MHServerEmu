@@ -938,7 +938,74 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
         {
-            // TODO
+            if (powerResults == null)
+                return;
+
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(powerResults.TargetId);
+            if (target != null && target.CanTriggerOtherProcs(ProcTriggerType.OnPetHit) == false)
+                return;
+
+            // Get proc chance multiplier for this power
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            float procChanceMultiplier = powerProto.OnHitProcChanceMultiplier;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnPetHit)
+                    continue;
+
+                PropertyEnum propertyEnum = kvp.Key.Enum;
+                if (propertyEnum == PropertyEnum.ProcKeyword || propertyEnum == PropertyEnum.ProcNotKeyword)
+                {
+                    // For keyword properties here we check both the pet and its conditions
+                    bool requiredKeywordState = propertyEnum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                    Property.FromParam(kvp.Key, 2, out PrototypeId keywordProtoRef);
+                    KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+
+                    if ((summon.HasKeyword(keywordProto) || summon.HasConditionWithKeyword(keywordProto)) != requiredKeywordState)
+                        continue;
+                }
+
+                if (CheckProcChance(kvp, procChanceMultiplier) == false)
+                    continue;
+
+                Power procPower = GetProcPower(kvp);
+                if (procPower == null)
+                    continue;
+
+                // NOTE: We do not check CanTrigger() for pet attacks
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                if (CheckOnHitRecursion(procPower, powerProto) == false)
+                    continue;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (target != null && target.IsInWorld)
+                {
+                    targetId = target.Id;
+                    targetPosition = target.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = Vector3.Zero;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                Logger.Debug($"OnPetHit(): {powerProto} for [{procPowerOwner}] (summon=[{summon}])");
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnPetHit);
         }
 
         public void TryActivateOnPowerUseProcs(ProcTriggerType triggerType, Power onPowerUsePower, ref PowerActivationSettings onPowerUseSettings)  // 58-62
@@ -1247,8 +1314,7 @@ namespace MHServerEmu.Games.Entities
             return Properties[PropertyEnum.DontTriggerOtherProcs, (int)triggerType] == false;
         }
 
-        private bool CheckProc(in KeyValuePair<PropertyId, PropertyValue> procProperty, out Power procPower,
-            int param = 0, float procChanceMultiplier = 1f, Power triggeringPower = null)
+        private bool CheckProc(in KeyValuePair<PropertyId, PropertyValue> procProperty, out Power procPower, int param = 0, float procChanceMultiplier = 1f)
         {
             procPower = null;
 
