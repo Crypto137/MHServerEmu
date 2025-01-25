@@ -177,10 +177,6 @@ namespace MHServerEmu.Games.Populations
                 cellMap[markerRef] = cellList;
             }
             cellList.Add(spot);
-
-            // HardFix for TimesSquare_DrStrange_X5Y2
-            if (cell.PrototypeDataRef == (PrototypeId)11803282576147423507 && id == 5)
-                spot.State = MarkerState.Reserved; 
         }
 
         public void RemoveCell(Cell cell)
