@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -150,20 +151,16 @@ namespace MHServerEmu.Games.Dialog
 
     public class EntityFilterWrapper
     {
-        private SortedSet<PrototypeId> _encounterRefs;
-        private SortedSet<PrototypeId> _regionRefs;
-        private SortedSet<PrototypeId> _clusterRefs;
-        private SortedSet<PrototypeId> _missionRefs;
-        private List<EntityFilterPrototype> _entityFilters;
+        private readonly SortedVector<PrototypeId> _encounterRefs = new();
+        private readonly SortedVector<PrototypeId> _regionRefs = new();
+        private readonly SortedVector<PrototypeId> _clusterRefs = new();
+        private readonly SortedVector<PrototypeId> _missionRefs = new();
+        private readonly List<EntityFilterPrototype> _entityFilters = new();
+
         public PrototypeId FilterContextMissionRef { get; set; }
 
         public EntityFilterWrapper()
         {
-            _entityFilters = new();
-            _regionRefs = new();
-            _encounterRefs = new();
-            _missionRefs = new();
-            _clusterRefs = new();
         }
 
         public void AddEncounterResource(AssetId encounterResource)

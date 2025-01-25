@@ -1444,7 +1444,7 @@ namespace MHServerEmu.Games.Powers
             // NOTE: The order is important here because refreshing uses the duration
             StackingApplicationStyleType applicationStyle = stackingBehaviorProto.ApplicationStyle;
 
-            if (applicationStyle == StackingApplicationStyleType.MatchDuration)
+            if (applicationStyle == StackingApplicationStyleType.MatchDuration && longestTimeRemaining > TimeSpan.Zero)
                 duration = longestTimeRemaining;
 
             if (refreshList.Count > 0)

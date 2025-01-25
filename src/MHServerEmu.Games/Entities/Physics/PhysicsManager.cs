@@ -506,7 +506,7 @@ namespace MHServerEmu.Games.Entities.Physics
                     bool overlapped = who.CanCollideWith(whom);
                     if (overlappedEntity.Overlapped != overlapped)
                     {
-                        overlappedEntity.Overlapped = overlapped;
+                        who.Physics.OverlappedEntities[whom.Id] = new(overlapped, overlappedEntity.Frame);
                         if (overlapped)
                             NotifyEntityOverlapBegin(who, whom, whoPos, whomPos);
                         else
@@ -575,9 +575,11 @@ namespace MHServerEmu.Games.Entities.Physics
 
         private void UpdateOverlapEntryHelper(EntityPhysics entityPhysics, WorldEntity otherEntity)
         {
-            if (entityPhysics.OverlappedEntities.TryAdd(otherEntity.Id, new()))
+            bool found = entityPhysics.OverlappedEntities.ContainsKey(otherEntity.Id);
+            entityPhysics.OverlappedEntities[otherEntity.Id] = new(false, _physicsFrames);
+
+            if (found == false)
                 RegisterEntityForPendingPhysicsResolve(entityPhysics.Entity);
-            entityPhysics.OverlappedEntities[otherEntity.Id].Frame = _physicsFrames;
         }
 
         private static void ApplyRepulsionForces(WorldEntity entity, WorldEntity otherEntity)
