@@ -581,8 +581,39 @@ namespace MHServerEmu.Games.Powers
                 results.Properties[PropertyEnum.Damage, damageType] = damage[(int)damageType];
             }
 
+            // Apply crit
             CalculateResultDamageCriticalModifier(results, target);
 
+            // Check OnGotDamaged procs prior to damage mitigation
+            float healthDelta = 0f;
+
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                float damageByType = kvp.Value;
+                healthDelta -= damageByType;
+
+                Property.FromParam(kvp.Key, 0, out int damageType);
+
+                ProcTriggerType triggerType = (DamageType)damageType switch
+                {
+                    DamageType.Physical => ProcTriggerType.OnGotDamagedPhysicalPriorResist,
+                    DamageType.Energy   => ProcTriggerType.OnGotDamagedEnergyPriorResist,
+                    DamageType.Mental   => ProcTriggerType.OnGotDamagedMentalPriorResist,
+                    _                   => ProcTriggerType.None
+                };
+
+                if (triggerType == ProcTriggerType.None)
+                {
+                    Logger.Warn("CalculateResultDamage(): triggerType == ProcTriggerType.None");
+                    continue;
+                }
+
+                target.TryActivateOnGotDamagedProcs(triggerType, results, -damageByType);
+            }
+
+            target.TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedPriorResist, results, healthDelta);
+
+            // Apply other modifiers
             CalculateResultDamageMetaGameModifier(results, target);
 
             CalculateResultDamageLevelScaling(results, target);
