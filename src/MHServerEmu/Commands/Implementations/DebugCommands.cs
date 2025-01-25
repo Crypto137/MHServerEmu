@@ -123,19 +123,17 @@ namespace MHServerEmu.Commands.Implementations
             return $"Spawn Log [{flags}]";
         }
 
-        [Command("ai", "Usage: debug ai [on|off].", AccountUserLevel.Admin)]
+        [Command("ai", "Usage: debug ai.", AccountUserLevel.Admin)]
         public string AI(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            EntityManager entityManager = playerConnection.Game.EntityManager;
 
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
-                flags = Switch.Off;   // Default Off
-
-            playerConnection.Game.EntityManager.EnableAI(flags == Switch.On);
-
-            return $"AI [{flags}]";
+            bool enableAI = entityManager.IsAIEnabled == false;
+            entityManager.EnableAI(enableAI);
+            return $"AI [{(enableAI ? "On" : "Off")}]";
         }
 
         [Command("mission", "Usage: debug mission [on|off].", AccountUserLevel.Admin)]

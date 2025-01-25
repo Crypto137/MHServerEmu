@@ -41,8 +41,6 @@ namespace MHServerEmu.Games.Entities
         // NOTE: We can use machine id argument if we ever implement multi-GIS architecture
         private static readonly IdGenerator EntityDbGuidGenerator = new(IdType.Entity, 0);
 
-        public static bool AI = true;
-
         private readonly Game _game;
 
         private readonly Dictionary<ulong, Entity> _entityDict = new();
@@ -69,6 +67,8 @@ namespace MHServerEmu.Games.Entities
         public EntityInvasiveCollection AllEntities { get; private set; }
         public EntityInvasiveCollection SimulatedEntities { get; private set; }
         public EntityInvasiveCollection LocomotionEntities { get; private set; }
+
+        public bool IsAIEnabled { get; private set; } = true;
 
         public EntityManager(Game game)
         {            
@@ -510,8 +510,8 @@ namespace MHServerEmu.Games.Entities
 
         public void EnableAI(bool enable)
         {
-            if (AI == enable) return;
-            AI = enable;
+            if (IsAIEnabled == enable) return;
+            IsAIEnabled = enable;
 
             if (enable)
                 foreach (var entity in SimulatedEntities.Iterate())
