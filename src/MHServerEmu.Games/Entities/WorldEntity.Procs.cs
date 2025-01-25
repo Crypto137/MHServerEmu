@@ -197,6 +197,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Keyword procs
+            KeywordsMask keywordsMask = powerResults.KeywordsMask != null ? powerResults.KeywordsMask : powerProto.KeywordsMask;
+
             foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
             {
                 Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
@@ -204,7 +206,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, powerProto.KeywordsMask, requiredKeywordState, procChanceMultiplier) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, requiredKeywordState, procChanceMultiplier) == false)
                     continue;
 
                 // Check for recursion (this will also null check procPower)
@@ -230,7 +232,7 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnBlockProcs(PowerResults powerResults)  // 4
         {
-            // TODO
+            TryActivateOnBlockOrDodgeProcHelper(ProcTriggerType.OnBlock, powerResults);
         }
 
         public void TryActivateOnCollideProcs(ProcTriggerType triggerType, WorldEntity target, Vector3 collisionPosition)
@@ -398,7 +400,7 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnDodgeProcs(PowerResults powerResults)  // 13
         {
-            // TODO
+            TryActivateOnBlockOrDodgeProcHelper(ProcTriggerType.OnDodge, powerResults);
         }
 
         public void TryActivateOnEnduranceProcs(ManaType manaType)  // 14-15
@@ -538,6 +540,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Keyworded procs
+            KeywordsMask keywordsMask = powerResults.KeywordsMask != null ? powerResults.KeywordsMask : powerProto.KeywordsMask;
+
             foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
             {
                 Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
@@ -545,7 +549,7 @@ namespace MHServerEmu.Games.Entities
                     continue;
 
                 bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
-                if (CheckKeywordProc(kvp, out Power procPower, powerProto.KeywordsMask, requiredKeywordState, procChanceMultiplier) == false)
+                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, requiredKeywordState, procChanceMultiplier) == false)
                     continue;
 
                 if (procPower == null)
@@ -806,6 +810,7 @@ namespace MHServerEmu.Games.Entities
                     if (powerProto == null)
                         continue;
 
+                    KeywordsMask keywordsMask = powerResults.KeywordsMask != null ? powerResults.KeywordsMask : powerProto.KeywordsMask;
                     if (CheckKeywordProc(kvp, out procPower, powerProto.KeywordsMask, requiredKeywordState) == false)
                         continue;
                 }
@@ -1077,6 +1082,99 @@ namespace MHServerEmu.Games.Entities
                 procPower.Properties.CopyProperty(properties, PropertyEnum.CharacterLevel);
 
                 PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(triggerType);
+        }
+
+        private void TryActivateOnBlockOrDodgeProcHelper(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            if (powerResults == null)
+                return;
+
+            if (IsInWorld == false)
+                return;
+
+            WorldEntity attacker = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
+            if (attacker != null && attacker.CanTriggerOtherProcs(triggerType) == false)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)triggerType))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnBlockOrDodgeProcHelper(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (attacker != null && attacker.IsInWorld)
+                {
+                    targetId = attacker.Id;
+                    targetPosition = attacker.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = powerResults.PowerOwnerPosition;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            // Keyworded procs
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            KeywordsMask keywordsMask = powerResults.KeywordsMask != null ? powerResults.KeywordsMask : powerProto.KeywordsMask;
+
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != triggerType)
+                    continue;
+
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                if (CheckKeywordProc(kvp, out Power procPower, keywordsMask, requiredKeywordState) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnBlockOrDodgeProcHelper(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                ulong targetId;
+                Vector3 targetPosition;
+
+                if (attacker != null && attacker.IsInWorld)
+                {
+                    targetId = attacker.Id;
+                    targetPosition = attacker.RegionLocation.Position;
+                }
+                else
+                {
+                    targetId = InvalidId;
+                    targetPosition = powerResults.PowerOwnerPosition;
+                }
+
+                PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
+                settings.PowerResults = powerResults;
+
                 procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
 

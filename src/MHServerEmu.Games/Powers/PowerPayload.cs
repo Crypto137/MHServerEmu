@@ -46,8 +46,6 @@ namespace MHServerEmu.Games.Powers
         public int BeamSweepSlice { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
 
-        public KeywordsMask KeywordsMask { get; private set; }
-
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
