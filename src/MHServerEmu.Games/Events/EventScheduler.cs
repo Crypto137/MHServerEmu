@@ -7,7 +7,7 @@ namespace MHServerEmu.Games.Events
 {
     public class EventScheduler
     {
-        private const int MaxEventsPerUpdate = 50000;
+        private const int MaxEventsPerUpdate = 250000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan EventTriggerTimeLogThreshold = TimeSpan.FromMilliseconds(5);
