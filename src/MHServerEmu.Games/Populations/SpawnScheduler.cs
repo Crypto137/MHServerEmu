@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Populations
         {
             List<SpawnReservation> reservations = ListPool<SpawnReservation>.Instance.Get();
             foreach (var popObj in MissionObjects)
-                if (popObj.MarkerReservation != null)
+                if (popObj.MarkerReservation != null && popObj.MarkerReservation.State == MarkerState.Pending)
                     reservations.Add(popObj.MarkerReservation);
 
             MissionObjects.Clear();
