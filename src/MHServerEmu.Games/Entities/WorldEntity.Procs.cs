@@ -1056,7 +1056,35 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
         {
-            // TODO
+            float procChanceMultiplier = power.Prototype.OnHitProcChanceMultiplier;
+
+            using PropertyCollection procProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            // Non-keyworded procs
+            TryActivateProcsCommon(ProcTriggerType.OnMissileHit, procProperties, null, procChanceMultiplier);
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnMissileHit)
+                    continue;
+
+                bool requiredKeywordState = kvp.Key.Enum == PropertyEnum.ProcKeyword;   // true for ProcKeyword, false for ProcNotKeyword
+                if (CheckKeywordProc(kvp, out Power procPower, power, requiredKeywordState, procChanceMultiplier) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnMissileHitProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
         }
 
         private void TryActivateProcsCommon(ProcTriggerType triggerType, PropertyCollection properties, WorldEntity target = null, float procChanceMultiplier = 1f)
