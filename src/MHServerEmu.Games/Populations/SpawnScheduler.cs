@@ -74,13 +74,12 @@ namespace MHServerEmu.Games.Populations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Dictionary<PrototypeId, SpawnMissionObject> SpawnMissionObjects { get; }
-        public HashSet<PrototypeId> MissionMarkers { get; }
+        public PrototypeId[] MissionMarkers => [.. SpawnMissionObjects.Keys];
         public int Priority { get; }
 
         public SpawnMissionScheduler(SpawnEvent spawnEvent) : base(spawnEvent)
         {
             Priority = spawnEvent.Game.Random.Next(100);
-            MissionMarkers = new();
             SpawnMissionObjects = new();
         }
 
@@ -95,7 +94,6 @@ namespace MHServerEmu.Games.Populations
                 SpawnMissionObjects[markerRef] = missionObject;
             }
             missionObject.MissionObjects.Add(popObject);
-            MissionMarkers.Add(markerRef);
         }
 
         public void ScheduleMissionObjects(bool critical, PrototypeId markerRef)
