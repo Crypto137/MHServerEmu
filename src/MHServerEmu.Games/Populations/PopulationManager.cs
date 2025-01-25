@@ -134,7 +134,7 @@ namespace MHServerEmu.Games.Populations
 
         public void DeScheduleSpawnEvent(SpawnEvent spawnEvent)
         {
-            if (spawnEvent is MissionSpawnEvent)
+            if (spawnEvent.MissionScheduler != null)
             {
                 foreach (var markerRef in spawnEvent.MissionScheduler.SpawnMissionObjects.Keys)
                     if (MarkerSchedulers.TryGetValue(markerRef, out var scheduler))
