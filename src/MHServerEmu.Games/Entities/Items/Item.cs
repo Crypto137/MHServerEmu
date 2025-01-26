@@ -855,11 +855,10 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 Properties[pickInRangeProto.Prop] = GenerateIntWithinRange(randomMult, valueMin, valueMax);
             }
-            else
-            {
-                // The client doesn't have assignment for bool properties here for some reason
-                Logger.Warn($"OnBuiltInPropertyRoll(): Unhandled property data type {propDataType} in [{this}]");
-            }
+
+            // The client doesn't have assignment for bool properties here.
+            // Entity/Items/Armor/UniquePrototypes/Avatars/AnyHero/Slot4/Unique189.prototype has a bool range property (CCResistAlwaysAll),
+            // but it seems to be a mistake, since it uses Difficulty/Curves/Items/TenacityItemCurve.curve[ItemLevelProp] to calculate its range.
 
             return true;
         }
@@ -871,7 +870,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (propDataType != PropertyDataType.Real && propDataType != PropertyDataType.Integer && propDataType != PropertyDataType.Asset)
             {
-                return Logger.WarnReturn(false, "OnBuiltInPropertyRoll(): The following Item has a built-in set PropertyEntry with a property " +
+                return Logger.WarnReturn(false, "OnBuiltInPropertySet(): The following Item has a built-in set PropertyEntry with a property " +
                     $"that is not an int/float/asset prop, which doesn't work!\nItem: [{this}]\nProperty: [{propertyInfo.PropertyName}]");
             }
 

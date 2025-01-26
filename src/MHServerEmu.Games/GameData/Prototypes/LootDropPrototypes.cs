@@ -7,7 +7,6 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
-using MHServerEmu.Games.Loot.Visitors;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
@@ -111,8 +110,103 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll(): AllowedTokenType={AllowedTokenType}, FilterType={FilterType}");
-            return base.Roll(settings, resolver);
+            if (FilterType == CharacterFilterType.DropUnownedAvatarOnly && settings.Player == null)
+                return Logger.WarnReturn(LootRollResult.Failure, $"Roll(): No player for filter type {FilterType}");
+
+            ItemPrototype itemProto = null;
+
+            // Build picker
+            Picker<Prototype> picker = new(resolver.Random);
+
+            foreach (PrototypeId charTokenProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CharacterTokenPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                CharacterTokenPrototype charTokenProto = charTokenProtoRef.As<CharacterTokenPrototype>();
+
+                if (charTokenProto.TokenType != AllowedTokenType)
+                    continue;
+
+                // Skip tokens that don't have an ES cost
+                ItemCostPrototype itemCostProto = charTokenProto.Cost;
+                if (itemCostProto == null || itemCostProto.HasEternitySplintersComponent() == false)
+                    continue;
+
+                bool addToPicker = true;
+
+                switch (FilterType)
+                {
+                    case CharacterFilterType.DropCurrentAvatarOnly:
+                        addToPicker = charTokenProto.Character == settings.UsableAvatar.DataRef;
+                        if (addToPicker)
+                            itemProto = charTokenProto;
+                        break;
+
+                    case CharacterFilterType.DropUnownedAvatarOnly:
+                        addToPicker = charTokenProto.HasUnlockedCharacter(settings.Player) == false;
+                        break;
+
+                    // Add by default if no filter is specified
+                }
+
+                if (addToPicker)
+                    picker.Add(charTokenProto);
+            }
+
+            // Fallback if failed to find anything to pick
+            if (picker.Empty())
+            {
+                if (OnTokenUnavailable == null)
+                {
+                    resolver.ClearPending();
+                    return LootRollResult.Failure;
+                }
+
+                return OnTokenUnavailable.Select(settings, resolver);
+            }
+
+            // Pick and push to the resolver
+            LootRollResult result = LootRollResult.NoRoll;
+            AvatarPrototype usableAvatarProto = settings.UsableAvatar;
+
+            int level = resolver.ResolveLevel(settings.Level, settings.UseLevelVerbatim);
+            AvatarPrototype resolvedAvatarProto = resolver.ResolveAvatarPrototype(usableAvatarProto, settings.ForceUsable, settings.UsablePercent);
+            PrototypeId rollFor = resolvedAvatarProto != null ? resolvedAvatarProto.DataRef : PrototypeId.Invalid;
+
+            PrototypeId? rarityProtoRef = resolver.ResolveRarity(settings.Rarities, level, null);
+            if (rarityProtoRef == PrototypeId.Invalid)
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            using DropFilterArguments filterArgs = ObjectPoolManager.Instance.Get<DropFilterArguments>();
+            DropFilterArguments.Initialize(filterArgs, itemProto, rollFor, level, rarityProtoRef.Value, 0, EquipmentInvUISlot.Invalid, resolver.LootContext);
+            filterArgs.DropDistanceSq = settings.DropDistanceSq;
+
+            if (LootUtilities.PickValidItem(resolver, picker, null, filterArgs, ref itemProto, RestrictionTestFlags.All, ref rarityProtoRef) == false)
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            filterArgs.Rarity = rarityProtoRef.Value;
+            filterArgs.ItemProto = itemProto;
+
+            RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
+            if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown) ||
+                settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly))
+            {
+                restrictionFlags &= ~RestrictionTestFlags.Cooldown;
+            }
+
+            result |= resolver.PushItem(filterArgs, restrictionFlags, 1, null);
+
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 

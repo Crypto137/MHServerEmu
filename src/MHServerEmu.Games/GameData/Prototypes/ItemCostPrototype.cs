@@ -329,9 +329,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     continue;
                 }
 
-                int numToSpend = Math.Min(remaining, item.CurrentStackSize);
+                int numToSpend = Math.Min(remaining, currencyItem.CurrentStackSize);
                 remaining -= numToSpend;
-                item.DecrementStack(numToSpend);
+                currencyItem.DecrementStack(numToSpend);
             }
 
             ListPool<ulong>.Instance.Return(currencyItemList);

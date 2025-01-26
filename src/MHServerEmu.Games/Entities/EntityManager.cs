@@ -68,6 +68,8 @@ namespace MHServerEmu.Games.Entities
         public EntityInvasiveCollection SimulatedEntities { get; private set; }
         public EntityInvasiveCollection LocomotionEntities { get; private set; }
 
+        public bool IsAIEnabled { get; private set; } = true;
+
         public EntityManager(Game game)
         {            
             _game = game;
@@ -504,6 +506,20 @@ namespace MHServerEmu.Games.Entities
             _entityDict.Remove(entity.Id);
             entity.OnDeallocate();
             return true;
+        }
+
+        public void EnableAI(bool enable)
+        {
+            if (IsAIEnabled == enable) return;
+            IsAIEnabled = enable;
+
+            if (enable)
+                foreach (var entity in SimulatedEntities.Iterate())
+                    if (entity is Agent agent) agent.AIController?.SetIsEnabled(true);
+
+            foreach (var entity in _entityDict.Values)
+                if (entity is WorldEntity worldEntity && entity is not Missile && worldEntity.IsInWorld)
+                    worldEntity.Locomotor?.Stop();
         }
     }
 }

@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -19,6 +20,7 @@ namespace MHServerEmu.Games.Populations
     public class PopulationManager
     {
         public static bool Debug { get; set; }
+        public static PrototypeId MarkerRef;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         public Game Game { get; }
@@ -95,14 +97,32 @@ namespace MHServerEmu.Games.Populations
 
         public void ScheduleSpawnEvent(SpawnEvent spawnEvent)
         {
+            if (spawnEvent.MissionScheduler != null)
+            {
+                foreach (var markerRef in spawnEvent.MissionScheduler.SpawnMissionObjects.Keys)
+                {
+                    if (MarkerSchedulers.ContainsKey(markerRef) == false)
+                        MarkerSchedulers[markerRef] = new();
+
+                    MarkerSchedulers[markerRef].MissionSchedulers.Add(spawnEvent.MissionScheduler);
+                    MarkerSchedule(markerRef);
+                }
+
+                return;
+            }
+
             foreach (var kvp in spawnEvent.SpawnMarkerSchedulers)
             {
                 var markerRef = kvp.Key;
                 var markerScheduler = kvp.Value;
                 if (MarkerSchedulers.ContainsKey(markerRef) == false)
                     MarkerSchedulers[markerRef] = new();
-                MarkerSchedulers[markerRef].SpawnSchedulers.Add(markerScheduler);
-                MarkerSchedule(markerRef);
+
+                if (markerScheduler.Any)
+                {
+                    MarkerSchedulers[markerRef].MarkerSchedulers.Add(markerScheduler);
+                    MarkerSchedule(markerRef);
+                }
             }
 
             if (spawnEvent.SpawnLocationSchedulers.Count > 0)
@@ -114,21 +134,52 @@ namespace MHServerEmu.Games.Populations
 
         public void DeScheduleSpawnEvent(SpawnEvent spawnEvent)
         {
+            if (spawnEvent.MissionScheduler != null)
+            {
+                foreach (var markerRef in spawnEvent.MissionScheduler.SpawnMissionObjects.Keys)
+                    if (MarkerSchedulers.TryGetValue(markerRef, out var scheduler))
+                        scheduler.MissionSchedulers.Remove(spawnEvent.MissionScheduler);
+
+               spawnEvent.MissionScheduler.Destroy();
+            }
+
             foreach (var kvp in spawnEvent.SpawnMarkerSchedulers)
             {
                 var markerRef = kvp.Key;
                 var markerScheduler = kvp.Value;
-                if (MarkerSchedulers.ContainsKey(markerRef))
-                {
-                    MarkerSchedulers[markerRef].SpawnSchedulers.Remove(markerScheduler);
-                    if (MarkerSchedulers[markerRef].SpawnSchedulers.Count == 0)
-                        MarkerSchedulers.Remove(markerRef);
-                }
+                if (MarkerSchedulers.TryGetValue(markerRef, out var scheduler))
+                    scheduler.MarkerSchedulers.Remove(markerScheduler);
+
+                markerScheduler.Destroy();
             }
 
             if (spawnEvent.SpawnLocationSchedulers.Count > 0)
                 foreach (var locationScheduler in spawnEvent.SpawnLocationSchedulers.Values)
+                {
                     LocationSchedulers.Remove(locationScheduler);
+                    locationScheduler.Destroy();
+                }
+        }
+
+        private bool GetEventTime(MarkerEventScheduler markerEventScheduler, TimeSpan maxTimeOffset, out TimeSpan eventTime, out TimeSpan timeOffset)
+        {
+            eventTime = TimeSpan.MaxValue;
+            timeOffset = TimeSpan.Zero;
+
+            foreach (var scheduler in markerEventScheduler.MissionSchedulers)
+                scheduler.GetMinEventTime(ref eventTime);
+
+            foreach (var scheduler in markerEventScheduler.MarkerSchedulers)
+                scheduler.GetMinEventTime(ref eventTime);
+
+            if (eventTime == TimeSpan.MaxValue) return false;
+
+            if (eventTime != TimeSpan.Zero)
+                timeOffset = Clock.Max(eventTime - Game.RealGameTime, maxTimeOffset);
+            else
+                timeOffset = maxTimeOffset;
+
+            return true;
         }
 
         private bool GetEventTime(List<SpawnScheduler> schedulers, TimeSpan maxTimeOffset, out TimeSpan eventTime, out TimeSpan timeOffset)
@@ -174,55 +225,57 @@ namespace MHServerEmu.Games.Populations
             if (MarkerSchedulers.TryGetValue(markerRef, out var markerEventScheduler) == false) return;
             if (Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) == 0) return;
 
-            if (GetEventTime(markerEventScheduler.SpawnSchedulers, TimeSpan.FromMilliseconds(20), out var eventTime, out var timeOffset))
+            if (GetEventTime(markerEventScheduler, TimeSpan.FromMilliseconds(20), out var eventTime, out var timeOffset))
             {
                 var markerEvent = markerEventScheduler.MarkerSpawnEvent;
                 if (markerEvent.IsValid == false)
                 {
                     scheduler.ScheduleEvent(markerEvent, timeOffset, _pendingEvents);
                     markerEvent.Get().Initialize(this, markerRef);
-                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
+                    if (DebugMarker(markerRef)) Logger.Debug($"Marker ScheduleEvent [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
                 }
                 else if (markerEvent.Get().FireTime > eventTime)
                 {
-                    if (Debug) Logger.Debug($"MarkerSchedule [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
+                    if (DebugMarker(markerRef)) Logger.Debug($"Marker RescheduleEvent [{markerRef.GetNameFormatted()}] [{timeOffset}] [{_scheduledCount++}]");
                     scheduler.RescheduleEvent(markerEvent, timeOffset);
                 }
             }
         }
 
+        public static bool DebugMarker(PrototypeId markerRef)
+        {
+            if (Debug == false) return false;
+            if (MarkerRef != PrototypeId.Invalid && MarkerRef != markerRef) return false;
+            return true;
+        }
+
+        public bool[] Priority = [true, false];
+
         private void ScheduleLocationObject()
         {
-            bool critical = true;
-            bool normal = true;
             var currentTime = Game.CurrentTime;
             Picker<SpawnScheduler> schedulerPicker = new(Game.Random);
-            foreach (var scheduler in LocationSchedulers)
-                if (scheduler.CanSpawn(currentTime, critical))
-                {
-                    schedulerPicker.Add(scheduler);
-                    normal = false;
-                }
 
-            if (normal)
+            foreach (bool critical in Priority)
             {
-                critical = false;
+                schedulerPicker.Clear();
+
                 foreach (var scheduler in LocationSchedulers)
                     if (scheduler.CanSpawn(currentTime, critical))
                         schedulerPicker.Add(scheduler);
-            }
 
-            while (schedulerPicker.PickRemove(out var scheduler))
-            {
-                if (scheduler.CanSpawn(currentTime, critical))
-                    scheduler.ScheduleLocationObject(critical);
+                while (schedulerPicker.PickRemove(out var scheduler))
+                {
+                    if (scheduler.CanSpawn(currentTime, critical))
+                        scheduler.ScheduleLocationObject(critical);
 
-                if (scheduler.CanSpawn(currentTime, critical))
-                    schedulerPicker.Add(scheduler);
+                    if (scheduler.CanSpawn(currentTime, critical))
+                        schedulerPicker.Add(scheduler);
+                }
             }
 
             foreach (var scheduler in LocationSchedulers)
-                if (scheduler.Count == 0) scheduler.PopFailedObjects();
+                scheduler.PushFailedObjects();
 
             LocationSchedule();
         }
@@ -233,25 +286,33 @@ namespace MHServerEmu.Games.Populations
                 && Region.SpawnMarkerRegistry.CalcFreeReservation(markerRef) > 0)
             {
                 var currentTime = Game.CurrentTime;
-                bool normal = true;
-                bool critical = true;
-                foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                    if (scheduler.CanSpawn(currentTime, critical))
-                    {
-                        scheduler.ScheduleMarkerObject(critical);
-                        normal = false;
-                    }
 
-                if (normal)
+                if (markerEventScheduler.MissionSchedulers.Count > 0)
                 {
-                    critical = false;
-                    foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                        if (scheduler.CanSpawn(currentTime, critical))
-                            scheduler.ScheduleMarkerObject(critical);
+                    List<SpawnMissionScheduler> missionSchedulers = ListPool<SpawnMissionScheduler>.Instance.Get();
+                    markerEventScheduler.GetSortedMissionSchedulers(missionSchedulers);
+
+                    foreach (var scheduler in missionSchedulers)
+                        foreach (bool critical in Priority)
+                            while (scheduler.CanSpawn(currentTime, critical))
+                                scheduler.ScheduleMissionObjects(critical, markerRef);
+
+                    foreach (var scheduler in missionSchedulers)
+                        scheduler.PushFailedObjects();
+
+                    ListPool<SpawnMissionScheduler>.Instance.Return(missionSchedulers);
                 }
 
-                foreach (var scheduler in markerEventScheduler.SpawnSchedulers)
-                    if (scheduler.Count == 0) scheduler.PopFailedObjects();
+                if (markerEventScheduler.MarkerSchedulers.Count > 0)
+                {
+                    foreach (var scheduler in markerEventScheduler.MarkerSchedulers)
+                        foreach (bool critical in Priority)
+                            if (scheduler.CanSpawn(currentTime, critical))
+                                scheduler.ScheduleMarkerObject(critical);
+
+                    foreach (var scheduler in markerEventScheduler.MarkerSchedulers)
+                        scheduler.PushFailedObjects();
+                }
             }
 
             MarkerSchedule(markerRef);
@@ -457,8 +518,15 @@ namespace MHServerEmu.Games.Populations
 
         public class MarkerEventScheduler
         {
-            public List<SpawnScheduler> SpawnSchedulers = new();
+            public List<SpawnMissionScheduler> MissionSchedulers = new();
+            public List<SpawnScheduler> MarkerSchedulers = new();
             public EventPointer<MarkerSpawnEvent> MarkerSpawnEvent = new();
+
+            public void GetSortedMissionSchedulers(List<SpawnMissionScheduler> missionSchedulers)
+            {
+                foreach (var scheduler in MissionSchedulers) missionSchedulers.Add(scheduler);
+                missionSchedulers.Sort(static (a, b) => a.Priority.CompareTo(b.Priority));
+            }
         }
 
         public class LocationSpawnEvent : CallMethodEvent<PopulationManager>
