@@ -786,7 +786,7 @@ namespace MHServerEmu.Games.Entities
             return advancementProto != null ? advancementProto.GetTeamUpLevelCap() : 0;
         }
 
-        protected virtual bool OnLevelUp(int oldLevel, int newLevel)
+        protected virtual bool OnLevelUp(int oldLevel, int newLevel, bool restoreHealthAndEndurance = true)
         {
             if (IsTeamUpAgent == false) return Logger.WarnReturn(false, "OnLevelUp(): IsTeamUpAgent == false");
 
@@ -802,8 +802,15 @@ namespace MHServerEmu.Games.Entities
 
         protected void SendLevelUpMessage()
         {
-            var levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
-            Game.NetworkManager.SendMessageToInterested(levelUpMessage, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity);
+            List<PlayerConnection> interestedClientList = ListPool<PlayerConnection>.Instance.Get();
+            PlayerConnectionManager networkManager = Game.NetworkManager;
+            if (networkManager.GetInterestedClients(interestedClientList, this, AOINetworkPolicyValues.AOIChannelOwner | AOINetworkPolicyValues.AOIChannelProximity))
+            {
+                var levelUpMessage = NetMessageLevelUp.CreateBuilder().SetEntityID(Id).Build();
+                networkManager.SendMessageToMultiple(interestedClientList, levelUpMessage);
+            }
+
+            ListPool<PlayerConnection>.Instance.Return(interestedClientList);
         }
 
         protected override void SetCharacterLevel(int characterLevel)

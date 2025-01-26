@@ -175,6 +175,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (IsDead)
                 Resurrect();
 
+            // Restore level state by running the level up code
+            int level = CharacterLevel;
+            OnLevelUp(level, level, false);
+
             return true;
         }
 
@@ -1613,6 +1617,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
             {
+                ManaType manaType = primaryManaBehaviorProto.ManaType;
+
                 // Set base value
                 Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
                 if (manaCurve == null)
@@ -1621,14 +1627,14 @@ namespace MHServerEmu.Games.Entities.Avatars
                     continue;
                 }
 
-                Properties[PropertyEnum.EnduranceBase, primaryManaBehaviorProto.ManaType] = manaCurve.GetAt(CharacterLevel);
+                Properties[PropertyEnum.EnduranceBase, manaType] = manaCurve.GetAt(CharacterLevel);
 
                 // Restore to full if needed
                 if (primaryManaBehaviorProto.StartsEmpty == false)
-                    Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = Properties[PropertyEnum.EnduranceMax, primaryManaBehaviorProto.ManaType];
+                    Properties[PropertyEnum.Endurance, manaType] = Properties[PropertyEnum.EnduranceMax, manaType];
 
                 // Start regen
-                Properties[PropertyEnum.DisableEnduranceRegen, primaryManaBehaviorProto.ManaType] = primaryManaBehaviorProto.StartsWithRegenEnabled == false;
+                Properties[PropertyEnum.DisableEnduranceRegen, manaType] = primaryManaBehaviorProto.StartsWithRegenEnabled == false;
 
                 // Do common mana init
                 AssignManaBehaviorPowers(primaryManaBehaviorProto);
@@ -1932,26 +1938,56 @@ namespace MHServerEmu.Games.Entities.Avatars
             return (long)(xp * xpMult);
         }
 
-        protected override bool OnLevelUp(int oldLevel, int newLevel)
+        protected override bool OnLevelUp(int oldLevel, int newLevel, bool restoreHealthAndEndurance = true)
         {
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "OnLevelUp(): avatarProto == null");
 
-            // Slot unlocked default abilities
-            AbilityKeyMapping currentAbilityKeyMapping = CurrentAbilityKeyMapping;
-            if (CurrentAbilityKeyMapping != null)
+            // Notify clients
+            SendLevelUpMessage();
+
+            // Restore health if needed
+            if (restoreHealthAndEndurance && IsDead == false)
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
+
+            // Update endurance
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
             {
-                List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
-                if (currentAbilityKeyMapping.GetDefaultAbilities(hotkeyDataList, this, oldLevel))
+                ManaType manaType = primaryManaBehaviorProto.ManaType;
+
+                // Update the base value
+                Curve manaCurve = GameDatabase.GetCurve(primaryManaBehaviorProto.BaseEndurancePerLevel);
+                if (manaCurve == null)
                 {
-                    // TODO: Avatar.SlotAbility()
-                    foreach (HotkeyData hotkeyData in hotkeyDataList)
-                        currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                    Logger.Warn("OnLevelUp(): manaCurve == null");
+                    continue;
                 }
 
-                ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
+                Properties[PropertyEnum.EnduranceBase, manaType] = manaCurve.GetAt(newLevel);
+
+                // Restore to max if needed
+                if (restoreHealthAndEndurance && primaryManaBehaviorProto.RestoreToMaxOnLevelUp && IsDead == false)
+                    Properties[PropertyEnum.Endurance, manaType] = Properties[PropertyEnum.EnduranceMax, manaType];
             }
 
-            SendLevelUpMessage();
+            if (IsInWorld)
+            {
+                // Slot ALL default abilities
+                // (this is dumb, but we have to do this to avoid desync with the client, see CAvatar::autoSlotPowers())
+                AbilityKeyMapping currentAbilityKeyMapping = CurrentAbilityKeyMapping;
+                if (CurrentAbilityKeyMapping != null)
+                {
+                    List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
+                    if (currentAbilityKeyMapping.GetDefaultAbilities(hotkeyDataList, this))
+                    {
+                        // TODO: Avatar.SlotAbility()
+                        foreach (HotkeyData hotkeyData in hotkeyDataList)
+                            currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                    }
+
+                    ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
+                }
+            }
 
             var player = GetOwnerOfType<Player>();
             if (player == null) return false;
