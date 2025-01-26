@@ -822,7 +822,7 @@ namespace MHServerEmu.Games.Populations
             var min = bound.Min;
             var max = bound.Max;
             var center = bound.Center;
-            float clusterSize = Radius;
+            float clusterSize = Math.Max(Radius, 32.0f);
             List<Point2> points = ListPool<Point2>.Instance.Get();
 
             for (float x = min.X; x < max.X; x += clusterSize)
