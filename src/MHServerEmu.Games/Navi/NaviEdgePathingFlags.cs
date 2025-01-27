@@ -69,26 +69,21 @@ namespace MHServerEmu.Games.Navi
         public bool PathingFlagsCheck(PathFlags pathingFlags) => pathingFlags.HasFlag(PathFlags.Walk);
     }
 
-    public class ContentFlagCounts // TODO: optimize it
+    public struct ContentFlagCounts
     {
-        public int AddWalk { get; set; }
-        public int RemoveWalk { get; set; }
-        public int AddFly { get; set; }
-        public int RemoveFly { get; set; }
-        public int AddPower { get; set; }
-        public int RemovePower { get; set; }
-        public int AddSight { get; set; }
-        public int RemoveSight { get; set; }
+        public const int Count = 8;
 
-        public static int Count { get; } = 8;      
+        public int AddWalk;
+        public int RemoveWalk;
+        public int AddFly;
+        public int RemoveFly;
+        public int AddPower;
+        public int RemovePower;
+        public int AddSight;
+        public int RemoveSight;
         
         public ContentFlagCounts()
         {
-        }        
-        
-        public ContentFlagCounts(ContentFlagCounts flagCounts)
-        {
-            Set(flagCounts);
         }
 
         public uint GetHash()
@@ -159,18 +154,6 @@ namespace MHServerEmu.Games.Navi
             }
         }
 
-        public void Set(ContentFlagCounts other)
-        {
-            AddWalk = other.AddWalk;
-            RemoveWalk = other.RemoveWalk;
-            AddFly = other.AddFly;
-            RemoveFly = other.RemoveFly;
-            AddPower = other.AddPower;
-            RemovePower = other.RemovePower;
-            AddSight = other.AddSight;
-            RemoveSight = other.RemoveSight;
-        }
-
         public void Clear()
         {
             AddWalk = 0;
@@ -223,16 +206,14 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdgePathingFlags
     {
-        public ContentFlagCounts[] ContentFlagCounts;
+        public ContentFlagCounts[] ContentFlagCounts = new ContentFlagCounts[2];
 
         public NaviEdgePathingFlags()
         {
-            InitContentFlagCounts();
         }
 
         public NaviEdgePathingFlags(NaviContentFlags[] flags0, NaviContentFlags[] flags1)
         {
-            InitContentFlagCounts();
             NaviContentFlags flag0 = NaviContentFlags.None;
             NaviContentFlags flag1 = NaviContentFlags.None;
             foreach (var flag in flags0) flag0 |= flag;
@@ -242,19 +223,11 @@ namespace MHServerEmu.Games.Navi
 
         public NaviEdgePathingFlags(NaviEdgePathingFlags pathingFlags)
         {
-            InitContentFlagCounts();
             if (pathingFlags != null)
             {
-               ContentFlagCounts[0].Set(pathingFlags.ContentFlagCounts[0]);
-               ContentFlagCounts[1].Set(pathingFlags.ContentFlagCounts[1]);
+               ContentFlagCounts[0] = pathingFlags.ContentFlagCounts[0];
+               ContentFlagCounts[1] = pathingFlags.ContentFlagCounts[1];
             }
-        }
-
-        private void InitContentFlagCounts()
-        {
-            ContentFlagCounts = new ContentFlagCounts[2];
-            ContentFlagCounts[0] = new();
-            ContentFlagCounts[1] = new();
         }
 
         public void SetContentFlags(NaviContentFlags flag0, NaviContentFlags flag1)
