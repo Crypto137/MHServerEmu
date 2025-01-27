@@ -1997,7 +1997,7 @@ namespace MHServerEmu.Games.Entities
             return power.Activate(ref settings);
         }
 
-        protected PowerUseResult ActivateProcPower(Power procPower, ref PowerActivationSettings settings, WorldEntity owner, bool interruptActivePower = false)
+        protected PowerUseResult ActivateProcPower(Power procPower, ref PowerActivationSettings settings, WorldEntity activator, bool interruptActivePower = false)
         {
             if (IsSimulated == false)
                 return PowerUseResult.OwnerNotSimulated;
@@ -2006,7 +2006,7 @@ namespace MHServerEmu.Games.Entities
             //Logger.Debug($"ActivateProcPower(): {procPowerProtoRef.GetName()} on [{this}]");
 
             // Apply target override if there is one
-            ulong procTargetOverrideId = owner.Properties[PropertyEnum.ProcTargetOverride, procPowerProtoRef];
+            ulong procTargetOverrideId = activator.Properties[PropertyEnum.ProcTargetOverride, procPowerProtoRef];
             if (procTargetOverrideId != InvalidId)
             {
                 WorldEntity procTargetOverride = Game.EntityManager.GetEntity<WorldEntity>(procTargetOverrideId);
@@ -2054,7 +2054,7 @@ namespace MHServerEmu.Games.Entities
             // Set index properties on the proc power
             procPower.Properties[PropertyEnum.PowerRank] = Properties.HasProperty(PropertyEnum.PowerRank)
                 ? Properties[PropertyEnum.PowerRank]
-                : owner.Properties[PropertyEnum.ProcPowerRank, procPowerProtoRef];
+                : activator.Properties[PropertyEnum.ProcPowerRank, procPowerProtoRef];
 
             procPower.Properties[PropertyEnum.CharacterLevel] = CharacterLevel;
             procPower.Properties[PropertyEnum.CombatLevel] = CombatLevel;

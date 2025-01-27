@@ -868,12 +868,50 @@ namespace MHServerEmu.Games.Entities
 
         public void TryActivateOnMovementStartedProcs() // 44
         {
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnMovementStarted))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
 
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnMovementStartedProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnMovementStarted);
         }
 
         public void TryActivateOnMovementStoppedProcs() // 45
         {
+            using PropertyCollection procProperties = GetProcProperties(Properties);
 
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnMovementStopped))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnMovementStoppedProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnMovementStopped);
         }
 
         public void TryActivateOnNegStatusAppliedProcs()  // 46
