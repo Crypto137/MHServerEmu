@@ -631,6 +631,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EffectPower != PrototypeId.Invalid)
                 agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
 
+            // Run OnOrbPickup procs
+            KeywordPrototype orbEntityKeywordProto = GameDatabase.KeywordGlobalsPrototype.OrbEntityKeyword.As<KeywordPrototype>();
+            if (orbProto.HasKeyword(orbEntityKeywordProto))
+                avatar.TryActivateOnOrbPickupProcs(agent);
+
             // Experience
             // Scale exp based on avatar level rather than orb level
             if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))

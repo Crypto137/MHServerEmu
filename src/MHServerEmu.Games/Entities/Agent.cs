@@ -659,7 +659,7 @@ namespace MHServerEmu.Games.Entities
                 Game.GameEventScheduler.CancelEvent(_exitCombatEvent);
 
             Properties[PropertyEnum.IsInCombat] = false;
-            TryActivateOnOutOfCombatProcs();
+            TryActivateOnOutCombatProcs();
             TriggerEntityActionEvent(EntitySelectorActionEventType.OnExitedCombat);
 
             return true;

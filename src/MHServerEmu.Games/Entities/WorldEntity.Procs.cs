@@ -872,7 +872,37 @@ namespace MHServerEmu.Games.Entities
             TryActivateProcsCommon(ProcTriggerType.OnNegStatusApplied, procProperties);
         }
 
-        public void TryActivateOnOutOfCombatProcs() // 48
+        public void TryActivateOnOrbPickupProcs(Agent orb)  // 47
+        {
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            TryActivateProcsCommon(ProcTriggerType.OnOrbPickup, procProperties);
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnOrbPickup)
+                    continue;
+
+                if (CheckKeywordProc(kvp, out Power procPower, orb) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnOrbPickupProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+        }
+
+        public void TryActivateOnOutCombatProcs() // 48
         {
             using PropertyCollection procProperties = GetProcProperties(Properties);
             TryActivateProcsCommon(ProcTriggerType.OnOutCombat, procProperties);
