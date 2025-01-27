@@ -1238,6 +1238,36 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public virtual void TryActivateOnHotspotNegatedProcs(WorldEntity other)
+        {
+            // TODO: Check if this works properly after we implement hotspot powers
+            if (IsInWorld == false)
+                return;
+
+            if (other.CanTriggerOtherProcs(ProcTriggerType.OnHotspotNegated))
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnHotspotNegated))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnHotspotNegatedProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(other.Id, other.RegionLocation.Position, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnHotspotNegated);
+        }
+
         private void TryActivateProcsCommon(ProcTriggerType triggerType, PropertyCollection properties, WorldEntity target = null, float procChanceMultiplier = 1f)
         {
             if (IsInWorld == false)

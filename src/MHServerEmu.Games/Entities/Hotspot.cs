@@ -189,7 +189,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        // Never activate OnHit / OnKill procs on the hotspot itself
+        // Never activate OnHit / OnKill / OnHotspotNegated procs on the hotspot itself
 
         public override void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)
         {
@@ -199,6 +199,14 @@ namespace MHServerEmu.Games.Entities
         public override void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)
         {
             TryForwardOnKillProcsToOwner(triggerType, powerResults);
+        }
+
+        public override void TryActivateOnHotspotNegatedProcs(WorldEntity other)
+        {
+            // Forward to owner
+            WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
+            if (owner != null && owner.IsInWorld)
+                owner.TryActivateOnHotspotNegatedProcs(other);
         }
 
         public bool IsOverlappingPowerTarget(ulong targetId)
