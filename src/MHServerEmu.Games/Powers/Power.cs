@@ -3346,8 +3346,22 @@ namespace MHServerEmu.Games.Powers
 
         protected virtual PowerUseResult ActivateInternal(ref PowerActivationSettings settings)
         {
-            // Send non-combo activations and combos triggered by the server
-            if (IsComboEffect() == false || settings.Flags.HasFlag(PowerActivationSettingsFlags.ServerCombo))
+            PowerPrototype powerProto = Prototype;
+            if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): powerProto == null");
+
+            bool isComboEffect = IsComboEffect();
+            bool isProcEffect = IsProcEffect();
+
+            // Set triggering power for combos (this is used to avoid infinite loops via recursion)
+            if (isComboEffect)
+                Properties[PropertyEnum.TriggeringPowerRef, PrototypeDataRef] = settings.TriggeringPowerRef;
+
+            // All procs are activated by the server and need to be replicated to clients
+            if (isProcEffect)
+                settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            // Send non-combo activations and combos / procs triggered by the server
+            if (isComboEffect == false || settings.Flags.HasFlag(PowerActivationSettingsFlags.ServerCombo))
             {
                 // Send message if there are any interested clients in proximity
                 PlayerConnectionManager networkManager = Owner.Game.NetworkManager;
@@ -3368,13 +3382,12 @@ namespace MHServerEmu.Games.Powers
             // ScoringEvent AvatarUsedPower
             if (Owner is Avatar avatar)
             {
-                var player = avatar.GetOwnerOfType<Player>();
-                var target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
-                player.OnScoringEvent(new(ScoringEventType.AvatarUsedPower, Prototype, target?.Prototype));
-            }
+                Player player = avatar.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): player == null");
 
-            PowerPrototype powerProto = Prototype;
-            if (powerProto == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): powerProto == null");
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                player.OnScoringEvent(new(ScoringEventType.AvatarUsedPower, powerProto, target?.Prototype));
+            }
 
             // Make a copy of activation settings
             _lastActivationSettings = settings;
@@ -3402,7 +3415,7 @@ namespace MHServerEmu.Games.Powers
             if (GetTargetingShape() == TargetingShapeType.BeamSweep)
                 powerApplication.BeamSweepVar = 0;
 
-            if (IsProcEffect() == false)
+            if (isProcEffect == false)
             {
                 if (Owner == null) return Logger.WarnReturn(PowerUseResult.GenericError, "ActivateInternal(): Owner == null");
                 powerApplication.TargetEntityId = settings.TargetEntityId;
