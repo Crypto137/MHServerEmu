@@ -514,6 +514,21 @@ namespace MHServerEmu.Games.Powers
             Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
             damage.Clear();
 
+            // Get damage from properties (TODO: rewrite this)
+            bool hasDamage = false;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                if (kvp.Value > 0f)
+                {
+                    hasDamage = true;
+                    break;
+                }
+            }
+
+            // Don't do other calculations if there is no damage
+            if (hasDamage == false)
+                return true;
+
             // Check crit / brutal strike chance
             if (CheckCritChance(target))
             {
