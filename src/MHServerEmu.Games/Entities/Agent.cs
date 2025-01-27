@@ -40,6 +40,8 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<WakeStartEvent> _wakeStartEvent = new();
         private readonly EventPointer<WakeEndEvent> _wakeEndEvent = new();
         private readonly EventPointer<ExitCombatEvent> _exitCombatEvent = new();
+        private readonly EventPointer<MovementStartedEvent> _movementStartedEvent = new();
+        private readonly EventPointer<MovementStoppedEvent> _movementStoppedEvent = new();
 
         private TimeSpan _hitReactionCooldownEnd = TimeSpan.Zero;
 
@@ -1283,6 +1285,11 @@ namespace MHServerEmu.Games.Entities
             base.OnExitedWorld();
             AIController?.OnAIExitedWorld();
 
+            // Cancel events
+            EventScheduler scheduler = Game.GameEventScheduler;
+            scheduler.CancelEvent(_movementStartedEvent);
+            scheduler.CancelEvent(_movementStoppedEvent);
+
             var player = TeamUpOwner?.GetOwnerOfType<Player>();
             player?.UpdateScoringEventContext();
         }
@@ -1341,13 +1348,42 @@ namespace MHServerEmu.Games.Entities
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
             base.OnLocomotionStateChanged(oldState, newState);
-            if (IsSimulated && IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+
+            if (IsInWorld == false || TestStatus(EntityStatus.ExitingWorld))
+                return;
+
+            if (IsSimulated)
             {
                 if ((oldState.Method == LocomotorMethod.HighFlying) != (newState.Method == LocomotorMethod.HighFlying))
                 {
                     Vector3 currentPosition = RegionLocation.Position;
                     Vector3 targetPosition = FloorToCenter(RegionLocation.ProjectToFloor(RegionLocation.Region, RegionLocation.Cell, currentPosition));
                     ChangeRegionPosition(targetPosition, null, ChangePositionFlags.DoNotSendToOwner | ChangePositionFlags.HighFlying);
+                }
+            }
+
+            // Check movement started/stopped procs if started/stopped locomoting.
+            // Use mutually exclusive events scheduled to the end of the current
+            // frame to do only one start/stop within a single frame.
+            bool isLocomoting = newState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting);
+            bool wasLocomoting = oldState.LocomotionFlags.HasFlag(LocomotionFlags.IsLocomoting);
+            if (isLocomoting ^ wasLocomoting)
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+
+                if (isLocomoting)
+                {
+                    scheduler.CancelEvent(_movementStoppedEvent);
+
+                    if (_movementStartedEvent.IsValid == false)
+                        ScheduleEntityEvent(_movementStartedEvent, TimeSpan.Zero);
+                }
+                else
+                {
+                    scheduler.CancelEvent(_movementStartedEvent);
+
+                    if (_movementStoppedEvent.IsValid == false)
+                        ScheduleEntityEvent(_movementStoppedEvent, TimeSpan.Zero);
                 }
             }
         }
@@ -1838,6 +1874,16 @@ namespace MHServerEmu.Games.Entities
         private class ExitCombatEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Agent)t).ExitCombat();
+        }
+
+        private class MovementStartedEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((WorldEntity)t).TryActivateOnMovementStartedProcs();
+        }
+
+        private class MovementStoppedEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((WorldEntity)t).TryActivateOnMovementStoppedProcs();
         }
 
         #endregion

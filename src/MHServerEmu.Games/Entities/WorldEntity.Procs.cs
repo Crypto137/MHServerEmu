@@ -866,6 +866,16 @@ namespace MHServerEmu.Games.Entities
             TryActivateProcsCommon(ProcTriggerType.OnMissileAbsorbed, procProperties);
         }
 
+        public void TryActivateOnMovementStartedProcs() // 44
+        {
+
+        }
+
+        public void TryActivateOnMovementStoppedProcs() // 45
+        {
+
+        }
+
         public void TryActivateOnNegStatusAppliedProcs()  // 46
         {
             using PropertyCollection procProperties = GetProcProperties(Properties);
