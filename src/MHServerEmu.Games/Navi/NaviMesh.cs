@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Navi
             };
             stateStack.Push(state);
 
-            NaviContentFlags contentFlags = ContentFlagCounts.ToContentFlags(state.FlagCounts);
+            NaviContentFlags contentFlags = state.FlagCounts.ToContentFlags();
             PathFlags pathFlags = ContentFlags.ToPathFlags(contentFlags);
 
             triangle.ContentFlagCounts = state.FlagCounts;
@@ -279,7 +279,7 @@ namespace MHServerEmu.Games.Navi
                             }
                         }
 
-                        contentFlags = ContentFlagCounts.ToContentFlags(stateOppo.FlagCounts);
+                        contentFlags = stateOppo.FlagCounts.ToContentFlags();
                         pathFlags = ContentFlags.ToPathFlags(contentFlags);
 
                         opposedTriangle.ContentFlagCounts = stateOppo.FlagCounts;

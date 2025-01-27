@@ -133,11 +133,11 @@ namespace MHServerEmu.Games.Navi
             AsSpan().Clear();
         }
 
-        public static NaviContentFlags ToContentFlags(ContentFlagCounts flagCounts)
+        public NaviContentFlags ToContentFlags()
         {
             NaviContentFlags contentFlags = NaviContentFlags.None;
             for (int flagIndex = 0; flagIndex < Count; flagIndex++)
-                if (flagCounts[flagIndex] > 0)
+                if (this[flagIndex] > 0)
                     contentFlags |= (NaviContentFlags)(1 << flagIndex);
             return contentFlags;
         }
@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.Navi
 
         public NaviContentFlags GetContentFlagsForSide(int side)
         {
-            return Navi.ContentFlagCounts.ToContentFlags(ContentFlagCounts[side]);
+            return ContentFlagCounts[side].ToContentFlags();
         }
 
         public void Merge(NaviEdgePathingFlags other, bool flip)
