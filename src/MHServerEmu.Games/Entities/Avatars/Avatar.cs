@@ -2702,6 +2702,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             //Properties[PropertyEnum.AvatarTeamUpDuration] = power.GetCooldownDuration();
 
             ActivateTeamUpAgent(true);
+
+            TryActivateOnSummonPetProcs(teamUp);
         }
 
         public bool ClearSummonedTeamUpAgent(Agent teamUpAgent)

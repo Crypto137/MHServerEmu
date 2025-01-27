@@ -985,7 +985,7 @@ namespace MHServerEmu.Games.Entities
 
                 if (procPower == null)
                 {
-                    Logger.Warn("TryActivateOnPowerUseProcs(): procPower == null");
+                    Logger.Warn("TryActivateOnPetDeathProcs(): procPower == null");
                     continue;
                 }
 
@@ -1174,6 +1174,36 @@ namespace MHServerEmu.Games.Entities
         {
             using PropertyCollection procProperties = GetProcProperties(Properties);
             TryActivateProcsCommon(ProcTriggerType.OnSkillshotReflect, procProperties);
+        }
+
+        public void TryActivateOnSummonPetProcs(WorldEntity pet)   // 70
+        {
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            TryActivateProcsCommon(ProcTriggerType.OnSummonPet, procProperties);
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnSummonPet)
+                    continue;
+
+                if (CheckKeywordProc(kvp, out Power procPower, pet) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnSummonPetProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
         }
 
         public void TryActivateOnMissileHitProcs(Power power, WorldEntity target)   // 72
