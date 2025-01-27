@@ -276,6 +276,15 @@ namespace MHServerEmu.Games.Entities
             CancelScheduledLifespanExpireEvent();
             EntityActionComponent?.CancelAll();
 
+            // Trigger OnPetDeath procs if this is a pet with an owner
+            ulong powerUserOverrideId = PowerUserOverrideId;
+            if (powerUserOverrideId != InvalidId && IsSummonedPet())
+            {
+                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(powerUserOverrideId);
+                if (owner != null && owner.IsInWorld)
+                    owner.TryActivateOnPetDeathProcs(this);
+            }
+
             bool notMissile = this is not Missile;
             
             // Loot and XP

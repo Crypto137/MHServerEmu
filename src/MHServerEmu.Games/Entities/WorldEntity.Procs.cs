@@ -965,8 +965,38 @@ namespace MHServerEmu.Games.Entities
             PowerActivationSettings settings = new(target.Id, target.RegionLocation.Position, overlapPosition);
             procPowerOwner.ActivateProcPower(procPower, ref settings, this);
         }
+        
+        public void TryActivateOnPetDeathProcs(WorldEntity pet)  // 50
+        {
+            using PropertyCollection procProperties = GetProcProperties(Properties);
 
-        public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity summon) // 51
+            // Non-keyworded procs
+            TryActivateProcsCommon(ProcTriggerType.OnPetDeath, procProperties);
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnPetDeath)
+                    continue;
+
+                if (CheckKeywordProc(kvp, out Power procPower, pet) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnPowerUseProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(InvalidId, Vector3.Zero, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+        }
+
+        public void TryActivateOnPetHitProcs(PowerResults powerResults, WorldEntity pet) // 51
         {
             if (powerResults == null)
                 return;
@@ -996,7 +1026,7 @@ namespace MHServerEmu.Games.Entities
                     Property.FromParam(kvp.Key, 2, out PrototypeId keywordProtoRef);
                     KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
 
-                    if ((summon.HasKeyword(keywordProto) || summon.HasConditionWithKeyword(keywordProto)) != requiredKeywordState)
+                    if ((pet.HasKeyword(keywordProto) || pet.HasConditionWithKeyword(keywordProto)) != requiredKeywordState)
                         continue;
                 }
 
@@ -1031,7 +1061,7 @@ namespace MHServerEmu.Games.Entities
                 PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
                 settings.PowerResults = powerResults;
 
-                Logger.Debug($"OnPetHit(): {powerProto} for [{procPowerOwner}] (summon=[{summon}])");
+                Logger.Debug($"OnPetHit(): {powerProto} for [{procPowerOwner}] (pet=[{pet}])");
                 procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
 
