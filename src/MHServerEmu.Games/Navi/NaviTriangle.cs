@@ -349,14 +349,14 @@ namespace MHServerEmu.Games.Navi
         {
             Flags = triangle.Flags & NaviTriangleFlags.Markup;
             PathingFlags = triangle.PathingFlags;
-            ContentFlagCounts = new(triangle.ContentFlagCounts);
+            ContentFlagCounts = triangle.ContentFlagCounts;
         }
 
         public void RestoreState(NaviTriangle triangle)
         {
             triangle.SetFlag(Flags);
             triangle.PathingFlags = PathingFlags;
-            triangle.ContentFlagCounts.Set(ContentFlagCounts);
+            triangle.ContentFlagCounts = ContentFlagCounts;
         }
     }
 }
