@@ -1,4 +1,5 @@
-﻿
+﻿using System.Runtime.InteropServices;
+
 namespace MHServerEmu.Games.Navi
 {
     [Flags]
@@ -69,6 +70,7 @@ namespace MHServerEmu.Games.Navi
         public bool PathingFlagsCheck(PathFlags pathingFlags) => pathingFlags.HasFlag(PathFlags.Walk);
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public struct ContentFlagCounts
     {
         public const int Count = 8;
@@ -118,52 +120,17 @@ namespace MHServerEmu.Games.Navi
             return hash;
         }
 
-        public int this[int index]
+        public int this[int index] { get => AsSpan()[index]; set => AsSpan()[index] = value; }
+
+        public Span<int> AsSpan()
         {
-            get
-            {
-                switch (index)
-                {
-                    case 0: return AddWalk;
-                    case 1: return RemoveWalk;
-                    case 2: return AddFly;
-                    case 3: return RemoveFly;
-                    case 4: return AddPower;
-                    case 5: return RemovePower;
-                    case 6: return AddSight;
-                    case 7: return RemoveSight;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
-            set
-            {
-                switch (index)
-                {
-                    case 0: AddWalk = value; break;
-                    case 1: RemoveWalk = value; break;
-                    case 2: AddFly = value; break;
-                    case 3: RemoveFly = value; break;
-                    case 4: AddPower = value; break;
-                    case 5: RemovePower = value; break;
-                    case 6: AddSight = value; break;
-                    case 7: RemoveSight = value; break;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
+            // Do some MemoryMarshal hackery to represent this struct as an int span
+            return MemoryMarshal.CreateSpan(ref AddWalk, Count);
         }
 
         public void Clear()
         {
-            AddWalk = 0;
-            RemoveWalk = 0;
-            AddFly = 0;
-            RemoveFly = 0;
-            AddPower = 0;
-            RemovePower = 0;
-            AddSight = 0;
-            RemoveSight = 0;
+            AsSpan().Clear();
         }
 
         public static NaviContentFlags ToContentFlags(ContentFlagCounts flagCounts)
