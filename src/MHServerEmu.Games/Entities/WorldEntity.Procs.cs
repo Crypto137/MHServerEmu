@@ -1238,13 +1238,13 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public virtual void TryActivateOnHotspotNegatedProcs(WorldEntity other)
+        public virtual void TryActivateOnHotspotNegatedProcs(WorldEntity other) // 73
         {
             // TODO: Check if this works properly after we implement hotspot powers
             if (IsInWorld == false)
                 return;
 
-            if (other.CanTriggerOtherProcs(ProcTriggerType.OnHotspotNegated))
+            if (other.CanTriggerOtherProcs(ProcTriggerType.OnHotspotNegated) == false)
                 return;
 
             using PropertyCollection procProperties = GetProcProperties(Properties);
@@ -1266,6 +1266,61 @@ namespace MHServerEmu.Games.Entities
             }
 
             ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnHotspotNegated);
+        }
+
+        public void TryActivateOnControlledEntityReleasedProcs(WorldEntity controller)  // 74
+        {
+            // TODO: Check if this works properly after we implement controlled entities
+            if (IsInWorld == false)
+                return;
+
+            if (controller.CanTriggerOtherProcs(ProcTriggerType.OnControlledEntityReleased) == false)
+                return;
+
+            using PropertyCollection procProperties = GetProcProperties(Properties);
+
+            // Non-keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(PropertyEnum.Proc, (int)ProcTriggerType.OnControlledEntityReleased))
+            {
+                if (CheckProc(kvp, out Power procPower) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnControlledEntityReleasedProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+                procPower.Properties.CopyProperty(procProperties, PropertyEnum.CharacterLevel);
+
+                PowerActivationSettings settings = new(controller.Id, controller.RegionLocation.Position, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            // Keyworded procs
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesKeyword))
+            {
+                Property.FromParam(kvp.Key, 0, out int triggerTypeValue);
+                if ((ProcTriggerType)triggerTypeValue != ProcTriggerType.OnControlledEntityReleased)
+                    continue;
+
+                if (CheckKeywordProc(kvp, out Power procPower, this) == false)
+                    continue;
+
+                if (procPower == null)
+                {
+                    Logger.Warn("TryActivateOnControlledEntityReleasedProcs(): procPower == null");
+                    continue;
+                }
+
+                WorldEntity procPowerOwner = procPower.Owner;
+
+                PowerActivationSettings settings = new(controller.Id, controller.RegionLocation.Position, procPowerOwner.RegionLocation.Position);
+                procPowerOwner.ActivateProcPower(procPower, ref settings, this);
+            }
+
+            ConditionCollection?.RemoveCancelOnProcTriggerConditions(ProcTriggerType.OnControlledEntityReleased);
         }
 
         private void TryActivateProcsCommon(ProcTriggerType triggerType, PropertyCollection properties, WorldEntity target = null, float procChanceMultiplier = 1f)
