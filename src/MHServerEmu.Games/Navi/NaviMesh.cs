@@ -291,8 +291,8 @@ namespace MHServerEmu.Games.Navi
                     if (edge.TestFlag(NaviEdgeFlags.Constraint) && edge.TestFlag(NaviEdgeFlags.Door) == false)
                     {
                         bool keepEdge = false;
-                        var triFlags = triangle.ContentFlagCounts;
-                        var oppFlags = opposedTriangle.ContentFlagCounts;
+                        ref var triFlags = ref triangle.ContentFlagCounts;
+                        ref var oppFlags = ref opposedTriangle.ContentFlagCounts;
                         if ((triFlags.RemoveWalk == 0) && (oppFlags.RemoveWalk == 0))
                             keepEdge |= (triFlags.AddWalk > 0) ^ (oppFlags.AddWalk > 0);
                         else
@@ -347,8 +347,8 @@ namespace MHServerEmu.Games.Navi
                         int side = triangle.EdgeSideFlag(edgeIndex);                                                
                         edge.PathingFlags.Clear(side);
 
-                        var triFlags = triangle.ContentFlagCounts;
-                        var edgeFlags = edge.PathingFlags.ContentFlagCounts[side];
+                        ref var triFlags = ref triangle.ContentFlagCounts;
+                        ref var edgeFlags = ref edge.PathingFlags.ContentFlagCounts[side];
                         if (triFlags.RemoveWalk > 0) edgeFlags.RemoveWalk = 1;
                         else if (triFlags.AddWalk > 0) edgeFlags.AddWalk = 1;
                         if (triFlags.RemoveFly > 0) edgeFlags.RemoveFly = 1;
