@@ -73,7 +73,7 @@ namespace MHServerEmu.Games.Properties
         }
 
         private ulong StartTickerInternal(PropertyCollection properties, ulong creatorId, ulong ultimateCreatorId, TimeSpan updateInterval,
-            ulong conditionId = ConditionCollection.InvalidConditionId, PowerPrototype powerProto = null, bool targetsCreator = false,
+            ulong conditionId = ConditionCollection.InvalidConditionId, PowerPrototype powerProto = null, bool targetsUltimateCreator = false,
             TimeSpan duration = default, bool isPaused = false)
         {
             if (properties.HasOverTimeProperties() == false)
@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Properties
             PropertyTicker ticker = AllocateTicker();
             _tickerDict.Add(tickerId, ticker);
 
-            ticker.Initialize(tickerId, properties, _owner.Id, creatorId, ultimateCreatorId, updateInterval, conditionId, powerProto, targetsCreator);
+            ticker.Initialize(tickerId, properties, _owner.Id, creatorId, ultimateCreatorId, updateInterval, conditionId, powerProto, targetsUltimateCreator);
             ticker.Start(duration, isPaused);
 
             return tickerId;
