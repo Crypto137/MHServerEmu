@@ -525,7 +525,7 @@ namespace MHServerEmu.Games.Populations
             public void GetSortedMissionSchedulers(List<SpawnMissionScheduler> missionSchedulers)
             {
                 foreach (var scheduler in MissionSchedulers) missionSchedulers.Add(scheduler);
-                missionSchedulers.Sort(static (a, b) => a.Priority.CompareTo(b.Priority));
+                missionSchedulers.Sort(static (a, b) => b.Priority.CompareTo(a.Priority));
             }
         }
 
