@@ -292,8 +292,8 @@ namespace MHServerEmu.Games.Populations
                     List<SpawnMissionScheduler> missionSchedulers = ListPool<SpawnMissionScheduler>.Instance.Get();
                     markerEventScheduler.GetSortedMissionSchedulers(missionSchedulers);
 
-                    foreach (var scheduler in missionSchedulers)
-                        foreach (bool critical in Priority)
+                    foreach (bool critical in Priority)
+                        foreach (var scheduler in missionSchedulers)
                             while (scheduler.CanSpawn(currentTime, critical))
                                 scheduler.ScheduleMissionObjects(critical, markerRef);
 
@@ -305,8 +305,8 @@ namespace MHServerEmu.Games.Populations
 
                 if (markerEventScheduler.MarkerSchedulers.Count > 0)
                 {
-                    foreach (var scheduler in markerEventScheduler.MarkerSchedulers)
-                        foreach (bool critical in Priority)
+                    foreach (bool critical in Priority)
+                        foreach (var scheduler in markerEventScheduler.MarkerSchedulers)
                             if (scheduler.CanSpawn(currentTime, critical))
                                 scheduler.ScheduleMarkerObject(critical);
 
