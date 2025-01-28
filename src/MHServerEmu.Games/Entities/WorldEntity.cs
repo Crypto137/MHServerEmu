@@ -2588,6 +2588,8 @@ namespace MHServerEmu.Games.Entities
 
             ConditionCollection?.OnOwnerExitedWorld();
 
+            StopAllPropertyTickers();
+
             PowerCollection?.OnOwnerExitedWorld();
 
             UpdateInterestPolicies(false);

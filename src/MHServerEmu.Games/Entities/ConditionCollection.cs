@@ -1119,22 +1119,33 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private void StartTicker(Condition condition)
+        private bool StartTicker(Condition condition)
         {
-            // TODO
-            //Logger.Debug($"StartTicker(): {condition}");
+            ulong tickerId = condition.PropertyTickerId;
+            if (tickerId != PropertyTicker.InvalidId)
+                return Logger.WarnReturn(false, $"StartTicker(): Attempted to start a ticker for condition [{condition}] that already has ticker id {tickerId}");
+
+            condition.PropertyTickerId = _owner.StartPropertyTickingCondition(condition);
+            return true;
         }
 
         private void StopTicker(Condition condition)
         {
-            // TODO
-            //Logger.Debug($"StopTicker(): {condition}");
+            ulong tickerId = condition.PropertyTickerId;
+            if (tickerId == PropertyTicker.InvalidId)
+                return;
+
+            _owner.StopPropertyTicker(tickerId);
+            condition.PropertyTickerId = PropertyTicker.InvalidId;
         }
 
         private void UpdateTicker(Condition condition)
         {
-            // TODO
-            //Logger.Debug($"UpdateTicker(): {condition}");
+            ulong tickerId = condition.PropertyTickerId;
+            if (tickerId == PropertyTicker.InvalidId)
+                return;
+
+            _owner.UpdatePropertyTicker(tickerId, condition.TimeRemaining, condition.IsPaused);
         }
 
         private void SendConditionPauseTimeMessage(Condition condition)

@@ -350,6 +350,20 @@ namespace MHServerEmu.Games.Properties
         }
 
         /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties that are applied over time.
+        /// </summary>
+        public bool HasOverTimeProperties()
+        {
+            foreach (var kvp in this)
+            {
+                if (Property.OverTimeProperties.Contains(kvp.Key.Enum))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Called when a property changes its value.
         /// </summary>
         public void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
