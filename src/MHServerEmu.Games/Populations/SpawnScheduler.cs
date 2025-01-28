@@ -76,9 +76,10 @@ namespace MHServerEmu.Games.Populations
         public Dictionary<PrototypeId, SpawnMissionObject> SpawnMissionObjects { get; }
         public int Priority { get; }
 
-        public SpawnMissionScheduler(SpawnEvent spawnEvent) : base(spawnEvent)
+        public SpawnMissionScheduler(SpawnEvent spawnEvent, bool critical) : base(spawnEvent)
         {
             Priority = spawnEvent.Game.Random.Next(100);
+            if (critical) Priority += 100;
             SpawnMissionObjects = new();
         }
 

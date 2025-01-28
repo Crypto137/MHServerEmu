@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Populations
 
                 if (populationObject.IsMissionMarker)
                 {
-                    MissionScheduler ??= new SpawnMissionScheduler(this);
+                    MissionScheduler ??= new SpawnMissionScheduler(this, populationObject.Critical);
                     scheduler = MissionScheduler;
                 }
                 else
@@ -335,11 +335,11 @@ namespace MHServerEmu.Games.Populations
 
         public override void OnSpawnedPopulation()
         {
-            /*if (MissionRef == (PrototypeId)7549034767255021523) // Debug mission
+            /*if (MissionRef == (PrototypeId)8848708389702214357) // Debug mission
             {
                 string str = "";
-                foreach (var scheduler in SpawnMarkerSchedulers.Values)
-                    str += $"{scheduler.ScheduledObjects.Count} ";
+                foreach (var scheduler in MissionScheduler.SpawnMissionObjects.Values)
+                    str += $"{scheduler.MissionObjects.Count} ";
                 Logger.Warn($"OnSpawnedPopulation {MissionRef.GetNameFormatted()} [{str}]");
             }*/
 
