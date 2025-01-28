@@ -1,5 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers.Conditions;
 
 namespace MHServerEmu.Games.Properties
@@ -23,51 +25,82 @@ namespace MHServerEmu.Games.Properties
 
         public ulong StartTicker(PropertyCollection properties, ulong creatorId, ulong ultimateCreatorId, TimeSpan updateInterval)
         {
-            if (properties.HasOverTimeProperties() == false)
-                return PropertyTicker.InvalidId;
-
-            PropertyTicker ticker = new();  // TODO: pool tickers?
-            ticker.Initialize(_nextTickerId++);
-            _tickerDict.Add(ticker.Id, ticker);
-
-            //Logger.Debug($"StartTicker(): tickerId={ticker.Id} (custom)");
-
-            return ticker.Id;
+            return StartTickerInternal(properties, creatorId, ultimateCreatorId, updateInterval);
         }
 
         public ulong StartTicker(Condition condition)
         {
-            if (condition.Properties.HasOverTimeProperties() == false)
-                return PropertyTicker.InvalidId;
-
-            PropertyTicker ticker = new();  // TODO: pool tickers?
-            ticker.Initialize(_nextTickerId++);
-            _tickerDict.Add(ticker.Id, ticker);
-
-            //Logger.Debug($"StartTicker(): tickerId={ticker.Id} ({condition})");
-
-            return ticker.Id;
+            return StartTickerInternal(condition.Properties, condition.CreatorId, condition.UltimateCreatorId, condition.UpdateInterval,
+                condition.Id, condition.CreatorPowerPrototype, condition.IsApplyOverTimeEffectsToOriginator(),
+                condition.TimeRemaining, condition.IsPaused);
         }
 
         public bool StopTicker(ulong tickerId)
         {
-            //Logger.Debug($"StopTicker(): tickerId={tickerId}");
-            if (_tickerDict.Remove(tickerId) == false)
+            if (_tickerDict.Remove(tickerId, out PropertyTicker ticker) == false)
                 return Logger.WarnReturn(false, $"StopTicker(): TickerId {tickerId} not found");
+
+            ticker.Stop(true);
+            DeleteTicker(ticker);
 
             return true;
         }
 
         public void StopAllTickers()
         {
-            // TODO
-            //Logger.Debug("StopAllTickers()");
+            // Store tickers in a temp list and clear the dict to prevent recursion on stop
+            List<PropertyTicker> tickerList = ListPool<PropertyTicker>.Instance.Get();
+            foreach (PropertyTicker ticker in _tickerDict.Values)
+                tickerList.Add(ticker);
+
             _tickerDict.Clear();
+
+            foreach (PropertyTicker ticker in tickerList)
+            {
+                ticker.Stop(false);
+                DeleteTicker(ticker);
+            }
+
+            ListPool<PropertyTicker>.Instance.Return(tickerList);
         }
 
         public void UpdateTicker(ulong tickerId, TimeSpan duration, bool isPaused)
         {
-            //Logger.Debug($"UpdateTicker(): tickerId={tickerId}");
+            if (_tickerDict.TryGetValue(tickerId, out PropertyTicker ticker) == false)
+                return;
+
+            ticker.Update(duration, isPaused);
+        }
+
+        private ulong StartTickerInternal(PropertyCollection properties, ulong creatorId, ulong ultimateCreatorId, TimeSpan updateInterval,
+            ulong conditionId = ConditionCollection.InvalidConditionId, PowerPrototype powerProto = null, bool targetsCreator = false,
+            TimeSpan duration = default, bool isPaused = false)
+        {
+            if (properties.HasOverTimeProperties() == false)
+                return PropertyTicker.InvalidId;
+
+            ulong tickerId = _nextTickerId++;
+
+            PropertyTicker ticker = AllocateTicker();
+            _tickerDict.Add(tickerId, ticker);
+
+            ticker.Initialize(tickerId, properties, _owner.Id, creatorId, ultimateCreatorId, updateInterval, conditionId, powerProto, targetsCreator);
+            ticker.Start(duration, isPaused);
+
+            return tickerId;
+        }
+
+        private static PropertyTicker AllocateTicker()
+        {
+            // TODO: Pooling
+            PropertyTicker ticker = new();
+            return ticker;
+        }
+
+        private static bool DeleteTicker(PropertyTicker ticker)
+        {
+            // TODO: Pooling
+            return true;
         }
     }
 }

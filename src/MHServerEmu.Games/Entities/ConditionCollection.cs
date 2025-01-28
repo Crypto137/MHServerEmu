@@ -1076,7 +1076,7 @@ namespace MHServerEmu.Games.Entities
 
         private bool EnableCondition(Condition condition, bool enable)
         {
-            Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
+            //Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
 
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
@@ -1302,7 +1302,6 @@ namespace MHServerEmu.Games.Entities
                     _cancelOnProcTriggerCache.Add(triggerType, conditionIds);
                 }
 
-                Logger.Debug($"CacheCancelOnProcTriggers(): {condition} - {triggerType}");
                 conditionIds.Add(condition.Id);
             }
 

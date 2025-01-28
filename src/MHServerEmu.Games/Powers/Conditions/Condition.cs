@@ -782,6 +782,12 @@ namespace MHServerEmu.Games.Powers.Conditions
             return _conditionPrototype.PauseDurationCountdown;
         }
 
+        public bool IsApplyOverTimeEffectsToOriginator()
+        {
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPauseDurationCountdown(): _conditionPrototype == null");
+            return _conditionPrototype.ApplyOverTimeEffectsToOriginator;
+        }
+
         public PrototypeId[] GetKeywords()
         {
             if (_conditionPrototype == null) return Logger.WarnReturn<PrototypeId[]>(null, "GetKeywords(): _conditionPrototype == null");
