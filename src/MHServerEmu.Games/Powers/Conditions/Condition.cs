@@ -85,6 +85,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         public ulong CreatorPlayerId { get; private set; }  // PlayerGuid
         public ConditionCollection Collection { get; set; }
         public ulong PropertyTickerId { get; set; } = PropertyTicker.InvalidId;
+        public PowerPayload PropertyTickerPayload { get; set; }
         public StackId StackId { get; private set; } = StackId.Invalid;
 
         public EventPointer<ConditionCollection.RemoveConditionEvent> RemoveEvent { get; set; }
@@ -386,6 +387,7 @@ namespace MHServerEmu.Games.Powers.Conditions
             CreatorPlayerId = default;
             Collection = default;
             PropertyTickerId = PropertyTicker.InvalidId;
+            PropertyTickerPayload = null;
             StackId = StackId.Invalid;
 
             RemoveEvent = default;

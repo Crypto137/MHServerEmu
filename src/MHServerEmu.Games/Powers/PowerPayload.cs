@@ -1001,6 +1001,10 @@ namespace MHServerEmu.Games.Powers
             // Procs
             CalculateResultConditionProcProperties(results, target, condition.Properties);
 
+            // Add a reference to this payload if there is anything that needs ticking after all properties are set
+            if (conditionProps.HasOverTimeProperties())
+                condition.PropertyTickerPayload = this;
+
             return true;
         }
 
