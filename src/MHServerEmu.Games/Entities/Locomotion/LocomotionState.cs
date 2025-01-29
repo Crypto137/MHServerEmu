@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -48,7 +49,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
     /// <summary>
     /// Represents state of a <see cref="Locomotor"/>.
     /// </summary>
-    public class LocomotionState
+    public class LocomotionState : IPoolable, IDisposable
     {
         // TODO: For optimization reasons it may be a good idea to change this to a struct.
         // However, it is going to be large + mutable + have a reference type as one of its
@@ -67,6 +68,8 @@ namespace MHServerEmu.Games.Entities.Locomotion
         public float FollowEntityRangeEnd { get; set; }
         public int PathGoalNodeIndex { get; set; }
         public List<NaviPathNode> PathNodes { get; set; } = new();
+
+        public bool IsInPool { get; set; }
 
         public LocomotionState() { }
 
@@ -90,7 +93,26 @@ namespace MHServerEmu.Games.Entities.Locomotion
             // Review this if/when we change NaviPathNode to struct.
             //PathNodes = new(other.PathNodes);
             PathNodes.Clear();
-            PathNodes.AddRange(other.PathNodes);
+            foreach (NaviPathNode pathNode in other.PathNodes)
+                PathNodes.Add(pathNode);
+        }
+
+        public void ResetForPool()
+        {
+            LocomotionFlags = default;
+            Method = LocomotorMethod.Default;
+            BaseMoveSpeed = default;
+            Height = default;
+            FollowEntityId = default;
+            FollowEntityRangeStart = default;
+            FollowEntityRangeEnd = default;
+            PathGoalNodeIndex = default;
+            PathNodes.Clear();
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager.Instance.Return(this);
         }
 
         public override string ToString()

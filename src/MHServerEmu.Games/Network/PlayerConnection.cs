@@ -628,7 +628,8 @@ namespace MHServerEmu.Games.Network
             if (fieldFlags.HasFlag(LocomotionMessageFlags.NoLocomotionState) == false && avatar.Locomotor != null)
             {
                 // Make a copy of the last sync state and update it with new data
-                LocomotionState newSyncState = new(avatar.Locomotor.LastSyncState);
+                using LocomotionState newSyncState = ObjectPoolManager.Instance.Get<LocomotionState>();
+                newSyncState.Set(avatar.Locomotor.LastSyncState);
 
                 // NOTE: Deserialize in a try block because we don't trust this
                 try
