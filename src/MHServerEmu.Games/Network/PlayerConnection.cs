@@ -619,7 +619,17 @@ namespace MHServerEmu.Games.Network
                 orientation = syncOrientation;
 
                 // Update position without sending it to clients (local avatar is moved by its own client, other avatars are moved by locomotion)
-                avatar.ChangeRegionPosition(canMove ? position : null, canRotate ? orientation : null, ChangePositionFlags.DoNotSendToClients);
+                if (avatar.ChangeRegionPosition(canMove ? position : null, canRotate ? orientation : null, ChangePositionFlags.DoNotSendToClients) == ChangePositionResult.PositionChanged)
+                {
+                    // Clear pending action if successfully updated position
+                    if (avatar.IsInPendingActionState(PendingActionState.MovingToRange) == false &&
+                        avatar.IsInPendingActionState(PendingActionState.WaitingForPrevPower) == false &&
+                        avatar.IsInPendingActionState(PendingActionState.FindingLandingSpot) == false)
+                    {
+                        avatar.CancelPendingAction();
+                    }
+                }
+
                 avatar.UpdateNavigationInfluence();
             }
 
