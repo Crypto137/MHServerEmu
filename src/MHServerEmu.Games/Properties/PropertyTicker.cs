@@ -4,6 +4,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers.Conditions;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -91,6 +92,7 @@ namespace MHServerEmu.Games.Properties
 
             Logger.Debug($"Start(): [{this}]");
 
+            // A condition's duration does not run out when it is paused, so we get infinite ticks
             _tickingStartTime = _game.CurrentTime;
             _duration = Clock.Max(duration, TimeSpan.Zero);
             _remainingTicks = isPaused ? InfiniteTicks : CalculateRemainingTicks(true);
@@ -123,6 +125,7 @@ namespace MHServerEmu.Games.Properties
         {
             Logger.Debug($"Update(): [{this}]");
 
+            // A condition's duration does not run out when it is paused, so we get infinite ticks
             _duration = duration;
             _remainingTicks = isPaused ? InfiniteTicks : CalculateRemainingTicks(true);
 
@@ -137,13 +140,24 @@ namespace MHServerEmu.Games.Properties
 
         private bool IsTickOnStart()
         {
-            // TODO
-            return false;
+            // Do not tick on start for non-condition tickers
+            if (_conditionId == ConditionCollection.InvalidConditionId)
+                return false;
+
+            WorldEntity target = _game.EntityManager.GetEntity<WorldEntity>(_targetId);
+            if (target == null) return Logger.WarnReturn(false, "IsTickOnStart(): target == null");
+
+            // Apply on start only to condition ticker that target their owner
+            Condition condition = target.ConditionCollection?.GetCondition(_conditionId);
+            if (condition == null)
+                return false;
+
+            return condition.ShouldApplyInitialTickImmediately();
         }
 
         private void Tick(bool finishTicking)
         {
-            //Logger.Debug($"Tick(): [{this}]");
+            //Logger.Debug($"Tick(): [{this}] (remaining={_remainingTicks})");
 
             WorldEntity target = _game.EntityManager.GetEntity<WorldEntity>(_targetId);
             if (target == null)

@@ -31,7 +31,7 @@ namespace MHServerEmu.Games.Properties
         public ulong StartTicker(Condition condition)
         {
             return StartTickerInternal(condition.Properties, condition.CreatorId, condition.UltimateCreatorId, condition.UpdateInterval,
-                condition.Id, condition.CreatorPowerPrototype, condition.IsApplyOverTimeEffectsToOriginator(),
+                condition.Id, condition.CreatorPowerPrototype, condition.ShouldApplyOverTimeEffectsToOriginator(),
                 condition.TimeRemaining, condition.IsPaused);
         }
 
