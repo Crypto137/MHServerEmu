@@ -25,6 +25,7 @@ namespace MHServerEmu.Games.Properties
         private readonly TickData _tickData = new();
 
         private TimeSpan _tickingStartTime = TimeSpan.Zero;
+        private TimeSpan _lastTickTime = TimeSpan.Zero;
         private int _remainingTicks = InfiniteTicks;
 
         public ulong Id { get; private set; }
@@ -163,17 +164,29 @@ namespace MHServerEmu.Games.Properties
             if (_remainingTicks != InfiniteTicks)
                 _remainingTicks--;
 
-            if (finishTicking == false)
+            // Over time properties specify their effect per second, but tickers can tick at varying rates.
+            // Adjust per second value depending on how long this tick took.
+            float tickDurationSeconds = GetTickDurationSeconds(finishTicking);
+
+            // If our time multiplier reduces effect to 0, don't bother applying
+            if (tickDurationSeconds > 0f)
             {
-                // Copy current tick data and schedule it to be applied at the end of the current frame
-                TickData tickDataToApply = new(_tickData);
-                target.ScheduleTickEvent(tickDataToApply);
+                _tickData.TickDurationSeconds = tickDurationSeconds;
+
+                if (finishTicking == false)
+                {
+                    // Copy current tick data and schedule it to be applied at the end of the current frame
+                    TickData tickDataToApply = new(_tickData);
+                    target.ScheduleTickEvent(tickDataToApply);
+                }
+                else
+                {
+                    // Apply right now if we are finishing ticking
+                    target.ApplyPropertyTicker(_tickData);
+                }
             }
-            else
-            {
-                // Apply right now if we are finishing ticking
-                target.ApplyPropertyTicker(_tickData);
-            }
+
+            _lastTickTime = _game.CurrentTime;
 
             if (finishTicking == false && _remainingTicks != 0)
                 ScheduleTick(_updateInterval, false);
@@ -193,6 +206,30 @@ namespace MHServerEmu.Games.Properties
                 ticks++;
 
             return ticks;
+        }
+
+        private float GetTickDurationSeconds(bool finishTicking)
+        {
+            // Start with the expected tick duration
+            float tickDurationSeconds = (float)_updateInterval.TotalMilliseconds / 1000f;
+
+            // Adjust the duration if the tick took more or less time than expected
+            TimeSpan lastTickTime = _lastTickTime;
+
+            // If we are ending before the first tick was able to happen as scheduled,
+            // take into account how much time has passed.
+            if (lastTickTime == TimeSpan.Zero && finishTicking)
+                lastTickTime = _tickingStartTime;
+
+            // Adjust tick duration
+            if (lastTickTime != TimeSpan.Zero)
+            {
+                TimeSpan actualDuration = _game.CurrentTime - lastTickTime;
+                float durationMult = Math.Clamp((float)actualDuration.Ticks / _updateInterval.Ticks, 0f, 1f);
+                tickDurationSeconds *= durationMult;
+            }
+
+            return tickDurationSeconds;
         }
 
         private bool ScheduleTick(TimeSpan delay, bool isLastTick)
@@ -221,7 +258,7 @@ namespace MHServerEmu.Games.Properties
             public ulong UltimateCreatorId { get; set; }
             public ulong ConditionId { get; set; }
             public PowerPrototype PowerProto { get; set; }
-            public float ValueMult { get; set; }
+            public float TickDurationSeconds { get; set; }
 
             // TODO: Custom fixed array style struct for storing properties to apply (similar to Navi.ContentFlagCounts) or just pool the whole TickData
             public List<KeyValuePair<PropertyId, PropertyValue>> PropertyList { get; } = new();
@@ -236,7 +273,7 @@ namespace MHServerEmu.Games.Properties
                 UltimateCreatorId = other.UltimateCreatorId;
                 ConditionId = other.ConditionId;
                 PowerProto = other.PowerProto;
-                ValueMult = other.ValueMult;
+                TickDurationSeconds = other.TickDurationSeconds;
 
                 foreach (var kvp in other.PropertyList)
                     PropertyList.Add(kvp);
@@ -244,7 +281,7 @@ namespace MHServerEmu.Games.Properties
 
             public override string ToString()
             {
-                return $"PowerProto={PowerProto}, PropertyList={string.Join(',', PropertyList.Select(kvp => kvp.Key.ToString()))}";
+                return $"PowerProto={PowerProto}, TickDurationSeconds={TickDurationSeconds}, PropertyList={string.Join(',', PropertyList.Select(kvp => kvp.Key.ToString()))}";
             }
         }
 
