@@ -57,6 +57,11 @@ namespace MHServerEmu.Games.Navi
             _modifyMeshPatchesProjZ = new();
         }
 
+        public override string ToString()
+        {
+            return $"region={_region}";
+        }
+
         public void Initialize(in Aabb bounds, float padding, Region region)
         {
             Release();
