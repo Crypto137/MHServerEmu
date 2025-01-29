@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Powers
             OwnerAlliance = powerOwner.Alliance;
             BeamSweepSlice = -1;        // TODO
             ExecutionTime = power.GetFullExecutionTime();
-            KeywordsMask = power.KeywordsMask.Copy<KeywordsMask>();
+            SetKeywordsMask(power.KeywordsMask);
 
             // TODO: visuals override
             PowerAssetRefOverride = AssetId.Invalid;
@@ -219,6 +219,15 @@ namespace MHServerEmu.Games.Powers
             // Add hit reaction if needed (NOTE: some conditions applied before take priority over hit reactions)
             if (calculateForTarget)
                 CalculateResultHitReaction(targetResults, target);
+        }
+
+        public void ClearResult()
+        {
+            Properties.RemovePropertyRange(PropertyEnum.Damage);
+            Properties.RemovePropertyRange(PropertyEnum.DamageAccumulationChange);
+            Properties.RemovePropertyRange(PropertyEnum.EnduranceChange);
+            Properties.RemoveProperty(PropertyEnum.Healing);
+            Properties.RemoveProperty(PropertyEnum.SecondaryResourceChange);
         }
 
         #region Initial Calculations

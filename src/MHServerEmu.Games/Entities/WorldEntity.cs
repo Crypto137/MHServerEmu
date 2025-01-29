@@ -1967,8 +1967,67 @@ namespace MHServerEmu.Games.Entities
 
         public void ApplyPropertyTicker(PropertyTicker.TickData tickData)
         {
-            // TODO
             //Logger.Debug($"ApplyPropertyTicker(): [{tickData}] => [{this}]");
+
+            if (IsInWorld == false || tickData.TickDurationSeconds <= 0f)
+                return;
+
+            // Try to find the payload that created this tick
+            PowerPayload payload = null;
+            bool hasConditionPayload = false;
+
+            if (tickData.ConditionId != ConditionCollection.InvalidConditionId)
+            {
+                Condition condition = ConditionCollection?.GetCondition(tickData.ConditionId);
+                payload = condition?.PropertyTickerPayload;
+            }
+
+            if (payload == null)
+            {
+                // If we couldn't find a payload, create a temporary one (TODO: make payloads poolable and get one from the pool)
+                payload = new();
+                foreach (var kvp in tickData.PropertyList)
+                    payload.Properties[kvp.Key] = kvp.Value;
+            }
+            else
+            {
+                // Clean up the payload that we are reusing
+                payload.ClearResult();
+                hasConditionPayload = true;
+            }
+
+            // Initialize and calculate results
+            WorldEntity ultimateCreator = Game.EntityManager.GetEntity<WorldEntity>(tickData.UltimateCreatorId);
+            
+            Vector3 powerOwnerPosition = ultimateCreator != null && ultimateCreator.IsInWorld
+                ? ultimateCreator.RegionLocation.Position
+                : Vector3.Zero;
+
+            bool isHostile = ultimateCreator?.IsHostileTo(this) == true;
+
+            PowerResults results = new();
+            results.Init(tickData.CreatorId, tickData.UltimateCreatorId, Id, powerOwnerPosition, tickData.PowerProto, payload.PowerAssetRefOverride, isHostile);
+            results.SetFlag(PowerResultFlags.OverTime, true);
+
+            if (hasConditionPayload)
+                results.SetKeywordsMask(payload.KeywordsMask);
+            else if (tickData.PowerProto != null)
+                results.SetKeywordsMask(tickData.PowerProto.KeywordsMask);
+
+            // TODO: calculate damage / healing / etc
+            /*
+            if (isHostile)
+            {
+                // dummy damage for testing
+                results.Properties[PropertyEnum.Damage, (int)DamageType.Physical] = 666666f;
+                results.SetDamageForClient(DamageType.Physical, 666666f);
+            }
+            */
+
+            if (results.ShouldSendToClient() == false)
+                return;
+
+            ApplyPowerResults(results);
         }
 
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)

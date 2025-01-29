@@ -30,5 +30,10 @@ namespace MHServerEmu.Games.Powers
 
             Properties.Clear();
         }
+
+        public void SetKeywordsMask(KeywordsMask keywordsMask)
+        {
+            KeywordsMask = keywordsMask.Copy<KeywordsMask>();
+        }
     }
 }
