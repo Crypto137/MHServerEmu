@@ -1965,6 +1965,12 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.SecondaryResource] = secondaryResource;
         }
 
+        public void ApplyPropertyTicker(PropertyTicker.TickData tickData)
+        {
+            // TODO
+            //Logger.Debug($"ApplyPropertyTicker(): [{tickData}] => [{this}]");
+        }
+
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
         {
             if (SpawnGroup == null) return;
@@ -3627,6 +3633,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void ScheduleTickEvent(PropertyTicker.TickData tickData)
+        {
+            EventPointer<ScheduledTickEvent> scheduledTick = new();
+            ScheduleEntityEvent(scheduledTick, TimeSpan.Zero, tickData);
+        }
+
         public void ScheduleWeaponReturnEvent(TimeSpan delay)
         {
             EventPointer<ScheduledWeaponReturnEvent> scheduledWeaponReturn = new();
@@ -3674,6 +3686,11 @@ namespace MHServerEmu.Games.Entities
                 _param1.Clear();    // Clear to prevent conditions leaking from their pool
                 return true;
             }
+        }
+
+        private class ScheduledTickEvent : CallMethodEventParam1<Entity, PropertyTicker.TickData>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).ApplyPropertyTicker(p1);
         }
 
         private class ScheduledWeaponReturnEvent : CallMethodEvent<Entity>

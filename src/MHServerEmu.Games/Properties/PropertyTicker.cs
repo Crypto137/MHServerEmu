@@ -22,11 +22,7 @@ namespace MHServerEmu.Games.Properties
         private TimeSpan _duration;
         private TimeSpan _updateInterval;
 
-        private ulong _creatorId;
-        private ulong _ultimateCreatorId;
-        private ulong _conditionId;
-        private PowerPrototype _powerProto;
-        private readonly List<KeyValuePair<PropertyId, PropertyValue>> _propertyList = new();
+        private readonly TickData _tickData = new();
 
         private TimeSpan _tickingStartTime = TimeSpan.Zero;
         private int _remainingTicks = InfiniteTicks;
@@ -40,7 +36,7 @@ namespace MHServerEmu.Games.Properties
 
         public override string ToString()
         {
-            return $"tickerId={Id}, powerProto={_powerProto}, targetId={_targetId}";
+            return $"tickerId={Id}, targetId={_targetId}, tickData=[{_tickData}]";
         }
 
         public bool Initialize(ulong id, PropertyCollection properties, ulong targetId, ulong creatorId, ulong ultimateCreatorId,
@@ -52,26 +48,26 @@ namespace MHServerEmu.Games.Properties
             _targetId = targetId;
             _updateInterval = updateInterval;
 
-            _creatorId = creatorId;
-            _ultimateCreatorId = ultimateCreatorId;
-            _conditionId = conditionId;
-            _powerProto = powerProto;
+            _tickData.CreatorId = creatorId;
+            _tickData.UltimateCreatorId = ultimateCreatorId;
+            _tickData.ConditionId = conditionId;
+            _tickData.PowerProto = powerProto;
 
             // Override target and ultimate creator if needed
             WorldEntity ultimateCreator = null;
-            if (_ultimateCreatorId != Entity.InvalidId)
+            if (_tickData.UltimateCreatorId != Entity.InvalidId)
             {
                 EntityManager entityManager = _game.EntityManager;
-                ultimateCreator = entityManager.GetEntity<WorldEntity>(_ultimateCreatorId);
+                ultimateCreator = entityManager.GetEntity<WorldEntity>(_tickData.UltimateCreatorId);
                 while (ultimateCreator != null && ultimateCreator.HasPowerUserOverride)
                 {
-                    _ultimateCreatorId = ultimateCreator.PowerUserOverrideId;
-                    ultimateCreator = entityManager.GetEntity<WorldEntity>(_ultimateCreatorId);
+                    _tickData.UltimateCreatorId = ultimateCreator.PowerUserOverrideId;
+                    ultimateCreator = entityManager.GetEntity<WorldEntity>(_tickData.UltimateCreatorId);
                 }
             }
 
             if (ultimateCreator != null && targetsUltimateCreator)
-                _targetId = _ultimateCreatorId;
+                _targetId = _tickData.UltimateCreatorId;
 
             // Store over time properties in a list since it's more lightweight than a full property collection
             foreach (var kvp in properties)
@@ -79,7 +75,7 @@ namespace MHServerEmu.Games.Properties
                 if (Property.OverTimeProperties.Contains(kvp.Key.Enum) == false)
                     continue;
 
-                _propertyList.Add(kvp);
+                _tickData.PropertyList.Add(kvp);
             }
 
             return true;
@@ -141,14 +137,15 @@ namespace MHServerEmu.Games.Properties
         private bool IsTickOnStart()
         {
             // Do not tick on start for non-condition tickers
-            if (_conditionId == ConditionCollection.InvalidConditionId)
+            ulong conditionId = _tickData.ConditionId;
+            if (conditionId == ConditionCollection.InvalidConditionId)
                 return false;
 
             WorldEntity target = _game.EntityManager.GetEntity<WorldEntity>(_targetId);
             if (target == null) return Logger.WarnReturn(false, "IsTickOnStart(): target == null");
 
             // Apply on start only to condition ticker that target their owner
-            Condition condition = target.ConditionCollection?.GetCondition(_conditionId);
+            Condition condition = target.ConditionCollection?.GetCondition(conditionId);
             if (condition == null)
                 return false;
 
@@ -166,7 +163,17 @@ namespace MHServerEmu.Games.Properties
             if (_remainingTicks != InfiniteTicks)
                 _remainingTicks--;
 
-            // TODO: apply over time properties to target
+            if (finishTicking == false)
+            {
+                // Copy current tick data and schedule it to be applied at the end of the current frame
+                TickData tickDataToApply = new(_tickData);
+                target.ScheduleTickEvent(tickDataToApply);
+            }
+            else
+            {
+                // Apply right now if we are finishing ticking
+                target.ApplyPropertyTicker(_tickData);
+            }
 
             if (finishTicking == false && _remainingTicks != 0)
                 ScheduleTick(_updateInterval, false);
@@ -203,6 +210,42 @@ namespace MHServerEmu.Games.Properties
         {
             _game.GameEventScheduler.CancelEvent(_tickEvent);
             return true;
+        }
+
+        /// <summary>
+        /// Container class for all the data needed to apply a <see cref="PropertyTicker"/> to a <see cref="WorldEntity"/>.
+        /// </summary>
+        public class TickData
+        {
+            public ulong CreatorId { get; set; }
+            public ulong UltimateCreatorId { get; set; }
+            public ulong ConditionId { get; set; }
+            public PowerPrototype PowerProto { get; set; }
+            public float ValueMult { get; set; }
+
+            // TODO: Custom fixed array style struct for storing properties to apply (similar to Navi.ContentFlagCounts) or just pool the whole TickData
+            public List<KeyValuePair<PropertyId, PropertyValue>> PropertyList { get; } = new();
+
+            public TickData()
+            {
+            }
+
+            public TickData(TickData other)
+            {
+                CreatorId = other.CreatorId;
+                UltimateCreatorId = other.UltimateCreatorId;
+                ConditionId = other.ConditionId;
+                PowerProto = other.PowerProto;
+                ValueMult = other.ValueMult;
+
+                foreach (var kvp in other.PropertyList)
+                    PropertyList.Add(kvp);
+            }
+
+            public override string ToString()
+            {
+                return $"PowerProto={PowerProto}, PropertyList={string.Join(',', PropertyList.Select(kvp => kvp.Key.ToString()))}";
+            }
         }
 
         private class TickEvent : CallMethodEventParam1<PropertyTicker, bool>
