@@ -567,7 +567,8 @@ namespace MHServerEmu.Games.Network
             if (updateAvatarState == null) return Logger.WarnReturn(false, $"OnUpdateAvatarState(): Failed to retrieve message");
 
             Avatar avatar = Player.CurrentAvatar;
-            if (avatar == null || avatar.IsInWorld == false) return false;
+            if (avatar == null || avatar.IsAliveInWorld == false)
+                return false;
 
             // Transfer data from the archive
             // NOTE: We need to be extra careful here because this is the only archive that is serialized by the client,
@@ -582,7 +583,8 @@ namespace MHServerEmu.Games.Network
             if (Serializer.Transfer(archive, ref avatarEntityId) == false)
                 return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer avatarEntityId");
 
-            if (avatarEntityId != avatar.Id) return false;
+            if (avatarEntityId != avatar.Id)
+                return false;
 
             bool isUsingGamepadInput = false;
             if (Serializer.Transfer(archive, ref isUsingGamepadInput) == false)
@@ -631,7 +633,8 @@ namespace MHServerEmu.Games.Network
                 // NOTE: Deserialize in a try block because we don't trust this
                 try
                 {
-                    LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags);
+                    if (LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags) == false)
+                        return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer newSyncState");
                 }
                 catch (Exception e)
                 {
