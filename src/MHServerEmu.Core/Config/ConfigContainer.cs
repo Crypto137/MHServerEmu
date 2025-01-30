@@ -13,7 +13,18 @@ namespace MHServerEmu.Core.Config
         /// <summary>
         /// Initializes this <see cref="ConfigContainer"/> instance from the provided <see cref="IniFile"/> using reflection.
         /// </summary>
-        internal void Initialize(IniFile configFile)
+        internal void Initialize(IniFile configFile, IniFile overrideFile)
+        {
+            SetFromIniFile(configFile);
+
+            if (overrideFile != null)
+                SetFromIniFile(overrideFile);
+        }
+
+        /// <summary>
+        /// Initializes this <see cref="ConfigContainer"/> instance from the provided <see cref="IniFile"/> using reflection.
+        /// </summary>
+        private void SetFromIniFile(IniFile iniFile)
         {
             Type type = GetType();                                          // Use reflection to populate our config
 
@@ -25,21 +36,26 @@ namespace MHServerEmu.Core.Config
             // Read and set values for each property from the ini file
             foreach (var property in type.GetProperties())
             {
-                if (property.IsDefined(typeof(ConfigIgnoreAttribute))) continue;   // Ignore specified properties
+                // Ignore specified properties
+                if (property.IsDefined(typeof(ConfigIgnoreAttribute)))
+                    continue;
 
                 object value = Type.GetTypeCode(property.PropertyType) switch
                 {
-                    TypeCode.String     => configFile.GetString(section, property.Name),
-                    TypeCode.Boolean    => configFile.GetBool(section, property.Name),
-                    TypeCode.Int32      => configFile.GetInt32(section, property.Name),
-                    TypeCode.UInt32     => configFile.GetUInt32(section, property.Name),
-                    TypeCode.Int64      => configFile.GetInt64(section, property.Name),
-                    TypeCode.UInt64     => configFile.GetUInt64(section, property.Name),
-                    TypeCode.Single     => configFile.GetSingle(section, property.Name),
+                    TypeCode.String     => iniFile.GetString(section, property.Name),
+                    TypeCode.Boolean    => iniFile.GetBool(section, property.Name),
+                    TypeCode.Int32      => iniFile.GetInt32(section, property.Name),
+                    TypeCode.UInt32     => iniFile.GetUInt32(section, property.Name),
+                    TypeCode.Int64      => iniFile.GetInt64(section, property.Name),
+                    TypeCode.UInt64     => iniFile.GetUInt64(section, property.Name),
+                    TypeCode.Single     => iniFile.GetSingle(section, property.Name),
                     _ => throw new NotImplementedException($"Value type {property.PropertyType} is not supported for config files."),
                 };
 
-                if (value == null) continue;    // Skip assignment if we weren't able to get the value from config
+                // Skip assignment if we weren't able to get the value from config
+                if (value == null)
+                    continue;
+                
                 property.SetValue(this, value);
             }
         }
