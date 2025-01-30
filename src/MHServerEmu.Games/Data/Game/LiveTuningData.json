@@ -258,5 +258,10 @@
     "Prototype": "Events/PublicEvents/Events/CivilWar.prototype",
     "Setting": "ePETV_EventInstance",
     "Value": 14.0
-  }
+  },
+  {
+    "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
+    "Setting": "ePETV_Enabled",
+    "Value": 0.0
+  }  
 ]
