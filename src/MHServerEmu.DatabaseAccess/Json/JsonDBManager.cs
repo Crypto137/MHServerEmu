@@ -40,14 +40,9 @@ namespace MHServerEmu.DatabaseAccess.Json
             {
                 Logger.Info($"Found existing account file {FileHelper.GetRelativePath(_accountFilePath)}");
 
-                try
-                {
-                    _account = FileHelper.DeserializeJson<DBAccount>(_accountFilePath, _jsonOptions);
-                }
-                catch
-                {
+                _account = FileHelper.DeserializeJson<DBAccount>(_accountFilePath, _jsonOptions);
+                if (_account == null)
                     Logger.Warn($"Initialize(): Failed to load existing account data, resetting");
-                }
             }
 
             if (_account == null)

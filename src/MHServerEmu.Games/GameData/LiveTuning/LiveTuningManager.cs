@@ -24,23 +24,43 @@ namespace MHServerEmu.Games.GameData.LiveTuning
 
         public bool LoadLiveTuningDataFromDisk()
         {
-            string savedLiveTuningDataPath = Path.Combine(FileHelper.DataDirectory, "Game", "LiveTuningData.json");
-
-            if (File.Exists(savedLiveTuningDataPath) == false)
-                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): LiveTuningData.json not found");
-
-            var updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(savedLiveTuningDataPath);
+            string liveTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
+            if (Directory.Exists(liveTuningDirectory) == false)
+                return Logger.WarnReturn(false, "LoadLiveTuningDataFromDisk(): Game data directory not found");
 
             List<NetStructLiveTuningSettingProtoEnumValue> protobufList = new();
-            foreach (LiveTuningUpdateValue value in updateValues)
+
+            // Read all .json files that start with LiveTuningData
+            string[] files = Directory.GetFiles(liveTuningDirectory, "*.json");
+            Array.Sort(files);  // sort for consistency (alphabetical order)
+
+            foreach (string filePath in files)
             {
-                NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
-                if (protobuf == null) continue;
-                protobufList.Add(protobuf);
+                string fileName = Path.GetFileName(filePath);
+
+                if (fileName.StartsWith("LiveTuningData", StringComparison.OrdinalIgnoreCase) == false)
+                    continue;
+
+                LiveTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(filePath);
+                if (updateValues == null)
+                {
+                    Logger.Warn($"LoadLiveTuningDataFromDisk(): Failed to parse {fileName}, skipping");
+                    continue;
+                }
+
+                foreach (LiveTuningUpdateValue value in updateValues)
+                {
+                    NetStructLiveTuningSettingProtoEnumValue protobuf = value.ToProtobuf();
+                    if (protobuf == null)
+                        continue;
+                    protobufList.Add(protobuf);
+                }
+
+                Logger.Trace($"Parsed live tuning data from {fileName}");
             }
 
             UpdateLiveTuningData(protobufList, true);
-            return Logger.InfoReturn(true, $"Loaded {updateValues.Length} live tuning settings");
+            return Logger.InfoReturn(true, $"Loaded {protobufList.Count} live tuning settings");
         }
 
         public void UpdateLiveTuningData(IEnumerable<NetStructLiveTuningSettingProtoEnumValue> protoEnumValues, bool resetToDefaults)
