@@ -135,6 +135,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return DifficultyTierPrototype.InRange(difficultyRef, RestrictToDifficultyMin, RestrictToDifficultyMax);
         }
+
+        public bool FilterRegion(RegionPrototype regionPrototype)
+        {
+            if (RestrictToRegions.IsNullOrEmpty()) return true;
+
+            foreach (var regionRef in RestrictToRegions)
+                if (regionPrototype.FilterRegion(regionRef, RestrictToRegionsIncludeChildren, RestrictToRegionsExclude)) 
+                    return true;
+
+            return false;
+        }
     }
 
     public class MissionDialogTextPrototype : Prototype

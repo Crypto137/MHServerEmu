@@ -311,6 +311,7 @@ namespace MHServerEmu.Games.Populations
                 foreach (var entry in missionProto.PopulationSpawns)
                 {
                     if (entry.AllowedInDifficulty(difficultyRef) == false) continue;
+                    if (entry.FilterRegion(Region.Prototype) == false) continue;
                     if (entry.RestrictToAreas.HasValue()) // check areas
                     {
                         bool foundArea = false;
