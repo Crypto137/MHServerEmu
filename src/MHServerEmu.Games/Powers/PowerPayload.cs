@@ -597,6 +597,18 @@ namespace MHServerEmu.Games.Powers
             }
 
             // Secondary resources
+            float secondaryResourceChange = overTimeProperties[PropertyEnum.SecondaryResourceCOTBase];
+
+            // Pct bonus
+            float secondaryResourceMax = target.Properties[PropertyEnum.SecondaryResourceMax];
+
+            secondaryResourceChange += secondaryResourceMax * overTimeProperties[PropertyEnum.SecondaryResourceCOTPct];
+
+            // Time multiplier
+            secondaryResourceChange *= timeSeconds;
+
+            if (secondaryResourceChange != 0f)
+                Properties[PropertyEnum.SecondaryResourceChange] = secondaryResourceChange;
         }
 
         #endregion
