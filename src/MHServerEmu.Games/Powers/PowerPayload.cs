@@ -547,7 +547,35 @@ namespace MHServerEmu.Games.Powers
 
         public void CalculateOverTimeHealing(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
+            // Check if our target can receive healing
 
+            // CanHeal can be overriden with PowerForceHealing
+            if (target.CanHeal == false && Properties[PropertyEnum.PowerForceHealing] == false)
+                return;
+
+            // Do not heal if at max health
+            long health = target.Properties[PropertyEnum.Health];
+            long healthMax = target.Properties[PropertyEnum.HealthMax];
+
+            if (health >= healthMax)
+                return;
+
+            float healing = 0f;
+
+            // Flat bonus
+            healing += CalculateOverTimeValue(overTimeProperties, PropertyEnum.HealingOverTimeBase,
+                PropertyEnum.HealingOverTimeVariance, PropertyEnum.HealingOverTimeMagnitude);
+
+            // Pct bonus
+            float healthPct = CalculateOverTimeValue(overTimeProperties, PropertyEnum.HealingOverTimeBasePct,
+                PropertyEnum.HealingOverTimeVariance, PropertyEnum.HealingOverTimeMagnitude);
+            healing += healthMax * healthPct;
+
+            // Time multiplier
+            healing *= timeSeconds;
+
+            // Set
+            Properties[PropertyEnum.Healing] = healing;
         }
 
         public void CalculateOverTimeResourceChange(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
