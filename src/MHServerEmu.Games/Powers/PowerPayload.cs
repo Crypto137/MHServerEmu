@@ -170,6 +170,15 @@ namespace MHServerEmu.Games.Powers
             CalculateInitialResourceChange(power.Properties);
         }
 
+        public void CalculateOverTimeProperties(WorldEntity target, float timeSeconds, bool calculateDamage)
+        {
+            if (calculateDamage)
+                CalculateOverTimeDamage(target, timeSeconds);
+
+            CalculateOverTimeHealing(target, timeSeconds);
+            CalculateOverTimeResourceChange(target, timeSeconds);
+        }
+
         public void InitPowerResultsForTarget(PowerResults results, WorldEntity target)
         {
             bool isHostile = OwnerAlliance != null && OwnerAlliance.IsHostileTo(target.Alliance);
@@ -219,6 +228,15 @@ namespace MHServerEmu.Games.Powers
             // Add hit reaction if needed (NOTE: some conditions applied before take priority over hit reactions)
             if (calculateForTarget)
                 CalculateResultHitReaction(targetResults, target);
+        }
+
+        public void CalculatePowerResultsOverTime(PowerResults targetResults, WorldEntity target, bool calculateDamage)
+        {
+            if (calculateDamage)
+                CalculateResultDamage(targetResults, target);
+
+            CalculateResultHealing(targetResults, target);
+            CalculateResultResourceChanges(targetResults, target);
         }
 
         public void ClearResult()
@@ -515,6 +533,25 @@ namespace MHServerEmu.Games.Powers
 
         #endregion
 
+        #region Over Time Calculations
+
+        public void CalculateOverTimeDamage(WorldEntity target, float timeSeconds)
+        {
+
+        }
+
+        public void CalculateOverTimeHealing(WorldEntity target, float timeSeconds)
+        {
+
+        }
+
+        public void CalculateOverTimeResourceChange(WorldEntity target, float timeSeconds)
+        {
+
+        }
+
+        #endregion
+
         #region Result Calculations
 
         private bool CalculateResultDamage(PowerResults results, WorldEntity target)
@@ -727,10 +764,6 @@ namespace MHServerEmu.Games.Powers
         private bool CalculateResultHealing(PowerResults results, WorldEntity target)
         {
             float healing = Properties[PropertyEnum.Healing];
-
-            // HACK: Increase medkit healing to compensate for the lack of healing over time
-            if (results.PowerPrototype.DataRef == GameDatabase.GlobalsPrototype.AvatarHealPower)
-                healing *= 2f;
 
             // Pct healing
             float healingBasePct = Properties[PropertyEnum.HealingBasePct];

@@ -2014,15 +2014,25 @@ namespace MHServerEmu.Games.Entities
             else if (tickData.PowerProto != null)
                 results.SetKeywordsMask(tickData.PowerProto.KeywordsMask);
 
-            // TODO: calculate damage / healing / etc
-            /*
-            if (isHostile)
+            // Only condition-based tickers can deal damage over time
+            payload.CalculateOverTimeProperties(this, tickData.TickDurationSeconds, hasConditionPayload);
+            payload.CalculatePowerResultsOverTime(results, this, hasConditionPayload);
+
+            // Scale bounds if needed
+            float boundsScaleChange = Properties[PropertyEnum.BoundsScaleRadiusCOTUnitsPerSec] * tickData.TickDurationSeconds;
+            if (Segment.IsNearZero(boundsScaleChange) == false)
             {
-                // dummy damage for testing
-                results.Properties[PropertyEnum.Damage, (int)DamageType.Physical] = 666666f;
-                results.SetDamageForClient(DamageType.Physical, 666666f);
+                // TODO
+                Logger.Debug($"ApplyPropertyTicker(): boundsScaleChange={boundsScaleChange} for [{this}]");
             }
-            */
+
+            // Apply health cost over time (different from damage)
+            float healthCostOverTime = payload.Properties[PropertyEnum.PowerHealthCostOverTime];
+            if (ultimateCreator != null && Segment.IsNearZero(healthCostOverTime) == false)
+            {
+                // TODO (should be paid by the ultimate creator)
+                Logger.Debug($"ApplyPropertyTicker(): healthCostOverTime={healthCostOverTime} for [{this}]");
+            }
 
             if (results.ShouldSendToClient() == false)
                 return;
