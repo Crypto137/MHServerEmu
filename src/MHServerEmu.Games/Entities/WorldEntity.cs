@@ -2029,12 +2029,18 @@ namespace MHServerEmu.Games.Entities
                 Logger.Debug($"ApplyPropertyTicker(): boundsScaleChange={boundsScaleChange} for [{this}]");
             }
 
-            // Apply health cost over time (different from damage)
-            float healthCostOverTime = payload.Properties[PropertyEnum.PowerHealthCostOverTime];
+            // Apply health cost over time (different from damage, e.g. Blade's Thirst)
+            float healthCostOverTime = overTimeProperties[PropertyEnum.PowerHealthCostOverTime];
             if (ultimateCreator != null && Segment.IsNearZero(healthCostOverTime) == false)
             {
-                // TODO (should be paid by the ultimate creator)
-                Logger.Debug($"ApplyPropertyTicker(): healthCostOverTime={healthCostOverTime} for [{this}]");
+                long health = ultimateCreator.Properties[PropertyEnum.Health];
+                if (health > 0)
+                {
+                    // Cap health at 1 so the cost doesn't kill the creator
+                    health = Math.Max(health - MathHelper.RoundToInt64(healthCostOverTime), 1L);
+                    health = Math.Max(health, ultimateCreator.Properties[PropertyEnum.HealthMin]);
+                    ultimateCreator.Properties[PropertyEnum.Health] = health;
+                }
             }
 
             if (results.HasMeaningfulResults() == false)
