@@ -1972,6 +1972,10 @@ namespace MHServerEmu.Games.Entities
             if (IsInWorld == false || tickData.TickDurationSeconds <= 0f)
                 return;
 
+            using PropertyCollection overTimeProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            foreach (var kvp in tickData.PropertyList)
+                overTimeProperties[kvp.Key] = kvp.Value;
+
             // Try to find the payload that created this tick
             PowerPayload payload = null;
             bool hasConditionPayload = false;
@@ -1986,8 +1990,7 @@ namespace MHServerEmu.Games.Entities
             {
                 // If we couldn't find a payload, create a temporary one (TODO: make payloads poolable and get one from the pool)
                 payload = new();
-                foreach (var kvp in tickData.PropertyList)
-                    payload.Properties[kvp.Key] = kvp.Value;
+                payload.Init(Game);
             }
             else
             {
@@ -2015,7 +2018,7 @@ namespace MHServerEmu.Games.Entities
                 results.SetKeywordsMask(tickData.PowerProto.KeywordsMask);
 
             // Only condition-based tickers can deal damage over time
-            payload.CalculateOverTimeProperties(this, tickData.TickDurationSeconds, hasConditionPayload);
+            payload.CalculateOverTimeProperties(this, overTimeProperties, tickData.TickDurationSeconds, hasConditionPayload);
             payload.CalculatePowerResultsOverTime(results, this, hasConditionPayload);
 
             // Scale bounds if needed
@@ -2034,7 +2037,7 @@ namespace MHServerEmu.Games.Entities
                 Logger.Debug($"ApplyPropertyTicker(): healthCostOverTime={healthCostOverTime} for [{this}]");
             }
 
-            if (results.ShouldSendToClient() == false)
+            if (results.HasMeaningfulResults() == false)
                 return;
 
             ApplyPowerResults(results);

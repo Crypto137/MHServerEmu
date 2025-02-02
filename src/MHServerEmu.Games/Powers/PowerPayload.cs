@@ -158,6 +158,11 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public void Init(Game game)
+        {
+            Game = game;
+        }
+
         /// <summary>
         /// Calculates properties for this <see cref="PowerPayload"/> that do not require a target.
         /// </summary>
@@ -170,13 +175,13 @@ namespace MHServerEmu.Games.Powers
             CalculateInitialResourceChange(power.Properties);
         }
 
-        public void CalculateOverTimeProperties(WorldEntity target, float timeSeconds, bool calculateDamage)
+        public void CalculateOverTimeProperties(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds, bool calculateDamage)
         {
             if (calculateDamage)
-                CalculateOverTimeDamage(target, timeSeconds);
+                CalculateOverTimeDamage(target, overTimeProperties, timeSeconds);
 
-            CalculateOverTimeHealing(target, timeSeconds);
-            CalculateOverTimeResourceChange(target, timeSeconds);
+            CalculateOverTimeHealing(target, overTimeProperties, timeSeconds);
+            CalculateOverTimeResourceChange(target, overTimeProperties, timeSeconds);
         }
 
         public void InitPowerResultsForTarget(PowerResults results, WorldEntity target)
@@ -535,19 +540,63 @@ namespace MHServerEmu.Games.Powers
 
         #region Over Time Calculations
 
-        public void CalculateOverTimeDamage(WorldEntity target, float timeSeconds)
+        public void CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
 
         }
 
-        public void CalculateOverTimeHealing(WorldEntity target, float timeSeconds)
+        public void CalculateOverTimeHealing(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
 
         }
 
-        public void CalculateOverTimeResourceChange(WorldEntity target, float timeSeconds)
+        public void CalculateOverTimeResourceChange(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
+            if (target is not Avatar avatar)
+                return;
 
+            // Endurance
+            bool hasAllChange = HasOverTimeEnduranceChange(overTimeProperties, ManaType.TypeAll);
+
+            for (ManaType manaType = ManaType.Type1; manaType < ManaType.NumTypes; manaType++)
+            {
+                if (hasAllChange == false && HasOverTimeEnduranceChange(overTimeProperties, manaType) == false)
+                    continue;
+
+                float enduranceChange = 0f;
+
+                // Flat bonus
+                enduranceChange += CalculateOverTimeValue(overTimeProperties, new(PropertyEnum.EnduranceCOTBase, manaType),
+                    new(PropertyEnum.EnduranceCOTVariance, manaType), new(PropertyEnum.EnduranceCOTMagnitude, manaType));
+
+                enduranceChange += CalculateOverTimeValue(overTimeProperties, new(PropertyEnum.EnduranceCOTBase, ManaType.TypeAll),
+                    new(PropertyEnum.EnduranceCOTVariance, ManaType.TypeAll), new(PropertyEnum.EnduranceCOTMagnitude, ManaType.TypeAll));
+
+                // Pct bonus
+                float enduranceMax = target.Properties[PropertyEnum.EnduranceMax, manaType];
+
+                float endurancePct = CalculateOverTimeValue(overTimeProperties, new(PropertyEnum.EnduranceCOTPctBase, manaType),
+                    new(PropertyEnum.EnduranceCOTVariance, manaType), new(PropertyEnum.EnduranceCOTMagnitude, manaType));
+                enduranceChange += enduranceMax * endurancePct;
+
+                float endurancePctAll = CalculateOverTimeValue(overTimeProperties, new(PropertyEnum.EnduranceCOTPctBase, ManaType.TypeAll),
+                    new(PropertyEnum.EnduranceCOTVariance, ManaType.TypeAll), new(PropertyEnum.EnduranceCOTMagnitude, ManaType.TypeAll));
+                enduranceChange += enduranceMax * endurancePctAll;
+
+                // Time multiplier
+                enduranceChange *= timeSeconds;
+
+                // Set if the change results in a gain or decay
+                float endurance = target.Properties[PropertyEnum.Endurance, manaType];
+
+                if ((enduranceChange > 0f && endurance < enduranceMax && avatar.CanGainOrRegenEndurance(manaType)) ||
+                    (enduranceChange < 0f && endurance > 0f))
+                {
+                    Properties[PropertyEnum.EnduranceChange, manaType] = enduranceChange;
+                }
+            }
+
+            // Secondary resources
         }
 
         #endregion
@@ -1414,6 +1463,20 @@ namespace MHServerEmu.Games.Powers
             // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
             return Game.Random.NextFloat() < superCritChance;
+        }
+
+        private float CalculateOverTimeValue(PropertyCollection overTimeProperties, PropertyId baseProp, PropertyId varianceProp, PropertyId magnitudeProp, float bonus = 0f)
+        {
+            // Helper function for calculating over time values
+            float variance = overTimeProperties[varianceProp];
+            float varianceMult = (1f - variance) + (variance * 2f * Game.Random.NextFloat());
+            return (overTimeProperties[baseProp] + bonus) * varianceMult * overTimeProperties[magnitudeProp];
+        }
+
+        private static bool HasOverTimeEnduranceChange(PropertyCollection overTimeProperties, ManaType manaType)
+        {
+            return overTimeProperties.HasProperty(new PropertyId(PropertyEnum.EnduranceCOTBase, manaType)) ||
+                   overTimeProperties.HasProperty(new PropertyId(PropertyEnum.EnduranceCOTPctBase, manaType));
         }
 
         private bool CalculateMovementDurationForCondition(WorldEntity target, bool calculateForTarget, out TimeSpan movementDuration)
