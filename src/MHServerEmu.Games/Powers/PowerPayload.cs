@@ -824,9 +824,39 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultHealing(PowerResults results, WorldEntity target)
         {
+            // Check if our target can receive healing
+
+            // DisableHealthGain has the highest priority
+            if (target.Properties[PropertyEnum.DisableHealthGain])
+                return false;
+
+            // CanHeal can be overriden with PowerForceHealing
+            if (target.CanHeal == false && Properties[PropertyEnum.PowerForceHealing] == false)
+                return false;
+
+            // Calculate healing amount
+
+            // Start with the previously calculated base healing value
             float healing = Properties[PropertyEnum.Healing];
 
-            // Pct healing
+            // Apply target-specific multiplier
+            float targetHealingReceivedMult = target.Properties[PropertyEnum.HealingReceivedMult];
+
+            // Accumulate keyword-based multiplier bonus if we have a power (there may not be one if this is a ticker payload)
+            if (PowerProtoRef != PrototypeId.Invalid)
+            {
+                foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.HealingReceivedMultPowerKeyword))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+
+                    if (KeywordsMask.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
+                        targetHealingReceivedMult += kvp.Value;
+                }
+            }
+
+            healing *= 1f + targetHealingReceivedMult;
+
+            // Pct-based healing
             float healingBasePct = Properties[PropertyEnum.HealingBasePct];
             if (healingBasePct > 0f)
             {
