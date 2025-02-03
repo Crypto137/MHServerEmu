@@ -540,9 +540,55 @@ namespace MHServerEmu.Games.Powers
 
         #region Over Time Calculations
 
-        public void CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
+        public bool CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
+            // DoTs require a full power payload for calculations
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateOverTimeDamage(): powerProto == null");
 
+            long targetHealthMax = target.Properties[PropertyEnum.HealthMax];
+
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+            {
+                // Calculate base damage
+                float damageOverTimeBasePerLevel = overTimeProperties[PropertyEnum.DamageOverTimeBasePerLevel, damageType];
+                float damageOverTimeBaseBonus = overTimeProperties[PropertyEnum.DamageOverTimeBaseBonus, damageType];
+                float bonus = damageOverTimeBasePerLevel * CombatLevel + damageOverTimeBaseBonus;
+
+                float damage = CalculateOverTimeValue(overTimeProperties, new(PropertyEnum.DamageOverTimeBase, damageType),
+                    PropertyEnum.DamageOverTimeVariance, PropertyEnum.DamageOverTimeMagnitude, bonus);
+
+                // Apply tuning score
+                damage *= powerProto.DamageTuningScore;
+
+                // Apply health pct based damage
+                damage += targetHealthMax * (float)overTimeProperties[PropertyEnum.DamageOverTimePctTargetHealthMax, damageType];
+
+                // Apply time multiplier
+                damage *= timeSeconds;
+
+                // Set value
+                if (damage > 0f)
+                    Properties[PropertyEnum.Damage, damageType] = damage;
+
+                // ----
+                // Calculate flat unmodified damage (unaffected by scaling)
+                float damageUnmodified = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodified];
+
+                // Apply per-rank unmodified damage
+                float damageOverTimeBaseUnmodPerRank = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodPerRank];
+                int powerRank = Properties[PropertyEnum.PowerRank];
+                damageUnmodified += damageOverTimeBaseUnmodPerRank * powerRank;
+
+                // Apply time multiplioer
+                damageUnmodified *= timeSeconds;
+
+                // Set value
+                if (damageUnmodified > 0f)
+                    Properties[PropertyEnum.DamageBaseUnmodified, damageType] = damageUnmodified;
+            }
+
+            return true;
         }
 
         public void CalculateOverTimeHealing(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
