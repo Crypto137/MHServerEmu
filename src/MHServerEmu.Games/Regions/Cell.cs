@@ -288,7 +288,7 @@ namespace MHServerEmu.Games.Regions
             if (RegionBounds.Intersects(entityPosition) == false) entityPosition.RoundToNearestInteger();
 
             var region = Region;
-            var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword.As<KeywordPrototype>();            
+            var destructibleKeyword = GameDatabase.KeywordGlobalsPrototype.DestructibleKeywordPrototype;            
             if (region.Prototype.RespawnDestructibles && entityProto.HasKeyword(destructibleKeyword))
             {
                 SpawnGroup group = PopulationManager.CreateSpawnGroup();

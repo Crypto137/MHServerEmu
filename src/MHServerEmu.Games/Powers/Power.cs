@@ -941,13 +941,17 @@ namespace MHServerEmu.Games.Powers
                 ownerResults.Clear();   // Clear results to prevent them from being sent
 
             // Apply results - this is delayed to account for proc effects that may kill our targets
+            bool isHostile = false;
             foreach (PowerResults results in targetResultsList)
             {
                 bool applied = false;
 
                 WorldEntity target = entityManager.GetEntity<WorldEntity>(results.TargetId);
                 if (target != null && target.IsInWorld)
+                {
                     applied = target.ScheduleApplyPowerResultsEvent(results);
+                    isHostile |= results.TestFlag(PowerResultFlags.Hostile);
+                }
 
                 if (applied == false)
                     results.Clear();    // leak prevention
@@ -961,6 +965,9 @@ namespace MHServerEmu.Games.Powers
 
             ListPool<WorldEntity>.Instance.Return(targetList);
             ListPool<PowerResults>.Instance.Return(targetResultsList);
+
+            // Break stealth if needed
+            TryBreakStealth(powerOwner, ultimateOwner, powerProto, isHostile, false);
 
             // Schedule beam sweep reapplication if needed
             CheckBeamSweepTick(payload);
@@ -1044,6 +1051,75 @@ namespace MHServerEmu.Games.Powers
             Owner.ActivatePostPowerAction(this, flags);
 
             OnEndPowerConditionalRemove(flags);     // Remove one-offs, like throwables
+
+            return true;
+        }
+
+        public static bool TryBreakStealth(WorldEntity powerOwner, WorldEntity ultimateOwner, PowerPrototype powerProto, bool isHostile, bool isOverTime)
+        {
+            // Non-power payloads don't break stealth
+            if (powerProto == null)
+                return false;
+
+            // Check if this power can potentially break stealth at all
+            if (powerProto.BreaksStealth == false || powerProto.Activation == PowerActivationType.Passive)
+                return false;
+
+            WorldEntity stealthedEntity = null;
+
+            if (isOverTime == false)
+            {
+                // For direct damage use the ultimate owner for hotspots / missiles
+                if (powerOwner == null || powerOwner is Missile || powerOwner is Hotspot)
+                    stealthedEntity = ultimateOwner;
+                else
+                    stealthedEntity = powerOwner;
+            }
+            else
+            {
+                // For DoTs only hotspots attached to their owners break stealth
+                if (isHostile && powerOwner != null && powerOwner is Hotspot && ultimateOwner != null &&
+                    powerOwner.IsAttachedToEntity && powerOwner.Properties[PropertyEnum.AttachedToEntityId] == ultimateOwner.Id)
+                {
+                    stealthedEntity = ultimateOwner;
+                }
+            }
+
+            // Validate our stealthed entity
+            if (stealthedEntity == null || stealthedEntity.IsInWorld == false || stealthedEntity.TestStatus(EntityStatus.Destroyed))
+                return false;
+
+            // Check stealth break override eval (e.g. talents that remove stealth break)
+            if (powerProto.BreaksStealthOverrideEval != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetVar_EntityPtr(EvalContext.Default, stealthedEntity);
+                if (Eval.RunBool(powerProto.BreaksStealthOverrideEval, evalContext) == false)
+                    return false;
+            }
+
+            // Check if our potentially stealthed entity is actually stealthed
+            KeywordPrototype stealthPowerKeyword = GameDatabase.KeywordGlobalsPrototype.StealthPowerKeywordPrototype;
+            if (stealthedEntity.HasConditionWithKeyword(stealthPowerKeyword) == false)
+                return false;
+
+            // Remove stealth via power results
+            PowerResults results = new();
+            results.Init(stealthedEntity.Id, stealthedEntity.Id, stealthedEntity.Id, stealthedEntity.RegionLocation.Position, powerProto, AssetId.Invalid, false);
+
+            Power power = stealthedEntity == powerOwner ? stealthedEntity.GetPower(powerProto.DataRef) : null;
+            results.SetKeywordsMask(power != null ? power.KeywordsMask : powerProto.KeywordsMask);
+
+            foreach (Condition condition in stealthedEntity.ConditionCollection)
+            {
+                if (condition.HasKeyword(stealthPowerKeyword) == false)
+                    continue;
+
+                results.AddConditionToRemove(condition.Id);
+            }
+
+            if (results.HasMeaningfulResults())
+                stealthedEntity.ScheduleApplyPowerResultsEvent(results);
 
             return true;
         }

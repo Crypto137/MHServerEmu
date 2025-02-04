@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsWeaponMissing { get => Properties[PropertyEnum.WeaponMissing]; }
         public bool IsGlobalEventVendor { get => GetVendorGlobalEvent() != PrototypeId.Invalid; }
         public bool IsHighFlying { get => Locomotor?.IsHighFlying ?? false; }
-        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeyword); }
+        public bool IsDestructible { get => HasKeyword(GameDatabase.KeywordGlobalsPrototype.DestructibleKeywordPrototype); }
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
         public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
@@ -2048,6 +2048,10 @@ namespace MHServerEmu.Games.Entities
                 return;
 
             ApplyPowerResults(results);
+
+            // Break stealth if needed
+            WorldEntity creator = Game.EntityManager.GetEntity<WorldEntity>(tickData.CreatorId);
+            Power.TryBreakStealth(creator, ultimateCreator, tickData.PowerProto, isHostile, true);
         }
 
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)

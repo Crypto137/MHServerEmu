@@ -1129,6 +1129,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId DangerRoomKeyword { get; protected set; }
         public PrototypeId StealingPowerKeyword { get; protected set; }
         public PrototypeId SummonPowerKeyword { get; protected set; }
+
+        //--
+
+        [DoNotCopy]
+        public KeywordPrototype DestructibleKeywordPrototype { get; private set; }
+        [DoNotCopy]
+        public KeywordPrototype StealthPowerKeywordPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // Cache frequently used keyword prototype refs
+            DestructibleKeywordPrototype = DestructibleKeyword.As<KeywordPrototype>();
+            StealthPowerKeywordPrototype = StealthPowerKeyword.As<KeywordPrototype>();
+        }
     }
 
     public class CurrencyGlobalsPrototype : Prototype
