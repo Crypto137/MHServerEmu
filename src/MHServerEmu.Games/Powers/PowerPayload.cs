@@ -43,12 +43,13 @@ namespace MHServerEmu.Games.Powers
         public float Range { get; private set; }
         public ulong RegionId { get; private set; }
         public AlliancePrototype OwnerAlliance { get; private set; }
-        public int BeamSweepSlice { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
 
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
+        public int AOESweepTick { get => Properties[PropertyEnum.AOESweepTick]; }
+        public TimeSpan AOESweepRate { get => TimeSpan.FromMilliseconds((int)Properties[PropertyEnum.AOESweepRateMS]); }
 
         public PowerActivationSettings ActivationSettings { get => new(TargetId, TargetPosition, PowerOwnerPosition); }
 
@@ -115,11 +116,17 @@ namespace MHServerEmu.Games.Powers
             Range = power.GetApplicationRange();
             RegionId = powerOwner.Region.Id;
             OwnerAlliance = powerOwner.Alliance;
-            BeamSweepSlice = -1;        // TODO
             ExecutionTime = power.GetFullExecutionTime();
             SetKeywordsMask(power.KeywordsMask);
 
-            // TODO: visuals override
+            // Beam sweep data
+            if (power.GetTargetingShape() == TargetingShapeType.BeamSweep)
+            {
+                Properties.CopyProperty(power.Properties, PropertyEnum.AOESweepRateMS);
+                Properties[PropertyEnum.AOESweepTick] = powerApplication.BeamSweepTick;
+            }
+
+            // TODO: Apply visual overrides if needed
             PowerAssetRefOverride = AssetId.Invalid;
 
             // Snapshot additional properties to recalculate initial damage for enemy DCL scaling

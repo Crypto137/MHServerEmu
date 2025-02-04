@@ -955,6 +955,9 @@ namespace MHServerEmu.Games.Powers
             ListPool<WorldEntity>.Instance.Return(targetList);
             ListPool<PowerResults>.Instance.Return(targetResultsList);
 
+            // Schedule beam sweep reapplication if needed
+            CheckBeamSweepTick(payload);
+
             // Check if this payload needs bouncing and end projectile powers once all bouncing is over
             if (TryBouncePayload(payload) == false)
                 TryEndNonMissilePowerActiveUntilProjExpire(payload);
@@ -1729,7 +1732,7 @@ namespace MHServerEmu.Games.Powers
             WorldEntity primaryTarget = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.TargetId);
 
             return GetTargets(targetList, payload.Game, payload.PowerPrototype, payload.Properties, primaryTarget, payload.TargetPosition, payload.PowerOwnerPosition,
-                payload.Range, payload.RegionId, payload.PowerOwnerId, payload.UltimateOwnerId, payload.OwnerAlliance, payload.BeamSweepSlice,
+                payload.Range, payload.RegionId, payload.PowerOwnerId, payload.UltimateOwnerId, payload.OwnerAlliance, payload.AOESweepTick,
                 payload.ExecutionTime, payload.PowerRandomSeed);
         }
 
@@ -3413,7 +3416,7 @@ namespace MHServerEmu.Games.Powers
             };
 
             if (GetTargetingShape() == TargetingShapeType.BeamSweep)
-                powerApplication.BeamSweepVar = 0;
+                powerApplication.BeamSweepTick = 0;
 
             if (isProcEffect == false)
             {
@@ -4570,6 +4573,43 @@ namespace MHServerEmu.Games.Powers
             Owner.ChangeRegionPosition(teleportPosition, null,
                 ChangePositionFlags.DoNotSendToServer | ChangePositionFlags.DoNotSendToClients | ChangePositionFlags.Force);
 
+            return true;
+        }
+
+        private static bool CheckBeamSweepTick(PowerPayload payload)
+        {
+            // -1 indicates that this is not a beam sweep payload
+            if (payload.AOESweepTick < 0)
+                return false;
+
+            // Make sure we have an owner in a valid state
+            WorldEntity powerOwner = payload.Game.EntityManager.GetEntity<WorldEntity>(payload.PowerOwnerId);
+            if (powerOwner == null || powerOwner.TestStatus(EntityStatus.Destroyed) || powerOwner.IsInWorld == false)
+                return false;
+
+            // Make sure the owner still has the power
+            Power power = powerOwner.GetPower(payload.PowerProtoRef);
+            if (power == null) return Logger.WarnReturn(false, "TryScheduleNextBeamSweepTick(): power == null");
+
+            int nextTick = payload.AOESweepTick + 1;
+            TimeSpan sweepRate = payload.AOESweepRate;
+
+            // Check if finished sweeping
+            if (nextTick * sweepRate >= payload.ExecutionTime)
+                return false;
+
+            // Schedule the next tick of the sweep
+            PowerApplication powerApplication = new()
+            {
+                UserEntityId = payload.PowerOwnerId,
+                UserPosition = payload.PowerOwnerPosition,
+                TargetEntityId = payload.TargetId,
+                TargetPosition = payload.TargetPosition,
+                MovementTime = payload.MovementTime,
+                BeamSweepTick = nextTick
+            };
+
+            power.SchedulePowerApplication(powerApplication, sweepRate);
             return true;
         }
 
