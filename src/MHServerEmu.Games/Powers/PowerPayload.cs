@@ -126,8 +126,21 @@ namespace MHServerEmu.Games.Powers
                 Properties[PropertyEnum.AOESweepTick] = powerApplication.BeamSweepTick;
             }
 
-            // TODO: Apply visual overrides if needed
-            PowerAssetRefOverride = AssetId.Invalid;
+            // Apply visual overrides (use the ultimate owner for missile overrides)
+            WorldEntity assetSourceEntity;
+            if (power.IsMissileEffect() && powerOwner.GetOriginalWorldAsset() == AssetId.Invalid && ultimateOwner != null)
+                assetSourceEntity = ultimateOwner;
+            else
+                assetSourceEntity = powerOwner;
+
+            AssetId creatorEntityAssetRefBase = assetSourceEntity.GetOriginalWorldAsset();
+            AssetId creatorEntityAssetRefCurrent = assetSourceEntity.GetEntityWorldAsset();
+            Properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorEntityAssetRefBase;
+            Properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorEntityAssetRefCurrent;
+
+            AssetId powerAssetRef = PowerPrototype.GetUnrealClass(creatorEntityAssetRefBase, creatorEntityAssetRefCurrent);
+            if (powerAssetRef != PowerPrototype.PowerUnrealClass)
+                PowerAssetRefOverride = powerAssetRef;
 
             // Snapshot additional properties to recalculate initial damage for enemy DCL scaling
             if (IsPlayerPayload == false)

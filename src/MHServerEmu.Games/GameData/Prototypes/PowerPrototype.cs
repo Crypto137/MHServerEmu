@@ -344,6 +344,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return _targetingStylePtr;
         }
 
+        public AssetId GetUnrealClass(AssetId originalWorldAssetRef, AssetId entityWorldAssetRef)
+        {
+            AssetId powerAssetRef = PowerUnrealClass;
+
+            if (PowerUnrealOverrides.IsNullOrEmpty())
+                return powerAssetRef;
+
+            foreach (PowerUnrealOverridePrototype overrideProto in PowerUnrealOverrides)
+            {
+                if (overrideProto.EntityArt != originalWorldAssetRef)
+                    continue;
+
+                powerAssetRef = overrideProto.PowerArt;
+
+                if (overrideProto.ArtOnlyReplacements.IsNullOrEmpty())
+                    break;
+
+                foreach (PowerUnrealReplacementPrototype replacementProto in overrideProto.ArtOnlyReplacements)
+                {
+                    if (replacementProto.EntityArt != entityWorldAssetRef)
+                        continue;
+
+                    powerAssetRef = replacementProto.PowerArt;
+                    break;
+                }
+
+                break;
+            }
+
+            return powerAssetRef;
+        }
+
         public float GetRange(PropertyCollection powerProperties, PropertyCollection ownerProperties)
         {
             if (Range == null) return Logger.WarnReturn(0f, "GetRange(): Range == null");
