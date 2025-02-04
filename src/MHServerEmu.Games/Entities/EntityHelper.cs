@@ -7,6 +7,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -96,6 +97,51 @@ namespace MHServerEmu.Games.Entities
                     Agent summoner = (Agent)entity.Game.EntityManager.CreateEntity(settings);
                 }
             }
+        }
+
+        public static void CreateMetalOrbFromPowerPrototype(WorldEntity user, WorldEntity target, SummonPowerPrototype summonPowerProto)
+        {
+            if (user is not Avatar avatar)
+                return;
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null)
+                return;
+
+            if (target.IsInWorld == false)
+                return;
+
+            if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty())
+                return;
+
+            PrototypeId summonEntityRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
+
+            Region region = target.Region;
+            if (region.ChooseRandomPositionNearPoint(target.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+                BlockingCheckFlags.CheckSpawns, 0f, 100f, out Vector3 position) == false)
+            {
+                Logger.Warn($"CreateMetalOrbFromPowerPrototype(): Failed to find position for summon entity {summonEntityRef.GetName()} near [{target}]");
+                return;
+            }
+
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            settings.EntityRef = summonEntityRef;
+            settings.Position = position;
+            settings.RegionId = target.Region.Id;
+            settings.SourceEntityId = target.Id;
+            settings.SourcePosition = target.RegionLocation.Position;
+
+            AssetId creatorAsset = target.GetEntityWorldAsset();
+            properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
+            properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
+            properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
+            properties[PropertyEnum.SummonedByPower] = true;
+            properties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
+            settings.Properties = properties;
+
+            target.Game.EntityManager.CreateEntity(settings);
         }
 
         public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto, Item item = null)

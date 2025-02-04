@@ -32,6 +32,15 @@ namespace MHServerEmu.Games.Powers
             (PrototypeId)15949525972715445694
         ];
 
+        // REMOVEME
+        private static readonly HashSet<PrototypeId> SpawnMetalOrbCombos = [
+            (PrototypeId)7346548612187493478,
+            (PrototypeId)10512701425740682877,
+            (PrototypeId)13542089336699950947,
+            (PrototypeId)9968471862826768614,
+            (PrototypeId)16334726522730453455
+        ];
+
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
         }
@@ -45,6 +54,14 @@ namespace MHServerEmu.Games.Powers
             {
                 Logger.Debug($"Activate(): Spawning OnDeath for [{this}]");
                 EntityHelper.OnDeathSummonFromPowerPrototype(Owner, (SummonPowerPrototype)Prototype);
+                return PowerUseResult.Success;
+            }
+
+            // Special handling for Magneto's metal orb spawning combos
+            if (SpawnMetalOrbCombos.Contains(PrototypeDataRef))
+            {
+                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+                EntityHelper.CreateMetalOrbFromPowerPrototype(Owner, target, (SummonPowerPrototype)Prototype);
                 return PowerUseResult.Success;
             }
 
