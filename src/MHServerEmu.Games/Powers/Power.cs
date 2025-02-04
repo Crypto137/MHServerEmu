@@ -853,6 +853,7 @@ namespace MHServerEmu.Games.Powers
             List<PowerResults> targetResultsList = ListPool<PowerResults>.Instance.Get();
 
             GetTargets(targetList, payload);
+            payload.Properties[PropertyEnum.TargetsHit] = targetList.Count;
 
             EntityManager entityManager = payload.Game.EntityManager;
 
@@ -865,10 +866,14 @@ namespace MHServerEmu.Games.Powers
 
             PowerActivationSettings activationSettings = payload.ActivationSettings;
 
+            bool isProc = powerProto.PowerCategory == PowerCategoryType.ProcEffect;
+
             // Accumulate results for the owner in a separate PowerResults instance
             PowerResults ownerResults = new();
             ulong ownerId = payload.PowerOwnerId;
             ownerResults.Init(ownerId, ownerId, ownerId, payload.PowerOwnerPosition, powerProto, payload.PowerAssetRefOverride, false);
+            ownerResults.SetKeywordsMask(payload.KeywordsMask);
+            ownerResults.SetFlag(PowerResultFlags.Proc, isProc);
             ownerResults.ActivationSettings = activationSettings;
 
             // Calculate and apply results for each target
@@ -888,6 +893,8 @@ namespace MHServerEmu.Games.Powers
 
                 PowerResults targetResults = new();
                 payload.InitPowerResultsForTarget(targetResults, target);
+                targetResults.SetKeywordsMask(payload.KeywordsMask);
+                targetResults.SetFlag(PowerResultFlags.Proc, isProc);
                 targetResults.ActivationSettings = activationSettings;
                 payload.CalculatePowerResults(targetResults, ownerResults, target, true);
                 
