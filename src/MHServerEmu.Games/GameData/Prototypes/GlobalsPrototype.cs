@@ -402,6 +402,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
 
+        [DoNotCopy]
+        public EvalPrototype AvatarThrowabilityEvalPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            AvatarThrowabilityEvalPrototype = AvatarThrowabilityEval.As<EvalPrototype>();
+        }
+
         public int GetAvatarLevelCap()
         {
             Curve levelingCurve = GetAvatarLevelingCurve();

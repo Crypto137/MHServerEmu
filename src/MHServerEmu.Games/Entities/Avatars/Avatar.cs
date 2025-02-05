@@ -63,6 +63,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public AvatarPrototype AvatarPrototype { get => Prototype as AvatarPrototype; }
         public int PrestigeLevel { get => Properties[PropertyEnum.AvatarPrestigeLevel]; }
         public override bool IsAtLevelCap { get => CharacterLevel >= GetAvatarLevelCap(); }
+        public override int Throwability { get => GetThrowability(); }
 
         public PrototypeId EquippedCostumeRef { get => Properties[PropertyEnum.CostumeCurrent]; }
         public CostumePrototype EquippedCostume { get => EquippedCostumeRef.As<CostumePrototype>(); }
@@ -1481,6 +1482,15 @@ namespace MHServerEmu.Games.Entities.Avatars
                 SendActivatePowerFailedMessage(throwablePowerProtoRef, PowerUseResult.GenericError);
             
             return success;
+        }
+
+        private int GetThrowability()
+        {
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, Properties);
+            evalContext.SetReadOnlyVar_ProtoRefVectorPtr(EvalContext.Var1, Keywords);
+
+            return Eval.RunInt(GameDatabase.AdvancementGlobalsPrototype.AvatarThrowabilityEvalPrototype, evalContext);
         }
 
         private bool FixupPendingActivateSettings(Power power, ref PowerActivationSettings settings)
