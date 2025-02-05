@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Powers
             if (SpawnMetalOrbCombos.Contains(PrototypeDataRef))
             {
                 WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
-                EntityHelper.CreateMetalOrbFromPowerPrototype(Owner, target, (SummonPowerPrototype)Prototype);
+                EntityHelper.CreateMetalOrbFromPowerPrototype(Owner, target, settings.TargetPosition, (SummonPowerPrototype)Prototype);
                 return PowerUseResult.Success;
             }
 

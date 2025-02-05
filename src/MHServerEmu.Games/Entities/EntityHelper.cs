@@ -99,16 +99,16 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        public static void CreateMetalOrbFromPowerPrototype(WorldEntity user, WorldEntity target, SummonPowerPrototype summonPowerProto)
+        public static void CreateMetalOrbFromPowerPrototype(WorldEntity user, WorldEntity target, Vector3 targetPosition, SummonPowerPrototype summonPowerProto)
         {
             if (user is not Avatar avatar)
                 return;
 
-            Player player = avatar.GetOwnerOfType<Player>();
-            if (player == null)
+            if (avatar.IsInWorld == false)
                 return;
 
-            if (target.IsInWorld == false)
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null)
                 return;
 
             if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty())
@@ -116,11 +116,19 @@ namespace MHServerEmu.Games.Entities
 
             PrototypeId summonEntityRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
 
-            Region region = target.Region;
-            if (region.ChooseRandomPositionNearPoint(target.Bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
+            Region region = avatar.Region;
+            Bounds bounds = target?.Bounds;
+            if (bounds == null)
+            {
+                bounds = new();
+                bounds.InitializeSphere(35f, BoundsCollisionType.None);
+                bounds.Center = targetPosition;
+            }            
+
+            if (region.ChooseRandomPositionNearPoint(bounds, PathFlags.Walk, PositionCheckFlags.PreferNoEntity,
                 BlockingCheckFlags.CheckSpawns, 0f, 100f, out Vector3 position) == false)
             {
-                Logger.Warn($"CreateMetalOrbFromPowerPrototype(): Failed to find position for summon entity {summonEntityRef.GetName()} near [{target}]");
+                Logger.Warn($"CreateMetalOrbFromPowerPrototype(): Failed to find a position to summon entity {summonEntityRef.GetName()} near [{targetPosition}] in region [{region}]");
                 return;
             }
 
@@ -129,19 +137,22 @@ namespace MHServerEmu.Games.Entities
 
             settings.EntityRef = summonEntityRef;
             settings.Position = position;
-            settings.RegionId = target.Region.Id;
-            settings.SourceEntityId = target.Id;
-            settings.SourcePosition = target.RegionLocation.Position;
+            settings.RegionId = avatar.Region.Id;
 
-            AssetId creatorAsset = target.GetEntityWorldAsset();
-            properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
-            properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
+            if (target != null)
+            {
+                settings.SourceEntityId = target.Id;
+                settings.SourcePosition = target.RegionLocation.Position;
+            }
+
+            properties[PropertyEnum.CreatorEntityAssetRefBase] = avatar.GetOriginalWorldAsset();
+            properties[PropertyEnum.CreatorEntityAssetRefCurrent] = avatar.GetEntityWorldAsset();
             properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
             properties[PropertyEnum.SummonedByPower] = true;
             properties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
             settings.Properties = properties;
 
-            target.Game.EntityManager.CreateEntity(settings);
+            avatar.Game.EntityManager.CreateEntity(settings);
         }
 
         public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto, Item item = null)
