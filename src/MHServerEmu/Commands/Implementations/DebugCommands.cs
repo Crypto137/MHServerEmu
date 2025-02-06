@@ -4,12 +4,15 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -314,6 +317,26 @@ namespace MHServerEmu.Commands.Implementations
                 .Build());
 
             return string.Empty;
+        }
+
+        [Command("difficulty", "Shows information about the current difficulty level.")]
+        public string Difficulty(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+
+            Avatar avatar = playerConnection.Player?.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return string.Empty;
+
+            var region = avatar.Region;
+            Vector3 position = avatar.RegionLocation.Position;
+            TuningTable tuningTable = region.TuningTable;
+
+            float playerToMob = tuningTable.GetDamageMultiplier(true, Rank.Popcorn, position);
+            float mobToPlayer = tuningTable.GetDamageMultiplier(false, Rank.Player, position);
+
+            return $"Region={region.Prototype}, TuningTable={tuningTable.Prototype}, playerToMob={playerToMob}, mobToPlayer={mobToPlayer}";
         }
     }
 }

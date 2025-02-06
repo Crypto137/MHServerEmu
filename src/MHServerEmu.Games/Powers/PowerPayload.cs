@@ -900,8 +900,6 @@ namespace MHServerEmu.Games.Powers
             if (difficultyMult == 1f)
                 return true;
 
-            Logger.Debug($"CalculateResultDamageDifficultyScaling(): difficultyMult = {difficultyMult}");
-
             Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
             GetDamageValues(results.Properties, damageValues);
 

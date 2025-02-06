@@ -1912,7 +1912,7 @@ namespace MHServerEmu.Games.Powers
             };
         }
 
-        public static int ComputeNearbyPlayers(Region region, Vector3 position, int numPlayersMin, bool combatActiveOnly, HashSet<ulong> nearbyPlayerIds = null)
+        public static int ComputeNearbyPlayers(Region region, Vector3 position, int numPlayersMin = 0, bool combatActiveOnly = false, HashSet<ulong> nearbyPlayerIds = null)
         {
             return ComputeNearbyPlayersInternal(region, position, numPlayersMin, combatActiveOnly, nearbyPlayerIds, null);
         }

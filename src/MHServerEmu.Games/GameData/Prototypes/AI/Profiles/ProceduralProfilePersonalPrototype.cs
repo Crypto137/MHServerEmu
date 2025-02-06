@@ -4639,7 +4639,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 case State.SummonHydra:
 
-                    int numPlayers = Power.ComputeNearbyPlayers(agent.Region, agent.RegionLocation.Position, 0, false);
+                    int numPlayers = Power.ComputeNearbyPlayers(agent.Region, agent.RegionLocation.Position);
                     int numSummons = 0;
                     for (int i = 0; i < numPlayers; i++)
                         if (ownerController.AttemptActivatePower(SummonHydraPower, agent.Id, agent.RegionLocation.Position))

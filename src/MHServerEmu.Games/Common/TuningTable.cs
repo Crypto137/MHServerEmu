@@ -1,9 +1,11 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Common
@@ -151,13 +153,104 @@ namespace MHServerEmu.Games.Common
         /// </summary>
         public float GetDamageMultiplier(bool isPlayerDamage, Rank targetRank, Vector3 targetPosition)
         {
-            // TODO
+            float damageMult = 1f;
+            damageMult *= GetRegionDifficultyDamageMultiplier(isPlayerDamage, targetRank);
+            damageMult *= GetDifficultyIndexDamageMultiplier(isPlayerDamage, targetRank);
+            damageMult *= GetNumNearbyPlayersDamageMultiplier(isPlayerDamage, targetRank, targetPosition);
+            return damageMult;
+        }
 
-            // Return something just for testing
+        private float GetRegionDifficultyDamageMultiplier(bool isPlayerDamage, Rank targetRank)
+        {
+            float difficultyMult = 1f;
+
             if (isPlayerDamage)
-                return _tuningProto.TuningDamagePlayerToMobDCL;
+            {
+                difficultyMult *= _tuningProto.TuningDamagePlayerToMobDCL;
+                difficultyMult *= _region.Properties[PropertyEnum.DamageRegionPlayerToMob];
+            }
             else
-                return _tuningProto.TuningDamageMobToPlayerDCL;
+            {
+                difficultyMult *= _tuningProto.TuningDamageMobToPlayerDCL;
+                difficultyMult *= _region.Properties[PropertyEnum.DamageRegionMobToPlayer];
+            }
+
+            // Apply rank-specific multipliers
+            if (_tuningProto.TuningDamageByRankDCL.HasValue())
+            {
+                foreach (TuningDamageByRankPrototype rankEntry in _tuningProto.TuningDamageByRankDCL)
+                {
+                    if (rankEntry.Rank != targetRank)
+                        continue;
+
+                    difficultyMult *= isPlayerDamage ? rankEntry.TuningPlayerToMob : rankEntry.TuningMobToPlayer;
+                }
+            }
+
+            return difficultyMult;
+        }
+
+        private float GetDifficultyIndexDamageMultiplier(bool isPlayerDamage, Rank targetRank)
+        {
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+
+            // Start with the default curve
+            CurveId curveRef = isPlayerDamage ? difficultyGlobals.DifficultyIndexDamageDefaultPtoM : difficultyGlobals.DifficultyIndexDamageDefaultMtoP;
+
+            // See if there are any rank overrides
+            if (difficultyGlobals.DifficultyIndexDamageByRank.HasValue())
+            {
+                foreach (DifficultyIndexDamageByRankPrototype rankEntry in difficultyGlobals.DifficultyIndexDamageByRank)
+                {
+                    if (rankEntry.Rank != targetRank)
+                        continue;
+
+                    curveRef = isPlayerDamage ? rankEntry.PlayerToMobCurve : rankEntry.MobToPlayerCurve;
+                }
+            }
+
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(1f, "GetDifficultyIndexDamageMultiplier(): curve == null");
+
+            int index = Math.Clamp(DifficultyIndex, curve.MinPosition, curve.MaxPosition);
+            return curve.GetAt(index);
+        }
+
+        private float GetNumNearbyPlayersDamageMultiplier(bool isPlayerDamage, Rank targetRank, Vector3 targetPosition)
+        {
+            // Check if this region scales with the number of players
+            if (_tuningProto.NumNearbyPlayersScalingEnabled == false)
+                return 1f;
+
+            DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+
+            // Start with the default curve
+            CurveId curveRef = isPlayerDamage ? difficultyGlobals.NumNearbyPlayersDmgDefaultPtoM : difficultyGlobals.NumNearbyPlayersDmgDefaultMtoP;
+
+            // See if there are any rank overrides (public combat zones use a different set of overrides)
+            NumNearbyPlayersDmgByRankPrototype[] rankOverrides = null;
+            if (_region.Prototype.Behavior == RegionBehavior.PublicCombatZone && difficultyGlobals.NumNearbyPlayersDmgByRankPCZ.HasValue())
+                rankOverrides = difficultyGlobals.NumNearbyPlayersDmgByRankPCZ;
+            else
+                rankOverrides = difficultyGlobals.NumNearbyPlayersDmgByRank;
+
+            if (rankOverrides.HasValue())
+            {
+                foreach (NumNearbyPlayersDmgByRankPrototype rankEntry in rankOverrides)
+                {
+                    if (rankEntry.Rank != targetRank)
+                        continue;
+
+                    curveRef = isPlayerDamage ? rankEntry.PlayerToMobCurve : rankEntry.MobToPlayerCurve;
+                }
+            }
+
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(1f, "GetNumNearbyPlayersDamageMultiplier(): curve == null");
+
+            int numNearbyPlayers = Power.ComputeNearbyPlayers(_region, targetPosition);
+            int index = Math.Clamp(numNearbyPlayers, curve.MinPosition, curve.MaxPosition);
+            return curve.GetAt(index);
         }
 
         private void BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
