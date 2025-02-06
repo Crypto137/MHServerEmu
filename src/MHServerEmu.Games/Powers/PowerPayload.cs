@@ -5,6 +5,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
@@ -141,6 +142,13 @@ namespace MHServerEmu.Games.Powers
             AssetId powerAssetRef = PowerPrototype.GetUnrealClass(creatorEntityAssetRefBase, creatorEntityAssetRefCurrent);
             if (powerAssetRef != PowerPrototype.PowerUnrealClass)
                 PowerAssetRefOverride = powerAssetRef;
+
+            // Rank for difficulty scaling (prioritize creator rank)
+            PrototypeId rankProtoRef = powerOwner.Properties[PropertyEnum.CreatorRank];
+            if (rankProtoRef == PrototypeId.Invalid)
+                rankProtoRef = powerOwner.Properties[PropertyEnum.Rank];
+
+            Properties[PropertyEnum.Rank] = rankProtoRef;
 
             // Snapshot additional properties to recalculate initial damage for enemy DCL scaling
             if (IsPlayerPayload == false)
@@ -830,9 +838,12 @@ namespace MHServerEmu.Games.Powers
             target.TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedPriorResist, results, healthDelta);
 
             // Apply other modifiers
+            float difficultyMult = 1f;
+            CalculateResultDamageDifficultyScaling(results, target, ref difficultyMult);
+
             CalculateResultDamageMetaGameModifier(results, target);
 
-            CalculateResultDamageLevelScaling(results, target);
+            CalculateResultDamageLevelScaling(results, target, difficultyMult);
 
             // Flag as NoDamage if we don't have damage and this isn't a DoT (this will make the client display 0)
             if (results.TestFlag(PowerResultFlags.OverTime) == false)
@@ -857,17 +868,49 @@ namespace MHServerEmu.Games.Powers
 
             // Store damage values in a temporary span so that we don't modify the results' collection while iterating
             // Remove this if our future optimized implementation does not require this.
-            Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
-
-            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
-            {
-                Property.FromParam(PropertyEnum.Damage, 0, out int damageType);
-                if (damageType < (int)DamageType.NumDamageTypes)
-                    damage[damageType] = kvp.Value;
-            }
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            GetDamageValues(results.Properties, damageValues);
 
             for (int i = 0; i < (int)DamageType.NumDamageTypes; i++)
-                results.Properties[PropertyEnum.Damage, i] = damage[i] * critDamageMult;
+            {
+                float damage = damageValues[i];
+                if (damage > 0f)
+                    results.Properties[PropertyEnum.Damage, i] = damageValues[i] * critDamageMult;
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, ref float difficultyMult)
+        {
+            // Do not apply difficulty scaling to player vs player or mob vs mob damage
+            if (target.CanBePlayerOwned() == IsPlayerPayload)
+                return true;
+
+            TuningTable tuningTable = target.Region?.TuningTable;
+            if (tuningTable == null) return Logger.WarnReturn(false, "CalculateResultDamageDifficultyScaling(): tuningTable == null");
+
+            // Scaling differs based on the rank of the target
+            RankPrototype rankProto = IsPlayerPayload
+                ? target.GetRankPrototype()
+                : GameDatabase.GetPrototype<RankPrototype>(Properties[PropertyEnum.Rank]);
+            if (rankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageDifficultyScaling(): rankProto == null");
+
+            difficultyMult = tuningTable.GetDamageMultiplier(IsPlayerPayload, rankProto.Rank, target.RegionLocation.Position);
+            if (difficultyMult == 1f)
+                return true;
+
+            Logger.Debug($"CalculateResultDamageDifficultyScaling(): difficultyMult = {difficultyMult}");
+
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            GetDamageValues(results.Properties, damageValues);
+
+            for (int i = 0; i < damageValues.Length; i++)
+            {
+                float damage = damageValues[i];
+                if (damage > 0f)
+                    results.Properties[PropertyEnum.Damage, (DamageType)i] = damage * difficultyMult;
+            }
 
             return true;
         }
@@ -897,30 +940,39 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool CalculateResultDamageLevelScaling(PowerResults results, WorldEntity target)
+        private bool CalculateResultDamageLevelScaling(PowerResults results, WorldEntity target, float difficultyMult)
         {
-            // Apply player->enemy damage scaling
+            // Calculate player->mob damage scaling
             float levelScalingMult = 1f;
-            if (CombatLevel != target.CombatLevel && IsPlayerPayload && target.CanBePlayerOwned() == false)
+            bool isPlayerToMob = IsPlayerPayload && target.CanBePlayerOwned() == false;
+
+            if (CombatLevel != target.CombatLevel && isPlayerToMob)
             {
                 long unscaledTargetHealthMax = target.Properties[PropertyEnum.HealthMax];
                 long scaledTargetHealthMax = CalculateTargetHealthMaxForCombatLevel(target, CombatLevel);
                 levelScalingMult = MathHelper.Ratio(unscaledTargetHealthMax, scaledTargetHealthMax);
             }
 
-            Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
-            int i = 0;
-            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
-                damage[i++] = kvp.Value;
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            GetDamageValues(results.Properties, damageValues);
 
             for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
             {
-                if (levelScalingMult != 1f)
-                    results.Properties[PropertyEnum.Damage, damageType] = damage[(int)damageType] * levelScalingMult;
+                // NOTE: Damage numbers sent to the client are faked to make it seem like
+                // mob health changes due to difficulty / level scaling, but it is actually
+                // player damage getting reduced.
 
-                // Show unscaled damage numbers to the client
-                // TODO: Hide region difficulty multipliers using this as well
-                results.SetDamageForClient(damageType, damage[(int)damageType]);
+                float damage = damageValues[(int)damageType];
+
+                // Apply player->mob damage scaling
+                if (levelScalingMult != 1f)
+                    results.Properties[PropertyEnum.Damage, damageType] = damage * levelScalingMult;
+
+                // Hide the difficulty multiplier
+                damage /= difficultyMult;
+
+                // Set fake client damage
+                results.SetDamageForClient(damageType, damage);
             }
 
             return true;
@@ -1540,6 +1592,22 @@ namespace MHServerEmu.Games.Powers
         private bool HasKeyword(KeywordPrototype keywordProto)
         {
             return keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto);
+        }
+
+        /// <summary>
+        /// Retrieves damage values from a <see cref="PropertyCollection"/> and writes them to the provided <see cref="Span{T}"/>.
+        /// </summary>
+        private static void GetDamageValues(PropertyCollection properties, Span<float> damage)
+        {
+            damage.Clear();
+            foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                Property.FromParam(kvp.Key, 0, out int damageType);
+                if (damageType >= damage.Length)
+                    continue;
+
+                damage[damageType] = kvp.Value;
+            }
         }
 
         /// <summary>

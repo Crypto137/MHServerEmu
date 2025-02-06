@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -143,6 +144,20 @@ namespace MHServerEmu.Games.Common
 
             int difficultyIndex = Math.Clamp(DifficultyIndex, modifierCurve.MinPosition, modifierCurve.MaxPosition);
             return modifierCurve.GetAt(difficultyIndex);
+        }
+
+        /// <summary>
+        /// Returns a damage multiplier based on the current difficulty and the number of nearby players.
+        /// </summary>
+        public float GetDamageMultiplier(bool isPlayerDamage, Rank targetRank, Vector3 targetPosition)
+        {
+            // TODO
+
+            // Return something just for testing
+            if (isPlayerDamage)
+                return _tuningProto.TuningDamagePlayerToMobDCL;
+            else
+                return _tuningProto.TuningDamageMobToPlayerDCL;
         }
 
         private void BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
