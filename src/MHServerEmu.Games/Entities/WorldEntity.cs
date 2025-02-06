@@ -1362,8 +1362,6 @@ namespace MHServerEmu.Games.Entities
 
                 if (assignPowers)
                 {
-                    Logger.Trace($"UpdateProcEffectPowers(): Assigning {kvp.Key}");
-
                     PowerIndexProperties indexProps = new(0, caster.CharacterLevel, caster.CombatLevel);
                     PrototypeId triggeringPowerRef = properties[PropertyEnum.TriggeringPowerRef, procPowerProtoRef];
 
@@ -1375,7 +1373,6 @@ namespace MHServerEmu.Games.Entities
                 }
                 else
                 {
-                    Logger.Trace($"UpdateProcEffectPowers(): Unassigning {kvp.Key}");
                     UnassignPower(procPowerProtoRef);
                 }
 

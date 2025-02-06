@@ -87,8 +87,6 @@ namespace MHServerEmu.Games.Properties
             if (IsTicking())
                 return Logger.WarnReturn(false, $"Start(): Ticker [{this}] is already ticking");
 
-            Logger.Debug($"Start(): [{this}]");
-
             // A condition's duration does not run out when it is paused, so we get infinite ticks
             _tickingStartTime = _game.CurrentTime;
             _duration = Clock.Max(duration, TimeSpan.Zero);
@@ -107,8 +105,6 @@ namespace MHServerEmu.Games.Properties
             if (IsTicking() == false)
                 return Logger.WarnReturn(false, $"Stop(): Ticker [{this}] is not ticking");
 
-            Logger.Debug($"Stop(): [{this}]");
-
             _tickingStartTime = TimeSpan.Zero;
             CancelScheduledTick();
 
@@ -120,8 +116,6 @@ namespace MHServerEmu.Games.Properties
 
         public void Update(TimeSpan duration, bool isPaused)
         {
-            Logger.Debug($"Update(): [{this}]");
-
             // A condition's duration does not run out when it is paused, so we get infinite ticks
             _duration = duration;
             _remainingTicks = isPaused ? InfiniteTicks : CalculateRemainingTicks(true);
@@ -155,8 +149,6 @@ namespace MHServerEmu.Games.Properties
 
         private void Tick(bool finishTicking)
         {
-            //Logger.Debug($"Tick(): [{this}] (remaining={_remainingTicks})");
-
             WorldEntity target = _game.EntityManager.GetEntity<WorldEntity>(_targetId);
             if (target == null)
                 return;
