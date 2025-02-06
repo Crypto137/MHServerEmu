@@ -39,7 +39,7 @@ namespace MHServerEmu.Core.Config
                 if (_configContainerDict.TryGetValue(typeof(T), out ConfigContainer container) == false)
                 {
                     container = new T();
-                    container.Initialize(_iniFile);
+                    container.Initialize(_iniFile, _overrideFile);
                     _configContainerDict.Add(typeof(T), container);
                 }
 
