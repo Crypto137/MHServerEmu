@@ -1,6 +1,8 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -253,10 +255,35 @@ namespace MHServerEmu.Games.Common
             return curve.GetAt(index);
         }
 
-        private void BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
+        private bool BroadcastChange(int oldDifficultyIndex, int newDifficultyIndex)
         {
-            // TODO
-            Logger.Debug($"BroadcastChange(): [{_region}] - {oldDifficultyIndex} => {newDifficultyIndex}");
+            if (oldDifficultyIndex == newDifficultyIndex) return Logger.WarnReturn(false, "BroadcastChange(): oldDifficultyIndex == newDifficultyIndex");
+
+            // TODO: Review this when we have a proper chat system
+            LocaleStringId messageStringId = LocaleStringId.Invalid;
+            if (newDifficultyIndex > oldDifficultyIndex)
+                messageStringId = GameDatabase.PopulationGlobalsPrototype.MessageEnemiesGrowStronger;
+            else if (newDifficultyIndex < oldDifficultyIndex)
+                messageStringId = GameDatabase.PopulationGlobalsPrototype.MessageEnemiesGrowWeaker;
+
+            NetMessageChatFromGameSystem chatMessage = null;
+            if (messageStringId != LocaleStringId.Invalid)
+            {
+                chatMessage = NetMessageChatFromGameSystem.CreateBuilder()
+                    .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
+                    .SetMessageStringId((ulong)messageStringId)
+                    .Build();
+            }
+
+            foreach (Player player in new PlayerIterator(_region))
+            {
+                if (chatMessage != null)
+                    player.SendMessage(chatMessage);
+
+                player.SendRegionDifficultyChange(newDifficultyIndex);
+            }
+
+            return true;
         }
     }
 }
