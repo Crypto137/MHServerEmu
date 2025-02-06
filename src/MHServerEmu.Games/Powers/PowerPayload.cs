@@ -834,6 +834,16 @@ namespace MHServerEmu.Games.Powers
 
             CalculateResultDamageLevelScaling(results, target);
 
+            // Flag as NoDamage if we don't have damage and this isn't a DoT (this will make the client display 0)
+            if (results.TestFlag(PowerResultFlags.OverTime) == false)
+            {
+                bool hasResultDamage = false;
+                foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+                    hasResultDamage |= MathHelper.RoundToInt(kvp.Value) > 0;
+
+                results.SetFlag(PowerResultFlags.NoDamage, hasResultDamage == false);
+            }
+
             return true;
         }
 
