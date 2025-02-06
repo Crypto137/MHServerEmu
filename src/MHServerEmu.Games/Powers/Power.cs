@@ -3388,6 +3388,18 @@ namespace MHServerEmu.Games.Powers
             return critDamageMult + critDamageRatingBonus;
         }
 
+        public static float GetBlockChance(PowerPrototype powerProto, PropertyCollection attackerProperties, PropertyCollection targetProperties, ulong attackerId)
+        {
+            // TODO
+            return 0f;
+        }
+
+        public static float GetDodgeChance(PowerPrototype powerProto, PropertyCollection attackerProperties, PropertyCollection targetProperties, ulong attackerId)
+        {
+            // TODO
+            return 0f;
+        }
+
         #endregion
 
         #region Payload

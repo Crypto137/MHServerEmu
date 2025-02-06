@@ -3088,7 +3088,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 if (entity is WorldEntity worldEntity)
                 {
                     float defenseRating = worldEntity.GetDefenseRating(getDamageReductionPctProto.VsDamageType);
-                    evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity, null));
+                    evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity.Properties, null));
                 }
 
             return evalVar;

@@ -2233,12 +2233,43 @@ namespace MHServerEmu.Games.Entities
 
         public float GetDefenseRating(DamageType damageType)
         {
-            throw new NotImplementedException();
+            float defense = Properties[PropertyEnum.Defense, damageType];
+            float defenseMult = 1f + Properties[PropertyEnum.DefenseChangePercent, damageType];
+
+            if (damageType != DamageType.Any)
+            {
+                defense += Properties[PropertyEnum.Defense, DamageType.Any];
+                defenseMult += Properties[PropertyEnum.DefenseChangePercent, DamageType.Any];
+            }
+
+            return Math.Max(0f, defense * defenseMult);
         }
 
-        public float GetDamageReductionPct(float defenseRating, WorldEntity worldEntity, PowerPrototype powerProto)
+        public float GetDamageReductionPct(float defenseRating, PropertyCollection attackerProperties, PowerPrototype powerProto)
         {
-            throw new NotImplementedException();
+            EvalPrototype evalProto = GameDatabase.CombatGlobalsPrototype.EvalDamageReduction;
+            if (evalProto == null) return Logger.WarnReturn(0f, "GetDamageReductionPct(): evalProto == null");
+
+            return GetDamageReductionPct(Properties, evalProto, defenseRating, attackerProperties, powerProto);
+        }
+
+        private static float GetDamageReductionPct(PropertyCollection targetProperties, EvalPrototype evalProto, float defenseRating,
+            PropertyCollection attackerProperties, PowerPrototype powerProto)
+        {
+            // Block / dodge chances also provide damage reduction
+            float blockChance = Power.GetBlockChance(powerProto, attackerProperties, targetProperties, InvalidId);
+            float dodgeChance = Power.GetDodgeChance(powerProto, attackerProperties, targetProperties, InvalidId);
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, targetProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, attackerProperties);
+            evalContext.SetVar_Float(EvalContext.Var1, defenseRating);
+
+            // Block / dodge chances need to be rounded to int
+            evalContext.SetVar_Int(EvalContext.Var2, MathHelper.RoundToInt(blockChance * 100f));
+            evalContext.SetVar_Int(EvalContext.Var3, MathHelper.RoundToInt(dodgeChance * 100f));
+
+            return Eval.RunFloat(evalProto, evalContext);
         }
 
         public float GetDamageRating(DamageType damageType = DamageType.Any)
