@@ -39,6 +39,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<RecheckContinuousPowerEvent> _recheckContinuousPowerEvent = new();
         private readonly EventPointer<DelayedPowerActivationEvent> _delayedPowerActivationEvent = new();
         private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
+        private readonly EventPointer<RefreshStatsPowersEvent> _refreshStatsPowerEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -120,30 +121,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
             Properties[PropertyEnum.CombatLevel] = CharacterLevel;
-
-            // Stats
-            foreach (PrototypeId entryId in avatarProto.StatProgressionTable)
-            {
-                var entry = entryId.As<StatProgressionEntryPrototype>();
-
-                if (entry.DurabilityValue > 0)
-                    Properties[PropertyEnum.StatDurability] = entry.DurabilityValue;
-
-                if (entry.StrengthValue > 0)
-                    Properties[PropertyEnum.StatStrength] = entry.StrengthValue;
-
-                if (entry.FightingSkillsValue > 0)
-                    Properties[PropertyEnum.StatFightingSkills] = entry.FightingSkillsValue;
-
-                if (entry.SpeedValue > 0)
-                    Properties[PropertyEnum.StatSpeed] = entry.SpeedValue;
-
-                if (entry.EnergyProjectionValue > 0)
-                    Properties[PropertyEnum.StatEnergyProjection] = entry.EnergyProjectionValue;
-
-                if (entry.IntelligenceValue > 0)
-                    Properties[PropertyEnum.StatIntelligence] = entry.IntelligenceValue;
-            }
 
             // REMOVEME
             // Unlock all stealable powers for Rogue
@@ -1252,6 +1229,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             AssignPower(GameDatabase.GlobalsPrototype.PetTechVacuumPower, indexProps);
             AssignPower(avatarPrototype.ResurrectOtherEntityPower, indexProps);
             AssignPower(avatarPrototype.StatsPower, indexProps);
+            ScheduleStatsPowerRefresh();
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
             // Initialize resources (TODO: Separate InitializePowers() into multiple methods and move this out of here)
@@ -1582,6 +1560,31 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 player.SendMessage(activatePowerFailedMessage);
             }
+
+            return true;
+        }
+
+        private void ScheduleStatsPowerRefresh()
+        {
+            EventScheduler scheduler = Game.GameEventScheduler;
+            scheduler.CancelEvent(_refreshStatsPowerEvent);
+            ScheduleEntityEvent(_refreshStatsPowerEvent, TimeSpan.Zero);
+        }
+
+        private bool RefreshStatsPower()
+        {
+            if (IsInWorld == false)
+                return false;
+
+            Power statsPower = GetPower(AvatarPrototype.StatsPower);
+            if (statsPower == null) return Logger.WarnReturn(false, "RefreshStatsPower(): statsPower == null");
+
+            // Reactivate the stats power to force it to recalculate the condition it applies
+            statsPower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
+
+            Vector3 position = RegionLocation.Position;
+            PowerActivationSettings settings = new(Id, position, position);
+            ActivatePower(statsPower, ref settings);
 
             return true;
         }
@@ -1952,6 +1955,31 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             AvatarPrototype avatarProto = AvatarPrototype;
             if (avatarProto == null) return Logger.WarnReturn(false, "OnLevelUp(): avatarProto == null");
+
+            // Check stat changes (this code also runs to initialize stats in ApplyInitialReplicationState())
+            bool statsChanged = false;
+            if (avatarProto.StatProgressionTable.HasValue())
+            {
+                foreach (PrototypeId statProgressionEntryProtoRef in avatarProto.StatProgressionTable)
+                {
+                    StatProgressionEntryPrototype statProgressionEntryProto = statProgressionEntryProtoRef.As<StatProgressionEntryPrototype>();
+                    if (statProgressionEntryProto == null)
+                    {
+                        Logger.Warn("OnLevelUp(): statProgressionEntryProto == null");
+                        continue;
+                    }
+
+                    if (newLevel < statProgressionEntryProto.Level)
+                        continue;
+
+                    statsChanged |= statProgressionEntryProto.TryUpdateStats(Properties);
+                }
+            }
+
+            // Stat refreshes are scheduled on stat changes, but even if our stats didn't change,
+            // we still need to refresh here, because some stats use avatar level in their formulas.
+            if (statsChanged == false)
+                ScheduleStatsPowerRefresh();
 
             // Notify clients
             SendLevelUpMessage();
@@ -2900,6 +2928,29 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case PropertyEnum.SecondaryResourceMaxPipsChg:
                     Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + newValue;
                     break;
+
+                case PropertyEnum.StatAllModifier:
+                case PropertyEnum.StatDurability:
+                case PropertyEnum.StatDurabilityDmgPctPerPoint:
+                case PropertyEnum.StatDurabilityModifier:
+                case PropertyEnum.StatStrength:
+                case PropertyEnum.StatStrengthDmgPctPerPoint:
+                case PropertyEnum.StatStrengthModifier:
+                case PropertyEnum.StatFightingSkills:
+                case PropertyEnum.StatFightingSkillsDmgPctPerPoint:
+                case PropertyEnum.StatFightingSkillsModifier:
+                case PropertyEnum.StatSpeed:
+                case PropertyEnum.StatSpeedDmgPctPerPoint:
+                case PropertyEnum.StatSpeedModifier:
+                case PropertyEnum.StatEnergyProjection:
+                case PropertyEnum.StatEnergyDmgPctPerPoint:
+                case PropertyEnum.StatEnergyProjectionModifier:
+                case PropertyEnum.StatIntelligence:
+                case PropertyEnum.StatIntelligenceDmgPctPerPoint:
+                case PropertyEnum.StatIntelligenceModifier:
+                    if (IsInWorld)
+                        ScheduleStatsPowerRefresh();
+                    break;
             }
         }
 
@@ -3069,6 +3120,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
+
+            // Cancel events
+            EventScheduler scheduler = Game.GameEventScheduler;
+            scheduler.CancelEvent(_refreshStatsPowerEvent);
         }
 
         public TimeSpan TimePlayed()
@@ -3145,6 +3200,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class AvatarEnteredRegionEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).AvatarEnteredRegion();
+        }
+
+        private class RefreshStatsPowersEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).RefreshStatsPower();
         }
 
         private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>

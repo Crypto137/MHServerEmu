@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -379,6 +380,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int IntelligenceValue { get; protected set; }
         public int SpeedValue { get; protected set; }
         public int StrengthValue { get; protected set; }
+
+        //---
+
+        public bool TryUpdateStats(PropertyCollection properties)
+        {
+            bool TryUpdateStatHelper(PropertyEnum statProperty, int statValue)
+            {
+                if (statValue > 0 && properties[statProperty] != statValue)
+                {
+                    properties[statProperty] = statValue;
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool statsChanged = false;
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatDurability, DurabilityValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatStrength, StrengthValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatFightingSkills, FightingSkillsValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatSpeed, SpeedValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatEnergyProjection, EnergyProjectionValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatIntelligence, IntelligenceValue);
+            return statsChanged;
+        }
     }
 
     public class PowerProgressionEntryPrototype : ProgressionEntryPrototype
