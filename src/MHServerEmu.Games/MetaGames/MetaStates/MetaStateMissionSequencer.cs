@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             
             ActivateMission(missionRef);
 
-            var spawnEvent = MetaGame.GetSpawnEvent(PrototypeDataRef);
+            var spawnEvent = MetaGame.GetSpawnEvent(missionRef);
             if (spawnEvent == null) return;
 
             var spawnLocation = new SpawnLocation(region, _proto.PopulationAreaRestriction, null);

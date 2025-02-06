@@ -29,7 +29,16 @@ namespace MHServerEmu.Core.Helpers
         /// </summary>
         public static T DeserializeJson<T>(string path, JsonSerializerOptions options = null)
         {
-            return JsonSerializer.Deserialize<T>(File.ReadAllText(path), options);
+            try
+            {
+                string json = File.ReadAllText(path);
+                T data = JsonSerializer.Deserialize<T>(json, options);
+                return data;
+            }
+            catch
+            {
+                return Logger.WarnReturn<T>(default, $"DeserializeJson(): Failed to deserialize {path} as {typeof(T).Name}");
+            }
         }
 
         /// <summary>

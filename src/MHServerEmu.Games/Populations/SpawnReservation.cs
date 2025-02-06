@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common.SpatialPartitions;
 using MHServerEmu.Games.GameData;
@@ -14,13 +15,14 @@ namespace MHServerEmu.Games.Populations
     public enum MarkerState
     {
         Free,
+        Pending,
         Reserved
     }
 
     public class SpawnReservation
     {
         private SpawnMarkerRegistry _registry;
-
+        public static readonly Logger Logger = LogManager.CreateLogger();
         public MarkerType Type { get; private set; }
         public int Id { get; private set; }
         public Cell Cell { get; private set; }
@@ -37,7 +39,6 @@ namespace MHServerEmu.Games.Populations
         public int BlackOutZones { get; set; }
         public bool Simulated { get; set; }
         public TimeSpan LastFreeTime { get; set; }
-        public TimeSpan RespawnDelay { get; set; }
 
         public SpawnReservation(SpawnMarkerRegistry registry, PrototypeId markerRef, MarkerType type, Vector3 position, Orientation rotation, Cell cell, int id)
         {
@@ -50,8 +51,7 @@ namespace MHServerEmu.Games.Populations
             Cell = cell;
             Id = id;
             SpatialPartitionLocation = new(this);
-            LastFreeTime = cell.Game.CurrentTime;
-            RespawnDelay = TimeSpan.Zero;
+            LastFreeTime = TimeSpan.Zero;
             CalculateRegionInfo();
         }
 
@@ -85,6 +85,20 @@ namespace MHServerEmu.Games.Populations
         public int GetPid()
         {
             return (int)Cell.Id * 1000 + Id;
+        }
+
+        public void ResetReservation(bool updateTime)
+        {
+            if (PopulationManager.DebugMarker(MarkerRef)) Logger.Debug($"ResetReservation {MarkerRef.GetNameFormatted()} [{updateTime}]");
+
+            State = MarkerState.Free;
+            if (updateTime) LastFreeTime = Game.Current.CurrentTime;
+
+            var region = Cell?.Region;
+            if (region == null || region.TestStatus(RegionStatus.Shutdown)) return;
+
+            var manager = region?.PopulationManager;
+            manager?.MarkerSchedule(MarkerRef);
         }
     }
 

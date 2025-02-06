@@ -28,11 +28,18 @@ namespace MHServerEmu.Games.Populations
         public Vector3? Position;
         public SpawnHeat SpawnHeat;
         public bool IsMarker;
+        public bool IsMissionMarker;
         public ulong SpawnGroupId;
         public bool SpawnCleanup;
         public bool RemoveOnSpawnFail;
         public SpawnEvent SpawnEvent;
         public SpawnScheduler Scheduler;
+        public SpawnReservation MarkerReservation;
+
+        public void ResetMarker()
+        {
+            MarkerReservation?.ResetReservation(false);
+        }
 
         public bool SpawnByMarker(List<WorldEntity> entities)
         {
@@ -63,9 +70,14 @@ namespace MHServerEmu.Games.Populations
             return SpawnObject(spawnTarget, new());
         }
 
-        public bool SpawnObject(SpawnTarget spawnTarget, List<WorldEntity> entities)
+        public void CleanUpSpawnFlags()
         {
             if (SpawnCleanup) SpawnFlags |= SpawnFlags.Cleanup;
+        }
+
+        public bool SpawnObject(SpawnTarget spawnTarget, List<WorldEntity> entities)
+        {
+            CleanUpSpawnFlags();
             ClusterGroup clusterGroup = new(spawnTarget.Region, Random, Object, null, Properties, SpawnFlags);
             clusterGroup.Initialize();
 
@@ -73,7 +85,16 @@ namespace MHServerEmu.Games.Populations
             {
                 Region region = spawnTarget.Region;
                 SpawnMarkerRegistry registry = region.SpawnMarkerRegistry;
-                SpawnReservation reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation, clusterGroup.SpawnFlags);
+
+                SpawnReservation reservation = MarkerReservation;
+                if (reservation != null)
+                    reservation.State = MarkerState.Reserved;
+                else
+                {
+                    int respawnDelayMS = SpawnEvent != null ? SpawnEvent.RespawnDelayMS : 0;
+                    reservation = registry.ReserveFreeReservation(MarkerRef, Random, SpawnLocation, clusterGroup.SpawnFlags, respawnDelayMS);
+                }
+
                 if (reservation != null)
                 {
                     reservation.Object = Object;
@@ -96,6 +117,8 @@ namespace MHServerEmu.Games.Populations
 
             if (success && SpawnEvent != null)
                 SpawnEvent.SetSpawnData(SpawnGroupId, entities);
+
+            if (PopulationManager.DebugMarker(MarkerRef)) Logger.Warn($"SpawnObject {MarkerRef.GetNameFormatted()}");
 
             return success;
         }

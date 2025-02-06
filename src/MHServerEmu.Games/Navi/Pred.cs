@@ -29,43 +29,51 @@ namespace MHServerEmu.Games.Navi
 
         public static bool SortInputs<T>(ref T input0, ref T input1, ref T input2) where T : IComparable<T>
         {
-            int i0, i1, i2;
-            bool flip;
+            // return flip
 
             if (input0.CompareTo(input1) < 0)
             {
                 if (input2.CompareTo(input0) < 0)
                 {
-                    i0 = 2; i1 = 0; i2 = 1; flip = false;
+                    // 1 2 0
+                    (input0, input2) = (input2, input0);
+                    (input1, input2) = (input2, input1);
+                    return false;
                 }
                 else if (input2.CompareTo(input1) < 0)
                 {
-                    i0 = 0; i1 = 2; i2 = 1; flip = true;
+                    // 0 2 1
+                    (input1, input2) = (input2, input1);
+                    return true;
                 }
                 else
+                {
+                    // 0 1 2
                     return false;
+                }
             }
             else
             {
                 if (input2.CompareTo(input1) < 0)
                 {
-                    i0 = 2; i1 = 1; i2 = 0; flip = true;
+                    // 2 1 0
+                    (input0, input2) = (input2, input0);
+                    return true;
                 }
                 else if (input2.CompareTo(input0) < 0)
                 {
-                    i0 = 1; i1 = 2; i2 = 0; flip = false;
+                    // 2 0 1
+                    (input0, input1) = (input1, input0);
+                    (input1, input2) = (input2, input1);
+                    return false;
                 }
                 else
                 {
-                    i0 = 1; i1 = 0; i2 = 2; flip = true;
+                    // 1 0 2
+                    (input0, input1) = (input1, input0);
+                    return true;
                 }
             }
-
-            T[] inputs = { input0, input1, input2 };
-            input0 = inputs[i0];
-            input1 = inputs[i1];
-            input2 = inputs[i2];
-            return flip;
         }
 
         public static double LineRelationship2D(NaviPoint p0, NaviPoint p1, Vector3 pos)

@@ -3,6 +3,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -821,8 +822,8 @@ namespace MHServerEmu.Games.Populations
             var min = bound.Min;
             var max = bound.Max;
             var center = bound.Center;
-            float clusterSize = Radius;
-            List<Point2> points = new();
+            float clusterSize = Math.Max(Radius, 32.0f);
+            List<Point2> points = ListPool<Point2>.Instance.Get();
 
             for (float x = min.X; x < max.X; x += clusterSize)
                 for (float y = min.Y; y < max.Y; y += clusterSize)
@@ -830,16 +831,22 @@ namespace MHServerEmu.Games.Populations
 
             Random.ShuffleList(points);
             int tries = Math.Min(points.Count, 256);
+            bool success = false;
 
             for (int i = 0; i < tries; i++)
             {
                 var point = points[i];
                 Vector3 testPosition = new(point.X, point.Y, center.Z);
                 Orientation orientation = Orientation.Player;
-                if (SetParentRelative(testPosition, orientation)) return true;
+                if (SetParentRelative(testPosition, orientation))
+                {
+                    success = true;
+                    break;
+                }
             }
 
-            return false;
+            ListPool<Point2>.Instance.Return(points);
+            return success;
         }
 
         private void SetParentRandomOrientation(Orientation orientation)

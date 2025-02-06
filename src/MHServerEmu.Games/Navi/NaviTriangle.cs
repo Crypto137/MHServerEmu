@@ -23,8 +23,9 @@ namespace MHServerEmu.Games.Navi
         public byte EdgeSideFlags { get; private set; }
         public NaviTriangleFlags Flags { get; private set; }
         public PathFlags PathingFlags { get; set; }
-        public ContentFlagCounts ContentFlagCounts { get; set; }
         public InvasiveListNode<NaviTriangle> InvasiveListNode { get; private set; }
+
+        public ContentFlagCounts ContentFlagCounts;     // ContentFlagCounts needs to be a field for Clear() calls
 
         public NaviTriangle(NaviEdge e0, NaviEdge e1, NaviEdge e2)
         {
@@ -32,7 +33,6 @@ namespace MHServerEmu.Games.Navi
             Edges[0] = e0;
             Edges[1] = e1;
             Edges[2] = e2;
-            ContentFlagCounts = new();
             InvasiveListNode = new();
             UpdateEdgeSideFlags();
             Attach();
@@ -349,14 +349,14 @@ namespace MHServerEmu.Games.Navi
         {
             Flags = triangle.Flags & NaviTriangleFlags.Markup;
             PathingFlags = triangle.PathingFlags;
-            ContentFlagCounts = new(triangle.ContentFlagCounts);
+            ContentFlagCounts = triangle.ContentFlagCounts;
         }
 
         public void RestoreState(NaviTriangle triangle)
         {
             triangle.SetFlag(Flags);
             triangle.PathingFlags = PathingFlags;
-            triangle.ContentFlagCounts.Set(ContentFlagCounts);
+            triangle.ContentFlagCounts = ContentFlagCounts;
         }
     }
 }

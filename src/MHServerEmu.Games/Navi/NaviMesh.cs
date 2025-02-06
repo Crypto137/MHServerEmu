@@ -57,6 +57,11 @@ namespace MHServerEmu.Games.Navi
             _modifyMeshPatchesProjZ = new();
         }
 
+        public override string ToString()
+        {
+            return $"region={_region}";
+        }
+
         public void Initialize(in Aabb bounds, float padding, Region region)
         {
             Release();
@@ -241,10 +246,10 @@ namespace MHServerEmu.Games.Navi
             };
             stateStack.Push(state);
 
-            NaviContentFlags contentFlags = ContentFlagCounts.ToContentFlags(state.FlagCounts);
+            NaviContentFlags contentFlags = state.FlagCounts.ToContentFlags();
             PathFlags pathFlags = ContentFlags.ToPathFlags(contentFlags);
 
-            triangle.ContentFlagCounts.Set(state.FlagCounts);
+            triangle.ContentFlagCounts = state.FlagCounts;
             triangle.PathingFlags = pathFlags;
             triangle.SetFlag(NaviTriangleFlags.Markup);
 
@@ -279,10 +284,10 @@ namespace MHServerEmu.Games.Navi
                             }
                         }
 
-                        contentFlags = ContentFlagCounts.ToContentFlags(stateOppo.FlagCounts);
+                        contentFlags = stateOppo.FlagCounts.ToContentFlags();
                         pathFlags = ContentFlags.ToPathFlags(contentFlags);
 
-                        opposedTriangle.ContentFlagCounts.Set(stateOppo.FlagCounts);
+                        opposedTriangle.ContentFlagCounts = stateOppo.FlagCounts;
                         opposedTriangle.PathingFlags = pathFlags;
                         opposedTriangle.SetFlag(NaviTriangleFlags.Markup);
                         stateStack.Push(stateOppo);
@@ -291,8 +296,8 @@ namespace MHServerEmu.Games.Navi
                     if (edge.TestFlag(NaviEdgeFlags.Constraint) && edge.TestFlag(NaviEdgeFlags.Door) == false)
                     {
                         bool keepEdge = false;
-                        var triFlags = triangle.ContentFlagCounts;
-                        var oppFlags = opposedTriangle.ContentFlagCounts;
+                        ref var triFlags = ref triangle.ContentFlagCounts;
+                        ref var oppFlags = ref opposedTriangle.ContentFlagCounts;
                         if ((triFlags.RemoveWalk == 0) && (oppFlags.RemoveWalk == 0))
                             keepEdge |= (triFlags.AddWalk > 0) ^ (oppFlags.AddWalk > 0);
                         else
@@ -347,8 +352,8 @@ namespace MHServerEmu.Games.Navi
                         int side = triangle.EdgeSideFlag(edgeIndex);                                                
                         edge.PathingFlags.Clear(side);
 
-                        var triFlags = triangle.ContentFlagCounts;
-                        var edgeFlags = edge.PathingFlags.ContentFlagCounts[side];
+                        ref var triFlags = ref triangle.ContentFlagCounts;
+                        ref var edgeFlags = ref edge.PathingFlags.ContentFlagCounts[side];
                         if (triFlags.RemoveWalk > 0) edgeFlags.RemoveWalk = 1;
                         else if (triFlags.AddWalk > 0) edgeFlags.AddWalk = 1;
                         if (triFlags.RemoveFly > 0) edgeFlags.RemoveFly = 1;
@@ -589,7 +594,7 @@ namespace MHServerEmu.Games.Navi
             NaviTriangle currentTriangle = NaviCdt.FindTriangleAtPoint(fromPosition);
             if (currentTriangle == null)
             {
-                Logger.Error($"Navi sweep failed to find starting triangle at point: {fromPosition} for mesh: {ToString()}");
+                Logger.Warn($"Sweep(): Navi sweep failed to find starting triangle at point: {fromPosition} for mesh: [{this}] (owner=[{owner}])");
                 resultPosition = Vector3.Zero;
                 return SweepResult.Failed;
             }
@@ -665,7 +670,7 @@ namespace MHServerEmu.Games.Navi
         private class MarkupState
         {
             public NaviTriangle Triangle { get; set; }
-            public ContentFlagCounts FlagCounts { get; set; }
+            public ContentFlagCounts FlagCounts;
 
             public MarkupState()
             {
@@ -674,7 +679,7 @@ namespace MHServerEmu.Games.Navi
             public MarkupState(MarkupState state)
             {
                 Triangle = state.Triangle;
-                FlagCounts = new(state.FlagCounts);
+                FlagCounts = state.FlagCounts;
             }
         }
     }

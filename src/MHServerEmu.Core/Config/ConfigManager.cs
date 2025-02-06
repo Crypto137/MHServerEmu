@@ -9,6 +9,7 @@ namespace MHServerEmu.Core.Config
     {
         private readonly Dictionary<Type, ConfigContainer> _configContainerDict = new();
         private readonly IniFile _iniFile;
+        private readonly IniFile _overrideFile;
 
         /// <summary>
         /// Provides access to the <see cref="ConfigManager"/> instance.
@@ -20,8 +21,12 @@ namespace MHServerEmu.Core.Config
         /// </summary>
         private ConfigManager()
         {
-            string path = Path.Combine(FileHelper.ServerRoot, "Config.ini");
-            _iniFile = new(path);
+            string configPath = Path.Combine(FileHelper.ServerRoot, "Config.ini");
+            _iniFile = new(configPath);
+
+            string overridePath = Path.Combine(FileHelper.ServerRoot, "ConfigOverride.ini");
+            if (File.Exists(overridePath))
+                _overrideFile = new(overridePath);
         }
 
         /// <summary>

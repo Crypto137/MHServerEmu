@@ -34,6 +34,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 var spawnLocation = new SpawnLocation(region, areas, _proto.RestrictToCells);
                 var time = TimeSpan.FromMilliseconds(Game.Random.Next(0, 1000));
 
+                if (MetaGame.Debug) MetaGame.Logger.Debug($"MetaStatePopulationMaintain {_proto.DataRef.GetNameFormatted()} " +
+                    $"[{_proto.RespawnDelayMS}] [{_proto.PopulationObjects.Length}]");
+
                 _spawnEvent.AddRequiredObjects(_proto.PopulationObjects, spawnLocation, PrototypeId.Invalid, true, _proto.RemovePopObjectsOnSpawnFail, time);
                 _spawnEvent.Schedule();
             }

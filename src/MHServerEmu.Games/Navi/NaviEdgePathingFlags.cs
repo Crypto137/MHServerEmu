@@ -1,4 +1,5 @@
-﻿
+﻿using System.Runtime.InteropServices;
+
 namespace MHServerEmu.Games.Navi
 {
     [Flags]
@@ -69,26 +70,22 @@ namespace MHServerEmu.Games.Navi
         public bool PathingFlagsCheck(PathFlags pathingFlags) => pathingFlags.HasFlag(PathFlags.Walk);
     }
 
-    public class ContentFlagCounts // TODO: optimize it
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ContentFlagCounts
     {
-        public int AddWalk { get; set; }
-        public int RemoveWalk { get; set; }
-        public int AddFly { get; set; }
-        public int RemoveFly { get; set; }
-        public int AddPower { get; set; }
-        public int RemovePower { get; set; }
-        public int AddSight { get; set; }
-        public int RemoveSight { get; set; }
+        public const int Count = 8;
 
-        public static int Count { get; } = 8;      
+        public int AddWalk;
+        public int RemoveWalk;
+        public int AddFly;
+        public int RemoveFly;
+        public int AddPower;
+        public int RemovePower;
+        public int AddSight;
+        public int RemoveSight;
         
         public ContentFlagCounts()
         {
-        }        
-        
-        public ContentFlagCounts(ContentFlagCounts flagCounts)
-        {
-            Set(flagCounts);
         }
 
         public uint GetHash()
@@ -123,71 +120,24 @@ namespace MHServerEmu.Games.Navi
             return hash;
         }
 
-        public int this[int index]
-        {
-            get
-            {
-                switch (index)
-                {
-                    case 0: return AddWalk;
-                    case 1: return RemoveWalk;
-                    case 2: return AddFly;
-                    case 3: return RemoveFly;
-                    case 4: return AddPower;
-                    case 5: return RemovePower;
-                    case 6: return AddSight;
-                    case 7: return RemoveSight;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
-            set
-            {
-                switch (index)
-                {
-                    case 0: AddWalk = value; break;
-                    case 1: RemoveWalk = value; break;
-                    case 2: AddFly = value; break;
-                    case 3: RemoveFly = value; break;
-                    case 4: AddPower = value; break;
-                    case 5: RemovePower = value; break;
-                    case 6: AddSight = value; break;
-                    case 7: RemoveSight = value; break;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
-        }
+        public int this[int index] { get => AsSpan()[index]; set => AsSpan()[index] = value; }
 
-        public void Set(ContentFlagCounts other)
+        public Span<int> AsSpan()
         {
-            AddWalk = other.AddWalk;
-            RemoveWalk = other.RemoveWalk;
-            AddFly = other.AddFly;
-            RemoveFly = other.RemoveFly;
-            AddPower = other.AddPower;
-            RemovePower = other.RemovePower;
-            AddSight = other.AddSight;
-            RemoveSight = other.RemoveSight;
+            // Do some MemoryMarshal hackery to represent this struct as an int span
+            return MemoryMarshal.CreateSpan(ref AddWalk, Count);
         }
 
         public void Clear()
         {
-            AddWalk = 0;
-            RemoveWalk = 0;
-            AddFly = 0;
-            RemoveFly = 0;
-            AddPower = 0;
-            RemovePower = 0;
-            AddSight = 0;
-            RemoveSight = 0;
+            AsSpan().Clear();
         }
 
-        public static NaviContentFlags ToContentFlags(ContentFlagCounts flagCounts)
+        public NaviContentFlags ToContentFlags()
         {
             NaviContentFlags contentFlags = NaviContentFlags.None;
             for (int flagIndex = 0; flagIndex < Count; flagIndex++)
-                if (flagCounts[flagIndex] > 0)
+                if (this[flagIndex] > 0)
                     contentFlags |= (NaviContentFlags)(1 << flagIndex);
             return contentFlags;
         }
@@ -223,16 +173,14 @@ namespace MHServerEmu.Games.Navi
 
     public class NaviEdgePathingFlags
     {
-        public ContentFlagCounts[] ContentFlagCounts;
+        public ContentFlagCounts[] ContentFlagCounts = new ContentFlagCounts[2];
 
         public NaviEdgePathingFlags()
         {
-            InitContentFlagCounts();
         }
 
         public NaviEdgePathingFlags(NaviContentFlags[] flags0, NaviContentFlags[] flags1)
         {
-            InitContentFlagCounts();
             NaviContentFlags flag0 = NaviContentFlags.None;
             NaviContentFlags flag1 = NaviContentFlags.None;
             foreach (var flag in flags0) flag0 |= flag;
@@ -242,19 +190,11 @@ namespace MHServerEmu.Games.Navi
 
         public NaviEdgePathingFlags(NaviEdgePathingFlags pathingFlags)
         {
-            InitContentFlagCounts();
             if (pathingFlags != null)
             {
-               ContentFlagCounts[0].Set(pathingFlags.ContentFlagCounts[0]);
-               ContentFlagCounts[1].Set(pathingFlags.ContentFlagCounts[1]);
+               ContentFlagCounts[0] = pathingFlags.ContentFlagCounts[0];
+               ContentFlagCounts[1] = pathingFlags.ContentFlagCounts[1];
             }
-        }
-
-        private void InitContentFlagCounts()
-        {
-            ContentFlagCounts = new ContentFlagCounts[2];
-            ContentFlagCounts[0] = new();
-            ContentFlagCounts[1] = new();
         }
 
         public void SetContentFlags(NaviContentFlags flag0, NaviContentFlags flag1)
@@ -279,7 +219,7 @@ namespace MHServerEmu.Games.Navi
 
         public NaviContentFlags GetContentFlagsForSide(int side)
         {
-            return Navi.ContentFlagCounts.ToContentFlags(ContentFlagCounts[side]);
+            return ContentFlagCounts[side].ToContentFlags();
         }
 
         public void Merge(NaviEdgePathingFlags other, bool flip)
