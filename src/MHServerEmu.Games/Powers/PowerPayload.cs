@@ -893,6 +893,8 @@ namespace MHServerEmu.Games.Powers
             float difficultyMult = 1f;
             CalculateResultDamageDifficultyScaling(results, target, ref difficultyMult);
 
+            CalculateResultDamageBlockModifier(results, target);
+
             CalculateResultDamageMetaGameModifier(results, target);
 
             CalculateResultDamageLevelScaling(results, target, difficultyMult);
@@ -958,11 +960,36 @@ namespace MHServerEmu.Games.Powers
             for (int i = 0; i < damageValues.Length; i++)
             {
                 float damage = damageValues[i];
-                if (damage > 0f)
-                    results.Properties[PropertyEnum.Damage, (DamageType)i] = damage * difficultyMult;
+                if (damage == 0f)
+                    continue;
+                    
+                results.Properties[PropertyEnum.Damage, (DamageType)i] = damage * difficultyMult;
             }
 
             return true;
+        }
+
+        private void CalculateResultDamageBlockModifier(PowerResults results, WorldEntity target)
+        {
+            if (results.IsBlocked == false)
+                return;
+
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            GetDamageValues(results.Properties, damageValues);
+
+            for (int i = 0; i < damageValues.Length; i++)
+            {
+                float damage = damageValues[i];
+                if (damage == 0f)
+                    continue;
+
+                float blockDamageMult = 1f;
+                blockDamageMult -= target.Properties[PropertyEnum.BlockDamageReductionPct];
+                blockDamageMult += target.Properties[PropertyEnum.BlockDamageReductionPctMod];
+                blockDamageMult = Math.Clamp(blockDamageMult, 0f, 1f);
+
+                results.Properties[PropertyEnum.Damage, (DamageType)i] = damage * blockDamageMult;
+            }
         }
 
         private bool CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)
@@ -1750,8 +1777,25 @@ namespace MHServerEmu.Games.Powers
 
         private bool CheckBlockChance(WorldEntity target)
         {
-            // TODO
-            return false;
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CheckDodgeChance(): powerProto == null");
+
+            // Some powers cannot be blocked
+            if (powerProto.CanBeBlocked == false)
+                return false;
+
+            // Cannot block powers from friendly entities
+            AlliancePrototype allianceProto = OwnerAlliance;
+            if (allianceProto == null || allianceProto.IsHostileTo(target.Alliance) == false)
+                return false;
+
+            // Check if the target is guaranteed to block
+            if (target.Properties[PropertyEnum.BlockAlways])
+                return true;
+
+            // Check block chance
+            float blockChance = Power.GetBlockChance(powerProto, Properties, target.Properties, UltimateOwnerId);
+            return Game.Random.NextFloat() < blockChance;
         }
 
         private float CalculateOverTimeValue(PropertyCollection overTimeProperties, PropertyId baseProp, PropertyId varianceProp, PropertyId magnitudeProp, float bonus = 0f)
