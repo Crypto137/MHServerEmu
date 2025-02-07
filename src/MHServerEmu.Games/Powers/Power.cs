@@ -3390,8 +3390,31 @@ namespace MHServerEmu.Games.Powers
 
         public static float GetBlockChance(PowerPrototype powerProto, PropertyCollection attackerProperties, PropertyCollection targetProperties, ulong attackerId)
         {
-            // TODO
-            return 0f;
+            float blockRatingAdd = targetProperties[PropertyEnum.BlockRatingBonusAdd];
+
+            // Add keyword bonuses for power (may be null)
+            if (powerProto != null)
+                AccumulateKeywordProperties(ref blockRatingAdd, powerProto, targetProperties, attackerProperties, PropertyEnum.BlockRatingBonusVsPowerKwd);
+            
+            // Add keyword bonuses for attacker (may be null)
+            WorldEntity attacker = Game.Current.EntityManager.GetEntity<WorldEntity>(attackerId);
+            attacker?.AccumulateKeywordProperties(PropertyEnum.BlockRatingBonusVsAttackerKwd, targetProperties, ref blockRatingAdd);
+
+            float blockRatingMult = Math.Max(1f + targetProperties[PropertyEnum.BlockRatingBonusMult], 0f);
+            float blockRating = Math.Max(blockRatingAdd * blockRatingMult, 0f);
+
+            EvalPrototype blockEvalProto = GameDatabase.CombatGlobalsPrototype.EvalBlockChanceFormula;
+            if (blockEvalProto == null) return Logger.WarnReturn(0f, "GetBlockChance(): blockEvalProto == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, targetProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, attackerProperties);
+            evalContext.SetVar_Float(EvalContext.Var1, blockRating);
+
+            if (Eval.Run(blockEvalProto, evalContext, out float blockChance) == false)
+                Logger.Warn($"GetBlockChance(): Failed to calculate block chance for power!\n Power: {powerProto}\n Caster: {attacker}\n");
+
+            return blockChance;
         }
 
         public static float GetDodgeChance(PowerPrototype powerProto, PropertyCollection attackerProperties, PropertyCollection targetProperties, ulong attackerId)
