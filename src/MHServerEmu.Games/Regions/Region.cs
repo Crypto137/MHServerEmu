@@ -857,6 +857,26 @@ namespace MHServerEmu.Games.Regions
             }
         }
 
+        public bool ContainsPvPMatch()
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (ulong metaGameId in MetaGames)
+            {
+                PvP pvp = entityManager.GetEntity<PvP>(metaGameId);
+                if (pvp == null)
+                    continue;
+
+                if (pvp.Prototype is not PvPPrototype pvpProto)
+                    continue;
+
+                if (pvpProto.IsPvP)
+                    return true;
+            }
+
+            return false;
+        }
+
         private void SetRegionLevel()
         {
             if (RegionLevel != 0) return;

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -11,10 +12,12 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -919,18 +922,7 @@ namespace MHServerEmu.Games.Powers
                 return true;
 
             float critDamageMult = Power.GetCritDamageMult(Properties, target, results.TestFlag(PowerResultFlags.SuperCritical));
-
-            // Store damage values in a temporary span so that we don't modify the results' collection while iterating
-            // Remove this if our future optimized implementation does not require this.
-            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
-            GetDamageValues(results.Properties, damageValues);
-
-            for (int i = 0; i < (int)DamageType.NumDamageTypes; i++)
-            {
-                float damage = damageValues[i];
-                if (damage > 0f)
-                    results.Properties[PropertyEnum.Damage, i] = damageValues[i] * critDamageMult;
-            }
+            ApplyDamageMultiplier(results.Properties, critDamageMult);
 
             return true;
         }
@@ -954,17 +946,26 @@ namespace MHServerEmu.Games.Powers
             if (difficultyMult == 1f)
                 return true;
 
-            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
-            GetDamageValues(results.Properties, damageValues);
+            ApplyDamageMultiplier(results.Properties, difficultyMult);
 
-            for (int i = 0; i < damageValues.Length; i++)
-            {
-                float damage = damageValues[i];
-                if (damage == 0f)
-                    continue;
-                    
-                results.Properties[PropertyEnum.Damage, (DamageType)i] = damage * difficultyMult;
-            }
+            return true;
+        }
+
+        private bool CalculateResultDamageLiveTuningModifier(PowerResults results)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageLiveTuningModifier(): powerProto == null");
+
+            Region region = Game.RegionManager.GetRegion(RegionId);
+            if (region == null) return Logger.WarnReturn(false, "CalculateResultDamageLiveTuningModifier(): region == null");
+
+            PowerTuningVar tuningVar = region.ContainsPvPMatch() ? PowerTuningVar.ePTV_PowerDamagePVP : PowerTuningVar.ePTV_PowerDamagePVE;
+            float tuningDamageMult = LiveTuningManager.GetLivePowerTuningVar(powerProto, tuningVar);
+
+            if (tuningDamageMult == 1f)
+                return true;
+
+            ApplyDamageMultiplier(results.Properties, tuningDamageMult);
 
             return true;
         }
@@ -974,22 +975,12 @@ namespace MHServerEmu.Games.Powers
             if (results.IsBlocked == false)
                 return;
 
-            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
-            GetDamageValues(results.Properties, damageValues);
+            float blockDamageMult = 1f;
+            blockDamageMult -= target.Properties[PropertyEnum.BlockDamageReductionPct];
+            blockDamageMult += target.Properties[PropertyEnum.BlockDamageReductionPctMod];
+            blockDamageMult = Math.Clamp(blockDamageMult, 0f, 1f);
 
-            for (int i = 0; i < damageValues.Length; i++)
-            {
-                float damage = damageValues[i];
-                if (damage == 0f)
-                    continue;
-
-                float blockDamageMult = 1f;
-                blockDamageMult -= target.Properties[PropertyEnum.BlockDamageReductionPct];
-                blockDamageMult += target.Properties[PropertyEnum.BlockDamageReductionPctMod];
-                blockDamageMult = Math.Clamp(blockDamageMult, 0f, 1f);
-
-                results.Properties[PropertyEnum.Damage, (DamageType)i] = damage * blockDamageMult;
-            }
+            ApplyDamageMultiplier(results.Properties, blockDamageMult);
         }
 
         private bool CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)
@@ -998,21 +989,20 @@ namespace MHServerEmu.Games.Powers
             if (damageMetaGameBossResistance == 0f)
                 return true;
 
-            float mult = 1f - damageMetaGameBossResistance;
+            float metaGameMult = 1f - damageMetaGameBossResistance;
 
             // NOTE: damageMetaGameBossResistance > 0f = damage reduction
             //       damageMetaGameBossResistance < 0f = damage increase
             if (damageMetaGameBossResistance > 0f)
             {
-                mult += Properties[PropertyEnum.DamageMetaGameBossPenetration];
-                mult = Math.Clamp(mult, 0f, 1f);
+                metaGameMult += Properties[PropertyEnum.DamageMetaGameBossPenetration];
+                metaGameMult = Math.Clamp(metaGameMult, 0f, 1f);
             }
 
-            if (mult == 1f)
+            if (metaGameMult == 1f)
                 return true;
 
-            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
-                results.Properties[PropertyEnum.Damage, damageType] *= mult;
+            ApplyDamageMultiplier(results.Properties, metaGameMult);
 
             return true;
         }
@@ -1684,6 +1674,24 @@ namespace MHServerEmu.Games.Powers
                     continue;
 
                 damage[damageType] = kvp.Value;
+            }
+        }
+
+        private static void ApplyDamageMultiplier(PropertyCollection properties, float multiplier)
+        {
+            // Store damage values in a temporary span so that we don't modify the collection while iterating
+            // Remove this if our future optimized implementation does not require this.
+            int numDamageTypes = (int)DamageType.NumDamageTypes;
+            Span<float> damageValues = stackalloc float[numDamageTypes];
+            GetDamageValues(properties, damageValues);
+
+            for (int i = 0; i < numDamageTypes; i++)
+            {
+                float damage = damageValues[i];
+                if (damage == 0f)
+                    continue;
+
+                properties[PropertyEnum.Damage, i] = damage * multiplier;
             }
         }
 
