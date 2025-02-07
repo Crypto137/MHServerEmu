@@ -183,6 +183,35 @@ namespace MHServerEmu.Games.Powers
             if (PowerPrototype is not MovementPowerPrototype movementPowerProto || movementPowerProto.ConstantMoveTime == false)
                 Properties.CopyProperty(power.Properties, PropertyEnum.MovementSpeedOverride);
 
+            // Snapshot properties from triggering power results
+            // TODO: Do we need full power results here? We should be able to get away with just the properties
+            
+            // Set proc recursion depth
+            if (powerApplication.PowerResults != null)
+            {
+                int procRecursionDepth = powerApplication.PowerResults.Properties[PropertyEnum.ProcRecursionDepth];
+                if (power.IsProcEffect())
+                    procRecursionDepth++;
+                Properties[PropertyEnum.ProcRecursionDepth] = procRecursionDepth;
+            }
+
+            // Snapshot damage for conversion (e.g. barrier primary resources)
+            if (power.Properties.HasProperty(PropertyEnum.DamageConvertToCondition))
+            {
+                if (powerApplication.PowerResults != null)
+                {
+                    foreach (var kvp in powerApplication.PowerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
+                    {
+                        Property.FromParam(kvp.Key, 0, out int damageType);
+                        Properties[PropertyEnum.DamageIncoming, damageType] = kvp.Value;
+                    }
+                }
+                else
+                {
+                    Logger.Warn("Init(): powerApplication.PowerResults == null");
+                }
+            }
+
             return true;
         }
 
