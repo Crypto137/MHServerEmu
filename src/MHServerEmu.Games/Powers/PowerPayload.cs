@@ -239,10 +239,19 @@ namespace MHServerEmu.Games.Powers
         {
             if (calculateForTarget)
             {
-                CalculateResultDamage(targetResults, target);
-                CalculateResultHealing(targetResults, target);
-                CalculateResultResourceChanges(targetResults, target);
+                // Check dodge chance (dodge is full mitigation, so don't bother calculating other stuff if dodged)
+                targetResults.SetFlag(PowerResultFlags.Dodged, CheckDodgeChance(target));
+                if (targetResults.IsDodged == false)
+                {
+                    // Block is partial mitigation, so continue the calculations even if blocked
+                    targetResults.SetFlag(PowerResultFlags.Blocked, CheckBlockChance(target));
 
+                    CalculateResultDamage(targetResults, target);
+                    CalculateResultHealing(targetResults, target);
+                    CalculateResultResourceChanges(targetResults, target);
+                }
+
+                // Dodging can still remove conditions
                 CalculateResultConditionsToRemove(targetResults, target);
             }
 
@@ -1675,6 +1684,31 @@ namespace MHServerEmu.Games.Powers
             // Calculate and check super crit chance
             float superCritChance = Power.GetSuperCritChance(PowerPrototype, Properties, target);
             return Game.Random.NextFloat() < superCritChance;
+        }
+
+        private bool CheckDodgeChance(WorldEntity target)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CheckDodgeChance(): powerProto == null");
+
+            // Some powers cannot be dodged
+            if (powerProto.CanBeDodged == false)
+                return false;
+
+            // Cannot dodge powers from friendly entities
+            AlliancePrototype allianceProto = OwnerAlliance;
+            if (allianceProto == null || allianceProto.IsHostileTo(target.Alliance) == false)
+                return false;
+
+            // Check dodge chance
+            float dodgeChance = Power.GetDodgeChance(powerProto, Properties, target.Properties, UltimateOwnerId);
+            return Game.Random.NextFloat() < dodgeChance;
+        }
+
+        private bool CheckBlockChance(WorldEntity target)
+        {
+            // TODO
+            return false;
         }
 
         private float CalculateOverTimeValue(PropertyCollection overTimeProperties, PropertyId baseProp, PropertyId varianceProp, PropertyId magnitudeProp, float bonus = 0f)
