@@ -239,14 +239,28 @@ namespace MHServerEmu.Games.Powers
         {
             if (calculateForTarget)
             {
+                // Flag for resurrection if needed
+                if (Properties[PropertyEnum.IsResurrectionPower])
+                    targetResults.SetFlag(PowerResultFlags.Resurrect, true);
+
                 // Check dodge chance (dodge is full mitigation, so don't bother calculating other stuff if dodged)
-                targetResults.SetFlag(PowerResultFlags.Dodged, CheckDodgeChance(target));
-                if (targetResults.IsDodged == false)
+                if (CheckDodgeChance(target))
+                {
+                    targetResults.SetFlag(PowerResultFlags.Dodged, true);
+                }
+                else
                 {
                     // Block is partial mitigation, so continue the calculations even if blocked
-                    targetResults.SetFlag(PowerResultFlags.Blocked, CheckBlockChance(target));
+                    if (CheckBlockChance(target))
+                        targetResults.SetFlag(PowerResultFlags.Blocked, true);
 
-                    CalculateResultDamage(targetResults, target);
+                    // Check if this is an instant kill (deals damage equal to the target's current health).
+                    // Instant kills override normal damage calculations.
+                    if (Properties[PropertyEnum.InstantKill])
+                        targetResults.SetFlag(PowerResultFlags.InstantKill, true);
+                    else
+                        CalculateResultDamage(targetResults, target);
+
                     CalculateResultHealing(targetResults, target);
                     CalculateResultResourceChanges(targetResults, target);
                 }
