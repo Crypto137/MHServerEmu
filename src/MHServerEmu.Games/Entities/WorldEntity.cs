@@ -2265,7 +2265,7 @@ namespace MHServerEmu.Games.Entities
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, attackerProperties);
             evalContext.SetVar_Float(EvalContext.Var1, defenseRating);
 
-            // Block / dodge chances need to be rounded to int
+            // The eval truncates values, so we need to multiply by 100 to save the decimal part for block / dodge chances
             evalContext.SetVar_Int(EvalContext.Var2, MathHelper.RoundToInt(blockChance * 100f));
             evalContext.SetVar_Int(EvalContext.Var3, MathHelper.RoundToInt(dodgeChance * 100f));
 

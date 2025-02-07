@@ -3400,9 +3400,11 @@ namespace MHServerEmu.Games.Powers
             WorldEntity attacker = Game.Current.EntityManager.GetEntity<WorldEntity>(attackerId);
             attacker?.AccumulateKeywordProperties(PropertyEnum.BlockRatingBonusVsAttackerKwd, targetProperties, ref blockRatingAdd);
 
+            // Apply multiplier
             float blockRatingMult = Math.Max(1f + targetProperties[PropertyEnum.BlockRatingBonusMult], 0f);
             float blockRating = Math.Max(blockRatingAdd * blockRatingMult, 0f);
 
+            // Run eval
             EvalPrototype blockEvalProto = GameDatabase.CombatGlobalsPrototype.EvalBlockChanceFormula;
             if (blockEvalProto == null) return Logger.WarnReturn(0f, "GetBlockChance(): blockEvalProto == null");
 
@@ -3412,15 +3414,44 @@ namespace MHServerEmu.Games.Powers
             evalContext.SetVar_Float(EvalContext.Var1, blockRating);
 
             if (Eval.Run(blockEvalProto, evalContext, out float blockChance) == false)
-                Logger.Warn($"GetBlockChance(): Failed to calculate block chance for power!\n Power: {powerProto}\n Caster: {attacker}\n");
+                Logger.Warn($"GetBlockChance(): Failed to calculate block chance for power!\n Power: {powerProto}\n Caster: {attacker}");
 
             return blockChance;
         }
 
         public static float GetDodgeChance(PowerPrototype powerProto, PropertyCollection attackerProperties, PropertyCollection targetProperties, ulong attackerId)
         {
-            // TODO
-            return 0f;
+            // Calculate raw dodge percentage
+            float dodgeChancePct = targetProperties[PropertyEnum.DodgeChancePct];
+
+            // Add keyword bonuses for power (may be null)
+            if (powerProto != null)
+                AccumulateKeywordProperties(ref dodgeChancePct, powerProto, targetProperties, attackerProperties, PropertyEnum.DodgeChancePctVsPowerKeyword);
+
+            // Calculate dodge rating
+            float dodgeRatingAdd = targetProperties[PropertyEnum.DodgeRatingBonusAdd];
+            float dodgeRatingMult = Math.Max(1f + targetProperties[PropertyEnum.DodgeRatingBonusMult], 0f);
+            float dodgeRating = Math.Max(dodgeRatingAdd * dodgeRatingMult, 0f);
+
+            // Run eval
+            EvalPrototype dodgeEvalProto = GameDatabase.CombatGlobalsPrototype.EvalDodgeChanceFormula;
+            if (dodgeEvalProto == null) return Logger.WarnReturn(0f, "GetDodgeChance(): dodgeEvalProto == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, targetProperties);
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, attackerProperties);
+
+            // The eval truncates the value, so we need to multiply the raw dodge chance by 100 to save the decimal part
+            evalContext.SetVar_Int(EvalContext.Var1, MathHelper.RoundToInt(dodgeChancePct * 100f));
+            evalContext.SetVar_Float(EvalContext.Var2, dodgeRating);
+
+            if (Eval.Run(dodgeEvalProto, evalContext, out float dodgeChance) == false)
+            {
+                WorldEntity attacker = Game.Current.EntityManager.GetEntity<WorldEntity>(attackerId);
+                Logger.Warn($"GetDodgeChance(): Failed to calculate dodge chance for power!\n Power: {powerProto}\n Caster: {attacker}");
+            }
+
+            return dodgeChance;
         }
 
         #endregion
