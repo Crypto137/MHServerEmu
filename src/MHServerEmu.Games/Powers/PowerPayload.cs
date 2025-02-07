@@ -421,7 +421,12 @@ namespace MHServerEmu.Games.Powers
             damageMult += power.Properties[PropertyEnum.DamageMultOnPower];
 
             // DamagePct
-            float damagePct = Properties[PropertyEnum.DamagePctBonus];
+
+            // NOTE: In some cases DamagePctBonus can potentially exist on both the owner
+            // and the power, so when copying properties powers will override their owners.
+            // For this reason we need to sum them manually here.
+            float damagePct = power.Properties[PropertyEnum.DamagePctBonus];
+            damagePct += ownerProperties[PropertyEnum.DamagePctBonus];
 
             // DamageRating
             float damageRating = powerOwner.GetDamageRating();
