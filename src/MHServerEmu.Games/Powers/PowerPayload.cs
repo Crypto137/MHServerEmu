@@ -422,7 +422,6 @@ namespace MHServerEmu.Games.Powers
 
             // DamagePct
             float damagePct = Properties[PropertyEnum.DamagePctBonus];
-            damagePct += Properties[PropertyEnum.DamagePctBonus];
 
             // DamageRating
             float damageRating = powerOwner.GetDamageRating();
