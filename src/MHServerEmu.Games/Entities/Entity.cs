@@ -952,7 +952,8 @@ namespace MHServerEmu.Games.Entities
 
         public void StopPropertyTicker(ulong tickerId)
         {
-            _propertyTickerManager?.StopTicker(tickerId);
+            if (tickerId != PropertyTicker.InvalidId)
+                _propertyTickerManager?.StopTicker(tickerId);
         }
 
         public void StopAllPropertyTickers()
