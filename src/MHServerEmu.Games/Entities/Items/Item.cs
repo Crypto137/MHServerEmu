@@ -1231,7 +1231,24 @@ namespace MHServerEmu.Games.Entities.Items
 
         private void RefreshProcPowerIndexProperties()
         {
-            // TODO
+            int itemLevel = Properties[PropertyEnum.ItemLevel];
+            float itemVariation = Properties[PropertyEnum.ItemVariation];
+            int stackCount = CurrentStackSize;
+
+            // Use a temporary property collection to store proc properties
+            // because we can't modify our collections while iterating.
+            using PropertyCollection procProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            foreach (PropertyEnum procProperty in Property.ProcPropertyTypesAll)
+                procProperties.CopyPropertyRange(Properties, procProperty);
+
+            foreach (var kvp in procProperties)
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
+
+                Properties[PropertyEnum.ProcPowerItemLevel, procPowerProtoRef] = itemLevel;
+                Properties[PropertyEnum.ProcPowerItemVariation, procPowerProtoRef] = itemVariation;
+                Properties[PropertyEnum.ProcPowerInvStackCount, procPowerProtoRef] = stackCount;
+            }
         }
 
         private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
