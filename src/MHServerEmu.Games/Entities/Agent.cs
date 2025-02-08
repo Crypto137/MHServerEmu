@@ -1025,10 +1025,10 @@ namespace MHServerEmu.Games.Entities
         {
             SimulateResult result = base.SetSimulated(simulated);
 
-            AIController?.OnAISetSimulated(simulated);
-
             if (result == SimulateResult.Set)
             {
+                AIController?.OnAISetSimulated(true);
+
                 if (AgentPrototype.WakeRange <= 0.0f) SetDormant(false);
                 if (IsDormant == false) TryAutoActivatePowersInCollection();
 
@@ -1036,12 +1036,34 @@ namespace MHServerEmu.Games.Entities
             }
             else if (result == SimulateResult.Clear)
             {
+                AIController?.OnAISetSimulated(false);
+
                 EntityActionComponent?.RestartPendingActions();
                 var scheduler = Game?.GameEventScheduler;
                 if (scheduler != null)
                 {
                     scheduler.CancelEvent(_wakeStartEvent);
                     scheduler.CancelEvent(_wakeEndEvent);
+                }
+            }
+
+            // Update equipment tickers
+            if (result != SimulateResult.None)
+            {
+                EntityManager entityManager = Game.EntityManager;
+                foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+                {
+                    foreach (var entry in inventory)
+                    {
+                        Item item = entityManager.GetEntity<Item>(entry.Id);
+                        if (item == null)
+                            continue;
+
+                        if (result == SimulateResult.Set)
+                            item.StartTicking(this);
+                        else
+                            item.StopTicking(this);
+                    }
                 }
             }
 

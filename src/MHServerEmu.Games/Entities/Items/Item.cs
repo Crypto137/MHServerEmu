@@ -55,6 +55,8 @@ namespace MHServerEmu.Games.Entities.Items
         private ItemSpec _itemSpec = new();
         private List<AffixPropertiesCopyEntry> _affixProperties = new();
 
+        private ulong _tickerId;
+
         public ItemPrototype ItemPrototype { get => Prototype as ItemPrototype; }
         public RarityPrototype RarityPrototype { get => GameDatabase.GetPrototype<RarityPrototype>(Properties[PropertyEnum.ItemRarity]); }
 
@@ -139,14 +141,80 @@ namespace MHServerEmu.Games.Entities.Items
 
         public override void OnSelfAddedToOtherInventory()
         {
-            if (InventoryLocation.IsValid)
+            InventoryLocation invLoc = InventoryLocation;
+
+            if (invLoc.IsValid)
             {
+                InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
+                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(invLoc.ContainerId);
+
                 // Remove sold price after buyback
                 if (IsInBuybackInventory == false)
                     Properties.RemoveProperty(PropertyEnum.ItemSoldPrice);
+
+                // Start ticking
+                if (owner != null && inventoryProto.IsEquipmentInventory)
+                    StartTicking(owner);
             }
 
             base.OnSelfAddedToOtherInventory();
+        }
+
+        public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        {
+            base.OnSelfRemovedFromOtherInventory(prevInvLoc);
+
+            if (prevInvLoc.IsValid)
+            {
+                InventoryPrototype inventoryProto = prevInvLoc.InventoryPrototype;
+                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(prevInvLoc.ContainerId);
+
+                // Stop ticking
+                if (owner != null && inventoryProto.IsEquipmentInventory)
+                    StopTicking(owner);
+
+                // REMOVEME: Destroy summoned pet hack
+                if (prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.PetItem)
+                {
+                    var itemProto = ItemPrototype;
+                    if (itemProto?.ActionsTriggeredOnItemEvent?.Choices == null) return;
+                    var itemActionProto = itemProto.ActionsTriggeredOnItemEvent.Choices[0];
+                    if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto)
+                    {
+                        var powerRef = itemActionUsePowerProto.Power;
+                        var avatar = Game.EntityManager.GetEntity<Avatar>(prevInvLoc.ContainerId);
+                        Power power = avatar?.GetPower(powerRef);
+                        if (power == null) return;
+                        if (power.Prototype is SummonPowerPrototype summonPowerProto)
+                        {
+                            PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
+                            if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
+                            {
+                                EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
+                                avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
+                                avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void StartTicking(WorldEntity owner)
+        {
+            if (_tickerId != PropertyTicker.InvalidId)
+            {
+                Logger.Warn("StartTicking(): _tickerId != PropertyTicker.InvalidId");
+                return;
+            }
+
+            _tickerId = owner.StartPropertyTicker(Properties, Id, Id, TimeSpan.FromMilliseconds(1000));
+        }
+
+        public void StopTicking(WorldEntity owner)
+        {
+            owner.StopPropertyTicker(_tickerId);
+            _tickerId = PropertyTicker.InvalidId;
         }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -293,36 +361,6 @@ namespace MHServerEmu.Games.Entities.Items
         {
             base.BuildString(sb);
             sb.AppendLine($"{nameof(_itemSpec)}: {_itemSpec}");
-        }
-
-        public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
-        {
-            base.OnSelfRemovedFromOtherInventory(prevInvLoc);
-
-            // Destroy summoned pet
-            if (prevInvLoc.IsValid && prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.PetItem)
-            {
-                var itemProto = ItemPrototype;
-                if (itemProto?.ActionsTriggeredOnItemEvent?.Choices == null) return;
-                var itemActionProto = itemProto.ActionsTriggeredOnItemEvent.Choices[0];
-                if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto){
-                    var powerRef = itemActionUsePowerProto.Power;
-                    var avatar = Game.EntityManager.GetEntity<Avatar>(prevInvLoc.ContainerId);
-                    Power power = avatar?.GetPower(powerRef);
-                    if (power == null) return;
-                    if (power.Prototype is SummonPowerPrototype summonPowerProto)
-                    {
-                        PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
-                        if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
-                        {
-                            EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-                            avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
-                            avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
-                        }
-                    }
-                }
-
-            }
         }
 
         public bool DecrementStack(int count = 1)
@@ -811,6 +849,22 @@ namespace MHServerEmu.Games.Entities.Items
 
         private void OnAffixLevelUp()
         {
+            RefreshProcPowerIndexProperties();
+
+            // Restart tickers
+            InventoryLocation invLoc = InventoryLocation;
+            if (invLoc.IsValid)
+            {
+                InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
+                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(invLoc.ContainerId);
+
+                if (owner != null && inventoryProto.IsEquipmentInventory && owner.IsInWorld && owner.IsSimulated)
+                {
+                    StopTicking(owner);
+                    StartTicking(owner);
+                }
+            }
+
             if (Prototype is LegendaryPrototype && Properties[PropertyEnum.ItemAffixLevel] == GetAffixLevelCap()) // TODO check GetAffixLevelCap
             { 
                 var player = GetOwnerOfType<Player>();
