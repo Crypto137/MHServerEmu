@@ -933,6 +933,8 @@ namespace MHServerEmu.Games.Powers
             float difficultyMult = 1f;
             CalculateResultDamageDifficultyScaling(results, target, ref difficultyMult);
 
+            CalculateResultDamageVulnerabilityModifier(results, target);
+
             CalculateResultDamageBlockModifier(results, target);
 
             CalculateResultDamageDefenseModifier(results, target);
@@ -999,6 +1001,68 @@ namespace MHServerEmu.Games.Powers
             float tuningDamageMult = LiveTuningManager.GetLivePowerTuningVar(powerProto, tuningVar);
 
             ApplyDamageMultiplier(results.Properties, tuningDamageMult);
+            return true;
+        }
+
+        private bool CalculateResultDamageVulnerabilityModifier(PowerResults results, WorldEntity target)
+        {
+            // NOTE: For vulnerability we pick the highest multiplier out of generic, power-specific and PvP.
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageVulnerabilityModifier(): powerProto == null");
+
+            // PvP vulnerability
+            float damagePctVulnerabilityPvP = target.IsInPvPMatch ? target.Properties[PropertyEnum.DamagePctVulnerabilityPvP] : 0f;
+
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            damageValues.Clear();
+
+            // Calculate damage amplification by vulnerability
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                float damage = kvp.Value;
+                if (damage == 0f)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                DamageType damageType = (DamageType)damageTypeValue;
+
+                // Generic vulnerability
+                float damagePctVulnerability = target.Properties[PropertyEnum.DamagePctVulnerability, damageType];
+                damagePctVulnerability += target.Properties[PropertyEnum.DamagePctVulnerability, DamageType.Any];
+
+                // Power-specific vulnerability
+                float damagePctVulnerabilityVsPower = target.Properties[PropertyEnum.DamagePctVulnerabilityVsPower, powerProto.DataRef];
+                float damagePctVulnerabilityVsPowerKwd = 0f;
+                
+                foreach (var kwdKvp in target.Properties.IteratePropertyRange(PropertyEnum.DamagePctVulnerabilityVsPowerKwd))
+                {
+                    Property.FromParam(kwdKvp.Key, 0, out PrototypeId keywordProtoRef);
+                    if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
+                        continue;
+
+                    damagePctVulnerabilityVsPowerKwd = Math.Max(damagePctVulnerabilityVsPowerKwd, kvp.Value);
+                }
+
+                // Pick the highest vulnerabililty pct
+                float pickedDamagePctVulnerability = damagePctVulnerability;
+                pickedDamagePctVulnerability = Math.Max(pickedDamagePctVulnerability, damagePctVulnerabilityPvP);
+                pickedDamagePctVulnerability = Math.Max(pickedDamagePctVulnerability, damagePctVulnerabilityVsPower);
+                pickedDamagePctVulnerability = Math.Max(pickedDamagePctVulnerability, damagePctVulnerabilityVsPowerKwd);
+
+                float vulnerabilityMult = 1f + pickedDamagePctVulnerability;
+                damageValues[(int)damageType] = damage * vulnerabilityMult;
+            }
+
+            // Set amplified damage
+            for (int i = 0; i < damageValues.Length; i++)
+            {
+                float damage = damageValues[i];
+                if (damage == 0f)
+                    continue;
+
+                results.Properties[PropertyEnum.Damage, i] = damage;
+            }
+
             return true;
         }
 

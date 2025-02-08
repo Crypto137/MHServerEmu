@@ -3383,7 +3383,8 @@ namespace MHServerEmu.Games.Powers
 
             float critDamageRatingBonus = Eval.RunFloat(ratingEval, evalContext);
 
-            // TODO: target.IsInPvPMatch()
+            if (target.IsInPvPMatch)
+                critDamageRatingBonus *= GameDatabase.DifficultyGlobalsPrototype.PvPCritDamageMultiplier;
 
             return critDamageMult + critDamageRatingBonus;
         }
