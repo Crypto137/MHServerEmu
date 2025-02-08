@@ -980,11 +980,8 @@ namespace MHServerEmu.Games.Powers
             if (rankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageDifficultyScaling(): rankProto == null");
 
             difficultyMult = tuningTable.GetDamageMultiplier(IsPlayerPayload, rankProto.Rank, target.RegionLocation.Position);
-            if (difficultyMult == 1f)
-                return true;
-
+            
             ApplyDamageMultiplier(results.Properties, difficultyMult);
-
             return true;
         }
 
@@ -999,11 +996,7 @@ namespace MHServerEmu.Games.Powers
             PowerTuningVar tuningVar = region.ContainsPvPMatch() ? PowerTuningVar.ePTV_PowerDamagePVP : PowerTuningVar.ePTV_PowerDamagePVE;
             float tuningDamageMult = LiveTuningManager.GetLivePowerTuningVar(powerProto, tuningVar);
 
-            if (tuningDamageMult == 1f)
-                return true;
-
             ApplyDamageMultiplier(results.Properties, tuningDamageMult);
-
             return true;
         }
 
@@ -1036,11 +1029,7 @@ namespace MHServerEmu.Games.Powers
                 metaGameMult = Math.Clamp(metaGameMult, 0f, 1f);
             }
 
-            if (metaGameMult == 1f)
-                return true;
-
             ApplyDamageMultiplier(results.Properties, metaGameMult);
-
             return true;
         }
 
@@ -1719,6 +1708,10 @@ namespace MHServerEmu.Games.Powers
         /// </summary>
         private static void ApplyDamageMultiplier(PropertyCollection properties, float multiplier)
         {
+            // No need to apply multipliers of 1
+            if (Segment.EpsilonTest(multiplier, 1f))
+                return;
+
             // Store damage values in a temporary span so that we don't modify the collection while iterating
             // Remove this if our future optimized implementation does not require this.
             int numDamageTypes = (int)DamageType.NumDamageTypes;
