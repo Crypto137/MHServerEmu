@@ -935,6 +935,8 @@ namespace MHServerEmu.Games.Powers
 
             CalculateResultDamageBlockModifier(results, target);
 
+            CalculateResultDamageDefenseModifier(results, target);
+
             CalculateResultDamageMetaGameModifier(results, target);
 
             CalculateResultDamageLevelScaling(results, target, difficultyMult);
@@ -1011,6 +1013,100 @@ namespace MHServerEmu.Games.Powers
             blockDamageMult = Math.Clamp(blockDamageMult, 0f, 1f);
 
             ApplyDamageMultiplier(results.Properties, blockDamageMult);
+        }
+
+        private bool CalculateResultDamageDefenseModifier(PowerResults results, WorldEntity target)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageLiveTuningModifier(): powerProto == null");
+
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            damageValues.Clear();
+
+            // Calculate damage mitigation by defense
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                float damage = kvp.Value;
+                if (damage == 0f)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                DamageType damageType = (DamageType)damageTypeValue;
+
+                // Get base damage rating
+                float defenseRating = target.GetDefenseRating(damageType);
+
+                // Calculate defense penetration (it looks like defense penetration may not be used in 1.52, need to investigate this further)
+                float defensePenetration = Properties[PropertyEnum.DefensePenetration, damageType];
+                defensePenetration += Properties[PropertyEnum.DefensePenetration, DamageType.Any];
+
+                // Keyworded penetration
+                foreach (var kwdKdp in Properties.IteratePropertyRange(PropertyEnum.DefensePenetrationKwd, (int)damageType))
+                {
+                    Property.FromParam(kwdKdp.Key, 1, out PrototypeId keywordProtoRef);
+                    if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
+                        continue;
+
+                    defensePenetration += kvp.Value;
+                }
+
+                // Variable activation time penetration (all powers seem to use ResistancePenetrationZero for this in 1.52)
+                TimeSpan activationTime = VariableActivationTime;
+                if (activationTime > TimeSpan.Zero)
+                {
+                    SecondaryActivateOnReleasePrototype secondaryActivateProto = GetSecondaryActivateOnReleasePrototype();
+                    if (secondaryActivateProto != null && secondaryActivateProto.DefensePenetrationIncrPerSec != CurveId.Invalid &&
+                        secondaryActivateProto.DefensePenetrationType == damageType)
+                    {
+                        Curve curve = secondaryActivateProto.DefensePenetrationIncrPerSec.AsCurve();
+                        if (curve == null) return Logger.WarnReturn(false, "CalculateResultDamageDefenseModifier(): curve == null");
+
+                        float timePenetrationBase = curve.GetAt(Properties[PropertyEnum.PowerRank]);
+                        float activationTimeMS = Math.Min((float)activationTime.TotalMilliseconds, secondaryActivateProto.MaxReleaseTimeMS);
+
+                        defensePenetration += timePenetrationBase * activationTimeMS * 0.001f;
+                    }
+                }
+
+                // Penetration pct
+                float defensePenetrationPct = Properties[PropertyEnum.DefensePenetrationPct, damageType];
+                defensePenetrationPct += Properties[PropertyEnum.DefensePenetrationPct, DamageType.Any];
+
+                // Keyworded penetration pct
+                foreach (var kwdKdp in Properties.IteratePropertyRange(PropertyEnum.DefensePenetrationPctKwd, (int)damageType))
+                {
+                    Property.FromParam(kwdKdp.Key, 1, out PrototypeId keywordProtoRef);
+                    if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
+                        continue;
+
+                    defensePenetrationPct += kvp.Value;
+                }
+
+                // Apply penetration (defense rating cannot become negative)
+                if (defensePenetration != 0f || defensePenetrationPct != 0f)
+                    Logger.Debug($"CalculateResultDamageDefenseModifier(): Found defense penetration for power {powerProto}");
+
+                defenseRating = Math.Max(defenseRating - defensePenetration, 0f);
+                defenseRating *= Math.Clamp(1f - defensePenetrationPct, 0f, 1f);
+
+                // Apply damage reduction
+                float damageReductionPct = target.GetDamageReductionPct(defenseRating, Properties, powerProto);
+                float damageReductionMult = 1f - Math.Clamp(damageReductionPct, 0f, 1f);
+
+                damageValues[(int)damageType] = damage * damageReductionMult;
+            }
+
+            // Set mitigated damage
+            for (int i = 0; i < damageValues.Length; i++)
+            {
+                float damage = damageValues[i];
+                if (damage == 0f)
+                    continue;
+
+                results.Properties[PropertyEnum.Damage, i] = damage;
+            }
+
+            return true;
         }
 
         private bool CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)
