@@ -57,6 +57,10 @@ namespace MHServerEmu.Games.Powers
 
         public PowerActivationSettings ActivationSettings { get => new(TargetId, TargetPosition, PowerOwnerPosition); }
 
+        public PowerPayload() { }
+
+        #region Data Management
+
         /// <summary>
         /// Initializes this <see cref="PowerPayload"/> from a <see cref="PowerApplication"/> and snapshots
         /// the state of the <see cref="Power"/> and its owner.
@@ -218,10 +222,58 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        /// <summary>
+        /// Initiates a dummy <see cref="PowerPayload"/> for applying over time effects.
+        /// </summary>
         public void Init(Game game)
         {
             Game = game;
         }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="PowerResults"/> using data from this <see cref="PowerPayload"/>.
+        /// </summary>
+        public void InitPowerResultsForTarget(PowerResults results, WorldEntity target)
+        {
+            bool isHostile = OwnerAlliance != null && OwnerAlliance.IsHostileTo(target.Alliance);
+
+            results.Init(PowerOwnerId, UltimateOwnerId, target.Id, PowerOwnerPosition, PowerPrototype,
+                PowerAssetRefOverride, isHostile);
+        }
+
+        /// <summary>
+        /// Updates the target of this <see cref="PowerPayload"/>.
+        /// </summary>
+        public void UpdateTarget(ulong targetId, Vector3 targetPosition)
+        {
+            TargetId = targetId;
+            TargetPosition = targetPosition;
+        }
+
+        /// <summary>
+        /// Recalculates initial damage properties of this <see cref="PowerPayload"/> for the specified combat level.
+        /// </summary>
+        public void RecalculateInitialDamageForCombatLevel(int combatLevel)
+        {
+            Properties[PropertyEnum.CombatLevel] = combatLevel;
+            CalculateInitialDamage(Properties);
+        }
+
+        /// <summary>
+        /// Clears calculated damage, damage accumulation, healing, and resource changes from this <see cref="PowerPayload"/>.
+        /// </summary>
+        public void ClearResult()
+        {
+            Properties.RemovePropertyRange(PropertyEnum.Damage);
+            Properties.RemovePropertyRange(PropertyEnum.DamageAccumulationChange);
+            Properties.RemovePropertyRange(PropertyEnum.EnduranceChange);
+            Properties.RemoveProperty(PropertyEnum.Healing);
+            Properties.RemoveProperty(PropertyEnum.SecondaryResourceChange);
+        }
+
+        #endregion
+
+        #region Initial Calculations
 
         /// <summary>
         /// Calculates properties for this <see cref="PowerPayload"/> that do not require a target.
@@ -234,109 +286,6 @@ namespace MHServerEmu.Games.Powers
             CalculateInitialHealing(power.Properties);
             CalculateInitialResourceChange(power.Properties);
         }
-
-        public void CalculateOverTimeProperties(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds, bool calculateDamage)
-        {
-            if (calculateDamage)
-                CalculateOverTimeDamage(target, overTimeProperties, timeSeconds);
-
-            CalculateOverTimeHealing(target, overTimeProperties, timeSeconds);
-            CalculateOverTimeResourceChange(target, overTimeProperties, timeSeconds);
-        }
-
-        public void InitPowerResultsForTarget(PowerResults results, WorldEntity target)
-        {
-            bool isHostile = OwnerAlliance != null && OwnerAlliance.IsHostileTo(target.Alliance);
-
-            results.Init(PowerOwnerId, UltimateOwnerId, target.Id, PowerOwnerPosition, PowerPrototype,
-                PowerAssetRefOverride, isHostile);
-        }
-
-        public void UpdateTarget(ulong targetId, Vector3 targetPosition)
-        {
-            TargetId = targetId;
-            TargetPosition = targetPosition;
-        }
-
-        public void RecalculateInitialDamageForCombatLevel(int combatLevel)
-        {
-            Properties[PropertyEnum.CombatLevel] = combatLevel;
-            CalculateInitialDamage(Properties);
-        }
-
-        /// <summary>
-        /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
-        /// </summary>
-        public void CalculatePowerResults(PowerResults targetResults, PowerResults userResults, WorldEntity target, bool calculateForTarget)
-        {
-            if (calculateForTarget)
-            {
-                // Flag for resurrection if needed
-                if (Properties[PropertyEnum.IsResurrectionPower])
-                    targetResults.SetFlag(PowerResultFlags.Resurrect, true);
-
-                // Check dodge chance (dodge is full mitigation, so don't bother calculating other stuff if dodged)
-                if (CheckDodgeChance(target))
-                {
-                    targetResults.SetFlag(PowerResultFlags.Dodged, true);
-                }
-                else
-                {
-                    // Block is partial mitigation, so continue the calculations even if blocked
-                    if (CheckBlockChance(target))
-                        targetResults.SetFlag(PowerResultFlags.Blocked, true);
-
-                    // Check if this is an instant kill (deals damage equal to the target's current health).
-                    // Instant kills override normal damage calculations.
-                    if (Properties[PropertyEnum.InstantKill])
-                        targetResults.SetFlag(PowerResultFlags.InstantKill, true);
-                    else
-                        CalculateResultDamage(targetResults, target);
-
-                    CalculateResultHealing(targetResults, target);
-                    CalculateResultResourceChanges(targetResults, target);
-                }
-
-                // Dodging can still remove conditions
-                CalculateResultConditionsToRemove(targetResults, target);
-            }
-
-            if (targetResults.IsDodged == false)
-                CalculateResultConditionsToAdd(targetResults, target, calculateForTarget);
-
-            // Copy extra properties
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoExpOnDeath);
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoLootDrop);
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
-            targetResults.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
-
-            // Add hit reaction if needed (NOTE: some conditions applied before take priority over hit reactions)
-            if (calculateForTarget)
-                CalculateResultHitReaction(targetResults, target);
-        }
-
-        public void CalculatePowerResultsOverTime(PowerResults targetResults, WorldEntity target, bool calculateDamage)
-        {
-            if (calculateDamage)
-                CalculateResultDamage(targetResults, target);
-
-            CalculateResultHealing(targetResults, target);
-            CalculateResultResourceChanges(targetResults, target);
-        }
-
-        public void ClearResult()
-        {
-            Properties.RemovePropertyRange(PropertyEnum.Damage);
-            Properties.RemovePropertyRange(PropertyEnum.DamageAccumulationChange);
-            Properties.RemovePropertyRange(PropertyEnum.EnduranceChange);
-            Properties.RemoveProperty(PropertyEnum.Healing);
-            Properties.RemoveProperty(PropertyEnum.SecondaryResourceChange);
-        }
-
-        #region Initial Calculations
 
         /// <summary>
         /// Calculates damage properties for this <see cref="PowerPayload"/> that do not require a target.
@@ -627,6 +576,21 @@ namespace MHServerEmu.Games.Powers
 
         #region Over Time Calculations
 
+        /// <summary>
+        /// Calculates properties for a tick of an over time effect.
+        /// </summary>
+        public void CalculateOverTimeProperties(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds, bool calculateDamage)
+        {
+            if (calculateDamage)
+                CalculateOverTimeDamage(target, overTimeProperties, timeSeconds);
+
+            CalculateOverTimeHealing(target, overTimeProperties, timeSeconds);
+            CalculateOverTimeResourceChange(target, overTimeProperties, timeSeconds);
+        }
+
+        /// <summary>
+        /// Calculates damage for a tick of an over time effect.
+        /// </summary>
         public bool CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             // DoTs require a full power payload for calculations
@@ -678,6 +642,9 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        /// <summary>
+        /// Calculates healing for a tick of an over time effect.
+        /// </summary>
         public void CalculateOverTimeHealing(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             // Check if our target can receive healing
@@ -711,6 +678,9 @@ namespace MHServerEmu.Games.Powers
             Properties[PropertyEnum.Healing] = healing;
         }
 
+        /// <summary>
+        /// Calculates primary and secondary resource change for a tick of an over time effect.
+        /// </summary>
         public void CalculateOverTimeResourceChange(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             if (target is not Avatar avatar)
@@ -775,6 +745,69 @@ namespace MHServerEmu.Games.Powers
         #endregion
 
         #region Result Calculations
+
+        /// <summary>
+        /// Calculates <see cref="PowerResults"/> for the provided <see cref="WorldEntity"/> target. 
+        /// </summary>
+        public void CalculatePowerResults(PowerResults targetResults, PowerResults userResults, WorldEntity target, bool calculateForTarget)
+        {
+            if (calculateForTarget)
+            {
+                // Flag for resurrection if needed
+                if (Properties[PropertyEnum.IsResurrectionPower])
+                    targetResults.SetFlag(PowerResultFlags.Resurrect, true);
+
+                // Check dodge chance (dodge is full mitigation, so don't bother calculating other stuff if dodged)
+                if (CheckDodgeChance(target))
+                {
+                    targetResults.SetFlag(PowerResultFlags.Dodged, true);
+                }
+                else
+                {
+                    // Block is partial mitigation, so continue the calculations even if blocked
+                    if (CheckBlockChance(target))
+                        targetResults.SetFlag(PowerResultFlags.Blocked, true);
+
+                    // Check if this is an instant kill (deals damage equal to the target's current health).
+                    // Instant kills override normal damage calculations.
+                    if (Properties[PropertyEnum.InstantKill])
+                        targetResults.SetFlag(PowerResultFlags.InstantKill, true);
+                    else
+                        CalculateResultDamage(targetResults, target);
+
+                    CalculateResultHealing(targetResults, target);
+                    CalculateResultResourceChanges(targetResults, target);
+                }
+
+                // Dodging can still remove conditions
+                CalculateResultConditionsToRemove(targetResults, target);
+            }
+
+            if (targetResults.IsDodged == false)
+                CalculateResultConditionsToAdd(targetResults, target, calculateForTarget);
+
+            // Copy extra properties
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoExpOnDeath);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.NoLootDrop);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.OnKillDestroyImmediate);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.ProcRecursionDepth);
+            targetResults.Properties.CopyProperty(Properties, PropertyEnum.SetTargetLifespanMS);
+
+            // Add hit reaction if needed (NOTE: some conditions applied before take priority over hit reactions)
+            if (calculateForTarget)
+                CalculateResultHitReaction(targetResults, target);
+        }
+
+        public void CalculatePowerResultsOverTime(PowerResults targetResults, WorldEntity target, bool calculateDamage)
+        {
+            if (calculateDamage)
+                CalculateResultDamage(targetResults, target);
+
+            CalculateResultHealing(targetResults, target);
+            CalculateResultResourceChanges(targetResults, target);
+        }
 
         private bool CalculateResultDamage(PowerResults results, WorldEntity target)
         {
@@ -1681,6 +1714,9 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        /// <summary>
+        /// Applies the provided multiplier to all <see cref="PropertyEnum.Damage"/> properties on this <see cref="PowerPayload"/>.
+        /// </summary>
         private static void ApplyDamageMultiplier(PropertyCollection properties, float multiplier)
         {
             // Store damage values in a temporary span so that we don't modify the collection while iterating
@@ -1700,7 +1736,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
-        /// Copies all curve properties that use the specified <see cref="PropertyEnum"/> from the provided <see cref="PropertyCollection"/>.
+        /// Copies all curve properties that use the specified <see cref="PropertyEnum"/> from the provided <see cref="PropertyCollection"/> to this <see cref="PowerPayload"/>.
         /// </summary>
         private bool CopyCurvePropertyRange(PropertyCollection source, PropertyEnum propertyEnum)
         {
@@ -1768,6 +1804,9 @@ namespace MHServerEmu.Games.Powers
             return Game.Random.NextFloat() < superCritChance;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PowerPayload"/>'s hit should dodged.
+        /// </summary>
         private bool CheckDodgeChance(WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
@@ -1787,10 +1826,13 @@ namespace MHServerEmu.Games.Powers
             return Game.Random.NextFloat() < dodgeChance;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PowerPayload"/>'s hit should blocked.
+        /// </summary>
         private bool CheckBlockChance(WorldEntity target)
         {
             PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CheckDodgeChance(): powerProto == null");
+            if (powerProto == null) return Logger.WarnReturn(false, "CheckBlockChance(): powerProto == null");
 
             // Some powers cannot be blocked
             if (powerProto.CanBeBlocked == false)
@@ -1810,6 +1852,9 @@ namespace MHServerEmu.Games.Powers
             return Game.Random.NextFloat() < blockChance;
         }
 
+        /// <summary>
+        /// Helper function for calculating random over time values.
+        /// </summary>
         private float CalculateOverTimeValue(PropertyCollection overTimeProperties, PropertyId baseProp, PropertyId varianceProp, PropertyId magnitudeProp, float bonus = 0f)
         {
             // Helper function for calculating over time values
@@ -1818,12 +1863,18 @@ namespace MHServerEmu.Games.Powers
             return (overTimeProperties[baseProp] + bonus) * varianceMult * overTimeProperties[magnitudeProp];
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PowerPayload"/> applies endurance changes over time.
+        /// </summary>
         private static bool HasOverTimeEnduranceChange(PropertyCollection overTimeProperties, ManaType manaType)
         {
             return overTimeProperties.HasProperty(new PropertyId(PropertyEnum.EnduranceCOTBase, manaType)) ||
                    overTimeProperties.HasProperty(new PropertyId(PropertyEnum.EnduranceCOTPctBase, manaType));
         }
 
+        /// <summary>
+        /// Calculates the duration of movement for this power for conditions that last for as long as movement is happening (e.g. knockbacks).
+        /// </summary>
         private bool CalculateMovementDurationForCondition(WorldEntity target, bool calculateForTarget, out TimeSpan movementDuration)
         {
             movementDuration = default;
@@ -1854,6 +1905,9 @@ namespace MHServerEmu.Games.Powers
             return movementDuration > TimeSpan.Zero;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the condition with the specified properties can be applied to the provided <see cref="WorldEntity"/>.
+        /// </summary>
         private bool CanApplyConditionToTarget(WorldEntity target, PropertyCollection conditionProperties, List<PrototypeId> negativeStatusList)
         {
             PropertyCollection targetProperties = target.Properties;
@@ -1890,6 +1944,9 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        /// <summary>
+        /// Applies condition duration reduction to the provided <see cref="TimeSpan"/>.
+        /// </summary>
         private void ApplyConditionDurationResistances(WorldEntity target, ConditionPrototype conditionProto, PropertyCollection conditionProperties, ref TimeSpan duration)
         {
             PropertyCollection targetProperties = target.Properties;
@@ -1943,7 +2000,7 @@ namespace MHServerEmu.Games.Powers
         }
 
         /// <summary>
-        /// Returns CCResistScore for the provided <see cref="WorldEntity"/> target based on its rank and region difficulty.
+        /// Returns CCResistScore (tenacity) for the provided <see cref="WorldEntity"/> target based on its rank and region difficulty.
         /// </summary>
         private int CalculateRegionCCResistScore(WorldEntity target, PropertyCollection conditionProperties)
         {
@@ -1981,6 +2038,9 @@ namespace MHServerEmu.Games.Powers
             return score;
         }
 
+        /// <summary>
+        /// Applies status effect resistance to the provided <see cref="TimeSpan"/>.
+        /// </summary>
         private void ApplyStatusResistByDuration(WorldEntity target, ConditionPrototype conditionProto, PropertyCollection conditionProperties, ref TimeSpan duration)
         {
             // Need a valid duration
@@ -2054,6 +2114,9 @@ namespace MHServerEmu.Games.Powers
             duration = Clock.Max(duration, TimeSpan.Zero);
         }
 
+        /// <summary>
+        /// Applies condition duration bonuses to the provided <see cref="TimeSpan"/>.
+        /// </summary>
         private void ApplyConditionDurationBonuses(ref TimeSpan duration)
         {
             if (PowerPrototype?.OmniDurationBonusExclude == false)
@@ -2069,6 +2132,10 @@ namespace MHServerEmu.Games.Powers
             duration += TimeSpan.FromMilliseconds((int)Properties[PropertyEnum.StatusDurationBonusMS]);
         }
 
+        /// <summary>
+        /// Returns the number of condition stacks to apply to the provided <see cref="WorldEntity"/>.
+        /// Depending on the power's stacking behavior can also modify the provided duration <see cref="TimeSpan"/>.
+        /// </summary>
         private int CalculateConditionNumStacksToApply(WorldEntity target, WorldEntity ultimateOwner,
             ConditionCollection conditionCollection, ConditionPrototype conditionProto, ref TimeSpan duration)
         {
