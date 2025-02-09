@@ -31,15 +31,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             List<NetStructLiveTuningSettingProtoEnumValue> protobufList = new();
 
             // Read all .json files that start with LiveTuningData
-            string[] files = Directory.GetFiles(liveTuningDirectory, "*.json");
-            Array.Sort(files);  // sort for consistency (alphabetical order)
-
-            foreach (string filePath in files)
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(liveTuningDirectory, "LiveTuningData", "json"))
             {
                 string fileName = Path.GetFileName(filePath);
-
-                if (fileName.StartsWith("LiveTuningData", StringComparison.OrdinalIgnoreCase) == false)
-                    continue;
 
                 LiveTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<LiveTuningUpdateValue[]>(filePath);
                 if (updateValues == null)

@@ -25,6 +25,32 @@ namespace MHServerEmu.Core.Helpers
         }
 
         /// <summary>
+        /// Returns all files that have the specified prefix in a directory.
+        /// Optionally returns only files with the specified extension.
+        /// </summary>
+        /// <remarks>
+        /// Case-sensitivity of the arguments depends on the operating system.
+        /// </remarks>
+        public static string[] GetFilesWithPrefix(string path, string prefix, string extension = "*")
+        {
+            string[] files;
+
+            try
+            {
+                string searchPattern = $"{prefix}*.{extension}";
+                files = Directory.GetFiles(path, searchPattern);
+                Array.Sort(files);  // sort for consistency (alphabetical order)
+            }
+            catch (Exception e)
+            {
+                Logger.Warn($"GetFilesWithPrefix(): Failed to get files from path {path} - {e.Message}");
+                files = Array.Empty<string>();
+            }
+
+            return files;
+        }
+
+        /// <summary>
         /// Deserializes a <typeparamref name="T"/> from a JSON file located at the specified path.
         /// </summary>
         public static T DeserializeJson<T>(string path, JsonSerializerOptions options = null)
@@ -35,9 +61,9 @@ namespace MHServerEmu.Core.Helpers
                 T data = JsonSerializer.Deserialize<T>(json, options);
                 return data;
             }
-            catch
+            catch (Exception e)
             {
-                return Logger.WarnReturn<T>(default, $"DeserializeJson(): Failed to deserialize {path} as {typeof(T).Name}");
+                return Logger.WarnReturn<T>(default, $"DeserializeJson(): Failed to deserialize {path} as {typeof(T).Name} - {e.Message}");
             }
         }
 
