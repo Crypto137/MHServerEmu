@@ -29,6 +29,8 @@ namespace MHServerEmu.Games.Powers
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ulong _propertySourceEntityId;
+        private WorldEntityPrototype _powerOwnerProto;
+        private WorldEntityPrototype _ultimatePowerOwnerProto;
 
         public Game Game { get; private set; }
 
@@ -54,6 +56,7 @@ namespace MHServerEmu.Games.Powers
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
         public int AOESweepTick { get => Properties[PropertyEnum.AOESweepTick]; }
         public TimeSpan AOESweepRate { get => TimeSpan.FromMilliseconds((int)Properties[PropertyEnum.AOESweepRateMS]); }
+        public bool IsTeamUpAwaySource { get => Properties[PropertyEnum.IsTeamUpAwaySource]; }
 
         public PowerActivationSettings ActivationSettings { get => new(TargetId, TargetPosition, PowerOwnerPosition); }
 
@@ -84,6 +87,8 @@ namespace MHServerEmu.Games.Powers
             WorldEntity powerOwner = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
             if (powerOwner == null) return Logger.WarnReturn(false, "powerOwner == null");
 
+            _powerOwnerProto = powerOwner.WorldEntityPrototype;
+
             WorldEntity ultimateOwner = power.GetUltimateOwner();
             if (ultimateOwner != null)
             {
@@ -91,7 +96,10 @@ namespace MHServerEmu.Games.Powers
                 IsPlayerPayload = ultimateOwner.CanBePlayerOwned();
 
                 if (ultimateOwner.IsInWorld)
+                {
+                    _ultimatePowerOwnerProto = ultimateOwner.WorldEntityPrototype;
                     UltimateOwnerPosition = ultimateOwner.RegionLocation.Position;
+                }
             }
             else
             {
@@ -875,8 +883,10 @@ namespace MHServerEmu.Games.Powers
             // Calculate target-specific damage bonuses (these will modify PayloadDamage bonuses copied above)
             CalculateResultDamageRankModifier(results, target);
 
-            // TODO: Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
+            // Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
             float teamUpDamageScalar = 1f;
+            if (_powerOwnerProto is AgentTeamUpPrototype || (_ultimatePowerOwnerProto != null && _ultimatePowerOwnerProto is AgentTeamUpPrototype) || IsTeamUpAwaySource)
+                teamUpDamageScalar = GameDatabase.DifficultyGlobalsPrototype.GetTeamUpDamageScalar(CombatLevel);
 
             // TODO: Get live tuning multiplier for mobs
 

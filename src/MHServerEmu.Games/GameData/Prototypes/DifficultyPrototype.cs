@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Regions;
 
@@ -210,5 +212,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public CurveId TeamUpDamageScalarFromLevelCurve { get; protected set; }
         public EvalPrototype EvalDamageLevelDeltaMtoP { get; protected set; }
         public EvalPrototype EvalDamageLevelDeltaPtoM { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public float GetTeamUpDamageScalar(int combatLevel)
+        {
+            Curve teamUpDamageScalarCurve = TeamUpDamageScalarFromLevelCurve.AsCurve();
+            if (teamUpDamageScalarCurve == null) return Logger.WarnReturn(1f, "GetTeamUpDamageScalar(): teamUpDamageScalarCurve == null");
+
+            return teamUpDamageScalarCurve.GetAt(combatLevel);
+        }
     }
 }
