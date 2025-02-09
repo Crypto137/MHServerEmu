@@ -115,13 +115,21 @@ namespace MHServerEmu.Games.GameData.Tables
                     // What we are picking may not be an item (orbs and stuff?)
                     if (lootProto is ItemPrototype itemProto)
                     {
+                        float weightMultiplier = itemProto.LootDropWeightMultiplier;
+
                         // Skip items that have a 0 weight multiplier
-                        if (Segment.IsNearZero(itemProto.LootDropWeightMultiplier))
-                            continue;
+                        if (Segment.IsNearZero(weightMultiplier))
+                        {
+                            // HACK: Override multiplier for F4 insignias to make them droppable again
+                            if (DataDirectory.Instance.PrototypeIsAPrototype(lootProtoRef, (PrototypeId)1954657857401986351))
+                                weightMultiplier = 1f;
+                            else
+                                continue;
+                        }
 
                         // NOTE: agentProto based skip happens only if there is no custom drop weight multiplier, is this correct?
-                        if (Segment.EpsilonTest(itemProto.LootDropWeightMultiplier, 1f) == false)
-                            weight = Math.Max(1, (int)(itemProto.LootDropWeightMultiplier * weight));
+                        if (Segment.EpsilonTest(weightMultiplier, 1f) == false)
+                            weight = Math.Max(1, (int)(weight * weightMultiplier));
                         else if (agentProto != null && itemProto.IsDroppableForAgent(agentProto) == false)
                             continue;
                     }
