@@ -811,23 +811,44 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamage(PowerResults results, WorldEntity target)
         {
-            // Placeholder implementation for testing
-            Span<float> damage = stackalloc float[(int)DamageType.NumDamageTypes];
-            damage.Clear();
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            damageValues.Clear();
 
-            // Get damage from properties (TODO: rewrite this)
-            bool hasDamage = false;
+            // Get base damage from properties
+            bool hasBaseDamage = false;
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.Damage))
             {
-                if (kvp.Value > 0f)
+                Property.FromParam(kvp.Key, 0, out int damageType);
+                if (damageType >= damageValues.Length)
+                    continue;
+
+                float damage = kvp.Value;
+                damageValues[damageType] = kvp.Value;
+                hasBaseDamage |= damage > 0f;
+            }
+
+            // Add DamageBasePctTargetHealth if needed
+            if (Properties.HasProperty(PropertyEnum.DamageBasePctTargetHealthCur) || Properties.HasProperty(PropertyEnum.DamageBasePctTargetHealthMax))
+            {
+                long health = target.Properties[PropertyEnum.Health];
+                long healthMax = target.Properties[PropertyEnum.HealthMax];
+
+                for (int damageType = 0; damageType < (int)DamageType.NumDamageTypes; damageType++)
                 {
-                    hasDamage = true;
-                    break;
+                    float pctTargetHealthDamage = 0f;
+                    pctTargetHealthDamage += health * (float)Properties[PropertyEnum.DamageBasePctTargetHealthCur, damageType];
+                    pctTargetHealthDamage += health * (float)Properties[PropertyEnum.DamageBasePctTargetHealthMax, damageType];
+
+                    damageValues[damageType] += pctTargetHealthDamage;
+                    hasBaseDamage |= pctTargetHealthDamage > 0f;
                 }
             }
 
-            // Don't do other calculations if there is no damage
-            if (hasDamage == false)
+            // Check if we have DamageBaseUnmodified
+            hasBaseDamage |= Properties.HasProperty(PropertyEnum.DamageBaseUnmodified);
+
+            // Don't do other calculations if there is no base damage
+            if (hasBaseDamage == false)
                 return true;
 
             // Check crit / brutal strike chance
@@ -839,62 +860,66 @@ namespace MHServerEmu.Games.Powers
                     results.SetFlag(PowerResultFlags.Critical, true);
             }
 
-            // Boss-specific bonuses (TODO: clean this up)
-            RankPrototype targetRankProto = target.GetRankPrototype();
-            float damagePctBonusVsBosses = 0f;
-            float damageRatingBonusVsBosses = 0f;
+            // TODO: Check unaffected
 
-            if (targetRankProto.IsRankBossOrMiniBoss)
-            {
-                damagePctBonusVsBosses += Properties[PropertyEnum.DamagePctBonusVsBosses];
-                damageRatingBonusVsBosses += Properties[PropertyEnum.DamageRatingBonusVsBosses];
-            }
+            if (results.IsAvoided)
+                return true;
 
-            // TODO: team up damage scalar
+            // Copy payload damage bonus properties to results to apply target-specific modifiers to them
+            PropertyCollection resultProperties = results.Properties;
+            resultProperties.CopyPropertyRange(Properties, PropertyEnum.PayloadDamageMultTotal);
+            resultProperties.CopyPropertyRange(Properties, PropertyEnum.PayloadDamagePctModifierTotal);
+            resultProperties.CopyPropertyRange(Properties, PropertyEnum.PayloadDamagePctWeakenTotal);
+            resultProperties.CopyPropertyRange(Properties, PropertyEnum.PayloadDamageRatingTotal);
+
+            // Calculate target-specific damage bonuses (these will modify PayloadDamage bonuses copied above)
+            CalculateResultDamageRankModifier(results, target);
+
+            // TODO: Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
             float teamUpDamageScalar = 1f;
+
+            // TODO: Get live tuning multiplier for mobs
 
             for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
             {
-                damage[(int)damageType] = Properties[PropertyEnum.Damage, damageType];
-
                 // DamageMult
                 float damageMult = 1f;
-                damageMult += Properties[PropertyEnum.PayloadDamageMultTotal, DamageType.Any];
-                damageMult += Properties[PropertyEnum.PayloadDamageMultTotal, damageType];
+                damageMult += resultProperties[PropertyEnum.PayloadDamageMultTotal, DamageType.Any];
+                damageMult += resultProperties[PropertyEnum.PayloadDamageMultTotal, damageType];
                 damageMult = MathF.Max(damageMult, 0f);
 
-                damage[(int)damageType] *= damageMult;
+                damageValues[(int)damageType] *= damageMult;
 
                 // DamagePct + DamageRating
                 float damagePct = 1f;
-                damagePct += Properties[PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any];
-                damagePct += Properties[PropertyEnum.PayloadDamagePctModifierTotal, damageType];
-                damagePct += damagePctBonusVsBosses;
+                damagePct += resultProperties[PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any];
+                damagePct += resultProperties[PropertyEnum.PayloadDamagePctModifierTotal, damageType];
                 
-                float damageRating = Properties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any];
-                damageRating += Properties[PropertyEnum.PayloadDamageRatingTotal, damageType];
-                damageRating += damageRatingBonusVsBosses;
+                float damageRating = resultProperties[PropertyEnum.PayloadDamageRatingTotal, DamageType.Any];
+                damageRating += resultProperties[PropertyEnum.PayloadDamageRatingTotal, damageType];
 
                 damagePct += Power.GetDamageRatingMult(damageRating, Properties, target);
                 damagePct = MathF.Max(damagePct, 0f);
 
-                damage[(int)damageType] *= damagePct;
+                damageValues[(int)damageType] *= damagePct;
 
                 // DamagePctWeaken
                 float damagePctWeaken = 1f;
-                damagePctWeaken -= Properties[PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any];
-                damagePctWeaken -= Properties[PropertyEnum.PayloadDamagePctWeakenTotal, damageType];
+                damagePctWeaken -= resultProperties[PropertyEnum.PayloadDamagePctWeakenTotal, DamageType.Any];
+                damagePctWeaken -= resultProperties[PropertyEnum.PayloadDamagePctWeakenTotal, damageType];
                 damagePctWeaken = MathF.Max(damagePctWeaken, 0f);
 
-                damage[(int)damageType] *= damagePctWeaken;
+                damageValues[(int)damageType] *= damagePctWeaken;
 
                 // Team-up damage scaling
-                damage[(int)damageType] *= teamUpDamageScalar;
+                damageValues[(int)damageType] *= teamUpDamageScalar;
+
+                // TODO: Live tuning for mobs
 
                 // Add flat damage bonuses not affected by modifiers
-                damage[(int)damageType] += Properties[PropertyEnum.DamageBaseUnmodified, damageType];
+                damageValues[(int)damageType] += Properties[PropertyEnum.DamageBaseUnmodified, damageType];
 
-                results.Properties[PropertyEnum.Damage, damageType] = damage[(int)damageType];
+                results.Properties[PropertyEnum.Damage, damageType] = damageValues[(int)damageType];
             }
 
             // Apply crit
@@ -964,6 +989,22 @@ namespace MHServerEmu.Games.Powers
 
             float critDamageMult = Power.GetCritDamageMult(Properties, target, results.TestFlag(PowerResultFlags.SuperCritical));
             ApplyDamageMultiplier(results.Properties, critDamageMult);
+
+            return true;
+        }
+
+        private bool CalculateResultDamageRankModifier(PowerResults results, WorldEntity target)
+        {
+            // Boss-specific bonuses (TODO: rewrite this)
+            RankPrototype targetRankProto = target.GetRankPrototype();
+            float damagePctBonusVsBosses = Properties[PropertyEnum.DamagePctBonusVsBosses];
+            float damageRatingBonusVsBosses = Properties[PropertyEnum.DamageRatingBonusVsBosses];
+
+            if (targetRankProto.IsRankBossOrMiniBoss)
+            {
+                results.Properties.AdjustProperty(damagePctBonusVsBosses, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+                results.Properties.AdjustProperty(damageRatingBonusVsBosses, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+            }
 
             return true;
         }
