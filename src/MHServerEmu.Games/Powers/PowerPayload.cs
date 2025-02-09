@@ -6,6 +6,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -882,6 +883,7 @@ namespace MHServerEmu.Games.Powers
 
             // Calculate target-specific damage bonuses (these will modify PayloadDamage bonuses copied above)
             CalculateResultDamageRankModifier(results, target);
+            CalculateResultDamageAggroModifier(results, target);
 
             // Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
             float teamUpDamageScalar = 1f;
@@ -1017,6 +1019,40 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        private void CalculateResultDamageAggroModifier(PowerResults results, WorldEntity target)
+        {
+            float damagePctBonusVsAggroed = Properties[PropertyEnum.DamagePctBonusVsAggroed];
+            float damagePctBonusVsUnaware = Properties[PropertyEnum.DamagePctBonusVsUnaware];
+            float damageRatingBonusVsAggroed = Properties[PropertyEnum.DamageRatingBonusVsAggroed];
+            float damageRatingBonusVsUnaware = Properties[PropertyEnum.DamageRatingBonusVsUnaware];
+
+            // Check if there is anything to apply
+            if (damagePctBonusVsAggroed == 0f && damagePctBonusVsUnaware == 0f && damageRatingBonusVsAggroed == 0f && damageRatingBonusVsUnaware == 0f)
+                return;
+
+            // Only agents can be aggroed
+            if (target is not Agent agent)
+                return;
+
+            // Check if this agent has AI
+            AIController aiController = agent.AIController;
+            if (aiController == null)
+                return;
+
+            // Apply aggro or unaware bonus
+            WorldEntity targetOfTarget = aiController.TargetEntity;
+            if (targetOfTarget == null && targetOfTarget.Id == UltimateOwnerId)
+            {
+                results.Properties.AdjustProperty(damagePctBonusVsAggroed, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+                results.Properties.AdjustProperty(damageRatingBonusVsAggroed, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+            }
+            else
+            {
+                results.Properties.AdjustProperty(damagePctBonusVsUnaware, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+                results.Properties.AdjustProperty(damageRatingBonusVsUnaware, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+            }
         }
 
         private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, ref float difficultyMult)
@@ -1590,6 +1626,10 @@ namespace MHServerEmu.Games.Powers
             // Knockback
             if (conditionProps[PropertyEnum.Knockback])
                 CalculateResultConditionKnockbackProperties(results, target, condition);
+
+            // Taunt
+            if (conditionProps[PropertyEnum.Taunted] && PowerOwnerId != Entity.InvalidId)
+                conditionProps[PropertyEnum.TauntersID] = PowerOwnerId;
 
             // Procs
             CalculateResultConditionProcProperties(results, target, condition.Properties);
