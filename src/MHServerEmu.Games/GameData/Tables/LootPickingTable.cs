@@ -69,21 +69,18 @@ namespace MHServerEmu.Games.GameData.Tables
             }
 
             // CUSTOM: Load loot drop weight multiplier overrides
-            string lootDropWeightMultiplierOverridesPath = Path.Combine(FileHelper.DataDirectory, "Game", "LootDropWeightMultiplierOverrides.json");
-            if (File.Exists(lootDropWeightMultiplierOverridesPath))
-            {
-                LootDropWeightMultiplierOverride[] overrides;
+            string lootDropWeightMultiplierOverridesDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
 
-                try
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(lootDropWeightMultiplierOverridesDirectory, "LootDropWeightMultiplierOverrides", "json"))
+            {
+                LootDropWeightMultiplierOverride[] overrides = FileHelper.DeserializeJson<LootDropWeightMultiplierOverride[]>(filePath);
+                if (overrides == null)
                 {
-                    string json = File.ReadAllText(lootDropWeightMultiplierOverridesPath);
-                    overrides = JsonSerializer.Deserialize<LootDropWeightMultiplierOverride[]>(json);
+                    Logger.Warn($"LootPickingTable(): Failed to parse LootDropWeightMultiplier overrides from {filePath}");
+                    continue;
                 }
-                catch (Exception e)
-                {
-                    Logger.Warn($"LootPickingTable(): Failed to parse LootDropWeightMultiplier overrides from {lootDropWeightMultiplierOverridesPath} - {e.Message}");
-                    overrides = Array.Empty<LootDropWeightMultiplierOverride>();
-                }
+
+                Logger.Trace($"Parsed LootDropWeightMultiplier overrides from {Path.GetFileName(filePath)}");
 
                 foreach (var @override in overrides)
                 {
@@ -103,8 +100,8 @@ namespace MHServerEmu.Games.GameData.Tables
                         continue;
                     }
 
-                    Logger.Trace($"Loaded LootDropWeightMultiplier override: {itemPrototype} = {lootDropWeightMultiplier}f");
-                    _lootDropWeightMultiplierOverrides.Add(itemProtoRef, lootDropWeightMultiplier);
+                    Logger.Trace($"Added LootDropWeightMultiplier override: {itemPrototype} = {lootDropWeightMultiplier}f");
+                    _lootDropWeightMultiplierOverrides[itemProtoRef] = lootDropWeightMultiplier;
                 }
             }
         }
