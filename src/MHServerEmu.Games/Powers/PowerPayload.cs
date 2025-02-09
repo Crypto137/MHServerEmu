@@ -1011,18 +1011,56 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamageRankModifier(PowerResults results, WorldEntity target)
         {
-            // Boss-specific bonuses (TODO: rewrite this)
-            RankPrototype targetRankProto = target.GetRankPrototype();
-            float damagePctBonusVsBosses = Properties[PropertyEnum.DamagePctBonusVsBosses];
-            float damageRatingBonusVsBosses = Properties[PropertyEnum.DamageRatingBonusVsBosses];
+            float damageMult = 0f;
+            float damagePct = 0f;
+            float damageRating = 0f;
 
+            RankPrototype targetRankProto = target.GetRankPrototype();
+            if (targetRankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRankModifier(): targetRankProto == null");
+
+            // DamageMultVsRank
+            CalculateResultDamageRankModifierHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsRank, targetRankProto);
+
+            // DamagePctBonusVsRank
+            CalculateResultDamageRankModifierHelper(ref damagePct, Properties, PropertyEnum.DamagePctBonusVsRank, targetRankProto);
+
+            // DamageRatingBonusVsRank
+            CalculateResultDamageRankModifierHelper(ref damageRating, Properties, PropertyEnum.DamageRatingBonusVsRank, targetRankProto);
+
+            // BonusVsBosses
             if (targetRankProto.IsRankBossOrMiniBoss)
             {
-                results.Properties.AdjustProperty(damagePctBonusVsBosses, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
-                results.Properties.AdjustProperty(damageRatingBonusVsBosses, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+                damagePct += Properties[PropertyEnum.DamagePctBonusVsBosses];
+                damageRating += Properties[PropertyEnum.DamageRatingBonusVsBosses];
             }
 
+            if (damageMult != 0f)
+                results.Properties.AdjustProperty(damageMult, new(PropertyEnum.PayloadDamageMultTotal, DamageType.Any));
+
+            if (damagePct != 0f)
+                results.Properties.AdjustProperty(damagePct, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+
+            if (damageRating != 0f)
+                results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+
             return true;
+        }
+
+        private static void CalculateResultDamageRankModifierHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, RankPrototype targetRankProto)
+        {
+            foreach (var kvp in properties.IteratePropertyRange(propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId paramRankProtoRef);
+                RankPrototype paramRankProto = paramRankProtoRef.As<RankPrototype>();
+                if (paramRankProto == null)
+                {
+                    Logger.Warn("CalculateResultDamageRankModifierHelper(): paramRankProto == null");
+                    continue;
+                }
+
+                if (paramRankProto.Rank == targetRankProto.Rank)
+                    value += kvp.Value;
+            }
         }
 
         private void CalculateResultDamageAggroModifier(PowerResults results, WorldEntity target)
