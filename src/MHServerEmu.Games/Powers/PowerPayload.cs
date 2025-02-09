@@ -890,7 +890,10 @@ namespace MHServerEmu.Games.Powers
             if (_powerOwnerProto is AgentTeamUpPrototype || (_ultimatePowerOwnerProto != null && _ultimatePowerOwnerProto is AgentTeamUpPrototype) || IsTeamUpAwaySource)
                 teamUpDamageScalar = GameDatabase.DifficultyGlobalsPrototype.GetTeamUpDamageScalar(CombatLevel);
 
-            // TODO: Get live tuning multiplier for mobs
+            // Get live tuning multiplier for mobs
+            float liveTuningMultiplier = 1f;
+            if (_ultimatePowerOwnerProto != null)
+                liveTuningMultiplier = LiveTuningManager.GetLiveWorldEntityTuningVar(_ultimatePowerOwnerProto, WorldEntityTuningVar.eWETV_MobPowerDamage);
 
             for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
             {
@@ -926,7 +929,8 @@ namespace MHServerEmu.Games.Powers
                 // Team-up damage scaling
                 damageValues[(int)damageType] *= teamUpDamageScalar;
 
-                // TODO: Live tuning for mobs
+                // Live tuning multiplier for mobs
+                damageValues[(int)damageType] *= liveTuningMultiplier;
 
                 // Add flat damage bonuses not affected by modifiers
                 damageValues[(int)damageType] += Properties[PropertyEnum.DamageBaseUnmodified, damageType];
