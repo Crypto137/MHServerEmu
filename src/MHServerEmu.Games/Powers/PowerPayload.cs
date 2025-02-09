@@ -882,9 +882,11 @@ namespace MHServerEmu.Games.Powers
             resultProperties.CopyPropertyRange(Properties, PropertyEnum.PayloadDamageRatingTotal);
 
             // Calculate target-specific damage bonuses (these will modify PayloadDamage bonuses copied above)
-            CalculateResultDamageRankModifier(results, target);
-            CalculateResultDamageAggroModifier(results, target);
-            CalculateResultDamageKeywordModifier(results, target);
+            CalculateResultDamageRankBonus(results, target);
+            CalculateResultDamageAggroBonus(results, target);
+            CalculateResultDamageTargetKeywordBonus(results, target);
+            CalculateResultDamagePowerBonus(results, target);
+            // TODO: CalculateResultDamagePositionPowerBonus
 
             // Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
             float teamUpDamageScalar = 1f;
@@ -1010,7 +1012,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private bool CalculateResultDamageRankModifier(PowerResults results, WorldEntity target)
+        private bool CalculateResultDamageRankBonus(PowerResults results, WorldEntity target)
         {
             float damageMult = 0f;
             float damagePct = 0f;
@@ -1020,13 +1022,13 @@ namespace MHServerEmu.Games.Powers
             if (targetRankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRankModifier(): targetRankProto == null");
 
             // DamageMultVsRank
-            CalculateResultDamageRankModifierHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsRank, targetRankProto);
+            CalculateResultDamageRankBonusHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsRank, targetRankProto);
 
             // DamagePctBonusVsRank
-            CalculateResultDamageRankModifierHelper(ref damagePct, Properties, PropertyEnum.DamagePctBonusVsRank, targetRankProto);
+            CalculateResultDamageRankBonusHelper(ref damagePct, Properties, PropertyEnum.DamagePctBonusVsRank, targetRankProto);
 
             // DamageRatingBonusVsRank
-            CalculateResultDamageRankModifierHelper(ref damageRating, Properties, PropertyEnum.DamageRatingBonusVsRank, targetRankProto);
+            CalculateResultDamageRankBonusHelper(ref damageRating, Properties, PropertyEnum.DamageRatingBonusVsRank, targetRankProto);
 
             // BonusVsBosses
             if (targetRankProto.IsRankBossOrMiniBoss)
@@ -1047,7 +1049,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private static void CalculateResultDamageRankModifierHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, RankPrototype targetRankProto)
+        private static void CalculateResultDamageRankBonusHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, RankPrototype targetRankProto)
         {
             foreach (var kvp in properties.IteratePropertyRange(propertyEnum))
             {
@@ -1064,7 +1066,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void CalculateResultDamageAggroModifier(PowerResults results, WorldEntity target)
+        private void CalculateResultDamageAggroBonus(PowerResults results, WorldEntity target)
         {
             float damagePctBonusVsAggroed = Properties[PropertyEnum.DamagePctBonusVsAggroed];
             float damagePctBonusVsUnaware = Properties[PropertyEnum.DamagePctBonusVsUnaware];
@@ -1098,7 +1100,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private bool CalculateResultDamageKeywordModifier(PowerResults results, WorldEntity target)
+        private bool CalculateResultDamageTargetKeywordBonus(PowerResults results, WorldEntity target)
         {
             float damageMult = 0f;
             float damagePct = 0f;
@@ -1108,13 +1110,13 @@ namespace MHServerEmu.Games.Powers
             if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageKeywordModifier(): powerProto == null");
 
             // DamageMultVsKeyword
-            CalculateResultDamageKeywordModifierHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsKeyword, target);
+            CalculateResultDamageKeywordBonusHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsKeyword, target);
 
             // DamagePctBonusVsConditionKeyword
-            CalculateResultDamageKeywordModifierHelper(ref damagePct, Properties, PropertyEnum.DamagePctBonusVsConditionKeyword, target);
+            CalculateResultDamageKeywordBonusHelper(ref damagePct, Properties, PropertyEnum.DamagePctBonusVsConditionKeyword, target);
 
             // DamageRatingBonusVsConditionKeyword
-            CalculateResultDamageKeywordModifierHelper(ref damageRating, Properties, PropertyEnum.DamageRatingBonusVsConditionKeyword, target);
+            CalculateResultDamageKeywordBonusHelper(ref damageRating, Properties, PropertyEnum.DamageRatingBonusVsConditionKeyword, target);
 
             // DamageMultVsKeywordForPowerKwd
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.DamageMultVsKeywordForPowerKwd))
@@ -1148,7 +1150,7 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        private static void CalculateResultDamageKeywordModifierHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, WorldEntity target)
+        private static void CalculateResultDamageKeywordBonusHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, WorldEntity target)
         {
             foreach (var kvp in properties.IteratePropertyRange(propertyEnum))
             {
@@ -1160,6 +1162,43 @@ namespace MHServerEmu.Games.Powers
 
                 value += kvp.Value;
             }
+        }
+
+        private void CalculateResultDamagePowerBonus(PowerResults results, WorldEntity target)
+        {
+            float damageRating = 0f;
+
+            // Apply damage rating bonuses for specific powers / power keywords set on the target (e.g. via conditions)
+
+            // DamageRatingBonusForPowerVsTarget
+            foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.DamageRatingBonusForPowerVsTarget))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                if (powerProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("CalculateResultDamagePowerBonus(): powerProtoRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                if (powerProtoRef != PowerProtoRef)
+                    continue;
+
+                damageRating += kvp.Value;
+            }
+
+            // DamageRatingBonusForPowerKeywordVsTarget
+            foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.DamageRatingBonusForPowerKeywordVsTarget))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+
+                if (HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
+                    continue;
+
+                damageRating += kvp.Value;
+            }
+
+            if (damageRating != 0f)
+                results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
         }
 
         private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, ref float difficultyMult)
