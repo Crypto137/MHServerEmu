@@ -56,6 +56,9 @@
     <None Update="Data\Game\LiveTuningDataBugFixes.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Data\Game\LootDropWeightMultiplierOverrides.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

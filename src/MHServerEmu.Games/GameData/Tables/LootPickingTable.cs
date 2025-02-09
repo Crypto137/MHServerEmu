@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using System.Text.Json;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -18,6 +20,8 @@ namespace MHServerEmu.Games.GameData.Tables
         private readonly Dictionary<PrototypeId, List<AffixPrototype>> _affixCategoryDict = new();
 
         private readonly Dictionary<LootPickingPair, List<PickerElement>> _pickerDict = new();
+
+        private readonly Dictionary<PrototypeId, float> _lootDropWeightMultiplierOverrides = new(); // CUSTOM
 
         public LootPickingTable()
         {
@@ -61,6 +65,46 @@ namespace MHServerEmu.Games.GameData.Tables
                 {
                     var affixProto = affixRef.As<AffixPrototype>();
                     categoryAffixList.Add(affixProto);
+                }
+            }
+
+            // CUSTOM: Load loot drop weight multiplier overrides
+            string lootDropWeightMultiplierOverridesPath = Path.Combine(FileHelper.DataDirectory, "Game", "LootDropWeightMultiplierOverrides.json");
+            if (File.Exists(lootDropWeightMultiplierOverridesPath))
+            {
+                LootDropWeightMultiplierOverride[] overrides;
+
+                try
+                {
+                    string json = File.ReadAllText(lootDropWeightMultiplierOverridesPath);
+                    overrides = JsonSerializer.Deserialize<LootDropWeightMultiplierOverride[]>(json);
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn($"LootPickingTable(): Failed to parse LootDropWeightMultiplier overrides from {lootDropWeightMultiplierOverridesPath} - {e.Message}");
+                    overrides = Array.Empty<LootDropWeightMultiplierOverride>();
+                }
+
+                foreach (var @override in overrides)
+                {
+                    string itemPrototype = @override.ItemPrototype;
+                    float lootDropWeightMultiplier = @override.LootDropWeightMultiplier;
+
+                    PrototypeId itemProtoRef = GameDatabase.GetPrototypeRefByName(itemPrototype);
+                    if (itemProtoRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn($"LootPickingTable(): Failed to add a LootDropWeightMultiplier override - {itemPrototype} is not a valid prototype name");
+                        continue;
+                    }
+
+                    if (DataDirectory.Instance.PrototypeIsA<ItemPrototype>(itemProtoRef) == false)
+                    {
+                        Logger.Warn($"LootPickingTable(): Failed to add a LootDropWeightMultiplier override - {itemPrototype} is not an ItemPrototype");
+                        continue;
+                    }
+
+                    Logger.Trace($"Loaded LootDropWeightMultiplier override: {itemPrototype} = {lootDropWeightMultiplier}f");
+                    _lootDropWeightMultiplierOverrides.Add(itemProtoRef, lootDropWeightMultiplier);
                 }
             }
         }
@@ -112,20 +156,16 @@ namespace MHServerEmu.Games.GameData.Tables
                     Prototype lootProto = GameDatabase.GetPrototype<Prototype>(lootProtoRef);
                     int weight = 100;   // 100 is the default weight
 
-                    // What we are picking may not be an item (orbs and stuff?)
+                    // What we are picking may not be an item? When?
                     if (lootProto is ItemPrototype itemProto)
                     {
-                        float weightMultiplier = itemProto.LootDropWeightMultiplier;
+                        // CUSTOM: Check if we have a weight multiplier override for this item, otherwise use the one from the item prototype
+                        if (_lootDropWeightMultiplierOverrides.TryGetValue(lootProtoRef, out float weightMultiplier) == false)
+                            weightMultiplier = itemProto.LootDropWeightMultiplier;
 
                         // Skip items that have a 0 weight multiplier
                         if (Segment.IsNearZero(weightMultiplier))
-                        {
-                            // HACK: Override multiplier for F4 insignias to make them droppable again
-                            if (DataDirectory.Instance.PrototypeIsAPrototype(lootProtoRef, (PrototypeId)1954657857401986351))
-                                weightMultiplier = 1f;
-                            else
-                                continue;
-                        }
+                            continue;
 
                         // NOTE: agentProto based skip happens only if there is no custom drop weight multiplier, is this correct?
                         if (Segment.EpsilonTest(weightMultiplier, 1f) == false)
@@ -174,6 +214,12 @@ namespace MHServerEmu.Games.GameData.Tables
                 Prototype = prototype;
                 Weight = weight;
             }
+        }
+
+        private class LootDropWeightMultiplierOverride
+        {
+            public string ItemPrototype { get; init; }
+            public float LootDropWeightMultiplier { get; init; }
         }
     }
 }
