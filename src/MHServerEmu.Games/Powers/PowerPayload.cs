@@ -884,6 +884,7 @@ namespace MHServerEmu.Games.Powers
             // Calculate target-specific damage bonuses (these will modify PayloadDamage bonuses copied above)
             CalculateResultDamageRankModifier(results, target);
             CalculateResultDamageAggroModifier(results, target);
+            CalculateResultDamageKeywordModifier(results, target);
 
             // Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
             float teamUpDamageScalar = 1f;
@@ -1094,6 +1095,70 @@ namespace MHServerEmu.Games.Powers
             {
                 results.Properties.AdjustProperty(damagePctBonusVsUnaware, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
                 results.Properties.AdjustProperty(damageRatingBonusVsUnaware, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+            }
+        }
+
+        private bool CalculateResultDamageKeywordModifier(PowerResults results, WorldEntity target)
+        {
+            float damageMult = 0f;
+            float damagePct = 0f;
+            float damageRating = 0f;
+
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageKeywordModifier(): powerProto == null");
+
+            // DamageMultVsKeyword
+            CalculateResultDamageKeywordModifierHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsKeyword, target);
+
+            // DamagePctBonusVsConditionKeyword
+            CalculateResultDamageKeywordModifierHelper(ref damagePct, Properties, PropertyEnum.DamagePctBonusVsConditionKeyword, target);
+
+            // DamageRatingBonusVsConditionKeyword
+            CalculateResultDamageKeywordModifierHelper(ref damageRating, Properties, PropertyEnum.DamageRatingBonusVsConditionKeyword, target);
+
+            // DamageMultVsKeywordForPowerKwd
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.DamageMultVsKeywordForPowerKwd))
+            {
+                // Check target keyword
+                Property.FromParam(kvp.Key, 0, out PrototypeId targetKeywordProtoRef);
+                KeywordPrototype targetKeywordProto = targetKeywordProtoRef.As<KeywordPrototype>();
+
+                if (target.HasKeyword(targetKeywordProto) == false && target.HasConditionWithKeyword(targetKeywordProto) == false)
+                    continue;
+
+                // Check power keyword
+                Property.FromParam(kvp.Key, 1, out PrototypeId powerKeywordProtoRef);
+                KeywordPrototype powerKeywordProto = powerKeywordProtoRef.As<KeywordPrototype>();
+                
+                if (HasKeyword(powerKeywordProto) == false)
+                    continue;
+
+                damageMult += kvp.Value;
+            }
+
+            if (damageMult != 0f)
+                results.Properties.AdjustProperty(damageMult, new(PropertyEnum.PayloadDamageMultTotal, DamageType.Any));
+
+            if (damagePct != 0f)
+                results.Properties.AdjustProperty(damagePct, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+
+            if (damageRating != 0f)
+                results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+
+            return true;
+        }
+
+        private static void CalculateResultDamageKeywordModifierHelper(ref float value, PropertyCollection properties, PropertyEnum propertyEnum, WorldEntity target)
+        {
+            foreach (var kvp in properties.IteratePropertyRange(propertyEnum))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+
+                if (target.HasKeyword(keywordProto) == false && target.HasConditionWithKeyword(keywordProto) == false)
+                    continue;
+
+                value += kvp.Value;
             }
         }
 
