@@ -1273,7 +1273,7 @@ namespace MHServerEmu.Games.Powers
                     if (powerProto.HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
                         continue;
 
-                    damagePctVulnerabilityVsPowerKwd = Math.Max(damagePctVulnerabilityVsPowerKwd, kvp.Value);
+                    damagePctVulnerabilityVsPowerKwd = Math.Max(damagePctVulnerabilityVsPowerKwd, kwdKvp.Value);
                 }
 
                 // Pick the highest vulnerabililty pct
