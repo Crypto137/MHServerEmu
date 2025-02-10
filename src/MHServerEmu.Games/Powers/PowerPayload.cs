@@ -344,7 +344,7 @@ namespace MHServerEmu.Games.Powers
                 if (damage > 0f)
                     Properties[PropertyEnum.Damage, damageType] = damage;
 
-                // Calculate unmodified damage (flat damage unaffected by bonuses)
+                // Calculate unmodified damage (flat damage not affected by bonuses)
                 float damageBaseUnmodified = powerProperties[PropertyEnum.DamageBaseUnmodified, damageType];
                 damageBaseUnmodified += (float)powerProperties[PropertyEnum.DamageBaseUnmodifiedPerRank, damageType] * (int)Properties[PropertyEnum.PowerRank];
 
@@ -632,7 +632,7 @@ namespace MHServerEmu.Games.Powers
                     Properties[PropertyEnum.Damage, damageType] = damage;
 
                 // ----
-                // Calculate flat unmodified damage (unaffected by scaling)
+                // Calculate flat unmodified damage (not affected by scaling)
                 float damageUnmodified = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodified];
 
                 // Apply per-rank unmodified damage
@@ -860,6 +860,14 @@ namespace MHServerEmu.Games.Powers
             if (hasBaseDamage == false)
                 return true;
 
+            // Check if this target can be affected by this payload
+            if (CheckUnaffected(target))
+            {
+                // Stop damage calculations if unaffected
+                results.SetFlag(PowerResultFlags.Unaffected, true);
+                return true;
+            }
+
             // Check crit / brutal strike chance
             if (CheckCritChance(target))
             {
@@ -868,11 +876,6 @@ namespace MHServerEmu.Games.Powers
                 else
                     results.SetFlag(PowerResultFlags.Critical, true);
             }
-
-            // TODO: Check unaffected
-
-            if (results.IsAvoided)
-                return true;
 
             // Copy payload damage bonus properties to results to apply target-specific modifiers to them
             PropertyCollection resultProperties = results.Properties;
@@ -2327,6 +2330,39 @@ namespace MHServerEmu.Games.Powers
             // Check block chance
             float blockChance = Power.GetBlockChance(powerProto, Properties, target.Properties, UltimateOwnerId);
             return Game.Random.NextFloat() < blockChance;
+        }
+
+        private bool CheckUnaffected(WorldEntity target)
+        {
+            AlliancePrototype allianceProto = OwnerAlliance;
+
+            // Self-targeted powers always affect their targets
+            if (target.Id == UltimateOwnerId)
+                return false;
+
+            // Check target invulnerability
+            if (target.Properties[PropertyEnum.Invulnerable])
+            {
+                // Invulnerability affects only hostile targets
+                if (allianceProto == null || allianceProto.IsHostileTo(target.Alliance))
+                    return true;
+            }
+            
+            // Check keyworded invulnerability
+            foreach (var kvp in target.Properties.IteratePropertyRange(PropertyEnum.InvulnExceptWithPowerKwd))
+            {
+                PrototypeId keywordProtoRef = kvp.Value;
+                if (HasKeyword(keywordProtoRef.As<KeywordPrototype>()) == false)
+                    return true;
+            }
+
+            // Check player targetability
+            Player player = target.GetOwnerOfType<Player>();
+            if (player != null && player.IsTargetable(allianceProto) == false)
+                return true;
+
+            // All checks passed, this target is affectable
+            return false;
         }
 
         /// <summary>
