@@ -67,6 +67,8 @@ namespace MHServerEmu.Games.Entities
             var summonProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
             if (summonProto == null) return; // Only Agent can be spawn, skip hotspot
 
+            Logger.Debug($"OnDeathSummonFromPowerPrototype(): {summonPowerProto}");
+
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
             using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
             {

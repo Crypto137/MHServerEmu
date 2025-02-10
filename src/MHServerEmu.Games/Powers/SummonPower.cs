@@ -52,7 +52,6 @@ namespace MHServerEmu.Games.Powers
             // Special handling for OnDeath summon procs
             if (OnDeathSummonProcs.Contains(PrototypeDataRef))
             {
-                Logger.Debug($"Activate(): Spawning OnDeath for [{this}]");
                 EntityHelper.OnDeathSummonFromPowerPrototype(Owner, (SummonPowerPrototype)Prototype);
                 return PowerUseResult.Success;
             }
