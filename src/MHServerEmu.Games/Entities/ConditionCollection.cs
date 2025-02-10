@@ -215,6 +215,38 @@ namespace MHServerEmu.Games.Entities
             return condition.Id;
         }
 
+        /// <summary>
+        /// Adds ids of all <see cref="Condition"/> instances contained in this <see cref="ConditionCollection"/> that apply
+        /// the specified negative status effect to the provided list. Returns <see langword="true"/> if any conditions were added.
+        /// </summary>
+        public bool GetNegativeStatusConditions(PrototypeId negativeStatusProtoRef, List<ulong> negativeStatusConditionList)
+        {
+            bool hasNegativeStatus = false;
+
+            List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+
+            foreach (Condition condition in this)
+            {
+                if (condition.IsANegativeStatusEffect(negativeStatusList) == false)
+                    continue;
+
+                foreach (PrototypeId foundNegativeStatusRef in negativeStatusList)
+                {
+                    if (foundNegativeStatusRef == negativeStatusProtoRef)
+                    {
+                        negativeStatusConditionList.Add(condition.Id);
+                        hasNegativeStatus = true;
+                        break;
+                    }
+                }
+
+                negativeStatusList.Clear();
+            }
+
+            ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+            return hasNegativeStatus;
+        }
+
         public Iterator IterateConditions(bool skipDisabled)
         {
             return new(this, skipDisabled);

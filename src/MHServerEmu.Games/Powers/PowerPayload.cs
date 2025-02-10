@@ -793,7 +793,10 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (targetResults.IsDodged == false)
+            {
                 CalculateResultConditionsToAdd(targetResults, target, calculateForTarget);
+                CalculateResultNegativeStatusRemoval(targetResults, target);
+            }
 
             // Copy extra properties
             targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
@@ -1750,6 +1753,49 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        private void CalculateResultNegativeStatusRemoval(PowerResults results, WorldEntity target)
+        {
+            List<ulong> negativeStatusConditionsToRemove = ListPool<ulong>.Instance.Get();
+            ConditionCollection conditionCollection = target.ConditionCollection;
+
+            float negStatusClearChancePctAll = Properties[PropertyEnum.PowerClearsNegStatusChancePctAll];
+            if (negStatusClearChancePctAll > 0f)
+            {
+                // Roll for all possible negative statuses
+                foreach (PrototypeId negativeStatusProtoRef in GameDatabase.GlobalsPrototype.NegStatusEffectList)
+                {
+                    float netStatusClearChance = negStatusClearChancePctAll + Properties[PropertyEnum.PowerClearsNegStatusChancePct, negativeStatusProtoRef];
+
+                    if (netStatusClearChance == 0f)
+                        continue;
+
+                    if (Game.Random.NextFloat() < netStatusClearChance)
+                        conditionCollection.GetNegativeStatusConditions(negativeStatusProtoRef, negativeStatusConditionsToRemove);
+                }
+            }
+            else
+            {
+                // Roll individually for each status effect property
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerClearsNegStatusChancePct))
+                {
+                    float netStatusClearChance = kvp.Value;
+
+                    if (netStatusClearChance == 0f)
+                        continue;
+
+                    Property.FromParam(kvp.Key, 0, out PrototypeId negativeStatusProtoRef);
+
+                    if (Game.Random.NextFloat() < netStatusClearChance)
+                        conditionCollection.GetNegativeStatusConditions(negativeStatusProtoRef, negativeStatusConditionsToRemove);
+                }
+            }
+
+            foreach (ulong conditionId in negativeStatusConditionsToRemove)
+                results.AddConditionToRemove(conditionId);
+
+            ListPool<ulong>.Instance.Return(negativeStatusConditionsToRemove);
         }
 
         private bool CalculateResultConditionDuration(PowerResults results, WorldEntity target, WorldEntity owner, bool calculateForTarget,
