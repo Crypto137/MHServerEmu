@@ -2046,6 +2046,174 @@ namespace MHServerEmu.Games.Entities
             Power.TryBreakStealth(creator, ultimateCreator, tickData.PowerProto, isHostile, true);
         }
 
+        public float ApplyDamageConversion(float damageBase, DamageType damageType, PowerResults powerResults, WorldEntity user, PropertyCollection powerProperties, float difficultyMult)
+        {
+            PowerPrototype powerProto = powerResults.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(damageBase, "ApplyDamageConversion(): powerProto == null");
+
+            DamageConversionContext context = new(damageBase, damageType, powerProto);
+
+            // Convert incoming (target -> target)
+            context.SetIncoming(Properties, this);
+            ApplyDamageConversionInternal(ref context);
+
+            if (user != null && user.IsDead == false)
+            {
+                // Convert outgoing (user -> user)
+                context.SetOutgoing(user.Properties, user, difficultyMult);
+                ApplyDamageConversionInternal(ref context);
+
+                // Convert for power (power -> user)
+                context.SetForPower(powerProperties, user);
+                ApplyDamageConversionInternal(ref context);
+            }
+
+            return context.DamageConverted;
+        }
+
+        private void ApplyDamageConversionInternal(ref DamageConversionContext context)
+        {
+            // Defer property changes because we are likely converting properties on the same collection (target -> target or user -> user)
+            List<(PropertyEnum, float)> conversionResults = ListPool<(PropertyEnum, float)>.Instance.Get();
+
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var kvp in context.SourceProperties.IteratePropertyRange(context.ConversionProperty))
+            {
+                // Check if this conversion property matches our context's damage type
+                Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                DamageType damageType = (DamageType)damageTypeValue;
+
+                if (damageType != DamageType.Any && damageType != context.DamageType)
+                    continue;
+
+                Property.FromParam(kvp.Key, 1, out PrototypeId convertedPropertyProtoRef);
+                PropertyEnum convertedProperty = propertyInfoTable.GetPropertyEnumFromPrototype(convertedPropertyProtoRef);
+
+                // Validate data type - this system supports only float properties and health
+                PropertyInfo propertyInfo = propertyInfoTable.LookupPropertyInfo(convertedProperty);
+                if (propertyInfo.DataType != PropertyDataType.Real && convertedProperty != PropertyEnum.Health)
+                {
+                    Logger.Warn($"ApplyDamageConversionInternal(): Trying to convert to invalid property type for power {context.PowerPrototype}");
+                    continue;
+                }
+
+                // Convert value
+                float convertedValue = context.DamageBase * kvp.Value;
+
+                // Apply conversion ration
+                float conversionRatio = context.SourceProperties[context.ConversionRatioProperty, convertedPropertyProtoRef];
+                if (Segment.IsNearZero(conversionRatio) == false)
+                    convertedValue /= conversionRatio;
+
+                // Clamp to max value
+                float conversionMax = context.SourceProperties[context.ConversionMaxProperty, convertedPropertyProtoRef];
+                if (Segment.IsNearZero(conversionMax) == false)
+                    convertedValue = Math.Max(convertedValue, conversionMax);
+
+                // Calculate conversion cost (i.e. damage lost a result of this conversion)
+                float convertedPct = 1f;    // Default to full conversion cost
+                Property.FromParam(kvp.Key, 2, out int conversionCostParam);
+                
+                // Clamp conversion cost if needed
+                if (conversionCostParam > 1)
+                {
+                    Properties.GetPropertyMinMaxFloat(convertedProperty, out float min, out float max);
+                    float current = Properties[convertedProperty];
+                    float remainingConvertedProperty = (convertedValue > 0f) ? (max - current) : (current - min);
+                    convertedPct = Math.Abs(remainingConvertedProperty / convertedValue);
+                    convertedPct = Math.Clamp(convertedPct, 0f, 1f);
+                }
+
+                // Remove difficulty multiplier from the converted value
+                if (context.ConversionProperty == PropertyEnum.DamageConversionOutgoing)
+                {
+                    float difficultyMultiplier = context.DifficultyMultiplier;
+                    if (difficultyMultiplier > 0f && difficultyMultiplier < 1f && Segment.IsNearZero(difficultyMultiplier) == false)
+                        convertedValue /= difficultyMultiplier;
+                }
+
+                // Add conversion results to be applied below
+                conversionResults.Add((convertedProperty, convertedValue));
+
+                // Apply conversion cost to the damage
+                if (conversionCostParam != 0)
+                {
+                    float costMultiplier = Math.Clamp(kvp.Value * convertedPct, 0f, 1f);
+                    float damageConverted = context.DamageConverted - (context.DamageBase * costMultiplier);
+                    damageConverted = Math.Max(damageConverted, 0f);
+                    context.DamageConverted = damageConverted;
+                }
+            }
+
+            // Apply resulting property adjustments to the target
+            WorldEntity target = context.Target;
+
+            foreach (var result in conversionResults)
+                target.SetDamageConvertedProperty(result.Item1, result.Item2);
+
+            ListPool<(PropertyEnum, float)>.Instance.Return(conversionResults);
+        }
+
+        private void SetDamageConvertedProperty(PropertyEnum propertyEnum, float delta)
+        {
+            switch (propertyEnum)
+            {
+                // By default simply adjust the value
+                default:
+                    Properties.AdjustProperty(delta, propertyEnum);
+                    break;
+
+                // Special handling for health / mana / secondary resource
+                case PropertyEnum.Health:
+                    if (delta > 0f && Properties[PropertyEnum.DisableHealthGain])
+                        return;
+
+                    long health = Properties[PropertyEnum.Health];
+                    health += MathHelper.RoundToInt64(delta);
+                    health = Math.Clamp(health, 0, Properties[PropertyEnum.HealthMax]);
+
+                    Properties[PropertyEnum.Health] = health;
+
+                    break;
+
+                case PropertyEnum.Endurance:
+                    if (this is not Avatar avatar)
+                        return;
+
+                    foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
+                    {
+                        ManaType manaType = primaryManaBehaviorProto.ManaType;
+
+                        if (delta > 0f && Properties[PropertyEnum.DisableEnduranceGain, manaType])
+                            continue;
+
+                        float endurance = Properties[PropertyEnum.Endurance, manaType];
+                        endurance += delta;
+                        endurance = Math.Clamp(endurance, 0f, Properties[PropertyEnum.EnduranceMax, manaType]);
+
+                        Properties[PropertyEnum.Endurance, manaType] = endurance;
+                    }
+
+                    break;
+
+                case PropertyEnum.SecondaryResource:
+                    if (this is not Avatar)
+                        return;
+
+                    if (delta > 0f && Properties[PropertyEnum.DisableSecondaryResourceGain])
+                        return;
+
+                    float secondaryResource = Properties[PropertyEnum.SecondaryResource];
+                    secondaryResource += delta;
+                    secondaryResource = Math.Clamp(secondaryResource, 0f, Properties[PropertyEnum.SecondaryResourceMax]);
+
+                    Properties[PropertyEnum.SecondaryResource] = secondaryResource;
+
+                    break;
+            }
+        }
+
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
         {
             if (SpawnGroup == null) return;

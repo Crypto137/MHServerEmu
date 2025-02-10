@@ -1721,7 +1721,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 if (GetPower(powerProtoRef) == null)
                 {
-                    Logger.Debug($"InitializeManaBehaviorPowers(): {powerProtoRef.GetName()}");
                     if (AssignPower(powerProtoRef, indexProps) == null)
                         Logger.Warn($"InitializeManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
                 }

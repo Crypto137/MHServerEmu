@@ -990,6 +990,8 @@ namespace MHServerEmu.Games.Powers
 
             CalculateResultDamageDefenseModifier(results, target);
 
+            CalculateResultDamageConversion(results, target, difficultyMult);
+
             CalculateResultDamageMetaGameModifier(results, target);
 
             CalculateResultDamageLevelScaling(results, target, difficultyMult);
@@ -1497,6 +1499,24 @@ namespace MHServerEmu.Games.Powers
             }
 
             return true;
+        }
+
+        private void CalculateResultDamageConversion(PowerResults results, WorldEntity target, float difficultyMult)
+        {
+            // Prioritize ultimate owner for damage conversion
+            WorldEntity user = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+            user ??= Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+
+            for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+            {
+                float damage = results.Properties[PropertyEnum.Damage, damageType];
+                if (damage == 0f)
+                    continue;
+
+                float convertedDamage = target.ApplyDamageConversion(damage, damageType, results, user, Properties, difficultyMult);
+                if (convertedDamage != damage)
+                    results.Properties[PropertyEnum.Damage, damageType] = convertedDamage;
+            }
         }
 
         private bool CalculateResultDamageMetaGameModifier(PowerResults results, WorldEntity target)

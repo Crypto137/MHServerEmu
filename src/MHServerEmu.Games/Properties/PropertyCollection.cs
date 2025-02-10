@@ -164,6 +164,45 @@ namespace MHServerEmu.Games.Properties
             return GetPropertyValue(id);
         }
 
+        public void GetPropertyMinMaxFloat(PropertyId id, out float min, out float max)
+        {
+            // This is ugly
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+            PropertyInfo propertyInfo = propertyInfoTable.LookupPropertyInfo(id.Enum);
+
+            if (propertyInfo.DataType != PropertyDataType.Real)
+            {
+                min = 0f;
+                max = 0f;
+                Logger.Warn("GetPropertyMinMaxFloat(): Attempting to lookup min/max float values for a non-float property");
+                return;
+            }
+
+            switch (id.Enum)
+            {
+                // Default to prototype data
+                default:
+                    PropertyInfoPrototype propertyInfoProto = propertyInfo.Prototype;
+                    min = propertyInfoProto.Min;
+                    max = propertyInfoProto.Max;
+                    break;
+
+                // Cap to max values for resources
+                case PropertyEnum.Endurance:
+                    Property.FromParam(id, 0, out int manaType);
+                    min = 0f;
+                    max = GetProperty(new(PropertyEnum.EnduranceMax, (PropertyParam)manaType));
+
+                    break;
+
+                case PropertyEnum.SecondaryResource:
+                    min = 0f;
+                    max = GetProperty(PropertyEnum.SecondaryResourceMax);
+
+                    break;
+            }
+        }
+
         /// <summary>
         /// Sets the <see cref="PropertyValue"/> with the specified <see cref="PropertyId"/>.
         /// </summary>
