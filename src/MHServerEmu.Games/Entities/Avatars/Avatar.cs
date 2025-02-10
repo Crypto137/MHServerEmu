@@ -2956,19 +2956,19 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
 
                 case PropertyEnum.SecondaryResourceMaxBase:
-                    Properties[PropertyEnum.SecondaryResourceMax] = newValue + Properties[PropertyEnum.SecondaryResourceMaxChange];
+                    Properties[PropertyEnum.SecondaryResourceMax] = (float)newValue + Properties[PropertyEnum.SecondaryResourceMaxChange];
                     break;
 
                 case PropertyEnum.SecondaryResourceMaxChange:
-                    Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase] + newValue;
+                    Properties[PropertyEnum.SecondaryResourceMax] = Properties[PropertyEnum.SecondaryResourceMaxBase] + (float)newValue;
                     break;
 
                 case PropertyEnum.SecondaryResourceMaxPipsBase:
-                    Properties[PropertyEnum.SecondaryResourceMaxPips] = newValue + Properties[PropertyEnum.SecondaryResourceMaxPipsChg];
+                    Properties[PropertyEnum.SecondaryResourceMaxPips] = (int)newValue + Properties[PropertyEnum.SecondaryResourceMaxPipsChg];
                     break;
 
                 case PropertyEnum.SecondaryResourceMaxPipsChg:
-                    Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + newValue;
+                    Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + (int)newValue;
                     break;
 
                 case PropertyEnum.StatAllModifier:
