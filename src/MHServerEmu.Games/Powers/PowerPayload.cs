@@ -886,7 +886,8 @@ namespace MHServerEmu.Games.Powers
             CalculateResultDamageAggroBonus(results, target);
             CalculateResultDamageTargetKeywordBonus(results, target);
             CalculateResultDamagePowerBonus(results, target);
-            // TODO: CalculateResultDamagePositionPowerBonus
+            CalculateResultDamageNearbyDistanceBonus(results, target);
+            CalculateResultDamageRangedDistanceBonus(results, target);
 
             // Team-ups deal too much damage at lower levels, so they need to have a scalar applied to their damage
             float teamUpDamageScalar = 1f;
@@ -1014,12 +1015,12 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamageRankBonus(PowerResults results, WorldEntity target)
         {
+            RankPrototype targetRankProto = target.GetRankPrototype();
+            if (targetRankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRankModifier(): targetRankProto == null");
+
             float damageMult = 0f;
             float damagePct = 0f;
             float damageRating = 0f;
-
-            RankPrototype targetRankProto = target.GetRankPrototype();
-            if (targetRankProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRankModifier(): targetRankProto == null");
 
             // DamageMultVsRank
             CalculateResultDamageRankBonusHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsRank, targetRankProto);
@@ -1102,12 +1103,12 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamageTargetKeywordBonus(PowerResults results, WorldEntity target)
         {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageKeywordModifier(): powerProto == null");
+
             float damageMult = 0f;
             float damagePct = 0f;
             float damageRating = 0f;
-
-            PowerPrototype powerProto = PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageKeywordModifier(): powerProto == null");
 
             // DamageMultVsKeyword
             CalculateResultDamageKeywordBonusHelper(ref damageMult, Properties, PropertyEnum.DamageMultVsKeyword, target);
@@ -1199,6 +1200,92 @@ namespace MHServerEmu.Games.Powers
 
             if (damageRating != 0f)
                 results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+        }
+
+        private bool CalculateResultDamageNearbyDistanceBonus(PowerResults results, WorldEntity target)
+        {
+            if (target.IsInWorld == false) return Logger.WarnReturn(false, "CalculateResultDamageNearbyDistanceBonus(): target.IsInWorld == false");
+
+            float damageRating = 0f;
+
+            Vector3 userPosition = UltimateOwnerId == Entity.InvalidId ? PowerOwnerPosition : UltimateOwnerPosition;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.DamageRatingBonusWithinDist))
+            {
+                // On the cosmological scale, it's all nearby.
+                Property.FromParam(kvp.Key, 0, out int nearbyThreshold);
+                float distanceSquared = Vector3.DistanceSquared(userPosition, target.RegionLocation.Position);
+                if (distanceSquared > (nearbyThreshold * nearbyThreshold))
+                    continue;
+
+                damageRating += kvp.Value;
+            }
+
+            if (damageRating != 0f)
+                results.Properties.AdjustProperty(damageRating, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
+
+            return true;
+        }
+
+        private bool CalculateResultDamageRangedDistanceBonus(PowerResults results, WorldEntity target)
+        {
+            if (target.IsInWorld == false) return Logger.WarnReturn(false, "CalculateResultDamageRangedDistanceBonus(): target.IsInWorld == false");
+
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageRangedDistanceBonus(): powerProto == null");
+
+            // This bonus applies only to powers keyworded as ranged
+            if (powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.RangedPowerKeywordPrototype) == false)
+                return true;
+
+            float damagePct = 0f;
+
+            WorldEntity user;
+            Vector3 userPosition;
+
+            if (UltimateOwnerId == Entity.InvalidId)
+            {
+                user = Game.EntityManager.GetEntity<WorldEntity>(PowerOwnerId);
+                userPosition = PowerOwnerPosition;
+            }
+            else
+            {
+                user = Game.EntityManager.GetEntity<WorldEntity>(UltimateOwnerId);
+                userPosition = UltimateOwnerPosition;
+            }
+
+            if (userPosition == Vector3.Zero) return Logger.WarnReturn(false, "CalculateResultDamageRangedDistanceBonus(): userPosition == Vector3.Zero");
+
+            CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceClose, user, userPosition, target);
+            CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceFar, user, userPosition, target);
+
+            if (damagePct != 0f)
+                results.Properties.AdjustProperty(damagePct, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
+
+            return true;
+        }
+
+        private void CalculateResultDamageRangedDistanceBonusHelper(ref float value, PropertyEnum propertyEnum, WorldEntity user, Vector3 userPosition, WorldEntity target)
+        {
+            float maxDistanceBonus = Properties[propertyEnum];
+            if (maxDistanceBonus == 0f)
+                return;
+
+            // Calculate the distance between the user and the target
+            float minRange = target.Bounds.Radius + (user != null ? user.Bounds.Radius : 0f);
+            float maxRange = Range + Properties[PropertyEnum.MissileRange];
+
+            float distance = Vector3.Length(target.RegionLocation.Position - userPosition);
+            distance = Math.Clamp(distance, minRange, maxRange);
+
+            // Calculate distance bonus multiplier excluding the min range
+            float distanceBonusMult = (distance - minRange) / (maxRange - minRange);
+
+            // Invert the multiplier if we are applying a close distance bonus
+            if (propertyEnum == PropertyEnum.DamagePctBonusDistanceClose)
+                distanceBonusMult = 1f - distanceBonusMult;
+
+            value += maxDistanceBonus * distanceBonusMult;
         }
 
         private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, ref float difficultyMult)

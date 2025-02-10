@@ -1145,6 +1145,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public KeywordPrototype DestructibleKeywordPrototype { get; private set; }
         [DoNotCopy]
+        public KeywordPrototype RangedPowerKeywordPrototype { get; private set; }
+        [DoNotCopy]
         public KeywordPrototype StealthPowerKeywordPrototype { get; private set; }
 
         public override void PostProcess()
@@ -1153,6 +1155,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // Cache frequently used keyword prototype refs
             DestructibleKeywordPrototype = DestructibleKeyword.As<KeywordPrototype>();
+            RangedPowerKeywordPrototype = RangedPowerKeyword.As<KeywordPrototype>();
             StealthPowerKeywordPrototype = StealthPowerKeyword.As<KeywordPrototype>();
         }
     }
