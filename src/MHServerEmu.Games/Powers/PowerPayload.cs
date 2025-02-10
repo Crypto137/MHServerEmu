@@ -1088,7 +1088,7 @@ namespace MHServerEmu.Games.Powers
 
             // Apply aggro or unaware bonus
             WorldEntity targetOfTarget = aiController.TargetEntity;
-            if (targetOfTarget == null && targetOfTarget.Id == UltimateOwnerId)
+            if (targetOfTarget != null && targetOfTarget.Id == UltimateOwnerId)
             {
                 results.Properties.AdjustProperty(damagePctBonusVsAggroed, new(PropertyEnum.PayloadDamagePctModifierTotal, DamageType.Any));
                 results.Properties.AdjustProperty(damageRatingBonusVsAggroed, new(PropertyEnum.PayloadDamageRatingTotal, DamageType.Any));
