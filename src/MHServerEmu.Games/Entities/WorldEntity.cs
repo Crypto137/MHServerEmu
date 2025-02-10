@@ -1819,13 +1819,7 @@ namespace MHServerEmu.Games.Entities
 
             // Now apply the health delta
             health += healthDelta;
-            health = Math.Clamp(health, Properties[PropertyEnum.HealthMin], Properties[PropertyEnum.HealthMaxOther]);
-
-            // HACK: Avatars should be invulnerable during the tutorial via a region-wide passive power that sets HealthMin
-            // (see Powers/Player/Passive/TutorialHealthMin.prototype).
-            // We don't have this working yet, so we need a temporary hack here to avoid breaking the tutorial.
-            if (region.PrototypeDataRef == (PrototypeId)13422564811632352998 && this is Avatar && health < 1)
-                health = 1;
+            health = Math.Clamp(health, Properties[PropertyEnum.HealthMin], Properties[PropertyEnum.HealthMax]);
 
             // Change health to the new value
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);

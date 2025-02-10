@@ -20,6 +20,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
@@ -1435,6 +1436,48 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // Make sure our inventory list is returned to the pool for reuse when we are done
                 ListPool<Inventory>.Instance.Return(inventoryList);
+            }
+        }
+
+        private void AssignRegionPowers()
+        {
+            Region region = Region;
+            if (region == null)
+                return;
+
+            // Assign and activate region powers
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+            
+            foreach (var kvp in region.Properties.IteratePropertyRange(PropertyEnum.RegionAvatarPower))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                if (powerProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                if (AssignPower(powerProtoRef, indexProps) == null)
+                    continue;
+
+                // Force activate this power
+                PowerActivationSettings settings = new(Id, Vector3.Zero, RegionLocation.Position);
+                settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+
+                if (ActivatePower(powerProtoRef, ref settings) != PowerUseResult.Success)
+                    Logger.Warn($"AssignRegionPowers(): Failed to activate power {powerProtoRef.GetName()} in region [{region}]");
+            }
+
+            // Assign metagame bodyslide overrides (e.g. for PvP)
+            EntityManager entityManager = Game.EntityManager;
+            foreach (ulong metaGameId in Region.MetaGames)
+            {
+                MetaGame metaGame = entityManager.GetEntity<MetaGame>(metaGameId);
+                if (metaGame == null)
+                    continue;
+
+                MetaGamePrototype metaGameProto = metaGame.MetaGamePrototype;
+                if (metaGameProto == null || metaGameProto.BodysliderOverride == PrototypeId.Invalid)
+                    continue;
+
+                AssignPower(metaGameProto.BodysliderOverride, new());
             }
         }
 
@@ -3075,6 +3118,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
 
+            // Assign region passive powers (e.g. min health tutorial power)
+            AssignRegionPowers();
+
+            // Spawn team-up if needed (TODO: also spawn controlled entities)
             if (Properties[PropertyEnum.AvatarTeamUpAgent] != PrototypeId.Invalid)
             {
                 LinkTeamUpAgent(CurrentTeamUpAgent);
