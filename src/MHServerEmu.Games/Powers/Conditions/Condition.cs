@@ -393,7 +393,8 @@ namespace MHServerEmu.Games.Powers.Conditions
             RemoveEvent = default;
         }
 
-        public bool InitializeFromPower(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
+        public bool InitializeFromPower(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration,
+            PropertyCollection properties = null, bool linkToPower = true)
         {
             _conditionId = conditionId;
 
@@ -414,8 +415,13 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
 
             _conditionPrototype = conditionProto;
-            _creatorPowerPrototype = payload.PowerPrototype;
-            _creatorPowerPrototypeRef = payload.PowerProtoRef;
+
+            // For some power-induced conditions (e.g. hit reacts) we don't want to link them to the creator power to avoid stacking
+            if (linkToPower)
+            {
+                _creatorPowerPrototype = payload.PowerPrototype;
+                _creatorPowerPrototypeRef = payload.PowerProtoRef;
+            }
 
             if (conditionProto.DataRef == PrototypeId.Invalid)
             {
