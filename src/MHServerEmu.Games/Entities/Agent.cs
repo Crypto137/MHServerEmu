@@ -1752,8 +1752,16 @@ namespace MHServerEmu.Games.Entities
             if (PowerCollection == null)
                 return;
 
+            // Need to use a temporary list here because activating a power can add a condition that will assign a proc power
+            List<Power> powerList = ListPool<Power>.Instance.Get();
+
             foreach (var kvp in PowerCollection)
-                TryAutoActivatePower(kvp.Value.Power);
+                powerList.Add(kvp.Value.Power);
+
+            foreach (Power power in powerList)
+                TryAutoActivatePower(power);
+
+            ListPool<Power>.Instance.Return(powerList);
         }
 
         /// <summary>
