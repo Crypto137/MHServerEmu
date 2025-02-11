@@ -1487,7 +1487,7 @@ namespace MHServerEmu.Games.Powers
                 properties = player.Properties;
             }
 
-            properties.AdjustProperty((long)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
+            properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
 
             // Reschedule cooldown end event
             if (_endCooldownEvent.IsValid)
