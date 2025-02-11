@@ -1284,7 +1284,7 @@ namespace MHServerEmu.Games.Powers
             float maxRange = Range + Properties[PropertyEnum.MissileRange];
 
             float distance = Vector3.Length(target.RegionLocation.Position - userPosition);
-            distance = Math.Clamp(distance, minRange, maxRange);
+            distance = MathHelper.ClampNoThrow(distance, minRange, maxRange);
 
             // Calculate distance bonus multiplier excluding the min range
             float distanceBonusMult = (distance - minRange) / (maxRange - minRange);
