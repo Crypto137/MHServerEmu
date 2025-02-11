@@ -1840,6 +1840,8 @@ namespace MHServerEmu.Games.Entities
 
             if (health <= 0 && Properties[PropertyEnum.AIDefeated] == false)
             {
+                Properties[PropertyEnum.Health] = 0;
+
                 if (this is Avatar killedAvatar)
                 {
                     var killedPlayer = GetOwnerOfType<Player>();
