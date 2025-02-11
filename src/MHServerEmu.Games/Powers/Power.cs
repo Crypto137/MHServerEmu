@@ -2959,7 +2959,7 @@ namespace MHServerEmu.Games.Powers
             AccumulateKeywordProperties(ref cooldownModifierPct, powerProto, owner.Properties, owner.Properties, PropertyEnum.CooldownModifierPctForKeyword);
 
             // Calculate flat cooldown modifier
-            long flatCooldownModifierMS = owner.Properties[PropertyEnum.CooldownModifierPctForPower, powerProto.DataRef];
+            long flatCooldownModifierMS = owner.Properties[PropertyEnum.CooldownModifierMSForPower, powerProto.DataRef];
             AccumulateKeywordProperties(ref flatCooldownModifierMS, powerProto, owner.Properties, owner.Properties, PropertyEnum.CooldownModifierMSForKeyword);
             TimeSpan flatCooldownModifier = TimeSpan.FromMilliseconds(flatCooldownModifierMS);
 
