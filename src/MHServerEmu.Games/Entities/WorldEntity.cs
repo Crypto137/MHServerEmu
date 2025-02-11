@@ -1341,7 +1341,8 @@ namespace MHServerEmu.Games.Entities
 
             EntityManager entityManager = Game.EntityManager;
 
-            foreach (var kvp in properties.IteratePropertyRange(Property.ProcPropertyTypesAll))
+            using PropertyCollection procProperties = GetProcProperties(properties);
+            foreach (var kvp in procProperties.IteratePropertyRange(Property.ProcPropertyTypesAll))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerProtoRef);
                 if (procPowerProtoRef == PrototypeId.Invalid)
