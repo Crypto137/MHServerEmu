@@ -398,12 +398,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public const long InvalidXPRequirement = -1;
+        public const double AlternateAdvancementFactor = 218666.6666666667;    // TODO: figure out where this const is coming from
 
         [DoNotCopy]
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
 
         [DoNotCopy]
         public EvalPrototype AvatarThrowabilityEvalPrototype { get; private set; }
+
+        [DoNotCopy]
+        public long InfinityPointsCap { get => InfinityPointsCapPerGem * (int)InfinityGem.NumGems; }
 
         public override void PostProcess()
         {

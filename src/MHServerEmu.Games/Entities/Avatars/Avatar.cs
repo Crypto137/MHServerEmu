@@ -1890,7 +1890,29 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override long AwardXP(long amount, bool showXPAwardedText)
         {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(0L, "AwardXP(): player == null");
+
             long awardedAmount = base.AwardXP(amount, showXPAwardedText);
+
+            // Award alternate advancement XP (omega or infinity)
+            // TODO: Remove the cosmic prestige experience penalty for omega / infinity
+            if (Game.InfinitySystemEnabled)
+            {
+                float infinityLiveTuningMult = 1f;
+                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForInfinityXP) == 0f || player.CanUseLiveTuneBonuses())
+                    infinityLiveTuningMult = Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_InfinityXPPct), 0f);
+
+                player.AwardInfinityXP((long)(amount * infinityLiveTuningMult), true);
+            }
+            else
+            {
+                float omegaLiveTuningMult = 1f;
+                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_RespectLevelForOmegaXP) == 0f || player.CanUseLiveTuneBonuses())
+                    omegaLiveTuningMult = Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_OmegaXPPct), 0f);
+
+                player.AwardOmegaXP((long)(amount * omegaLiveTuningMult), true);
+            }
 
             // Award XP to the equipped legendary item if there is one
             Inventory legendaryInventory = GetInventory(InventoryConvenienceLabel.AvatarLegendary);
@@ -2727,17 +2749,39 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-        #region Omega and Infinity
+        #region Alternate Advancement (Omega and Infinity)
+
+        public bool IsInfinitySystemUnlocked()
+        {
+            // Infinity is unlocked account-wide at level 60
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "IsInfinitySystemUnlocked(): player == null");
+
+            AdvancementGlobalsPrototype advGlobals = GameDatabase.AdvancementGlobalsPrototype;
+            if (advGlobals == null) return Logger.WarnReturn(false, "IsInfinitySystemUnlocked(): advGlobals == null");
+
+            return player.Properties[PropertyEnum.PlayerMaxAvatarLevel] >= advGlobals.InfinitySystemUnlockLevel;
+        }
 
         public long GetInfinityPointsSpentOnBonus(PrototypeId infinityGemBonusRef, bool getTempPoints)
         {
             if (getTempPoints)
             {
                 long pointsSpent = Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
-                if (pointsSpent >= 0) return pointsSpent;
+                if (pointsSpent >= 0)
+                    return pointsSpent;
             }
 
             return Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
+        }
+
+        public bool IsOmegaSystemUnlocked()
+        {
+            // Omega is unlocked per-avatar at level 30
+            AdvancementGlobalsPrototype advGlobals = GameDatabase.AdvancementGlobalsPrototype;
+            if (advGlobals == null) return Logger.WarnReturn(false, "IsOmegaSystemUnlocked(): advGlobals == null");
+
+            return CharacterLevel >= advGlobals.OmegaSystemLevelUnlock;
         }
 
         public int GetOmegaPointsSpentOnBonus(PrototypeId omegaBonusRef, bool getTempPoints)
@@ -2745,7 +2789,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (getTempPoints)
             {
                 int pointsSpent = Properties[PropertyEnum.OmegaSpecTemp, omegaBonusRef];
-                if (pointsSpent >= 0) return pointsSpent;
+                if (pointsSpent >= 0)
+                    return pointsSpent;
             }
 
             return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
