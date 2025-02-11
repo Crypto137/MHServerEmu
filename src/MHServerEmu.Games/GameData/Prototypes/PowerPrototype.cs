@@ -906,7 +906,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
         {
-            return Logger.WarnReturn(false, $"HandlePowerEvent(): Not implemented (user=[{user}], target=[{target}], targetPosition=[{targetPosition}]");
+            if (user is Agent agent)
+            {
+                var controller = agent.AIController;
+                if (controller == null) return false;
+
+                ulong targetId = Entity.InvalidId;
+
+                if (UseTargetEntityId && target != null)
+                    targetId = target.Id;
+
+                controller.Blackboard.ChangeBlackboardFact(PropertyInfoRef, Value, Operation, targetId);
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -918,7 +932,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
         {
-            return Logger.WarnReturn(false, $"HandlePowerEvent(): Not implemented (user=[{user}], target=[{target}], targetPosition=[{targetPosition}]");
+            if (target is Agent targetAgent && user != null)
+            {
+                var controller = targetAgent.AIController;
+                if (controller == null) return Logger.WarnReturn(false, $"HandlePowerEvent: AIController == null");
+
+                controller.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = user.Id;
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -934,7 +957,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool HandlePowerEvent(WorldEntity user, WorldEntity target, Vector3 targetPosition)
         {
-            return Logger.WarnReturn(false, $"HandlePowerEvent(): Not implemented (user=[{user}], target=[{target}], targetPosition=[{targetPosition}]");
+            if (PowerToActivate == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"HandlePowerEvent: PowerToActivate == Invalid");
+
+            if (user is Agent summoned)
+            {
+                var game = summoned.Game;
+                if (game == null) return Logger.WarnReturn(false, $"HandlePowerEvent: game == null");
+
+                if (SummonsKeywordFilter == PrototypeId.Invalid || summoned.HasKeyword(SummonsKeywordFilter))
+                {
+                    var controller = summoned.AIController;
+                    if (controller == null) return false;
+
+                    ulong targetId = Entity.InvalidId;
+                    if (SummonedEntitiesUsePowerTarget && target != null)
+                        targetId = target.Id;
+
+                    var blackboard = controller.Blackboard;
+                    var position = SummonsUsePowerTargetLocation ? targetPosition : Vector3.Zero;
+                    
+                    blackboard.AddCustomPower(PowerToActivate, position, targetId);
+                    blackboard.PropertyCollection[PropertyEnum.AICustomThinkRateMS] = (long)game.FixedTimeBetweenUpdates.TotalMilliseconds;
+                    controller.ScheduleAIThinkEvent(TimeSpan.Zero, false, true);
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
