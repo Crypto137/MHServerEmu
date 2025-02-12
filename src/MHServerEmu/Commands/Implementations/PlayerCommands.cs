@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Commands.Attributes;
-using MHServerEmu.Core.Config;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -63,42 +62,6 @@ namespace MHServerEmu.Commands.Implementations
                 return "Resetting costume.";
 
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeProtoRef)}.";
-        }
-
-        [Command("omegapoints", "Maxes out Omega points.\nUsage: player omegapoints", AccountUserLevel.Admin)]
-        public string OmegaPoints(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
-            if (config.InfinitySystemEnabled) return "Set InfinitySystemEnabled to false in Config.ini to enable the Omega system.";
-
-            int value = GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap;
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            playerConnection.Player.Properties[PropertyEnum.OmegaPoints] = value;
-
-            return $"Setting Omega points to {value}.";
-        }
-
-        [Command("infinitypoints", "Maxes out Infinity points.\nUsage: player infinitypoints", AccountUserLevel.Admin)]
-        public string InfinityPoints(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
-            if (config.InfinitySystemEnabled == false) return "Set InfinitySystemEnabled to true in Config.ini to enable the Infinity system.";
-
-            long value = GameDatabase.AdvancementGlobalsPrototype.InfinityPointsCapPerGem;
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-
-            foreach (InfinityGem gem in Enum.GetValues<InfinityGem>())
-            {
-                if (gem == InfinityGem.None) continue;
-                playerConnection.Player.Properties[PropertyEnum.InfinityPoints, (int)gem] = value;
-            }
-            
-            return $"Setting all Infinity points to {value}.";
         }
 
         [Command("wipe", "Wipes all progress associated with the current account.\nUsage: player wipe [playerName]")]
