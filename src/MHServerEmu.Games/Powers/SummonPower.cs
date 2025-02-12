@@ -1,7 +1,10 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -10,108 +13,191 @@ namespace MHServerEmu.Games.Powers
 {
     public class SummonPower : Power
     {
+        public SummonPowerPrototype SummonPowerPrototype => Prototype as SummonPowerPrototype;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        // REMOVEME
-        private static readonly HashSet<PrototypeId> OnDeathSummonProcs = [
-            (PrototypeId)2106971016502847711,
-            (PrototypeId)2307265150892711295,
-            (PrototypeId)3546293262353180156,
-            (PrototypeId)5414562982452403703,
-            (PrototypeId)7908228357593113141,
-            (PrototypeId)12369052742477423808,
-            (PrototypeId)12679251810370591997,
-            (PrototypeId)15261901601421273503,
-            (PrototypeId)15273839860189830062,
-            (PrototypeId)15976842786056317493,
-            (PrototypeId)16550637434795860683,
-            (PrototypeId)17408445236831923988,
-            (PrototypeId)17675087605881512697,
-
-            (PrototypeId)14386906015355968513,
-            (PrototypeId)15949525972715445694
-        ];
-
-        // REMOVEME
-        private static readonly HashSet<PrototypeId> SpawnMetalOrbCombos = [
-            (PrototypeId)7346548612187493478,
-            (PrototypeId)10512701425740682877,
-            (PrototypeId)13542089336699950947,
-            (PrototypeId)9968471862826768614,
-            (PrototypeId)16334726522730453455
-        ];
+        private int _totalSummonedEntities;
+        private EventPointer<SummonEvent> _summonEvent;
 
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
+            _totalSummonedEntities = 0;
         }
 
-        public override PowerUseResult Activate(ref PowerActivationSettings settings)
+        public override bool ApplyPower(PowerApplication powerApplication)
         {
-            // HACK/REMOVEME: Remove these hacks when we get summon powers working properly
+            CheckSummonedEntities();
 
-            // Special handling for OnDeath summon procs
-            if (OnDeathSummonProcs.Contains(PrototypeDataRef))
+            if (base.ApplyPower(powerApplication) == false) 
+                return false;
+
+            ScheduleSummonEntity(1);
+            UpdateAndCheckTotalSummonedEntities();
+
+            return true;
+        }
+
+        private void CheckSummonedEntities()
+        {
+            if (Owner == null) return;
+
+            var summonPowerProto = SummonPowerPrototype;
+            if (summonPowerProto == null || summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
+
+            var inventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+            if (inventory == null) return;
+
+            var manager = Owner.Game?.EntityManager;
+            if (manager == null) return;
+
+            foreach (var context in summonPowerProto.SummonEntityContexts)
             {
-                EntityHelper.OnDeathSummonFromPowerPrototype(Owner, (SummonPowerPrototype)Prototype);
-                return PowerUseResult.Success;
+                if (context == null) return;
+
+                var removalProto = context.SummonEntityRemoval;
+                if (removalProto == null) continue;
+
+                bool removalKeywords = removalProto.Keywords.HasValue();
+                bool removalPowers = removalProto.FromPowers.HasValue();
+
+                if (removalKeywords == false && removalPowers == false) continue;
+
+                List<WorldEntity> killList = [];
+
+                foreach (var entry in inventory)
+                {
+                    var summoned = manager.GetEntity<WorldEntity>(entry.Id);
+                    if (summoned == null || summoned.IsDead) continue;
+
+                    bool found = false;
+                    if (removalKeywords)
+                        found |= SummonedHasKeywords(summoned, removalProto.Keywords);
+                    
+                    if (found == false && removalPowers)
+                        found |= SummonedHasCreatorPower(summoned, removalProto.FromPowers);
+
+                    if (found) killList.Add(summoned);
+                }
+
+                foreach (var summoned in killList) KillSummoned(summoned, Owner);
             }
+        }
 
-            // Special handling for Magneto's metal orb spawning combos
-            if (SpawnMetalOrbCombos.Contains(PrototypeDataRef))
+        public static void KillSummoned(WorldEntity summoned, WorldEntity owner)
+        {
+            if (summoned.IsAliveInWorld)
             {
-                WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
-                EntityHelper.CreateMetalOrbFromPowerPrototype(Owner, target, settings.TargetPosition, (SummonPowerPrototype)Prototype);
-                return PowerUseResult.Success;
-            }
-
-            // Pass non-avatar and non-item activations to the base implementation
-            if (Owner is not Avatar avatar)
-                return base.Activate(ref settings);
-
-            if (settings.ItemSourceId == Entity.InvalidId)
-                return base.Activate(ref settings);
-
-            Item item = Game.EntityManager.GetEntity<Item>(settings.ItemSourceId);
-            if (item == null)
-                return base.Activate(ref settings);
-
-            // Also pass passive summons from items, we don't have proper cleanup for those
-            if (GetActivationType() == PowerActivationType.Passive || IsItemPower() == false)
-                return base.Activate(ref settings);
-
-            // Do the hackery
-            SummonPowerPrototype summonPowerProto = Prototype as SummonPowerPrototype;
-
-            PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, PrototypeDataRef);
-            if (avatar.Properties[PropertyEnum.PowerToggleOn, PrototypeDataRef])
-            {
-                EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-
-                if (IsToggled())  // Check for Danger Room scenarios that are not toggled
-                    avatar.Properties[PropertyEnum.PowerToggleOn, PrototypeDataRef] = false;
-
-                avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
+                summoned.TryActivateOnDeathProcs(new());
+                summoned.Kill(null, KillFlags.NoExp | KillFlags.NoLoot | KillFlags.NoDeadEvent);
             }
             else
             {
-                // Fix for holo crafter / vendor spam
-                if (avatar.Properties[summonedEntityCountProp] > 0)
-                {
-                    EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-                    avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
-                }
+                if (summoned.IsSummonedPet()) owner?.TryActivateOnPetDeathProcs(summoned);
+                summoned.Destroy();
+            }
+        }
 
-                EntityHelper.SummonEntityFromPowerPrototype(avatar, summonPowerProto, item);
+        private static bool SummonedHasCreatorPower(WorldEntity summoned, PrototypeId[] fromPowers)
+        {
+            var creatorPowerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
 
-                if (IsToggled())  // Check for Danger Room scenarios that are not toggled
-                    avatar.Properties[PropertyEnum.PowerToggleOn, PrototypeDataRef] = true;
+            foreach (var power in fromPowers)
+                if (creatorPowerRef == power) return true;
 
-                avatar.Properties.AdjustProperty(1, summonedEntityCountProp);
+            return false;
+        }
+
+        private static bool SummonedHasKeywords(WorldEntity summoned, PrototypeId[] keywords)
+        {
+            foreach (var keyword in keywords)
+                if (summoned.HasKeyword(keyword)) return true;
+
+            return false;
+        }
+
+        public override PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
+        {
+            if (IsOnExtraActivation() == false)
+            {
+                PowerUseResult result = CanSummonEntity();
+                if (result != PowerUseResult.Success)
+                    return result;
             }
 
-            item.OnUsePowerActivated();
+            return base.CanActivate(target, targetPosition, flags);
+        }
+
+        private PowerUseResult CanSummonEntity()
+        {
+            var prototype = SummonPowerPrototype;
+            if (prototype == null) return PowerUseResult.GenericError;
+
+            if (prototype.TrackInInventory && !prototype.KillPreviousSummons)
+            {
+                int maxNumSimultaneousSummons = prototype.GetMaxNumSimultaneousSummons(Properties);
+                if (maxNumSimultaneousSummons > 0)
+                {
+                    int summonedEntityCount = GetExistingSummonedEntitiesCount(Owner, prototype);
+                    if (summonedEntityCount >= maxNumSimultaneousSummons)
+                        return PowerUseResult.SummonSimultaneousLimit;
+                }
+            }
+
+            int maxNumSummons = prototype.GetMaxNumSummons(Properties);
+            if (maxNumSummons > 0 && _totalSummonedEntities >= maxNumSummons)
+                return PowerUseResult.SummonLifetimeLimit;
 
             return PowerUseResult.Success;
+        }
+
+        private static int GetExistingSummonedEntitiesCount(WorldEntity owner, PowerPrototype summonPowerProto)
+        {
+            if (owner != null && owner.IsInWorld)
+                return owner.Properties[PropertyEnum.PowerSummonedEntityCount, summonPowerProto.DataRef];
+
+            return 0;
+        }
+
+        public void UpdateAndCheckTotalSummonedEntities()
+        {
+            var proto = SummonPowerPrototype;
+            if (proto == null) return;
+
+            int maxNumSummons = proto.GetMaxNumSummons(Properties);
+            if (maxNumSummons > 0)
+            { 
+                if (_totalSummonedEntities < maxNumSummons) _totalSummonedEntities++;
+
+                if (proto.SummonMaxReachedDestroyOwner && _totalSummonedEntities >= maxNumSummons)
+                    Owner?.Kill();
+            }
+        }
+
+        private void ScheduleSummonEntity(int index)
+        {
+            var summonPowerProto = SummonPowerPrototype;
+            if (summonPowerProto.SummonIntervalMS <= 0) return;
+
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            if (_summonEvent.IsValid) scheduler.CancelEvent(_summonEvent);
+
+            var timeOffset = TimeSpan.FromMilliseconds(summonPowerProto.SummonIntervalMS);
+            scheduler.ScheduleEvent(_summonEvent, timeOffset, _pendingEvents);
+            _summonEvent.Get().Initialize(this, index);
+        }
+
+        private void SummonEntity(int index)
+        {
+            if (index <= 0 || CanSummonEntity() != PowerUseResult.Success) return;
+
+            // TODO SummonEntityContext
+        }
+
+        private class SummonEvent : CallMethodEventParam1<SummonPower, int>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.SummonEntity(p1);
         }
     }
 }
