@@ -2751,6 +2751,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Alternate Advancement (Omega and Infinity)
 
+        //----------
+        // INFINITY
+        //----------
+
         public bool IsInfinitySystemUnlocked()
         {
             // Infinity is unlocked account-wide at level 60
@@ -2775,9 +2779,109 @@ namespace MHServerEmu.Games.Entities.Avatars
             return Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
         }
 
+        public static int GetInfinityRankForPointCost(PrototypeId infinityBonusProtoRef, long points, out long remainder)
+        {
+            remainder = 0;
+
+            InfinityGemBonusPrototype infinityBonusProto = infinityBonusProtoRef.As<InfinityGemBonusPrototype>();
+            if (infinityBonusProto == null) return Logger.WarnReturn(0, "GetInfinityRankForPointCost(): infinityBonusProto == null");
+
+            return ModRankFromPoints(infinityBonusProtoRef, points, out remainder);
+        }
+
+        public CanSetInfinityRankResult CanSetInfinityRank(PrototypeId infinityBonusProtoRef, int rank, bool useTempPoints)
+        {
+            // TODO
+            return CanSetInfinityRankResult.Success;
+        }
+
         public void InfinityPointAllocationCommit(NetMessageInfinityPointAllocationCommit commitMessage)
         {
-            Logger.Debug($"InfinityPointAllocationCommit()\n{commitMessage}");
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+            {
+                Logger.Warn("InfinityPointAllocationCommit(): player == null");
+                return;
+            }
+
+            if (InfinityPointAllocationClearTemporary())
+                Logger.Warn($"InfinityPointAllocationCommit(): [{this}] already had a pending allocation");
+
+            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+            // Set temp properties received from the client
+            long pointsSpent = 0;
+
+            for (int i = 0; i < commitMessage.AllocationsCount; i++)
+            {
+                NetMessageSelectInfinityGemBonus allocation = commitMessage.AllocationsList[i];
+
+                PrototypeId infinityBonusProtoRef = (PrototypeId)allocation.GemBonusProtoRefID;
+
+                // Get the prototype for validation
+                InfinityGemBonusPrototype infinityBonusProto = infinityBonusProtoRef.As<InfinityGemBonusPrototype>();
+                if (infinityBonusProto == null)
+                {
+                    Logger.Warn("InfinityPointAllocationCommit(): infinityBonusProto == null");
+                    goto end;
+                }
+
+                Properties[PropertyEnum.InfinityPointsSpentTemp, infinityBonusProtoRef] = allocation.Points;
+                pointsSpent += GetInfinityPointsSpentOnBonus(infinityBonusProtoRef, true);
+            }
+
+            // Validate the spent number of points
+            long totalInfinityPoints = player.GetTotalInfinityPoints();
+            if (pointsSpent > totalInfinityPoints)
+            {
+                Logger.Warn($"InfinityPointAllocationCommit(): Number of points spent [{pointsSpent}] exceeds the total available number [{totalInfinityPoints}] for [{this}]");
+                goto end;
+            }
+
+            // Calculate ranks for each bonus
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpentTemp))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
+
+                // The number of points received from the client should not have a remainder
+                int rank = GetInfinityRankForPointCost(infinityBonusProtoRef, kvp.Value, out long remainder);
+                if (remainder != 0)
+                {
+                    Logger.Warn("InfinityPointAllocationCommit(): remainder != 0");
+                    goto end;
+                }
+
+                // Validate the rank
+                if (CanSetInfinityRank(infinityBonusProtoRef, rank, true) != CanSetInfinityRankResult.Success)
+                {
+                    Logger.Warn($"InfinityPointAllocationCommit(): Rank validation failed for infinity bonus [{infinityBonusProtoRef.GetName()} on [{this}]");
+                    goto end;
+                }
+
+                setDict[new(PropertyEnum.InfinityGemBonusRankTemp, infinityBonusProtoRef)] = rank;
+            }
+
+            foreach (var kvp in setDict)
+                Properties[kvp.Key] = kvp.Value;
+
+            // Commit temporary allocation
+            setDict.Clear();
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpentTemp))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
+
+                setDict[new(PropertyEnum.InfinityPointsSpent, infinityBonusProtoRef)] = kvp.Value;
+                setDict[new(PropertyEnum.InfinityGemBonusRank, infinityBonusProtoRef)] = Properties[PropertyEnum.InfinityGemBonusRankTemp, infinityBonusProtoRef];
+            }
+
+            foreach (var kvp in setDict)
+                Properties[kvp.Key] = kvp.Value;
+
+            // Clean up
+            end:
+            InfinityPointAllocationClearTemporary();
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
         }
 
         public void RespecInfinity(InfinityGem gemToRespec)
@@ -2817,6 +2921,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             ListPool<PropertyId>.Instance.Return(removeList);
         }
 
+        private bool InfinityPointAllocationClearTemporary()
+        {
+            Properties.RemovePropertyRange(PropertyEnum.InfinityGemBonusRankTemp);
+            return Properties.RemovePropertyRange(PropertyEnum.InfinityPointsSpentTemp);
+        }
+
+        //----------
+        // OMEGA
+        //----------
+
         public bool IsOmegaSystemUnlocked()
         {
             // Omega is unlocked per-avatar at level 30
@@ -2838,6 +2952,22 @@ namespace MHServerEmu.Games.Entities.Avatars
             return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
         }
 
+        public static int GetOmegaRankForPointCost(PrototypeId omegaBonusProtoRef, long points, out long remainder)
+        {
+            remainder = 0;
+
+            OmegaBonusPrototype omegaBonusProto = omegaBonusProtoRef.As<OmegaBonusPrototype>();
+            if (omegaBonusProto == null) return Logger.WarnReturn(0, "GetOmegaRankForPointCost(): omegaBonusProto == null");
+
+            return ModRankFromPoints(omegaBonusProtoRef, points, out remainder);
+        }
+
+        public CanSetOmegaRankResult CanSetOmegaRank(PrototypeId omegaBonusPRotoRef, int rank, bool useTempPoints)
+        {
+            // TODO
+            return CanSetOmegaRankResult.Success;
+        }
+
         public void OmegaPointAllocationCommit(NetMessageOmegaBonusAllocationCommit commitMessage)
         {
             Logger.Warn($"OmegaPointAllocationCommit(): Not yet implemented\n{commitMessage}");
@@ -2847,6 +2977,43 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             Properties.RemovePropertyRange(PropertyEnum.OmegaRank);
             Properties.RemovePropertyRange(PropertyEnum.OmegaPointsSpent);
+        }
+
+        private bool OmegaPointAllocationClearTemporary()
+        {
+            Properties.RemovePropertyRange(PropertyEnum.OmegaRankTemp);
+            return Properties.RemovePropertyRange(PropertyEnum.OmegaSpecTemp);
+        }
+
+        //----------
+        // SHARED
+        //----------
+
+        public static int ModRankFromPoints(PrototypeId modProtoRef, long points, out long remainder)
+        {
+            remainder = 0;
+
+            ModPrototype modProto = modProtoRef.As<ModPrototype>();
+            if (modProto == null) return Logger.WarnReturn(0, "ModRankFromPoints(): modProto == null");
+
+            Curve curve = modProto.RankCostCurve.AsCurve();
+            if (curve == null) return Logger.WarnReturn(0, "ModRankFromPoints(): curve == null");
+
+            int rank = 0;
+            int ranksMax = modProto.GetRanksMax();
+            remainder = points;
+
+            while (remainder > 0 && rank < ranksMax)
+            {
+                int nextRankCost = curve.GetIntAt(rank + 1);
+                if (nextRankCost > remainder)
+                    break;
+
+                remainder -= nextRankCost;
+                rank++;
+            }
+
+            return rank;
         }
 
         #endregion

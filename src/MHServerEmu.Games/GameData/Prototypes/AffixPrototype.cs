@@ -371,6 +371,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public int GetRanksMax()
+        {
+            Curve curve = RankCostCurve.AsCurve();
+
+            if (RanksMax > 0 && curve != null)
+                return Math.Min(curve.MaxPosition, RanksMax);
+
+            if (RanksMax > 0)
+                return RanksMax;
+
+            if (curve != null)
+                return curve.MaxPosition;
+
+            return 0;
+        }
+
         public void RunEvalOnCreate(Entity entity, PropertyCollection indexProperties, PropertyCollection modProperties)
         {
             if (EvalOnCreate.HasValue())
