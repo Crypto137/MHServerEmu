@@ -2775,6 +2775,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             return Properties[PropertyEnum.InfinityPointsSpentTemp, infinityGemBonusRef];
         }
 
+        public void InfinityPointAllocationCommit(NetMessageInfinityPointAllocationCommit commitMessage)
+        {
+            Logger.Debug($"InfinityPointAllocationCommit()\n{commitMessage}");
+        }
+
+        public void RespecInfinity(InfinityGem gem)
+        {
+            Logger.Debug("RespecInfinity()");
+        }
+
         public bool IsOmegaSystemUnlocked()
         {
             // Omega is unlocked per-avatar at level 30
@@ -2794,6 +2804,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
+        }
+
+        public void OmegaPointAllocationCommit(NetMessageOmegaBonusAllocationCommit commitMessage)
+        {
+            Logger.Warn($"OmegaPointAllocationCommit(): Not yet implemented\n{commitMessage}");
+        }
+
+        public void RespecOmegaBonus()
+        {
+            Logger.Warn("RespecOmegaBonus():  Not yet implemented");
         }
 
         #endregion
