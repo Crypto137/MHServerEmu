@@ -209,7 +209,7 @@ namespace MHServerEmu.Games.Events
             // TODO: Do the actual rescheduling
             if (timeOffset < TimeSpan.Zero)
             {
-                Logger.Warn($"RescheduleEvent(): timeOffset < TimeSpan.Zero");
+                Logger.Warn($"RescheduleEvent(): timeOffset < TimeSpan.Zero for {@event.GetType().Name}");
                 timeOffset = TimeSpan.Zero;
             }
 
