@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Powers
         public ulong RegionId { get; private set; }
         public AlliancePrototype OwnerAlliance { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
-
+        public Action<PowerPayload> DeliverAction { get; set; }
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
@@ -228,7 +228,14 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            power.OnPayloadInit(this);
+
             return true;
+        }
+
+        public void OnDeliverPayload()
+        {
+            DeliverAction?.Invoke(this);
         }
 
         /// <summary>

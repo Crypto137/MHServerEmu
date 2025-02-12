@@ -173,6 +173,19 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
+        public override void OnPayloadInit(PowerPayload payload)
+        {
+            payload.DeliverAction = OnDeliverPayload;
+
+            if (Owner != null && Owner.Properties.HasProperty(PropertyEnum.ParentSpawnerGroupId))
+                payload.Properties[PropertyEnum.ParentSpawnerGroupId] = Owner.Properties[PropertyEnum.ParentSpawnerGroupId];
+        }
+
+        private void OnDeliverPayload(PowerPayload payload)
+        {
+            throw new NotImplementedException();
+        }
+
         private void ScheduleSummonEntity(int index)
         {
             var summonPowerProto = SummonPowerPrototype;
@@ -190,7 +203,7 @@ namespace MHServerEmu.Games.Powers
 
         private void SummonEntity(int index)
         {
-            if (index <= 0 || CanSummonEntity() != PowerUseResult.Success) return;
+            if (index < 0 || CanSummonEntity() != PowerUseResult.Success) return;
 
             // TODO SummonEntityContext
         }

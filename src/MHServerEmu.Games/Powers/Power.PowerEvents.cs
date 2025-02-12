@@ -469,6 +469,8 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public virtual void OnPayloadInit(PowerPayload payload) { }
+
         private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings initialSettings)
         {
             // Activate combo power - a power triggered by a power event action

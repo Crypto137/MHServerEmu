@@ -848,6 +848,8 @@ namespace MHServerEmu.Games.Powers
 
         private static bool DeliverPayload(PowerPayload payload)
         {
+            payload.OnDeliverPayload();
+
             // Find targets for this power application
             List<WorldEntity> targetList = ListPool<WorldEntity>.Instance.Get();
             List<PowerResults> targetResultsList = ListPool<PowerResults>.Instance.Get();
