@@ -35,6 +35,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (targetingStyleProto == null) return;
 
             float maxRadius = 0f;
+
+            if (SummonEntityContexts.IsNullOrEmpty()) return;
+
             foreach (var context in SummonEntityContexts)
             {
                 if (context == null) return;
@@ -74,6 +77,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool IsHotspotSummoningPower()
         {
+            if (SummonEntityContexts.IsNullOrEmpty()) return false;
             foreach (var context in SummonEntityContexts)
             {
                 if (context == null) return false;
