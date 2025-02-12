@@ -1487,7 +1487,14 @@ namespace MHServerEmu.Games.Powers
                 properties = player.Properties;
             }
 
-            properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
+            // The client implementation uses AdjustProperty() here, but this can cause the cooldown duration to become negative.
+            // Is this an issue from the original game, or is there an underlying problem somewhere else?
+            //properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
+
+            // Custom implementation the does not allow negative PowerCooldownDuration
+            long cooldownDurationMS = properties[PropertyEnum.PowerCooldownDuration, PrototypeDataRef];
+            cooldownDurationMS += (long)offset.TotalMilliseconds;
+            properties[PropertyEnum.PowerCooldownDuration, PrototypeDataRef] = Math.Max(cooldownDurationMS, 0);
 
             // Reschedule cooldown end event (since we are modifying an existing cooldown, there should be one)
             if (_endCooldownEvent.IsValid == false) return Logger.WarnReturn(false, "ModifyCooldown(): _endCooldownEvent.IsValid == false");
