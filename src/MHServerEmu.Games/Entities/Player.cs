@@ -932,7 +932,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Reapply lifespan
-            TimeSpan expirationTime = item.GetExpirationTime();
+            float expirationTimeMult = Math.Max(Game.CustomGameOptions.TrashedItemExpirationTimeMultiplier, 0f);
+            TimeSpan expirationTime = item.GetExpirationTime() * expirationTimeMult;
             item.ResetLifespan(expirationTime);
 
             return true;

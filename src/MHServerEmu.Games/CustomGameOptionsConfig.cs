@@ -9,6 +9,7 @@ namespace MHServerEmu.Games
         public bool DisableMovementPowerChargeCost { get; private set; } = true;
         public bool DisableInstancedLoot { get; private set; } = false;
         public float LootSpawnGridCellRadius { get; private set; } = 20f;
+        public float TrashedItemExpirationTimeMultiplier { get; private set; } = 1f;
 
         [ConfigIgnore]
         public TimeSpan RegionCleanupInterval { get => TimeSpan.FromMilliseconds(RegionCleanupIntervalMS); }
