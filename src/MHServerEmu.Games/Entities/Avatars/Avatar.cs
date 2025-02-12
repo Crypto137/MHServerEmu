@@ -236,6 +236,39 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region World and Positioning
 
+        public override SimulateResult SetSimulated(bool simulated)
+        {
+            SimulateResult result = base.SetSimulated(simulated);
+
+            if (result == SimulateResult.Set)
+            {
+                // TODO: Add a helper function for applying mods? (pvp / infinity / omega)
+
+                // Apply PvP upgrade bonuses
+                List<(PrototypeId, int)> pvpUpgradeList = ListPool<(PrototypeId, int)>.Instance.Get();
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaRank))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId omegaBonusProtoRef);
+                    int rank = kvp.Value;
+                    pvpUpgradeList.Add((omegaBonusProtoRef, rank));
+                }
+
+                foreach (var pvpUpgrade in pvpUpgradeList)
+                    ModChangeModEffects(pvpUpgrade.Item1, pvpUpgrade.Item2);
+
+                ListPool<(PrototypeId, int)>.Instance.Return(pvpUpgradeList);
+
+                // Apply alternate advancement (infinity / omega) bonuses
+                if (Game.InfinitySystemEnabled)
+                    ApplyInfinityBonuses();
+                else
+                    ApplyOmegaBonuses();
+            }
+
+            return result;
+        }
+
         public override bool CanMove()
         {
             if (base.CanMove() == false)
@@ -2838,7 +2871,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 goto end;
             }
 
-            // Calculate ranks for each bonus
+            // Calculate rank for each bonus
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpentTemp))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
@@ -2921,10 +2954,53 @@ namespace MHServerEmu.Games.Entities.Avatars
             ListPool<PropertyId>.Instance.Return(removeList);
         }
 
+        public void ApplyInfinityBonuses()
+        {
+            List<(PrototypeId, int)> bonusList = ListPool<(PrototypeId, int)>.Instance.Get();
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityGemBonusRank))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
+                int rank = kvp.Value;
+                bonusList.Add((infinityBonusProtoRef, rank));
+            }
+
+            foreach (var bonus in bonusList)
+                ModChangeModEffects(bonus.Item1, bonus.Item2);
+
+            ListPool<(PrototypeId, int)>.Instance.Return(bonusList);
+        }
+
         private bool InfinityPointAllocationClearTemporary()
         {
             Properties.RemovePropertyRange(PropertyEnum.InfinityGemBonusRankTemp);
             return Properties.RemovePropertyRange(PropertyEnum.InfinityPointsSpentTemp);
+        }
+
+        private void InitializeInfinityBonuses()
+        {
+            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+            // Infinity bonus ranks are not persistent, so they need to be recalculated
+
+            // Calculate rank for each bonus
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpent))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
+
+                int rank = GetInfinityRankForPointCost(infinityBonusProtoRef, kvp.Value, out long remainder);
+
+                // Refund the remainder
+                if (remainder != 0)
+                    setDict[kvp.Key] = kvp.Value - remainder;
+
+                setDict[new(PropertyEnum.InfinityGemBonusRank, infinityBonusProtoRef)] = rank;
+            }
+
+            foreach (var kvp in setDict)
+                Properties[kvp.Key] = kvp.Value;
+
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
         }
 
         //----------
@@ -2975,14 +3051,37 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void RespecOmegaBonus()
         {
+            //PropertyEnum.OmegaRespecResult?
             Properties.RemovePropertyRange(PropertyEnum.OmegaRank);
             Properties.RemovePropertyRange(PropertyEnum.OmegaPointsSpent);
+        }
+
+        public void ApplyOmegaBonuses()
+        {
+            List<(PrototypeId, int)> bonusList = ListPool<(PrototypeId, int)>.Instance.Get();
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaRank))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId omegaBonusProtoRef);
+                int rank = kvp.Value;
+                bonusList.Add((omegaBonusProtoRef, rank));
+            }
+
+            foreach (var bonus in bonusList)
+                ModChangeModEffects(bonus.Item1, bonus.Item2);
+
+            ListPool<(PrototypeId, int)>.Instance.Return(bonusList);
         }
 
         private bool OmegaPointAllocationClearTemporary()
         {
             Properties.RemovePropertyRange(PropertyEnum.OmegaRankTemp);
             return Properties.RemovePropertyRange(PropertyEnum.OmegaSpecTemp);
+        }
+
+        private void InitializeOmegaBonuses()
+        {
+            // TODO
         }
 
         //----------
@@ -3147,6 +3246,22 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             switch (id.Enum)
             {
+                case PropertyEnum.OmegaRank:
+                case PropertyEnum.InfinityGemBonusRank:
+                case PropertyEnum.PvPUpgrades:
+                    if (IsSimulated)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId modProtoRef);
+                        if (modProtoRef == PrototypeId.Invalid)
+                        {
+                            Logger.Warn("OnPropertyChange(): modProtoRef == PrototypeId.Invalid");
+                            return;
+                        }
+
+                        ModChangeModEffects(modProtoRef, newValue);
+                    }
+                    break;
+
                 case PropertyEnum.Knockback:
                 case PropertyEnum.Knockdown:
                 case PropertyEnum.Knockup:
@@ -3344,6 +3459,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Assign powers
             InitializePowers();
+
+            if (Game.InfinitySystemEnabled)
+                InitializeInfinityBonuses();
+            else
+                InitializeOmegaBonuses();
 
             RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
             UpdateBoostConditionPauseState(region.PausesBoostConditions());
