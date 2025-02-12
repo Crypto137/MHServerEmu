@@ -493,7 +493,10 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
                 case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;                  // 125
                 case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;             // 126
+                case ClientToGameServerMessage.NetMessageInfinityPointAllocationCommit:     OnInfinityPointAllocationCommit(message); break;    // 129
+                case ClientToGameServerMessage.NetMessageRespecInfinity:                    OnRespecInfinity(message); break;                   // 130
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;       // 132
+                case ClientToGameServerMessage.NetMessageRespecOmegaBonus:                  OnRespecOmegaBonus(message); break;                 // 133
                 case ClientToGameServerMessage.NetMessageNewItemGlintPlayed:                OnNewItemGlintPlayed(message); break;               // 135
                 case ClientToGameServerMessage.NetMessageNewItemHighlightCleared:           OnNewItemHighlightCleared(message); break;          // 136
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
@@ -1461,12 +1464,79 @@ namespace MHServerEmu.Games.Network
             avatar.DismissTeamUpAgent();
         }
 
+        private bool OnInfinityPointAllocationCommit(MailboxMessage message)   // 132
+        {
+            var infinityBonusAllocationCommit = message.As<NetMessageInfinityPointAllocationCommit>();
+            if (infinityBonusAllocationCommit == null) return Logger.WarnReturn(false, $"OnInfinityPointAllocationCommit(): Failed to retrieve message");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(infinityBonusAllocationCommit.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnInfinityPointAllocationCommit(): avatar == null");
+
+            if (avatar.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnInfinityPointAllocationCommit(): Player [{Player}] is attempting to allocate Infinity points for avatar [{avatar}] that belongs to another player");
+
+            if (avatar.IsInfinitySystemUnlocked() == false)
+                return Logger.WarnReturn(false, $"OnInfinityPointAllocationCommit(): Player [{Player}] is attempting to allocate Infinity points for avatar [{avatar}] that does not have the Infinity system unlocked");
+
+            avatar.InfinityPointAllocationCommit(infinityBonusAllocationCommit);
+            return true;
+        }
+
+        private bool OnRespecInfinity(MailboxMessage message)
+        {
+            var respecInfinity = message.As<NetMessageRespecInfinity>();
+            if (respecInfinity == null) return Logger.WarnReturn(false, $"OnRespecInfinity(): Failed to retrieve message");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(respecInfinity.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnRespecInfinity(): avatar == null");
+
+            if (avatar.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnRespecInfinity(): Player [{Player}] is attempting to respec Infinity for avatar [{avatar}] that belongs to another player");
+
+            if (avatar.IsInfinitySystemUnlocked() == false)
+                return Logger.WarnReturn(false, $"OnRespecInfinity(): Player [{Player}] is attempting to respec Infinity for avatar [{avatar}] that does not have the Infinity system unlocked");
+
+            InfinityGem infinityGem = (InfinityGem)respecInfinity.Gem;
+            if (infinityGem != InfinityGem.None && (infinityGem < 0 || infinityGem >= InfinityGem.NumGems))
+                return Logger.WarnReturn(false, $"OnRespecInfinity(): Received invalid InfinityGem {infinityGem}");
+
+            avatar.RespecInfinity(infinityGem);
+            return true;
+        }
+
         private bool OnOmegaBonusAllocationCommit(MailboxMessage message)   // 132
         {
             var omegaBonusAllocationCommit = message.As<NetMessageOmegaBonusAllocationCommit>();
             if (omegaBonusAllocationCommit == null) return Logger.WarnReturn(false, $"OnOmegaBonusAllocationCommit(): Failed to retrieve message");
 
-            Logger.Debug(omegaBonusAllocationCommit.ToString());
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(omegaBonusAllocationCommit.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnOmegaBonusAllocationCommit(): avatar == null");
+
+            if (avatar.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnOmegaBonusAllocationCommit(): Player [{Player}] is attempting to allocate Omega points for avatar [{avatar}] that belongs to another player");
+
+            if (avatar.IsOmegaSystemUnlocked() == false)
+                return Logger.WarnReturn(false, $"OnOmegaBonusAllocationCommit(): Player [{Player}] is attempting to allocate Omega points for avatar [{avatar}] that does not have the Omega system unlocked");
+
+            avatar.OmegaPointAllocationCommit(omegaBonusAllocationCommit);
+            return true;
+        }
+
+        private bool OnRespecOmegaBonus(MailboxMessage message)
+        {
+            var respecOmegaBonus = message.As<NetMessageRespecOmegaBonus>();
+            if (respecOmegaBonus == null) return Logger.WarnReturn(false, $"OnRespecOmegaBonus(): Failed to retrieve message");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(respecOmegaBonus.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnRespecOmegaBonus(): avatar == null");
+
+            if (avatar.GetOwnerOfType<Player>() != Player)
+                return Logger.WarnReturn(false, $"OnRespecOmegaBonus(): Player [{Player}] is attempting to respec Omega bonus for avatar [{avatar}] that belongs to another player");
+
+            if (avatar.IsOmegaSystemUnlocked() == false)
+                return Logger.WarnReturn(false, $"OnRespecOmegaBonus(): Player [{Player}] is attempting to respec Omega bonus for avatar [{avatar}] that does not have the Omega system unlocked");
+
+            avatar.RespecOmegaBonus();
             return true;
         }
 
