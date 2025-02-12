@@ -1497,7 +1497,8 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"OnRespecInfinity(): Player [{Player}] is attempting to respec Infinity for avatar [{avatar}] that does not have the Infinity system unlocked");
 
             InfinityGem infinityGem = (InfinityGem)respecInfinity.Gem;
-            if (infinityGem < 0 || infinityGem >= InfinityGem.NumGems) return Logger.WarnReturn(false, "OnRespecInfinity(): infinityGem < 0 || infinityGem >= InfinityGem.NumGems");
+            if (infinityGem != InfinityGem.None && (infinityGem < 0 || infinityGem >= InfinityGem.NumGems))
+                return Logger.WarnReturn(false, $"OnRespecInfinity(): Received invalid InfinityGem {infinityGem}");
 
             avatar.RespecInfinity(infinityGem);
             return true;

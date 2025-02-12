@@ -2780,9 +2780,41 @@ namespace MHServerEmu.Games.Entities.Avatars
             Logger.Debug($"InfinityPointAllocationCommit()\n{commitMessage}");
         }
 
-        public void RespecInfinity(InfinityGem gem)
+        public void RespecInfinity(InfinityGem gemToRespec)
         {
-            Logger.Debug("RespecInfinity()");
+            // InfinityGem.None indicates that all bonuses need to be respeced
+            if (gemToRespec == InfinityGem.None)
+            {
+                Properties.RemovePropertyRange(PropertyEnum.InfinityGemBonusRank);
+                Properties.RemovePropertyRange(PropertyEnum.InfinityPointsSpent);
+                return;
+            }
+
+            // Find the bonuses to respec that  match the tab (gem)
+            InfinityGemBonusTable bonusTable = GameDataTables.Instance.InfinityGemBonusTable;
+            List<PropertyId> removeList = ListPool<PropertyId>.Instance.Get();
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.InfinityPointsSpent))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId infinityBonusProtoRef);
+                if (infinityBonusProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("RespecInfinity(): infinityBonusProtoRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                InfinityGem bonusGem = bonusTable.GetGemForPrototype(infinityBonusProtoRef);
+                if (bonusGem == gemToRespec)
+                {
+                    removeList.Add(new(PropertyEnum.InfinityGemBonusRank, infinityBonusProtoRef));
+                    removeList.Add(kvp.Key);
+                }
+            }
+
+            foreach (PropertyId propertyId in removeList)
+                Properties.RemoveProperty(propertyId);
+
+            ListPool<PropertyId>.Instance.Return(removeList);
         }
 
         public bool IsOmegaSystemUnlocked()
@@ -2813,7 +2845,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void RespecOmegaBonus()
         {
-            Logger.Warn("RespecOmegaBonus():  Not yet implemented");
+            Properties.RemovePropertyRange(PropertyEnum.OmegaRank);
+            Properties.RemovePropertyRange(PropertyEnum.OmegaPointsSpent);
         }
 
         #endregion
