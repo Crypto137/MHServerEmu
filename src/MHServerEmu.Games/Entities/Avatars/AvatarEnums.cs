@@ -51,7 +51,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         ErrorInsufficientPoints,
         Error4,
         ErrorCannotRemove,
-        Error6
+        ErrorPrerequisiteRequirement
     }
 
     public enum CanSetOmegaRankResult
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         ErrorInsufficientPoints,
         Error4,
         ErrorCannotRemove,
-        Error6
+        ErrorPrerequisiteRequirement
     }
 
     public enum AvatarPrototypeId : ulong

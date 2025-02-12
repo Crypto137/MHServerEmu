@@ -2822,10 +2822,46 @@ namespace MHServerEmu.Games.Entities.Avatars
             return ModRankFromPoints(infinityBonusProtoRef, points, out remainder);
         }
 
-        public CanSetInfinityRankResult CanSetInfinityRank(PrototypeId infinityBonusProtoRef, int rank, bool useTempPoints)
+        public CanSetInfinityRankResult CanSetInfinityRank(PrototypeId infinityBonusProtoRef, int rank, bool checkTempPoints)
         {
-            // TODO
+            if (infinityBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CanSetInfinityRankResult.ErrorGeneric, "CanSetInfinityRank(): infinityBonusProtoRef == PrototypeId.Invalid");
+            if (rank < 0) return Logger.WarnReturn(CanSetInfinityRankResult.ErrorGeneric, "CanSetInfinityRank(): rank < 0");
+
+            if (IsInfinitySystemUnlocked() == false)
+                return CanSetInfinityRankResult.ErrorLevelRequirement;
+
+            if (rank > 0)
+            {
+                if (IsInfinityGemBonusPrerequisiteRequirementMet(infinityBonusProtoRef, checkTempPoints) == false)
+                    return CanSetInfinityRankResult.ErrorPrerequisiteRequirement;
+            }
+            else
+            {
+                if (GameDataTables.Instance.InfinityGetBonusPostreqsTable.CanInfinityGemBonusBeRemoved(infinityBonusProtoRef, this, checkTempPoints) == false)
+                    return CanSetInfinityRankResult.ErrorCannotRemove;
+            }
+
             return CanSetInfinityRankResult.Success;
+        }
+
+        public bool IsInfinityGemBonusPrerequisiteRequirementMet(PrototypeId infinityBonusProtoRef, bool checkTempPoints)
+        {
+            if (infinityBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsInfinityGemBonusPrerequisiteRequirementMet(): infinityBonusProtoRef == PrototypeId.Invalid");
+
+            InfinityGemBonusPrototype infinityBonusProto = infinityBonusProtoRef.As<InfinityGemBonusPrototype>();
+            if (infinityBonusProto == null) return Logger.WarnReturn(false, "IsInfinityGemBonusPrerequisiteRequirementMet(): infinityBonusProto == null");
+
+            if (infinityBonusProto.Prerequisites.IsNullOrEmpty())
+                return true;
+
+            foreach (PrototypeId prereqBonusProtoRef in infinityBonusProto.Prerequisites)
+            {
+                // Any of the prereq bonuses is enough to satisfy this
+                if (GetInfinityPointsSpentOnBonus(prereqBonusProtoRef, checkTempPoints) > 0)
+                    return true;
+            }
+
+            return false;
         }
 
         public void InfinityPointAllocationCommit(NetMessageInfinityPointAllocationCommit commitMessage)
@@ -3038,10 +3074,46 @@ namespace MHServerEmu.Games.Entities.Avatars
             return ModRankFromPoints(omegaBonusProtoRef, points, out remainder);
         }
 
-        public CanSetOmegaRankResult CanSetOmegaRank(PrototypeId omegaBonusPRotoRef, int rank, bool useTempPoints)
+        public CanSetOmegaRankResult CanSetOmegaRank(PrototypeId omegaBonusProtoRef, int rank, bool checkTempPoints)
         {
-            // TODO
+            if (omegaBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CanSetOmegaRankResult.ErrorGeneric, "CanSetOmegaRank(): omegaBonusProtoRef == PrototypeId.Invalid");
+            if (rank < 0) return Logger.WarnReturn(CanSetOmegaRankResult.ErrorGeneric, "CanSetOmegaRank(): rank < 0");
+
+            if (IsOmegaSystemUnlocked() == false)
+                return CanSetOmegaRankResult.ErrorLevelRequirement;
+
+            if (rank > 0)
+            {
+                if (IsOmegaBonusPrerequisiteRequirementMet(omegaBonusProtoRef, checkTempPoints) == false)
+                    return CanSetOmegaRankResult.ErrorPrerequisiteRequirement;
+            }
+            else
+            {
+                if (GameDataTables.Instance.OmegaBonusPostreqsTable.CanOmegaBonusBeRemoved(omegaBonusProtoRef, this, checkTempPoints) == false)
+                    return CanSetOmegaRankResult.ErrorCannotRemove;
+            }
+
             return CanSetOmegaRankResult.Success;
+        }
+
+        public bool IsOmegaBonusPrerequisiteRequirementMet(PrototypeId omegaBonusProtoRef, bool checkTempPoints)
+        {
+            if (omegaBonusProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsOmegaBonusPrerequisiteRequirementMet(): omegaBonusProtoRef == PrototypeId.Invalid");
+
+            OmegaBonusPrototype omegaBonusProto = omegaBonusProtoRef.As<OmegaBonusPrototype>();
+            if (omegaBonusProto == null) return Logger.WarnReturn(false, "IsOmegaBonusPrerequisiteRequirementMet(): omegaBonusProto == null");
+
+            if (omegaBonusProto.Prerequisites.IsNullOrEmpty())
+                return true;
+
+            foreach (PrototypeId prereqBonusProtoRef in omegaBonusProto.Prerequisites)
+            {
+                // Any of the prereq bonuses is enough to satisfy this
+                if (GetOmegaPointsSpentOnBonus(prereqBonusProtoRef, checkTempPoints) > 0)
+                    return true;
+            }
+
+            return false;
         }
 
         public void OmegaPointAllocationCommit(NetMessageOmegaBonusAllocationCommit commitMessage)
