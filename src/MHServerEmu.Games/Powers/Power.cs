@@ -1470,7 +1470,7 @@ namespace MHServerEmu.Games.Powers
             if (Owner is Agent agent && agent.AIController != null)
             {
                 PropertyCollection blackboardProperties = agent.AIController.Blackboard.PropertyCollection;
-                blackboardProperties.AdjustProperty((long)offset.TotalMilliseconds, new(PropertyEnum.AIProceduralPowerSpecificCDTime, PrototypeDataRef));
+                blackboardProperties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.AIProceduralPowerSpecificCDTime, PrototypeDataRef));
                 return true;
             }
 
@@ -1489,16 +1489,15 @@ namespace MHServerEmu.Games.Powers
 
             properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
 
-            // Reschedule cooldown end event
-            if (_endCooldownEvent.IsValid)
-            {
-                EventScheduler scheduler = Game.GameEventScheduler;
-                if (scheduler == null) return Logger.WarnReturn(false, $"ModifyCooldown(): scheduler == null");
+            // Reschedule cooldown end event (since we are modifying an existing cooldown, there should be one)
+            if (_endCooldownEvent.IsValid == false) return Logger.WarnReturn(false, "ModifyCooldown(): _endCooldownEvent.IsValid == false");
 
-                TimeSpan delay = _endCooldownEvent.Get().FireTime - Game.CurrentTime + offset;
-                Clock.Max(delay, TimeSpan.Zero);
-                scheduler.RescheduleEvent(_endCooldownEvent, delay);
-            }
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, $"ModifyCooldown(): scheduler == null");
+
+            TimeSpan delay = _endCooldownEvent.Get().FireTime - Game.CurrentTime + offset;
+            delay = Clock.Max(delay, TimeSpan.Zero);
+            scheduler.RescheduleEvent(_endCooldownEvent, delay);
 
             return true;
         }
