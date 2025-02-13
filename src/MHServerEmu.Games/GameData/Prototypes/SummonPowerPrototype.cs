@@ -125,6 +125,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
             return Eval.RunInt(SummonMax, evalContext);
         }
+
+        public bool InSummonMaxCountWithOthers(PropertyValue powerRef)
+        {
+            if (SummonMaxCountWithOthers.IsNullOrEmpty()) return false;
+            return SummonMaxCountWithOthers.Contains(powerRef);
+        }
     }
 
     public class SummonPowerOverridePrototype : PowerUnrealOverridePrototype
