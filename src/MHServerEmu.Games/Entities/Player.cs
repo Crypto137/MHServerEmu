@@ -1064,6 +1064,22 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
+        public bool AcquireGazillionite(long amount)
+        {
+            if (amount <= 0) return Logger.WarnReturn(false, "AcquireGazillionite(): amount <= 0");
+
+            long balance = GazillioniteBalance;
+            balance += amount;
+            GazillioniteBalance = balance;
+
+            SendMessage(NetMessageGrantGToPlayerNotification.CreateBuilder()
+                .SetDidSucceed(true)
+                .SetCurrentCurrencyBalance(balance)
+                .Build());
+
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);
