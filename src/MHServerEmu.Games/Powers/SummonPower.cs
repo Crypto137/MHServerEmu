@@ -9,6 +9,7 @@ using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.Powers
 {
@@ -16,6 +17,7 @@ namespace MHServerEmu.Games.Powers
     {
         public Game Game;
         public WorldEntity Target;
+        public SummonPowerPrototype PowerProto;
         public ulong RegionId;
         public Vector3 Position;
         public Vector3 TargetPosition;
@@ -242,7 +244,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void SummonPayloadEntity(EntityManager manager, SummonPowerPrototype powerProto, PowerPayload payload, WorldEntity target)
+        private static void SummonPayloadEntity(EntityManager manager, SummonPowerPrototype powerProto, PowerPayload payload, WorldEntity target)
         {
             var payloadProperties = payload.Properties;
             int summonNum = payloadProperties[PropertyEnum.SummonNumPerActivation];
@@ -270,6 +272,7 @@ namespace MHServerEmu.Games.Powers
             {
                 Game = payload.Game,
                 Target = target,
+                PowerProto = powerProto,
                 RegionId = payload.RegionId,
                 Position = payload.PowerOwnerPosition,
                 TargetPosition = payload.TargetPosition,
@@ -347,6 +350,7 @@ namespace MHServerEmu.Games.Powers
             {
                 Game = Game,
                 Target = Owner,
+                PowerProto = powerProto,
                 RegionId = regionId,
                 Position = position,
                 TargetPosition = position,
@@ -366,9 +370,167 @@ namespace MHServerEmu.Games.Powers
             ScheduleSummonEntity(nextIndex);
         }
 
-        private PowerUseResult SummonEntityContext(EntityManager manager, in SummonContext context, int index)
+        private static PowerUseResult SummonEntityContext(EntityManager manager, in SummonContext context, int index)
         {
-            throw new NotImplementedException();
+            var game = context.Game; 
+            var powerProto = context.PowerProto;
+
+            if (powerProto.SummonEntityContexts.IsNullOrEmpty()) return PowerUseResult.GenericError;
+            int contextLength = powerProto.SummonEntityContexts.Length;
+
+            var owner = manager.GetEntity<WorldEntity>(context.PowerOwnerId);
+            WorldEntity ultimateOwner = null;
+
+            if (context.UltimateOwnerId != Entity.InvalidId)
+                ultimateOwner = manager.GetEntity<WorldEntity>(context.UltimateOwnerId);
+
+            // get context index
+            int contextIndex;
+            if (powerProto.SummonRandomSelection)
+            {
+                contextIndex = game.Random.Next(0, contextLength);
+            }
+            else if (powerProto.EvalSelectSummonContextIndex != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = game;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, context.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, ultimateOwner?.Properties);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, ultimateOwner);
+
+                contextIndex = Eval.RunInt(powerProto.EvalSelectSummonContextIndex, evalContext);
+            }
+            else
+            {
+                contextIndex = index % contextLength;
+            }
+
+            if (contextIndex < 0 || contextIndex >= contextLength) return PowerUseResult.GenericError;
+
+            // check summon entity context prototype
+            var contextProto = powerProto.SummonEntityContexts[contextIndex];
+            if (contextProto == null) return PowerUseResult.GenericError;
+
+            if (contextProto.SummonEntity == PrototypeId.Invalid)
+            {
+                if (contextProto.SummonEntityRemoval == null) return PowerUseResult.GenericError;
+                return PowerUseResult.RestrictiveCondition;
+            }
+
+            // check EvalCanSummon
+            if (contextProto.EvalCanSummon != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = game;
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, context.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, ultimateOwner?.Properties);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, ultimateOwner);
+
+                if (Eval.RunBool(contextProto.EvalCanSummon, evalContext) == false)
+                    return PowerUseResult.RestrictiveCondition;
+            }
+
+            // entity settings
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+
+            // get entityRef and summon prototype
+            if (ultimateOwner != null)
+                settings.EntityRef = ultimateOwner.Properties[PropertyEnum.SummonEntityOverrideRef];
+
+            WorldEntityPrototype summonProto = null;
+            if (settings.EntityRef != PrototypeId.Invalid)
+            {
+                summonProto = GameDatabase.GetPrototype<WorldEntityPrototype>(settings.EntityRef);
+            }
+            else
+            {
+                summonProto = powerProto.GetSummonEntity(contextIndex, context.EntityAsset);
+                if (summonProto != null)
+                    settings.EntityRef = summonProto.DataRef;
+            }
+
+            if (summonProto == null) return PowerUseResult.GenericError;
+
+            if (summonProto.IsLiveTuningEnabled() == false) 
+                return PowerUseResult.DisabledByLiveTuning;
+
+            // check region
+            var regionManager = game.RegionManager;
+            if (regionManager == null) return PowerUseResult.GenericError;
+            var region = regionManager.GetRegion(context.RegionId);
+            if (region == null) return PowerUseResult.GenericError;
+
+            settings.RegionId = region.Id;
+
+            // get region position
+            if (IsOwnerCenteredAOE(context.PowerProto) || GetTargetingShape(powerProto) == TargetingShapeType.Self)
+            {
+                settings.Position = context.Position;
+            }
+            else
+            {
+                if (context.Target != null && IsSummoned(powerProto))
+                    settings.Position = context.Target.RegionLocation.Position;
+                else
+                    settings.Position = context.TargetPosition;
+            }
+
+            // get offset vector
+            if (contextProto.SummonOffsetVector != null) 
+            {
+                var offsetVector = contextProto.SummonOffsetVector.ToVector3();
+                if (owner != null && owner.IsInWorld)
+                {
+                    var regionLocation = owner.RegionLocation;
+                    var transform = Transform3.BuildTransform(regionLocation.Position, regionLocation.Orientation);
+                    offsetVector = transform * offsetVector;
+                }
+                settings.Position += offsetVector;
+            }
+
+            // get orientation
+            var toTarget = ShouldOrientToTarget(powerProto);
+            if (owner != null)
+            {
+                if (toTarget && owner.IsInWorld)
+                    settings.Orientation = owner.Orientation;
+
+                settings.SourceEntityId = owner.Id;
+            }
+
+            // fix orientation
+            if (toTarget == false)
+                settings.Orientation = Orientation.FromDeltaVector2D(context.TargetPosition - context.Position);
+
+            // get source position
+            if (powerProto.UseTargetAsSource)
+            {
+                if (context.Target != null)
+                {
+                    settings.SourceEntityId = context.Target.Id;
+                    settings.SourcePosition = context.Target.RegionLocation.Position;
+                }
+                else
+                {
+                    settings.SourceEntityId = Entity.InvalidId;
+                    settings.SourcePosition = context.TargetPosition;
+                }
+            }
+
+            // TODO Fix position
+
+            settings.Lifespan = TimeSpan.FromMilliseconds((int)context.Properties[PropertyEnum.SummonLifespanMS]);
+
+            using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settings.Properties = properties;
+
+            // TODO CreateEntity
+
+            return PowerUseResult.Success;
         }
 
         private void ScheduleSummonEntity(int index)

@@ -2502,6 +2502,13 @@ namespace MHServerEmu.Games.Powers
             return reachProto.Melee;
         }
 
+        public static bool IsSummoned(PowerPrototype powerProto)
+        {
+            TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
+            if (reachProto == null) return Logger.WarnReturn(false, "IsSummoned(): reachProto == null");
+            return reachProto.TargetsEntitiesInInventory == InventoryConvenienceLabel.Summoned;
+        }
+
         public bool IsGamepadMeleeMoveIntoRangePower()
         {
             return GamepadSettingsPrototype != null && GamepadSettingsPrototype.MeleeMoveIntoRange;
