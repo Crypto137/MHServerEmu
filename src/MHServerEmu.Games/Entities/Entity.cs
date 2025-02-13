@@ -819,7 +819,7 @@ namespace MHServerEmu.Games.Entities
 
         public void DetachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index)
         {
-            Logger.Debug($"DetachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
+            //Logger.Debug($"DetachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
 
             if (_attachedProperties == null) { Logger.Warn("DetachProperties(): _attachedProperties == null"); return; }
 

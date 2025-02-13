@@ -3056,12 +3056,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             if (getTempPoints)
             {
-                int pointsSpent = Properties[PropertyEnum.OmegaSpecTemp, omegaBonusRef];
+                int pointsSpent = Properties[PropertyEnum.OmegaSpecTemp, 0, omegaBonusRef];
                 if (pointsSpent >= 0)
                     return pointsSpent;
             }
 
-            return Properties[PropertyEnum.OmegaSpec, omegaBonusRef];
+            return Properties[PropertyEnum.OmegaSpec, 0, omegaBonusRef];
         }
 
         public static int GetOmegaRankForPointCost(PrototypeId omegaBonusProtoRef, long points, out long remainder)
@@ -3118,14 +3118,101 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void OmegaPointAllocationCommit(NetMessageOmegaBonusAllocationCommit commitMessage)
         {
-            Logger.Warn($"OmegaPointAllocationCommit(): Not yet implemented\n{commitMessage}");
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+            {
+                Logger.Warn("OmegaPointAllocationCommit(): player == null");
+                return;
+            }
+
+            if (OmegaPointAllocationClearTemporary())
+                Logger.Warn($"OmegaPointAllocationCommit(): [{this}] already had a pending allocation");
+
+            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+            // Set temp properties received from the client
+            long pointsSpent = 0;
+
+            for (int i = 0; i < commitMessage.AllocationsCount; i++)
+            {
+                NetMessageSelectOmegaBonus allocation = commitMessage.AllocationsList[i];
+
+                PrototypeId omegaBonusProtoRef = (PrototypeId)allocation.OmegaBonusProtoRefID;
+
+                // Get the prototype for validation
+                OmegaBonusPrototype omegaBonusProto = omegaBonusProtoRef.As<OmegaBonusPrototype>();
+                if (omegaBonusProto == null)
+                {
+                    Logger.Warn("OmegaPointAllocationCommit(): omegaBonusProto == null");
+                    goto end;
+                }
+
+                Properties[PropertyEnum.OmegaSpecTemp, 0, omegaBonusProtoRef] = allocation.Points;
+                pointsSpent += GetOmegaPointsSpentOnBonus(omegaBonusProtoRef, true);
+            }
+
+            // Validate the spent number of points
+            long omegaPoints = player.GetOmegaPoints();
+            if (pointsSpent > omegaPoints)
+            {
+                Logger.Warn($"OmegaPointAllocationCommit(): Number of points spent [{pointsSpent}] exceeds the total available number [{omegaPoints}] for [{this}]");
+                goto end;
+            }
+
+            // Calculate rank for each bonus
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaSpecTemp))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId omegaBonusProtoRef);
+
+                // The number of points received from the client should not have a remainder
+                int rank = GetOmegaRankForPointCost(omegaBonusProtoRef, kvp.Value, out long remainder);
+                if (remainder != 0)
+                {
+                    Logger.Warn("OmegaPointAllocationCommit(): remainder != 0");
+                    goto end;
+                }
+
+                // Validate the rank
+                if (CanSetOmegaRank(omegaBonusProtoRef, rank, true) != CanSetOmegaRankResult.Success)
+                {
+                    Logger.Warn($"OmegaPointAllocationCommit(): Rank validation failed for Omega bonus [{omegaBonusProtoRef.GetName()} on [{this}]");
+                    goto end;
+                }
+
+                setDict[new(PropertyEnum.OmegaRankTemp, omegaBonusProtoRef)] = rank;
+            }
+
+            foreach (var kvp in setDict)
+                Properties[kvp.Key] = kvp.Value;
+
+            // Commit temporary allocation
+            setDict.Clear();
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaSpecTemp))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId omegaBonusProtoRef);
+
+                setDict[new(PropertyEnum.OmegaSpec, 0, omegaBonusProtoRef)] = kvp.Value;
+                setDict[new(PropertyEnum.OmegaRank, omegaBonusProtoRef)] = Properties[PropertyEnum.OmegaRankTemp, omegaBonusProtoRef];
+            }
+
+            foreach (var kvp in setDict)
+                Properties[kvp.Key] = kvp.Value;
+
+            Properties[PropertyEnum.OmegaPointsSpent] = pointsSpent;
+
+            // Clean up
+            end:
+            OmegaPointAllocationClearTemporary();
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
         }
 
         public void RespecOmegaBonus()
         {
             //PropertyEnum.OmegaRespecResult?
             Properties.RemovePropertyRange(PropertyEnum.OmegaRank);
-            Properties.RemovePropertyRange(PropertyEnum.OmegaPointsSpent);
+            Properties.RemovePropertyRange(PropertyEnum.OmegaSpec);
+            Properties.RemoveProperty(PropertyEnum.OmegaPointsSpent);
         }
 
         public void ApplyOmegaBonuses()
@@ -3153,7 +3240,28 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private void InitializeOmegaBonuses()
         {
-            // TODO
+            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+            // Omega bonus ranks are not persistent, so they need to be recalculated
+
+            // Calculate rank for each bonus
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaSpec))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId omegaBonusProtoRef);
+
+                int rank = GetOmegaRankForPointCost(omegaBonusProtoRef, kvp.Value, out long remainder);
+
+                // Refund the remainder
+                if (remainder != 0)
+                    setDict[kvp.Key] = kvp.Value - remainder;
+
+                setDict[new(PropertyEnum.OmegaRank, omegaBonusProtoRef)] = rank;
+            }
+
+            foreach (var kvp in setDict)
+                Properties[kvp.Key] = kvp.Value;
+
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
         }
 
         //----------
