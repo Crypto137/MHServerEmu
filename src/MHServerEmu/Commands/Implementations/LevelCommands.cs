@@ -1,8 +1,10 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
@@ -41,7 +43,39 @@ namespace MHServerEmu.Commands.Implementations
 
             avatar.AwardXP(expToAdd, true);
 
-            return $"Awarded {long.MaxValue} experience.";
+            return $"Awarded {expToAdd} experience.";
+        }
+
+        [Command("maxinfinity", "Maxes out Infinity experience.\nUsage: level max")]
+        public string MaxInfinity(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            player.Properties[PropertyEnum.InfinityXP] = GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap;
+            player.TryInfinityLevelUp(true);
+
+            return $"Infinity experience maxed out.";
+        }
+
+        [Command("resetinfinity", "Removes all Infinity progression.\nUsage: level resetinfinity")]
+        public string ResetInfinity(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            // Force respec for all avatars
+            foreach (Avatar avatar in new AvatarIterator(player))
+                avatar.RespecInfinity(InfinityGem.None);
+
+            player.Properties.RemovePropertyRange(PropertyEnum.InfinityPoints);
+            player.Properties[PropertyEnum.InfinityXP] = 0;
+
+            return $"Infinity reset.";
         }
 
         [Command("awardxp", "Awards the specified amount of experience.\nUsage: level awardxp [amount]")]
