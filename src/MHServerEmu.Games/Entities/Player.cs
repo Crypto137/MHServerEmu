@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -1467,7 +1468,7 @@ namespace MHServerEmu.Games.Entities
 
         private static long CalcInfinityPointsFromXP(long xp)
         {
-            long points = (long)Math.Sqrt(xp / AdvancementGlobalsPrototype.AlternateAdvancementFactor);
+            long points = (long)Math.Sqrt(xp / AdvancementGlobalsPrototype.InfinityXPFactor);
             return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.InfinityPointsCap);
         }
 
@@ -1478,18 +1479,44 @@ namespace MHServerEmu.Games.Entities
 
         public void AwardOmegaXP(long amount, bool notifyClient)
         {
-            Logger.Warn("AwardOmegaXP(): Not yet implemented");
+            if (amount <= 0)
+                return;
+
+            long omegaXP = Math.Min(OmegaXP + amount, GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap);
+            Properties[PropertyEnum.OmegaXP] = omegaXP;
+
+            TryOmegaLevelUp(notifyClient);
         }
 
-        public void TryOmegaLevelUp()
+        public void TryOmegaLevelUp(bool notifyClient)
         {
-            Logger.Warn("TryOmegaLevelUp(): Not yet implemented");
+            // TODO: Verify if it's working correctly
+
+            long pointsBefore = GetOmegaPoints();
+            long pointsAfter = CalcOmegaPointsFromXP(OmegaXP);
+
+            // Early out if we don't have any points
+            if (pointsAfter <= pointsBefore)
+                return;
+
+            long numPointsGained = pointsAfter - pointsBefore;
+            Properties.AdjustProperty((int)numPointsGained, PropertyEnum.OmegaPoints);
+
+            Avatar avatar = CurrentAvatar;
+            if (notifyClient && avatar != null && avatar.IsOmegaSystemUnlocked())
+            {
+                NetMessageOmegaPointGain message = NetMessageOmegaPointGain.CreateBuilder()
+                    .SetAvatarId(avatar.Id)
+                    .SetNumPointsGained((uint)numPointsGained)
+                    .Build();
+
+                Game.NetworkManager.SendMessageToInterested(message, avatar, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
+            }
         }
 
         private static long CalcOmegaPointsFromXP(long xp)
         {
-            // TODO: Use MathHelper.RoundToInt() like the client here
-            int points = (int)Math.Sqrt(xp / AdvancementGlobalsPrototype.AlternateAdvancementFactor);
+            int points = MathHelper.RoundToInt(Math.Sqrt(xp / AdvancementGlobalsPrototype.OmegaXPFactor));
             return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap);
         }
 

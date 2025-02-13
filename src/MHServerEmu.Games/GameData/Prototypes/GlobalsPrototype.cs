@@ -398,7 +398,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public const long InvalidXPRequirement = -1;
-        public const double AlternateAdvancementFactor = 218666.6666666667;    // TODO: figure out where this const is coming from
+
+        public const double OmegaXPFactor = 2186.666666666667;          // Player::CalcOmegaXpFromPoints()
+        public const double InfinityXPFactor = OmegaXPFactor * 100;     // Player::CalcInfinityXPFromPoints()
 
         [DoNotCopy]
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }

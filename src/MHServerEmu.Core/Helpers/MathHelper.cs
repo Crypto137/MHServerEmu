@@ -89,6 +89,14 @@
                 return (int)(value + 0.5f);
         }
 
+        public static int RoundToInt(double value)
+        {
+            if (value < 0.0)
+                return (int)(value - 0.5);
+            else
+                return (int)(value + 0.5);
+        }
+
         public static long RoundToInt64(float value)
         {
             if (value < 0.0f)
