@@ -3245,21 +3245,30 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Omega bonus ranks are not persistent, so they need to be recalculated
 
             // Calculate rank for each bonus
+            long pointsSpent = 0;
+
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.OmegaSpec))
             {
+                long omegaSpec = kvp.Value;
                 Property.FromParam(kvp.Key, 1, out PrototypeId omegaBonusProtoRef);
 
                 int rank = GetOmegaRankForPointCost(omegaBonusProtoRef, kvp.Value, out long remainder);
 
                 // Refund the remainder
                 if (remainder != 0)
-                    setDict[kvp.Key] = kvp.Value - remainder;
+                {
+                    omegaSpec -= remainder;
+                    setDict[kvp.Key] = omegaSpec;
+                }
 
+                pointsSpent += omegaSpec;
                 setDict[new(PropertyEnum.OmegaRank, omegaBonusProtoRef)] = rank;
             }
 
             foreach (var kvp in setDict)
                 Properties[kvp.Key] = kvp.Value;
+
+            Properties[PropertyEnum.OmegaPointsSpent] = pointsSpent;
 
             DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
         }
