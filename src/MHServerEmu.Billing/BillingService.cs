@@ -11,6 +11,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Network;
 using MHServerEmu.PlayerManagement;
 
@@ -27,7 +28,7 @@ namespace MHServerEmu.Billing
         public BillingService()
         {
             var config = ConfigManager.Instance.GetConfig<BillingConfig>();
-            _currencyBalance = config.CurrencyBalance;
+            _currencyBalance = 0;
 
             _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(BillingDataDirectory, "Catalog.json"));
 

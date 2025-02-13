@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -20,6 +21,7 @@ using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -131,6 +133,14 @@ namespace MHServerEmu.Games.Network
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
+
+            // Set G balance for new accounts if needed
+            if (_dbAccount.Player.GazillioniteBalance == -1)
+            {
+                long defaultBalance = ConfigManager.Instance.GetConfig<BillingConfig>().GazillioniteBalanceForNewAccounts;
+                Logger.Trace($"LoadFromDBAccount(): Setting Gazillionite balance for account [{_dbAccount}] to the default value for new accounts ({defaultBalance})", LogCategory.MTXStore);
+                _dbAccount.Player.GazillioniteBalance = defaultBalance;
+            }
 
             // Create player entity
             using (EntitySettings playerSettings = ObjectPoolManager.Instance.Get<EntitySettings>())

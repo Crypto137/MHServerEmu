@@ -34,6 +34,7 @@
     {
         Common,
         Chat,
+        MTXStore,
         NumCategories
     }
 }
