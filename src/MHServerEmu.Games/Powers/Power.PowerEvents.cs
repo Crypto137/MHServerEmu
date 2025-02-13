@@ -124,9 +124,14 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnTargetKill, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnSummonEntity()             // 11
+        public void HandleTriggerPowerEventOnSummonEntity(ulong summonEntityId)             // 11
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = summonEntityId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSummonEntity, ref settings);
         }
 
         public void HandleTriggerPowerEventOnHoldBegin()                // 12
