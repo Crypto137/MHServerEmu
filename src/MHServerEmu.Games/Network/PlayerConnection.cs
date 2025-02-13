@@ -59,6 +59,7 @@ namespace MHServerEmu.Games.Network
         public Player Player { get; private set; }
 
         public ulong PlayerDbId { get => (ulong)_dbAccount.Id; }
+        public long GazillioniteBalance { get => _dbAccount.Player.GazillioniteBalance; set => _dbAccount.Player.GazillioniteBalance = value; }
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.

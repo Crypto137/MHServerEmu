@@ -155,6 +155,7 @@ namespace MHServerEmu.Games.Entities
         public PrototypeId CurrentOpenStashPagePrototypeRef { get; set; }
         public long InfinityXP { get => Properties[PropertyEnum.InfinityXP]; }
         public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
+        public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
 
         public Player(Game game) : base(game)
         {
