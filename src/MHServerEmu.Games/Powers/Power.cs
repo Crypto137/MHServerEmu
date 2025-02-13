@@ -3480,6 +3480,12 @@ namespace MHServerEmu.Games.Powers
             return Owner;
         }
 
+        public static void SerializePropertiesForSummonEntity(PropertyCollection sourceProperties, PropertyCollection destinationProperties)
+        {
+            SerializePropertiesForPowerPayload(sourceProperties, destinationProperties, PowerSerializeType.Entity);
+            SerializePropertiesForPowerPayload(sourceProperties, destinationProperties, PowerSerializeType.Power);
+        }
+
         public static void SerializeEntityPropertiesForPowerPayload(WorldEntity worldEntity, PropertyCollection destinationProperties)
         {
             SerializePropertiesForPowerPayload(worldEntity.Properties, destinationProperties, PowerSerializeType.Entity);
