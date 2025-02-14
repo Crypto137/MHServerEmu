@@ -52,6 +52,7 @@ namespace MHServerEmu.Games
         private FixedQuantumGameTime _realGameTime = new(TimeSpan.FromMilliseconds(1));
         private TimeSpan _currentGameTime = TimeSpan.FromMilliseconds(1);   // Current time in the game simulation
         private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
+        private TimeSpan _fixedTimeUpdateProcessTimeLogThreshold;
         private long _frameCount;
 
         private int _liveTuningChangeNum;
@@ -90,6 +91,9 @@ namespace MHServerEmu.Games
 
         public Game(ulong id)
         {
+            // Small lags are fine, and logging all of them creates too much noise
+            _fixedTimeUpdateProcessTimeLogThreshold = FixedTimeBetweenUpdates * 2;
+
             Id = id;
 
             // Initialize game options
@@ -339,8 +343,8 @@ namespace MHServerEmu.Games
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.EntityCount, EntityManager.EntityCount);
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.PlayerCount, EntityManager.PlayerCount);
 
-                if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
-                    Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+                if (_lastFixedTimeUpdateProcessTime > _fixedTimeUpdateProcessTimeLogThreshold)
+                    Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than _fixedTimeUpdateWarningThreshold ({_fixedTimeUpdateProcessTimeLogThreshold.TotalMilliseconds:0.00} ms)");
 
                 // Bail out if we have fallen behind more exceeded frame budget
                 if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
