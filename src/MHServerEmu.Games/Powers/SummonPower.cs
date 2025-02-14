@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Powers
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private int _totalSummonedEntities;
-        private EventPointer<SummonEvent> _summonEvent;
+        private readonly EventPointer<SummonEvent> _summonEvent = new();
 
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
@@ -77,6 +77,8 @@ namespace MHServerEmu.Games.Powers
             var manager = Owner.Game?.EntityManager;
             if (manager == null) return;
 
+            List<WorldEntity> killList = [];
+
             foreach (var context in summonPowerProto.SummonEntityContexts)
             {
                 if (context == null) return;
@@ -89,7 +91,7 @@ namespace MHServerEmu.Games.Powers
 
                 if (removalKeywords == false && removalPowers == false) continue;
 
-                List<WorldEntity> killList = [];
+                killList.Clear();
 
                 foreach (var entry in inventory)
                 {
@@ -140,6 +142,57 @@ namespace MHServerEmu.Games.Powers
                 if (summoned.HasKeyword(keyword)) return true;
 
             return false;
+        }
+
+        protected override bool EndPowerInternal(EndPowerFlags flags)
+        {
+            base.EndPowerInternal(flags);
+
+            var powerProto = SummonPowerPrototype;
+            if (powerProto == null) return false;
+
+            bool goodEnd = (flags & (EndPowerFlags.ExplicitCancel | EndPowerFlags.ChanneledLoopEnd | EndPowerFlags.PowerEventAction)) != 0;
+            bool badEnd = (flags & (EndPowerFlags.Force | EndPowerFlags.ExitWorld | EndPowerFlags.Unassign)) != 0;
+            if (badEnd || (goodEnd && powerProto.SummonsLiveWhilePowerActive))
+                if (powerProto.TrackInInventory)
+                    DestoySummoned(flags.HasFlag(EndPowerFlags.ExitWorld));
+
+            Game.GameEventScheduler.CancelEvent(_summonEvent);
+            return true;
+        }
+
+        protected override void OnEndChannelingPhase()
+        {
+            base.OnEndChannelingPhase();
+
+            if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
+                DestoySummoned(false);
+        }
+
+        protected override bool SetToggleState(bool value, bool doNotStartCooldown = false)
+        {
+            base.SetToggleState(value, doNotStartCooldown);
+
+            if (IsToggledOn() == false)
+            {
+                if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
+                    DestoySummoned(false);
+            }
+
+            return true;
+        }
+
+        protected override PowerUseResult RunExtraActivation(ref PowerActivationSettings settings)
+        {
+            var powerProto = SummonPowerPrototype;
+            if (powerProto == null) return PowerUseResult.ExtraActivationFailed;
+
+            if (powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivate) 
+                if (extraActivate.ExtraActivateEffect == SubsequentActivateType.DestroySummonedEntity)
+                    if (DestoySummoned(false) == 0)
+                        return PowerUseResult.ExtraActivationFailed;
+
+            return base.RunExtraActivation(ref settings);
         }
 
         public override PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
@@ -404,7 +457,7 @@ namespace MHServerEmu.Games.Powers
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.Game = game;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, context.Properties);
-                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner?.Properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, ultimateOwner?.Properties);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, ultimateOwner);
@@ -434,7 +487,7 @@ namespace MHServerEmu.Games.Powers
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.Game = game;
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, context.Properties);
-                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner.Properties);
+                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, owner?.Properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, ultimateOwner?.Properties);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, owner);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var2, ultimateOwner);
@@ -690,6 +743,51 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
+        private int DestoySummoned(bool exitWorld)
+        {
+            int count = 0;
+            var powerProto = SummonPowerPrototype;
+
+            var manager = Owner.Game?.EntityManager;
+            if (manager == null) return count;
+
+            var inventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+            if (inventory == null) return count;
+
+            List<WorldEntity> summons = ListPool<WorldEntity>.Instance.Get();
+
+            foreach (var entry in inventory)
+            {
+                var summoned = manager.GetEntity<WorldEntity>(entry.Id);
+                if (summoned == null || summoned.IsDead) continue;
+
+                var powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
+                if (powerRef == powerProto.DataRef)
+                    summons.Add(summoned);
+            }
+
+            foreach (var summoned in summons)
+            {
+                if (exitWorld && summoned.Properties[PropertyEnum.SummonedEntityIsRegionPersisted])
+                {
+                    summoned.ExitWorld();
+                }
+                else
+                {
+                    if (exitWorld)
+                        summoned.Destroy();
+                    else
+                        KillSummoned(summoned, Owner);
+
+                    count++;
+                }
+            }
+
+            ListPool<WorldEntity>.Instance.Return(summons);
+
+            return count;
+        }
+
         private static void KillPreviousSummons(WorldEntity owner, SummonPowerPrototype powerProto, int summonsCount)
         {
             var manager = owner.Game?.EntityManager;
@@ -704,11 +802,10 @@ namespace MHServerEmu.Games.Powers
             {
                 var summoned = manager.GetEntity<WorldEntity>(entry.Id);
                 if (summoned == null || summoned.IsDead) continue;
+
                 var powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef || powerProto.InSummonMaxCountWithOthers(powerRef))
-                {
                     summons.Add(summoned);
-                }
             }
             
             summons.Sort((a, b) => a.Id.CompareTo(b.Id));
