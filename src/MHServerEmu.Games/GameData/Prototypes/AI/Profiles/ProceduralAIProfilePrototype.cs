@@ -1149,7 +1149,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             if (syncAttack.TargetEntity == targetAgent.PrototypeDataRef)
                             {
                                 InitPower(agent, syncAttack.LeaderPower);
-                                InitPower(targetAgent, syncAttack.TargetEntityPower);
+                                InitPower(targetAgent, syncAttack.TargetEntityPower.As<ProceduralUsePowerContextPrototype>());
                                 var targetController = targetAgent.AIController;
                                 if (targetController != null)
                                     targetController.Blackboard.PropertyCollection[PropertyEnum.AISyncAttackTargetPower] = syncAttack.TargetEntityPower;
