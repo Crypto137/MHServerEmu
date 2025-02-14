@@ -651,7 +651,7 @@ namespace MHServerEmu.Games.Powers
 
                 if (inventory == null || conteinerId == Entity.InvalidId) return PowerUseResult.GenericError;
 
-                settings.InventoryLocation.Set(conteinerId, inventory.PrototypeDataRef, Inventory.InvalidSlot);
+                settings.InventoryLocation = new(conteinerId, inventory.PrototypeDataRef, Inventory.InvalidSlot);
             }
 
             // set properties
@@ -663,7 +663,7 @@ namespace MHServerEmu.Games.Powers
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.Game = game;
-                evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, ultimateOwner?.Properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Other, context.Properties);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Var1, ultimateOwner);
