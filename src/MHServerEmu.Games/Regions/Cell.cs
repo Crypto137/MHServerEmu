@@ -529,6 +529,15 @@ namespace MHServerEmu.Games.Regions
             return _populationThemeRef;
         }
 
+        public bool GetEntitiesInCellBounds(List<WorldEntity> entityList)
+        {
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "GetEntitiesInCellBounds(): region == null");
+
+            region.GetEntitiesInVolume(entityList, RegionBounds, new(EntityRegionSPContextFlags.All));
+            return true;
+        }
+
         public void OnAddedToAOI()
         {
             Generate();
@@ -538,8 +547,14 @@ namespace MHServerEmu.Games.Regions
             if (_numInterestedPlayers == 1)
             {
                 SpawnSpecScheduler.Spawn(false);
-                foreach (WorldEntity worldEntity in Entities)
+
+                List<WorldEntity> entityList = ListPool<WorldEntity>.Instance.Get();
+                GetEntitiesInCellBounds(entityList);
+
+                foreach (WorldEntity worldEntity in entityList)
                     worldEntity.UpdateSimulationState();
+
+                ListPool<WorldEntity>.Instance.Return(entityList);
             } 
             else
                 SpawnSpecScheduler.Spawn(true);
@@ -560,8 +575,13 @@ namespace MHServerEmu.Games.Regions
 
             if (_numInterestedPlayers == 0)
             {
-                foreach (WorldEntity worldEntity in Entities)
+                List<WorldEntity> entityList = ListPool<WorldEntity>.Instance.Get();
+                GetEntitiesInCellBounds(entityList);
+
+                foreach (WorldEntity worldEntity in entityList)
                     worldEntity.UpdateSimulationState();
+
+                ListPool<WorldEntity>.Instance.Return(entityList);
             }
         }
 
