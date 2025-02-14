@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 
 namespace MHServerEmu.Games.Events
@@ -97,18 +98,19 @@ namespace MHServerEmu.Games.Events
             long startFrame = CurrentTime.CalcNumTimeQuantums(_quantumSize);
             long endFrame = updateEndTime.CalcNumTimeQuantums(_quantumSize);
 
+            List<ScheduledEvent> frameEvents = ListPool<ScheduledEvent>.Instance.Get();
+
             // Process all frames that are within our time window
             for (long i = startFrame; i <= endFrame; i++)
             {
                 _currentFrame = i;
 
-                // TODO: Replace linq with buckets
+                // TODO: Implement the real bucketing system
                 TimeSpan frameEndTime = (_currentFrame + 1) * _quantumSize;
 
                 // Process events for this frame
-                // NOTE: Events need to be fired in the order they are scheduled for cases like powers that apply and end at the same time.
-                var frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.SortOrder);
-                while (frameEvents.Any())
+                TEMP_FillFrameBucket(frameEvents, frameEndTime);
+                while (frameEvents.Count > 0)
                 {
                     foreach (ScheduledEvent @event in frameEvents)
                     {
@@ -142,7 +144,7 @@ namespace MHServerEmu.Games.Events
                     }
 
                     // See if any more events got scheduled for this frame
-                    frameEvents = _scheduledEvents.Where(@event => @event.FireTime <= frameEndTime).OrderBy(@event => @event.FireTime);
+                    TEMP_FillFrameBucket(frameEvents, frameEndTime);
                 }
 
                 CurrentTime = frameEndTime;
@@ -156,6 +158,8 @@ namespace MHServerEmu.Games.Events
 
             //if (numEvents > 0)
             //    Logger.Trace($"Triggered {numEvents} event(s) in {1 + endFrame - startFrame} frame(s) ({_scheduledEvents.Count} more scheduled)");
+
+            ListPool<ScheduledEvent>.Instance.Return(frameEvents);
         }
 
         public Dictionary<string, int> GetScheduledEventCounts()
@@ -214,6 +218,21 @@ namespace MHServerEmu.Games.Events
             }
 
             @event.FireTime = CurrentTime + timeOffset;
+        }
+
+        private void TEMP_FillFrameBucket(List<ScheduledEvent> frameEvents, TimeSpan frameEndTime)
+        {
+            // A horribly inefficient temp helper method until we get proper bucketing working.
+            // NOTE: Events need to be fired in the order they are scheduled for cases like powers that apply and end at the same time.
+            // Where() + OrderBy() LINQ combo does not return reliable results, most likely because of deferred execution.
+            frameEvents.Clear();
+            foreach (ScheduledEvent @event in _scheduledEvents)
+            {
+                if (@event.FireTime <= frameEndTime)
+                    frameEvents.Add(@event);
+            }
+
+            frameEvents.Sort(static (a, b) => a.SortOrder.CompareTo(b.SortOrder));
         }
     }
 }
