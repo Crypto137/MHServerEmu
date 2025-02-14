@@ -28,6 +28,7 @@ namespace MHServerEmu.Games.Powers
             (PrototypeId)17408445236831923988,
             (PrototypeId)17675087605881512697,
 
+            (PrototypeId)8316043623727311458,
             (PrototypeId)14386906015355968513,
             (PrototypeId)15949525972715445694
         ];
