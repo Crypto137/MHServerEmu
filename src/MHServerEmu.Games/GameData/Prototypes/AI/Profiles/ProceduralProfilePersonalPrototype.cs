@@ -2293,7 +2293,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             var powerQueue = blackboard.CustomPowerQueue;
-            if (powerQueue != null)
+            if (powerQueue != null && powerQueue.Count > 0)
             {
                 PrototypeId customPowerDataRef = powerQueue.Peek().PowerRef;
                 if (powerContext.Power != customPowerDataRef) return;
