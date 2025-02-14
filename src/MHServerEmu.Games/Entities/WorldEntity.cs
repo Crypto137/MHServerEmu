@@ -1984,8 +1984,9 @@ namespace MHServerEmu.Games.Entities
 
             if (payload == null)
             {
-                // If we couldn't find a payload, create a temporary one (TODO: make payloads poolable and get one from the pool)
-                payload = new();
+                // If we couldn't find a power payload, use a dummy one
+                PowerPayload.ReusableTickerPayload ??= new();
+                payload = PowerPayload.ReusableTickerPayload;
                 payload.Init(Game);
             }
             else

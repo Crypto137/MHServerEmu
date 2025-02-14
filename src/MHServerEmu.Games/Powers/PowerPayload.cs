@@ -29,6 +29,9 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        [ThreadStatic]
+        public static PowerPayload ReusableTickerPayload;
+
         private ulong _propertySourceEntityId;
         private WorldEntityPrototype _powerOwnerProto;
         private WorldEntityPrototype _ultimatePowerOwnerProto;
@@ -237,6 +240,7 @@ namespace MHServerEmu.Games.Powers
         public void Init(Game game)
         {
             Game = game;
+            Properties.Clear();
         }
 
         /// <summary>
