@@ -27,12 +27,22 @@ namespace MHServerEmu.Core.Logging
             Log(LoggingLevel.Trace, message, channels, category);
         }
 
+        public void Trace(string message, LogCategory category)
+        {
+            Log(LoggingLevel.Trace, message, LogChannels.General, category);
+        }
+
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Debug"/> message.
         /// </summary>
         public void Debug(string message, LogChannels channels = LogChannels.General, LogCategory category = LogCategory.Common)
         {
             Log(LoggingLevel.Debug, message, channels, category);
+        }
+
+        public void Debug(string message, LogCategory category)
+        {
+            Log(LoggingLevel.Debug, message, LogChannels.General, category);
         }
 
         /// <summary>
@@ -43,12 +53,22 @@ namespace MHServerEmu.Core.Logging
             Log(LoggingLevel.Info, message, channels, category);
         }
 
+        public void Info(string message, LogCategory category)
+        {
+            Log(LoggingLevel.Info, message, LogChannels.General, category);
+        }
+
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Warn"/> message.
         /// </summary>
         public void Warn(string message, LogChannels channels = LogChannels.General, LogCategory category = LogCategory.Common)
         {
             Log(LoggingLevel.Warn, message, channels, category);
+        }
+
+        public void Warn(string message, LogCategory category)
+        {
+            Log(LoggingLevel.Warn, message, LogChannels.General, category);
         }
 
         /// <summary>
@@ -59,12 +79,22 @@ namespace MHServerEmu.Core.Logging
             Log(LoggingLevel.Error, message, channels, category);
         }
 
+        public void Error(string message, LogCategory category)
+        {
+            Log(LoggingLevel.Error, message, LogChannels.General, category);
+        }
+
         /// <summary>
         /// Logs a <see cref="LoggingLevel.Fatal"/> message.
         /// </summary>
         public void Fatal(string message, LogChannels channels = LogChannels.All, LogCategory category = LogCategory.Common)
         {
             Log(LoggingLevel.Fatal, message, channels, category);
+        }
+
+        public void Fatal(string message, LogCategory category)
+        {
+            Log(LoggingLevel.Fatal, message, LogChannels.General, category);
         }
 
         #endregion

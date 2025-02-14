@@ -84,6 +84,7 @@ namespace MHServerEmu.Games
         public Dictionary<ulong, IArchiveMessageHandler> MessageHandlerDict { get; } = new();
         public bool OmegaMissionsEnabled { get; set; }
         public bool AchievementsEnabled { get; set; }
+        public bool InfinitySystemEnabled { get => GameOptions.InfinitySystemEnabled; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 

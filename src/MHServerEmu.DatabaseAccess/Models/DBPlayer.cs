@@ -7,6 +7,7 @@
         public long StartTarget { get; set; }
         public long StartTargetRegionOverride { get; set; }
         public int AOIVolume { get; set; }
+        public long GazillioniteBalance { get; set; } = -1;     // -1 indicates that Gs need to be restored to the default value for new accounts when the player logs in
 
         public DBPlayer() { }
 
@@ -22,6 +23,7 @@
             StartTarget = unchecked((long)15338215617681369199);    // Regions/StoryRevamp/CH00Raft/TimesSquare/ConnectionTargets/TimesSquareTutorialStartTarget.prototype
             StartTargetRegionOverride = 0;
             AOIVolume = 3200;
+            GazillioniteBalance = -1;
         }
     }
 }

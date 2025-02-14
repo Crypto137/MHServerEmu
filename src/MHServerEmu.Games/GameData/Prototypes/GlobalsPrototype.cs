@@ -399,11 +399,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public const long InvalidXPRequirement = -1;
 
+        public const double OmegaXPFactor = 2186.666666666667;          // Player::CalcOmegaXpFromPoints()
+        public const double InfinityXPFactor = OmegaXPFactor * 100;     // Player::CalcInfinityXPFromPoints()
+
         [DoNotCopy]
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
 
         [DoNotCopy]
         public EvalPrototype AvatarThrowabilityEvalPrototype { get; private set; }
+
+        [DoNotCopy]
+        public long InfinityPointsCap { get => InfinityPointsCapPerGem * (int)InfinityGem.NumGems; }
 
         public override void PostProcess()
         {

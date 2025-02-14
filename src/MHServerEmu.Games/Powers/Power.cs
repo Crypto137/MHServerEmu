@@ -1472,7 +1472,7 @@ namespace MHServerEmu.Games.Powers
             if (Owner is Agent agent && agent.AIController != null)
             {
                 PropertyCollection blackboardProperties = agent.AIController.Blackboard.PropertyCollection;
-                blackboardProperties.AdjustProperty((long)offset.TotalMilliseconds, new(PropertyEnum.AIProceduralPowerSpecificCDTime, PrototypeDataRef));
+                blackboardProperties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.AIProceduralPowerSpecificCDTime, PrototypeDataRef));
                 return true;
             }
 
@@ -1489,18 +1489,24 @@ namespace MHServerEmu.Games.Powers
                 properties = player.Properties;
             }
 
-            properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
+            // The client implementation uses AdjustProperty() here, but this can cause the cooldown duration to become negative.
+            // Is this an issue from the original game, or is there an underlying problem somewhere else?
+            //properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
 
-            // Reschedule cooldown end event
-            if (_endCooldownEvent.IsValid)
-            {
-                EventScheduler scheduler = Game.GameEventScheduler;
-                if (scheduler == null) return Logger.WarnReturn(false, $"ModifyCooldown(): scheduler == null");
+            // Custom implementation the does not allow negative PowerCooldownDuration
+            long cooldownDurationMS = properties[PropertyEnum.PowerCooldownDuration, PrototypeDataRef];
+            cooldownDurationMS += (long)offset.TotalMilliseconds;
+            properties[PropertyEnum.PowerCooldownDuration, PrototypeDataRef] = Math.Max(cooldownDurationMS, 0);
 
-                TimeSpan delay = _endCooldownEvent.Get().FireTime - Game.CurrentTime + offset;
-                Clock.Max(delay, TimeSpan.Zero);
-                scheduler.RescheduleEvent(_endCooldownEvent, delay);
-            }
+            // Reschedule cooldown end event (since we are modifying an existing cooldown, there should be one)
+            if (_endCooldownEvent.IsValid == false) return Logger.WarnReturn(false, "ModifyCooldown(): _endCooldownEvent.IsValid == false");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return Logger.WarnReturn(false, $"ModifyCooldown(): scheduler == null");
+
+            TimeSpan delay = _endCooldownEvent.Get().FireTime - Game.CurrentTime + offset;
+            delay = Clock.Max(delay, TimeSpan.Zero);
+            scheduler.RescheduleEvent(_endCooldownEvent, delay);
 
             return true;
         }

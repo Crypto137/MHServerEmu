@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -22,6 +23,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
@@ -152,6 +154,9 @@ namespace MHServerEmu.Games.Entities
         public ulong DialogTargetId { get; private set; }
         public ulong DialogInteractorId { get; private set; }
         public PrototypeId CurrentOpenStashPagePrototypeRef { get; set; }
+        public long InfinityXP { get => Properties[PropertyEnum.InfinityXP]; }
+        public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
+        public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
 
         public Player(Game game) : base(game)
         {
@@ -932,7 +937,8 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Reapply lifespan
-            TimeSpan expirationTime = item.GetExpirationTime();
+            float expirationTimeMult = Math.Max(Game.CustomGameOptions.TrashedItemExpirationTimeMultiplier, 0f);
+            TimeSpan expirationTime = item.GetExpirationTime() * expirationTimeMult;
             item.ResetLifespan(expirationTime);
 
             return true;
@@ -1057,6 +1063,22 @@ namespace MHServerEmu.Games.Entities
             }
 
             return result;
+        }
+
+        public bool AcquireGazillionite(long amount)
+        {
+            if (amount <= 0) return Logger.WarnReturn(false, "AcquireGazillionite(): amount <= 0");
+
+            long balance = GazillioniteBalance;
+            balance += amount;
+            GazillioniteBalance = balance;
+
+            SendMessage(NetMessageGrantGToPlayerNotification.CreateBuilder()
+                .SetDidSucceed(true)
+                .SetCurrentCurrencyBalance(balance)
+                .Build());
+
+            return true;
         }
 
         protected override bool InitInventories(bool populateInventories)
@@ -1360,6 +1382,142 @@ namespace MHServerEmu.Games.Entities
 
             // NOTE: ServerBonusUnlockLevel is set to 60 in 1.52.
             return playerMaxAvatarLevel >= GameDatabase.GlobalsPrototype.ServerBonusUnlockLevel;
+        }
+
+        #endregion
+
+        #region Alternate Advancement (Omega and Infinity)
+
+        public long GetTotalInfinityPoints()
+        {
+            long infinityPoints = 0;
+
+            for (InfinityGem gem = 0; gem < InfinityGem.NumGems; gem++)
+                infinityPoints += Properties[PropertyEnum.InfinityPoints, (int)gem];
+
+            return infinityPoints;
+        }
+
+        public void AwardInfinityXP(long amount, bool notifyClient)
+        {
+            if (amount <= 0)
+                return;
+
+            long infinityXP = Math.Min(InfinityXP + amount, GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap);
+            Properties[PropertyEnum.InfinityXP] = infinityXP;
+
+            TryInfinityLevelUp(notifyClient);
+        }
+
+        public void TryInfinityLevelUp(bool notifyClient)
+        {
+            long pointsBefore = GetTotalInfinityPoints();
+            long pointsAfter = CalcInfinityPointsFromXP(InfinityXP);
+
+            // Early out if we don't have any points
+            if (pointsAfter <= pointsBefore)
+                return;
+
+            long pointsPerGem = Math.DivRem(pointsAfter - pointsBefore, (int)InfinityGem.NumGems, out long pointsPerGemRemainder);
+
+            InfinityGemBonusTable infinityBonusTable = GameDataTables.Instance.InfinityGemBonusTable;
+
+            NetMessageInfinityPointGain.Builder messageBuilder = notifyClient ? NetMessageInfinityPointGain.CreateBuilder() : null;
+
+            InfinityGem gemStart = (InfinityGem)(int)Properties[PropertyEnum.InfinityGemNext];
+            InfinityGem gemCurrent = gemStart;
+            InfinityGem gemLast = gemStart;
+
+            // Need to use a do loop here instead of for to ensure at least one iteration of it
+            do
+            {
+                long numPointsGained = pointsPerGem;
+
+                // Distribute the remainder
+                if (pointsPerGemRemainder > 0)
+                {
+                    numPointsGained++;
+                    pointsPerGemRemainder--;
+
+                    if (pointsPerGemRemainder == 0)
+                        gemLast = gemCurrent;
+                }
+
+                // Adjust the number of points
+                if (numPointsGained > 0)
+                {
+                    Properties.AdjustProperty((int)numPointsGained, new(PropertyEnum.InfinityPoints, (PropertyParam)gemCurrent));
+                    
+                    messageBuilder?.AddPointsGained(NetStructInfinityPointGain.CreateBuilder()
+                        .SetNumPointsGained(numPointsGained)
+                        .SetInfinityGemEnum((int)gemCurrent));
+                }
+
+                gemCurrent = infinityBonusTable.GetNextGem(gemCurrent);
+            } while (gemCurrent != gemStart);
+
+            Properties[PropertyEnum.InfinityGemNext] = (int)infinityBonusTable.GetNextGem(gemLast);
+
+            Avatar avatar = CurrentAvatar;
+            if (messageBuilder != null && avatar != null && avatar.IsInfinitySystemUnlocked())
+            {
+                messageBuilder.SetAvatarId(avatar.Id);
+                Game.NetworkManager.SendMessageToInterested(messageBuilder.Build(), avatar, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
+            }
+        }
+
+        private static long CalcInfinityPointsFromXP(long xp)
+        {
+            long points = (long)Math.Sqrt(xp / AdvancementGlobalsPrototype.InfinityXPFactor);
+            return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.InfinityPointsCap);
+        }
+
+        public long GetOmegaPoints()
+        {
+            return Properties[PropertyEnum.OmegaPoints];
+        }
+
+        public void AwardOmegaXP(long amount, bool notifyClient)
+        {
+            if (amount <= 0)
+                return;
+
+            long omegaXP = Math.Min(OmegaXP + amount, GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap);
+            Properties[PropertyEnum.OmegaXP] = omegaXP;
+
+            TryOmegaLevelUp(notifyClient);
+        }
+
+        public void TryOmegaLevelUp(bool notifyClient)
+        {
+            // TODO: Verify if it's working correctly
+
+            long pointsBefore = GetOmegaPoints();
+            long pointsAfter = CalcOmegaPointsFromXP(OmegaXP);
+
+            // Early out if we don't have any points
+            if (pointsAfter <= pointsBefore)
+                return;
+
+            long numPointsGained = pointsAfter - pointsBefore;
+            Properties.AdjustProperty((int)numPointsGained, PropertyEnum.OmegaPoints);
+
+            Avatar avatar = CurrentAvatar;
+            if (notifyClient && avatar != null && avatar.IsOmegaSystemUnlocked())
+            {
+                NetMessageOmegaPointGain message = NetMessageOmegaPointGain.CreateBuilder()
+                    .SetAvatarId(avatar.Id)
+                    .SetNumPointsGained((uint)numPointsGained)
+                    .Build();
+
+                Game.NetworkManager.SendMessageToInterested(message, avatar, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
+            }
+        }
+
+        private static long CalcOmegaPointsFromXP(long xp)
+        {
+            int points = MathHelper.RoundToInt(Math.Sqrt(xp / AdvancementGlobalsPrototype.OmegaXPFactor));
+            return Math.Min(points, GameDatabase.AdvancementGlobalsPrototype.OmegaPointsCap);
         }
 
         #endregion

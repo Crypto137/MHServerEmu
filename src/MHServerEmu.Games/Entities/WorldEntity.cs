@@ -2569,27 +2569,54 @@ namespace MHServerEmu.Games.Entities
 
             if (modProto.Type == PrototypeId.Invalid) return Logger.WarnReturn(false, "modProto.Type == PrototypeId.Invalid");
 
-            // No properties to add from this mod
-            if ((modProto.Properties == null || modProto.Properties.Any() == false) && modProto.EvalOnCreate.IsNullOrEmpty())
-                return true;
-
-            if (rank > 0)
+            // Attached properties
+            if ((modProto.Properties != null && modProto.Properties.IsEmpty == false) || modProto.EvalOnCreate.HasValue() || modProto.PropertiesForTooltips.HasValue())
             {
-                using PropertyCollection indexProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                indexProperties[PropertyEnum.CharacterLevel] = CharacterLevel;
-                indexProperties[PropertyEnum.CombatLevel] = CombatLevel;
-                indexProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
+                if (rank > 0)
+                {
+                    using PropertyCollection indexProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                    indexProperties[PropertyEnum.CharacterLevel] = CharacterLevel;
+                    indexProperties[PropertyEnum.CombatLevel] = CombatLevel;
+                    indexProperties.CopyProperty(Properties, PropertyEnum.ItemLevel);
 
-                if (modProto is OmegaBonusPrototype omegaModProto)
-                    indexProperties.CopyPropertyRange(Properties, PropertyEnum.OmegaRank);
-                else if (modProto is InfinityGemBonusPrototype)
-                    indexProperties.CopyPropertyRange(Properties, PropertyEnum.InfinityGemBonusRank);
+                    if (modProto is InfinityGemBonusPrototype)
+                        indexProperties.CopyPropertyRange(Properties, PropertyEnum.InfinityGemBonusRank);
+                    else if (modProto is OmegaBonusPrototype)
+                        indexProperties.CopyPropertyRange(Properties, PropertyEnum.OmegaRank);
 
-                AttachProperties(modProto.Type, modRef, 0, modProto.Properties, indexProperties, rank, true);                
+                    AttachProperties(modProto.Type, modRef, 0, modProto.Properties, indexProperties, rank, true);
+                }
+                else
+                {
+                    DetachProperties(modProto.Type, modRef, 0);
+                }
             }
-            else
+
+            // Passive powers
+            if (modProto.PassivePowers.HasValue())
             {
-                DetachProperties(modProto.Type, modRef, 0);
+                if (rank > 0)
+                {
+                    PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+
+                    foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
+                    {
+                        // Unassign power if it's already there
+                        if (PowerCollection != null && HasPowerInPowerCollection(powerProtoRef))
+                            UnassignPower(powerProtoRef);
+
+                        if (AssignPower(powerProtoRef, indexProps) == null)
+                            Logger.Warn($"ModChangeModEffects(): Failed to assign passive power {powerProtoRef.GetName()} for mod {modProto}");
+                    }
+                }
+                else
+                {
+                    foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
+                    {
+                        if (UnassignPower(powerProtoRef) == false)
+                            Logger.Warn($"ModChangeModEffects(): Failed to unassign passive power {powerProtoRef.GetName()} for mod {modProto}");
+                    }
+                }
             }
 
             return true;
@@ -2838,17 +2865,19 @@ namespace MHServerEmu.Games.Entities
         {
             SetSimulated(false);
 
-            var region = Region;
-
-            if (region.EntityTracker != null)
+            Region region = Region;
+            if (region != null)
             {
-                region.EntityExitedWorldEvent.Invoke(new(this));
-                region.EntityTracker.RemoveFromTracking(this);
-            }
+                if (region.EntityTracker != null)
+                {
+                    region.EntityExitedWorldEvent.Invoke(new(this));
+                    region.EntityTracker.RemoveFromTracking(this);
+                }
 
-            // Undiscover from region
-            if (WorldEntityPrototype.DiscoverInRegion)
-                region.UndiscoverEntity(this, true);
+                // Undiscover from region
+                if (WorldEntityPrototype.DiscoverInRegion)
+                    region.UndiscoverEntity(this, true);
+            }
 
             // Undiscover from players
             if (InterestReferences.IsAnyPlayerInterested(AOINetworkPolicyValues.AOIChannelDiscovery))

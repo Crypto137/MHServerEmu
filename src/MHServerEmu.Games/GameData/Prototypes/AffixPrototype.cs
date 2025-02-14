@@ -53,31 +53,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
     [AssetEnum]
     public enum OmegaPageType
     {
-        Psionics = 12,
+        NeuralEnhancement = 0,
         CosmicEntities = 1,
         ArcaneAttunement = 2,
         InterstellarExploration = 3,
         SpecialWeapons = 4,
         ExtraDimensionalTravel = 5,
-        MolecularAdjustment = 13,
+        Xenobiology = 6,
         RadioactiveOrigins = 7,
         TemporalManipulation = 8,
         Nanotechnology = 9,
         SupernaturalInvestigation = 10,
         HumanAugmentation = 11,
-        NeuralEnhancement = 0,
-        Xenobiology = 6,
+        Psionics = 12,
+        MolecularAdjustment = 13,
     }
 
     [AssetEnum((int)None)]
     public enum InfinityGem
     {
-        Soul = 3,
-        Time = 5,
-        Space = 4,
         Mind = 0,
-        Reality = 2,
         Power = 1,
+        Reality = 2,
+        Soul = 3,
+        Space = 4,
+        Time = 5,
+        NumGems = 6,
         None = 7,
     }
 
@@ -369,6 +370,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //---
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public int GetRanksMax()
+        {
+            Curve curve = RankCostCurve.AsCurve();
+
+            if (RanksMax > 0 && curve != null)
+                return Math.Min(curve.MaxPosition, RanksMax);
+
+            if (RanksMax > 0)
+                return RanksMax;
+
+            if (curve != null)
+                return curve.MaxPosition;
+
+            return 0;
+        }
 
         public void RunEvalOnCreate(Entity entity, PropertyCollection indexProperties, PropertyCollection modProperties)
         {
