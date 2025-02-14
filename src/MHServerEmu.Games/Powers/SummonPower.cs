@@ -597,7 +597,7 @@ namespace MHServerEmu.Games.Powers
 
             // set OptionFlags
             if (contextProto.SnapToFloor)
-                settings.OptionFlags = EntitySettingsOptionFlags.HasOverrideSnapToFloor | EntitySettingsOptionFlags.OverrideSnapToFloorValue;
+                settings.OptionFlags |= EntitySettingsOptionFlags.HasOverrideSnapToFloor | EntitySettingsOptionFlags.OverrideSnapToFloorValue;
 
             if (contextProto.HideEntityOnSummon)
                 settings.OptionFlags |= EntitySettingsOptionFlags.IsClientEntityHidden;
