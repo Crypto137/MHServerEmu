@@ -3,6 +3,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers.Conditions;
+using System.Diagnostics;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -38,7 +39,12 @@ namespace MHServerEmu.Games.Properties
         public bool StopTicker(ulong tickerId)
         {
             if (_tickerDict.Remove(tickerId, out PropertyTicker ticker) == false)
-                return Logger.WarnReturn(false, $"StopTicker(): TickerId {tickerId} not found");
+            {
+                // Temporarily adding a full stack trace here to figure out what is causing this
+                StackTrace st = new();
+                Logger.Debug($"StopTicker():\n{st}");
+                return Logger.WarnReturn(false, $"StopTicker(): TickerId {tickerId} not found on owner=[{_owner}]");
+            }
 
             ticker.Stop(true);
             DeleteTicker(ticker);
