@@ -561,21 +561,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == (int)State.ToadSummoned)
             {
                 bool toadSummoned = false;
-                Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
-                if (summonedInventory != null)
-                {
-                    EntityManager entityManager = game.EntityManager;
 
-                    foreach (var entry in summonedInventory)
+                foreach (var summoned in new SummonedEntityIterator(agent))
+                    if (summoned.PrototypeDataRef == ToadPrototype)
                     {
-                        WorldEntity summoned = entityManager.GetEntity<WorldEntity>(entry.Id);
-                        if (summoned != null && summoned.PrototypeDataRef == ToadPrototype)
-                        {
-                            toadSummoned = true;
-                            break;
-                        }
+                        toadSummoned = true;
+                        break;
                     }
-                }
 
                 if (toadSummoned == false)
                 {
@@ -2027,18 +2019,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (agent == null) return;
                 Game game = agent.Game;
                 if (game == null) return;
-                var manager = game.EntityManager;
-                Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
-                if (summonedInventory != null)                
-                    foreach (var entry in summonedInventory)
+                
+                foreach (var summoned in new SummonedEntityIterator(agent))
+                    if (summoned is Agent summonedAgent)
                     {
-                        Agent summonedAgent = manager.GetEntity<Agent>(entry.Id);
-                        if (summonedAgent != null)
-                        {
-                            WorldEntity target = ownerController.TargetEntity;
-                            if (target == null) return;
-                            summonedAgent.Properties[PropertyEnum.TauntersID] = target.Id;
-                        }
+                        WorldEntity target = ownerController.TargetEntity;
+                        if (target == null) return;
+                        summonedAgent.Properties[PropertyEnum.TauntersID] = target.Id;
                     }
             }
         }

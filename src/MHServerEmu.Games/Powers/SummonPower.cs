@@ -71,11 +71,8 @@ namespace MHServerEmu.Games.Powers
             var summonPowerProto = SummonPowerPrototype;
             if (summonPowerProto == null || summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
 
-            var inventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+            var inventory = Owner.SummonedInventory;
             if (inventory == null) return;
-
-            var manager = Owner.Game?.EntityManager;
-            if (manager == null) return;
 
             List<WorldEntity> killList = [];
 
@@ -93,10 +90,9 @@ namespace MHServerEmu.Games.Powers
 
                 killList.Clear();
 
-                foreach (var entry in inventory)
+                foreach (var summoned in new SummonedEntityIterator(Owner))
                 {
-                    var summoned = manager.GetEntity<WorldEntity>(entry.Id);
-                    if (summoned == null || summoned.IsDead) continue;
+                    if (summoned.IsDead) continue;
 
                     bool found = false;
                     if (removalKeywords)
@@ -636,7 +632,7 @@ namespace MHServerEmu.Games.Powers
                     if (target != null)
                     {
                         conteinerId = target.Id;
-                        inventory = target.GetInventory(InventoryConvenienceLabel.Summoned);
+                        inventory = target.SummonedInventory;
                     }
                     else return PowerUseResult.TargetIsMissing;
                 }
@@ -645,7 +641,7 @@ namespace MHServerEmu.Games.Powers
                     if (owner != null)
                     {
                         conteinerId = owner.Id;
-                        inventory = owner.GetInventory(InventoryConvenienceLabel.Summoned);
+                        inventory = owner.SummonedInventory;
                     }
                 }
 
@@ -748,18 +744,14 @@ namespace MHServerEmu.Games.Powers
             int count = 0;
             var powerProto = SummonPowerPrototype;
 
-            var manager = Owner.Game?.EntityManager;
-            if (manager == null) return count;
-
-            var inventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+            var inventory = Owner.SummonedInventory;
             if (inventory == null) return count;
 
             List<WorldEntity> summons = ListPool<WorldEntity>.Instance.Get();
 
-            foreach (var entry in inventory)
+            foreach (var summoned in new SummonedEntityIterator(Owner))
             {
-                var summoned = manager.GetEntity<WorldEntity>(entry.Id);
-                if (summoned == null || summoned.IsDead) continue;
+                if (summoned.IsDead) continue;
 
                 PrototypeId powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef)
@@ -790,18 +782,14 @@ namespace MHServerEmu.Games.Powers
 
         private static void KillPreviousSummons(WorldEntity owner, SummonPowerPrototype powerProto, int summonsCount)
         {
-            var manager = owner.Game?.EntityManager;
-            if (manager == null) return;
-
-            var inventory = owner.GetInventory(InventoryConvenienceLabel.Summoned);
+            var inventory = owner.SummonedInventory;
             if (inventory == null) return;
             
             List<WorldEntity> summons = ListPool<WorldEntity>.Instance.Get();
 
-            foreach (var entry in inventory)
+            foreach (var summoned in new SummonedEntityIterator(owner))
             {
-                var summoned = manager.GetEntity<WorldEntity>(entry.Id);
-                if (summoned == null || summoned.IsDead) continue;
+                if (summoned.IsDead) continue;
 
                 PrototypeId powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef || powerProto.InSummonMaxCountWithOthers(powerRef))
