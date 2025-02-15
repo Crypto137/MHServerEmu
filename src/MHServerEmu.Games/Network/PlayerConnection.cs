@@ -479,6 +479,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;          // 46
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;      // 47
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
+                case ClientToGameServerMessage.NetMessagePowerRecentlyUnlocked:             OnPowerRecentlyUnlocked(message); break;            // 51
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
                 case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
@@ -1106,7 +1107,25 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnRequestDeathRelease(MailboxMessage message)  // 48
+        private bool OnPowerRecentlyUnlocked(MailboxMessage message)  // 51
+        {
+            var powerRecentlyUnlocked = message.As<NetMessagePowerRecentlyUnlocked>();
+            if (powerRecentlyUnlocked == null) return Logger.WarnReturn(false, $"OnPowerRecentlyUnlocked(): Failed to retrieve message");
+
+            // PowerUnlocked is a client-authoritative property, this message is used to keep the server in sync.
+            // It is also flagged as ReplicateForTransfer, so it's supposed to persist until the client logs out.
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(powerRecentlyUnlocked.AvatarEntityId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnPowerRecentlyUnlocked(): avatar == null");
+
+            // Get the power prototype instance to validate that this is a real power prototype
+            PowerPrototype powerProto = ((PrototypeId)powerRecentlyUnlocked.PowerPrototypeId).As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(false, "OnPowerRecentlyUnlocked(): powerProto == null");
+
+            avatar.Properties[PropertyEnum.PowerUnlocked, powerProto.DataRef] = powerRecentlyUnlocked.IsRecentlyUnlocked;
+            return true;
+        }
+
+        private bool OnRequestDeathRelease(MailboxMessage message)  // 52
         {
             var requestDeathRelease = message.As<NetMessageRequestDeathRelease>();
             if (requestDeathRelease == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");
