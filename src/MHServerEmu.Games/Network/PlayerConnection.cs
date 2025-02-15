@@ -1069,7 +1069,6 @@ namespace MHServerEmu.Games.Network
             var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
             AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
-            Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
 
             // Set
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
@@ -1083,7 +1082,6 @@ namespace MHServerEmu.Games.Network
 
             var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
-            Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
 
             // Remove by assigning invalid id
             abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
