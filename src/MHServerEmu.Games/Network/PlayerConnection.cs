@@ -455,6 +455,8 @@ namespace MHServerEmu.Games.Network
 
             switch ((ClientToGameServerMessage)message.Id)
             {
+                case ClientToGameServerMessage.NetMessagePlayerSystemMetrics:               OnPlayerSystemMetrics(message); break;              // 1
+                case ClientToGameServerMessage.NetMessagePlayerSteamInfo:                   OnPlayerSteamInfo(message); break;                  // 2
                 case ClientToGameServerMessage.NetMessageIsRegionAvailable:                 OnIsRegionAvailable(message); break;                // 5
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:                 OnUpdateAvatarState(message); break;                // 6
                 case ClientToGameServerMessage.NetMessageCellLoaded:                        OnCellLoaded(message); break;                       // 7
@@ -550,6 +552,31 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnPlayerSystemMetrics(MailboxMessage message)  // 1
+        {
+            var playerSystemMetrics = message.As<NetMessagePlayerSystemMetrics>();
+            if (playerSystemMetrics == null) return Logger.WarnReturn(false, $"OnPlayerSystemMetrics(): Failed to retrieve message");
+
+            // Adding this handler to reduce log spam.
+            // This message is sent when the client logs in for the first time after startup. We are not interested in any of this info.
+
+            return true;
+        }
+
+        private bool OnPlayerSteamInfo(MailboxMessage message)  // 2
+        {
+            var playerSteamInfo = message.As<NetMessagePlayerSteamInfo>();
+            if (playerSteamInfo == null) return Logger.WarnReturn(false, $"OnPlayerSteamInfo(): Failed to retrieve message");
+
+            // Adding this handler to reduce log spam.
+            // TODO: Figure out if we can make use of any Steam functionality. If so, set PropertyEnum.SteamUserId and PropertyEnum.SteamAchievementUpdateSeqNum here.
+
+            // NOTE: It's impossible to use this to grant Steam achievements without a publisher API key.
+            // See SetUserStatsForGame in Steamworks docs for more info: https://partner.steamgames.com/doc/webapi/isteamuserstats
+
+            return true;
         }
 
         private bool OnIsRegionAvailable(MailboxMessage message)    // 5
