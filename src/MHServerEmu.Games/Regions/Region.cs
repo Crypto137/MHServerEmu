@@ -92,6 +92,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool IsPublic { get => Prototype != null && Prototype.IsPublic; }
         public bool IsPrivate { get => Prototype != null && Prototype.IsPrivate; }
+        public RegionBehavior Behavior { get => Prototype != null ? Prototype.Behavior : RegionBehavior.Invalid; }
 
         public Aabb Aabb { get; private set; }
         public Aabb2 Aabb2 { get => new(Aabb); }
