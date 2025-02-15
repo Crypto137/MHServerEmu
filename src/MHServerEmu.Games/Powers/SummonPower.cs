@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Powers
 
         private static bool SummonedHasCreatorPower(WorldEntity summoned, PrototypeId[] fromPowers)
         {
-            var creatorPowerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
+            PrototypeId creatorPowerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
 
             foreach (var power in fromPowers)
                 if (creatorPowerRef == power) return true;
@@ -761,7 +761,7 @@ namespace MHServerEmu.Games.Powers
                 var summoned = manager.GetEntity<WorldEntity>(entry.Id);
                 if (summoned == null || summoned.IsDead) continue;
 
-                var powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
+                PrototypeId powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef)
                     summons.Add(summoned);
             }
@@ -803,7 +803,7 @@ namespace MHServerEmu.Games.Powers
                 var summoned = manager.GetEntity<WorldEntity>(entry.Id);
                 if (summoned == null || summoned.IsDead) continue;
 
-                var powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
+                PrototypeId powerRef = summoned.Properties[PropertyEnum.CreatorPowerPrototype];
                 if (powerRef == powerProto.DataRef || powerProto.InSummonMaxCountWithOthers(powerRef))
                     summons.Add(summoned);
             }
