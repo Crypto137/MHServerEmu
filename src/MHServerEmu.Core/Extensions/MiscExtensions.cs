@@ -18,8 +18,7 @@ namespace MHServerEmu.Core.Extensions
         public static void Set<T>(this List<T> list, List<T> other)
         {
             list.Clear();
-            foreach (T value in other)
-                list.Add(value);
+            list.AddRange(other);
         }
     }
 }

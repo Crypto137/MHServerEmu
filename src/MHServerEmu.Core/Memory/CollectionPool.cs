@@ -49,6 +49,16 @@ namespace MHServerEmu.Core.Memory
     public class ListPool<T> : CollectionPool<List<T>, T>
     {
         public static ListPool<T> Instance { get; } = new();
+
+        /// <summary>
+        /// Retrieves a <typeparamref name="TCollection"/> from the pool or allocates a new one if the pool is empty and ensures it has the specified capacity.
+        /// </summary>
+        public List<T> Get(int capacity)
+        {
+            List<T> list = Get();
+            list.EnsureCapacity(capacity);
+            return list;
+        }
     }
 
     /// <summary>
