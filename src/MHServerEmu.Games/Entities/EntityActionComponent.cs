@@ -33,6 +33,13 @@ namespace MHServerEmu.Games.Entities
             _pendingActions = new();
         }
 
+        public void Destroy()
+        {
+            ActionTable.Clear();
+            CancelTable.Clear();
+            CancelAll();
+        }
+
         public void Register(List<EntitySelectorActionPrototype> actions)
         {
             if (actions == null) return;
