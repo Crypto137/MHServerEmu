@@ -789,6 +789,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public bool HasEvalEventTriggerChance { get => EvalEventTriggerChance != null; }
 
+        [DoNotCopy]
+        public KeywordsMask KeywordsMask { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            KeywordsMask = KeywordPrototype.GetBitMaskForKeywordList(Keywords);
+        }
+
         public float GetEventTriggerChance(PropertyCollection powerProperties, WorldEntity owner, WorldEntity target)
         {
             if (EvalEventTriggerChance == null)
