@@ -897,8 +897,6 @@ namespace MHServerEmu.Games.Entities
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
                 procPowerRefList.Add(procPowerRef);
-
-                Logger.Debug($"CreateAndCloneAttachedModCollection(): {procPowerRef.GetName()}");
             }
 
             foreach (PrototypeId procPowerRef in procPowerRefList)

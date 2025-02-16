@@ -3,7 +3,6 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers.Conditions;
-using System.Diagnostics;
 
 namespace MHServerEmu.Games.Properties
 {
@@ -38,13 +37,10 @@ namespace MHServerEmu.Games.Properties
 
         public bool StopTicker(ulong tickerId)
         {
+            // In some cases (e.g. reapplying Infinity/Omega tickers after reentering the world)
+            // a ticker may no longer exist, and this is valid behavior, so stay silent.
             if (_tickerDict.Remove(tickerId, out PropertyTicker ticker) == false)
-            {
-                // Temporarily adding a full stack trace here to figure out what is causing this
-                StackTrace st = new();
-                Logger.Debug($"StopTicker():\n{st}");
-                return Logger.WarnReturn(false, $"StopTicker(): TickerId {tickerId} not found on owner=[{_owner}]");
-            }
+                return true;
 
             ticker.Stop(true);
             DeleteTicker(ticker);
