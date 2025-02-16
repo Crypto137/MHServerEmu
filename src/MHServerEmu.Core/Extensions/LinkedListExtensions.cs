@@ -24,8 +24,11 @@
         /// </summary>
         public static bool Remove<T>(this LinkedListNode<T> node)
         {
-            if (node.List == null) return false;
-            node.List.Remove(node);
+            LinkedList<T> list = node.List;
+            if (list == null)
+                return false;
+
+            list.Remove(node);
             return true;
         }
     }

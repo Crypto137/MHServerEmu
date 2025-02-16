@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.Events
 {
     /// <summary>
     /// Represents an intrusive collection of <see cref="ScheduledEvent"/>.
     /// </summary>
-    public class EventGroup : IEnumerable<ScheduledEvent>
+    public class EventGroup
     {
         private readonly LinkedList<ScheduledEvent> _eventList = new();
 
@@ -15,19 +14,24 @@ namespace MHServerEmu.Games.Events
 
         public void Add(ScheduledEvent @event)
         {
-            @event.EventGroupNode?.Remove();
-            @event.EventGroupNode = _eventList.AddLast(@event);
+            @event.EventGroupNode.Remove();
+            _eventList.AddLast(@event.EventGroupNode);
         }
 
         public bool Remove(ScheduledEvent @event)
         {
-            if (@event.EventGroupNode == null) return false;
-            if (@event.EventGroupNode.List != _eventList) return false;
-            @event.EventGroupNode.Remove();
+            LinkedListNode<ScheduledEvent> node = @event.EventGroupNode;
+
+            if (node.List != _eventList)
+                return false;
+
+            node.Remove();
             return true;
         }
 
-        public IEnumerator<ScheduledEvent> GetEnumerator() => _eventList.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public LinkedList<ScheduledEvent>.Enumerator GetEnumerator()
+        {
+            return _eventList.GetEnumerator();
+        }
     }
 }

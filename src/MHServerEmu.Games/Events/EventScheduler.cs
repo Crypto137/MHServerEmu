@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Events
 
                         CurrentTime = @event.FireTime;
                         _scheduledEvents.Remove(@event);
-                        @event.EventGroupNode?.Remove();
+                        @event.EventGroupNode.Remove();
                         @event.InvalidatePointers();
 
                         TimeSpan referenceTime = _stopwatch.Elapsed;
@@ -203,7 +203,7 @@ namespace MHServerEmu.Games.Events
         private void CancelEvent(ScheduledEvent @event)
         {
             _scheduledEvents.Remove(@event);
-            @event.EventGroupNode?.Remove();
+            @event.EventGroupNode.Remove();
             @event.InvalidatePointers();
             @event.OnCancelled();
         }
