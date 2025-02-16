@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Entities
                 if (archive.IsPacking)
                 {
                     if (_currentConditions.Count >= MaxConditions)
-                        return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions");
+                        return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions\n{string.Join('\n', _currentConditions.Values)}");
 
                     uint numConditions = (uint)_currentConditions.Count;
                     success &= Serializer.Transfer(archive, ref numConditions);
