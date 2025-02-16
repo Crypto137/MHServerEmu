@@ -181,6 +181,22 @@ namespace MHServerEmu.Core.Collections
             return false;
         }
 
+        public bool TestAll(GBitArray other)
+        {
+            for (int i = 0; i < other._size; i++)
+            {
+                if (i < _size)
+                {
+                    if ((_bits[i] & other._bits[i]) != other._bits[i])
+                        return false;
+                }
+                else if (other._bits[i] != 0) 
+                    return false;
+            }
+
+            return true;
+        }
+
         public static T And<T>(T left, T right) where T: GBitArray
         {
             left.Reserve(right.Size);
