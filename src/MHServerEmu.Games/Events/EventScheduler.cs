@@ -15,6 +15,8 @@ namespace MHServerEmu.Games.Events
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 
+        private readonly ScheduledEventPool _eventPool = new();
+
         // TODO: Implement frame buckets
         private readonly HashSet<ScheduledEvent> _scheduledEvents = new();
 
@@ -141,6 +143,8 @@ namespace MHServerEmu.Games.Events
 
                         if (++numEvents > MaxEventsPerUpdate)
                             throw new Exception($"Infinite loop detected in EventScheduler.");
+
+                        _eventPool.Return(@event);
                     }
 
                     // See if any more events got scheduled for this frame
@@ -179,7 +183,7 @@ namespace MHServerEmu.Games.Events
 
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
         {
-            T @event = new();
+            T @event = _eventPool.Get<T>();
 
             if (timeOffset < TimeSpan.Zero)
             {
@@ -206,6 +210,8 @@ namespace MHServerEmu.Games.Events
             @event.EventGroupNode.Remove();
             @event.InvalidatePointers();
             @event.OnCancelled();
+
+            _eventPool.Return(@event);
         }
 
         private void RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)

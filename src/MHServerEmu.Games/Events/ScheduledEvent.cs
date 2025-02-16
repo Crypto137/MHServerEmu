@@ -13,18 +13,22 @@ namespace MHServerEmu.Games.Events
         // in practice there is never more than one pointer to an event.
         private IEventPointer _pointer;
 
-        public ulong SortOrder { get; }    // REMOVEME
+        public ulong SortOrder { get; private set; }    // REMOVEME
         // TODO: public LinkedListNode<ScheduledEvent> ProcessListNode { get; }
         public LinkedListNode<ScheduledEvent> EventGroupNode { get; }
         public TimeSpan FireTime { get; set; }
 
+        public bool IsValid { get => _pointer != null; }
+
         public ScheduledEvent()
         {
-            SortOrder = ++NextSortOrder;    // REMOVEME
             EventGroupNode = new(this);
         }
 
-        public bool IsValid { get => _pointer != null; }
+        public void ResetSortOrder()
+        {
+            SortOrder = ++NextSortOrder;    // REMOVEME
+        }
 
         public bool Link(IEventPointer pointer)
         {
@@ -56,5 +60,7 @@ namespace MHServerEmu.Games.Events
 
         public abstract bool OnTriggered();
         public virtual bool OnCancelled() { return true; }
+
+        public abstract void Clear();
     }
 }

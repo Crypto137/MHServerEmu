@@ -609,6 +609,12 @@ namespace MHServerEmu.Games.Powers
 
                 return true;
             }
+
+            public override void Clear()
+            {
+                _missilePower = default;
+                _powerApplication = default;
+            }
         }
     }
 }
