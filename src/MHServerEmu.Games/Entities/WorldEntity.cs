@@ -2612,11 +2612,11 @@ namespace MHServerEmu.Games.Entities
                 }
                 else
                 {
+                    // Infinity is a piece of crap codewise, and ranks in different nodes can assign/unassign the same synergy passive,
+                    // so we can't verify removal here, because full respec can unassign the same synergy passive multiple times.
+                    // Also removing all points from one of the nodes can remove the passive that is also granted by other nodes.
                     foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
-                    {
-                        if (UnassignPower(powerProtoRef) == false)
-                            Logger.Warn($"ModChangeModEffects(): Failed to unassign passive power {powerProtoRef.GetName()} for mod {modProto}");
-                    }
+                        UnassignPower(powerProtoRef);
                 }
             }
 
