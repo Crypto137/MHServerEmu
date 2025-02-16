@@ -2603,8 +2603,7 @@ namespace MHServerEmu.Games.Entities
                     foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
                     {
                         // Unassign power if it's already there
-                        if (PowerCollection != null && HasPowerInPowerCollection(powerProtoRef))
-                            UnassignPower(powerProtoRef);
+                        UnassignPower(powerProtoRef);
 
                         if (AssignPower(powerProtoRef, indexProps) == null)
                             Logger.Warn($"ModChangeModEffects(): Failed to assign passive power {powerProtoRef.GetName()} for mod {modProto}");
