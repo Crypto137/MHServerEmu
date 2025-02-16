@@ -532,6 +532,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsRankBoss { get => Rank == Rank.Boss || Rank == Rank.GroupBoss; }
 
         [DoNotCopy]
+        public bool IsRankChampionOrEliteOrMiniBoss { get => Rank == Rank.Champion || Rank == Rank.Elite || Rank == Rank.MiniBoss; }
+
+        [DoNotCopy]
         public bool IsRankBossOrMiniBoss { get => IsRankBoss || Rank == Rank.MiniBoss; }
 
         private KeywordsMask _keywordsMask;
