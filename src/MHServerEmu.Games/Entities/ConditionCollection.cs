@@ -1167,8 +1167,10 @@ namespace MHServerEmu.Games.Entities
             if (tickerId == PropertyTicker.InvalidId)
                 return;
 
-            _owner.StopPropertyTicker(tickerId);
+            // Ticker id needs to be cleared before actually stopping the ticker because
+            // stopping the ticker can kill the target, which may call StopTicker() again.
             condition.PropertyTickerId = PropertyTicker.InvalidId;
+            _owner.StopPropertyTicker(tickerId);
         }
 
         private void UpdateTicker(Condition condition)
