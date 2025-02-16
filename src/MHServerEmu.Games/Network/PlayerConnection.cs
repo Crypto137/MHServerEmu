@@ -480,6 +480,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
                 case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
+                case ClientToGameServerMessage.NetMessageRequestRemoveAndKillControlledAgent:   OnRequestRemoveAndKillControlledAgent(message); break;   // 58
                 case ClientToGameServerMessage.NetMessageMetaGameUpdateNotification:        OnMetaGameUpdateNotification(message); break;       // 63
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
@@ -1141,6 +1142,18 @@ namespace MHServerEmu.Games.Network
             else
                 Player.MissionManager?.OnRequestMissionRewards(missionRef, entityId);
 
+            return true;
+        }
+
+        private bool OnRequestRemoveAndKillControlledAgent(MailboxMessage message) // 58
+        {
+            var request = message.As<NetMessageRequestRemoveAndKillControlledAgent>();
+            if (request == null) return Logger.WarnReturn(false, $"OnRequestRemoveAndKillControlledAgent(): Failed to retrieve message");
+
+            var avatar = Game.EntityManager.GetEntity<Avatar>(request.AvatarId);
+            if (avatar == null || avatar.GetOwnerOfType<Player>() != Player) return false;
+
+            avatar.RemoveAndKillControlledAgent();
             return true;
         }
 
