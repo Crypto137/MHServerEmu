@@ -338,5 +338,24 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Region={region.Prototype}, TuningTable={tuningTable.Prototype}, playerToMob={playerToMob}, mobToPlayer={mobToPlayer}";
         }
+
+        [Command("geteventpoolreport", "Returns a report representing the state of the ScheduledEventPool in the current game.")]
+        public string GetEventPoolStatus(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetGame(client, out Game game);
+            string reportString = game.GameEventScheduler.GetPoolReportString();
+
+            string filePath = $"Download/ScheduledEventPoolReport_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
+
+            client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
+                .SetResponse($"Saved scheduled event pool report for the current game to {filePath}")
+                .SetFilerelativepath(filePath)
+                .SetFilecontents(reportString)
+                .Build());
+
+            return string.Empty;
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using System.Text;
+using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Games.Events
 {
@@ -40,6 +41,37 @@ namespace MHServerEmu.Games.Events
 
             node.Return(@event);
             return true;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="string"/> representing the current state of this <see cref="ScheduledEventPool"/> instance.
+        /// </summary>
+        public string GetReportString()
+        {
+            StringBuilder sb = new();
+
+            int availableSum = 0;
+            int totalSum = 0;
+            int activeSum = 0;
+
+            foreach (var kvp in _nodeDict.OrderBy(kvp => kvp.Key.Name))
+            {
+                string name = kvp.Key.Name;
+                int available = kvp.Value.AvailableCount;
+                int total = kvp.Value.TotalCount;
+                int active = total - available;
+
+                availableSum += available;
+                totalSum += total;
+                activeSum += active;
+
+                sb.AppendLine($"{name} = {available}/{total} ({active} active)");
+            }
+
+            sb.AppendLine("----------");
+            sb.AppendLine($"TOTAL = {availableSum}/{totalSum} ({activeSum} active)");
+
+            return sb.ToString();
         }
 
         /// <summary>

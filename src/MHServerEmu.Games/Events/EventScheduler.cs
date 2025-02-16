@@ -181,6 +181,11 @@ namespace MHServerEmu.Games.Events
             return countDict;
         }
 
+        public string GetPoolReportString()
+        {
+            return _eventPool.GetReportString();
+        }
+
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
         {
             T @event = _eventPool.Get<T>();

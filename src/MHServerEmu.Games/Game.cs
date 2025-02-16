@@ -442,9 +442,8 @@ namespace MHServerEmu.Games
                     writer.WriteLine(region.ToString());
                 writer.WriteLine();
 
-                writer.WriteLine("Scheduled Events:");
-                foreach (var kvp in GameEventScheduler.GetScheduledEventCounts())
-                    writer.WriteLine($"{kvp.Key} x{kvp.Value}");
+                writer.WriteLine("Scheduled Event Pool:");
+                writer.Write(GameEventScheduler.GetPoolReportString());
                 writer.WriteLine();
 
                 writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");
