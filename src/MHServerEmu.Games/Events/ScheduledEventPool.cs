@@ -15,8 +15,17 @@ namespace MHServerEmu.Games.Events
         private readonly Stack<LinkedList<ScheduledEvent>> _listStack = new();
         private int _totalListCount = 0;
 
-        public int ActiveInstanceCount { get; private set; }     // Keep track of active instances for metrics
+        /// <summary>
+        /// The number of <see cref="ScheduledEvent"/> instances allocated by this <see cref="ScheduledEventPool"/> that are currently in use.
+        /// </summary>
+        /// <remarks>
+        /// Used primarily as a fast lookup for metrics.
+        /// </remarks>
+        public int ActiveInstanceCount { get; private set; }
 
+        /// <summary>
+        /// Constructs a new <see cref="ScheduledEventPool"/> instance.
+        /// </summary>
         public ScheduledEventPool()
         {
             // Preallocate some linked lists to store window buckets, each stores 1 frame of events
@@ -137,9 +146,19 @@ namespace MHServerEmu.Games.Events
         {
             private readonly Stack<ScheduledEvent> _stack = new();
 
+            /// <summary>
+            /// The total number of <see cref="ScheduledEvent"/> instances allocated by this <see cref="Node"/>.
+            /// </summary>
             public int TotalCount { get; private set; }
+
+            /// <summary>
+            /// The number of <see cref="ScheduledEvent"/> instances that have been returned to this <see cref="Node"/> after use.
+            /// </summary>
             public int AvailableCount { get => _stack.Count; }
 
+            /// <summary>
+            /// Constructs a new <see cref="Node"/> instance.
+            /// </summary>
             public Node() { }
 
             /// <summary>

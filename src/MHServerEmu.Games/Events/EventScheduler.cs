@@ -5,6 +5,9 @@ using MHServerEmu.Core.Metrics;
 
 namespace MHServerEmu.Games.Events
 {
+    /// <summary>
+    /// Manages <see cref="ScheduledEvent"/> instances.
+    /// </summary>
     public class EventScheduler
     {
         private const int MaxEventsPerUpdate = 250000;
@@ -27,8 +30,14 @@ namespace MHServerEmu.Games.Events
         private long _currentFrame;
         private bool _cancellingAllEvents = false;
 
+        /// <summary>
+        /// Time that advances as <see cref="ScheduledEvent"/> instances are fired.
+        /// </summary>
         public TimeSpan CurrentTime { get; private set; }
 
+        /// <summary>
+        /// Constructs a new <see cref="EventScheduler"/> instance. 
+        /// </summary>
         public EventScheduler(TimeSpan currentTime, TimeSpan quantumSize, int numWindowBuckets = 256)
         {
             CurrentTime = currentTime;
@@ -47,6 +56,9 @@ namespace MHServerEmu.Games.Events
             _currentFrame = currentTime.CalcNumTimeQuantums(_quantumSize);
         }
 
+        /// <summary>
+        /// Creates an instance of <typeparamref name="T"/> and links it to the provided <see cref="EventPointer{T}"/>.
+        /// </summary>
         public bool ScheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset, EventGroup eventGroup = null) where T: ScheduledEvent, new()
         {
             if (eventPointer.IsValid) return Logger.WarnReturn(false, $"ScheduleEvent<{typeof(T).Name}>(): eventPointer.IsValid");
@@ -61,6 +73,9 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
+        /// <summary>
+        /// Reschedules the <typeparamref name="T"/> instance linked to the provided <see cref="EventPointer{T}"/> to <see cref="CurrentTime"/> + timeOffset.
+        /// </summary>
         public bool RescheduleEvent<T>(EventPointer<T> eventPointer, TimeSpan timeOffset) where T: ScheduledEvent
         {
             if (eventPointer.IsValid == false)
@@ -74,12 +89,18 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
+        /// <summary>
+        /// Cancels the <typeparamref name="T"/> instance linked to the provided <see cref="EventPointer{T}"/>.
+        /// </summary>
         public void CancelEvent<T>(EventPointer<T> eventPointer) where T: ScheduledEvent
         {
             if (eventPointer.IsValid)
                 CancelEvent((T)eventPointer);
         }
 
+        /// <summary>
+        /// Cancels all <see cref="ScheduledEvent"/> instances managed by this <see cref="EventScheduler"/>.
+        /// </summary>
         public void CancelAllEvents()
         {
             _cancellingAllEvents = true;
@@ -114,12 +135,18 @@ namespace MHServerEmu.Games.Events
             _cancellingAllEvents = false;
         }
 
+        /// <summary>
+        /// Cancels all <see cref="ScheduledEvent"/> instances belonging to the provided <see cref="EventGroup"/>.
+        /// </summary>
         public void CancelAllEvents(EventGroup eventGroup)
         {
             while (eventGroup.IsEmpty == false)
                 CancelEvent(eventGroup.Front);
         }
 
+        /// <summary>
+        /// Triggers <see cref="ScheduledEvent"/> instances starting at <see cref="CurrentTime"/> and ending at the provided timestamp.
+        /// </summary>
         public void TriggerEvents(TimeSpan updateEndTime)
         {
             // No time travel allowed
@@ -198,11 +225,17 @@ namespace MHServerEmu.Games.Events
             MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.RemainingScheduledEvents, _eventPool.ActiveInstanceCount);
         }
 
+        /// <summary>
+        /// Returns a <see cref="string"/> representing the current state of the underlying <see cref="ScheduledEventPool"/>.
+        /// </summary>
         public string GetPoolReportString()
         {
             return _eventPool.GetReportString();
         }
 
+        /// <summary>
+        /// Allocates and schedules an instance of <typeparamref name="T"/>.
+        /// </summary>
         private T ConstructAndScheduleEvent<T>(TimeSpan timeOffset) where T : ScheduledEvent, new()
         {
             T @event = _eventPool.Get<T>();
@@ -219,6 +252,9 @@ namespace MHServerEmu.Games.Events
             return @event;
         }
 
+        /// <summary>
+        /// Schedules the provided <see cref="ScheduledEvent"/> instance by bucket sorting it.
+        /// </summary>
         private void ScheduleEvent(ScheduledEvent @event)
         {
             long fireTimeFrame = @event.FireTime.CalcNumTimeQuantums(_quantumSize);
@@ -252,6 +288,9 @@ namespace MHServerEmu.Games.Events
             }
         }
 
+        /// <summary>
+        /// Cancels the provided <see cref="ScheduledEvent"/> instance and invalidates the linked <see cref="EventPointer{T}"/>.
+        /// </summary>
         private void CancelEvent(ScheduledEvent @event)
         {
             @event.ProcessListNode.Remove();
@@ -262,6 +301,9 @@ namespace MHServerEmu.Games.Events
             _eventPool.Return(@event);
         }
 
+        /// <summary>
+        /// Reschedules the provided <see cref="ScheduledEvent"/> instance by bucket sorting it again using the provided new time offset.
+        /// </summary>
         private bool RescheduleEvent(ScheduledEvent @event, TimeSpan timeOffset)
         {
             if (@event.ProcessListNode.List == null)
@@ -321,6 +363,9 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
+        /// <summary>
+        /// Container for <see cref="LinkedList{T}"/> instances holding bucket sorted events for upcoming frames.
+        /// </summary>
         private class WindowBucket
         {
             public LinkedList<ScheduledEvent> NextList;
