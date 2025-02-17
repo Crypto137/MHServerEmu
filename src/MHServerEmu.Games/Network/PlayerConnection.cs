@@ -505,6 +505,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
                 case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;                  // 125
                 case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;             // 126
+                case ClientToGameServerMessage.NetMessageTryTeamUpStyleSelect:              OnTryTeamUpStyleSelect(message); break;             // 127
                 case ClientToGameServerMessage.NetMessageInfinityPointAllocationCommit:     OnInfinityPointAllocationCommit(message); break;    // 129
                 case ClientToGameServerMessage.NetMessageRespecInfinity:                    OnRespecInfinity(message); break;                   // 130
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;       // 132
@@ -1485,7 +1486,14 @@ namespace MHServerEmu.Games.Network
         private void OnRequestTeamUpDismiss(MailboxMessage message) // 126
         {
             Avatar avatar = Player.CurrentAvatar;
-            avatar.DismissTeamUpAgent();
+            avatar.DismissTeamUpAgent(true);
+        }
+
+        private void OnTryTeamUpStyleSelect(MailboxMessage message) // 127
+        {
+            var styleSelect = message.As<NetMessageTryTeamUpStyleSelect>();
+            Avatar avatar = Player.CurrentAvatar;
+            avatar.TryTeamUpStyleSelect(styleSelect.StyleIndex);
         }
 
         private bool OnInfinityPointAllocationCommit(MailboxMessage message)   // 132
