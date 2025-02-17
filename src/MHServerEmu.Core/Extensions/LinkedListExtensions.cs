@@ -11,7 +11,8 @@
             value = default;
             LinkedListNode<T> first = list.First;
             
-            if (first == null) return false;
+            if (first == null)
+                return false;
             
             list.RemoveFirst();
             value = first.Value;

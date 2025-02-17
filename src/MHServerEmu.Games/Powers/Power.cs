@@ -5447,6 +5447,12 @@ namespace MHServerEmu.Games.Powers
 
                 return true;
             }
+
+            public override void Clear()
+            {
+                _power = default;
+                _powerApplication = default;
+            }
         }
 
         private class DeliverPayloadEvent : ScheduledEvent
@@ -5461,6 +5467,11 @@ namespace MHServerEmu.Games.Powers
             public override bool OnTriggered()
             {
                 return DeliverPayload(_payload);
+            }
+
+            public override void Clear()
+            {
+                _payload = default;
             }
         }
 

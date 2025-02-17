@@ -28,5 +28,13 @@ namespace MHServerEmu.Games.Events.Templates
             GetCallback().Invoke(_eventTarget, _param1, _param2, _param3);
             return true;
         }
+
+        public override void Clear()
+        {
+            base.Clear();
+            _param1 = default;
+            _param2 = default;
+            _param3 = default;
+        }
     }
 }

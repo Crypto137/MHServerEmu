@@ -6,25 +6,21 @@ namespace MHServerEmu.Games.Events
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // TODO: Remove sort order workaround when we implement buckets for the scheduler
-        private static ulong NextSortOrder = 0;
-
         // We don't need a collection of pointers for this like the client because
         // in practice there is never more than one pointer to an event.
         private IEventPointer _pointer;
 
-        public ulong SortOrder { get; }    // REMOVEME
-        // TODO: public LinkedListNode<ScheduledEvent> ProcessListNode { get; }
+        public LinkedListNode<ScheduledEvent> ProcessListNode { get; }
         public LinkedListNode<ScheduledEvent> EventGroupNode { get; }
         public TimeSpan FireTime { get; set; }
 
+        public bool IsValid { get => _pointer != null; }
+
         public ScheduledEvent()
         {
-            SortOrder = ++NextSortOrder;    // REMOVEME
+            ProcessListNode = new(this);
             EventGroupNode = new(this);
         }
-
-        public bool IsValid { get => _pointer != null; }
 
         public bool Link(IEventPointer pointer)
         {
@@ -56,5 +52,7 @@ namespace MHServerEmu.Games.Events
 
         public abstract bool OnTriggered();
         public virtual bool OnCancelled() { return true; }
+
+        public abstract void Clear();
     }
 }
