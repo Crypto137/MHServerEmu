@@ -10,10 +10,8 @@ namespace MHServerEmu.Games.Events
         private const int MaxEventsPerUpdate = 250000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly TimeSpan EventTriggerTimeLogThreshold = TimeSpan.FromMilliseconds(5);
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
-
         private readonly ScheduledEventPool _eventPool = new();
 
         private readonly TimeSpan _quantumSize;
@@ -39,7 +37,7 @@ namespace MHServerEmu.Games.Events
             _numWindowBuckets = numWindowBuckets;
             _windowBuckets = new WindowBucket[_numWindowBuckets];
             for (int i = 0; i < _numWindowBuckets; i++)
-                _windowBuckets[i] = new();
+                _windowBuckets[i] = new(_eventPool.GetList());
 
             _numFrameBuckets = (long)_quantumSize.TotalMilliseconds;
             _frameBuckets = new LinkedList<ScheduledEvent>[_numFrameBuckets];
@@ -106,10 +104,11 @@ namespace MHServerEmu.Games.Events
                 {
                     while (futureList.PopFront(out ScheduledEvent @event))
                         CancelEvent(@event);
+
+                    _eventPool.ReturnList(futureList);
                 }
 
                 windowBucket.FutureListDict.Clear();
-                // TODO: Reuse list instances?
             }
 
             _cancellingAllEvents = false;
@@ -181,7 +180,7 @@ namespace MHServerEmu.Games.Events
                     if (windowBucket.FutureListDict.TryGetValue(currentFrame + 1 + _numWindowBuckets, out LinkedList<ScheduledEvent> futureList))
                     {
                         (windowBucket.NextList, futureList) = (futureList, windowBucket.NextList);
-                        // TODO: reuse list instances?
+                        _eventPool.ReturnList(futureList);
                     }
 
                     // Advance time by one frame
@@ -244,7 +243,7 @@ namespace MHServerEmu.Games.Events
                     // This event will not be happening within the current window range, put it away for now
                     if (windowBucket.FutureListDict.TryGetValue(fireTimeFrame, out LinkedList<ScheduledEvent> futureList) == false)
                     {
-                        futureList = new();
+                        futureList = _eventPool.GetList();
                         windowBucket.FutureListDict.Add(fireTimeFrame, futureList);
                     }
 
@@ -299,7 +298,7 @@ namespace MHServerEmu.Games.Events
                     // This event will not be happening within the current window range, put it away for now
                     if (windowBucket.FutureListDict.TryGetValue(fireTimeFrameAfter, out LinkedList<ScheduledEvent> futureList) == false)
                     {
-                        futureList = new();
+                        futureList = _eventPool.GetList();
                         windowBucket.FutureListDict.Add(fireTimeFrameAfter, futureList);
                     }
 
@@ -324,8 +323,13 @@ namespace MHServerEmu.Games.Events
 
         private class WindowBucket
         {
-            public LinkedList<ScheduledEvent> NextList = new();
-            public Dictionary<long, LinkedList<ScheduledEvent>> FutureListDict = new();
+            public LinkedList<ScheduledEvent> NextList;
+            public readonly Dictionary<long, LinkedList<ScheduledEvent>> FutureListDict = new();
+
+            public WindowBucket(LinkedList<ScheduledEvent> nextList)
+            {
+                NextList = nextList;
+            }
         }
     }
 }

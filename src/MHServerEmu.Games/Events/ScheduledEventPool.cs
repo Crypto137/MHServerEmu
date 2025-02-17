@@ -4,7 +4,7 @@ using MHServerEmu.Core.Logging;
 namespace MHServerEmu.Games.Events
 {
     /// <summary>
-    /// Manages reusable <see cref="ScheduledEvent"/> instances of various subtypes.
+    /// Specialized pool for managing reusable object instances for <see cref="EventScheduler"/>.
     /// </summary>
     public class ScheduledEventPool
     {
@@ -12,9 +12,22 @@ namespace MHServerEmu.Games.Events
 
         private readonly Dictionary<Type, Node> _nodeDict = new();
 
+        private readonly Stack<LinkedList<ScheduledEvent>> _listStack = new();
+        private int _totalListCount = 0;
+
         public int ActiveInstanceCount { get; private set; }     // Keep track of active instances for metrics
 
-        public ScheduledEventPool() { }
+        public ScheduledEventPool()
+        {
+            // Preallocate some linked lists to store window buckets, each stores 1 frame of events
+            const int StartingListCount = 8192;
+            for (int i = 0; i < StartingListCount; i++)
+            {
+                LinkedList<ScheduledEvent> list = new();
+                _totalListCount++;
+                _listStack.Push(list);
+            }
+        }
 
         /// <summary>
         /// Retrieves or creates a new <see cref="ScheduledEvent"/> instance of subtype <typeparamref name="T"/>.
@@ -49,6 +62,39 @@ namespace MHServerEmu.Games.Events
         }
 
         /// <summary>
+        /// Retrieves or creates a new <see cref="LinkedList{T}"/> instance.
+        /// </summary>
+        public LinkedList<ScheduledEvent> GetList()
+        {
+            LinkedList<ScheduledEvent> list;
+
+            if (_listStack.Count == 0)
+            {
+                list = new();
+                _totalListCount++;
+            }
+            else
+            {
+                list = _listStack.Pop();
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Returns a <see cref="LinkedList{T}"/> instance to the pool.
+        /// </summary>
+        public bool ReturnList(LinkedList<ScheduledEvent> eventList)
+        {
+            // Here we accept LinkedList instances created elsewhere (e.g. when constructing WindowBuckets)
+            if (eventList.Count != 0)
+                return Logger.WarnReturn(false, "ReturnList(): Attemped to return non-empty LinkedList to the pool");
+
+            _listStack.Push(eventList);
+            return true;
+        }
+
+        /// <summary>
         /// Returns a <see cref="string"/> representing the current state of this <see cref="ScheduledEventPool"/> instance.
         /// </summary>
         public string GetReportString()
@@ -77,6 +123,10 @@ namespace MHServerEmu.Games.Events
             sb.AppendLine("----------");
             sb.AppendLine($"TOTAL = {availableSum}/{totalSum} ({activeSum} active)");
 
+            int availableListCount = _listStack.Count;
+            int activeListCount = _totalListCount - availableListCount;
+            sb.AppendLine($"LinkedListCount = {availableListCount}/{_totalListCount} ({activeListCount} active)");
+
             return sb.ToString();
         }
 
@@ -102,9 +152,7 @@ namespace MHServerEmu.Games.Events
                 if (_stack.Count == 0)
                 {
                     @event = new();
-
                     TotalCount++;
-                    //Logger.Trace($"Get<T>(): Created a new instance of {typeof(T).Name} (TotalCount={TotalCount})");
                 }
                 else
                 {
