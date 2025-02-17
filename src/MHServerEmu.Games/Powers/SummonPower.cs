@@ -720,7 +720,7 @@ namespace MHServerEmu.Games.Powers
                         summoned.Properties[PropertyEnum.AttachedToEntityId] = target.Id;
 
                     if (contextProto.VisibleWhileAttached == false)
-                        summoned.Properties[PropertyEnum.Visible] = false;
+                        summoned.SetVisible(false);
 
                     if (owner != null && owner.IsInWorld)
                     {
