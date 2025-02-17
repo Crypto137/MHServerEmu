@@ -1222,6 +1222,8 @@ namespace MHServerEmu.Games.Entities
 
                     break;
             }
+
+            AIController?.Brain?.OnPropertyChange(id, newValue, oldValue, flags);
         }
 
         private void StopLocomotor()
