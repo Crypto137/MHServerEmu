@@ -3773,7 +3773,7 @@ namespace MHServerEmu.Games.Entities
 
         public void DestroyEntityActionComponent()
         {
-            EntityActionComponent.Destroy();
+            EntityActionComponent?.Destroy();
             EntityActionComponent = null;
         }
 
