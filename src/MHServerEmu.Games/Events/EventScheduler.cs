@@ -275,7 +275,7 @@ namespace MHServerEmu.Games.Events
 
             // Calculate frames for times before and after rescheduling and update fire time on the event
             TimeSpan fireTimeBefore = @event.FireTime;
-            TimeSpan fireTimeAfter = fireTimeBefore + timeOffset;
+            TimeSpan fireTimeAfter = CurrentTime + timeOffset;
 
             long fireTimeFrameBefore = fireTimeBefore.CalcNumTimeQuantums(_quantumSize);
             long fireTimeFrameAfter = fireTimeAfter.CalcNumTimeQuantums(_quantumSize);
