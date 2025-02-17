@@ -105,7 +105,6 @@ namespace MHServerEmu.Games.Events
                     @event = (T)_stack.Pop();
                 }
 
-                @event.ResetSortOrder();    // REMOVEME
                 return @event;
             }
 
