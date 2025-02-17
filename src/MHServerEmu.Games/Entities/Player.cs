@@ -268,6 +268,30 @@ namespace MHServerEmu.Games.Entities
                 _gameplayOptions.ResetToDefaults();
         }
 
+        public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
+        {
+            base.OnPropertyChange(id, newValue, oldValue, flags);
+
+            if (flags.HasFlag(SetPropertyFlags.Refresh)) return;
+
+            switch (id.Enum)
+            {
+                case PropertyEnum.TeamUpsAtMaxLevelPersistent:
+                    var avatar = CurrentAvatar;
+                    if (avatar != null && avatar.IsInWorld)
+                    {
+                        var teamUpAgent = avatar.CurrentTeamUpAgent;
+                        if (teamUpAgent != null)
+                        {
+                            teamUpAgent.SetTeamUpsAtMaxLevel(this);
+                            if (teamUpAgent.IsInWorld) 
+                                teamUpAgent.AddTeamUpSynergyCondition();
+                        }
+                    }
+                    break;
+            }
+        }
+
         public void UnlockNewPlayerUISystems()
         {
             if (_newPlayerUISystemsUnlocked)

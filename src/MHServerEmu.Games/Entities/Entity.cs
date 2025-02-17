@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Entities
         HasMissionPrototype             = 1ul << 30,
         Flag31                          = 1ul << 31,
         IsPopulation                    = 1ul << 32,
-        Flag33                          = 1ul << 33,
+        SummonDecremented               = 1ul << 33,
         AttachedToEntityId              = 1ul << 34,
         IsHotspot                       = 1ul << 35,
         IsCollidableHotspot             = 1ul << 36,
@@ -186,6 +186,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasEncounterResourcePrototype { get => _flags.HasFlag(EntityFlags.EncounterResource); }
         public bool IgnoreNavi { get => _flags.HasFlag(EntityFlags.IgnoreNavi); }
         public bool IsInTutorialPowerLock { get => _flags.HasFlag(EntityFlags.TutorialPowerLock); }
+        public bool SummonDecremented { get => _flags.HasFlag(EntityFlags.SummonDecremented); }
 
         #endregion
 

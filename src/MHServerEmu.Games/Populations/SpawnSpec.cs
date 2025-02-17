@@ -206,7 +206,7 @@ namespace MHServerEmu.Games.Populations
             if (Defeat(killer, cleanUp)) Group?.ScheduleClearCluster(ActiveEntity, killer);
         }
 
-        private bool Defeat(WorldEntity killer = null, bool cleanUp = false)
+        public bool Defeat(WorldEntity killer = null, bool cleanUp = false)
         {
             if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return false;
             State = SpawnState.Defeated;

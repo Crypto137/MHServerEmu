@@ -41,6 +41,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<DelayedPowerActivationEvent> _delayedPowerActivationEvent = new();
         private readonly EventPointer<AvatarEnteredRegionEvent> _avatarEnteredRegionEvent = new();
         private readonly EventPointer<RefreshStatsPowersEvent> _refreshStatsPowerEvent = new();
+        private readonly EventPointer<DismissTeamUpAgentEvent> _dismissTeamUpAgentEvent = new();
+        private readonly EventPointer<DespawnControlledEvent> _despawnControlledEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -90,6 +92,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public AvatarModePrototype AvatarModePrototype { get => GameDatabase.GetPrototype<AvatarModePrototype>(Properties[PropertyEnum.AvatarMode]); }
         public AvatarMode AvatarMode { get => AvatarModePrototype?.AvatarModeEnum ?? AvatarMode.Invalid; }
+        public Inventory ControlledInventory { get => GetInventory(InventoryConvenienceLabel.Controlled); }
+        public Agent ControlledAgent { get => GetControlledAgent(); }
 
         public Avatar(Game game) : base(game) { }
 
@@ -299,10 +303,16 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (player.AOI.ContainsPosition(position.Value))
             {
+                if (flags.HasFlag(ChangePositionFlags.Teleport))
+                    DespawnPersistentAgents();
+
                 // Do a normal position change and update AOI if the position is loaded
                 result = base.ChangeRegionPosition(position, orientation, flags);
                 if (result == ChangePositionResult.PositionChanged)
                     player.AOI.Update(RegionLocation.Position);
+
+                if (flags.HasFlag(ChangePositionFlags.Teleport))
+                    RespawnPersistentAgents();
             }
             else
             {
@@ -2161,6 +2171,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             Agent teamUpAgent = CurrentTeamUpAgent;
             if (teamUpAgent != null)
                 teamUpAgent.CombatLevel = combatLevel;
+
+            Agent cotrolledAgent = ControlledAgent;
+            if (cotrolledAgent != null)
+                cotrolledAgent.CombatLevel = combatLevel;
         }
 
         #endregion
@@ -3310,58 +3324,163 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SelectTeamUpAgent(PrototypeId teamUpProtoRef)
         {
+            if (Game.GameOptions.TeamUpSystemEnabled == false) return;
+
             if (teamUpProtoRef == PrototypeId.Invalid || IsTeamUpAgentUnlocked(teamUpProtoRef) == false) return;
-            Agent currentTeamUp = CurrentTeamUpAgent;
-            if (currentTeamUp != null)
-                if (currentTeamUp.IsInWorld || currentTeamUp.PrototypeDataRef == teamUpProtoRef) return;
+            var teamUpRoto = GameDatabase.GetPrototype<WorldEntityPrototype>(teamUpProtoRef);
+            if (teamUpRoto.IsLiveTuningEnabled() == false) return;
+
+            Agent oldTeamUp = CurrentTeamUpAgent;
+            if (oldTeamUp != null)
+                if (oldTeamUp.IsInWorld || oldTeamUp.PrototypeDataRef == teamUpProtoRef) return;
 
             Properties[PropertyEnum.AvatarTeamUpAgent] = teamUpProtoRef;
-            LinkTeamUpAgent(CurrentTeamUpAgent);
             Player player = GetOwnerOfType<Player>();
             player.Properties[PropertyEnum.AvatarLibraryTeamUp, 0, Prototype.DataRef] = teamUpProtoRef;
 
-            // TODO affixes, event PlayerActivatedTeamUpGameEvent
+            if (oldTeamUp != null)
+            {
+                oldTeamUp.AssignTeamUpAgentPowers();
+                oldTeamUp.RemoveTeamUpAffixesFromAvatar(this);
+            }
+
+            var currentTeamUp = CurrentTeamUpAgent;
+            if (currentTeamUp == null) return;
+
+            SetOwnerTeamUpAgent(currentTeamUp);
+            currentTeamUp.AssignTeamUpAgentPowers();
+            currentTeamUp.ApplyTeamUpAffixesToAvatar(this);
+            currentTeamUp.SetTeamUpsAtMaxLevel(player);
+
+            // event PlayerActivatedTeamUpGameEvent not used in missions
         }
 
-        public void SummonTeamUpAgent()
+        public void SummonTeamUpAgent(TimeSpan duration)
         {
-            Agent teamUp = CurrentTeamUpAgent;
-            if (teamUp == null) return;
-            if (teamUp.IsInWorld) return;
+            if (Game.GameOptions.TeamUpSystemEnabled == false) return;
+            if (IsInWorld == false) return;
 
-            Properties[PropertyEnum.AvatarTeamUpIsSummoned] = true;
-            Properties[PropertyEnum.AvatarTeamUpStartTime] = (long)Game.CurrentTime.TotalMilliseconds;
-            //Power power = GetPower(TeamUpPowerRef);
-            //Properties[PropertyEnum.AvatarTeamUpDuration] = power.GetCooldownDuration();
+            Agent teamUpAgent = CurrentTeamUpAgent;
+            if (teamUpAgent == null || teamUpAgent.IsLiveTuningEnabled == false) return;
 
-            ActivateTeamUpAgent(true);
+            if (teamUpAgent.IsInWorld) 
+            {
+                if (teamUpAgent.IsDead == false) return;
+                else DespawnTeamUpAgent();
+            }
 
-            TryActivateOnSummonPetProcs(teamUp);
+            // schedule Dissmiss event
+            if (_dismissTeamUpAgentEvent.IsValid) return;
+
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_dismissTeamUpAgentEvent);
+
+            if (duration > TimeSpan.Zero && teamUpAgent.IsPermanentTeamUpStyle() == false)
+                ScheduleEntityEvent(_dismissTeamUpAgentEvent, duration);
+
+            SetTeamUpAgentDuration(true, Game.CurrentTime, duration);
+
+            SpawnTeamUpAgent(true);
+
+            TryActivateOnSummonPetProcs(teamUpAgent);
         }
 
-        public bool ClearSummonedTeamUpAgent(Agent teamUpAgent)
+        private void SpawnTeamUpAgent(bool newOnServer)
         {
-            if (teamUpAgent != CurrentTeamUpAgent)
-                return Logger.WarnReturn(false, "CleanUpSummonedTeamUpAgent(): teamUpAgent != CurrentTeamUpAgent");
+            Agent teamUpAgent = CurrentTeamUpAgent;
+            if (teamUpAgent == null) return;
 
-            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
-            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
-            //Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
+            // Resurrect or restore team-up health
+            if (teamUpAgent.IsDead)
+                teamUpAgent.Resurrect();
+            else
+                teamUpAgent.Properties[PropertyEnum.Health] = teamUpAgent.Properties[PropertyEnum.HealthMax];
 
+            teamUpAgent.RevealEquipmentToOwner();
+            teamUpAgent.SetAsPersistent(this, newOnServer);
+            teamUpAgent.AssignTeamUpAgentPowers();
+            teamUpAgent.SetSummonedAllianceOverride(Alliance);
+        }
+
+        private bool RespawnTeamUpAgent()
+        {
+            if (IsInWorld == false) return false;
+            var teamUp = CurrentTeamUpAgent;
+            if (teamUp == null || teamUp.IsInWorld) return false;
+            if (Properties[PropertyEnum.AvatarTeamUpIsSummoned] == false) return false;
+
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return false;
+            scheduler.CancelEvent(_dismissTeamUpAgentEvent);
+
+            TimeSpan duration = Properties[PropertyEnum.AvatarTeamUpDuration];
+            if (duration > TimeSpan.Zero)
+            {
+                TimeSpan startTime = Properties[PropertyEnum.AvatarTeamUpStartTime];
+                TimeSpan time = duration - (Game.CurrentTime - startTime);
+
+                if (time <= TimeSpan.Zero)
+                {
+                    ResetTeamUpAgentDuration();
+                    return false;
+                }
+                ScheduleEntityEvent(_dismissTeamUpAgentEvent, time);
+            }
+            SpawnTeamUpAgent(false);
             return true;
         }
 
-        public void DismissTeamUpAgent()
+        private void DespawnTeamUpAgent()
         {
-            Agent teamUp = CurrentTeamUpAgent;
-            if (teamUp == null) return;
-            if (teamUp.IsAliveInWorld)
+            var teamup = CurrentTeamUpAgent;
+            if (teamup == null) return;
+
+            if (teamup.IsInWorld) teamup.ExitWorld();
+            else teamup.SetDormant(true);
+        }
+
+        public void DismissTeamUpAgent(bool reset)
+        {
+            if (IsInWorld == false) return;
+
+            if (reset) ResetTeamUpAgentDuration();
+
+            Agent teamUpAgent = CurrentTeamUpAgent;
+            if (teamUpAgent == null) return;
+
+            if (teamUpAgent.IsAliveInWorld)
             {
-                teamUp.Kill();
+                bool isSummoned = Properties[PropertyEnum.AvatarTeamUpIsSummoned];
+                TimeSpan startTime = Properties[PropertyEnum.AvatarTeamUpStartTime];
+                TimeSpan duration = Properties[PropertyEnum.AvatarTeamUpDuration];
+
+                teamUpAgent.Kill();
+
+                if (reset == false) 
+                    SetTeamUpAgentDuration(isSummoned, startTime, duration);
+            }
+            else
+            {
+                DespawnTeamUpAgent();
             }
         }
 
-        public void LinkTeamUpAgent(Agent teamUpAgent)
+        private void SetTeamUpAgentDuration(bool isSummoned, TimeSpan startTime, TimeSpan duration)
+        {
+            Properties[PropertyEnum.AvatarTeamUpIsSummoned] = isSummoned;
+            Properties[PropertyEnum.AvatarTeamUpStartTime] = startTime;
+            Properties[PropertyEnum.AvatarTeamUpDuration] = duration;
+        }
+
+        public void ResetTeamUpAgentDuration()
+        {
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpIsSummoned);
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
+            Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
+        }
+
+        public void SetOwnerTeamUpAgent(Agent teamUpAgent)
         {
             Properties[PropertyEnum.AvatarTeamUpAgentId] = teamUpAgent.Id;
             teamUpAgent.Properties[PropertyEnum.TeamUpOwnerId] = Id;
@@ -3382,46 +3501,379 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player?.GetTeamUpAgent(teamUpProtoRef);
         }
 
+        public void OnEnteredWorldTeamUpAgent()
+        {
+            var player = GetOwnerOfType<Player>();
+            player?.UpdateScoringEventContext();
+        }
+
+        public void OnExitedWorldTeamUpAgent(Agent teamUpAgent)
+        {
+            var player = GetOwnerOfType<Player>();
+            if (player == null) return;
+
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+            scheduler.CancelEvent(_dismissTeamUpAgentEvent);
+
+            teamUpAgent.AssignTeamUpAgentPowers();
+            teamUpAgent.SetDormant(true);
+
+            player.UpdateScoringEventContext();
+        }
+
+        public void TryTeamUpStyleSelect(uint styleIndex)
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            var teamUpAgent = CurrentTeamUpAgent;
+            if (teamUpAgent == null) return;
+
+            if (teamUpAgent.Prototype is not AgentTeamUpPrototype teamUpProto) return;
+            if (teamUpProto.Styles.IsNullOrEmpty()) return;
+            if (styleIndex < 0 || styleIndex >= teamUpProto.Styles.Length) return;
+
+            if (styleIndex == teamUpAgent.Properties[PropertyEnum.TeamUpStyle]) return;
+
+            bool oldStyle = teamUpAgent.IsPermanentTeamUpStyle();
+            teamUpAgent.Properties[PropertyEnum.TeamUpStyle] = styleIndex;
+
+            if (teamUpAgent.IsPermanentTeamUpStyle())
+            {
+                scheduler.CancelEvent(_dismissTeamUpAgentEvent);
+            }
+            else if (oldStyle && IsInWorld)
+            {
+                TimeSpan duration = Properties[PropertyEnum.AvatarTeamUpDuration];
+                if (duration > TimeSpan.Zero)
+                {
+                    Properties[PropertyEnum.AvatarTeamUpStartTime] = Game.CurrentTime;
+                    scheduler.CancelEvent(_dismissTeamUpAgentEvent);
+                    ScheduleEntityEvent(_dismissTeamUpAgentEvent, duration);
+                }
+            }
+        }
+
+        #endregion
+
+        private bool IsInTown()
+        {
+            var region = Region;
+            return region != null && region.Behavior == RegionBehavior.Town;
+        }
+
+        #region PersistentAgents
+
         private Agent GetCurrentVanityPet()
         {
             var keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
             if (keywordGlobals == null) return Logger.WarnReturn((Agent)null, "GetCurrentVanityPet(): keywordGlobals == null");
 
-            var manager = Game.EntityManager;
-            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
-            {
-                var summoned = manager.GetEntity<Agent>(inventory.Id);
-                if (summoned != null && summoned.HasKeyword(keywordGlobals.VanityPetKeyword))
-                    return summoned;
-            }
+            foreach (var summoned in new SummonedEntityIterator(this))
+                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeyword))
+                    return pet;
+
             return null;
         }
 
-        private void ActivateTeamUpAgent(bool playIntro)
+        private void RespawnPersistentAgents()
         {
-            Agent teamUp = CurrentTeamUpAgent;
-            if (teamUp == null) return;
+            if (RespawnTeamUpAgent() == false)
+            {
+                var teamUpAgent = CurrentTeamUpAgent;
+                if (teamUpAgent != null)
+                {
+                    SetOwnerTeamUpAgent(teamUpAgent);
+                    teamUpAgent.AssignTeamUpAgentPowers();
+                }
+            }
 
-            // Resurrect or restore team-up health
-            if (teamUp.IsDead)
-                teamUp.Resurrect();
-            else
-                teamUp.Properties[PropertyEnum.Health] = teamUp.Properties[PropertyEnum.HealthMax];
+            var controlledInventory = ControlledInventory;
+            if (controlledInventory != null && controlledInventory.Count > 1)
+                RemoveControlledAgentsFromInventory();
 
-            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
-            if (playIntro)
-                settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer | EntitySettingsOptionFlags.IsClientEntityHidden;
+            if (ControlledAgentHasSummonDuration() == false)
+                SummonControlledAgentWithDuration();
 
-            teamUp.EnterWorld(RegionLocation.Region, teamUp.GetPositionNearAvatar(this), RegionLocation.Orientation, settings);
-            teamUp.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id; // link to owner
+            if (IsInTown()) SetSummonWithLifespanRemaining();
         }
 
-        private void DeactivateTeamUpAgent()
+        private void DespawnPersistentAgents()
         {
-            CurrentTeamUpAgent?.ExitWorld();
+            DespawnTeamUpAgent();
+            DespawnControlledAgent();
+            ResetSummonWithLifespanRemaining();
+        }
+
+        private void SetSummonWithLifespanRemaining()
+        {
+            foreach (var summoned in new SummonedEntityIterator(this))
+                if (summoned.Properties[PropertyEnum.SummonedEntityIsRegionPersisted])
+                {
+                    summoned.SetAsPersistent(this, false);
+                    summoned.Properties[PropertyEnum.DetachOnContainerDestroyed] = true;
+
+                    var lifespan = TimeSpan.FromMilliseconds((int)summoned.Properties[PropertyEnum.SummonLifespanRemainingMS]);
+                    if (lifespan > TimeSpan.Zero)
+                    {
+                        summoned.ResetLifespan(lifespan);
+                        summoned.Properties.RemoveProperty(PropertyEnum.SummonLifespanRemainingMS);
+                    }
+                }
+        }
+
+        private void ResetSummonWithLifespanRemaining()
+        {
+            foreach (var summoned in new SummonedEntityIterator(this))
+                if (summoned.Properties[PropertyEnum.SummonedEntityIsRegionPersisted])
+                {
+                    var lifespan = summoned.GetRemainingLifespan();
+                    if (lifespan > TimeSpan.Zero)
+                    {
+                        summoned.Properties[PropertyEnum.SummonLifespanRemainingMS] = (long)lifespan.TotalMilliseconds;
+                    }
+                    summoned.Properties[PropertyEnum.DetachOnContainerDestroyed] = false;
+                    summoned.ExitWorld();
+                }
+        }
+
+        public void SummonControlledAgentWithDuration()
+        {
+            if (IsControlPowerSlot() == false) return;
+
+            var scheduler = Game.GameEventScheduler;
+            if (scheduler == null) return;
+
+            var controlled = ControlledAgent;
+            if (controlled == null) return;
+
+            var aiGlobals = GameDatabase.AIGlobalsPrototype;
+
+            if (controlled.HasKeyword(aiGlobals.CantBeControlledKeyword))
+            {
+                RemoveControlledAgentFromInventory(controlled);
+                KillControlledAgent(controlled, KillFlags.None);
+            }
+            else
+            {
+                controlled.Properties[PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId;
+                controlled.SetAsPersistent(this, false);
+
+                if (ControlledAgentHasSummonDuration())
+                {
+                    scheduler.CancelEvent(_despawnControlledEvent);
+                    var duration = TimeSpan.FromMilliseconds(aiGlobals.ControlledAgentSummonDurationMS);
+                    ScheduleEntityEvent(_despawnControlledEvent, duration);
+                }
+            }
+        }
+
+        private void DespawnControlledAgent()
+        {
+            var scheduler = Game?.GameEventScheduler;
+            if (scheduler == null) return;
+
+            scheduler.CancelEvent(_despawnControlledEvent);
+
+            var controlled = ControlledAgent;
+            if (controlled == null) return;
+
+            controlled.KillSummonedOnOwnerDeath();
+            controlled.ExitWorld();
+        }
+
+        public void RemoveAndKillControlledAgent()
+        {
+            var controlled = ControlledAgent;
+            if (controlled == null) return;
+
+            if (controlled.IsDestroyed || controlled.TestStatus(EntityStatus.PendingDestroy)) return;
+
+            RemoveControlledAgentFromInventory(controlled);
+            KillControlledAgent(controlled, KillFlags.Release);
+        }
+
+        private void KillControlledAgent(Agent controlled, KillFlags killFlags)
+        {
+            if (controlled.IsDestroyed || controlled.TestStatus(EntityStatus.PendingDestroy)) return;
+            if (controlled.IsAliveInWorld)
+            {
+                if (killFlags.HasFlag(KillFlags.Release))
+                    TryActivateOnControlledEntityReleasedProcs(controlled);
+
+                controlled.Kill(null, killFlags);
+            }
+            else
+            {
+                controlled.Destroy();
+            }
+        }
+
+        private bool ControlledAgentHasSummonDuration()
+        {
+            var controlledAgent = ControlledAgent;
+            return controlledAgent != null && controlledAgent.Properties.HasProperty(PropertyEnum.ControlledAgentHasSummonDur);
+        }
+
+        private void RemoveControlledAgentsFromInventory()
+        {
+            List<Agent> destroyList = ListPool<Agent>.Instance.Get();
+
+            var manager = Game.EntityManager;
+            foreach (var entry in ControlledInventory)
+            {
+                var controlled = manager.GetEntity<Agent>(entry.Id);
+                if (controlled == null) continue;
+                destroyList.Add(controlled);
+            }
+
+            foreach (var controlled in destroyList)
+                if (controlled.IsDestroyed == false && controlled.TestStatus(EntityStatus.PendingDestroy) == false)
+                {
+                    RemoveControlledAgentFromInventory(controlled);
+                    controlled.Destroy();
+                }
+
+            ListPool<Agent>.Instance.Return(destroyList);
+        }
+
+        private void RemoveControlledAgentFromInventory(Agent controlled)
+        {
+            if (controlled.IsOwnedBy(Id) == false) return;
+            if (controlled.IsDestroyed || controlled.TestStatus(EntityStatus.PendingDestroy)) return;
+
+            controlled.Properties.RemoveProperty(PropertyEnum.AIMasterAvatarDbGuid);
+
+            if (controlled.InventoryLocation.IsValid)
+                controlled.ChangeInventoryLocation(null);
+        }
+
+        public bool IsControlPowerSlot()
+        {
+            var keyMapping = CurrentAbilityKeyMapping;
+            if (keyMapping == null) return false;
+
+            // TODO Crypto do this
+
+            return true;
+        }
+
+        public Agent GetControlledAgent()
+        {
+            Agent controlledAgent = null;
+            var controlledInventory = ControlledInventory;
+            if (controlledInventory != null)
+            {
+                if (controlledInventory.Count > 1)
+                    Logger.Warn($"Avatar has multiple controlled entities! Avatar: {ToString()}");
+
+                var controlledId = controlledInventory.GetAnyEntity();
+                if (controlledId != InvalidId)
+                {
+                    controlledAgent = Game.EntityManager.GetEntity<Agent>(controlledId);
+                    if (controlledAgent == null)
+                        Logger.Warn("Controlled agent is null!");
+                }
+            }
+            return controlledAgent;
+        }
+
+        public bool SetControlledAgent(Agent controlled)
+        {
+            var controlledInventory = ControlledInventory;
+            if (controlledInventory == null) return false;
+
+            RemoveAndKillControlledAgent();
+
+            if (controlledInventory.Count > 0) return false;
+
+            controlled.Properties[PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId;
+
+            controlled.AwardKillLoot(this, KillFlags.None, this);
+            controlled.SpawnSpec?.Defeat(this, true);
+
+            controlled.DestroyEntityActionComponent();
+            controlled.CancelDestroyEvent();
+
+            var keywordSummonDuration = GameDatabase.KeywordGlobalsPrototype.ControlledSummonDurationKeyword;
+            if (keywordSummonDuration == PrototypeId.Invalid) return false;
+
+            bool hasSummonDuration = controlled.HasConditionWithKeyword(keywordSummonDuration);
+
+            if (controlled.IsDead && hasSummonDuration == false)
+                controlled.Properties[PropertyEnum.Health] = controlled.Properties[PropertyEnum.HealthMax];
+
+            controlled.SetControlledProperties(this);
+            controlled.Properties[PropertyEnum.PowerUserOverrideID] = Id;
+            controlled.CombatLevel = CombatLevel;
+
+            var rankRef = controlled.Properties[PropertyEnum.Rank];
+            var rankProto = GameDatabase.GetPrototype<RankPrototype>(rankRef);
+            if (rankProto.IsRankChampionOrEliteOrMiniBoss)
+                controlled.Properties[PropertyEnum.MobRankOverride] = rankRef;
+
+            var result = controlled.ChangeInventoryLocation(controlledInventory);
+            if (result == InventoryResult.Success)
+            {
+                var invLocation = controlled.InventoryLocation;
+                var message = NetMessageInventoryMove.CreateBuilder()
+                            .SetEntityId(controlled.Id)
+                            .SetInvLocContainerEntityId(invLocation.ContainerId)
+                            .SetInvLocInventoryPrototypeId((ulong)invLocation.InventoryRef)
+                            .SetInvLocSlot(invLocation.Slot)
+                            .SetRequiredNoOwnerOnClient(false)
+                            .Build();
+                Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelOwner);
+            }
+            else
+            {
+                controlled.Kill();
+            }
+
+            if (hasSummonDuration)
+            {
+                controlled.Properties[PropertyEnum.ControlledAgentHasSummonDur] = true;
+                var scheduler = Game.GameEventScheduler;
+                if (scheduler == null) return false;
+                scheduler.CancelEvent(_despawnControlledEvent);
+                ScheduleEntityEvent(_despawnControlledEvent, TimeSpan.Zero);
+            }
+
+            return result == InventoryResult.Success;
+        }
+
+        public int RemoveSummonedAgentsWithKeywords(float count, KeywordsMask keywordsMask)
+        {
+            int removed = 0;
+
+            List<WorldEntity> summons = ListPool<WorldEntity>.Instance.Get();
+
+            foreach (var summoned in new SummonedEntityIterator(this))
+            {
+                if (summoned.IsDead) continue;
+                if (summoned.IsDestroyed || summoned.TestStatus(EntityStatus.PendingDestroy)) continue;
+
+                if (summoned.KeywordsMask.TestAll(keywordsMask))
+                {
+                    summons.Add(summoned);
+                    removed++;
+                }
+
+                if (removed != 0 && removed == count) break;
+            }
+
+            var killFlags = KillFlags.NoExp | KillFlags.NoLoot | KillFlags.NoDeadEvent;
+            foreach (var summoned in summons)
+                summoned.Kill(null, killFlags);
+
+            ListPool<WorldEntity>.Instance.Return(summons);
+
+            return removed;
         }
 
         #endregion
+
 
         #region Event Handlers
 
@@ -3466,6 +3918,25 @@ namespace MHServerEmu.Games.Entities.Avatars
                         SetContinuousPower(PrototypeId.Invalid, _continuousPowerData.TargetId, Vector3.Zero, 0, true);
                     }
                         
+                    break;
+
+                case PropertyEnum.AllianceOverride:
+                case PropertyEnum.Confused:
+
+                    var alliance = Alliance;
+                    ControlledAgent?.SetSummonedAllianceOverride(alliance);
+                    CurrentTeamUpAgent?.SetSummonedAllianceOverride(alliance);
+                    break;
+
+                case PropertyEnum.PetHealthPctBonus:
+                case PropertyEnum.PetDamagePctBonus:
+
+                    var controlledAgent = ControlledAgent;
+                    if (controlledAgent != null)
+                    {
+                        controlledAgent.Properties[PropertyEnum.PetHealthPctBonus] = Properties[PropertyEnum.PetHealthPctBonus];
+                        controlledAgent.Properties[PropertyEnum.PetDamagePctBonus] = Properties[PropertyEnum.PetDamagePctBonus];
+                    }
                     break;
 
                 case PropertyEnum.EnduranceAddBonus:
@@ -3681,6 +4152,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 missionManager.UpdateMissionInterest();
             }
 
+            // summoner condition
+            foreach (var summon in new SummonedEntityIterator(this))
+                summon.AddSummonerCondition(Id);
+
             // Finish the switch (if there was one)
             player.Properties.RemovePropertyRange(PropertyEnum.AvatarSwitchPending);
 
@@ -3694,13 +4169,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Assign region passive powers (e.g. min health tutorial power)
             AssignRegionPowers();
 
-            // Spawn team-up if needed (TODO: also spawn controlled entities)
-            if (Properties[PropertyEnum.AvatarTeamUpAgent] != PrototypeId.Invalid)
-            {
-                LinkTeamUpAgent(CurrentTeamUpAgent);
-                if (Properties[PropertyEnum.AvatarTeamUpIsSummoned])
-                    ActivateTeamUpAgent(true);  // We may want to disable the intro animation in some cases
-            }
+            // Spawn team-up / controlled entities
+            RespawnPersistentAgents();
 
             if (regionProto != null)
             {
@@ -3724,10 +4194,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             player?.SetDialogTargetId(InvalidId, InvalidId);
 
-            DeactivateTeamUpAgent();
-
-            Inventory summonedInventory = GetInventory(InventoryConvenienceLabel.Summoned);
-            summonedInventory?.DestroyContained();
+            // despawn teamups / controlled entities
+            DespawnPersistentAgents();
 
             CancelEnduranceEvents();
 
@@ -3744,6 +4212,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Cancel events
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler.CancelEvent(_refreshStatsPowerEvent);
+
+            // summoner condition
+            foreach (var summon in new SummonedEntityIterator(this))
+                summon.RemoveSummonerCondition(Id);
         }
 
         public TimeSpan TimePlayed()
@@ -3830,6 +4302,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class RecheckContinuousPowerEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).CheckContinuousPower();
+        }
+
+        private class DismissTeamUpAgentEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DismissTeamUpAgent(true);
+        }
+
+        private class DespawnControlledEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DespawnControlledAgent();
         }
 
         private class DelayedPowerActivationEvent : CallMethodEvent<Entity>
