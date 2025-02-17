@@ -44,7 +44,7 @@ namespace MHServerEmu.Games.Powers
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private int _totalSummonedEntities;
-        private readonly EventPointer<SummonEvent> _summonEvent = new();
+        private readonly EventPointer<SummonIntervalEvent> _summonIntervalEvent = new();
 
         public SummonPower(Game game, PrototypeId prototypeDataRef) : base(game, prototypeDataRef)
         {
@@ -53,18 +53,18 @@ namespace MHServerEmu.Games.Powers
 
         public override bool ApplyPower(PowerApplication powerApplication)
         {
-            CheckSummonedEntities();
+            CheckSummonEntityRemoval();
 
             if (base.ApplyPower(powerApplication) == false)
                 return false;
 
-            ScheduleSummonEntity(1);
+            ScheduleSummonInterval(1);
             UpdateAndCheckTotalSummonedEntities();
 
             return true;
         }
 
-        private void CheckSummonedEntities()
+        private void CheckSummonEntityRemoval()
         {
             if (Owner == null) return;
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.Powers
                 if (powerProto.TrackInInventory)
                     DestoySummoned(flags.HasFlag(EndPowerFlags.ExitWorld));
 
-            Game.GameEventScheduler.CancelEvent(_summonEvent);
+            Game.GameEventScheduler.CancelEvent(_summonIntervalEvent);
             return true;
         }
 
@@ -342,7 +342,7 @@ namespace MHServerEmu.Games.Powers
                 KillPrevious = killPrevious
             };
 
-            for (int i = 0; i < maxSummons; i++)
+            for (int i = 0; i < summonNum; i++)
             {
                 context.KillPrevious = killPrevious && maxSummons > 0 && count >= maxSummons;
 
@@ -423,7 +423,7 @@ namespace MHServerEmu.Games.Powers
             SummonEntityContext(manager, context, index);
 
             int nextIndex = (index + 1) % powerProto.SummonEntityContexts.Length;
-            ScheduleSummonEntity(nextIndex);
+            ScheduleSummonInterval(nextIndex);
         }
 
         private static PowerUseResult SummonEntityContext(EntityManager manager, SummonContext context, int index)
@@ -1034,7 +1034,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void ScheduleSummonEntity(int index)
+        private void ScheduleSummonInterval(int index)
         {
             var summonPowerProto = SummonPowerPrototype;
             if (summonPowerProto.SummonIntervalMS <= 0) return;
@@ -1042,14 +1042,14 @@ namespace MHServerEmu.Games.Powers
             var scheduler = Game?.GameEventScheduler;
             if (scheduler == null) return;
 
-            if (_summonEvent.IsValid) scheduler.CancelEvent(_summonEvent);
+            if (_summonIntervalEvent.IsValid) scheduler.CancelEvent(_summonIntervalEvent);
 
             var timeOffset = TimeSpan.FromMilliseconds(summonPowerProto.SummonIntervalMS);
-            scheduler.ScheduleEvent(_summonEvent, timeOffset, _pendingEvents);
-            _summonEvent.Get().Initialize(this, index);
+            scheduler.ScheduleEvent(_summonIntervalEvent, timeOffset, _pendingEvents);
+            _summonIntervalEvent.Get().Initialize(this, index);
         }
 
-        private class SummonEvent : CallMethodEventParam1<SummonPower, int>
+        private class SummonIntervalEvent : CallMethodEventParam1<SummonPower, int>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => t.SummonEntityIndex(p1);
         }
