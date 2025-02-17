@@ -158,12 +158,12 @@ namespace MHServerEmu.Games.Events
             long startFrame = CurrentTime.CalcNumTimeQuantums(_quantumSize);
             long endFrame = updateEndTime.CalcNumTimeQuantums(_quantumSize);
 
-            // Process all frames that are within our time window
+            // Process all frames within our time window
             for (long currentFrame = startFrame; currentFrame <= endFrame; currentFrame++)
             {
                 _currentFrame = currentFrame;
 
-                // Process events for each millisecond of the frame
+                // Process events for each millisecond of the frame covered by our time window
                 long frameBucketStart = currentFrame == startFrame ? ((long)CurrentTime.TotalMilliseconds % _numFrameBuckets) : 0;
                 long frameBucketEnd = currentFrame == endFrame ? ((long)updateEndTime.TotalMilliseconds % _numFrameBuckets) + 1 : _numFrameBuckets;
 
@@ -191,7 +191,7 @@ namespace MHServerEmu.Games.Events
                     }
                 }
 
-                // Do scheduling for the next frame if we still have more to go
+                // Prepare the next frame
                 if (currentFrame != endFrame)
                 {
                     WindowBucket windowBucket = _windowBuckets[(currentFrame + 1) % _numWindowBuckets];
@@ -204,13 +204,13 @@ namespace MHServerEmu.Games.Events
                     }
 
                     // Prepare events for the next time we reach this window bucket
-                    if (windowBucket.FutureListDict.TryGetValue(currentFrame + 1 + _numWindowBuckets, out LinkedList<ScheduledEvent> futureList))
+                    if (windowBucket.FutureListDict.Remove(currentFrame + 1 + _numWindowBuckets, out LinkedList<ScheduledEvent> futureList))
                     {
                         (windowBucket.NextList, futureList) = (futureList, windowBucket.NextList);
                         _eventPool.ReturnList(futureList);
                     }
 
-                    // Advance time by one frame
+                    // Advance time to the beginning of the next frame
                     CurrentTime = (_currentFrame + 1) * _quantumSize;
                 }
             }
