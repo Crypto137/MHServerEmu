@@ -314,7 +314,10 @@ namespace MHServerEmu.Games.Powers
 
         public void HandleTriggerPowerEventOnEntityControlled()                 // 29
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnEntityControlled, ref settings);
         }
 
         public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()  // 30
@@ -726,7 +729,7 @@ namespace MHServerEmu.Games.Powers
 
             if (contextCallbackProto.SetContextOnOwnerSummonEntities)
             {
-                Inventory summonedInventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+                Inventory summonedInventory = Owner.SummonedInventory;
                 if (summonedInventory == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): summonedInventory == null");
 
                 if (contextCallbackProto.SummonedEntitiesUsePowerTarget == false)
@@ -1068,15 +1071,78 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 21
-        private void DoPowerEventActionControlAgentAI(ulong targetId)
+        private bool DoPowerEventActionControlAgentAI(ulong targetId)
         {
-            Logger.Warn($"DoPowerEventActionControlAgentAI(): Not implemented");
+            var manager = Game.EntityManager;
+            var target = manager.GetEntity<WorldEntity>(targetId);
+            if (target == null || target.IsControlledEntity) return false;
+
+            var conditionCollection = target.ConditionCollection;
+            if (conditionCollection == null) return false;
+
+            var keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (keywordGlobals == null || keywordGlobals.ControlPowerKeywordPrototype == PrototypeId.Invalid) return false;
+
+            Avatar masterAvatar = null;
+            Power masterControlPower = null;
+            TimeSpan maxTime = TimeSpan.Zero;
+
+            List<Power> controlPowerEndList = ListPool<Power>.Instance.Get();
+
+            foreach (var condition in conditionCollection)
+            {
+                if (condition == null) continue;
+                if (condition.HasKeyword(keywordGlobals.ControlPowerKeywordPrototype) == false) continue;
+                
+                var controller = manager.GetEntity<WorldEntity>(condition.UltimateCreatorId);
+                if (controller is not Avatar avatar) continue;
+
+                var elapsedTime = condition.ElapsedTime;                    
+                if (elapsedTime >= maxTime)
+                {
+                    masterAvatar = avatar;
+                    maxTime = elapsedTime;
+                }
+
+                var powerRef = condition.CreatorPowerPrototypeRef;
+                if (powerRef != PrototypeId.Invalid && condition.Duration == TimeSpan.Zero)
+                {
+                    var controlPower = avatar.GetPower(powerRef);
+                    if (controlPower != null)
+                    {
+                        if (masterAvatar == avatar)
+                            masterControlPower = controlPower;
+
+                        controlPowerEndList.Add(controlPower);
+                    }
+                }
+            }
+
+            if (masterAvatar != null)
+            {
+                if (target is Agent targetAgent && masterAvatar.SetControlledAgent(targetAgent) == false)
+                {
+                    ListPool<Power>.Instance.Return(controlPowerEndList);
+                    return Logger.WarnReturn(false,
+                        $"DoPowerEventActionControlAgentAI(): Failed SetControlledAgent {targetAgent}");
+                }
+
+                masterControlPower?.HandleTriggerPowerEventOnEntityControlled();
+            }
+
+            foreach (var controlPower in controlPowerEndList)
+                controlPower?.SchedulePowerEnd(TimeSpan.Zero, EndPowerFlags.ExplicitCancel);
+
+            ListPool<Power>.Instance.Return(controlPowerEndList);
+
+            return true;
         }
 
         // 22
         private void DoPowerEventActionRemoveAndKillControlledAgentsFromInv()
         {
-            Logger.Warn($"DoPowerEventActionRemoveAndKillControlledAgentsFromInv(): Not implemented");
+            if (Owner is Avatar avatar) 
+                avatar.RemoveAndKillControlledAgent();
         }
 
         // 23
@@ -1200,7 +1266,11 @@ namespace MHServerEmu.Games.Powers
             if (Owner is not Avatar avatar)
                 return Logger.WarnReturn(false, $"DoPowerEventActionTeamUpAgentSummon(): A non-avatar entity {Owner} is trying to summon a team-up agent");
 
-            avatar.SummonTeamUpAgent();
+            float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
+            if (eventParam < 0.0f)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTeamUpAgentSummon(): eventParam {eventParam} < 0.0f");
+
+            avatar.SummonTeamUpAgent(TimeSpan.FromSeconds(eventParam));
             return true;
         }
 
@@ -1298,15 +1368,43 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 34
-        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Not implemented");
+            if (Game == null || Owner is not Avatar avatar) return false;
+
+            float count = triggeredPowerEvent.GetEventParam(Properties, avatar);
+            if (count < 0) return Logger.WarnReturn(false, $"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): eventParam {count} < 0");
+            if (triggeredPowerEvent.Keywords.IsNullOrEmpty()) 
+                return Logger.WarnReturn(false, $"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Keywords is null or empty");
+
+            int removed = avatar.RemoveSummonedAgentsWithKeywords(count, triggeredPowerEvent.KeywordsMask);
+            if (removed > 0 && triggeredPowerEvent.Power != PrototypeId.Invalid)
+            {
+                var powerCollection = avatar.PowerCollection;
+                if (powerCollection == null) return false;
+                var comboPower = powerCollection.GetPower(triggeredPowerEvent.Power);
+                if (comboPower == null)
+                    return Logger.WarnReturn(false, $"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Failed GetPower {triggeredPowerEvent.Power.GetNameFormatted()}");
+                
+                while (removed > 0)
+                {
+                    PowerActivationSettings localSettings = settings;
+                    localSettings.TriggeringPowerRef = PrototypeDataRef;
+                    localSettings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+                    DoActivateComboPower(comboPower, triggeredPowerEvent, ref localSettings);
+                    removed--;
+                }
+            }
+
+            return true;
         }
 
         // 35
         private void DoPowerEventActionSummonControlledAgentWithDuration()
         {
-            Logger.Warn($"DoPowerEventActionSummonControlledAgentWithDuration(): Not implemented");
+            if (Game == null || Owner is not Avatar avatar) return;
+            if (avatar.ControlledAgent == null) return;
+            avatar.SummonControlledAgentWithDuration();
         }
 
         // 36
