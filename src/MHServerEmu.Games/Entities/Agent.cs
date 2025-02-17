@@ -1754,7 +1754,7 @@ namespace MHServerEmu.Games.Entities
             var controller = AIController;
             if (controller == null) return;
 
-            controller.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = Id;
+            controller.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
             controller.ResetCurrentTargetState();
         }
 

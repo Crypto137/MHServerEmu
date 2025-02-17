@@ -261,7 +261,7 @@ namespace MHServerEmu.Games.Populations
                 ActiveEntity = null;
             }
 
-            EntitySelectorProto?.SetUniqueEntity(EntityRef, entity.Region, false);
+            EntitySelectorProto?.SetUniqueEntity(EntityRef, entity?.Region, false);
 
             if (destroyGroup)
                 Group?.ScheduleClearCluster(entity, null);
