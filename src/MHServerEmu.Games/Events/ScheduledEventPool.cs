@@ -110,6 +110,8 @@ namespace MHServerEmu.Games.Events
         {
             StringBuilder sb = new();
 
+            sb.AppendLine("Name\tActive\tAvailable\tTotal");
+
             // Accuracy > efficiency here, so recalculate all counts using the data from actual nodes
             int availableSum = 0;
             int totalSum = 0;
@@ -126,15 +128,15 @@ namespace MHServerEmu.Games.Events
                 totalSum += total;
                 activeSum += active;
 
-                sb.AppendLine($"{name} = {available}/{total} ({active} active)");
+                sb.AppendLine($"{name}\t{active}\t{available}\t{total}");
             }
 
-            sb.AppendLine("----------");
-            sb.AppendLine($"TOTAL = {availableSum}/{totalSum} ({activeSum} active)");
+            sb.AppendLine();
+            sb.AppendLine($"TOTAL\t{activeSum}\t{availableSum}\t{totalSum}");
 
             int availableListCount = _listStack.Count;
             int activeListCount = _totalListCount - availableListCount;
-            sb.AppendLine($"LinkedListCount = {availableListCount}/{_totalListCount} ({activeListCount} active)");
+            sb.AppendLine($"LinkedListCount\t{activeListCount}\t{availableListCount}\t{_totalListCount}");
 
             return sb.ToString();
         }
