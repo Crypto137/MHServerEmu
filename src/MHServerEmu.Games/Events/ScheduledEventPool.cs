@@ -12,6 +12,8 @@ namespace MHServerEmu.Games.Events
 
         private readonly Dictionary<Type, Node> _nodeDict = new();
 
+        public int ActiveInstanceCount { get; private set; }     // Keep track of active instances for metrics
+
         public ScheduledEventPool() { }
 
         /// <summary>
@@ -26,7 +28,9 @@ namespace MHServerEmu.Games.Events
                 _nodeDict.Add(type, node);
             }
 
-            return node.Get<T>();
+            T @event = node.Get<T>();
+            ActiveInstanceCount++;
+            return @event;
         }
 
         /// <summary>
@@ -40,6 +44,7 @@ namespace MHServerEmu.Games.Events
                 return Logger.WarnReturn(false, $"Return(): Failed to get a node for a scheduled event instance of type {type.Name}");
 
             node.Return(@event);
+            ActiveInstanceCount--;
             return true;
         }
 
@@ -50,6 +55,7 @@ namespace MHServerEmu.Games.Events
         {
             StringBuilder sb = new();
 
+            // Accuracy > efficiency here, so recalculate all counts using the data from actual nodes
             int availableSum = 0;
             int totalSum = 0;
             int activeSum = 0;

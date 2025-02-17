@@ -196,7 +196,7 @@ namespace MHServerEmu.Games.Events
             ulong gameId = Game.Current != null ? Game.Current.Id : 0;
             MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.ScheduledEventsPerUpdate, numEvents);
             MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.EventSchedulerFramesPerUpdate, 1 + endFrame - startFrame);
-            //MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.RemainingScheduledEvents, _scheduledEvents.Count);
+            MetricsManager.Instance.RecordGamePerformanceMetric(gameId, GamePerformanceMetricEnum.RemainingScheduledEvents, _eventPool.ActiveInstanceCount);
         }
 
         public string GetPoolReportString()
