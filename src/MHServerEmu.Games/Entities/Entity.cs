@@ -1453,5 +1453,10 @@ namespace MHServerEmu.Games.Entities
         {
             Properties[PropertyEnum.CombatLevel] = combatLevel;
         }
+
+        public void SetVisible(bool visible)
+        {
+            Properties[PropertyEnum.Visible] = visible;
+        }
     }
 }

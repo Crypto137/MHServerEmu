@@ -473,6 +473,13 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public override void OnDetachedFromDestroyedContainer()
+        {
+            var summonProto = GetSummonEntityContext();
+            if (summonProto == null) return;
+            if (summonProto.VisibleWhileAttached == false) SetVisible(true);
+        }
+
         private void AdjustSummonCount(int value)
         {
             bool decrement = value < 0;
