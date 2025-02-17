@@ -959,6 +959,8 @@ namespace MHServerEmu.Games.Powers
         {
             var powerProto = context.PowerProto;
 
+            properties[PropertyEnum.SummonedByPower] = true;
+
             if (powerProto.IsPetSummoningPower())
             {
                 properties.AdjustProperty(context.Properties[PropertyEnum.PetHealthPctBonus], PropertyEnum.PetHealthPctBonus);

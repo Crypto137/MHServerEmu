@@ -486,10 +486,10 @@ namespace MHServerEmu.Games.Entities
             var powerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
             if (summoner == null || powerProto == null) return;
 
-            Properties.AdjustProperty(value, new PropertyId(PropertyEnum.PowerSummonedEntityCount, powerRef));
+            summoner.Properties.AdjustProperty(value, new PropertyId(PropertyEnum.PowerSummonedEntityCount, powerRef));
             if (powerProto.SummonMaxCountWithOthers.HasValue())
                 foreach (var protoRef in powerProto.SummonMaxCountWithOthers)
-                    Properties.AdjustProperty(value, new PropertyId(PropertyEnum.PowerSummonedEntityCount, protoRef));
+                    summoner.Properties.AdjustProperty(value, new PropertyId(PropertyEnum.PowerSummonedEntityCount, protoRef));
 
             SetFlag(EntityFlags.SummonDecremented, decrement);
 
