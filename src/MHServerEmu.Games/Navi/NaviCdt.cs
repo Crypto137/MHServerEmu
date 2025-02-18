@@ -3,6 +3,8 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.Avatars;
+using System.Drawing;
 using System.Globalization;
 using System.Text;
 
@@ -921,6 +923,22 @@ namespace MHServerEmu.Games.Navi
             foreach (var triangle in TriangleList.Iterate())
                 hashes.AppendLine($"[{id++}] {triangle.ToHashString2()}");
             FileHelper.SaveTextFileToRoot(fileName, hashes.ToString());
+        }
+
+        public void MeshToSvg(string name)
+        {
+            NaviSvgHelper svg = new(this);
+            Stack<NaviPoint> influences = new();
+            foreach (var triangle in TriangleList.Iterate())
+                foreach (var edge in triangle.Edges)
+                    foreach (var point in edge.Points)
+                        if (point.InfluenceRadius > 0 && influences.Contains(point) == false)
+                            influences.Push(point);
+            foreach (var triangle in TriangleList.Iterate())
+                svg.AddTriangle(triangle);
+            foreach (var point in influences)
+                svg.AddCircle(point.Pos, point.InfluenceRadius);
+                svg.SaveToFile($"{name}-{DateTime.Now:mm-ss-fff}.svg");
         }
 
         public string MeshToObj(PathFlags filterFlags = PathFlags.Walk)
