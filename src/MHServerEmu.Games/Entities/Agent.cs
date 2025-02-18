@@ -1487,9 +1487,6 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnNegativeStatusEffectApplied(conditionId);
 
-            // temporarily disabled CC react conditions
-            return true;
-
             // Apply CCReactCondition (if this agent has one)
             PrototypeId ccReactConditionProtoRef = AgentPrototype.CCReactCondition;
             if (ccReactConditionProtoRef == PrototypeId.Invalid)
