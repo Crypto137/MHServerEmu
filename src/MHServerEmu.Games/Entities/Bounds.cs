@@ -360,6 +360,16 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public float GetCenterOffset()
+        {
+            return Geometry switch
+            {
+                GeometryType.Triangle => _params.TriangleLength * 0.66666669f,
+                GeometryType.Wedge => _params.WedgeLength * 0.66666669f,
+                _ => 0.0f
+            };
+        }
+
         private Vector3[] GetWedgeVertices()
         {
             if (Geometry != GeometryType.Wedge)
