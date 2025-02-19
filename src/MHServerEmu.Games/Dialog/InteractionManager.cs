@@ -112,8 +112,7 @@ namespace MHServerEmu.Games.Dialog
 
                 if (missionOption is MissionConditionMissionCompleteOption completeOption)
                 {
-                    SortedSet<PrototypeId> completeMissions = completeOption.GetCompleteMissionRefs();
-                    foreach (PrototypeId completeMissionRef in completeMissions)
+                    foreach (PrototypeId completeMissionRef in completeOption.CompleteMissionRefs)
                     {
                         if (completeMissionRef == PrototypeId.Invalid) continue;
                         ExtraMissionData completeMissionData = GetMissionData(completeMissionRef);
@@ -1412,7 +1411,7 @@ namespace MHServerEmu.Games.Dialog
     {      
         public PrototypeId MissionRef { get; set; }
         public HashSet<BaseMissionOption> Options { get; set; }
-        public SortedSet<PrototypeId> Contexts { get; set; }
+        public HashSet<PrototypeId> Contexts { get; set; }
         public HashSet<BaseMissionOption> CompleteOptions { get; set; }
         public bool PlayerHUDShowObjs { get; set; }
 

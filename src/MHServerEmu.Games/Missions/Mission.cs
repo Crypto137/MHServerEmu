@@ -1695,6 +1695,7 @@ namespace MHServerEmu.Games.Missions
 
         public IEnumerable<Hotspot> GetMissionHotspots()
         {
+            // TODO: Optimize this
             var region = Region;
             if (region == null) yield break;
 
