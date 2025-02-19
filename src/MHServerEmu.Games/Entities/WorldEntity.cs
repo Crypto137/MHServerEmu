@@ -656,9 +656,20 @@ namespace MHServerEmu.Games.Entities
 
             bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
             SetStatus(EntityStatus.ExitingWorld, true);
+
             Physics.ReleaseCollisionId();
-            // TODO IsAttachedToEntity()
+            if (IsAttachedToEntity)
+            {
+                ulong parentId = Properties[PropertyEnum.AttachedToEntityId];
+                if (parentId != InvalidId)
+                {
+                    var parent = Game.EntityManager.GetEntity<WorldEntity>(parentId);
+                    if (parent != null && parent.IsInWorld && parent.TestStatus(EntityStatus.ExitingWorld) == false)
+                        parent.Physics.DetachChild(Physics);
+                }
+            }
             Physics.DetachAllChildren();
+
             DisableNavigationInfluence();
 
             if (Locomotor != null)
@@ -3030,6 +3041,17 @@ namespace MHServerEmu.Games.Entities
 
             PowerCollection?.OnOwnerEnteredWorld();
 
+            if (IsAttachedToEntity)
+            {
+                ulong parentId = Properties[PropertyEnum.AttachedToEntityId];
+                if (parentId != InvalidId)
+                {
+                    var parent = Game.EntityManager.GetEntity<WorldEntity>(parentId);
+                    if (parent != null && parent.IsInWorld && parent.TestStatus(EntityStatus.ExitingWorld) == false)
+                        parent.Physics.AttachChild(Physics);
+                }
+            }
+
             var region = Region;
 
             region.EntityEnteredWorldEvent.Invoke(new(this));
@@ -3257,6 +3279,32 @@ namespace MHServerEmu.Games.Entities
                 case PropertyEnum.NegateHotspots:
 
                     ScheduleNegateHotspots(newValue);
+                    break;
+
+                case PropertyEnum.AttachedToEntityId:
+
+                    ulong oldParentId = oldValue;
+                    ulong newParentId = newValue;
+                    SetFlag(EntityFlags.AttachedToEntityId, newParentId != InvalidId);
+
+                    var manager = Game.EntityManager;
+                    if (oldParentId != InvalidId)
+                    {
+                        var oldParent = manager.GetEntity<WorldEntity>(oldParentId);
+                        if (oldParent != null && oldParent.IsInWorld && oldParent.TestStatus(EntityStatus.ExitingWorld) == false)
+                            oldParent.Physics.DetachChild(Physics);
+                    }
+
+                    if (IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+                    {
+                        if (newParentId != InvalidId)
+                        {
+                            var newParent = manager.GetEntity<WorldEntity>(newParentId);
+                            if (newParent != null && newParent.IsInWorld && newParent.TestStatus(EntityStatus.ExitingWorld) == false)
+                                newParent.Physics.AttachChild(Physics);
+                        }
+                    }
+
                     break;
 
                 case PropertyEnum.NoEntityCollide:
