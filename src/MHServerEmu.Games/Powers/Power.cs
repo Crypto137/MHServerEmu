@@ -1747,6 +1747,40 @@ namespace MHServerEmu.Games.Powers
             return _trackedConditionList.Contains(trackedCondition);
         }
 
+        public void RemoveOrUnpauseTrackedConditionsForTarget(ulong targetId)
+        {
+            // Check if there is anything to remove before doing anything else
+            if (_trackedConditionList.Count == 0)
+                return;
+
+            // The entity the tracked condition was applied to may no longer exist
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+            ConditionCollection conditionCollection = target?.ConditionCollection;
+            if (conditionCollection == null)
+                return;
+
+            List<TrackedCondition> unpausedConditionList = ListPool<TrackedCondition>.Instance.Get();
+
+            for (int i = 0; i < _trackedConditionList.Count; i++)
+            {
+                TrackedCondition trackedCondition = _trackedConditionList[i];
+                if (trackedCondition.EntityId != targetId)
+                    continue;
+
+                if (conditionCollection.RemoveOrUnpauseCondition(trackedCondition.ConditionId) == false)
+                    unpausedConditionList.Add(trackedCondition);
+
+                // RemoveOrUnpauseCondition can potentially change _trackedConditionList, so we need to restart iteration
+                i = 0;
+            }
+
+            // Readd conditions that were unpaused
+            foreach (TrackedCondition unpausedCondition in unpausedConditionList)
+                _trackedConditionList.Add(unpausedCondition);
+
+            ListPool<TrackedCondition>.Instance.Return(unpausedConditionList);
+        }
+
         private void RemoveTrackedConditions(bool allowUnpause)
         {
             List<TrackedCondition> unpausedConditionList = ListPool<TrackedCondition>.Instance.Get();
