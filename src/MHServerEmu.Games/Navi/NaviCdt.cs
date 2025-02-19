@@ -3,8 +3,6 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Entities.Avatars;
-using System.Drawing;
 using System.Globalization;
 using System.Text;
 

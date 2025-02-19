@@ -3557,12 +3557,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-        private bool IsInTown()
-        {
-            var region = Region;
-            return region != null && region.Behavior == RegionBehavior.Town;
-        }
-
         #region PersistentAgents
 
         private Agent GetCurrentVanityPet()
