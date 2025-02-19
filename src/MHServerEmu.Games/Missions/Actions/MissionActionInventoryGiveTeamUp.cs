@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,8 +18,14 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             var teamUpRef = _proto.TeamUpPrototype;
             if (teamUpRef == PrototypeId.Invalid) return;
-            foreach (Player player in Mission.GetParticipants())
-                player.UnlockTeamUpAgent(teamUpRef);
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
+            {
+                foreach (Player player in participants)
+                    player.UnlockTeamUpAgent(teamUpRef);
+            }
+            ListPool<Player>.Instance.Return(participants);
         }
     }
 }

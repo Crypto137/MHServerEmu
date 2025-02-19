@@ -1749,6 +1749,40 @@ namespace MHServerEmu.Games.Powers
             return _trackedConditionList.Contains(trackedCondition);
         }
 
+        public void RemoveOrUnpauseTrackedConditionsForTarget(ulong targetId)
+        {
+            // Check if there is anything to remove before doing anything else
+            if (_trackedConditionList.Count == 0)
+                return;
+
+            // The entity the tracked condition was applied to may no longer exist
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+            ConditionCollection conditionCollection = target?.ConditionCollection;
+            if (conditionCollection == null)
+                return;
+
+            List<TrackedCondition> unpausedConditionList = ListPool<TrackedCondition>.Instance.Get();
+
+            for (int i = 0; i < _trackedConditionList.Count; i++)
+            {
+                TrackedCondition trackedCondition = _trackedConditionList[i];
+                if (trackedCondition.EntityId != targetId)
+                    continue;
+
+                if (conditionCollection.RemoveOrUnpauseCondition(trackedCondition.ConditionId) == false)
+                    unpausedConditionList.Add(trackedCondition);
+
+                // RemoveOrUnpauseCondition can potentially change _trackedConditionList, so we need to restart iteration
+                i = -1;
+            }
+
+            // Readd conditions that were unpaused
+            foreach (TrackedCondition unpausedCondition in unpausedConditionList)
+                _trackedConditionList.Add(unpausedCondition);
+
+            ListPool<TrackedCondition>.Instance.Return(unpausedConditionList);
+        }
+
         private void RemoveTrackedConditions(bool allowUnpause)
         {
             List<TrackedCondition> unpausedConditionList = ListPool<TrackedCondition>.Instance.Get();
@@ -3682,6 +3716,7 @@ namespace MHServerEmu.Games.Powers
             if (Prototype.EvalOnPreApply.HasValue())
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.Game = Game;
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, payload.Properties);
                 evalContext.SetVar_PropertyCollectionPtr(EvalContext.Entity, Owner.Properties);
                 evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1, Properties);
@@ -5139,6 +5174,12 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public void CancelScheduledPowerApplicationsForTarget(ulong targetId)
+        {
+            PowerApplyEvent.TargetFilter filter = new(targetId);
+            Game.GameEventScheduler.CancelEventsFiltered(_pendingPowerApplicationEvents, filter);
+        }
+
         private static bool SchedulePayloadDelivery(PowerPayload payload, TimeSpan deliveryDelay)
         {
             if (payload == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): payload == null");
@@ -5461,6 +5502,34 @@ namespace MHServerEmu.Games.Powers
 
                 return true;
             }
+
+            public override void Clear()
+            {
+                _power = default;
+                _powerApplication = default;
+            }
+
+            public readonly struct TargetFilter : IScheduledEventFilter
+            {
+                private readonly ulong _targetId;
+
+                public TargetFilter(ulong targetId)
+                {
+                    _targetId = targetId;
+                }
+
+                public bool Filter(ScheduledEvent @event)
+                {
+                    if (@event is not PowerApplyEvent powerApplyEvent)
+                        return false;
+
+                    PowerApplication powerApplication = powerApplyEvent._powerApplication;
+                    if (powerApplication == null)
+                        return false;
+
+                    return powerApplication.TargetEntityId == _targetId;
+                }
+            }
         }
 
         private class DeliverPayloadEvent : ScheduledEvent
@@ -5475,6 +5544,11 @@ namespace MHServerEmu.Games.Powers
             public override bool OnTriggered()
             {
                 return DeliverPayload(_payload);
+            }
+
+            public override void Clear()
+            {
+                _payload = default;
             }
         }
 

@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -32,19 +33,29 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (_proto.CountItemsOnMissionStart)
             {
                 var manager = Game.EntityManager;
-                foreach (var player in Mission.GetParticipants())
-                    foreach (Inventory inventory in new InventoryIterator(player))
+
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
+                {
+                    foreach (var player in participants)
                     {
-                        if (inventory == null) continue;
-                        var inventoryProto = inventory.Prototype;
-                        if (inventoryProto.IsPlayerGeneralInventory || inventoryProto.IsEquipmentInventory)
-                            foreach (var entry in inventory)
+                        foreach (Inventory inventory in new InventoryIterator(player))
+                        {
+                            if (inventory == null) continue;
+                            var inventoryProto = inventory.Prototype;
+                            if (inventoryProto.IsPlayerGeneralInventory || inventoryProto.IsEquipmentInventory)
                             {
-                                var item = manager.GetEntity<Item>(entry.Id);
-                                if (EvaluateItem(player, item))
-                                    count += item.CurrentStackSize;
+                                foreach (var entry in inventory)
+                                {
+                                    var item = manager.GetEntity<Item>(entry.Id);
+                                    if (EvaluateItem(player, item))
+                                        count += item.CurrentStackSize;
+                                }
                             }
+                        }
                     }
+                }
+                ListPool<Player>.Instance.Return(participants);
             }
 
             SetCount(count);

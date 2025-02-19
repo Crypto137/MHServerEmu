@@ -45,8 +45,9 @@ namespace MHServerEmu.Games.GameData.Tables
             if (omegaBonusRef == PrototypeId.Invalid)
                 return Logger.WarnReturn(false, "CanOmegaBonusBeRemoved(): omegaBonusRef == PrototypeId.Invalid");
 
+            // If there is no postreq list for this bonus, there is nothing to check
             if (_omegaBonusPostreqDict.TryGetValue(omegaBonusRef, out List<PrototypeId> postreqList) == false)
-                return Logger.WarnReturn(false, $"CanOmegaBonusBeRemoved(): omegaBonusRef is not valid ref ({GameDatabase.GetPrototypeName(omegaBonusRef)})");
+                return true;
 
             // Track all nodes we have already checked in a set
             HashSet<PrototypeId> checkedNodes = new();

@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
@@ -902,7 +903,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     _generatedPath.Set(newPath);
                     if (updateEnd && _generatedPath.Path.IsValid)
                         _generatedPath.Path.UpdateEndPosition(updateEndPosition);
-                    LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                    LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
                     LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNodeIndex();
                     _syncPathGoalNodeIndex = 0;
                     _initRotation = false;
@@ -928,7 +929,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
             }
             SetEnabled(success);
             return success;
@@ -955,7 +956,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
             }
 
             if (hasNaviInfluence) _owner.EnableNavigationInfluence();
@@ -1007,7 +1008,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting;
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
                 SetEnabled(true);
                 return true;
             }
@@ -1097,7 +1098,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                 LocomotionState.BaseMoveSpeed = CalcBaseMoveSpeedForLocomotion(options);
                 LocomotionState.Height = options.MoveHeight;
                 LocomotionState.LocomotionFlags |= options.Flags | LocomotionFlags.IsLocomoting | LocomotionFlags.MoveTo;
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
             }
             SetEnabled(success);
             return success;
@@ -1126,7 +1127,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
             if (IsLooking)
             {
                 _generatedPath.Path.UpdateEndPosition(position);
-                LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
             }
             else
             {
@@ -1140,7 +1141,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
                     if (success)
                     {
                         LocomotionState.LocomotionFlags |= LocomotionFlags.IsLooking;
-                        LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                        LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
                     }
                     SetEnabled(success);
                 }
@@ -1325,7 +1326,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
                                     if (syncTeleport == false)
                                     {
-                                        LocomotionState.PathNodes = _generatedPath.Path.PathNodeList;
+                                        LocomotionState.PathNodes.Set(_generatedPath.Path.PathNodeList);
                                         LocomotionState.PathGoalNodeIndex = _generatedPath.Path.GetCurrentGoalNodeIndex();
                                         _syncPathGoalNodeIndex = Math.Max(0, numPathNodeList - 1);
                                     }

@@ -1448,8 +1448,13 @@ namespace MHServerEmu.Games.Missions
 
         public void UpdateMissionEntities(Mission mission)
         {
-            foreach (var player in mission.GetParticipants())
-                UpdateMissionEntitiesForPlayer(mission, player);
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (mission.GetParticipants(participants))
+            {
+                foreach (var player in participants)
+                    UpdateMissionEntitiesForPlayer(mission, player);
+            }
+            ListPool<Player>.Instance.Return(participants);
         }
 
         public static void UpdateMissionEntitiesForPlayer(Mission mission, Player player)

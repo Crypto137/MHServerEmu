@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities
         private Dictionary<EntitySelectorActionPrototype, FireActionPointer> _pendingActions;
         private readonly EventGroup _pendingEvents = new();
         public bool RequiresBrain { get; private set; }
-        public SortedSet<PrototypeId> PerformPowers { get; private set; }
+        public HashSet<PrototypeId> PerformPowers { get; private set; }
 
         public EntityActionComponent(WorldEntity owner)
         {

@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -34,8 +35,13 @@ namespace MHServerEmu.Games.Missions.Actions
                 | InventoryIterationFlags.PlayerStashGeneral 
                 | InventoryIterationFlags.SortByPrototypeRef;
 
-            foreach (Player player in Mission.GetParticipants())
-                RemoveItemsFromInventory(new InventoryIterator(player, flags), itemRef, itemCount);
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
+            {
+                foreach (Player player in participants)
+                    RemoveItemsFromInventory(new InventoryIterator(player, flags), itemRef, itemCount);
+            }
+            ListPool<Player>.Instance.Return(participants);
         }
 
         private void RemoveItemsFromInventory(InventoryIterator inventoryIterator, PrototypeId itemRef, long count)

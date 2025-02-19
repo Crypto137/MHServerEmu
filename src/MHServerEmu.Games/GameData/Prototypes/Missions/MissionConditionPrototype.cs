@@ -1,9 +1,9 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Missions.Conditions;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public virtual MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner) { return null; }
         public virtual void BuildEntityFilter(EntityFilterWrapper entityFilter, PrototypeId contextMissionRef) { }
         public virtual void GetPrototypeContextRefs(HashSet<PrototypeId> refs) { }
-        public virtual void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells) { }
+        public virtual void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells) { }
     }
 
     public class MissionPlayerConditionPrototype : MissionConditionPrototype
@@ -162,7 +162,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
         }
 
-        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
             if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
             if (AreaPrototype != PrototypeId.Invalid) areas.Add(AreaPrototype);
@@ -233,7 +233,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Cells { get; protected set; }
         public PrototypeId[] Regions { get; protected set; }
 
-        private SortedSet<PrototypeId> _cells = new();
+        //---
+
+        private readonly HashSet<PrototypeId> _cells = new();
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -257,11 +259,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 foreach (var region in Regions) refs.Add(region);
         }
 
-        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
             if (Regions.HasValue())
                 foreach (var region in Regions) regions.Add(region);
-            cells.UnionWith(_cells);
+
+            foreach (PrototypeId cellProtoRef in _cells)
+                cells.Add(cellProtoRef);
         }
 
         public bool Contains(PrototypeId cellRef)
@@ -274,7 +278,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public AssetId[] Cells { get; protected set; }
 
-        private SortedSet<PrototypeId> _cells = new();
+        //---
+
+        private readonly HashSet<PrototypeId> _cells = new();
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner)
         {
@@ -449,11 +455,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             entityFilter.AddEncounterResource(EncounterResource);
         }
 
-        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
             if (EntityFilter != null)
             {
-                HashSet<PrototypeId> refs = new ();
+                HashSet<PrototypeId> refs = HashSetPool<PrototypeId>.Instance.Get();
                 EntityFilter.GetRegionDataRefs(refs);
                 foreach (var region in refs)
                     regions.Add(region);
@@ -462,6 +468,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 EntityFilter.GetAreaDataRefs(refs);
                 foreach (var area in refs)
                     areas.Add(area);
+
+                HashSetPool<PrototypeId>.Instance.Return(refs);
             }
         }
 
@@ -926,7 +934,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
         }
 
-        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
             if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
         }
@@ -975,7 +983,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (RegionPrototype != PrototypeId.Invalid) refs.Add(RegionPrototype);
         }
 
-        public override void SetInterestLocations(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas, SortedSet<PrototypeId> cells)
+        public override void SetInterestLocations(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas, HashSet<PrototypeId> cells)
         {
             if (RegionPrototype != PrototypeId.Invalid) regions.Add(RegionPrototype);
         }

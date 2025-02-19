@@ -536,13 +536,24 @@ namespace MHServerEmu.Games.Missions
 
             if (mission.IsOpenMission)
             {
-                foreach (Player player in mission.GetSortedContributors())
-                    mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
+                // TODO: check MinimumContributionForCredit
+                List<Player> sortedContributors = ListPool<Player>.Instance.Get();
+                if (mission.GetSortedContributors(sortedContributors))
+                {
+                    foreach (Player player in sortedContributors)
+                        mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
+                }
+                ListPool<Player>.Instance.Return(sortedContributors);
             }
             else
             {
-                foreach (Player player in mission.GetParticipants())
-                    mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (mission.GetParticipants(participants))
+                {
+                    foreach (Player player in participants)
+                        mission.RollSummaryAndAwardLootToPlayer(player, rewards, seed);
+                }
+                ListPool<Player>.Instance.Return(participants);
             }            
         }
 
@@ -669,10 +680,15 @@ namespace MHServerEmu.Games.Missions
             {
                 var region = Region;
                 if (region == null) return;
-                
-                var missionRef = Mission.PrototypeDataRef;
-                foreach (var player in Mission.GetParticipants())
-                    region.MissionObjectiveUpdatedEvent.Invoke(new(player, missionRef, namedProto.ObjectiveID));                
+
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
+                {
+                    var missionRef = Mission.PrototypeDataRef;
+                    foreach (var player in participants)
+                        region.MissionObjectiveUpdatedEvent.Invoke(new(player, missionRef, namedProto.ObjectiveID));
+                }
+                ListPool<Player>.Instance.Return(participants);               
             }
         }
 
@@ -791,8 +807,13 @@ namespace MHServerEmu.Games.Missions
             var missionProto = Mission.Prototype;
             if (missionProto == null || missionProto.HasClientInterest == false) return;
 
-            foreach (var player in Mission.GetParticipants())
-                SendUpdateToPlayer(player, objectiveFlags);
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
+            {
+                foreach (var player in participants)
+                    SendUpdateToPlayer(player, objectiveFlags);
+            }
+            ListPool<Player>.Instance.Return(participants);
         }
 
         public void SendUpdateToPlayer(Player player, MissionObjectiveUpdateFlags objectiveFlags)

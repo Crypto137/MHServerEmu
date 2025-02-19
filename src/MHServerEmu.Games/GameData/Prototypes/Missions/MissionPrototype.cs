@@ -349,6 +349,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public override bool ShouldCacheCRC { get => true; }
 
@@ -368,8 +370,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public List<PrototypeId> MissionActionReferencedPowers { get; private set; }
 
-        private readonly SortedSet<PrototypeId> PopulationRegions = new();
-        private readonly SortedSet<PrototypeId> PopulationAreas = new();
+        private readonly HashSet<PrototypeId> PopulationRegions = new();
+        private readonly HashSet<PrototypeId> PopulationAreas = new();
         private KeywordsMask _keywordsMask;
         private KeywordsMask _regionRestrictionKeywordsMask;
 
@@ -602,17 +604,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 PrototypeId regionRef = region.PrototypeDataRef;
 
-                if (PopulationRegions.Any())
+                if (PopulationRegions.Count > 0)
                     return PopulationRegions.Contains(regionRef);
 
-                if (PopulationAreas.Any())
+                if (PopulationAreas.Count > 0)
                     foreach (var areaRef in PopulationAreas)
                         if (region.GetArea(areaRef) != null) return true;
             }
             return false;
         }
 
-        public bool PopulatePopulationForZoneLookups(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas)
+        public bool PopulatePopulationForZoneLookups(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas)
         {
             if (PopulationSpawns.HasValue())
             {
@@ -717,9 +719,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long AchievementTimeLimitSeconds { get; protected set; }
         public bool ShowToastMessages { get; protected set; }
 
-        private SortedSet<PrototypeId> _activeRegions = new();
-        private SortedSet<PrototypeId> _activeAreas = new();
-        private SortedSet<PrototypeId> _activeCells = new();
+        //---
+
+        private readonly HashSet<PrototypeId> _activeRegions = new();
+        private readonly HashSet<PrototypeId> _activeAreas = new();
+        private readonly HashSet<PrototypeId> _activeCells = new();
 
         public override void PostProcess()
         {

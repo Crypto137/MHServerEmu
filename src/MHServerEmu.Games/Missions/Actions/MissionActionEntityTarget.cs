@@ -9,7 +9,9 @@ namespace MHServerEmu.Games.Missions.Actions
     public class MissionActionEntityTarget : MissionAction
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private SortedSet<ulong> _completedEntities;
+
+        private HashSet<ulong> _completedEntities;
+        
         public MissionActionEntityTarget(IMissionActionOwner owner, MissionActionPrototype prototype) : base(owner, prototype) { }
 
         public override void Run()

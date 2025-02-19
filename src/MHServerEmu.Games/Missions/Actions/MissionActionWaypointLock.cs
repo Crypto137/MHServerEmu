@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -14,8 +15,13 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            foreach (Player player in Mission.GetParticipants())
-                player.LockWaypoint(_proto.WaypointToLock);
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
+            {
+                foreach (Player player in participants)
+                    player.LockWaypoint(_proto.WaypointToLock);
+            }
+            ListPool<Player>.Instance.Return(participants);
         }
     }
 }

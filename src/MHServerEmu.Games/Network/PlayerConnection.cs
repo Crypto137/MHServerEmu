@@ -455,6 +455,8 @@ namespace MHServerEmu.Games.Network
 
             switch ((ClientToGameServerMessage)message.Id)
             {
+                case ClientToGameServerMessage.NetMessagePlayerSystemMetrics:               OnPlayerSystemMetrics(message); break;              // 1
+                case ClientToGameServerMessage.NetMessagePlayerSteamInfo:                   OnPlayerSteamInfo(message); break;                  // 2
                 case ClientToGameServerMessage.NetMessageIsRegionAvailable:                 OnIsRegionAvailable(message); break;                // 5
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:                 OnUpdateAvatarState(message); break;                // 6
                 case ClientToGameServerMessage.NetMessageCellLoaded:                        OnCellLoaded(message); break;                       // 7
@@ -477,6 +479,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;          // 46
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;      // 47
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
+                case ClientToGameServerMessage.NetMessagePowerRecentlyUnlocked:             OnPowerRecentlyUnlocked(message); break;            // 51
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
                 case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
@@ -552,6 +555,31 @@ namespace MHServerEmu.Games.Network
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnPlayerSystemMetrics(MailboxMessage message)  // 1
+        {
+            var playerSystemMetrics = message.As<NetMessagePlayerSystemMetrics>();
+            if (playerSystemMetrics == null) return Logger.WarnReturn(false, $"OnPlayerSystemMetrics(): Failed to retrieve message");
+
+            // Adding this handler to reduce log spam.
+            // This message is sent when the client logs in for the first time after startup. We are not interested in any of this info.
+
+            return true;
+        }
+
+        private bool OnPlayerSteamInfo(MailboxMessage message)  // 2
+        {
+            var playerSteamInfo = message.As<NetMessagePlayerSteamInfo>();
+            if (playerSteamInfo == null) return Logger.WarnReturn(false, $"OnPlayerSteamInfo(): Failed to retrieve message");
+
+            // Adding this handler to reduce log spam.
+            // TODO: Figure out if we can make use of any Steam functionality. If so, set PropertyEnum.SteamUserId and PropertyEnum.SteamAchievementUpdateSeqNum here.
+
+            // NOTE: It's impossible to use this to grant Steam achievements without a publisher API key.
+            // See SetUserStatsForGame in Steamworks docs for more info: https://partner.steamgames.com/doc/webapi/isteamuserstats
+
+            return true;
         }
 
         private bool OnIsRegionAvailable(MailboxMessage message)    // 5
@@ -1043,7 +1071,6 @@ namespace MHServerEmu.Games.Network
             var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
             AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
-            Logger.Trace($"NetMessageAbilitySlotToAbilityBar: {GameDatabase.GetFormattedPrototypeName(prototypeRefId)} to {slotNumber}");
 
             // Set
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
@@ -1057,7 +1084,6 @@ namespace MHServerEmu.Games.Network
 
             var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
             AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
-            Logger.Trace($"NetMessageAbilityUnslotFromAbilityBar: from {slotNumber}");
 
             // Remove by assigning invalid id
             abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
@@ -1081,7 +1107,25 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
-        private bool OnRequestDeathRelease(MailboxMessage message)  // 48
+        private bool OnPowerRecentlyUnlocked(MailboxMessage message)  // 51
+        {
+            var powerRecentlyUnlocked = message.As<NetMessagePowerRecentlyUnlocked>();
+            if (powerRecentlyUnlocked == null) return Logger.WarnReturn(false, $"OnPowerRecentlyUnlocked(): Failed to retrieve message");
+
+            // PowerUnlocked is a client-authoritative property, this message is used to keep the server in sync.
+            // It is also flagged as ReplicateForTransfer, so it's supposed to persist until the client logs out.
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(powerRecentlyUnlocked.AvatarEntityId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnPowerRecentlyUnlocked(): avatar == null");
+
+            // Get the power prototype instance to validate that this is a real power prototype
+            PowerPrototype powerProto = ((PrototypeId)powerRecentlyUnlocked.PowerPrototypeId).As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(false, "OnPowerRecentlyUnlocked(): powerProto == null");
+
+            avatar.Properties[PropertyEnum.PowerUnlocked, powerProto.DataRef] = powerRecentlyUnlocked.IsRecentlyUnlocked;
+            return true;
+        }
+
+        private bool OnRequestDeathRelease(MailboxMessage message)  // 52
         {
             var requestDeathRelease = message.As<NetMessageRequestDeathRelease>();
             if (requestDeathRelease == null) return Logger.WarnReturn(false, $"OnRequestDeathRelease(): Failed to retrieve message");

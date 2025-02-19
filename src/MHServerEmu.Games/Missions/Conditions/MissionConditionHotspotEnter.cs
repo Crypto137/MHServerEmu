@@ -3,6 +3,7 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
@@ -35,16 +36,23 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
             else
             {
-                foreach (var player in Mission.GetParticipants())
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
                 {
-                    var avatar = player.CurrentAvatar;
-                    if (avatar != null)
-                        if (Mission.FilterHotspots(avatar, PrototypeId.Invalid, _proto.EntityFilter))
+                    foreach (var player in participants)
+                    {
+                        var avatar = player.CurrentAvatar;
+                        if (avatar != null)
                         {
-                            entered = true;
-                            break;
+                            if (Mission.FilterHotspots(avatar, PrototypeId.Invalid, _proto.EntityFilter))
+                            {
+                                entered = true;
+                                break;
+                            }
                         }
+                    }
                 }
+                ListPool<Player>.Instance.Return(participants);
             }
 
             SetCompletion(entered);

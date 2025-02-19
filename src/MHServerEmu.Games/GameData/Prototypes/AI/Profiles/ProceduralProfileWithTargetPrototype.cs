@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
-            float flankTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime];
+            long flankTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime];
             if (proceduralAI.GetState(0) == Flank.Instance || currentTime > flankTime)
                 HandleMovementContext(proceduralAI, ownerController, locomotor, proceduralFlankContext.FlankContext, checkPower, out contextResult, proceduralFlankContext);
 
@@ -214,7 +214,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (proceduralFleeContext == null) return StaticBehaviorReturnType.None;
 
             StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
-            float fleeTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFleeTime];
+            long fleeTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFleeTime];
             if (proceduralAI.GetState(0) == Flee.Instance || currentTime > fleeTime)
                 contextResult = HandleContext(proceduralAI, ownerController, proceduralFleeContext.FleeContext, proceduralFleeContext);
 

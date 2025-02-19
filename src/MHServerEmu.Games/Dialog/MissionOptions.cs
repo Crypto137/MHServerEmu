@@ -1,8 +1,9 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Missions;
 
 namespace MHServerEmu.Games.Dialog
@@ -34,9 +35,9 @@ namespace MHServerEmu.Games.Dialog
         public MissionStateFlags MissionState { get; private set; }
         public sbyte ObjectiveIndex { get; private set; }
         public MissionObjectiveStateFlags ObjectiveState { get; private set; }
-        public SortedSet<PrototypeId> InterestRegions { get; private set; }
-        public SortedSet<PrototypeId> InterestAreas { get; private set; }
-        public SortedSet<PrototypeId> InterestCells { get; private set; }
+        public HashSet<PrototypeId> InterestRegions { get; private set; }
+        public HashSet<PrototypeId> InterestAreas { get; private set; }
+        public HashSet<PrototypeId> InterestCells { get; private set; }
         public bool HasObjective => ObjectiveIndex != -1;
 
         public BaseMissionOption()
@@ -308,8 +309,7 @@ namespace MHServerEmu.Games.Dialog
 
     public class MissionConditionMissionCompleteOption : BaseMissionConditionOption
     {
-        private readonly SortedSet<PrototypeId> _missionRefs = new();
-        public SortedSet<PrototypeId> CompleteMissionRefs { get => _missionRefs; }
+        public SortedVector<PrototypeId> CompleteMissionRefs { get; } = new();
 
         public override void InitializeForMission(MissionPrototype missionProto, MissionStateFlags state, sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, MissionOptionTypeFlags optionType)
         {
@@ -318,7 +318,7 @@ namespace MHServerEmu.Games.Dialog
 
             PrototypeId missionCompleteRef = missionComplete.MissionPrototype;
             if (missionCompleteRef != PrototypeId.Invalid)
-                _missionRefs.Add(missionCompleteRef);
+                CompleteMissionRefs.Add(missionCompleteRef);
 
             if (missionComplete.MissionKeyword != PrototypeId.Invalid)
             {
@@ -326,14 +326,9 @@ namespace MHServerEmu.Games.Dialog
                 {
                     MissionPrototype mission = missionRef.As<MissionPrototype>();
                     if (mission != null && mission.Keywords.HasValue() && mission.Keywords.Contains(missionComplete.MissionKeyword))
-                        _missionRefs.Add(missionRef);
+                        CompleteMissionRefs.Add(missionRef);
                 }
             }
-        }
-
-        public SortedSet<PrototypeId> GetCompleteMissionRefs()
-        {
-            return _missionRefs;
         }
 
         public override EntityTrackingFlag InterestedInEntity(EntityTrackingContextMap map, WorldEntity entity, HashSet<InteractionOption> checkList)
@@ -346,8 +341,7 @@ namespace MHServerEmu.Games.Dialog
                 checkList.Add(this);
 
             var manager = GameDatabase.InteractionManager;
-            var completeMissions = GetCompleteMissionRefs();
-            foreach (var completeMissionRef in completeMissions)
+            foreach (var completeMissionRef in CompleteMissionRefs)
             {
                 var missionData = manager.GetMissionData(completeMissionRef);
                 if (missionData != null)

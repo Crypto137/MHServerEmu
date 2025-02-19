@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities
 {
     public class ConditionCollection : ISerialize
     {
-        public const int MaxConditions = 256;
+        public const int MaxConditions = 255;
         public const ulong InvalidConditionId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -56,25 +56,46 @@ namespace MHServerEmu.Games.Entities
             {
                 if (archive.IsPacking)
                 {
-                    if (_currentConditions.Count >= MaxConditions)
-                        return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions");
+                    // When the number of serialized conditions is >= 256, the client aborts deserialization without
+                    // skipping, which can make it crash when trying to read the data ahead. This number is hardcoded,
+                    // and it affects only archive serialization, protobuf messages can exceed this cap without issues.
+
+                    // Our options are as follows:
+                    // 1. Do nothing and allow clients to crash - crashing is bad.
+                    // 2. Cap the number of conditions server-side to 255 - may lead to unexpected behavior.
+                    // 3. Patch the client check - will require everyone to modify their clients.
+                    // 4. Do not send any conditions when the cap is exceeded - severe desync.
+                    // 5. Cap the number of serialized conditions to 255 - less desync than option 3.
+                    // All of these options are not ideal, but 5 seems to be the least intrusive.
 
                     uint numConditions = (uint)_currentConditions.Count;
+                    if (numConditions > MaxConditions)
+                    {
+                        Logger.Warn($"Serialize(): Attempting to serialize a ConditionCollection that contains > {MaxConditions} conditions, some conditions will not be included!\nNumConditions={numConditions}\nOwner=[{_owner}]");
+                        numConditions = MaxConditions;
+                    }
+
                     success &= Serializer.Transfer(archive, ref numConditions);
 
                     foreach (Condition condition in _currentConditions.Values)
+                    {
                         success &= condition.Serialize(archive, _owner);
+
+                        if (--numConditions == 0)
+                            break;
+                    }
                 }
                 else
                 {
+                    // Deserialization implementation mimics the client for reference.
                     if (_currentConditions.Count != 0)
                         return Logger.ErrorReturn(false, $"Serialize(): _currrentConditionDict is not empty");
 
                     uint numConditions = 0;
                     success &= Serializer.Transfer(archive, ref numConditions);
 
-                    if (numConditions >= MaxConditions)
-                        return Logger.ErrorReturn(false, $"Serialize(): numConditions >= MaxConditions");
+                    if (numConditions > MaxConditions)
+                        return Logger.ErrorReturn(false, $"Serialize(): numConditions > MaxConditions");
 
                     for (uint i = 0; i < numConditions; i++)
                     {
@@ -1167,8 +1188,10 @@ namespace MHServerEmu.Games.Entities
             if (tickerId == PropertyTicker.InvalidId)
                 return;
 
-            _owner.StopPropertyTicker(tickerId);
+            // Ticker id needs to be cleared before actually stopping the ticker because
+            // stopping the ticker can kill the target, which may call StopTicker() again.
             condition.PropertyTickerId = PropertyTicker.InvalidId;
+            _owner.StopPropertyTicker(tickerId);
         }
 
         private void UpdateTicker(Condition condition)

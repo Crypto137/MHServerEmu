@@ -37,8 +37,10 @@ namespace MHServerEmu.Games.Properties
 
         public bool StopTicker(ulong tickerId)
         {
+            // In some cases (e.g. reapplying Infinity/Omega tickers after reentering the world)
+            // a ticker may no longer exist, and this is valid behavior, so stay silent.
             if (_tickerDict.Remove(tickerId, out PropertyTicker ticker) == false)
-                return Logger.WarnReturn(false, $"StopTicker(): TickerId {tickerId} not found");
+                return true;
 
             ticker.Stop(true);
             DeleteTicker(ticker);

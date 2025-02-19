@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData;
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Entities
     public class EntityTrackingData
     {
         public Dictionary<ulong, EntityTrackingFlag> Entities;
-        public SortedSet<ulong> Hotspots;
+        public SortedVector<ulong> Hotspots;
 
         public EntityTrackingData()
         {
@@ -110,7 +111,7 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public SortedSet<ulong> HotspotsForContext(PrototypeId contextRef)
+        public SortedVector<ulong> HotspotsForContext(PrototypeId contextRef)
         {
             if ( _contextTrackingDataMap.TryGetValue(contextRef, out var data))
                 return data.Hotspots;

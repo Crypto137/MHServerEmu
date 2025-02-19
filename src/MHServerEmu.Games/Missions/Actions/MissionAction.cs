@@ -35,14 +35,14 @@ namespace MHServerEmu.Games.Missions.Actions
             return actionProto.AllocateAction(owner);
         }
 
-        public IEnumerable<Player> GetDistributors(DistributionType distributionType)
+        public bool GetDistributors(DistributionType distributionType, List<Player> players)
         {
             return distributionType switch
             {
-                DistributionType.Participants => Mission.GetParticipants(),
-                DistributionType.Contributors => Mission.GetContributors(),
-                DistributionType.AllInOpenMissionRegion => Mission.GetRegionPlayers(),
-                _ => Enumerable.Empty<Player>(),
+                DistributionType.Participants => Mission.GetParticipants(players),
+                DistributionType.Contributors => Mission.GetContributors(players),
+                DistributionType.AllInOpenMissionRegion => Mission.GetRegionPlayers(players),
+                _ => false,
             };
         }
 

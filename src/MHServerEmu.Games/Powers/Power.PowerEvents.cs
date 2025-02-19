@@ -647,7 +647,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (triggeredPowerEvent.Keywords.HasValue())
-                outputList.AddRange(powerCollection.GetPowersMatchingAnyKeyword(triggeredPowerEvent.Keywords));
+                powerCollection.GetPowersMatchingAnyKeyword(outputList, triggeredPowerEvent.Keywords);
 
             return outputList.Count > 0;
         }

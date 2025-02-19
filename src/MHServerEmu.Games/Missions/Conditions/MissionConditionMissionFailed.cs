@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -108,9 +109,9 @@ namespace MHServerEmu.Games.Missions.Conditions
                 var mission = regionManager.FindMissionByDataRef(missionRef);
                 if (mission == null || mission.IsOpenMission == false) return;
 
-                bool isPartipant = false;
+                bool isParticipant = false;
                 bool isContributor = false;
-                List<Entity> participants = new();
+                List<Player> participants = ListPool<Player>.Instance.Get();
                 mission.GetParticipants(participants);
 
                 var party = player.Party;
@@ -118,18 +119,20 @@ namespace MHServerEmu.Games.Missions.Conditions
                 {
                     foreach (Player member in party.GetMembers())
                     {
-                        isPartipant |= participants.Contains(member);
+                        isParticipant |= participants.Contains(member);
                         isContributor |= mission.GetContribution(member) > 0.0f;
                     }
                 }
                 else
                 {
-                    isPartipant = participants.Contains(player);
+                    isParticipant = participants.Contains(player);
                     isContributor = mission.GetContribution(player) > 0.0f;
                 }
 
-                if (EvaluatePlayer(player, missionRef, isPartipant, isContributor))
+                if (EvaluatePlayer(player, missionRef, isParticipant, isContributor))
                     UpdatePlayerContribution(player);
+
+                ListPool<Player>.Instance.Return(participants);
             }
 
             Count++;
