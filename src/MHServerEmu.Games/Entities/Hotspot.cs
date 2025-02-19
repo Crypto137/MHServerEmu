@@ -176,7 +176,8 @@ namespace MHServerEmu.Games.Entities
 
             foreach (var powerRef in powers)
             {
-                if (powerRef == PrototypeId.Invalid || powerCollection.ContainsPower(powerRef)) continue;
+                var powerProto = powerRef.As<PowerPrototype>();
+                if (powerProto == null || powerCollection.ContainsPower(powerRef)) continue;
                 powerCollection.AssignPower(powerRef, indexProps);
             }
         }
@@ -623,15 +624,32 @@ namespace MHServerEmu.Games.Entities
                 CancelPowerEvents();
         }
 
+        public override void OnPowerEnded(Power power, EndPowerFlags flags)
+        {
+            var powerRef = power.PrototypeDataRef;
+            if (powerRef == PrototypeId.Invalid) return;
+            var hotspotProto = HotspotPrototype;
+
+            if (flags.HasFlag(EndPowerFlags.ExitWorld) && hotspotProto.AppliesPowers.HasValue() && _overlapPowerTargets != null)
+            {
+                int index = Array.IndexOf(hotspotProto.AppliesPowers, powerRef);
+                if (index == -1 || index >= 32) return;
+
+                foreach (var powerTarget in _overlapPowerTargets.Values)
+                    if (powerTarget.ActivePowers[index])
+                        ClearActiveTargetPowers(powerTarget, index);
+            }
+        }
+
         private void EndPowerForActivePowers(WorldEntity target, in PowerTargetMap powerTarget)
         {
             var hotspotProto = HotspotPrototype;
             for (var i = 0; i < hotspotProto.AppliesPowers.Length; i++)
                 if (powerTarget.ActivePowers[i])
                 {
-                    var powerRef = hotspotProto.AppliesPowers[i];
-                    if (powerRef != PrototypeId.Invalid)
-                        EndPowerForActiveTarget(powerRef, target.Id, powerTarget, i);
+                    var powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
+                    if (powerProto != null) 
+                        EndPowerForActiveTarget(powerProto.DataRef, target.Id, powerTarget, i);
                 }
         }
 
