@@ -1771,7 +1771,7 @@ namespace MHServerEmu.Games.Powers
                     unpausedConditionList.Add(trackedCondition);
 
                 // RemoveOrUnpauseCondition can potentially change _trackedConditionList, so we need to restart iteration
-                i = 0;
+                i = -1;
             }
 
             // Readd conditions that were unpaused
