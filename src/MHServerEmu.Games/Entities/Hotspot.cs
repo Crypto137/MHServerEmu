@@ -631,18 +631,19 @@ namespace MHServerEmu.Games.Entities
                 {
                     var powerRef = hotspotProto.AppliesPowers[i];
                     if (powerRef != PrototypeId.Invalid)
-                        EndPowerForActiveTarget(powerRef, target, powerTarget, i);
+                        EndPowerForActiveTarget(powerRef, target.Id, powerTarget, i);
                 }
         }
 
-        private void EndPowerForActiveTarget(PrototypeId powerRef, WorldEntity target, in PowerTargetMap powerTarget, int index)
+        private void EndPowerForActiveTarget(PrototypeId powerRef, ulong targetId, in PowerTargetMap powerTarget, int index)
         {
             ClearActiveTargetPowers(powerTarget, index);
             var power = GetPower(powerRef);
             if (power == null) return;
 
-            //power.CancelSelectEvents(targetId);
-            //if (power.Prototype.CancelConditionsOnEnd)               
+            power.CancelScheduledPowerApplicationsForTarget(targetId);
+            if (power.Prototype.CancelConditionsOnEnd)
+                power.RemoveOrUnpauseTrackedConditionsForTarget(targetId);
         }
 
         private void ClearActiveTargetPowers(PowerTargetMap powerTarget, int index)
@@ -880,7 +881,7 @@ namespace MHServerEmu.Games.Entities
                 }
                 else if (powerTarget.ActivePowers[i] && isValidTarget == false)
                 { 
-                    EndPowerForActiveTarget(powerProto.DataRef, target, powerTarget, i);
+                    EndPowerForActiveTarget(powerProto.DataRef, target.Id, powerTarget, i);
                 }                
             }
 
