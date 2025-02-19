@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 
 namespace MHServerEmu.Games.Events
@@ -142,6 +143,25 @@ namespace MHServerEmu.Games.Events
         {
             while (eventGroup.IsEmpty == false)
                 CancelEvent(eventGroup.Front);
+        }
+
+        /// <summary>
+        /// Cancels all <see cref="ScheduledEvent"/> instances belonging to the provided <see cref="EventGroup"/> that pass the provided filter.
+        /// </summary>
+        public void CancelEventsFiltered<T>(EventGroup eventGroup, in T filter) where T: struct, IScheduledEventFilter
+        {
+            List<ScheduledEvent> filteredList = ListPool<ScheduledEvent>.Instance.Get();
+
+            foreach (ScheduledEvent @event in eventGroup)
+            {
+                if (filter.Filter(@event))
+                    filteredList.Add(@event);
+            }
+
+            foreach (ScheduledEvent @event in filteredList)
+                CancelEvent(@event);
+
+            ListPool<ScheduledEvent>.Instance.Return(filteredList);
         }
 
         /// <summary>
