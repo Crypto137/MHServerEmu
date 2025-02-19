@@ -81,6 +81,7 @@ namespace MHServerEmu.Games.Entities
 
         private readonly EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
         private readonly EventPointer<ScheduledKillEvent> _scheduledKillEvent = new();
+        private readonly EventPointer<NegateHotspotsEvent> _negateHotspotsEvent = new();
 
         private AlliancePrototype _allianceProto;
         private Transform3 _transform = Transform3.Identity();
@@ -3253,6 +3254,11 @@ namespace MHServerEmu.Games.Entities
                     }
                     break;
 
+                case PropertyEnum.NegateHotspots:
+
+                    ScheduleNegateHotspots(newValue);
+                    break;
+
                 case PropertyEnum.NoEntityCollide:
                     SetFlag(EntityFlags.NoCollide, newValue);
                     bool canInfluence = CanInfluenceNavigationMesh();
@@ -3414,7 +3420,62 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
+        public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        {
+            if (whom is not Hotspot hotspot) return;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.NegateHotspots))
+            {
+                Property.FromParam(kvp.Key, 0, out int type);
+                var allianceType = (HotspotNegateByAllianceType)type;
+                if (allianceType == HotspotNegateByAllianceType.None) continue;
+
+                Property.FromParam(kvp.Key, 1, out PrototypeId keywordRef);
+                if (keywordRef == PrototypeId.Invalid) continue;
+
+                Property.FromParam(kvp.Key, 2, out int users);
+
+                hotspot.OnHotspotNegated(this, allianceType, keywordRef, users);
+            }
+        }
+
+        private void OnNegateHotspots()
+        {
+            var manager = Game?.EntityManager;
+            if (manager == null) return;
+
+            List<ulong> overlappingEntities = ListPool<ulong>.Instance.Get();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.NegateHotspots))
+            {
+                Property.FromParam(kvp.Key, 0, out int type);
+                var allianceType = (HotspotNegateByAllianceType)type;
+                if (allianceType == HotspotNegateByAllianceType.None) continue;
+
+                Property.FromParam(kvp.Key, 1, out PrototypeId keywordRef);
+                if (keywordRef == PrototypeId.Invalid) continue;
+
+                Property.FromParam(kvp.Key, 2, out int users);
+
+                overlappingEntities.Clear();
+                if (Physics.GetOverlappingEntities(overlappingEntities))
+                    foreach (ulong entityId in overlappingEntities)
+                    {
+                        var hotspot = manager.GetEntity<Hotspot>(entityId);
+                        if (hotspot == null) continue;
+                        hotspot.OnHotspotNegated(this, allianceType, keywordRef, users);
+                    }
+            }
+
+            ListPool<ulong>.Instance.Return(overlappingEntities);
+        }
+
+        private void ScheduleNegateHotspots(bool schedule)
+        {
+            if (schedule == false)
+                Game.GameEventScheduler.CancelEvent(_negateHotspotsEvent);
+            else if (_negateHotspotsEvent.IsValid == false)
+                ScheduleEntityEvent(_negateHotspotsEvent, TimeSpan.Zero);
+        }
+
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
 
@@ -3616,6 +3677,12 @@ namespace MHServerEmu.Games.Entities
         {
             if (prototype == null) return Logger.WarnReturn(AssetId.Invalid, $"GetOriginalWorldAsset(): prototype == null");
             return prototype.UnrealClass;
+        }
+
+        public bool IsInTown()
+        {
+            var region = Region;
+            return region != null && region.Behavior == RegionBehavior.Town;
         }
 
         public virtual bool IsSummonedPet()
@@ -4190,6 +4257,11 @@ namespace MHServerEmu.Games.Entities
                 _param1.Clear();    // Clear to prevent conditions leaking from their pool
                 return true;
             }
+        }
+
+        private class NegateHotspotsEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((WorldEntity)t).OnNegateHotspots();
         }
 
         private class ScheduledTickEvent : CallMethodEventParam1<Entity, PropertyTicker.TickData>
