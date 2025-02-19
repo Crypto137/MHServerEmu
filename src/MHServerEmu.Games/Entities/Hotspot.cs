@@ -15,6 +15,8 @@ using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -672,6 +674,46 @@ namespace MHServerEmu.Games.Entities
                 if (powerTarget.ActivePowers.Empty && _activePowerTargetCount > 0)
                     _activePowerTargetCount--;
             }
+        }
+
+        public override ChangePositionResult ChangeRegionPosition(Vector3? position, Orientation? orientation, ChangePositionFlags flags = ChangePositionFlags.None)
+        {
+            bool isOrientation = orientation.HasValue;
+            if (isOrientation == false) orientation = RegionLocation.Orientation;
+            if (position.HasValue == false) position = RegionLocation.Position;
+
+            float centerOffset = Bounds.GetCenterOffset();
+            if (centerOffset > 0.0f)
+            {
+                var region = Region;
+                if (region == null) return ChangePositionResult.NotChanged;
+
+                var forward = Forward;
+                if (isOrientation)
+                {
+                    if (flags.HasFlag(ChangePositionFlags.EnterWorld) == false)
+                    {
+                        var summonProto = GetSummonEntityContext();
+                        if (summonProto == null) return ChangePositionResult.NotChanged;
+                        if (Segment.IsNearZero(summonProto.SummonOffsetAngle) == false)
+                        {
+                            float angle = MathHelper.ToRadians(summonProto.SummonOffsetAngle);
+                            var newOrientation = orientation.Value;
+                            newOrientation.Yaw += angle;
+                            orientation = newOrientation;
+                        }
+                    }
+
+                    var transform = Transform3.BuildTransform(Vector3.Zero, orientation.Value);
+                    forward = transform.Col0;
+                }
+
+                var offsetPosition = position.Value + forward * centerOffset;                
+                if (region.GetCellAtPosition(offsetPosition) != null)
+                    position = offsetPosition;
+            }
+
+            return base.ChangeRegionPosition(position, orientation, flags);
         }
 
         private void MissionEntityTracker()
