@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -76,8 +77,15 @@ namespace MHServerEmu.Games.Missions.Conditions
         {
             var storyNotification = Prototype.StoryNotification;
             if (storyNotification != null)
-                foreach (var player in Mission.GetParticipants())
-                    player.SendStoryNotification(storyNotification, Mission.PrototypeDataRef);
+            {
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
+                {
+                    foreach (var player in participants)
+                        player.SendStoryNotification(storyNotification, Mission.PrototypeDataRef);
+                }
+                ListPool<Player>.Instance.Return(participants);
+            }
 
             return Owner.OnConditionCompleted();
         }

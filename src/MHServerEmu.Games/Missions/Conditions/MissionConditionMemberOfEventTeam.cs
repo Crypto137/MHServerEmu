@@ -1,3 +1,5 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -26,12 +28,20 @@ namespace MHServerEmu.Games.Missions.Conditions
             var eventProto = GameDatabase.GetPrototype<PublicEventPrototype>(teamProto.PublicEventRef);
 
             bool eventTeam = false;
-            foreach (var player in Mission.GetParticipants())
-                if (eventTeamRef == player.GetPublicEventTeam(eventProto))
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
+            {
+                foreach (var player in participants)
                 {
-                    eventTeam = true;
-                    break;
+                    if (eventTeamRef == player.GetPublicEventTeam(eventProto))
+                    {
+                        eventTeam = true;
+                        break;
+                    }
                 }
+            }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(eventTeam);
             return true;

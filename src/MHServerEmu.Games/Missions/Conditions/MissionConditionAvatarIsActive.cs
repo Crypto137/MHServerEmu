@@ -1,3 +1,5 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -19,15 +21,21 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool isActive = false;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                var avatar = player.CurrentAvatar;
-                if (avatar != null && avatar.PrototypeDataRef == _proto.AvatarPrototype)
+                foreach (var player in participants)
                 {
-                    isActive = true;
-                    break;
+                    var avatar = player.CurrentAvatar;
+                    if (avatar != null && avatar.PrototypeDataRef == _proto.AvatarPrototype)
+                    {
+                        isActive = true;
+                        break;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(isActive);
             return true;

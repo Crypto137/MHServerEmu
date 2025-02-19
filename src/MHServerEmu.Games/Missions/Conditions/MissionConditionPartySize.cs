@@ -1,3 +1,5 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -18,17 +20,22 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public override bool OnReset()
         {
-            foreach (var player in Mission.GetParticipants())
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                int partySize = 1;
-                var party = player.Party;
-                if (party != null) partySize = party.NumMembers;
-                if (partySize >= _proto.MinSize && partySize <= _proto.MaxSize)
+                foreach (var player in participants)
                 {
-                    SetCompleted();
-                    return true;
+                    int partySize = 1;
+                    var party = player.Party;
+                    if (party != null) partySize = party.NumMembers;
+                    if (partySize >= _proto.MinSize && partySize <= _proto.MaxSize)
+                    {
+                        SetCompleted();
+                        return true;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             ResetCompleted();
             return true;

@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -26,16 +27,22 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool entered = false;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                if (_proto.WaitForCinematicFinished && player.IsFullscreenObscured) continue;
-                var region = player.CurrentAvatar?.Region;
-                if (region != null && FilterRegion(region.Prototype))
+                foreach (var player in participants)
                 {
-                    entered = true;
-                    break;
-                }                
+                    if (_proto.WaitForCinematicFinished && player.IsFullscreenObscured) continue;
+                    var region = player.CurrentAvatar?.Region;
+                    if (region != null && FilterRegion(region.Prototype))
+                    {
+                        entered = true;
+                        break;
+                    }
+                }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(entered);
             return true;

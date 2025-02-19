@@ -1,4 +1,6 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -24,9 +26,14 @@ namespace MHServerEmu.Games.Missions.Actions
                 var uiSystemLockProto = GameDatabase.GetPrototype<UISystemLockPrototype>(uiSystemLockRef);
                 if (uiSystemLockProto != null && uiSystemLockProto.UISystem == _proto.UISystem)
                 {
-                    foreach (var player in Mission.GetParticipants())
-                        player.Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
+                    List<Player> participants = ListPool<Player>.Instance.Get();
+                    if (Mission.GetParticipants(participants))
+                    {
+                        foreach (var player in participants)
+                            player.Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
 
+                    }
+                    ListPool<Player>.Instance.Return(participants);
                     return;
                 }
             }

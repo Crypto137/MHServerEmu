@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -41,16 +42,23 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
             else
             {
-                foreach (var player in Mission.GetParticipants())
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
                 {
-                    var avatar = player.CurrentAvatar;
-                    if (avatar != null)
-                        if (EvaluateEntity(avatar))
+                    foreach (var player in participants)
+                    {
+                        var avatar = player.CurrentAvatar;
+                        if (avatar != null)
                         {
-                            healthChanged = true;
-                            break;
+                            if (EvaluateEntity(avatar))
+                            {
+                                healthChanged = true;
+                                break;
+                            }
                         }
+                    }
                 }
+                ListPool<Player>.Instance.Return(participants);
             }               
 
             SetCompletion(healthChanged);
