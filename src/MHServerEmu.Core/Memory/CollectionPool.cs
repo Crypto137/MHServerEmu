@@ -104,9 +104,11 @@ namespace MHServerEmu.Core.Memory
     /// <summary>
     /// Provides a pool of reusable <see cref="List{T}"/> instances, similar to ArrayPool.
     /// </summary>
-    public class ListPool<T> : CollectionPool<List<T>, T>
+    public sealed class ListPool<T> : CollectionPool<List<T>, T>
     {
         public static ListPool<T> Instance { get; } = new();
+
+        private ListPool() { }
 
         /// <summary>
         /// Retrieves a <typeparamref name="TCollection"/> from the pool or allocates a new one if the pool is empty and ensures it has the specified capacity.
@@ -122,16 +124,20 @@ namespace MHServerEmu.Core.Memory
     /// <summary>
     /// Provides a pool of reusable <see cref="Dictionary{TKey, TValue}"/> instances, similar to ArrayPool.
     /// </summary>
-    public class DictionaryPool<TKey, TValue> : CollectionPool<Dictionary<TKey, TValue>, KeyValuePair<TKey, TValue>>
+    public sealed class DictionaryPool<TKey, TValue> : CollectionPool<Dictionary<TKey, TValue>, KeyValuePair<TKey, TValue>>
     {
         public static DictionaryPool<TKey, TValue> Instance { get; } = new();
+
+        private DictionaryPool() { }
     }
 
     /// <summary>
     /// Provides a pool of reusable <see cref="HashSet{T}"/> instances, similar to ArrayPool.
     /// </summary>
-    public class HashSetPool<T> : CollectionPool<HashSet<T>, T>
+    public sealed class HashSetPool<T> : CollectionPool<HashSet<T>, T>
     {
         public static HashSetPool<T> Instance { get; } = new();
+
+        private HashSetPool() { }
     }
 }
