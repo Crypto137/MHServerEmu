@@ -374,7 +374,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return largestTeamSize;
         }
 
-        public static void BuildRegionsFromFilters(SortedSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
+        public static void BuildRegionsFromFilters(HashSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
         {
             if (includeRegions.HasValue())
                 foreach (var regionRef in includeRegions)

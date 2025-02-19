@@ -29,6 +29,9 @@ namespace MHServerEmu.Games.Powers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        [ThreadStatic]
+        public static PowerPayload ReusableTickerPayload;
+
         private ulong _propertySourceEntityId;
         private WorldEntityPrototype _powerOwnerProto;
         private WorldEntityPrototype _ultimatePowerOwnerProto;
@@ -244,6 +247,7 @@ namespace MHServerEmu.Games.Powers
         public void Init(Game game)
         {
             Game = game;
+            Properties.Clear();
         }
 
         /// <summary>
@@ -1269,7 +1273,8 @@ namespace MHServerEmu.Games.Powers
                 userPosition = UltimateOwnerPosition;
             }
 
-            if (userPosition == Vector3.Zero) return Logger.WarnReturn(false, "CalculateResultDamageRangedDistanceBonus(): userPosition == Vector3.Zero");
+            if (userPosition == Vector3.Zero)
+                return Logger.WarnReturn(false, $"CalculateResultDamageRangedDistanceBonus(): No valid user position for powerProto=[{powerProto}], user=[{user}]");
 
             CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceClose, user, userPosition, target);
             CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceFar, user, userPosition, target);

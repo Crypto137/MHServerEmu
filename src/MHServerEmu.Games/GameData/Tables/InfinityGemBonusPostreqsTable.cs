@@ -48,8 +48,9 @@ namespace MHServerEmu.Games.GameData.Tables
             if (infinityGemBonusRef == PrototypeId.Invalid)
                 return Logger.WarnReturn(false, "CanInfinityGemBonusBeRemoved(): infinityGemBonusRef == PrototypeId.Invalid");
 
+            // If there is no postreq list for this bonus, there is nothing to check
             if (_infinityGemBonusPostreqDict.TryGetValue(infinityGemBonusRef, out List<PrototypeId> postreqList) == false)
-                return Logger.WarnReturn(false, $"CanInfinityGemBonusBeRemoved(): infinityGemBonusRef is not valid ref ({GameDatabase.GetPrototypeName(infinityGemBonusRef)})");
+                return true;
 
             // Track all nodes we have already checked in a set
             HashSet<PrototypeId> checkedNodes = new();

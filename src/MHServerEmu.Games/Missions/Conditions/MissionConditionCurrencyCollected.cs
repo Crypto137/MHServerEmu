@@ -1,3 +1,5 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -24,15 +26,21 @@ namespace MHServerEmu.Games.Missions.Conditions
             PropertyId propId = new(PropertyEnum.Currency, _proto.CurrencyType);
 
             bool collected = false;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                int amount = player.Properties[propId];
-                if (amount >= _proto.AmountRequired)
+                foreach (var player in participants)
                 {
-                    collected = true;
-                    break;
+                    int amount = player.Properties[propId];
+                    if (amount >= _proto.AmountRequired)
+                    {
+                        collected = true;
+                        break;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(collected);
             return true;

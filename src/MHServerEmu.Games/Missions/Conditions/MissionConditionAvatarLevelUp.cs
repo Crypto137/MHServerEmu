@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -31,12 +32,19 @@ namespace MHServerEmu.Games.Missions.Conditions
                 if (missionProto == null) return false;
                 bool perAvatar = missionProto.SaveStatePerAvatar;
 
-                foreach (var player in Mission.GetParticipants())
-                    if (TestAvatarLevel(player, _proto, perAvatar))
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
+                {
+                    foreach (var player in participants)
                     {
-                        isLevelUp = true;
-                        break;
+                        if (TestAvatarLevel(player, _proto, perAvatar))
+                        {
+                            isLevelUp = true;
+                            break;
+                        }
                     }
+                }
+                ListPool<Player>.Instance.Return(participants);
             }
 
             SetCompletion(isLevelUp);

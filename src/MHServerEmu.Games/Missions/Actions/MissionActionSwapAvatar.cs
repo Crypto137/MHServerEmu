@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -16,23 +17,28 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            foreach (Player player in Mission.GetParticipants())
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                var avatar = player.CurrentAvatar;
-                if (avatar == null || avatar.AvatarPrototype.DataRef != _proto.AvatarPrototype)
+                foreach (Player player in participants)
                 {
-                    if (avatar != null && player.CurrentHUDTutorial != null)
-                        avatar.TryRestoreThrowable();
-
-                    if (_proto.UseAvatarSwapPowers)
-                        player.BeginSwitchAvatar(_proto.AvatarPrototype);
-                    else
+                    var avatar = player.CurrentAvatar;
+                    if (avatar == null || avatar.AvatarPrototype.DataRef != _proto.AvatarPrototype)
                     {
-                        player.Properties[PropertyEnum.AvatarSwitchPending, _proto.AvatarPrototype] = true;
-                        player.SwitchAvatar();
+                        if (avatar != null && player.CurrentHUDTutorial != null)
+                            avatar.TryRestoreThrowable();
+
+                        if (_proto.UseAvatarSwapPowers)
+                            player.BeginSwitchAvatar(_proto.AvatarPrototype);
+                        else
+                        {
+                            player.Properties[PropertyEnum.AvatarSwitchPending, _proto.AvatarPrototype] = true;
+                            player.SwitchAvatar();
+                        }
                     }
                 }
-            }    
+            }
+            ListPool<Player>.Instance.Return(participants); 
         }
     }
 }

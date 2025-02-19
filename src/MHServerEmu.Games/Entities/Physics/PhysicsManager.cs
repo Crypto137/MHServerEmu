@@ -350,8 +350,8 @@ namespace MHServerEmu.Games.Entities.Physics
                         Vector3? resultNormal = Vector3.ZAxis;
                         if (bounds.Sweep(otherBounds, Vector3.Zero, velocity, ref time, ref resultNormal) == false) continue;
                         Vector3 normal = resultNormal.Value;
-                        velocity *= time;
-                        EntityCollision entityCollision = new (otherEntity, time, location.Position + velocity, normal);
+                        Vector3 collisionPosition = location.Position + velocity * time;
+                        EntityCollision entityCollision = new (otherEntity, time, collisionPosition, normal);
                         entityCollisionList.Add(entityCollision);
 
                         if (entity.CanBeBlockedBy(otherEntity))

@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Missions.Actions
             }
             else
             {
-                var player = Mission.GetParticipants().First();
+                var player = Mission.GetFirstParticipant();
                 if (player == null) return;
                 var avatar = player.CurrentAvatar;
                 if (avatar == null) return;

@@ -14,5 +14,11 @@ namespace MHServerEmu.Core.Extensions
             string address = endpoint.Address.ToString();
             return $"{address.Substring(0, address.Length / 2)}****:{endpoint.Port}";
         }
+
+        public static void Set<T>(this List<T> list, List<T> other)
+        {
+            list.Clear();
+            list.AddRange(other);
+        }
     }
 }

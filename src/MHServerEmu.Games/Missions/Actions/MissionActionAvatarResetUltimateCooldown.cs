@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -16,15 +17,20 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            foreach (Player player in GetDistributors(_proto.ApplyTo))
+            List<Player> players = ListPool<Player>.Instance.Get();
+            if (GetDistributors(_proto.ApplyTo, players))
             {
-                var avatar = player.CurrentAvatar;
-                if (avatar == null) continue;
-                PrototypeId ultimateRef = avatar.UltimatePowerRef;
-                if (ultimateRef == PrototypeId.Invalid) continue;
-                avatar.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, ultimateRef));
-                avatar.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTimePersistent, ultimateRef));
+                foreach (Player player in players)
+                {
+                    var avatar = player.CurrentAvatar;
+                    if (avatar == null) continue;
+                    PrototypeId ultimateRef = avatar.UltimatePowerRef;
+                    if (ultimateRef == PrototypeId.Invalid) continue;
+                    avatar.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, ultimateRef));
+                    avatar.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTimePersistent, ultimateRef));
+                }
             }
+            ListPool<Player>.Instance.Return(players);
         }
     }
 }

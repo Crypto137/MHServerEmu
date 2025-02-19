@@ -2171,8 +2171,9 @@ namespace MHServerEmu.Games.Entities
 
             if (payload == null)
             {
-                // If we couldn't find a payload, create a temporary one (TODO: make payloads poolable and get one from the pool)
-                payload = new();
+                // If we couldn't find a power payload, use a dummy one
+                PowerPayload.ReusableTickerPayload ??= new();
+                payload = PowerPayload.ReusableTickerPayload;
                 payload.Init(Game);
             }
             else
@@ -2789,8 +2790,7 @@ namespace MHServerEmu.Games.Entities
                     foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
                     {
                         // Unassign power if it's already there
-                        if (PowerCollection != null && HasPowerInPowerCollection(powerProtoRef))
-                            UnassignPower(powerProtoRef);
+                        UnassignPower(powerProtoRef);
 
                         if (AssignPower(powerProtoRef, indexProps) == null)
                             Logger.Warn($"ModChangeModEffects(): Failed to assign passive power {powerProtoRef.GetName()} for mod {modProto}");
@@ -2798,11 +2798,11 @@ namespace MHServerEmu.Games.Entities
                 }
                 else
                 {
+                    // Infinity is a piece of crap codewise, and ranks in different nodes can assign/unassign the same synergy passive,
+                    // so we can't verify removal here, because full respec can unassign the same synergy passive multiple times.
+                    // Also removing all points from one of the nodes can remove the passive that is also granted by other nodes.
                     foreach (PrototypeId powerProtoRef in modProto.PassivePowers)
-                    {
-                        if (UnassignPower(powerProtoRef) == false)
-                            Logger.Warn($"ModChangeModEffects(): Failed to unassign passive power {powerProtoRef.GetName()} for mod {modProto}");
-                    }
+                        UnassignPower(powerProtoRef);
                 }
             }
 

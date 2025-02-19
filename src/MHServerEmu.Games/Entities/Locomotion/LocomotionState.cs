@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -91,10 +92,7 @@ namespace MHServerEmu.Games.Entities.Locomotion
 
             // NOTE: Is it okay to add path nodes here by reference? Do we need a copy?
             // Review this if/when we change NaviPathNode to struct.
-            //PathNodes = new(other.PathNodes);
-            PathNodes.Clear();
-            foreach (NaviPathNode pathNode in other.PathNodes)
-                PathNodes.Add(pathNode);
+            PathNodes.Set(other.PathNodes);
         }
 
         public void ResetForPool()

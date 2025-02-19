@@ -1,3 +1,5 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -19,15 +21,21 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool areaEnter = false;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                var area = player.CurrentAvatar?.Area;
-                if (area != null && area.PrototypeDataRef == _proto.AreaPrototype)
+                foreach (var player in participants)
                 {
-                    areaEnter = true;
-                    break;
+                    var area = player.CurrentAvatar?.Area;
+                    if (area != null && area.PrototypeDataRef == _proto.AreaPrototype)
+                    {
+                        areaEnter = true;
+                        break;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(areaEnter);
             return true;
