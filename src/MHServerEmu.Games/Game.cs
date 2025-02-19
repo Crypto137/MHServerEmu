@@ -6,6 +6,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Random;
@@ -278,6 +279,8 @@ namespace MHServerEmu.Games
         {
             Current = this;
             _gameTimer.Start();
+
+            CollectionPoolSettings.UseThreadLocalStorage = true;
 
             try
             {

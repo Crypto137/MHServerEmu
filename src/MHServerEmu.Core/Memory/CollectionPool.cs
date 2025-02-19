@@ -3,29 +3,43 @@
 namespace MHServerEmu.Core.Memory
 {
     /// <summary>
+    /// Contains settings for <see cref="CollectionPool{TCollection, TValue}"/> instances.
+    /// </summary>
+    public static class CollectionPoolSettings
+    {
+        // NOTE: We use a separate class to have shared settings for various CollectionPool types.
+
+        // For game threads we want to have dedicated pools, in other cases we'll use shared pools with locks
+        [ThreadStatic]
+        public static bool UseThreadLocalStorage;
+    }
+
+    /// <summary>
     /// Provides a pool of reusable <typeparamref name="TCollection"/> instances, similar to ArrayPool.
     /// </summary>
     public abstract class CollectionPool<TCollection, TValue> where TCollection: ICollection<TValue>, new()
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Stack<TCollection> _collectionStack = new();
-        private int _totalCount = 0;
+        [ThreadStatic]
+        private static Node _threadStaticNode;
+
+        private readonly Node _sharedNode = new(false);
 
         /// <summary>
         /// Retrieves a <typeparamref name="TCollection"/> from the pool or allocates a new one if the pool is empty.
         /// </summary>
         public TCollection Get()
         {
-            lock (_collectionStack)
+            if (CollectionPoolSettings.UseThreadLocalStorage)
             {
-                if (_collectionStack.Count == 0)
-                {
-                    Logger.Trace($"Get(): Created a new instance of {typeof(TCollection).Name}<{typeof(TValue).Name}> (TotalCount={++_totalCount})");
-                    return new();
-                }
-
-                return _collectionStack.Pop();
+                _threadStaticNode ??= new(true);
+                return _threadStaticNode.Get();
+            }
+            else
+            {
+                lock (_sharedNode)
+                    return _sharedNode.Get();
             }
         }
 
@@ -34,10 +48,54 @@ namespace MHServerEmu.Core.Memory
         /// </summary>
         public void Return(TCollection collection)
         {
-            collection.Clear();
-
-            lock (_collectionStack)
+            if (CollectionPoolSettings.UseThreadLocalStorage)
             {
+                // Thread-static node should have already been allocated in Get()
+                _threadStaticNode.Return(collection);
+            }
+            else
+            {
+                lock (_sharedNode)
+                    _sharedNode.Return(collection);
+            }
+        }
+
+        /// <summary>
+        /// Represents a storage unit of a pool or a particular type.
+        /// </summary>
+        private class Node
+        {
+            private readonly Stack<TCollection> _collectionStack = new();
+            private readonly int _threadId = -1;
+
+            private int _totalCount = 0;
+
+            public Node(bool isThreadLocal)
+            {
+                if (isThreadLocal)
+                    _threadId = Environment.CurrentManagedThreadId;
+            }
+
+            /// <summary>
+            /// Retrieves a <typeparamref name="TCollection"/> from the node or allocates a new one if the node is empty.
+            /// </summary>
+            public TCollection Get()
+            {
+                if (_collectionStack.Count == 0)
+                {
+                    Logger.Trace($"Get(): Created a new instance of {typeof(TCollection).Name}<{typeof(TValue).Name}> (ThreadId={_threadId}, TotalCount={++_totalCount})");
+                    return new();
+                }
+
+                return _collectionStack.Pop();
+            }
+
+            /// <summary>
+            /// Clears the provided <typeparamref name="TCollection"/> and returns it to the node.
+            /// </summary>
+            public void Return(TCollection collection)
+            {
+                collection.Clear();
                 _collectionStack.Push(collection);
             }
         }
