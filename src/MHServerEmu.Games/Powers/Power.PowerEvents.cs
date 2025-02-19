@@ -164,24 +164,46 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnMissileKilled, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotNegated()           // 15
+        public void HandleTriggerPowerEventOnHotspotNegated(Hotspot hotspot)           // 15
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = hotspot.Id;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.TargetPosition = hotspot.RegionLocation.Position;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotNegated, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotNegatedByOther()    // 16
+        public void HandleTriggerPowerEventOnHotspotNegatedByOther(Hotspot hotspot)    // 16
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = hotspot.Id;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.TargetPosition = hotspot.RegionLocation.Position;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotNegatedByOther, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotOverlapBegin()      // 17
+        public void HandleTriggerPowerEventOnHotspotOverlapBegin(ulong targetId)      // 17
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = targetId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotOverlapBegin, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotOverlapEnd()        // 18
+        public void HandleTriggerPowerEventOnHotspotOverlapEnd(ulong targetId)        // 18
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = targetId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotOverlapEnd, ref settings);
         }
 
         public void HandleTriggerPowerEventOnRemoveCondition(PowerResults powerResults, int numRemoved) // 19
