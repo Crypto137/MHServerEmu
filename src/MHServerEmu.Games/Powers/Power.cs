@@ -1769,6 +1769,7 @@ namespace MHServerEmu.Games.Powers
                 if (trackedCondition.EntityId != targetId)
                     continue;
 
+                _trackedConditionList.RemoveAt(i);
                 if (conditionCollection.RemoveOrUnpauseCondition(trackedCondition.ConditionId) == false)
                     unpausedConditionList.Add(trackedCondition);
 
