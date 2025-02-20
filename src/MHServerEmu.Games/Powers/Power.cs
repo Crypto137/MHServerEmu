@@ -773,6 +773,9 @@ namespace MHServerEmu.Games.Powers
 
         public virtual bool ApplyPower(PowerApplication powerApplication)
         {
+            if (Owner.IsInWorld == false)
+                return Logger.WarnReturn(false, $"ApplyPower(): Power is applying when its owner is not in the world.\n{this}");
+
             //Logger.Trace($"ApplyPower(): {Prototype}");
 
             PowerPrototype powerProto = Prototype;

@@ -96,6 +96,7 @@ namespace MHServerEmu.Games.Powers
             WorldEntity ultimateOwner = power.GetUltimateOwner();
             if (ultimateOwner != null)
             {
+                // GetUltimateOwner() returns the regular owner if there is no ultimate owner
                 UltimateOwnerId = ultimateOwner.Id;
                 IsPlayerPayload = ultimateOwner.CanBePlayerOwned();
 
@@ -104,11 +105,6 @@ namespace MHServerEmu.Games.Powers
                     _ultimatePowerOwnerProto = ultimateOwner.WorldEntityPrototype;
                     UltimateOwnerPosition = ultimateOwner.RegionLocation.Position;
                 }
-            }
-            else
-            {
-                UltimateOwnerId = powerOwner.Id;
-                IsPlayerPayload = powerOwner.CanBePlayerOwned();
             }
 
             // Record that current position of the target (which may be different from the target position of this power)
