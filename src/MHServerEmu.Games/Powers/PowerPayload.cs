@@ -96,20 +96,15 @@ namespace MHServerEmu.Games.Powers
             WorldEntity ultimateOwner = power.GetUltimateOwner();
             if (ultimateOwner != null)
             {
+                // - If there is no user override, the owner itself is the ultimate owner.
+                // - If there is a user override and the ultimate owner is available, we get the ultimate owner here.
+                // - If there is a user override and the ultimate owner is destroyed or not in world, we get null and this part is skipped.
                 UltimateOwnerId = ultimateOwner.Id;
-                IsPlayerPayload = ultimateOwner.CanBePlayerOwned();
+                UltimateOwnerPosition = ultimateOwner.RegionLocation.Position;
+                _ultimatePowerOwnerProto = ultimateOwner.WorldEntityPrototype;
+            }
 
-                if (ultimateOwner.IsInWorld)
-                {
-                    _ultimatePowerOwnerProto = ultimateOwner.WorldEntityPrototype;
-                    UltimateOwnerPosition = ultimateOwner.RegionLocation.Position;
-                }
-            }
-            else
-            {
-                UltimateOwnerId = powerOwner.Id;
-                IsPlayerPayload = powerOwner.CanBePlayerOwned();
-            }
+            IsPlayerPayload = ultimateOwner != null ? ultimateOwner.CanBePlayerOwned() : powerOwner.CanBePlayerOwned();
 
             // Record that current position of the target (which may be different from the target position of this power)
             WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(TargetId);
