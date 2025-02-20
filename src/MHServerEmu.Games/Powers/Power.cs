@@ -33,6 +33,7 @@ namespace MHServerEmu.Games.Powers
         private const float PowerPositionSweepPadding = Locomotor.MovementSweepPadding;
         private const float PowerPositionSweepPaddingSquared = PowerPositionSweepPadding * PowerPositionSweepPadding;
 
+        private static readonly TimeSpan CheckIfTargetIsKilledInterval = TimeSpan.FromMilliseconds(250);
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private bool _isTeamUpPassivePowerWhileAway;
@@ -59,8 +60,9 @@ namespace MHServerEmu.Games.Powers
         private readonly EventPointer<EndCooldownEvent> _endCooldownEvent = new();
         private readonly EventPointer<PowerSubsequentActivationTimeoutEvent> _subsequentActivationTimeoutEvent = new();
         private readonly EventPointer<EndPowerEvent> _endPowerEvent = new();
-        private readonly EventPointer<ReapplyIndexPropertiesEvent> _reapplyIndexPropertiesEvent = new();
         private readonly EventPointer<PayRecurringCostEvent> _payRecurringCostEvent = new();
+        private readonly EventPointer<ReapplyIndexPropertiesEvent> _reapplyIndexPropertiesEvent = new();
+        private readonly EventPointer<CancelIfTargetIsKilledEvent> _cancelIfTargetIsKilledEvent = new();
 
         private List<EventPointer<ScheduledActivateEvent>> _scheduledActivateEventList;     // Initialized on demand
 
@@ -847,7 +849,17 @@ namespace MHServerEmu.Games.Powers
             {
                 if (IsChannelingPower() && NeedsTarget() && IsCancelledOnTargetKilled())
                 {
-                    // TODO: cancel targeted channel powers
+                    if (powerApplication.TargetEntityId == Entity.InvalidId) return Logger.WarnReturn(false, "FinishApplyPower(): powerApplication.TargetEntityId == Entity.InvalidId");
+
+                    EventScheduler scheduler = Game.GameEventScheduler;
+                    if (_cancelIfTargetIsKilledEvent.IsValid)
+                    {
+                        Logger.Warn("FinishApplyPower(): _cancelIfTargetIsKilledEvent.IsValid");
+                        scheduler.CancelEvent(_cancelIfTargetIsKilledEvent);
+                    }
+
+                    scheduler.ScheduleEvent(_cancelIfTargetIsKilledEvent, CheckIfTargetIsKilledInterval, _pendingEvents);
+                    _cancelIfTargetIsKilledEvent.Get().Initialize(this, powerApplication.TargetEntityId);
                 }
 
                 if (IsProcEffect() == false && IsComboEffect() == false)
@@ -1180,6 +1192,23 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
+        private void CancelIfTargetIsKilled(ulong targetId)
+        {
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+            if (target == null || target.IsDead)
+            {
+                // End the power if the target is lost
+                EndPower(EndPowerFlags.ExplicitCancel);
+            }
+            else
+            {
+                // Schedule another check
+                Game.GameEventScheduler.ScheduleEvent(_cancelIfTargetIsKilledEvent, CheckIfTargetIsKilledInterval, _pendingEvents);
+                _cancelIfTargetIsKilledEvent.Get().Initialize(this, targetId);
+            }
+        }
+
         #region Delayed / Variable Time Activation
 
         public void ReleaseVariableActivation(ref PowerActivationSettings settings)
@@ -1349,7 +1378,6 @@ namespace MHServerEmu.Games.Powers
                 _stopChannelingEvent.Get().Initialize(this);
             }
 
-            OnEndChannelingPhase();
             return true;
         }
 
@@ -1375,6 +1403,7 @@ namespace MHServerEmu.Games.Powers
 
             _activationPhase = PowerActivationPhase.Active;
 
+            OnEndChannelingPhase();
             return true;
         }
 
@@ -3883,6 +3912,7 @@ namespace MHServerEmu.Games.Powers
 
             scheduler.CancelEvent(_payRecurringCostEvent);
             scheduler.CancelEvent(_reapplyIndexPropertiesEvent);
+            scheduler.CancelEvent(_cancelIfTargetIsKilledEvent);
             CancelDelayedActivation();
 
             return true;
@@ -5581,6 +5611,11 @@ namespace MHServerEmu.Games.Powers
         private class PayRecurringCostEvent : CallMethodEvent<Power>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.PayRecurringCost();
+        }
+
+        private class CancelIfTargetIsKilledEvent : CallMethodEventParam1<Power, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => t.CancelIfTargetIsKilled(p1);
         }
 
         #endregion
