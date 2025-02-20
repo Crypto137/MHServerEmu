@@ -19,6 +19,8 @@ namespace MHServerEmu.Games.Powers.Conditions
 
         public static Func IsConditionCancelOnHitFunc { get; } = IsConditionCancelOnHit;
         public static Func IsConditionCancelOnKilledFunc { get; } = IsConditionCancelOnKilled;        
+        public static Func<PowerPrototype> IsConditionCancelOnPowerUseFunc { get; } = IsConditionCancelOnPowerUse;
+        public static Func<PowerPrototype> IsConditionCancelOnPowerUsePostFunc { get; } = IsConditionCancelOnPowerUsePost;
 
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="Condition"/> was created by the specified <see cref="Power"/>.
@@ -60,6 +62,26 @@ namespace MHServerEmu.Games.Powers.Conditions
         private static bool IsConditionCancelOnKilled(Condition condition)
         {
             return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnKilled);
+        }
+
+        private static bool IsConditionCancelOnPowerUse(Condition condition, PowerPrototype powerProto)
+        {
+            ConditionPrototype conditionProto = condition.ConditionPrototype;
+            if (conditionProto == null)
+                return false;
+
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUse) &&
+                (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+        }
+
+        private static bool IsConditionCancelOnPowerUsePost(Condition condition, PowerPrototype powerProto)
+        {
+            ConditionPrototype conditionProto = condition.ConditionPrototype;
+            if (conditionProto == null)
+                return false;
+
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUsePost) &&
+                (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
         }
     }
 }

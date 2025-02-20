@@ -708,6 +708,16 @@ namespace MHServerEmu.Games.Entities
             RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnKilledFunc);
         }
 
+        public void RemoveCancelOnPowerUseConditions(PowerPrototype powerProto)
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnPowerUseFunc, powerProto);
+        }
+
+        public void RemoveCancelOnPowerUsePostConditions(PowerPrototype powerProto)
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnPowerUsePostFunc, powerProto);
+        }
+
         public void RemoveCancelOnProcTriggerConditions(ProcTriggerType triggerType)
         {
             if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
