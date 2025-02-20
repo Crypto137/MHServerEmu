@@ -23,6 +23,7 @@ namespace MHServerEmu.Games.Entities
     public class Hotspot : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        public static bool Debug = true;
 
         private EventPointer<ApplyEffectsDelayEvent> _applyEffectsDelayEvent = new();
         private EventPointer<IntervalPowersEvent> _intervalPowersEvent = new();
@@ -376,7 +377,6 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missile(Missile missile, Vector3 missilePosition)
         {
-            //Logger.Trace($"HandleOverlapBegin_Missile {this} {missile} {missilePosition}");
             var hotspotProto = HotspotPrototype;
             if (hotspotProto == null) return;
 
@@ -399,7 +399,6 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Missile(Missile missile)
         {
-            //Logger.Trace($"HandleOverlapEnd_Missile {this} {missile}");
             var hotspotProto = HotspotPrototype;
             if (hotspotProto == null) return;
 
@@ -412,7 +411,6 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Missions(WorldEntity target)
         {
-            // Logger.Trace($"HandleOverlapBegin_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
             if (targetAvatar) _missionAvatars?.Add(target.Id);
 
@@ -437,7 +435,6 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Missions(WorldEntity target)
         {
-            // Logger.Trace($"HandleOverlapEnd_Missions {this} {target}");
             bool targetAvatar = target is Avatar;
             if (targetAvatar) _missionAvatars?.Remove(target.Id);
 
@@ -583,8 +580,6 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapBegin_Powers(WorldEntity target)
         {
-            //Logger.Trace($"HandleOverlapBegin_Powers {this} {target}");
-
             if (target.IsAffectedByPowers() == false) return; 
             if (_overlapPowerTargets == null) return;
             
@@ -593,7 +588,7 @@ namespace MHServerEmu.Games.Entities
 
             if (hotspotProto.AppliesPowers.HasValue())
                 ApplyActivePowers(target, ref powerTarget);
-
+            if (Debug) Logger.Debug($"OverlapBegin Add {target.PrototypeName}[{target.Id}]");
             _overlapPowerTargets[target.Id] = powerTarget;
 
             ScheduleActivePowersEvent();
@@ -602,17 +597,16 @@ namespace MHServerEmu.Games.Entities
 
         private void HandleOverlapEnd_Powers(WorldEntity target)
         {
-            //Logger.Trace($"HandleOverlapEnd_Powers {this} {whom}");
-
             ulong targetId = target.Id;
             var manager = Game.EntityManager;
 
             if (_overlapPowerTargets == null) return;
             if (_overlapPowerTargets.TryGetValue(targetId, out var powerTarget) == false) return;
 
+            if (Debug) Logger.Debug($"OverlapEnd {target.PrototypeName}[{target.Id}]");
             if (powerTarget.ActivePowers.Any)
             {
-                EndPowerForActivePowers(target, powerTarget);
+                EndPowerForActivePowers(target, ref powerTarget);
                 if (_activePowerTargetCount == 0 && HotspotPrototype.KillCreatorWhenHotspotIsEmpty)
                 {
                     var creator = manager.GetEntity<WorldEntity>(OwnerId);
@@ -631,42 +625,58 @@ namespace MHServerEmu.Games.Entities
             var powerRef = power.PrototypeDataRef;
             if (powerRef == PrototypeId.Invalid) return;
             var hotspotProto = HotspotPrototype;
-
+            Logger.Debug($"OnPowerEnded {power.PrototypeDataRef.GetNameFormatted()}[{flags}]");
             if (flags.HasFlag(EndPowerFlags.ExitWorld) && hotspotProto.AppliesPowers.HasValue() && _overlapPowerTargets != null)
             {
                 int index = Array.IndexOf(hotspotProto.AppliesPowers, powerRef);
                 if (index == -1 || index >= 32) return;
 
-                foreach (var powerTarget in _overlapPowerTargets.Values)
+                var changed = ListPool <(ulong, PowerTargetMap)>.Instance.Get();
+
+                foreach (var kvp in _overlapPowerTargets)
+                {
+                    var key = kvp.Key;
+                    var powerTarget = kvp.Value;
                     if (powerTarget.ActivePowers[index])
-                        ClearActiveTargetPowers(powerTarget, index);
+                    {
+                        ClearActiveTargetPowers(ref powerTarget, index);
+                        changed.Add((key, powerTarget));
+                    }
+                }
+
+                foreach(var kv in changed)
+                    _overlapPowerTargets[kv.Item1] = kv.Item2;
+
+                ListPool<(ulong, PowerTargetMap)>.Instance.Return(changed);
             }
         }
 
-        private void EndPowerForActivePowers(WorldEntity target, in PowerTargetMap powerTarget)
+        private void EndPowerForActivePowers(WorldEntity target, ref PowerTargetMap powerTarget)
         {
+            Logger.Debug($"EndPowerForActivePowers for {target.PrototypeName}");
             var hotspotProto = HotspotPrototype;
             for (var i = 0; i < hotspotProto.AppliesPowers.Length; i++)
                 if (powerTarget.ActivePowers[i])
                 {
                     var powerProto = hotspotProto.AppliesPowers[i].As<PowerPrototype>();
                     if (powerProto != null) 
-                        EndPowerForActiveTarget(powerProto.DataRef, target.Id, powerTarget, i);
+                        EndPowerForActiveTarget(powerProto.DataRef, target.Id, ref powerTarget, i);
                 }
         }
 
-        private void EndPowerForActiveTarget(PrototypeId powerRef, ulong targetId, in PowerTargetMap powerTarget, int index)
+        private void EndPowerForActiveTarget(PrototypeId powerRef, ulong targetId, ref PowerTargetMap powerTarget, int index)
         {
-            ClearActiveTargetPowers(powerTarget, index);
+            ClearActiveTargetPowers(ref powerTarget, index);
             var power = GetPower(powerRef);
             if (power == null) return;
 
+            if (Debug) Logger.Debug($"EndPowerForActiveTarget for {powerRef.GetNameFormatted()} {targetId}");
             power.CancelScheduledPowerApplicationsForTarget(targetId);
             if (power.Prototype.CancelConditionsOnEnd)
                 power.RemoveOrUnpauseTrackedConditionsForTarget(targetId);
         }
 
-        private void ClearActiveTargetPowers(PowerTargetMap powerTarget, int index)
+        private void ClearActiveTargetPowers(ref PowerTargetMap powerTarget, int index)
         {
             if (powerTarget.ActivePowers[index])
             {
@@ -711,6 +721,8 @@ namespace MHServerEmu.Games.Entities
                 var offsetPosition = position.Value + forward * centerOffset;                
                 if (region.GetCellAtPosition(offsetPosition) != null)
                     position = offsetPosition;
+
+                if (Debug) Logger.Debug($"ChangeRegionPosition {PrototypeName} at {position} {orientation}");
             }
 
             return base.ChangeRegionPosition(position, orientation, flags);
@@ -857,6 +869,7 @@ namespace MHServerEmu.Games.Entities
             if (_skipCollide) settings.Flags |= PowerActivationSettingsFlags.SkipRangeCheck;
 
             var result = power.Activate(ref settings);
+            if (Debug) Logger.Debug($"ActivateIntervalPower {power.PrototypeDataRef.GetNameFormatted()} from {PrototypeName} to {target.PrototypeName}");
             return result == PowerUseResult.Success;
         }
 
@@ -876,14 +889,23 @@ namespace MHServerEmu.Games.Entities
             if (_overlapPowerTargets == null) return;
 
             var manager = Game.EntityManager;
+
+            var changed = ListPool<(ulong, PowerTargetMap)>.Instance.Get();
+
             foreach (var entry in _overlapPowerTargets)
             {
                 ulong targetId = entry.Key;
-                var powerTargetMap = entry.Value;
+                var powerTarget = entry.Value;
                 var target = manager.GetEntity<WorldEntity>(targetId);
                 if (target == null) continue;
-                ApplyActivePowers(target, ref powerTargetMap);
+                ApplyActivePowers(target, ref powerTarget);
+                changed.Add((targetId, powerTarget));
             }
+
+            foreach (var kv in changed)
+                _overlapPowerTargets[kv.Item1] = kv.Item2;
+
+            ListPool<(ulong, PowerTargetMap)>.Instance.Return(changed);
 
             ScheduleActivePowersEvent();
         }
@@ -913,7 +935,7 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (HasConditionsForTarget(powerProto, target, out bool hasOthers) == false)
                     {
-                        ClearActiveTargetPowers(powerTarget, i);
+                        ClearActiveTargetPowers(ref powerTarget, i);
                         if (hasOthers == false) continue;
                     }
                 }
@@ -937,11 +959,11 @@ namespace MHServerEmu.Games.Entities
                 // activate powers
                 if (powerTarget.ActivePowers[i] == false && isValidTarget)
                 {
-                    activated |= ActivatePowerForTarget(powerProto.DataRef, target, powerTarget, i);
+                    activated |= ActivatePowerForTarget(powerProto.DataRef, target, ref powerTarget, i);
                 }
                 else if (powerTarget.ActivePowers[i] && isValidTarget == false)
                 { 
-                    EndPowerForActiveTarget(powerProto.DataRef, target.Id, powerTarget, i);
+                    EndPowerForActiveTarget(powerProto.DataRef, target.Id, ref powerTarget, i);
                 }                
             }
 
@@ -973,7 +995,7 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private bool ActivatePowerForTarget(PrototypeId powerRef, WorldEntity target, PowerTargetMap powerTarget, int index)
+        private bool ActivatePowerForTarget(PrototypeId powerRef, WorldEntity target, ref PowerTargetMap powerTarget, int index)
         {
             var power = GetPower(powerRef);
             if (power == null) return false;
