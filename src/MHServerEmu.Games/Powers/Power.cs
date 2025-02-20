@@ -825,22 +825,55 @@ namespace MHServerEmu.Games.Powers
 
         private bool FinishApplyPower(PowerApplication powerApplication, PowerPrototype powerProto, bool success)
         {
-            // Helper function for ApplyPower that either reschedules application or ends recurring powers
-            if (powerProto.IsRecurring == false)
-                return success;
-
-            EndPowerFlags flags = EndPowerFlags.None;
-
-            if (success && Owner.ShouldContinueRecurringPower(this, ref flags))
+            // Reschedule application or end recurring power
+            if (powerProto.IsRecurring)
             {
-                // Schedule a new application for the next loop
-                PowerApplication newApplication = new(powerApplication);
-                SchedulePowerApplication(newApplication, GetChannelLoopTime());
+                EndPowerFlags flags = EndPowerFlags.None;
+
+                if (success && Owner.ShouldContinueRecurringPower(this, ref flags))
+                {
+                    // Schedule a new application for the next loop
+                    PowerApplication newApplication = new(powerApplication);
+                    SchedulePowerApplication(newApplication, GetChannelLoopTime());
+                }
+                else
+                {
+                    // End power
+                    SchedulePowerEnd(TimeSpan.Zero, flags, true);
+                }
             }
-            else
+
+            if (success)
             {
-                // End power
-                SchedulePowerEnd(TimeSpan.Zero, flags, true);
+                if (IsChannelingPower() && NeedsTarget() && IsCancelledOnTargetKilled())
+                {
+                    // TODO: cancel targeted channel powers
+                }
+
+                if (IsProcEffect() == false && IsComboEffect() == false)
+                    Owner.ConditionCollection.RemoveCancelOnPowerUseConditions(powerProto);
+
+                if (IsThrowablePower())
+                {
+                    ulong throwableEntityId = Owner.Properties[PropertyEnum.ThrowableOriginatorEntity];
+                    if (throwableEntityId != 0)
+                    {
+                        var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
+                        if (throwableEntity != null)
+                        {
+                            // Trigger EntityDead Event
+                            var avatar = Owner?.GetMostResponsiblePowerUser<Avatar>();
+                            var player = avatar?.GetOwnerOfType<Player>();
+                            Owner.Region.EntityDeadEvent.Invoke(new(throwableEntity, Owner, player));
+
+                            // Destroy throwable
+                            throwableEntity.Destroy();
+                        }
+                    }
+
+                    Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
+                    Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
+                }
             }
 
             return success;
@@ -957,9 +990,18 @@ namespace MHServerEmu.Games.Powers
                     results.Clear();    // leak prevention
             }
 
-            if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false && ownerResults.HasMeaningfulResults())
+            if (powerOwner != null && powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false)
             {
-                if (powerOwner.ScheduleApplyPowerResultsEvent(ownerResults) == false)
+                bool applied = false;
+                powerOwner.ConditionCollection.RemoveCancelOnPowerUsePostConditions(powerProto);
+
+                // Cancelling conditions can potentially kill the target, so check again
+                if (powerOwner.IsInWorld && powerOwner.TestStatus(EntityStatus.Destroyed) == false && ownerResults.HasMeaningfulResults())
+                {
+                    applied = powerOwner.ScheduleApplyPowerResultsEvent(ownerResults);
+                }
+
+                if (applied == false)
                     ownerResults.Clear(); // leak prevention
             }
 
@@ -3731,29 +3773,6 @@ namespace MHServerEmu.Games.Powers
                 DeliverPayload(payload);
             else
                 SchedulePayloadDelivery(payload, deliveryDelay);
-
-            if (IsThrowablePower())
-            {
-                // NOTE: Based on the old throwable hack, consider revising
-                ulong throwableEntityId = Owner.Properties[PropertyEnum.ThrowableOriginatorEntity];
-                if (throwableEntityId != 0)
-                {
-                    var throwableEntity = Game.EntityManager.GetEntity<WorldEntity>(throwableEntityId);
-                    if (throwableEntity != null)
-                    {
-                        // Trigger EntityDead Event
-                        var avatar = Owner?.GetMostResponsiblePowerUser<Avatar>();
-                        var player = avatar?.GetOwnerOfType<Player>();
-                        Owner.Region.EntityDeadEvent.Invoke(new(throwableEntity, Owner, player));
-
-                        // Destroy throwable
-                        throwableEntity.Destroy();
-                    }
-                }
-
-                Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorEntity);
-                Owner.Properties.RemoveProperty(PropertyEnum.ThrowableOriginatorAssetRef);
-            }
 
             return true;
         }
