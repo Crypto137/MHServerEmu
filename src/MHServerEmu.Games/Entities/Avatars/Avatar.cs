@@ -3017,7 +3017,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             bool newStyle = teamUpAgent.IsPermanentTeamUpStyle();
             teamUpAgent.AssignTeamUpAgentPowers();
 
-            if (teamUpAgent.IsPermanentTeamUpStyle())
+            if (newStyle)
             {
                 scheduler.CancelEvent(_dismissTeamUpAgentEvent);
             }

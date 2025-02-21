@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Entities
     public class Hotspot : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public static bool Debug = true;
+        public static bool Debug = false;
 
         private EventPointer<ApplyEffectsDelayEvent> _applyEffectsDelayEvent = new();
         private EventPointer<IntervalPowersEvent> _intervalPowersEvent = new();
