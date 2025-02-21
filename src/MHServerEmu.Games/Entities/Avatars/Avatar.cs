@@ -2891,7 +2891,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             scheduler.CancelEvent(_dismissTeamUpAgentEvent);
 
             TimeSpan duration = Properties[PropertyEnum.AvatarTeamUpDuration];
-            if (duration > TimeSpan.Zero)
+            if (duration > TimeSpan.Zero && teamUp.IsPermanentTeamUpStyle() == false)
             {
                 TimeSpan startTime = Properties[PropertyEnum.AvatarTeamUpStartTime];
                 TimeSpan time = duration - (Game.CurrentTime - startTime);
@@ -3014,6 +3014,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             bool oldStyle = teamUpAgent.IsPermanentTeamUpStyle();
             teamUpAgent.Properties[PropertyEnum.TeamUpStyle] = styleIndex;
+            bool newStyle = teamUpAgent.IsPermanentTeamUpStyle();
+            teamUpAgent.AssignTeamUpAgentPowers();
 
             if (teamUpAgent.IsPermanentTeamUpStyle())
             {

@@ -1623,7 +1623,54 @@ namespace MHServerEmu.Games.Entities
 
         public void AssignTeamUpAgentPowers()
         {
-            // TODO Assign TeamUp Style and Powers
+            if (IsTeamUpAgent == false) return;
+            AssignTeamUpAgentStylePowers();
+            // TODO Assign Progression Powers
+        }
+
+        private void AssignTeamUpAgentStylePowers()
+        {
+            var teamUpProto = Prototype as AgentTeamUpPrototype;
+            var styles = teamUpProto.Styles;
+            if (styles.IsNullOrEmpty()) return;
+
+            var teamUpOwner = TeamUpOwner;
+            if (teamUpOwner == null) return;
+
+            bool current = this == teamUpOwner.CurrentTeamUpAgent;
+            bool isSummoned = IsAliveInWorld && TestStatus(EntityStatus.ExitingWorld);
+
+            int currentStyle = Properties[PropertyEnum.TeamUpStyle];
+
+            for (int styleIndex = 0; styleIndex < styles.Length; styleIndex++)
+            {
+                var style = styles[styleIndex];
+                if (style == null || style.Power == PrototypeId.Invalid) continue;
+
+                var powerRef = style.Power;
+                var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+                if (powerProto == null || powerProto.Activation != PowerActivationType.Passive) continue;
+
+                bool assignPower = current && currentStyle == styleIndex;
+
+                Agent powerOwner = this;
+                if (style.PowerIsOnAvatarWhileAway || style.PowerIsOnAvatarWhileSummoned)
+                {
+                    powerOwner = teamUpOwner;
+                    if (isSummoned) assignPower &= style.PowerIsOnAvatarWhileSummoned;
+                    else assignPower &= style.PowerIsOnAvatarWhileAway;
+                }
+                if (powerOwner.IsInWorld == false || powerOwner.TestStatus(EntityStatus.ExitingWorld)) continue;
+
+                if (assignPower)
+                {
+                    var collection = powerOwner.PowerCollection;
+                    if (collection == null) return;
+                    if (collection.ContainsPower(powerRef) == false)
+                        powerOwner.AssignPower(powerRef, new(0, 1, CharacterLevel, CombatLevel));
+                }
+                else powerOwner.UnassignPower(powerRef);
+            }
         }
 
         public void ApplyTeamUpAffixesToAvatar(Avatar avatar)
