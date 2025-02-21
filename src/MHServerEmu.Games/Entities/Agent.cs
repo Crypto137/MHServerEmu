@@ -1667,7 +1667,7 @@ namespace MHServerEmu.Games.Entities
                     var collection = powerOwner.PowerCollection;
                     if (collection == null) return;
                     if (collection.ContainsPower(powerRef) == false)
-                        powerOwner.AssignPower(powerRef, new(0, 1, CharacterLevel, CombatLevel));
+                        powerOwner.AssignPower(powerRef, new(1, CharacterLevel, CombatLevel));
                 }
                 else powerOwner.UnassignPower(powerRef);
             }
