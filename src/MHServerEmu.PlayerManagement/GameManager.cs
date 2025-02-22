@@ -12,31 +12,31 @@ namespace MHServerEmu.PlayerManagement
     /// </remarks>
     public class GameManager
     {
+        // NOTE: This is a very rough early implementation just to do some testing with multiple game instances running at the same time.
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
         private readonly Dictionary<ulong, Game> _gameDict = new();
+
+        private int _targetGameInstanceCount = -1;
 
         public int GameCount { get => _gameDict.Count; }
 
         /// <summary>
         /// Constructs a new <see cref="GameManager"/> instance.
         /// </summary>
-        public GameManager()
-        {
-            
-        }
+        public GameManager() { }
 
-        /// <summary>
-        /// Creates and returns a new <see cref="Game"/> instance.
-        /// </summary>
-        public Game CreateGame()
+        public void InitializeGames(int gameInstanceCount)
         {
-            ulong id = _idGenerator.Generate();
-            Game game = new(id);
-            _gameDict.Add(id, game);
-            game.Run();
-            return game;
+            // Should always have at least 1 game instance
+            gameInstanceCount = Math.Max(gameInstanceCount, 1);
+
+            for (int i = 0; i < gameInstanceCount; i++)
+                CreateGame();
+
+            _targetGameInstanceCount = gameInstanceCount;
         }
 
         /// <summary>
@@ -44,7 +44,9 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public Game GetGameById(ulong id)
         {
-            if (id == 0) return null;   // 0 just means the client is not in a game, this is valid output
+            // 0 just means the client is not in a game, this is valid output
+            if (id == 0)
+                return null;
 
             // Having a valid id and not finding a game for it is bad
             if (_gameDict.TryGetValue(id, out Game game) == false)
@@ -61,15 +63,9 @@ namespace MHServerEmu.PlayerManagement
             if (_gameDict.Count == 0)
                 Logger.WarnReturn<Game>(null, $"GetAvailableGame(): No games are available");
 
-            Game availableGame = _gameDict.First().Value;
-            if (availableGame.HasBeenShutDown)
-            {
-                // We need to recreate the game if the one we had has been shut down
-                _gameDict.Clear();
-                availableGame = CreateGame();
-            }
+            RefreshGames();
 
-            return availableGame;
+            return FindAvailableGame();
         }
 
         public void ShutdownAllGames()
@@ -79,6 +75,60 @@ namespace MHServerEmu.PlayerManagement
                 kvp.Value.RequestShutdown();
                 _gameDict.Remove(kvp.Key);  // Should be safe to remove while iterating as long as we use a dictionary
             }
+        }
+
+        /// <summary>
+        /// Creates and returns a new <see cref="Game"/> instance.
+        /// </summary>
+        private Game CreateGame()
+        {
+            ulong id = _idGenerator.Generate();
+            Game game = new(id);
+            _gameDict.Add(id, game);
+            game.Run();
+            return game;
+        }
+
+        private void RefreshGames()
+        {
+            // Clean up game instances that were shut down
+            foreach (var kvp in _gameDict)
+            {
+                Game game = kvp.Value;
+
+                if (game.HasBeenShutDown)
+                    _gameDict.Remove(game.Id);
+            }
+
+            // Create replacement game instances if needed
+            while (GameCount < _targetGameInstanceCount)
+                CreateGame();
+        }
+
+        private Game FindAvailableGame()
+        {
+            // If there is only one game instance, just return it
+            if (GameCount == 1)
+            {
+                foreach (Game game in _gameDict.Values)
+                    return game;
+            }
+
+            // Do very basic load balancing based on player count
+            Game resultGame = null;
+            int lowestPlayerCount = int.MaxValue;
+
+            foreach (Game game in _gameDict.Values)
+            {
+                int playerCount = game.PlayerCount;
+                if (playerCount < lowestPlayerCount)
+                {
+                    resultGame = game;
+                    lowestPlayerCount = playerCount;
+                }
+            }
+
+            return resultGame;
         }
     }
 }

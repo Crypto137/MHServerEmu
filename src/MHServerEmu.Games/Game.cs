@@ -88,6 +88,8 @@ namespace MHServerEmu.Games
         public bool AchievementsEnabled { get; set; }
         public bool InfinitySystemEnabled { get => GameOptions.InfinitySystemEnabled; }
 
+        public int PlayerCount { get => EntityManager.PlayerCount; }
+
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
         public Game(ulong id)

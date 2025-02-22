@@ -60,7 +60,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
-            _gameManager.CreateGame();
+            _gameManager.InitializeGames(Config.GameInstanceCount);
         }
 
         public void Shutdown()

@@ -15,5 +15,6 @@ namespace MHServerEmu.PlayerManagement
         public ulong QueueNumberOfPlayersInLine { get; private set; } = 9001;
         public bool ShowNewsOnLogin { get; private set; } = false;
         public string NewsUrl { get; private set; } = "http://localhost/";
+        public int GameInstanceCount { get; private set; } = 1;
     }
 }
