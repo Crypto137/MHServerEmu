@@ -42,18 +42,6 @@ namespace MHServerEmu.Commands.Implementations
             return "Manual garbage collection successfully requested.";
         }
 
-        [Command("objectpoolreport", "Generates object pool report.")]
-        public string ObjectPoolReport(string[] @params, FrontendClient client)
-        {
-            string report = ObjectPoolManager.Instance.GenerateReport();
-            
-            if (client == null)
-                return report;
-
-            ChatHelper.SendMetagameMessageSplit(client, report);
-            return string.Empty;
-        }
-
         [Command("cell", "Shows current cell.", AccountUserLevel.User)]
         public string Cell(string[] @params, FrontendClient client)
         {

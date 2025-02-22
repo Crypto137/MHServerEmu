@@ -281,6 +281,7 @@ namespace MHServerEmu.Games
             _gameTimer.Start();
 
             CollectionPoolSettings.UseThreadLocalStorage = true;
+            ObjectPoolManager.UseThreadLocalStorage = true;
 
             try
             {

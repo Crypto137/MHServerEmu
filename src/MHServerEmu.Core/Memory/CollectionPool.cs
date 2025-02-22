@@ -22,7 +22,7 @@ namespace MHServerEmu.Core.Memory
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [ThreadStatic]
-        private static Node _threadStaticNode;
+        private static Node _threadLocalNode;
 
         private readonly Node _sharedNode = new(false);
 
@@ -33,8 +33,8 @@ namespace MHServerEmu.Core.Memory
         {
             if (CollectionPoolSettings.UseThreadLocalStorage)
             {
-                _threadStaticNode ??= new(true);
-                return _threadStaticNode.Get();
+                _threadLocalNode ??= new(true);
+                return _threadLocalNode.Get();
             }
             else
             {
@@ -51,7 +51,7 @@ namespace MHServerEmu.Core.Memory
             if (CollectionPoolSettings.UseThreadLocalStorage)
             {
                 // Thread-static node should have already been allocated in Get()
-                _threadStaticNode.Return(collection);
+                _threadLocalNode.Return(collection);
             }
             else
             {
