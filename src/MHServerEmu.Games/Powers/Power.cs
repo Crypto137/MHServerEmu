@@ -5530,6 +5530,7 @@ namespace MHServerEmu.Games.Powers
         private class StopChannelingEvent : CallMethodEvent<Power>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.StopChanneling();
+            public override bool OnCancelled() => OnTriggered();
         }
 
         private class PowerApplyEvent : ScheduledEvent
