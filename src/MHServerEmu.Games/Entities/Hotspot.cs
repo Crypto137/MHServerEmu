@@ -625,7 +625,9 @@ namespace MHServerEmu.Games.Entities
             var powerRef = power.PrototypeDataRef;
             if (powerRef == PrototypeId.Invalid) return;
             var hotspotProto = HotspotPrototype;
-            Logger.Debug($"OnPowerEnded {power.PrototypeDataRef.GetNameFormatted()}[{flags}]");
+
+            if (Debug) Logger.Debug($"OnPowerEnded {power.PrototypeDataRef.GetNameFormatted()}[{flags}]");
+
             if (flags.HasFlag(EndPowerFlags.ExitWorld) && hotspotProto.AppliesPowers.HasValue() && _overlapPowerTargets != null)
             {
                 int index = Array.IndexOf(hotspotProto.AppliesPowers, powerRef);
@@ -653,7 +655,8 @@ namespace MHServerEmu.Games.Entities
 
         private void EndPowerForActivePowers(WorldEntity target, ref PowerTargetMap powerTarget)
         {
-            Logger.Debug($"EndPowerForActivePowers for {target.PrototypeName}");
+            if (Debug) Logger.Debug($"EndPowerForActivePowers for {target.PrototypeName}");
+
             var hotspotProto = HotspotPrototype;
             for (var i = 0; i < hotspotProto.AppliesPowers.Length; i++)
                 if (powerTarget.ActivePowers[i])
@@ -671,6 +674,7 @@ namespace MHServerEmu.Games.Entities
             if (power == null) return;
 
             if (Debug) Logger.Debug($"EndPowerForActiveTarget for {powerRef.GetNameFormatted()} {targetId}");
+
             power.CancelScheduledPowerApplicationsForTarget(targetId);
             if (power.Prototype.CancelConditionsOnEnd)
                 power.RemoveOrUnpauseTrackedConditionsForTarget(targetId);
