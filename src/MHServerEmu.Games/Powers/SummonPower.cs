@@ -967,7 +967,8 @@ namespace MHServerEmu.Games.Powers
                 properties.AdjustProperty(context.Properties[PropertyEnum.PetDamagePctBonus], PropertyEnum.PetDamagePctBonus);
             }
 
-            if (powerProto.PersistAcrossRegions)
+            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeyword.As<KeywordPrototype>(); // Fix vanityPet
+            if (powerProto.PersistAcrossRegions || summonProto.HasKeyword(vanityKeyword))
                 properties[PropertyEnum.SummonedEntityIsRegionPersisted] = true;
 
             properties[PropertyEnum.SummonContextIndex] = contextIndex;

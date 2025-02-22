@@ -1815,6 +1815,7 @@ namespace MHServerEmu.Games.Entities
 
             Properties[PropertyEnum.NoLootDrop] = true;
             Properties[PropertyEnum.NoExpOnDeath] = true;
+            Properties[PropertyEnum.NoEntityCollide] = true; // Fix controlled collide
             Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = true;
             Properties[PropertyEnum.DramaticEntrancePlayedOnce] = true;
             Properties[PropertyEnum.PetHealthPctBonus] = avatar.Properties[PropertyEnum.HealthPctBonus];
