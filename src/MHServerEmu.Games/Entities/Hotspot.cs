@@ -726,7 +726,7 @@ namespace MHServerEmu.Games.Entities
                 if (region.GetCellAtPosition(offsetPosition) != null)
                     position = offsetPosition;
 
-                if (Debug) Logger.Debug($"ChangeRegionPosition {PrototypeName} at {position} {orientation}");
+                //if (Debug) Logger.Debug($"ChangeRegionPosition {PrototypeName} at {position} {orientation}");
             }
 
             return base.ChangeRegionPosition(position, orientation, flags);
@@ -940,6 +940,7 @@ namespace MHServerEmu.Games.Entities
                     if (HasConditionsForTarget(powerProto, target, out bool hasOthers) == false)
                     {
                         ClearActiveTargetPowers(ref powerTarget, i);
+                        if (Debug) Logger.Debug($"hasOthers[{hasOthers}] {powerProto.DataRef.GetNameFormatted()} {target.PrototypeName} {target.Id}");
                         if (hasOthers == false) continue;
                     }
                 }
@@ -963,6 +964,7 @@ namespace MHServerEmu.Games.Entities
                 // activate powers
                 if (powerTarget.ActivePowers[i] == false && isValidTarget)
                 {
+                    if (Debug) Logger.Debug($"ActivatePowerForTarget {powerProto.DataRef.GetNameFormatted()} {target.PrototypeName} {target.Id}");
                     activated |= ActivatePowerForTarget(powerProto.DataRef, target, ref powerTarget, i);
                 }
                 else if (powerTarget.ActivePowers[i] && isValidTarget == false)
@@ -1042,7 +1044,10 @@ namespace MHServerEmu.Games.Entities
                 {
                     if (mixinPrototype.Prototype is not ConditionPrototype conditionProto) continue;
                     if (CheckStackingBehavior(conditionProto, powerProto, conditionCollection, ref hasOthers, ref hasThis))
+                    {
+                        if (Debug) Logger.Warn($"AppliesConditions [{hasThis}] [{hasOthers}] for [{target.PrototypeName}] in {powerProto.DataRef.GetNameFormatted()}");
                         return hasThis;
+                    }
                 }
 
             if (powerProto.ConditionsByRef.HasValue())
@@ -1051,7 +1056,10 @@ namespace MHServerEmu.Games.Entities
                     var conditionProto = conditionRef.As<ConditionPrototype>();
                     if (conditionProto == null) continue;
                     if (CheckStackingBehavior(conditionProto, powerProto, conditionCollection, ref hasOthers, ref hasThis))
+                    {
+                        if (Debug) Logger.Warn($"ConditionsByRef [{hasThis}] [{hasOthers}] for [{target.PrototypeName}] in {powerProto.DataRef.GetNameFormatted()}");
                         return hasThis;
+                    }
                 }
 
             return hasThis;
