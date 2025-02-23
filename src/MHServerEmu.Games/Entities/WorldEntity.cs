@@ -2071,7 +2071,18 @@ namespace MHServerEmu.Games.Entities
                         TryActivateOnDeathProcs(powerResults);
                 }
 
-                Kill(ultimateOwner, KillFlags.None, powerUser);
+                var killFlags = KillFlags.None;
+                if (powerResults != null)
+                {
+                    if (powerResults.Properties[PropertyEnum.NoLootDrop])
+                        killFlags |= KillFlags.NoLoot;
+                    if (powerResults.Properties[PropertyEnum.NoExpOnDeath])
+                        killFlags |= KillFlags.NoExp;
+                    if (powerResults.Properties[PropertyEnum.OnKillDestroyImmediate])
+                        killFlags |= KillFlags.DestroyImmediate;
+                }
+
+                Kill(ultimateOwner, killFlags, powerUser);
                 killed = true;
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
