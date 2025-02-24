@@ -36,7 +36,6 @@ namespace MHServerEmu.Games.Powers
         private static readonly TimeSpan CheckIfTargetIsKilledInterval = TimeSpan.FromMilliseconds(250);
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private bool _isTeamUpPassivePowerWhileAway;
         private SituationalPowerComponent _situationalComponent;
         private KeywordsMask _keywordsMask;
 
@@ -73,6 +72,7 @@ namespace MHServerEmu.Games.Powers
         public GamepadSettingsPrototype GamepadSettingsPrototype { get; }
 
         public WorldEntity Owner { get; private set; }
+        public bool IsTeamUpPassivePowerWhileAway { get; private set; }
         public PropertyCollection Properties { get; } = new();
         public KeywordsMask KeywordsMask { get => _keywordsMask; }
 
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Powers
         public bool Initialize(WorldEntity owner, bool isTeamUpPassivePowerWhileAway, PropertyCollection initializeProperties)
         {
             Owner = owner;
-            _isTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
+            IsTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
 
             if (Prototype == null)
                 return Logger.WarnReturn(false, $"Initialize(): Prototype == null");
@@ -3585,11 +3585,17 @@ namespace MHServerEmu.Games.Powers
         
         // Payload Serialization is the term the game uses for the snapshotting of properties that happens when a power is applied
 
-        public WorldEntity GetPayloadPropertySourceEntity()
+        public WorldEntity GetPayloadPropertySourceEntity(WorldEntity ultimateOwner)
         {
-            if (_isTeamUpPassivePowerWhileAway)
+            if (IsTeamUpPassivePowerWhileAway)
             {
-                // TODO: team-up when away powers
+                Avatar avatarOwner = ultimateOwner != null ? ultimateOwner.GetMostResponsiblePowerUser<Avatar>() : Owner.GetMostResponsiblePowerUser<Avatar>();
+                if (avatarOwner != null)
+                {
+                    Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
+                    if (teamUpAgent != null)
+                        return teamUpAgent;
+                }
             }
 
             return Owner;
