@@ -751,18 +751,6 @@ namespace MHServerEmu.Games.Network
 
             avatar.ActivatePower(powerProtoRef, ref settings);
 
-            // HACK: Destroy the bowling ball item (remove this when we implement consumable items)
-            if (powerProtoRef == (PrototypeId)18211158277448213692)
-            {
-                Inventory inventory = Player.GetInventory(InventoryConvenienceLabel.General);
-
-                // BowlingBallItem
-                if (inventory.GetMatchingEntity((PrototypeId)7835010736274089329) is not Item bowlingBall)
-                    return false;
-
-                bowlingBall.DecrementStack();
-            }
-
             return true;
         }
 
