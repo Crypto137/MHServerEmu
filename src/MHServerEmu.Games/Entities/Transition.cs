@@ -57,7 +57,7 @@ namespace MHServerEmu.Games.Entities
                 hotspotSettings.RegionId = Region.Id;
                 hotspotSettings.Position = RegionLocation.Position;
 
-                var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
+                var inventory = SummonedInventory;
                 if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
 
                 var hotspot = Game.EntityManager.CreateEntity(hotspotSettings);

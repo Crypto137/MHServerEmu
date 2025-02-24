@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 // Count the current number of stacks
-                if (creatorId != Entity.InvalidId && condition.Id == creatorId)
+                if (creatorId != Entity.InvalidId && condition.CreatorId == creatorId)
                     existingStackCount++;
 
                 // Determine the longest remaining duration

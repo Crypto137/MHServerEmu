@@ -1,5 +1,8 @@
-﻿
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -22,11 +25,66 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool KillPreviousSummons { get; protected set; }
         public bool SummonAsPopulation { get; protected set; }
 
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            if (GameDatabase.DataDirectory.PrototypeIsAbstract(DataRef)) return;
+
+            var targetingStyleProto = GetTargetingStyle();
+            if (targetingStyleProto == null) return;
+
+            float maxRadius = 0f;
+
+            if (SummonEntityContexts.IsNullOrEmpty()) return;
+
+            foreach (var context in SummonEntityContexts)
+            {
+                if (context == null) return;
+
+                var summonEntityProto = context.SummonEntity.As<WorldEntityPrototype>();
+                if (summonEntityProto == null && context.SummonEntityRemoval == null) return;
+
+                if (summonEntityProto is HotspotPrototype hotspotProto && hotspotProto.Bounds != null)
+                {
+                    if (targetingStyleProto.TargetingShape == TargetingShapeType.CircleArea)
+                    {
+                        var bounds = hotspotProto.Bounds;
+                        if (bounds is CapsuleBoundsPrototype capsuleBounds)
+                        {
+                            if (capsuleBounds.Radius > maxRadius)
+                                maxRadius = capsuleBounds.Radius;
+                        }
+                        else if (bounds is SphereBoundsPrototype sphereBounds)
+                        {
+                            if (sphereBounds.Radius > maxRadius)
+                                maxRadius = sphereBounds.Radius;
+                        }
+                    }
+                }
+            }
+
+            if (maxRadius > 0) Radius = maxRadius;
+        }
+
         public bool IsPetSummoningPower()
         {
             var keywordGlobalsProto = GameDatabase.KeywordGlobalsPrototype;
             if (keywordGlobalsProto != null)
                 return HasKeyword(keywordGlobalsProto.PetPowerKeyword.As<KeywordPrototype>());
+            return false;
+        }
+
+        public bool IsHotspotSummoningPower()
+        {
+            if (SummonEntityContexts.IsNullOrEmpty()) return false;
+            foreach (var context in SummonEntityContexts)
+            {
+                if (context == null) return false;
+                var summonEntityProto = context.SummonEntity.As<WorldEntityPrototype>();
+                if (summonEntityProto is HotspotPrototype)
+                    return true;
+            }
             return false;
         }
 
@@ -52,6 +110,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (contextIndex < 0 || contextIndex >= SummonEntityContexts.Length) return null;
             var context = SummonEntityContexts[contextIndex];
             return context;
+        }
+
+        public int GetMaxNumSimultaneousSummons(PropertyCollection properties)
+        {
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+            return Eval.RunInt(SummonMaxSimultaneous, evalContext);
+        }
+
+        public int GetMaxNumSummons(PropertyCollection properties)
+        {
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, properties);
+            return Eval.RunInt(SummonMax, evalContext);
+        }
+
+        public bool InSummonMaxCountWithOthers(PropertyValue powerRef)
+        {
+            if (SummonMaxCountWithOthers.IsNullOrEmpty()) return false;
+            return SummonMaxCountWithOthers.Contains(powerRef);
         }
     }
 

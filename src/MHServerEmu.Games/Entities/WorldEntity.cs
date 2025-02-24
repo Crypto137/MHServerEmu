@@ -11,6 +11,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Locomotion;
 using MHServerEmu.Games.Entities.Physics;
 using MHServerEmu.Games.Entities.PowerCollections;
@@ -42,9 +43,11 @@ namespace MHServerEmu.Games.Entities
     public enum KillFlags
     {
         None,
-        NoDeadEvent = 1 << 0,
-        NoExp       = 1 << 1,
-        NoLoot      = 1 << 2,
+        NoDeadEvent         = 1 << 0,
+        NoExp               = 1 << 1,
+        NoLoot              = 1 << 2,
+        DestroyImmediate    = 1 << 3,
+        Release            = 1 << 4,
     }
 
     [Flags]
@@ -78,6 +81,7 @@ namespace MHServerEmu.Games.Entities
 
         private readonly EventPointer<ScheduledExitWorldEvent> _exitWorldEvent = new();
         private readonly EventPointer<ScheduledKillEvent> _scheduledKillEvent = new();
+        private readonly EventPointer<NegateHotspotsEvent> _negateHotspotsEvent = new();
 
         private AlliancePrototype _allianceProto;
         private Transform3 _transform = Transform3.Identity();
@@ -153,9 +157,11 @@ namespace MHServerEmu.Games.Entities
         public bool IsDestroyProtectedEntity { get => IsControlledEntity || IsTeamUpAgent || this is Avatar; }  // Persistent entities cannot be easily destroyed
         public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
+        public bool IsLiveTuningEnabled { get => WorldEntityPrototype?.IsLiveTuningEnabled() == true; }
         public Dictionary<ulong, long> TankingContributors { get; private set; }
         public Dictionary<ulong, long> DamageContributors { get; private set; }
         public TagPlayers TagPlayers { get; private set; }
+        public Inventory SummonedInventory { get => GetInventory(InventoryConvenienceLabel.Summoned); }
 
         public WorldEntity(Game game) : base(game)
         {
@@ -276,6 +282,7 @@ namespace MHServerEmu.Games.Entities
         {
             var worldEntityProto = WorldEntityPrototype;
             CancelScheduledLifespanExpireEvent();
+            SummonedInventory?.DestroyContained();
             EntityActionComponent?.CancelAll();
 
             // Trigger OnPetDeath procs if this is a pet with an owner
@@ -286,6 +293,8 @@ namespace MHServerEmu.Games.Entities
                 if (owner != null && owner.IsInWorld)
                     owner.TryActivateOnPetDeathProcs(this);
             }
+
+            AdjustSummonCount(-1);
 
             bool notMissile = this is not Missile;
             
@@ -301,10 +310,6 @@ namespace MHServerEmu.Games.Entities
                 var player = killer?.GetOwnerOfType<Player>();
                 region?.EntityDeadEvent.Invoke(new(this, killer, player));
             }
-
-            // Remove navi influence if needed
-            if (worldEntityProto.RemoveNavInfluenceOnKilled)
-                Properties[PropertyEnum.NoEntityCollide] = true;
 
             SpawnSpec?.OnDefeat(killer, false);
 
@@ -324,6 +329,19 @@ namespace MHServerEmu.Games.Entities
                 ApplyStateFromPrototype(worldEntityProto.PostKilledState);
 
             region?.UIDataProvider.OnEntityLifecycle(this);
+
+            OnRemoveFromWorld();
+        }
+
+        public void OnRemoveFromWorld()
+        {
+            var worldEntityProto = WorldEntityPrototype;
+
+            // Remove navi influence if needed
+            if (worldEntityProto.RemoveNavInfluenceOnKilled)
+                Properties[PropertyEnum.NoEntityCollide] = true;
+
+            if (IsControlledEntity) return;
 
             // Schedule destruction
             int removeFromWorldTimerMS = worldEntityProto.RemoveFromWorldTimerMS;
@@ -349,6 +367,176 @@ namespace MHServerEmu.Games.Entities
             else
                 ScheduleDestroyEvent(removeFromWorldTimer);
         }
+
+        #region Summon
+
+        public SummonEntityContextPrototype GetSummonEntityContext()
+        {
+            PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];
+            if (powerRef == PrototypeId.Invalid) return null;
+
+            var summonProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
+            if (summonProto == null) return null;
+
+            int contextIndex = Properties[PropertyEnum.SummonContextIndex];
+            return summonProto.GetSummonEntityContext(contextIndex);
+        }
+
+        public override void OnSelfAddedToOtherInventory()
+        {
+            base.OnSelfAddedToOtherInventory();
+            var invLoc = InventoryLocation;
+            if (invLoc.IsValid && invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Summoned)
+                AddSummonerCondition(invLoc.ContainerId);
+        }
+
+        public override void OnSelfRemovedFromOtherInventory(InventoryLocation prevInvLoc)
+        {
+            base.OnSelfRemovedFromOtherInventory(prevInvLoc);
+            if (prevInvLoc.IsValid && prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.Summoned)
+                RemoveSummonerCondition(prevInvLoc.ContainerId);
+        }
+
+        public void AddSummonerCondition(ulong summonerId)
+        {
+            if (Properties.HasProperty(PropertyEnum.SummonOwnerConditionId)) return;
+
+            var summonProto = GetSummonEntityContext();
+            if (summonProto == null) return;
+
+            var conditionProto = GameDatabase.GetPrototype<ConditionPrototype>(summonProto.TrackInInventoryOwnerCondition);
+            if (conditionProto == null) return;
+
+            var summoner = Game.EntityManager.GetEntity<WorldEntity>(summonerId);
+            if (summoner == null) return;
+
+            var conditionCollection = summoner.ConditionCollection;
+            var conditionId = conditionCollection.NextConditionId;
+            Condition condition = ConditionCollection.AllocateCondition();
+            var duration = conditionProto.GetDuration(summoner.Properties, this);
+            if (condition.InitializeFromConditionPrototype(conditionId, Game, summonerId, summonerId, Id, conditionProto, duration)) 
+            {
+                conditionCollection.AddCondition(condition);
+                Properties[PropertyEnum.SummonOwnerConditionId] = conditionId;
+            }
+            else
+                ConditionCollection.DeleteCondition(condition);
+        }
+
+        public void RemoveSummonerCondition(ulong summonerId)
+        {
+            ulong conditionId = Properties[PropertyEnum.SummonOwnerConditionId];
+            Properties.RemoveProperty(PropertyEnum.SummonOwnerConditionId);
+            if (conditionId == 0) return;
+            var summoner = Game.EntityManager.GetEntity<WorldEntity>(summonerId);
+            if (summoner == null) return;
+
+            var conditionCollection = summoner.ConditionCollection;
+            conditionCollection.RemoveCondition(conditionId);
+        }
+
+        private void ClearSummonedInventory()
+        {
+            var manager = Game?.EntityManager;
+            if (manager == null) return;
+
+            var inventory = SummonedInventory;
+            if (inventory == null) return;
+
+            if (manager.IsDestroyingAllEntities)
+            {
+                inventory.DestroyContained();
+            }
+            else
+            {
+                List<WorldEntity> destroyList = ListPool<WorldEntity>.Instance.Get();
+
+                foreach (var summoned in new SummonedEntityIterator(this))
+                    if (summoned.IsDead 
+                        || summoned.TestStatus(EntityStatus.PendingDestroy) 
+                        || summoned.Properties[PropertyEnum.SummonedEntityIsRegionPersisted] == false)
+                        destroyList.Add(summoned);
+
+                foreach (var summoned in destroyList)
+                {
+                    if (summoned.Properties[PropertyEnum.DetachOnContainerDestroyed])
+                    {
+                        summoned.ChangeInventoryLocation(null);
+                        summoned.OnDetachedFromDestroyedContainer();
+                    }
+                    else
+                    {
+                        summoned.Destroy();
+                    }
+                }
+
+                ListPool<WorldEntity>.Instance.Return(destroyList);
+            }
+        }
+
+        public override void OnDetachedFromDestroyedContainer()
+        {
+            var summonProto = GetSummonEntityContext();
+            if (summonProto == null) return;
+            if (summonProto.VisibleWhileAttached == false) SetVisible(true);
+        }
+
+        private void AdjustSummonCount(int value)
+        {
+            bool decrement = value < 0;
+            if (decrement && SummonDecremented) return;
+            if (Properties[PropertyEnum.SummonedByPower] == false) return;
+
+            PrototypeId powerRef = Properties[PropertyEnum.CreatorPowerPrototype];
+            if (powerRef == PrototypeId.Invalid) return;
+
+            var summoner = Game.EntityManager.GetEntity<WorldEntity>(PowerUserOverrideId);
+            var powerProto = GameDatabase.GetPrototype<SummonPowerPrototype>(powerRef);
+            if (summoner == null || powerProto == null) return;
+
+            summoner.Properties.AdjustProperty(value, new PropertyId(PropertyEnum.PowerSummonedEntityCount, powerRef));
+            if (powerProto.SummonMaxCountWithOthers.HasValue())
+                foreach (var protoRef in powerProto.SummonMaxCountWithOthers)
+                    summoner.Properties.AdjustProperty(value, new PropertyId(PropertyEnum.PowerSummonedEntityCount, protoRef));
+
+            SetFlag(EntityFlags.SummonDecremented, decrement);
+
+            if (summoner is not Avatar avatar) return;
+            
+            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeyword;
+            if (HasKeyword(vanityKeyword))
+            {
+                var player = avatar.GetOwnerOfType<Player>();
+                player?.UpdateScoringEventContext();
+            }           
+        }
+
+        public virtual void SetAsPersistent(Avatar avatar, bool newOnServer)
+        {
+            var region = avatar.Region;
+            if (region == null) return;
+            Properties[PropertyEnum.PowerUserOverrideID] = avatar.Id;
+
+            if (IsInWorld) return;
+
+            Vector3 position = avatar.RegionLocation.Position;
+            if (this is Agent) position = GetPositionNearAvatar(avatar);
+
+            Orientation orientation = avatar.RegionLocation.Orientation;
+
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+
+            if (newOnServer)
+            {
+                settings.OptionFlags |= EntitySettingsOptionFlags.IsNewOnServer;
+                if (IsTeamUpAgent)
+                    settings.OptionFlags |= EntitySettingsOptionFlags.IsClientEntityHidden;
+            }
+
+            EnterWorld(region, position, orientation, settings);
+        }
+
+        #endregion
 
         public void Kill(WorldEntity killer = null, KillFlags killFlags = KillFlags.None, WorldEntity directKiller = null)
         {
@@ -468,9 +656,20 @@ namespace MHServerEmu.Games.Entities
 
             bool exitStatus = !TestStatus(EntityStatus.ExitingWorld);
             SetStatus(EntityStatus.ExitingWorld, true);
+
             Physics.ReleaseCollisionId();
-            // TODO IsAttachedToEntity()
+            if (IsAttachedToEntity)
+            {
+                ulong parentId = Properties[PropertyEnum.AttachedToEntityId];
+                if (parentId != InvalidId)
+                {
+                    var parent = Game.EntityManager.GetEntity<WorldEntity>(parentId);
+                    if (parent != null && parent.IsInWorld && parent.TestStatus(EntityStatus.ExitingWorld) == false)
+                        parent.Physics.DetachChild(Physics);
+                }
+            }
             Physics.DetachAllChildren();
+
             DisableNavigationInfluence();
 
             if (Locomotor != null)
@@ -1872,7 +2071,18 @@ namespace MHServerEmu.Games.Entities
                         TryActivateOnDeathProcs(powerResults);
                 }
 
-                Kill(ultimateOwner, KillFlags.None, powerUser);
+                var killFlags = KillFlags.None;
+                if (powerResults != null)
+                {
+                    if (powerResults.Properties[PropertyEnum.NoLootDrop])
+                        killFlags |= KillFlags.NoLoot;
+                    if (powerResults.Properties[PropertyEnum.NoExpOnDeath])
+                        killFlags |= KillFlags.NoExp;
+                    if (powerResults.Properties[PropertyEnum.OnKillDestroyImmediate])
+                        killFlags |= KillFlags.DestroyImmediate;
+                }
+
+                Kill(ultimateOwner, killFlags, powerUser);
                 killed = true;
                 TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
             }
@@ -2842,6 +3052,17 @@ namespace MHServerEmu.Games.Entities
 
             PowerCollection?.OnOwnerEnteredWorld();
 
+            if (IsAttachedToEntity)
+            {
+                ulong parentId = Properties[PropertyEnum.AttachedToEntityId];
+                if (parentId != InvalidId)
+                {
+                    var parent = Game.EntityManager.GetEntity<WorldEntity>(parentId);
+                    if (parent != null && parent.IsInWorld && parent.TestStatus(EntityStatus.ExitingWorld) == false)
+                        parent.Physics.AttachChild(Physics);
+                }
+            }
+
             var region = Region;
 
             region.EntityEnteredWorldEvent.Invoke(new(this));
@@ -2851,6 +3072,8 @@ namespace MHServerEmu.Games.Entities
 
             if (Bounds.CollisionType != BoundsCollisionType.None)
                 RegisterForPendingPhysicsResolve();
+
+            AdjustSummonCount(1);
 
             InitializeProcEffectPowers();
 
@@ -2901,6 +3124,9 @@ namespace MHServerEmu.Games.Entities
             ConditionCollection?.OnOwnerExitedWorld();
 
             StopAllPropertyTickers();
+
+            AdjustSummonCount(-1);
+            ClearSummonedInventory();
 
             PowerCollection?.OnOwnerExitedWorld();
 
@@ -3059,6 +3285,37 @@ namespace MHServerEmu.Games.Entities
                         if ((missionRef == PrototypeId.Invalid && isTracked) || (missionRef != PrototypeId.Invalid && !isTracked))
                             Region.EntityTracker.ConsiderForTracking(this);
                     }
+                    break;
+
+                case PropertyEnum.NegateHotspots:
+
+                    ScheduleNegateHotspots(newValue);
+                    break;
+
+                case PropertyEnum.AttachedToEntityId:
+
+                    ulong oldParentId = oldValue;
+                    ulong newParentId = newValue;
+                    SetFlag(EntityFlags.AttachedToEntityId, newParentId != InvalidId);
+
+                    var manager = Game.EntityManager;
+                    if (oldParentId != InvalidId)
+                    {
+                        var oldParent = manager.GetEntity<WorldEntity>(oldParentId);
+                        if (oldParent != null && oldParent.IsInWorld && oldParent.TestStatus(EntityStatus.ExitingWorld) == false)
+                            oldParent.Physics.DetachChild(Physics);
+                    }
+
+                    if (IsInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+                    {
+                        if (newParentId != InvalidId)
+                        {
+                            var newParent = manager.GetEntity<WorldEntity>(newParentId);
+                            if (newParent != null && newParent.IsInWorld && newParent.TestStatus(EntityStatus.ExitingWorld) == false)
+                                newParent.Physics.AttachChild(Physics);
+                        }
+                    }
+
                     break;
 
                 case PropertyEnum.NoEntityCollide:
@@ -3222,7 +3479,62 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos) { }
+        public virtual void OnOverlapBegin(WorldEntity whom, Vector3 whoPos, Vector3 whomPos)
+        {
+            if (whom is not Hotspot hotspot) return;
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.NegateHotspots))
+            {
+                Property.FromParam(kvp.Key, 0, out int type);
+                var allianceType = (HotspotNegateByAllianceType)type;
+                if (allianceType == HotspotNegateByAllianceType.None) continue;
+
+                Property.FromParam(kvp.Key, 1, out PrototypeId keywordRef);
+                if (keywordRef == PrototypeId.Invalid) continue;
+
+                Property.FromParam(kvp.Key, 2, out int users);
+
+                hotspot.OnHotspotNegated(this, allianceType, keywordRef, users);
+            }
+        }
+
+        private void OnNegateHotspots()
+        {
+            var manager = Game?.EntityManager;
+            if (manager == null) return;
+
+            List<ulong> overlappingEntities = ListPool<ulong>.Instance.Get();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.NegateHotspots))
+            {
+                Property.FromParam(kvp.Key, 0, out int type);
+                var allianceType = (HotspotNegateByAllianceType)type;
+                if (allianceType == HotspotNegateByAllianceType.None) continue;
+
+                Property.FromParam(kvp.Key, 1, out PrototypeId keywordRef);
+                if (keywordRef == PrototypeId.Invalid) continue;
+
+                Property.FromParam(kvp.Key, 2, out int users);
+
+                overlappingEntities.Clear();
+                if (Physics.GetOverlappingEntities(overlappingEntities))
+                    foreach (ulong entityId in overlappingEntities)
+                    {
+                        var hotspot = manager.GetEntity<Hotspot>(entityId);
+                        if (hotspot == null) continue;
+                        hotspot.OnHotspotNegated(this, allianceType, keywordRef, users);
+                    }
+            }
+
+            ListPool<ulong>.Instance.Return(overlappingEntities);
+        }
+
+        private void ScheduleNegateHotspots(bool schedule)
+        {
+            if (schedule == false)
+                Game.GameEventScheduler.CancelEvent(_negateHotspotsEvent);
+            else if (_negateHotspotsEvent.IsValid == false)
+                ScheduleEntityEvent(_negateHotspotsEvent, TimeSpan.Zero);
+        }
+
         public virtual void OnOverlapEnd(WorldEntity whom) { }
         public virtual void OnCollide(WorldEntity whom, Vector3 whoPos) { }
 
@@ -3426,6 +3738,12 @@ namespace MHServerEmu.Games.Entities
             return prototype.UnrealClass;
         }
 
+        public bool IsInTown()
+        {
+            var region = Region;
+            return region != null && region.Behavior == RegionBehavior.Town;
+        }
+
         public virtual bool IsSummonedPet()
         {
             return false;
@@ -3584,6 +3902,12 @@ namespace MHServerEmu.Games.Entities
             if (actions == null) return;
             EntityActionComponent ??= new(this);
             EntityActionComponent.Register(actions);
+        }
+
+        public void DestroyEntityActionComponent()
+        {
+            EntityActionComponent?.Destroy();
+            EntityActionComponent = null;
         }
 
         public ScriptRoleKeyEnum GetScriptRoleKey()
@@ -3992,6 +4316,11 @@ namespace MHServerEmu.Games.Entities
                 _param1.Clear();    // Clear to prevent conditions leaking from their pool
                 return true;
             }
+        }
+
+        private class NegateHotspotsEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((WorldEntity)t).OnNegateHotspots();
         }
 
         private class ScheduledTickEvent : CallMethodEventParam1<Entity, PropertyTicker.TickData>

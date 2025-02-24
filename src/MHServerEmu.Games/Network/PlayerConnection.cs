@@ -483,6 +483,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
                 case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
+                case ClientToGameServerMessage.NetMessageRequestRemoveAndKillControlledAgent:   OnRequestRemoveAndKillControlledAgent(message); break;   // 58
                 case ClientToGameServerMessage.NetMessageMetaGameUpdateNotification:        OnMetaGameUpdateNotification(message); break;       // 63
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
@@ -507,6 +508,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestInterestInTeamUpEquipment:  OnRequestInterestInTeamUpEquipment(message); break; // 124
                 case ClientToGameServerMessage.NetMessageTryTeamUpSelect:                   OnTryTeamUpSelect(message); break;                  // 125
                 case ClientToGameServerMessage.NetMessageRequestTeamUpDismiss:              OnRequestTeamUpDismiss(message); break;             // 126
+                case ClientToGameServerMessage.NetMessageTryTeamUpStyleSelect:              OnTryTeamUpStyleSelect(message); break;             // 127
                 case ClientToGameServerMessage.NetMessageInfinityPointAllocationCommit:     OnInfinityPointAllocationCommit(message); break;    // 129
                 case ClientToGameServerMessage.NetMessageRespecInfinity:                    OnRespecInfinity(message); break;                   // 130
                 case ClientToGameServerMessage.NetMessageOmegaBonusAllocationCommit:        OnOmegaBonusAllocationCommit(message); break;       // 132
@@ -1188,6 +1190,18 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnRequestRemoveAndKillControlledAgent(MailboxMessage message) // 58
+        {
+            var request = message.As<NetMessageRequestRemoveAndKillControlledAgent>();
+            if (request == null) return Logger.WarnReturn(false, $"OnRequestRemoveAndKillControlledAgent(): Failed to retrieve message");
+
+            var avatar = Game.EntityManager.GetEntity<Avatar>(request.AvatarId);
+            if (avatar == null || avatar.GetOwnerOfType<Player>() != Player) return false;
+
+            avatar.RemoveAndKillControlledAgent();
+            return true;
+        }
+
         private bool OnMetaGameUpdateNotification(MailboxMessage message)
         {
             var metaGameUpdate = message.As<NetMessageMetaGameUpdateNotification>();
@@ -1516,7 +1530,14 @@ namespace MHServerEmu.Games.Network
         private void OnRequestTeamUpDismiss(MailboxMessage message) // 126
         {
             Avatar avatar = Player.CurrentAvatar;
-            avatar.DismissTeamUpAgent();
+            avatar.DismissTeamUpAgent(true);
+        }
+
+        private void OnTryTeamUpStyleSelect(MailboxMessage message) // 127
+        {
+            var styleSelect = message.As<NetMessageTryTeamUpStyleSelect>();
+            Avatar avatar = Player.CurrentAvatar;
+            avatar.TryTeamUpStyleSelect(styleSelect.StyleIndex);
         }
 
         private bool OnInfinityPointAllocationCommit(MailboxMessage message)   // 132

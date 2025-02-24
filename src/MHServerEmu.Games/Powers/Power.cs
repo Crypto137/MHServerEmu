@@ -896,6 +896,8 @@ namespace MHServerEmu.Games.Powers
 
         private static bool DeliverPayload(PowerPayload payload)
         {
+            payload.OnDeliverPayload();
+
             // Find targets for this power application
             List<WorldEntity> targetList = ListPool<WorldEntity>.Instance.Get();
             List<PowerResults> targetResultsList = ListPool<PowerResults>.Instance.Get();
@@ -1841,6 +1843,7 @@ namespace MHServerEmu.Games.Powers
                 if (trackedCondition.EntityId != targetId)
                     continue;
 
+                _trackedConditionList.RemoveAt(i);
                 if (conditionCollection.RemoveOrUnpauseCondition(trackedCondition.ConditionId) == false)
                     unpausedConditionList.Add(trackedCondition);
 
@@ -2612,6 +2615,13 @@ namespace MHServerEmu.Games.Powers
             TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
             if (reachProto == null) return Logger.WarnReturn(false, "IsMelee(): reachProto == null");
             return reachProto.Melee;
+        }
+
+        public static bool IsSummoned(PowerPrototype powerProto)
+        {
+            TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
+            if (reachProto == null) return Logger.WarnReturn(false, "IsSummoned(): reachProto == null");
+            return reachProto.TargetsEntitiesInInventory == InventoryConvenienceLabel.Summoned;
         }
 
         public bool IsGamepadMeleeMoveIntoRangePower()
@@ -3583,6 +3593,12 @@ namespace MHServerEmu.Games.Powers
             }
 
             return Owner;
+        }
+
+        public static void SerializePropertiesForSummonEntity(PropertyCollection sourceProperties, PropertyCollection destinationProperties)
+        {
+            SerializePropertiesForPowerPayload(sourceProperties, destinationProperties, PowerSerializeType.Entity);
+            SerializePropertiesForPowerPayload(sourceProperties, destinationProperties, PowerSerializeType.Power);
         }
 
         public static void SerializeEntityPropertiesForPowerPayload(WorldEntity worldEntity, PropertyCollection destinationProperties)
@@ -5514,6 +5530,7 @@ namespace MHServerEmu.Games.Powers
         private class StopChannelingEvent : CallMethodEvent<Power>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.StopChanneling();
+            public override bool OnCancelled() => OnTriggered();
         }
 
         private class PowerApplyEvent : ScheduledEvent
