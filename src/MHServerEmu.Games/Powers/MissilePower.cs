@@ -440,7 +440,7 @@ namespace MHServerEmu.Games.Powers
             extraProperties.CopyProperty(Properties, PropertyEnum.DamageMult);
             extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultForPower);
 
-            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity();
+            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity(GetUltimateOwner());
             if (propertySourceEntity == null)
                 return;
 

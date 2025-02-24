@@ -398,9 +398,11 @@ namespace MHServerEmu.Games.Powers
             }
 
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity();
+            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity(ultimateOwner);
             SerializeEntityPropertiesForPowerPayload(propertySourceEntity, properties);
             SerializePowerPropertiesForPowerPayload(this, properties);
+
+            properties[PropertyEnum.IsTeamUpAwaySource] = IsTeamUpPassivePowerWhileAway;
 
             SummonContext context = new()
             {

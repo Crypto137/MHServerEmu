@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Powers
                 : powerOwner.RegionLocation.Position;
 
             // Snapshot properties of the power and its owner
-            WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity();
+            WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity(ultimateOwner);
             if (propertySourceEntity == null) return Logger.WarnReturn(false, "Init(): propertySourceEntity == null");
 
             // Save property source owner id for later calculations
@@ -126,6 +126,9 @@ namespace MHServerEmu.Games.Powers
 
             Power.SerializeEntityPropertiesForPowerPayload(propertySourceEntity, Properties);
             Power.SerializePowerPropertiesForPowerPayload(power, Properties);
+
+            // Team-up passive flag
+            Properties[PropertyEnum.IsTeamUpAwaySource] = power.IsTeamUpPassivePowerWhileAway;
 
             // Snapshot additional data used to determine targets
             Range = power.GetApplicationRange();
