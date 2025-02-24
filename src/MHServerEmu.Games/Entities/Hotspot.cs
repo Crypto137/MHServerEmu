@@ -943,10 +943,6 @@ namespace MHServerEmu.Games.Entities
                         if (Debug) Logger.Debug($"hasOthers[{hasOthers}] {powerProto.DataRef.GetNameFormatted()} {target.PrototypeName} {target.Id}");
                         if (hasOthers == false) continue;
                     }
-                    else
-                    {
-                        powerTarget.ActivePowers.Set(i); // Fix infinite conditions
-                    }
                 }
                 else
                 {

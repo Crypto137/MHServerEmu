@@ -789,27 +789,27 @@ namespace MHServerEmu.Games.Entities
         /// Attempts to readd a condition to the <see cref="Power"/> that created it.
         /// Returns <see langword="false"/> if condition is no longer valid.
         /// </summary>
-        public bool TryRestorePowerCondition(Condition condition, WorldEntity owner)
+        public bool TryRestorePowerCondition(Condition condition, WorldEntity powerOwner)
         {
-            if (owner == null)
+            if (powerOwner == null)
                 return false;
 
             if (condition.CreatorPowerPrototypeRef == PrototypeId.Invalid)
                 return false;
 
             // Restore tracking if the power is still assigned and can be used
-            Power power = owner.PowerCollection?.GetPower(condition.CreatorPowerPrototypeRef);
+            Power power = powerOwner.PowerCollection?.GetPower(condition.CreatorPowerPrototypeRef);
             if (power != null)
             {
-                if (power.CanBeUsedInRegion(owner.Region) == false)
+                if (power.CanBeUsedInRegion(powerOwner.Region) == false)
                     return false;
 
                 // Trying to figure out if this orphan condition bug is a data issue with a specific power (DiamondFormCondition) or a more broad issue
                 if (power.IsToggled() && power.IsToggledOn() == false && power.PrototypeDataRef != (PrototypeId)17994345800984565974)
                     Logger.Warn($"TryRestorePowerCondition(): Toggled power is off, but has an active condition! power=[{power}]");
 
-                if (power.IsTrackingCondition(owner.Id, condition) == false)
-                    power.TrackCondition(owner.Id, condition);
+                if (power.IsTrackingCondition(_owner.Id, condition) == false)
+                    power.TrackCondition(_owner.Id, condition);
 
                 return true;
             }
