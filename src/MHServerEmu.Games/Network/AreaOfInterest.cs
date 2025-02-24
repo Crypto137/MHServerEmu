@@ -914,10 +914,6 @@ namespace MHServerEmu.Games.Network
 
             if (worldEntity != null)
             {
-                // Do not add dead non-destructible entities to AOI that weren't there already
-                if (worldEntity.IsDead && worldEntity.IsDestructible == false && currentInterestPolicies == AOINetworkPolicyValues.AOIChannelNone)
-                    return AOINetworkPolicyValues.AOIChannelNone;
-
                 // Make sure this world entity is in the same region as our interest
                 bool isInRegion = worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false && worldEntity.Region == Region;
 

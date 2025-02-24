@@ -330,10 +330,10 @@ namespace MHServerEmu.Games.Entities
 
             region?.UIDataProvider.OnEntityLifecycle(this);
 
-            OnRemoveFromWorld();
+            OnRemoveFromWorld(killFlags);
         }
 
-        public void OnRemoveFromWorld()
+        public void OnRemoveFromWorld(KillFlags killFlags)
         {
             var worldEntityProto = WorldEntityPrototype;
 
@@ -341,10 +341,13 @@ namespace MHServerEmu.Games.Entities
             if (worldEntityProto.RemoveNavInfluenceOnKilled)
                 Properties[PropertyEnum.NoEntityCollide] = true;
 
-            if (IsControlledEntity) return;
+            if (IsControlledEntity || this is Avatar) return;
 
             // Schedule destruction
             int removeFromWorldTimerMS = worldEntityProto.RemoveFromWorldTimerMS;
+            if (killFlags.HasFlag(KillFlags.DestroyImmediate) && IsTeamUpAgent == false)
+                removeFromWorldTimerMS = 0;
+
             if (removeFromWorldTimerMS < 0)     // -1 means entities are not destroyed (e.g. avatars)
                 return;
 
@@ -1830,6 +1833,9 @@ namespace MHServerEmu.Games.Entities
             // TODO: More stuff
             WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(powerResults.UltimateOwnerId);
 
+            if (powerResults.Flags.HasFlag(PowerResultFlags.Resurrect) && IsDead)
+                ResurrectFromOther(ultimateOwner);
+
             if (powerResults.IsAvoided == false)
             {
                 // Add / remove conditions
@@ -1849,6 +1855,8 @@ namespace MHServerEmu.Games.Entities
 
             return true;
         }
+
+        protected virtual void ResurrectFromOther(WorldEntity ultimateOwner) { }
 
         private bool ApplyMovementPowerResults(PowerResults powerResults)
         {

@@ -573,6 +573,10 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnOwnerCollide(whom);
         }
 
+        public void OnAIResurrect()
+        {
+            SetIsEnabled(true);
+        }
 
         public void OnAIStartThrowing(WorldEntity throwableEntity, PrototypeId throwablePowerRef, PrototypeId throwableCancelPowerRef)
         {
