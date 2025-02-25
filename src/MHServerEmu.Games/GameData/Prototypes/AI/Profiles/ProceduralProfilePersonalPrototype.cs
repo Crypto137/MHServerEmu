@@ -5590,6 +5590,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = false;
                         ownerController.ResetCurrentTargetState();
                     }
+                    if (movetoResult == StaticBehaviorReturnType.Running) return;
                 }
 
                 float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
