@@ -140,8 +140,17 @@ namespace MHServerEmu.Games.Entities
 
         #region Powers
 
+        protected override void ResurrectFromOther(WorldEntity ultimateOwner)
+        {
+            Properties[PropertyEnum.NoLootDrop] = true;
+            Properties[PropertyEnum.NoExpOnDeath] = true;
+            Resurrect();
+        }
+
         public virtual bool Resurrect()
         {
+            if (SummonDecremented) return false;
+
             // Cancel cleanup events
             CancelExitWorldEvent();
             CancelKillEvent();
@@ -152,8 +161,21 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.WeaponMissing] = false;
             Properties[PropertyEnum.NoEntityCollide] = false;
 
+            TagPlayers.Clear();
+
             // Reset state
-            SetState(PrototypeId.Invalid);
+            PrototypeId stateRef = Properties[PropertyEnum.EntityState];
+            if (stateRef != PrototypeId.Invalid)
+            {
+                var stateProto = GameDatabase.GetPrototype<EntityStatePrototype>(stateRef);
+                if (stateProto == null || stateProto.AppearanceEnum != EntityAppearanceEnum.Dead) return false;
+
+                if (WorldEntityPrototype.PostKilledState != null && WorldEntityPrototype.PostKilledState is StateSetPrototype setState)
+                {
+                    if (setState.State == stateRef)
+                        SetState(PrototypeId.Invalid);
+                }
+            }
 
             // Send resurrection message
             var resurrectMessage = NetMessageOnResurrect.CreateBuilder()
@@ -175,6 +197,9 @@ namespace MHServerEmu.Games.Entities
                 // Reactivate passive and toggled powers
                 TryAutoActivatePowersInCollection();
             }
+
+            if (CanBePlayerOwned() == false)
+                AIController?.OnAIResurrect();
 
             return true;
         }
@@ -1164,7 +1189,7 @@ namespace MHServerEmu.Games.Entities
                         var scheduler = Game?.GameEventScheduler;
                         if (scheduler == null) return;
                         scheduler.CancelEvent(_respawnControlledAgentEvent);
-                        if (IsDead) OnRemoveFromWorld();
+                        if (IsDead) OnRemoveFromWorld(KillFlags.None);
                     }
 
                     break;
@@ -1287,6 +1312,9 @@ namespace MHServerEmu.Games.Entities
                     ActivatePower(startPower, ref powerSettings);
                 }
             }
+
+            if (Properties.HasProperty(PropertyEnum.PlaceableDead))
+                Kill();
 
             TeamUpOwner?.OnEnteredWorldTeamUpAgent();
 

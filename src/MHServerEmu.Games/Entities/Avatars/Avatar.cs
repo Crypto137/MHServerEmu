@@ -165,6 +165,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        protected override void ResurrectFromOther(WorldEntity ultimateOwner)
+        {
+            // TODO Ressurect for Avatar
+        }
+
         protected override void BindReplicatedFields()
         {
             base.BindReplicatedFields();
