@@ -4834,6 +4834,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] < 1)
                     {
                         var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SummonElektra.PowerContext, SummonElektra);
+                        if (powerResult == StaticBehaviorReturnType.Running) return;
                         if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
                             ProceduralAI.Logger.Warn($"Kingpin failed to play his SummonElektra power! Reason: {powerResult}  Kingpin: {agent}");
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
@@ -4842,6 +4843,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] < 2)
                         {
                             var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SummonBullseye.PowerContext, SummonBullseye);
+                            if (powerResult == StaticBehaviorReturnType.Running) return;
                             if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
                                 ProceduralAI.Logger.Warn($"Kingpin failed to play his SummonBullseye power! Reason: {powerResult}  Kingpin: {agent}");
                             blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 2;
