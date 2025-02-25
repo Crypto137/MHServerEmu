@@ -286,7 +286,13 @@ namespace MHServerEmu.Games.Navi
         public void UpdateEndPosition(Vector3 position)
         {
             if (_pathNodes.Count > 0)
-                _pathNodes[^1].Vertex = position;
+            {
+                // TODO: Simplify this when/if we turn NaviPathNode into a struct?
+                int index = _pathNodes.Count - 1;
+                NaviPathNode node = new(_pathNodes[index]);
+                node.Vertex = position;
+                _pathNodes[index] = node;
+            }
         }
 
         public static NaviPathResult CheckCanPathTo(NaviMesh naviMesh, Vector3 position, Vector3 goalPosition, float radius, PathFlags pathFlags)
