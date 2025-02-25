@@ -1268,7 +1268,7 @@ namespace MHServerEmu.Games.Entities
                 if (notSimulated && power.Properties[PropertyEnum.RemovePowerWhenNotSimulated] == false)
                     continue;
 
-                EndPowerFlags flags = EndPowerFlags.ExplicitCancel;
+                EndPowerFlags flags = EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting;
                 if (notSimulated)
                     flags |= EndPowerFlags.ExitWorld;
 
