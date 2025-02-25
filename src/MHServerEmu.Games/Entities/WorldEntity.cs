@@ -193,7 +193,11 @@ namespace MHServerEmu.Games.Entities
             SetFlag(EntityFlags.IsPopulation, settings.IsPopulation);
 
             if (worldEntityProto.Bounds != null)
+            {
                 Bounds.InitializeFromPrototype(worldEntityProto.Bounds);
+                if (settings.BoundsScaleOverride != 1f)
+                    Bounds.Scale(settings.BoundsScaleOverride);
+            }
 
             Physics.Initialize(this);
 
@@ -2238,11 +2242,7 @@ namespace MHServerEmu.Games.Entities
 
             // Scale bounds if needed
             float boundsScaleChange = Properties[PropertyEnum.BoundsScaleRadiusCOTUnitsPerSec] * tickData.TickDurationSeconds;
-            if (Segment.IsNearZero(boundsScaleChange) == false)
-            {
-                // TODO
-                Logger.Debug($"ApplyPropertyTicker(): boundsScaleChange={boundsScaleChange} for [{this}]");
-            }
+            ApplyBoundsScaleChange(boundsScaleChange);
 
             // Apply health cost over time (different from damage, e.g. Blade's Thirst)
             float healthCostOverTime = overTimeProperties[PropertyEnum.PowerHealthCostOverTime];
@@ -2266,6 +2266,29 @@ namespace MHServerEmu.Games.Entities
             // Break stealth if needed
             WorldEntity creator = Game.EntityManager.GetEntity<WorldEntity>(tickData.CreatorId);
             Power.TryBreakStealth(creator, ultimateCreator, tickData.PowerProto, isHostile, true);
+        }
+
+        private bool ApplyBoundsScaleChange(float boundsScaleChange)
+        {
+            if (Segment.IsNearZero(boundsScaleChange))
+                return true;
+
+            Bounds bounds = new(Bounds);
+            float oldRadius = bounds.Radius;
+            if (oldRadius == 0f) return Logger.WarnReturn(false, "ApplyBoundsScaleChange(): oldRadius == 0f");  // guard against div by 0
+            float newRadius = oldRadius + boundsScaleChange;
+            bounds.Scale(newRadius / oldRadius);
+            Bounds = bounds;
+
+            bounds = new(EntityCollideBounds);
+            oldRadius = bounds.Radius;
+            if (oldRadius == 0f) return Logger.WarnReturn(false, "ApplyBoundsScaleChange(): oldRadius == 0f");  // guard against div by 0
+            newRadius = oldRadius + boundsScaleChange;
+            bounds.Scale(newRadius / oldRadius);
+            EntityCollideBounds = bounds;
+
+            RegisterForPendingPhysicsResolve();
+            return true;
         }
 
         public float ApplyDamageConversion(float damageBase, DamageType damageType, PowerResults powerResults, WorldEntity user, PropertyCollection powerProperties, float difficultyMult)

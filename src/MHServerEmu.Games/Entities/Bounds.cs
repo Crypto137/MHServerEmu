@@ -213,6 +213,11 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void Scale(float scaleMult)
+        {
+            // TODO
+        }
+
         public void InitializeWedge(float angleDegrees, float heightFromCenter, float length, float baseWidth, BoundsCollisionType collisionType, BoundsFlags flags)
         {
             Geometry = GeometryType.Wedge;
