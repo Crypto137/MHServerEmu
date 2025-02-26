@@ -1,14 +1,11 @@
 ﻿using System.Text;
 using Gazillion;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
-using MHServerEmu.Games.DRAG.Generators.Regions;
-using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -64,53 +61,66 @@ namespace MHServerEmu.Games.Entities
                 if (hotspot != null) hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transProto.Waypoint;
             }
 
-            if (transProto.Type == RegionTransitionType.Transition)
-            {
-                var area = Area;
-                var entityRef = PrototypeDataRef;
-                var cellRef = Cell.PrototypeDataRef;
-                var region = Region;
-                bool noDest = _destinationList.Count == 0;
-                if (noDest && area.RandomInstances.Count > 0)
-                    foreach(var instance in area.RandomInstances)
-                    {
-                        var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
-                        if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
-                        if (instance.OriginEntity != entityRef) continue;
-                        var destination = Destination.DestinationFromTarget(instance.Target, region, transProto);
-                        if (destination == null) continue;
-                        _destinationList.Add(destination);
-                        noDest = false;
-                    }
+            Destination destination;
+            PrototypeId targetRef;
 
-                if (noDest)
-                {
-                    // TODO destination from region origin target
-                    var targets = region.Targets;
-                    if (targets.Count == 1)
-                    {
-                        var destination = Destination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
-                        if (destination != null)
+            switch (transProto.Type) 
+            {
+                case RegionTransitionType.Transition:
+                case RegionTransitionType.TransitionDirectReturn:
+
+                    var area = Area;
+                    var entityRef = PrototypeDataRef;
+                    var cellRef = Cell.PrototypeDataRef;
+                    var region = Region;
+                    bool noDest = _destinationList.Count == 0;
+                    if (noDest && area.RandomInstances.Count > 0)
+                        foreach(var instance in area.RandomInstances)
                         {
+                            var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
+                            if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
+                            if (instance.OriginEntity != entityRef) continue;
+                            destination = Destination.DestinationFromTarget(instance.Target, region, transProto);
+                            if (destination == null) continue;
                             _destinationList.Add(destination);
                             noDest = false;
                         }
-                    }
-                }
 
-                // Get default region
-                if (noDest)
-                {
-                    var targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                    var destination = Destination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                    if (noDest)
+                    {
+                        // TODO destination from region origin target
+                        var targets = region.Targets;
+                        if (targets.Count == 1)
+                        {
+                            destination = Destination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
+                            if (destination != null)
+                            {
+                                _destinationList.Add(destination);
+                                noDest = false;
+                            }
+                        }
+                    }
+
+                    // Get default region
+                    if (noDest)
+                    {
+                        targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+                        destination = Destination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                        if (destination != null) _destinationList.Add(destination);
+                    }
+                    break;
+
+                case RegionTransitionType.TransitionDirect:
+            
+                    var avatar = Game.EntityManager.GetEntity<Avatar>(settings.SourceEntityId);
+                    var player = avatar?.GetOwnerOfType<Player>();
+                    if (player == null) break;
+                    Properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
+
+                    targetRef = transProto.DirectTarget;
+                    destination = Destination.DestinationFromTargetRef(targetRef);
                     if (destination != null) _destinationList.Add(destination);
-                }
-            }
-            else if (transProto.Type == RegionTransitionType.TransitionDirect)
-            {
-                var targetRef = transProto.DirectTarget;
-                var destination = Destination.DestinationFromTargetRef(targetRef);
-                if (destination != null) _destinationList.Add(destination);
+                    break;
             }
 
             base.OnEnteredWorld(settings);
@@ -191,6 +201,9 @@ namespace MHServerEmu.Games.Entities
 
                             if (regionProto.UsePrevRegionPlayerDeathCount)
                                 regionContext.PlayerDeaths = region.PlayerDeaths;
+
+                            // Lifespan for destory Teleport
+                            ResetLifespan(TimeSpan.FromMinutes(2)); 
                         }
 
                         return TeleportToRemoteTarget(player, destination.TargetRef);
@@ -209,6 +222,14 @@ namespace MHServerEmu.Games.Entities
 
                 case RegionTransitionType.ReturnToLastTown:
                     return TeleportToLastTown(player);
+
+                case RegionTransitionType.TransitionDirectReturn:
+                    if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
+                    if (_destinationList.Count > 1) Logger.Debug("UseTransition(): _destinationList.Count > 1");
+
+                    destination = _destinationList[0];
+                    // TODO teleport to Position in region
+                    return TeleportToRemoteTarget(player, destination.TargetRef);
 
                 default:
                     return Logger.WarnReturn(false, $"UseTransition(): Unimplemented region transition type {TransitionPrototype.Type}");
