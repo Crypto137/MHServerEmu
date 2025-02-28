@@ -114,7 +114,7 @@ namespace MHServerEmu.Games.UI
                 _timeStart = 0;
             }
 
-            _timeEnd = (long)Clock.GameTime.TotalMilliseconds + timeRemainingMS;
+            _timeEnd = (long)Game.Current.CurrentTime.TotalMilliseconds + timeRemainingMS;
             UpdateUI();
         }
 
