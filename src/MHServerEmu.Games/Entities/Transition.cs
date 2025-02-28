@@ -203,7 +203,8 @@ namespace MHServerEmu.Games.Entities
                                 regionContext.PlayerDeaths = region.PlayerDeaths;
 
                             // Lifespan for destory Teleport
-                            ResetLifespan(TimeSpan.FromMinutes(2)); 
+                            ResetLifespan(TimeSpan.FromMinutes(2));
+                            regionContext.PortalId = Id;
                         }
 
                         return TeleportToRemoteTarget(player, destination.TargetRef);

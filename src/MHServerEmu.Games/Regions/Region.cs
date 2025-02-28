@@ -494,6 +494,12 @@ namespace MHServerEmu.Games.Regions
                 MetaGames.Remove(metaGameId);
             }
 
+            if (Settings.PortalId != 0) // Destroy Portal with region
+            {
+                var portal = entityManager.GetEntity<Entity>(Settings.PortalId);
+                portal?.Destroy();
+            }
+
             while (Areas.Count > 0)
             {
                 var areaId = Areas.First().Key;
