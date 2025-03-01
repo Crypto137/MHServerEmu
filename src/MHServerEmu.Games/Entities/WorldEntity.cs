@@ -2486,6 +2486,15 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
+        public string ConditionCollectionToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"Conditions:");
+            foreach (var condition in _conditionCollection)
+                sb.AppendLine($" {GameDatabase.GetFormattedPrototypeName(condition.CreatorPowerPrototypeRef)}");
+            return sb.ToString();
+        }
+
         protected virtual PowerUseResult ActivatePower(Power power, ref PowerActivationSettings settings)
         {
             return power.Activate(ref settings);
