@@ -1573,7 +1573,7 @@ namespace MHServerEmu.Games.Entities.Items
                 properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
             }
 
-            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; // we need this?
+            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; 
         }
 
         public bool IsGear(AvatarPrototype avatarProto)

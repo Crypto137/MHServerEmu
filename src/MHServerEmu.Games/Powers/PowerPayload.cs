@@ -10,6 +10,7 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -166,6 +167,13 @@ namespace MHServerEmu.Games.Powers
                 rankProtoRef = powerOwner.Properties[PropertyEnum.Rank];
 
             Properties[PropertyEnum.Rank] = rankProtoRef;
+
+            // Set scenario affixes
+            if (powerApplication.ItemSourceId != Entity.InvalidId)
+            {
+                var item = Game.EntityManager.GetEntity<Item>(powerApplication.ItemSourceId);
+                item?.SetScenarioProperties(Properties);
+            }
 
             // Snapshot additional properties to recalculate initial damage for enemy DCL scaling
             if (IsPlayerPayload == false)
