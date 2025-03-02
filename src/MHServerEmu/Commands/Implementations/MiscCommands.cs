@@ -150,4 +150,34 @@ namespace MHServerEmu.Commands.Implementations
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
     }
+
+    [CommandGroup("tptoentity", "Teleports to the first entity present in the region which prototype name contains the string given.\nUsage:\ntptoentity MODOK", AccountUserLevel.Admin)]
+    public class TeleportToProtoCommand : CommandGroup
+    {
+        [DefaultCommand(AccountUserLevel.User)]
+        public string tptoentity(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
+
+            if(avatar.Region == null) return "No region found.";
+
+            Entity targetEntity = avatar.Region.Entities.FirstOrDefault(k => k.PrototypeName.ToLower().Contains(@params[0].ToLower()));
+
+            if (targetEntity == null) return $"No entity found with the name {@params[0]}";
+
+            if (targetEntity is not WorldEntity worldEntity)
+                return "No world entity found.";
+
+            Vector3 teleportPoint = worldEntity.RegionLocation.Position;
+            avatar.ChangeRegionPosition(teleportPoint, null, ChangePositionFlags.Teleport);
+
+            return $"Teleporting to {teleportPoint.ToStringNames()}.";
+        }
+    }
 }
