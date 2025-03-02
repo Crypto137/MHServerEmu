@@ -158,7 +158,7 @@ namespace MHServerEmu.Commands.Implementations
         public string tptoentity(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help tptoentity' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
