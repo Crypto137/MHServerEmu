@@ -189,9 +189,11 @@ namespace MHServerEmu.Games.Entities
                     // TODO: Additional checks if we need to transfer (e.g. when transferring to another instance of the same region proto).
                     if (targetRegionProtoRef != PrototypeId.Invalid && region.PrototypeDataRef != targetRegionProtoRef)
                     {
+                        var regionContext = player.PlayerConnection.RegionContext;
+                        regionContext.ResetRegionSettings();
+
                         if (TransitionPrototype.Type == RegionTransitionType.TransitionDirect)
                         {
-                            var regionContext = player.PlayerConnection.RegionContext;
                             var regionProto = GameDatabase.GetPrototype<RegionPrototype>(targetRegionProtoRef);
 
                             if (regionProto.HasEndless())

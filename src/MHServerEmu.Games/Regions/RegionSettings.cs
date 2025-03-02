@@ -111,6 +111,13 @@ namespace MHServerEmu.Games.Regions
             Properties.Clear();
         }
 
+        public void ResetRegionSettings()
+        {
+            PortalId = 0;
+            PlayerDeaths = 0;
+            PlayerGuidParty = 0;
+        }
+
         public void CopyScenarioProperties(PropertyCollection properties)
         {
             Properties.Clear();
