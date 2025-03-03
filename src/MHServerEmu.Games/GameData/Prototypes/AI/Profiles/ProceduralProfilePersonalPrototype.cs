@@ -964,7 +964,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Ally) == false) return;
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Ally) == false) return;
 
             GRandom random = game.Random;
             Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -2311,7 +2311,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+            CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
             if (target == null)
             {
                 HandleContext(proceduralAI, ownerController,IdleRotation);
@@ -2472,7 +2472,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (state != EnrageState.Enraging)
             {
                 WorldEntity target = ownerController.TargetEntity;
-                if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+                if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -4569,7 +4569,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null || blackboard == null) return;
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long summonCooldown = currentTime + game.Random.Next(SummonHydraMinCooldownMS, SummonHydraMaxCooldownMS);
-            summonCooldown = long.MaxValue; // REMOVEME: Disabled summon/invul phases until we have summons working
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = summonCooldown;
         }
 
@@ -5606,7 +5605,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
             {
                 int distToMasterSq = 0;
                 if (master != null && master.IsInWorld)

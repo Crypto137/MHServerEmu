@@ -568,7 +568,7 @@ namespace MHServerEmu.Games.Powers
                     direction = transform * direction;
 
                     // Apply offset
-                    settings.TargetPosition = direction * offsetActivationAoe.PositionOffsetMagnitude;
+                    settings.TargetPosition += direction * offsetActivationAoe.PositionOffsetMagnitude;
                     if (offsetActivationAoe.UseIncomingTargetPosAsUserPos)
                         settings.UserPosition = settings.TargetPosition;
 

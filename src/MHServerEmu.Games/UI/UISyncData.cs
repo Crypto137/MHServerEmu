@@ -94,7 +94,12 @@ namespace MHServerEmu.Games.UI
                 _timeEnd = 0;
             }
 
-            _timeStart = (long)Clock.GameTime.TotalMilliseconds - timeElapsedMS;
+            var game = Game.Current;
+
+            // Client checks _timeStart against its own GameTime, so here need to add time offset
+            var clientCurrentTime = (long)game.CurrentTime.TotalMilliseconds - 100;
+
+            _timeStart = clientCurrentTime - timeElapsedMS;
             UpdateUI();
         }
 
@@ -109,7 +114,7 @@ namespace MHServerEmu.Games.UI
                 _timeStart = 0;
             }
 
-            _timeEnd = (long)Clock.GameTime.TotalMilliseconds + timeRemainingMS;
+            _timeEnd = (long)Game.Current.CurrentTime.TotalMilliseconds + timeRemainingMS;
             UpdateUI();
         }
 
