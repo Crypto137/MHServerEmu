@@ -222,6 +222,11 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
+        public void PullCommunityStatus()
+        {
+            // TODO
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();

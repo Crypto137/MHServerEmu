@@ -496,6 +496,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageVendorRequestSellItemTo:           OnVendorRequestSellItemTo(message); break;          // 103
                 case ClientToGameServerMessage.NetMessageVendorRequestDonateItemTo:         OnVendorRequestDonateItemTo(message); break;        // 104
                 case ClientToGameServerMessage.NetMessageVendorRequestRefresh:              OnVendorRequestRefresh(message); break;             // 105
+                case ClientToGameServerMessage.NetMessagePullCommunityStatus:               OnPullCommunityStatus(message); break;              // 107
                 case ClientToGameServerMessage.NetMessageAkEvent:                           OnAkEvent(message); break;                          // 109
                 case ClientToGameServerMessage.NetMessageSetTipSeen:                        OnSetTipSeen(message); break;                       // 110
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
@@ -533,6 +534,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTell:                                                                                  // 65
                 case ClientToGameServerMessage.NetMessageReportPlayer:                                                                          // 66
                 case ClientToGameServerMessage.NetMessageChatBanVote:                                                                           // 67
+                case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:                                                        // 106, TODO: handle this in game
                     ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.GroupingManager);
                     break;
 
@@ -1296,6 +1298,15 @@ namespace MHServerEmu.Games.Network
             if (vendorRequestRefresh == null) return Logger.WarnReturn(false, $"OnVendorRequestRefresh(): Failed to retrieve message");
 
             Player?.RefreshVendorInventory(vendorRequestRefresh.VendorId);
+            return true;
+        }
+
+        private bool OnPullCommunityStatus(MailboxMessage message)  // 107
+        {
+            var pullCommunityStatus = message.As<NetMessagePullCommunityStatus>();
+            if (pullCommunityStatus == null) return Logger.WarnReturn(false, $"OnPullCommunityStatus(): Failed to retrieve message");
+
+            Player?.Community?.PullCommunityStatus();
             return true;
         }
 
