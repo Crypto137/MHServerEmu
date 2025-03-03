@@ -1,9 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Commands.Attributes;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -18,7 +16,6 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers.Conditions;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -165,116 +162,6 @@ namespace MHServerEmu.Commands.Implementations
             string obj = region.NaviMesh.NaviCdt.MeshToObj(flags);
             FileHelper.SaveTextFileToRoot(filename, obj);
             return $"NaviMesh saved as {filename}";
-        }
-
-        [Command("isblocked", "Usage: debug isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
-        public string IsBlocked(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help debug isblocked' to get help.";
-
-            if (ulong.TryParse(@params[0], out ulong entityId1) == false)
-                return $"Failed to parse EntityId1 {@params[0]}";
-
-            if (ulong.TryParse(@params[1], out ulong entityId2) == false)
-                return $"Failed to parse EntityId2 {@params[1]}";
-
-            CommandHelper.TryGetGame(client, out Game game);
-            var manager = game.EntityManager;
-
-            var entity1 = manager.GetEntity<WorldEntity>(entityId1);
-            if (entity1 == null) return $"No entity found for {entityId1}";
-
-            var entity2 = manager.GetEntity<WorldEntity>(entityId2);
-            if (entity2 == null) return $"No entity found for {entityId2}";
-
-            Bounds bounds = entity1.Bounds;
-            bool isBlocked = Games.Regions.Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
-            return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
-        }
-
-        [Command("near", "Usage: debug near [radius]. Default radius 100.", AccountUserLevel.User)]
-        public string Near(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
-
-            if ((@params.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
-                radius = 100;   // Default to 100 if no radius is specified
-
-            Sphere near = new(avatar.RegionLocation.Position, radius);
-
-            List<string> entities = new();
-            foreach (var worldEntity in playerConnection.AOI.Region.IterateEntitiesInVolume(near, new()))
-            {
-                string name = worldEntity.PrototypeName;
-                ulong entityId = worldEntity.Id;
-                string status = string.Empty;
-                if (playerConnection.AOI.InterestedInEntity(entityId) == false) status += "[H]";
-                if (worldEntity is Transition) status += "[T]";
-                if (worldEntity.WorldEntityPrototype.VisibleByDefault == false) status += "[Inv]";
-                entities.Add($"[E][{entityId}] {name} {status}");
-            }
-
-            foreach (var reservation in playerConnection.AOI.Region.SpawnMarkerRegistry.IterateReservationsInVolume(near))
-            {
-                string name = GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef);
-                int markerId = reservation.GetPid();
-                string status = $"[{reservation.Type.ToString()[0]}][{reservation.State.ToString()[0]}]";
-                entities.Add($"[M][{markerId}] {name} {status}");
-            }
-
-            if (entities.Count == 0)
-                return "No objects found.";
-
-            ChatHelper.SendMetagameMessage(client, $"Found for R={radius}:");
-            ChatHelper.SendMetagameMessages(client, entities, false);
-            return string.Empty;
-        }
-
-        [Command("marker", "Displays information about the specified marker.\nUsage: debug marker [MarkerId]", AccountUserLevel.User)]
-        public string Marker(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help debug marker' to get help.";
-
-            if (int.TryParse(@params[0], out int markerId) == false)
-                return $"Failed to parse MarkerId {@params[0]}";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-
-            var reservation = playerConnection.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
-            if (reservation == null) return "No marker found.";
-
-            ChatHelper.SendMetagameMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
-            ChatHelper.SendMetagameMessageSplit(client, reservation.ToString(), false);
-            return string.Empty;
-        }
-
-        [Command("entity", "Displays information about the specified entity.\nUsage: debug entity [EntityId]", AccountUserLevel.User)]
-        public string Entity(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help debug entity' to get help.";
-
-            if (ulong.TryParse(@params[0], out ulong entityId) == false)
-                return $"Failed to parse EntityId {@params[0]}";
-
-            CommandHelper.TryGetGame(client, out Game game);
-
-            var entity = game.EntityManager.GetEntity<Entity>(entityId);
-            if (entity == null) return "No entity found.";
-
-            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
-            ChatHelper.SendMetagameMessageSplit(client, entity.Properties.ToString(), false);
-            if (entity is WorldEntity worldEntity)
-            {
-                ChatHelper.SendMetagameMessageSplit(client, worldEntity.Bounds.ToString(), false);
-                ChatHelper.SendMetagameMessageSplit(client, worldEntity.PowerCollectionToString(), false);
-            }
-            return string.Empty;
         }
 
         [Command("crashgame", "Crashes the current game instance.", AccountUserLevel.Admin)]

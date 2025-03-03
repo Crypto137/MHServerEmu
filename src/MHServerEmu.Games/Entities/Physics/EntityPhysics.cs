@@ -164,7 +164,17 @@ namespace MHServerEmu.Games.Entities.Physics
             ListPool<ulong>.Instance.Return(attachedEntities);
         }
 
-        private void DetachChild(EntityPhysics physics)
+        public void AttachChild(EntityPhysics physics)
+        {
+            if (Entity == null && physics.Entity == null) return;
+            if (Entity.IsInWorld == false || Entity.TestStatus(EntityStatus.ExitingWorld)) return;
+            if (physics.Entity.IsInWorld == false || physics.Entity.TestStatus(EntityStatus.ExitingWorld)) return;
+
+            AttachedEntities ??= new();
+            AttachedEntities.Add(physics.Entity.Id);
+        }
+
+        public void DetachChild(EntityPhysics physics)
         {
             if (AttachedEntities != null && Entity != null && physics.Entity != null)
                 AttachedEntities.Remove(physics.Entity.Id);

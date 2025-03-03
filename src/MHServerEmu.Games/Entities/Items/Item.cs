@@ -168,36 +168,22 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 InventoryPrototype inventoryProto = prevInvLoc.InventoryPrototype;
                 WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(prevInvLoc.ContainerId);
+                if (owner == null) return;
+
+                var player = owner.GetOwnerOfType<Player>();
+                var avatar = player?.CurrentAvatar;
+                if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == owner)
+                    RemoveTeamUpAffixesFromAvatar(avatar);
 
                 // Stop ticking
                 if (owner != null && inventoryProto.IsEquipmentInventory)
                     StopTicking(owner);
-
-                // REMOVEME: Destroy summoned pet hack
-                if (prevInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.PetItem)
-                {
-                    var itemProto = ItemPrototype;
-                    if (itemProto?.ActionsTriggeredOnItemEvent?.Choices == null) return;
-                    var itemActionProto = itemProto.ActionsTriggeredOnItemEvent.Choices[0];
-                    if (itemActionProto is ItemActionUsePowerPrototype itemActionUsePowerProto)
-                    {
-                        var powerRef = itemActionUsePowerProto.Power;
-                        var avatar = Game.EntityManager.GetEntity<Avatar>(prevInvLoc.ContainerId);
-                        Power power = avatar?.GetPower(powerRef);
-                        if (power == null) return;
-                        if (power.Prototype is SummonPowerPrototype summonPowerProto)
-                        {
-                            PropertyId summonedEntityCountProp = new(PropertyEnum.PowerSummonedEntityCount, powerRef);
-                            if (avatar.Properties[PropertyEnum.PowerToggleOn, powerRef])
-                            {
-                                EntityHelper.DestroySummonerFromPowerPrototype(avatar, summonPowerProto);
-                                avatar.Properties[PropertyEnum.PowerToggleOn, powerRef] = false;
-                                avatar.Properties.AdjustProperty(-1, summonedEntityCountProp);
-                            }
-                        }
-                    }
-                }
             }
+        }
+
+        private void RemoveTeamUpAffixesFromAvatar(Avatar avatar)
+        {
+            // TODO
         }
 
         public void StartTicking(WorldEntity owner)
@@ -1587,7 +1573,7 @@ namespace MHServerEmu.Games.Entities.Items
                 properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
             }
 
-            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; // we need this?
+            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; 
         }
 
         public bool IsGear(AvatarPrototype avatarProto)

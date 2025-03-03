@@ -208,7 +208,8 @@ namespace MHServerEmu.Games.Regions
                 if (regionId == 0 
                     || _allRegions.TryGetValue(regionId, out region) == false 
                     || region.DifficultyTierRef != regionContext.DifficultyTierRef 
-                    || region.Settings.EndlessLevel != regionContext.EndlessLevel) // Danger Room next level
+                    || region.Settings.EndlessLevel != regionContext.EndlessLevel // Danger Room next level
+                    || region.Settings.PortalId != regionContext.PortalId) // TODO remake portal for Party
                 {
                     // MetaStateShutdown will shutdown old region
                     if (region != null && region.Settings.EndlessLevel == regionContext.EndlessLevel)

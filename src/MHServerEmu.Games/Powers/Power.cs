@@ -36,7 +36,6 @@ namespace MHServerEmu.Games.Powers
         private static readonly TimeSpan CheckIfTargetIsKilledInterval = TimeSpan.FromMilliseconds(250);
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private bool _isTeamUpPassivePowerWhileAway;
         private SituationalPowerComponent _situationalComponent;
         private KeywordsMask _keywordsMask;
 
@@ -73,6 +72,7 @@ namespace MHServerEmu.Games.Powers
         public GamepadSettingsPrototype GamepadSettingsPrototype { get; }
 
         public WorldEntity Owner { get; private set; }
+        public bool IsTeamUpPassivePowerWhileAway { get; private set; }
         public PropertyCollection Properties { get; } = new();
         public KeywordsMask KeywordsMask { get => _keywordsMask; }
 
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Powers
         public bool Initialize(WorldEntity owner, bool isTeamUpPassivePowerWhileAway, PropertyCollection initializeProperties)
         {
             Owner = owner;
-            _isTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
+            IsTeamUpPassivePowerWhileAway = isTeamUpPassivePowerWhileAway;
 
             if (Prototype == null)
                 return Logger.WarnReturn(false, $"Initialize(): Prototype == null");
@@ -896,6 +896,8 @@ namespace MHServerEmu.Games.Powers
 
         private static bool DeliverPayload(PowerPayload payload)
         {
+            payload.OnDeliverPayload();
+
             // Find targets for this power application
             List<WorldEntity> targetList = ListPool<WorldEntity>.Instance.Get();
             List<PowerResults> targetResultsList = ListPool<PowerResults>.Instance.Get();
@@ -1303,8 +1305,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StartCharging()
         {
-            //Logger.Debug("StartCharging()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StartCharging(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "StartCharging(): Game == null");
 
@@ -1327,8 +1327,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StopCharging()
         {
-            //Logger.Debug("StopCharging()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StopCharging(): Owner == null");
 
             _activationPhase = PowerActivationPhase.Active;
@@ -1349,8 +1347,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StartChanneling()
         {
-            //Logger.Debug("StartChanneling()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StartChanneling(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "StartChanneling(): Game == null");
 
@@ -1386,8 +1382,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StopChanneling()
         {
-            //Logger.Debug("StopChanneling()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StopChanneling(): Owner == null");
 
             if (_activationPhase != PowerActivationPhase.ChannelStarting && _activationPhase != PowerActivationPhase.Channeling
@@ -1841,6 +1835,7 @@ namespace MHServerEmu.Games.Powers
                 if (trackedCondition.EntityId != targetId)
                     continue;
 
+                _trackedConditionList.RemoveAt(i);
                 if (conditionCollection.RemoveOrUnpauseCondition(trackedCondition.ConditionId) == false)
                     unpausedConditionList.Add(trackedCondition);
 
@@ -2612,6 +2607,13 @@ namespace MHServerEmu.Games.Powers
             TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
             if (reachProto == null) return Logger.WarnReturn(false, "IsMelee(): reachProto == null");
             return reachProto.Melee;
+        }
+
+        public static bool IsSummoned(PowerPrototype powerProto)
+        {
+            TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
+            if (reachProto == null) return Logger.WarnReturn(false, "IsSummoned(): reachProto == null");
+            return reachProto.TargetsEntitiesInInventory == InventoryConvenienceLabel.Summoned;
         }
 
         public bool IsGamepadMeleeMoveIntoRangePower()
@@ -3575,14 +3577,26 @@ namespace MHServerEmu.Games.Powers
         
         // Payload Serialization is the term the game uses for the snapshotting of properties that happens when a power is applied
 
-        public WorldEntity GetPayloadPropertySourceEntity()
+        public WorldEntity GetPayloadPropertySourceEntity(WorldEntity ultimateOwner)
         {
-            if (_isTeamUpPassivePowerWhileAway)
+            if (IsTeamUpPassivePowerWhileAway)
             {
-                // TODO: team-up when away powers
+                Avatar avatarOwner = ultimateOwner != null ? ultimateOwner.GetMostResponsiblePowerUser<Avatar>() : Owner.GetMostResponsiblePowerUser<Avatar>();
+                if (avatarOwner != null)
+                {
+                    Agent teamUpAgent = avatarOwner.CurrentTeamUpAgent;
+                    if (teamUpAgent != null)
+                        return teamUpAgent;
+                }
             }
 
             return Owner;
+        }
+
+        public static void SerializePropertiesForSummonEntity(PropertyCollection sourceProperties, PropertyCollection destinationProperties)
+        {
+            SerializePropertiesForPowerPayload(sourceProperties, destinationProperties, PowerSerializeType.Entity);
+            SerializePropertiesForPowerPayload(sourceProperties, destinationProperties, PowerSerializeType.Power);
         }
 
         public static void SerializeEntityPropertiesForPowerPayload(WorldEntity worldEntity, PropertyCollection destinationProperties)
@@ -4398,9 +4412,6 @@ namespace MHServerEmu.Games.Powers
             PropertyCollection properties, WorldEntity primaryTarget, WorldEntity owner, in Vector3 targetPosition, in Vector3 userPosition,
             ulong regionId, ulong userEntityId, AlliancePrototype userAllianceProto, int beamSweepSlice, TimeSpan executionTime, int randomSeed)
         {
-            //Logger.Debug($"GetAOETargets(): {powerProto}");
-
-            // Validation
             if (game == null) return Logger.WarnReturn(false, "GetAOETargets(): game == null");
             
             TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
@@ -4529,8 +4540,6 @@ namespace MHServerEmu.Games.Powers
         private static bool GetTargetsFromInventory(List<WorldEntity> targetList, Game game, WorldEntity owner, WorldEntity target,
             PowerPrototype powerProto, AlliancePrototype userAllianceProto, InventoryConvenienceLabel inventoryConvenienceLabel)
         {
-            Logger.Debug($"GetTargetsFromInventory(): {inventoryConvenienceLabel}");
-
             if (game == null) return Logger.WarnReturn(false, "GetTargetsFromInventory(): game == null");
             if (owner == null) return Logger.WarnReturn(false, "GetTargetsFromInventory(): owner == null");
 
@@ -5172,8 +5181,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleChannelStart()
         {
-            //Logger.Debug("ScheduleChannelStart()");
-
             if (Owner == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Game == null");
 
@@ -5267,7 +5274,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleExtraActivationTimeout(ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
         {
-            Logger.Debug("ScheduleExtraActivationTimeout()");
+            Logger.Debug($"ScheduleExtraActivationTimeout(): [{this}]");
 
             int timeoutLengthMS = extraActivateOnSubsequent.GetTimeoutLengthMS(Properties[PropertyEnum.PowerRank]);
             
@@ -5514,6 +5521,7 @@ namespace MHServerEmu.Games.Powers
         private class StopChannelingEvent : CallMethodEvent<Power>
         {
             protected override CallbackDelegate GetCallback() => (t) => t.StopChanneling();
+            public override bool OnCancelled() => OnTriggered();
         }
 
         private class PowerApplyEvent : ScheduledEvent

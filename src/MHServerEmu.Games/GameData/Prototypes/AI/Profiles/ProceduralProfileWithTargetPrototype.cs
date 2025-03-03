@@ -245,7 +245,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
-        protected bool CommonSimplifiedSensory(WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, 
+        protected bool CommonSimplifiedSensory(ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, 
             SelectEntityContextPrototype selectTarget, CombatTargetType targetType)
         {
             BehaviorSensorySystem senses = ownerController.Senses;
@@ -807,7 +807,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Power == null || Power.Power == PrototypeId.Invalid) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             WorldEntity target = ownerController.TargetEntity;
-            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+            CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
 
             StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, Power, null);
             if (contextResult == StaticBehaviorReturnType.Running)
@@ -882,7 +882,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) 
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) 
             { 
                 if (SecondaryTargetSelection != null)
                 {
@@ -912,7 +912,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
             {
                 if (SecondaryTargetSelection != null)
                 {
@@ -945,7 +945,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
 
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
@@ -991,7 +991,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
             HandleContext(proceduralAI, ownerController, MoveToTarget);
         }
 

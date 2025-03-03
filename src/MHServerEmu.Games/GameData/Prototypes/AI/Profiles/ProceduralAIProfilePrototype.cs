@@ -824,7 +824,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             WorldEntity target = ownerController.TargetEntity;
 
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
             {
                 HandleMovementContext(proceduralAI, ownerController, agent.Locomotor, PetFollow, false, out var movementResult);
                 if (movementResult != StaticBehaviorReturnType.Running) 
@@ -1024,7 +1024,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (powerResult == StaticBehaviorReturnType.Running) return;
             }
 
-            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+            CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
 
             if (master != null && master.IsInWorld)
             {
@@ -1082,7 +1082,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             var powerQueue = blackboard.CustomPowerQueue;
-            if (powerQueue != null)
+            if (powerQueue != null && powerQueue.Count > 0)
             {
                 PrototypeId customPowerDataRef = powerQueue.Peek().PowerRef;
                 if (powerContext.Power != customPowerDataRef) return;

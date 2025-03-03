@@ -18,7 +18,7 @@ namespace MHServerEmu.Games.Powers
 {
     public partial class Power
     {
-        public PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
+        public virtual PowerUseResult CanActivate(WorldEntity target, Vector3 targetPosition, PowerActivationSettingsFlags flags)
         {
             if (IsToggledOn())
                 return PowerUseResult.Success;

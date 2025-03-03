@@ -1,6 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -68,7 +69,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                 ulong masterAvatarDbGuid = agent.Properties[PropertyEnum.AIMasterAvatarDbGuid];
                 if (masterAvatarDbGuid != 0)
                 {
-                    var avatar = _game.EntityManager.GetEntityByDbGuid<Player>(masterAvatarDbGuid); // TODO AvatarDB
+                    var avatar = _game.EntityManager.GetEntityByDbGuid<Avatar>(masterAvatarDbGuid);
                     if (avatar != null)
                         _owningController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
                 }
@@ -348,6 +349,16 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
         {
             switch (id.Enum)
             {
+                case PropertyEnum.AllianceOverride:
+                case PropertyEnum.Confused:
+                    _owningController.ResetCurrentTargetState();
+                    break;
+
+                case PropertyEnum.TauntersID:
+                    if (oldValue != 0ul)
+                        _owningController.ResetCurrentTargetState();
+                    break;
+
                 case PropertyEnum.AIFullOverride:
                 case PropertyEnum.AIPartialOverride:
 
@@ -362,6 +373,15 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                     else
                         ClearOverrideBehavior(overrideType);
 
+                    break;
+                case PropertyEnum.AIMasterAvatarDbGuid:
+                    ulong masterAvatarDbGuid = newValue;
+                    if (masterAvatarDbGuid != 0)
+                    {
+                        var avatar = _game.EntityManager.GetEntityByDbGuid<Avatar>(masterAvatarDbGuid);
+                        if (avatar != null)
+                            _owningController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
+                    }
                     break;
             }
         }

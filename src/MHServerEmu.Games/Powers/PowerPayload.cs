@@ -10,6 +10,7 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -54,7 +55,7 @@ namespace MHServerEmu.Games.Powers
         public ulong RegionId { get; private set; }
         public AlliancePrototype OwnerAlliance { get; private set; }
         public TimeSpan ExecutionTime { get; private set; }
-
+        public Action<PowerPayload> DeliverAction { get; set; }
         public EventGroup PendingEvents { get; } = new();
 
         public int CombatLevel { get => Properties[PropertyEnum.CombatLevel]; }
@@ -118,7 +119,7 @@ namespace MHServerEmu.Games.Powers
                 : powerOwner.RegionLocation.Position;
 
             // Snapshot properties of the power and its owner
-            WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity();
+            WorldEntity propertySourceEntity = power.GetPayloadPropertySourceEntity(ultimateOwner);
             if (propertySourceEntity == null) return Logger.WarnReturn(false, "Init(): propertySourceEntity == null");
 
             // Save property source owner id for later calculations
@@ -126,6 +127,9 @@ namespace MHServerEmu.Games.Powers
 
             Power.SerializeEntityPropertiesForPowerPayload(propertySourceEntity, Properties);
             Power.SerializePowerPropertiesForPowerPayload(power, Properties);
+
+            // Team-up passive flag
+            Properties[PropertyEnum.IsTeamUpAwaySource] = power.IsTeamUpPassivePowerWhileAway;
 
             // Snapshot additional data used to determine targets
             Range = power.GetApplicationRange();
@@ -163,6 +167,13 @@ namespace MHServerEmu.Games.Powers
                 rankProtoRef = powerOwner.Properties[PropertyEnum.Rank];
 
             Properties[PropertyEnum.Rank] = rankProtoRef;
+
+            // Set scenario affixes
+            if (powerApplication.ItemSourceId != Entity.InvalidId)
+            {
+                var item = Game.EntityManager.GetEntity<Item>(powerApplication.ItemSourceId);
+                item?.SetScenarioProperties(Properties);
+            }
 
             // Snapshot additional properties to recalculate initial damage for enemy DCL scaling
             if (IsPlayerPayload == false)
@@ -226,7 +237,14 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            power.OnPayloadInit(this);
+
             return true;
+        }
+
+        public void OnDeliverPayload()
+        {
+            DeliverAction?.Invoke(this);
         }
 
         /// <summary>

@@ -1584,7 +1584,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 return Logger.WarnReturn(evalVar, "Or: Non-Bool/Error field Arg1");
 
             if (arg1.Value.Bool)
-                evalVar.SetBool(false); 
+                evalVar.SetBool(true); 
             else
             {
                 EvalVar arg2 = Run(OrProto.Arg2, data);

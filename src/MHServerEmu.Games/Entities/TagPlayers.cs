@@ -44,6 +44,11 @@ namespace MHServerEmu.Games.Entities
 
             player.AddTag(_owner);
         }
+
+        public void Clear()
+        {
+            _tags.Clear();
+        }
     }
 
     public struct TagInfo : IComparable<TagInfo>

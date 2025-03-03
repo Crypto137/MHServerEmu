@@ -382,7 +382,8 @@ namespace MHServerEmu.Games.Powers
             if (missilePrototype.NaviMethod == LocomotorMethod.MissileSeeking)
                 extraProperties[PropertyEnum.MissileSeekTargetId] = powerApplication.TargetEntityId;
 
-            extraProperties[PropertyEnum.CreatorPowerPrototype] = PrototypeDataRef;
+            // CreatorPowerPrototype needs to be set after SerializeEntityPropertiesForPowerPayload so that it doesn't get overriden
+            //extraProperties[PropertyEnum.CreatorPowerPrototype] = PrototypeDataRef;
             extraProperties[PropertyEnum.PowerRank] = Rank;
 
             extraProperties.CopyProperty(Properties, PropertyEnum.CharacterLevel);
@@ -439,11 +440,13 @@ namespace MHServerEmu.Games.Powers
             extraProperties.CopyProperty(Properties, PropertyEnum.DamageMult);
             extraProperties.CopyPropertyRange(Properties, PropertyEnum.DamageMultForPower);
 
-            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity();
+            WorldEntity propertySourceEntity = GetPayloadPropertySourceEntity(GetUltimateOwner());
             if (propertySourceEntity == null)
                 return;
 
             SerializeEntityPropertiesForPowerPayload(propertySourceEntity, extraProperties);
+
+            extraProperties[PropertyEnum.CreatorPowerPrototype] = PrototypeDataRef;
         }
 
         private void TransferMissilePierceChance(PropertyCollection extraProperties)

@@ -191,6 +191,7 @@ namespace MHServerEmu.Games.Entities
                 StartMovement();
             }
 
+            StartPropertyTicker(Properties, Id, OwnerId, TimeSpan.FromMilliseconds(50));
             SetOwnerWeaponMissing(true);
         }
 

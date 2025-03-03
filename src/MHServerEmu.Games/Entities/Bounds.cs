@@ -213,6 +213,46 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public void Scale(float scaleMult)
+        {
+            switch (Geometry)
+            {
+                case GeometryType.OBB:
+                    _params.OBBHalfWidth *= scaleMult;
+                    _params.OBBHalfLength *= scaleMult;
+                    _params.OBBHalfHeight *= scaleMult;
+                    break;
+
+                case GeometryType.AABB:
+                    _params.AABBHalfWidth *= scaleMult;
+                    _params.AABBHalfLength *= scaleMult;
+                    _params.AABBHalfHeight *= scaleMult;
+                    UpdateAABBGeometry();
+                    break;
+
+                case GeometryType.Capsule:
+                    _params.CapsuleRadius *= scaleMult;
+                    break;
+
+                case GeometryType.Sphere:
+                    _params.SphereRadius *= scaleMult;
+                    break;
+
+                case GeometryType.Triangle:
+                    float angleRad = MathF.Atan((_params.TriangleBase * 0.5f) / _params.TriangleLength);
+                    _params.TriangleLength *= scaleMult;
+                    _params.TriangleBase = MathF.Tan(angleRad) * 2.0f * _params.TriangleLength;
+                    break;
+
+                case GeometryType.Wedge:
+                    angleRad = MathF.Atan((_params.WedgeBase * 0.5f) / _params.WedgeLength);
+                    _params.WedgeLength *= scaleMult;
+                    _params.WedgeBase = MathF.Tan(angleRad) * 2.0f * _params.WedgeLength;
+                    _params.WedgeBaseWidth *= scaleMult;
+                    break;
+            }
+        }
+
         public void InitializeWedge(float angleDegrees, float heightFromCenter, float length, float baseWidth, BoundsCollisionType collisionType, BoundsFlags flags)
         {
             Geometry = GeometryType.Wedge;
@@ -358,6 +398,16 @@ namespace MHServerEmu.Games.Entities
                 default:
                     return 0.0f;
             }
+        }
+
+        public float GetCenterOffset()
+        {
+            return Geometry switch
+            {
+                GeometryType.Triangle => _params.TriangleLength * 0.66666669f,
+                GeometryType.Wedge => _params.WedgeLength * 0.66666669f,
+                _ => 0.0f
+            };
         }
 
         private Vector3[] GetWedgeVertices()
