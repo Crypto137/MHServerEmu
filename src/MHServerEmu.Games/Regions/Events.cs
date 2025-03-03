@@ -1,6 +1,7 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,6 +18,22 @@ namespace MHServerEmu.Games.Regions
         {
             Who = who;
             Whom = whom;
+        }
+    }
+
+    public struct EntityInventoryChangedEvent
+    {
+        public Entity InvOwner;
+        public Entity Entity;
+        public InventoryLocation PrevLoc;
+        public InventoryLocation NewLoc;
+
+        public EntityInventoryChangedEvent(Entity invOwner, Entity entity, InventoryLocation prevLoc, InventoryLocation newLoc)
+        {
+            InvOwner = invOwner;
+            Entity = entity;
+            PrevLoc = prevLoc;
+            NewLoc = newLoc;
         }
     }
 
@@ -43,6 +60,16 @@ namespace MHServerEmu.Games.Regions
         {
             SpawnGroup = spawnGroup;
             KillerId = killerId;
+        }
+    }
+
+    public struct EntityResurrectEvent
+    {
+        public WorldEntity Entity;
+
+        public EntityResurrectEvent(WorldEntity entity)
+        {
+            Entity = entity;
         }
     }
 

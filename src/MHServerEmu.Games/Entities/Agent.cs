@@ -201,6 +201,9 @@ namespace MHServerEmu.Games.Entities
             if (CanBePlayerOwned() == false)
                 AIController?.OnAIResurrect();
 
+            // Resurrect event
+            if (IsInWorld) Region?.EntityResurrectEvent.Invoke(new(this));
+
             return true;
         }
 

@@ -676,7 +676,17 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         private void PostFinalMove(Entity entity, InventoryLocation prevInvLoc, InventoryLocation invLoc)
         {
+            if (entity == null) return;
+            var manager = Game?.EntityManager;
+            if (manager == null) return;
 
+            var oldOwner = manager.GetEntity<Entity>(prevInvLoc.ContainerId);
+            var newOwner = manager.GetEntity<Entity>(invLoc.ContainerId);
+
+            if (oldOwner != null && oldOwner != newOwner)
+                oldOwner.EntityInventoryChangedEvent.Invoke(new(oldOwner, entity, prevInvLoc, invLoc));
+
+            newOwner?.EntityInventoryChangedEvent.Invoke(new(newOwner, entity, prevInvLoc, invLoc));
         }
 
         private InventoryResult UnpackArchivedEntity(Entity entity, uint destSlot)
