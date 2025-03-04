@@ -5233,7 +5233,7 @@ namespace MHServerEmu.Games.Powers
 
             EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();
             scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents);
-            deliverPayloadEvent.Get().Initialize(payload);
+            deliverPayloadEvent.Get()?.Initialize(payload);
 
             return true;
         }
