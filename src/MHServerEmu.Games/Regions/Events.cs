@@ -1,11 +1,11 @@
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -23,17 +23,11 @@ namespace MHServerEmu.Games.Regions
 
     public struct EntityInventoryChangedEvent
     {
-        public Entity InvOwner;
         public Entity Entity;
-        public InventoryLocation PrevLoc;
-        public InventoryLocation NewLoc;
 
-        public EntityInventoryChangedEvent(Entity invOwner, Entity entity, InventoryLocation prevLoc, InventoryLocation newLoc)
+        public EntityInventoryChangedEvent(Entity entity)
         {
-            InvOwner = invOwner;
             Entity = entity;
-            PrevLoc = prevLoc;
-            NewLoc = newLoc;
         }
     }
 
@@ -717,13 +711,15 @@ namespace MHServerEmu.Games.Regions
     {
         public WorldEntity Entity;
         public Player Player;
+        public PropertyEnum StatusProp;
         public bool Status;
         public bool NegStatusEffect;
 
-        public EntityStatusEffectGameEvent(WorldEntity entity, Player player, bool status, bool negStatusEffect)
+        public EntityStatusEffectGameEvent(WorldEntity entity, Player player, PropertyEnum statusProp, bool status, bool negStatusEffect)
         {
             Entity = entity;
             Player = player;
+            StatusProp = statusProp;
             Status = status;
             NegStatusEffect = negStatusEffect;
         }
