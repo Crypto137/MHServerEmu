@@ -190,7 +190,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime, UsePowerContextPrototype powerContext, ProceduralUsePowerContextPrototype proceduralPowerContext)
         {
             var collection = ownerController.Blackboard.PropertyCollection;
-            int agroTime = collection[PropertyEnum.AIAggroTime] + collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.Power];
+            long agroTime = (long)collection[PropertyEnum.AIAggroTime] + (long)collection[PropertyEnum.AIInitialCooldownMSForPower, powerContext.Power];
             if (currentTime >= agroTime)
             {
                 if (currentTime >= collection[PropertyEnum.AIProceduralPowerSpecificCDTime, powerContext.Power])

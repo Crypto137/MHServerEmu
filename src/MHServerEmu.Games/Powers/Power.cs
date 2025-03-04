@@ -1305,8 +1305,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StartCharging()
         {
-            //Logger.Debug("StartCharging()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StartCharging(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "StartCharging(): Game == null");
 
@@ -1329,8 +1327,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StopCharging()
         {
-            //Logger.Debug("StopCharging()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StopCharging(): Owner == null");
 
             _activationPhase = PowerActivationPhase.Active;
@@ -1351,8 +1347,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StartChanneling()
         {
-            //Logger.Debug("StartChanneling()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StartChanneling(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "StartChanneling(): Game == null");
 
@@ -1388,8 +1382,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool StopChanneling()
         {
-            //Logger.Debug("StopChanneling()");
-
             if (Owner == null) return Logger.WarnReturn(false, "StopChanneling(): Owner == null");
 
             if (_activationPhase != PowerActivationPhase.ChannelStarting && _activationPhase != PowerActivationPhase.Channeling
@@ -4420,9 +4412,6 @@ namespace MHServerEmu.Games.Powers
             PropertyCollection properties, WorldEntity primaryTarget, WorldEntity owner, in Vector3 targetPosition, in Vector3 userPosition,
             ulong regionId, ulong userEntityId, AlliancePrototype userAllianceProto, int beamSweepSlice, TimeSpan executionTime, int randomSeed)
         {
-            //Logger.Debug($"GetAOETargets(): {powerProto}");
-
-            // Validation
             if (game == null) return Logger.WarnReturn(false, "GetAOETargets(): game == null");
             
             TargetingReachPrototype reachProto = powerProto.GetTargetingReach();
@@ -4551,8 +4540,6 @@ namespace MHServerEmu.Games.Powers
         private static bool GetTargetsFromInventory(List<WorldEntity> targetList, Game game, WorldEntity owner, WorldEntity target,
             PowerPrototype powerProto, AlliancePrototype userAllianceProto, InventoryConvenienceLabel inventoryConvenienceLabel)
         {
-            Logger.Debug($"GetTargetsFromInventory(): {inventoryConvenienceLabel}");
-
             if (game == null) return Logger.WarnReturn(false, "GetTargetsFromInventory(): game == null");
             if (owner == null) return Logger.WarnReturn(false, "GetTargetsFromInventory(): owner == null");
 
@@ -5194,8 +5181,6 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleChannelStart()
         {
-            //Logger.Debug("ScheduleChannelStart()");
-
             if (Owner == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Owner == null");
             if (Game == null) return Logger.WarnReturn(false, "ScheduleChannelStart(): Game == null");
 
@@ -5248,7 +5233,7 @@ namespace MHServerEmu.Games.Powers
 
             EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();
             scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents);
-            deliverPayloadEvent.Get().Initialize(payload);
+            deliverPayloadEvent.Get()?.Initialize(payload);
 
             return true;
         }
@@ -5289,7 +5274,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleExtraActivationTimeout(ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
         {
-            Logger.Debug("ScheduleExtraActivationTimeout()");
+            Logger.Debug($"ScheduleExtraActivationTimeout(): [{this}]");
 
             int timeoutLengthMS = extraActivateOnSubsequent.GetTimeoutLengthMS(Properties[PropertyEnum.PowerRank]);
             

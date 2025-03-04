@@ -60,6 +60,7 @@ namespace MHServerEmu.Grouping
             {
                 case ClientToGameServerMessage.NetMessageChat: OnChat(client, message); break;
                 case ClientToGameServerMessage.NetMessageTell: OnTell(client, message); break;
+                case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle: OnTryModifyCommunityMemberCircle(client, message); break;
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -182,6 +183,14 @@ namespace MHServerEmu.Grouping
                 .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
                 .Build());
 
+            return true;
+        }
+
+        private bool OnTryModifyCommunityMemberCircle(FrontendClient client, MailboxMessage message)
+        {
+            // We are handling this in the grouping manager to avoid exposing the ChatHelper class
+            // TODO: Remove this and handle it in game after we implemented social functionality there.
+            ChatHelper.SendMetagameMessage(client, "Social features are not yet implemented.", false);
             return true;
         }
 
