@@ -717,9 +717,8 @@ namespace MHServerEmu.Games.Powers
                 {
                     if (manager.CreateEntity(settings) is not WorldEntity summoned) continue;
 
-                    if (target != null && target.IsInWorld && (powerProto.AttachSummonsToCaster || powerProto.AttachSummonsToTarget)
-                        && target.TestStatus(EntityStatus.ExitingWorld) == false)
-                        summoned.Properties[PropertyEnum.AttachedToEntityId] = target.Id;
+                    if (powerProto.AttachSummonsToCaster || powerProto.AttachSummonsToTarget)
+                        summoned.AttachToEntity(target);
 
                     if (contextProto.VisibleWhileAttached == false)
                         summoned.SetVisible(false);

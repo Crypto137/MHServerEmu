@@ -216,6 +216,9 @@ namespace MHServerEmu.Games.Entities
             if (CanBePlayerOwned() == false)
                 AIController?.OnAIResurrect();
 
+            // Resurrect event
+            if (IsInWorld) Region?.EntityResurrectEvent.Invoke(new(this));
+
             return true;
         }
 
@@ -1783,6 +1786,11 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public bool CanSummonControlledAgent()
+        {
+            return _respawnControlledAgentEvent.IsValid == false;
+        }
+
         private void ScheduleRespawnControlledAgent()
         {
             var scheduler = Game?.GameEventScheduler;
@@ -1867,9 +1875,6 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.DramaticEntrancePlayedOnce] = true;
             Properties[PropertyEnum.PetHealthPctBonus] = avatar.Properties[PropertyEnum.HealthPctBonus];
             Properties[PropertyEnum.PetDamagePctBonus] = avatar.Properties[PropertyEnum.DamagePctBonus];
-
-            // HACK/REMOVEME: Intangible should be added by SituationalPowerComponent if needed (e.g. ControlledMobHiddenPassive)
-            Properties[PropertyEnum.Intangible] = true;
 
             AIController?.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
             Properties.RemoveProperty(PropertyEnum.MissionPrototype);

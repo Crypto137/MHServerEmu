@@ -22,6 +22,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PowerOwnerId = 0;
             PartyId = 0;
         }
+
+        public EntityFilterContext(ulong powerOwnerId, ulong partyId)
+        {
+            MissionRef = PrototypeId.Invalid;
+            PowerOwnerId = powerOwnerId;
+            PartyId = partyId;
+        }
     }
 
     public class EntityFilterPrototype : Prototype

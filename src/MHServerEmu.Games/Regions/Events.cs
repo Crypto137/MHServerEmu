@@ -5,6 +5,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
@@ -17,6 +18,16 @@ namespace MHServerEmu.Games.Regions
         {
             Who = who;
             Whom = whom;
+        }
+    }
+
+    public struct EntityInventoryChangedEvent
+    {
+        public Entity Entity;
+
+        public EntityInventoryChangedEvent(Entity entity)
+        {
+            Entity = entity;
         }
     }
 
@@ -43,6 +54,16 @@ namespace MHServerEmu.Games.Regions
         {
             SpawnGroup = spawnGroup;
             KillerId = killerId;
+        }
+    }
+
+    public struct EntityResurrectEvent
+    {
+        public WorldEntity Entity;
+
+        public EntityResurrectEvent(WorldEntity entity)
+        {
+            Entity = entity;
         }
     }
 
@@ -690,13 +711,15 @@ namespace MHServerEmu.Games.Regions
     {
         public WorldEntity Entity;
         public Player Player;
+        public PropertyEnum StatusProp;
         public bool Status;
         public bool NegStatusEffect;
 
-        public EntityStatusEffectGameEvent(WorldEntity entity, Player player, bool status, bool negStatusEffect)
+        public EntityStatusEffectGameEvent(WorldEntity entity, Player player, PropertyEnum statusProp, bool status, bool negStatusEffect)
         {
             Entity = entity;
             Player = player;
+            StatusProp = statusProp;
             Status = status;
             NegStatusEffect = negStatusEffect;
         }

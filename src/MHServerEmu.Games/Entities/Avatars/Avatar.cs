@@ -3097,7 +3097,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (ControlledAgentHasSummonDuration() == false)
                 SummonControlledAgentWithDuration();
 
-            if (IsInTown()) SetSummonWithLifespanRemaining();
+            if (IsInTown() == false) SetSummonWithLifespanRemaining();
         }
 
         private void DespawnPersistentAgents()

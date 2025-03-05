@@ -15,6 +15,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
@@ -144,6 +145,8 @@ namespace MHServerEmu.Games.Entities
         public bool IsRootOwner { get => OwnerId == 0; }
         public virtual bool IsWakingUp { get => false; }
         public TimeSpan TotalLifespan { get; private set; }
+
+        public Event<EntityInventoryChangedEvent> EntityInventoryChangedEvent = new();
 
         #region Flag Properties
 

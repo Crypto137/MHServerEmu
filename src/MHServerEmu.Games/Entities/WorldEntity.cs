@@ -376,6 +376,13 @@ namespace MHServerEmu.Games.Entities
                 ScheduleDestroyEvent(removeFromWorldTimer);
         }
 
+        public void AttachToEntity(WorldEntity target)
+        {
+            if (target == null || this == target) return;
+            if (target.IsInWorld && target.TestStatus(EntityStatus.ExitingWorld) == false)
+                Properties[PropertyEnum.AttachedToEntityId] = target.Id;
+        }
+
         #region Summon
 
         public SummonEntityContextPrototype GetSummonEntityContext()

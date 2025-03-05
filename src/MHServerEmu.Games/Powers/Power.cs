@@ -82,6 +82,7 @@ namespace MHServerEmu.Games.Powers
         public PowerActivationSettings LastActivationSettings { get => _lastActivationSettings; }
 
         public bool IsSituationalPower { get => _situationalComponent != null; }
+        public bool IsControlPower { get => Prototype != null && Prototype.IsControlPower; }
 
         public int Rank { get => Properties[PropertyEnum.PowerRank]; }
 
@@ -229,6 +230,36 @@ namespace MHServerEmu.Games.Powers
             Owner?.Properties.RemoveProperty(new(PropertyEnum.PowerActivationCount, PrototypeDataRef));
         }
 
+        public void OnEquipped()
+        {
+            if (IsNormalPower() == false || Owner == null) return;
+
+            if (IsSituationalPower)
+                _situationalComponent.OnPowerEquipped();
+
+            if (IsControlPower && Owner is Avatar avatar)
+            {
+                var controlledAgent = avatar.ControlledAgent;
+                if (controlledAgent != null && controlledAgent.CanSummonControlledAgent())
+                    avatar.SummonControlledAgentWithDuration();
+            }
+        }
+
+        public void OnUnequipped()
+        {
+            if (IsNormalPower() == false || Owner == null) return;
+
+            if (IsControlPower && Owner is Avatar avatar)
+            {
+                var controlledAgent = avatar.ControlledAgent;
+                if (controlledAgent != null && controlledAgent.IsAliveInWorld)
+                {
+                    controlledAgent.KillSummonedOnOwnerDeath();
+                    controlledAgent.ExitWorld();
+                }
+            }
+        }
+
         public void OnOwnerEnteredWorld()
         {
             _situationalComponent?.Initialize();
@@ -272,6 +303,8 @@ namespace MHServerEmu.Games.Powers
             Game.GameEventScheduler.CancelAllEvents(_pendingEvents);
             Game.GameEventScheduler.CancelAllEvents(_pendingActivationPhaseEvents);
             Game.GameEventScheduler.CancelAllEvents(_pendingPowerApplicationEvents);
+
+            _situationalComponent?.Destroy();
         }
 
         public static void GeneratePowerProperties(PropertyCollection primaryCollection, PowerPrototype powerProto, PropertyCollection initializeProperties, WorldEntity owner)

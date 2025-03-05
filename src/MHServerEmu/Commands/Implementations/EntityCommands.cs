@@ -11,6 +11,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Grouping;
 using MHServerEmu.Games;
+using MHServerEmu.Core.VectorMath;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -25,7 +26,7 @@ namespace MHServerEmu.Commands.Implementations
 
             PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
-          
+
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
@@ -49,7 +50,7 @@ namespace MHServerEmu.Commands.Implementations
 
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
             using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
-            {   
+            {
                 var avatarProp = player.CurrentAvatar.Properties;
                 int health = avatarProp[PropertyEnum.HealthMax];
                 properties[PropertyEnum.HealthBase] = avatarProp[PropertyEnum.HealthBase];
@@ -178,6 +179,32 @@ namespace MHServerEmu.Commands.Implementations
             Bounds bounds = entity1.Bounds;
             bool isBlocked = Games.Regions.Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
+        }
+
+        [Command("tp", "Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).\nUsage:\nentity tp modok", AccountUserLevel.Admin)]
+        public string Tp(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help entity tp' to get help.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
+
+            if (avatar.Region == null) return "No region found.";
+
+            Entity targetEntity = avatar.Region.Entities.FirstOrDefault(k => k.PrototypeName.ToLower().Contains(@params[0].ToLower()));
+
+            if (targetEntity == null) return $"No entity found with the name {@params[0]}";
+
+            if (targetEntity is not WorldEntity worldEntity)
+                return "No world entity found.";
+
+            Vector3 teleportPoint = worldEntity.RegionLocation.Position;
+            avatar.ChangeRegionPosition(teleportPoint, null, ChangePositionFlags.Teleport);
+
+            return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
     }
 }
