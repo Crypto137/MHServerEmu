@@ -125,8 +125,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
-            Properties[PropertyEnum.CombatLevel] = CharacterLevel;
-
             // REMOVEME
             // Unlock all stealable powers for Rogue
             if (avatarProto.StealablePowersAllowed.HasValue())
@@ -152,7 +150,20 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (base.ApplyInitialReplicationState(ref settings) == false)
                 return false;
 
-            ResetResources(false);
+            Player player = null;
+            if (settings.InventoryLocation != null)
+                player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
+
+            if (player == null)
+                Logger.Warn("ApplyInitialReplicationState(): player == null");
+
+            if (settings.ArchiveData != null)
+            {
+                if (player != null)
+                    TryLevelUp(player, true);
+
+                ResetResources(false);
+            }
 
             // Resurrect if dead
             if (IsDead)
@@ -1936,6 +1947,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Progression
 
+        public override void InitializeLevel(int newLevel)
+        {
+            base.InitializeLevel(newLevel);
+            CombatLevel = newLevel;
+        }
+
         public override long AwardXP(long amount, bool showXPAwardedText)
         {
             Player player = GetOwnerOfType<Player>();
@@ -2004,12 +2021,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
         }
 
-        public override int TryLevelUp(Player owner)
+        public override int TryLevelUp(Player owner, bool isInitializing = false)
         {
-            int levelDelta = base.TryLevelUp(owner);
+            int levelDelta = base.TryLevelUp(owner, isInitializing);
 
-            if (levelDelta != 0)
+            if (isInitializing)
+            {
+                CombatLevel = CharacterLevel;
+                owner.OnAvatarCharacterLevelChanged(this);
+            }
+            else if (levelDelta != 0)
+            {
                 CombatLevel = Math.Clamp(CombatLevel + levelDelta, 1, GetAvatarLevelCap());
+            }
 
             return levelDelta;
         }
