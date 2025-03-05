@@ -2,6 +2,8 @@
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
+**NOTE: This list of commands is very outdated. Use `!commands` to see an up to date list for your version of the server.**
+
 ## General Commands
 
 | Command         | Description                                   | User Level |

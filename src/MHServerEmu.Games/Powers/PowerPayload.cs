@@ -94,13 +94,18 @@ namespace MHServerEmu.Games.Powers
 
             _powerOwnerProto = powerOwner.WorldEntityPrototype;
 
-            WorldEntity ultimateOwner = power.GetUltimateOwner();
-            if (ultimateOwner != null)
+            // Get ultimate owner id. We can't use Power.GetUltimateOwner() here because
+            // we need the id even if the ultimate owner no longer exists to be able to create stack ids.
+            ulong ultimateOwnerId = power.Owner.PowerUserOverrideId;
+            if (ultimateOwnerId == Entity.InvalidId)
+                ultimateOwnerId = power.Owner.Id;
+
+            UltimateOwnerId = ultimateOwnerId;
+
+            // Get additional information from the ultimate owner if it's available
+            WorldEntity ultimateOwner = Game.EntityManager.GetEntity<WorldEntity>(ultimateOwnerId);
+            if (ultimateOwner != null && ultimateOwner.IsInWorld)
             {
-                // - If there is no user override, the owner itself is the ultimate owner.
-                // - If there is a user override and the ultimate owner is available, we get the ultimate owner here.
-                // - If there is a user override and the ultimate owner is destroyed or not in world, we get null and this part is skipped.
-                UltimateOwnerId = ultimateOwner.Id;
                 UltimateOwnerPosition = ultimateOwner.RegionLocation.Position;
                 _ultimatePowerOwnerProto = ultimateOwner.WorldEntityPrototype;
             }
@@ -1279,8 +1284,9 @@ namespace MHServerEmu.Games.Powers
                 userPosition = UltimateOwnerPosition;
             }
 
+            // Fail silently here if no valid user position (TODO: see if there is anything else wrong that's causing this)
             if (userPosition == Vector3.Zero)
-                return Logger.WarnReturn(false, $"CalculateResultDamageRangedDistanceBonus(): No valid user position for powerProto=[{powerProto}], user=[{user}]");
+                return false;   //return Logger.WarnReturn(false, $"CalculateResultDamageRangedDistanceBonus(): No valid user position for powerProto=[{powerProto}], user=[{user}]");
 
             CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceClose, user, userPosition, target);
             CalculateResultDamageRangedDistanceBonusHelper(ref damagePct, PropertyEnum.DamagePctBonusDistanceFar, user, userPosition, target);
@@ -2741,7 +2747,7 @@ namespace MHServerEmu.Games.Powers
             ConditionCollection.StackId stackId = ConditionCollection.MakeConditionStackId(PowerPrototype,
                 conditionProto, UltimateOwnerId, creatorPlayerId, out StackingBehaviorPrototype stackingBehaviorProto);
 
-            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateConditionNumStacksToApply(): ");
+            if (stackId.PrototypeRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "CalculateConditionNumStacksToApply(): stackId.PrototypeRef == PrototypeId.Invalid");
 
             List<ulong> refreshList = ListPool<ulong>.Instance.Get();
             List<ulong> removeList = ListPool<ulong>.Instance.Get();

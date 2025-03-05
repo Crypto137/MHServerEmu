@@ -23,7 +23,7 @@ namespace MHServerEmu.Games.Powers
 
         public void Initialize()
         {
-            Logger.Debug($"Initialize(): {_power.Prototype}");
+            //Logger.Debug($"Initialize(): {_power.Prototype}");
         }
 
         public void Shutdown()
@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Powers
 
         public void OnPowerActivated(WorldEntity target)
         {
-            Logger.Debug($"OnPowerActivated(): {_power.Prototype}");
+            //Logger.Debug($"OnPowerActivated(): {_power.Prototype}");
         }
     }
 }

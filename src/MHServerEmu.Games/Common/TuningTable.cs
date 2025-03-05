@@ -186,6 +186,7 @@ namespace MHServerEmu.Games.Common
                         continue;
 
                     difficultyMult *= isPlayerDamage ? rankEntry.TuningPlayerToMob : rankEntry.TuningMobToPlayer;
+                    break;
                 }
             }
 
@@ -208,6 +209,7 @@ namespace MHServerEmu.Games.Common
                         continue;
 
                     curveRef = isPlayerDamage ? rankEntry.PlayerToMobCurve : rankEntry.MobToPlayerCurve;
+                    break;
                 }
             }
 
@@ -244,6 +246,7 @@ namespace MHServerEmu.Games.Common
                         continue;
 
                     curveRef = isPlayerDamage ? rankEntry.PlayerToMobCurve : rankEntry.MobToPlayerCurve;
+                    break;
                 }
             }
 
