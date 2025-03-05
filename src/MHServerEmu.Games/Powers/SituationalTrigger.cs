@@ -236,8 +236,8 @@ namespace MHServerEmu.Games.Powers
             var region = Region;
             if (powerOwner == null || region == null) return false;
 
-            //region.EntitySetSimulatedEvent.AddActionBack(_entitySetSimulatedAction);
-            region.EntityEnteredWorldEvent.AddActionBack(_entityEnteredWorldAction);
+            region.EntitySetSimulatedEvent.AddActionBack(_entitySetSimulatedAction);
+            //region.EntityEnteredWorldEvent.AddActionBack(_entityEnteredWorldAction);
             region.EntityExitedWorldEvent.AddActionBack(_entityExitedWorldAction);
             region.EntityResurrectEvent.AddActionBack(_entityRessurectAction);
             powerOwner.EntityInventoryChangedEvent.AddActionBack(_entityInventoryChangedAction);
@@ -249,12 +249,13 @@ namespace MHServerEmu.Games.Powers
             base.UnRegisterEvents();
 
             var powerOwner = PowerOwner; 
-            var region = Region;
-            if (powerOwner == null || region == null) return;
-
+            if (powerOwner == null) return;
             powerOwner.EntityInventoryChangedEvent.RemoveAction(_entityInventoryChangedAction);
-            //region.EntitySetSimulatedEvent.RemoveAction(_entitySetSimulatedAction);
-            region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
+
+            var region = Region;
+            if (region == null) return;
+            region.EntitySetSimulatedEvent.RemoveAction(_entitySetSimulatedAction);
+            //region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
             region.EntityExitedWorldEvent.RemoveAction(_entityExitedWorldAction);
             region.EntityResurrectEvent.RemoveAction(_entityRessurectAction);
         }
