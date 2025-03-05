@@ -158,6 +158,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsDiscoverable { get => CompatibleReplicationChannels.HasFlag(AOINetworkPolicyValues.AOIChannelDiscovery); }
         public bool IsTrackable { get => WorldEntityPrototype?.TrackingDisabled == false; }
         public bool IsLiveTuningEnabled { get => WorldEntityPrototype?.IsLiveTuningEnabled() == true; }
+        public bool IsVacuumable { get => WorldEntityPrototype?.IsVacuumable == true; }
         public Dictionary<ulong, long> TankingContributors { get; private set; }
         public Dictionary<ulong, long> DamageContributors { get; private set; }
         public TagPlayers TagPlayers { get; private set; }

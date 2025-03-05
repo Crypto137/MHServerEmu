@@ -291,7 +291,8 @@ namespace MHServerEmu.Games.Powers
             Properties[PropertyEnum.CharacterLevel] = Owner.CharacterLevel;
             Properties[PropertyEnum.CombatLevel] = Owner.CombatLevel;
 
-            ReapplyIndexProperties(PowerIndexPropertyFlags.CharacterLevel | PowerIndexPropertyFlags.CombatLevel);
+            // Reapplication needs to be deferred for cases like controlled entities that change level before they become owned by players
+            ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.CharacterLevel | PowerIndexPropertyFlags.CombatLevel);
         }
 
         public virtual void OnDeallocate()
@@ -432,8 +433,10 @@ namespace MHServerEmu.Games.Powers
         {
             //Logger.Debug($"ReapplyIndexProperties(): {this} - {indexPropertyFlags}");
 
+            PowerPrototype powerProto = Prototype;
+
             // Rerun creation evals
-            if (Prototype.EvalOnCreate.HasValue())
+            if (powerProto.EvalOnCreate.HasValue())
             {
                 using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.Game = Game;
@@ -450,29 +453,60 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
-            Player owner = Owner.GetOwnerOfType<Player>();
-            if (owner != null)
+            // Do not notify about index prop changes for orbs (they can change their level when they shrink)
+            if (Owner.IsVacuumable == false)
             {
-                PowerIndexProperties indexProperties = GetIndexProperties();
+                Player playerOwner = Owner.GetOwnerOfType<Player>();
+                if (playerOwner != null)
+                {
+                    PowerIndexProperties indexProperties = GetIndexProperties();
 
-                var updatePropsMessage = NetMessageUpdatePowerIndexProps.CreateBuilder()
-                    .SetEntityId(Owner.Id)
-                    .SetPowerProtoId((ulong)PrototypeDataRef)
-                    .SetPowerRank(indexProperties.CombatLevel)
-                    .SetCharacterLevel(indexProperties.CharacterLevel)
-                    .SetCombatLevel(indexProperties.CombatLevel)
-                    .SetItemLevel(indexProperties.ItemLevel)
-                    .SetItemVariation(indexProperties.ItemVariation)
-                    .Build();
+                    var updatePropsMessage = NetMessageUpdatePowerIndexProps.CreateBuilder()
+                        .SetEntityId(Owner.Id)
+                        .SetPowerProtoId((ulong)PrototypeDataRef)
+                        .SetPowerRank(indexProperties.CombatLevel)
+                        .SetCharacterLevel(indexProperties.CharacterLevel)
+                        .SetCombatLevel(indexProperties.CombatLevel)
+                        .SetItemLevel(indexProperties.ItemLevel)
+                        .SetItemVariation(indexProperties.ItemVariation)
+                        .Build();
 
-                owner.SendMessage(updatePropsMessage);
+                    playerOwner.SendMessage(updatePropsMessage);
+                }
+                else
+                {
+                    Logger.Warn($"ReapplyIndexProperties(): No player owner for power [{this}]");
+                }
             }
-            else
+
+            // Refresh passive / toggle powers that rely on changed index properties
+            bool isToggledOn = IsToggledOn();
+
+            if (((GetActivationType() == PowerActivationType.Passive || isToggledOn) && HasConditionsWithIndexProperties(indexPropertyFlags)) ||
+                (GetPowerCategory() == PowerCategoryType.HiddenPassivePower && (IsToggled() == false || isToggledOn || powerProto.HasPowerEvent(PowerEventType.OnPowerApply))))
             {
-                Logger.Warn("ReapplyIndexProperties(): owner == null");
-            }
+                EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
 
-            // TODO: Everything that needs to happen to a power on level up
+                if (isToggledOn)
+                    RemoveTrackedConditions(false);
+
+                if (isToggledOn || CheckCanTriggerEval())
+                {
+                    ulong ownerId = Owner.Id;
+                    Vector3 ownerPosition = Owner.RegionLocation.Position;
+
+                    PowerApplication powerApplication = new()
+                    {
+                        UserEntityId = ownerId,
+                        UserPosition = ownerPosition,
+                        TargetEntityId = ownerId,
+                        TargetPosition = ownerPosition,
+                        IsFree = true
+                    };
+
+                    ApplyInternal(powerApplication);
+                }
+            }
         }
 
         #region Keywords

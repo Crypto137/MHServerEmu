@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -16,12 +17,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class PowerPrototype : Prototype
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
-        // Local instance refs to speed up access
-        private TargetingReachPrototype _targetingReachPtr;
-        private TargetingStylePrototype _targetingStylePtr;
-
         public PrototypePropertyCollection Properties { get; protected set; }
         public PowerEventActionPrototype[] ActionsTriggeredOnPowerEvent { get; protected set; }
         public PowerActivationType Activation { get; protected set; }
@@ -168,8 +163,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         // See GetRecurringCostInterval() for why we use 500 ms here.
         private static readonly TimeSpan RecurringCostIntervalDefault = TimeSpan.FromMilliseconds(500);
+
+        private readonly GBitArray _powerEventMask = new();
+
+        // Local instance refs to speed up access
+        private TargetingReachPrototype _targetingReachPtr;
+        private TargetingStylePrototype _targetingStylePtr;
 
         [DoNotCopy]
         public float DamageTuningScore { get; private set; }
@@ -238,7 +241,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 foreach (PowerEventActionPrototype triggeredAction in ActionsTriggeredOnPowerEvent)
                 {
-                    // TODO: Populate lookup for power event actions
+                    // Populate lookup for power event actions
+                    _powerEventMask.Set((int)triggeredAction.PowerEvent);
                     
                     if (triggeredAction.EventAction == PowerEventActionType.RescheduleActivationInSeconds && triggeredAction.Power == PrototypeId.Invalid)
                         HasRescheduleActivationEventWithInvalidPowerRef = true;
@@ -332,6 +336,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
             return (keywordProto != null && KeywordPrototype.TestKeywordBit(KeywordsMask, keywordProto));
+        }
+
+        public bool HasPowerEvent(PowerEventType eventType)
+        {
+            return _powerEventMask[(int)eventType];
         }
 
         public TargetingReachPrototype GetTargetingReach()

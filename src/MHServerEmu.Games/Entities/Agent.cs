@@ -97,6 +97,21 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public override bool ApplyInitialReplicationState(ref EntitySettings settings)
+        {
+            if (base.ApplyInitialReplicationState(ref settings) == false)
+                return false;
+
+            if (IsTeamUpAgent && settings.ArchiveData != null && settings.InventoryLocation != null)
+            {
+                Player player = Game.EntityManager.GetEntity<Player>(settings.InventoryLocation.ContainerId);
+                if (player != null)
+                    TryLevelUp(player, true);
+            }
+
+            return true;
+        }
+
         #region World and Positioning
 
         public override bool CanRotate()
@@ -737,11 +752,15 @@ namespace MHServerEmu.Games.Entities
             return info.IsValid;
         }
 
-        public void InitializeLevel(int level)
+        public virtual void InitializeLevel(int newLevel)
         {
-            CharacterLevel = level;
+            int oldLevel = CharacterLevel;
+            CharacterLevel = newLevel;
+
             Properties[PropertyEnum.ExperiencePoints] = 0;
-            Properties[PropertyEnum.ExperiencePointsNeeded] = GetLevelUpXPRequirement(level);
+            Properties[PropertyEnum.ExperiencePointsNeeded] = GetLevelUpXPRequirement(newLevel);
+
+            OnLevelUp(oldLevel, newLevel);
         }
 
         public virtual long AwardXP(long amount, bool showXPAwardedText)
@@ -782,7 +801,7 @@ namespace MHServerEmu.Games.Entities
             return advancementProto.GetTeamUpLevelUpXPRequirement(level);
         }
 
-        public virtual int TryLevelUp(Player owner)
+        public virtual int TryLevelUp(Player owner, bool isInitializing = false)
         {
             int oldLevel = CharacterLevel;
             int newLevel = oldLevel;
@@ -804,9 +823,10 @@ namespace MHServerEmu.Games.Entities
                 CharacterLevel = newLevel;
                 Properties[PropertyEnum.ExperiencePoints] = xp;
                 Properties[PropertyEnum.ExperiencePointsNeeded] = xpNeeded;
-
-                OnLevelUp(oldLevel, newLevel);
             }
+
+            if (isInitializing || levelDelta != 0)
+                OnLevelUp(oldLevel, newLevel);
 
             return levelDelta;
         }
