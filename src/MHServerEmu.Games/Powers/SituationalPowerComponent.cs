@@ -2,7 +2,6 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -163,8 +162,7 @@ namespace MHServerEmu.Games.Powers
             var powerOwner = Power.Owner;
             if (powerOwner == null) return false;
             
-             var avatar = powerOwner as Avatar;
-            if (TargetsTriggeringEntity && target != avatar?.ControlledAgent) 
+            if (TargetsTriggeringEntity) 
             {
                 if (SituationalTrigger.Debug) Logger.Debug($"CanTrigger[{powerOwner.PrototypeName}] {target.PrototypeName} for {Power.PrototypeDataRef.GetNameFormatted()}");
                 if (Power.IsValidTarget(target) == false) return false;

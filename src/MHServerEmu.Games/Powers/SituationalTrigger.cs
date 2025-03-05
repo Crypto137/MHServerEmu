@@ -150,7 +150,6 @@ namespace MHServerEmu.Games.Powers
         {
             if (base.CanTrigger(powerOwner, target) == false) return false;
 
-
             if (_proto.TriggeringProperties.HasValue())
                 foreach (var propRef in _proto.TriggeringProperties)
                 {
@@ -199,6 +198,7 @@ namespace MHServerEmu.Games.Powers
     public class SituationalTriggerInvAndWorld : SituationalTrigger
     {
         private readonly SituationalTriggerInvAndWorldPrototype _proto;
+        private readonly Action<EntitySetSimulatedGameEvent> _entitySetSimulatedAction;
         private readonly Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
         private readonly Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
         private readonly Action<EntityInventoryChangedEvent> _entityInventoryChangedAction;
@@ -212,6 +212,7 @@ namespace MHServerEmu.Games.Powers
             _entityExitedWorldAction = OnExitedWorld;
             _entityInventoryChangedAction = OnInventoryChanged;
             _entityRessurectAction = OnRessurect;
+            _entitySetSimulatedAction = OnSetSimulated;
         }
 
         public override bool CanTrigger(WorldEntity powerOwner, WorldEntity target)
@@ -235,6 +236,7 @@ namespace MHServerEmu.Games.Powers
             var region = Region;
             if (powerOwner == null || region == null) return false;
 
+            //region.EntitySetSimulatedEvent.AddActionBack(_entitySetSimulatedAction);
             region.EntityEnteredWorldEvent.AddActionBack(_entityEnteredWorldAction);
             region.EntityExitedWorldEvent.AddActionBack(_entityExitedWorldAction);
             region.EntityResurrectEvent.AddActionBack(_entityRessurectAction);
@@ -251,6 +253,7 @@ namespace MHServerEmu.Games.Powers
             if (powerOwner == null || region == null) return;
 
             powerOwner.EntityInventoryChangedEvent.RemoveAction(_entityInventoryChangedAction);
+            //region.EntitySetSimulatedEvent.RemoveAction(_entitySetSimulatedAction);
             region.EntityEnteredWorldEvent.RemoveAction(_entityEnteredWorldAction);
             region.EntityExitedWorldEvent.RemoveAction(_entityExitedWorldAction);
             region.EntityResurrectEvent.RemoveAction(_entityRessurectAction);
@@ -276,6 +279,13 @@ namespace MHServerEmu.Games.Powers
                 if (entity == null) continue;
                 if (PowerComponent.OnTrigger(entity)) return;
             }
+        }
+
+        private void OnSetSimulated(EntitySetSimulatedGameEvent evt)
+        {
+            if (evt.Entity == null) return;
+            if (Debug) Logger.Debug($"OnSetSimulated[{PowerOwner.PrototypeName}] {evt.Entity}");
+            PowerComponent.OnTrigger(evt.Entity);
         }
 
         private void OnEnteredWorld(EntityEnteredWorldGameEvent evt)
