@@ -260,7 +260,8 @@ namespace MHServerEmu.Games.Powers
             Properties[PropertyEnum.CharacterLevel] = Owner.CharacterLevel;
             Properties[PropertyEnum.CombatLevel] = Owner.CombatLevel;
 
-            ReapplyIndexProperties(PowerIndexPropertyFlags.CharacterLevel | PowerIndexPropertyFlags.CombatLevel);
+            // Reapplication needs to be deferred for cases like controlled entities that change level before they become owned by players
+            ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.CharacterLevel | PowerIndexPropertyFlags.CombatLevel);
         }
 
         public virtual void OnDeallocate()
