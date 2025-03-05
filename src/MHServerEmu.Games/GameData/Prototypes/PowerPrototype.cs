@@ -832,6 +832,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
+    #region SituationalTriggerPrototype
+
     public class SituationalTriggerPrototype : Prototype
     {
         public PrototypeId TriggerCollider { get; protected set; }
@@ -839,6 +841,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EntityFilterPrototype EntityFilter { get; protected set; }
         public bool AllowDead { get; protected set; }
         public bool ActivateOnTriggerSuccess { get; protected set; }
+
+        public virtual SituationalTrigger AllocateTrigger(SituationalPowerComponent powerComponent)
+        {
+            return new SituationalTrigger(this, powerComponent);
+        }
     }
 
     public class SituationalTriggerOnKilledPrototype : SituationalTriggerPrototype
@@ -848,12 +855,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool KilledByOther { get; protected set; }
         public bool KilledBySelf { get; protected set; }
         public bool WasLastInRange { get; protected set; }
+
+        // Not used
     }
 
     public class SituationalTriggerOnHealthThresholdPrototype : SituationalTriggerPrototype
     {
         public bool HealthBelow { get; protected set; }
         public float HealthPercent { get; protected set; }
+
+        // Not used
     }
 
     public class SituationalTriggerOnStatusEffectPrototype : SituationalTriggerPrototype
@@ -861,12 +872,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId[] TriggeringProperties { get; protected set; }
         public bool TriggersOnStatusApplied { get; protected set; }
         public PrototypeId[] TriggeringConditionKeywords { get; protected set; }
+
+        public override SituationalTrigger AllocateTrigger(SituationalPowerComponent powerComponent)
+        {
+            return new SituationalTriggerOnStatusEffect(this, powerComponent);
+        }       
     }
 
     public class SituationalTriggerInvAndWorldPrototype : SituationalTriggerPrototype
     {
         public PrototypeId InventoryRef { get; protected set; }
+
+        public override SituationalTrigger AllocateTrigger(SituationalPowerComponent powerComponent)
+        {
+            return new SituationalTriggerInvAndWorld(this, powerComponent);
+        }       
     }
+
+    #endregion
 
     public class SituationalPowerComponentPrototype : Prototype
     {

@@ -684,9 +684,9 @@ namespace MHServerEmu.Games.Entities.Inventories
             var newOwner = manager.GetEntity<Entity>(invLoc.ContainerId);
 
             if (oldOwner != null && oldOwner != newOwner)
-                oldOwner.EntityInventoryChangedEvent.Invoke(new(oldOwner, entity, prevInvLoc, invLoc));
+                oldOwner.EntityInventoryChangedEvent.Invoke(new(entity));
 
-            newOwner?.EntityInventoryChangedEvent.Invoke(new(newOwner, entity, prevInvLoc, invLoc));
+            newOwner?.EntityInventoryChangedEvent.Invoke(new(entity));
         }
 
         private InventoryResult UnpackArchivedEntity(Entity entity, uint destSlot)
