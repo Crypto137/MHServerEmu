@@ -1,6 +1,9 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
@@ -144,6 +147,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AllowLocalCoopMode { get; protected set; }
 
         //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; private set; }
@@ -479,6 +484,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool HasEndless()
         {
             return RegionGenerator is SequenceRegionGeneratorPrototype sequenceRegion && sequenceRegion.EndlessThemes.HasValue();
+        }
+
+        public PrototypeId GetLootTableOverride(WorldEntity worldEntity, AssetId source, LootDropEventType lootEvent)
+        {
+            if (_lootTableMap.TryGetValue(source, out List<LootTableAssignmentPrototype> tables))
+            {
+                foreach (LootTableAssignmentPrototype tableAssignment in tables)
+                {
+                    LootDropEventType tableAssignmentEvent = tableAssignment.Event;
+
+                    if (tableAssignmentEvent == lootEvent)
+                        return tableAssignment.Table;
+
+                    if (tableAssignmentEvent == LootDropEventType.None && (lootEvent == LootDropEventType.OnKilled || lootEvent == LootDropEventType.OnInteractedWith))
+                        return tableAssignment.Table;
+                }
+            }
+
+            return Logger.WarnReturn(PrototypeId.Invalid, $"GetLootTableOverride(): Region [{this}] has no overrides for source=[{source}], lootEvent=[{lootEvent}] requested by entity [{worldEntity}]");
         }
     }
 
