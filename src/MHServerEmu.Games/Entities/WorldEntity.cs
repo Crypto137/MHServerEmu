@@ -301,16 +301,13 @@ namespace MHServerEmu.Games.Entities
 
             AdjustSummonCount(-1);
 
-            bool notMissile = this is not Missile;
-            
             // Loot and XP
-            if (this is Agent agent && notMissile && agent is not Avatar && agent.IsTeamUpAgent == false)
-                AwardKillLoot(killer, killFlags, directKiller);
+            AwardKillLoot(killer, killFlags, directKiller);
 
             var region = Region;
 
             // Trigger EntityDead Event
-            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && notMissile)
+            if (killFlags.HasFlag(KillFlags.NoDeadEvent) == false && this is not Missile)
             {
                 var player = killer?.GetOwnerOfType<Player>();
                 region?.EntityDeadEvent.Invoke(new(this, killer, player));
@@ -3605,6 +3602,9 @@ namespace MHServerEmu.Games.Entities
 
         public bool AwardKillLoot(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            if (this is Missile || this is Hotspot)
+                return false;
+
             if (IsInWorld == false)
                 return false;
 
@@ -3691,9 +3691,6 @@ namespace MHServerEmu.Games.Entities
 
                 tables[numTables++] = (lootTableProtoRef, actionType);
             }
-
-            if (numTables == 0)
-                return true;
 
             tables = tables[..numTables];
 
