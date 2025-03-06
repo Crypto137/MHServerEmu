@@ -355,7 +355,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                     break;
 
                 case PropertyEnum.TauntersID:
-                    if (oldValue != 0ul)
+                    if (oldValue == 0ul)
                         _owningController.ResetCurrentTargetState();
                     break;
 
