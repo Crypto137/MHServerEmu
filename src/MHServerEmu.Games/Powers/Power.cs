@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Powers
         public bool IsSituationalPower { get => _situationalComponent != null; }
         public bool IsControlPower { get => Prototype != null && Prototype.IsControlPower; }
 
-        public int Rank { get => Properties[PropertyEnum.PowerRank]; }
+        public int Rank { get => Properties[PropertyEnum.PowerRank]; set => Properties[PropertyEnum.PowerRank] = value; }
 
         public bool IsInActivation { get => _activationPhase == PowerActivationPhase.Active; }
         public bool IsChanneling { get => _activationPhase == PowerActivationPhase.Channeling || _activationPhase == PowerActivationPhase.LoopEnding; }
@@ -423,7 +423,7 @@ namespace MHServerEmu.Games.Powers
                         continue;
                     }
 
-                    triggeredPower.Properties[PropertyEnum.PowerRank] = Properties[PropertyEnum.PowerRank];
+                    triggeredPower.Rank = Rank;
                     triggeredPower.ScheduleIndexPropertiesReapplication(indexPropertyFlags | PowerIndexPropertyFlags.PowerRank);
                 }
             }

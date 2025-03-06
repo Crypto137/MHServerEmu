@@ -667,6 +667,22 @@ namespace MHServerEmu.Games.Entities
             return power.IsInRange(position, RangeCheckType.Activation);
         }
 
+        private void RefreshDependentPassivePowers(PowerPrototype powerProto, int rank)
+        {
+            if (powerProto.RefreshDependentPassivePowers.IsNullOrEmpty())
+                return;
+
+            foreach (PrototypeId powerProtoRef in powerProto.RefreshDependentPassivePowers)
+            {
+                Power power = GetPower(powerProtoRef);
+                if (power == null)
+                    continue;
+
+                power.Rank = rank;
+                power.ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.PowerRank);
+            }
+        }
+
         #endregion
 
         #region Combat State
@@ -1503,6 +1519,9 @@ namespace MHServerEmu.Games.Entities
             {
                 Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
                 Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
+
+                // TODO: Move this to rank assignment
+                RefreshDependentPassivePowers(power.Prototype, 1);
             }
 
             if (IsDormant == false)
