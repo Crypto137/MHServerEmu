@@ -1634,13 +1634,7 @@ namespace MHServerEmu.Games.Powers
 
             // Set mitigated damage
             for (int i = 0; i < damageValues.Length; i++)
-            {
-                float damage = damageValues[i];
-                if (damage == 0f)
-                    continue;
-
-                results.Properties[PropertyEnum.Damage, i] = damage;
-            }
+                results.Properties[PropertyEnum.Damage, i] = damageValues[i];
 
             return true;
         }
@@ -1743,13 +1737,7 @@ namespace MHServerEmu.Games.Powers
 
             // Set mitigated damage
             for (int i = 0; i < damageValues.Length; i++)
-            {
-                float damage = damageValues[i];
-                if (damage == 0f)
-                    continue;
-
-                results.Properties[PropertyEnum.Damage, i] = damage;
-            }
+                results.Properties[PropertyEnum.Damage, i] = damageValues[i];
 
             return true;
         }
@@ -1785,7 +1773,6 @@ namespace MHServerEmu.Games.Powers
                     if (conditionProperties[PropertyEnum.DamageShieldRegensFromDamage, damageType] == false)
                         expirationCheckNeeded |= ApplyDamageToShield(target, conditionProperties, damageType, damageTotal, ref damageShielded);
 
-                    Logger.Debug($"damageTotal = {damageTotal}, damageShielded = {damageShielded} (damageShieldPercent = {damageShieldPercent})");
                     results.Properties[PropertyEnum.Damage, damageType] = damageTotal - damageShielded;
                 }
 
