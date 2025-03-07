@@ -1027,11 +1027,17 @@ namespace MHServerEmu.Games.Powers
             target.TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedPriorResist, results, healthDelta);
 
             // Apply other modifiers
+            CalculateResultDamageSplit(results);
+
+            CalculateResultDamagePvPScaling(results, target);
+
             CalculateResultDamageDifficultyScaling(results, target, out float difficultyMult);
 
             CalculateResultDamageLiveTuningModifier(results);
 
             CalculateResultDamageBounceModifier(results, target);
+
+            CalculateResultDamageBonusReservoir(results);
 
             CalculateResultDamageVulnerabilityModifier(results, target);
 
@@ -1048,6 +1054,8 @@ namespace MHServerEmu.Games.Powers
             CalculateResultDamageMetaGameModifier(results, target);
 
             CalculateResultDamageLevelScaling(results, target, difficultyMult);
+
+            CalculateResultDamageTransfer(results, target);
 
             // Flag as NoDamage if we don't have damage and this isn't a DoT (this will make the client display 0)
             if (results.TestFlag(PowerResultFlags.OverTime) == false)
@@ -1351,6 +1359,38 @@ namespace MHServerEmu.Games.Powers
             value += maxDistanceBonus * distanceBonusMult;
         }
 
+        private bool CalculateResultDamageSplit(PowerResults results)
+        {
+            // TODO, used for SurturRaid - Surtur
+            return true;
+        }
+
+        private bool CalculateResultDamagePvPScaling(PowerResults results, WorldEntity target)
+        {
+            float pvpDamageMult = 1f;
+
+            // Damage modifiers that apply when the target is in a PvP match
+            if (target.IsInPvPMatch)
+            {
+                pvpDamageMult *= target.Properties[PropertyEnum.PvPIncomingDamageMult];
+                pvpDamageMult *= Properties[PropertyEnum.PvPOutgoingDamageMult];
+            }
+
+            // Damage modifiers that apply when both the owner and the target are players
+            if (IsPlayerPayload && target.CanBePlayerOwned())
+            {
+                DifficultyGlobalsPrototype difficultyGlobals = GameDatabase.DifficultyGlobalsPrototype;
+                pvpDamageMult *= difficultyGlobals.PvPDamageMultiplier;
+
+                Curve pvpDamageScalarFromLevelCurve = difficultyGlobals.PvPDamageScalarFromLevelCurve.AsCurve();
+                if (pvpDamageScalarFromLevelCurve != null)
+                    pvpDamageMult *= pvpDamageScalarFromLevelCurve.GetAt(CombatLevel);
+            }
+
+            ApplyDamageMultiplier(results.Properties, pvpDamageMult);
+            return true;
+        }
+
         private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, out float difficultyMult)
         {
             difficultyMult = 1f;
@@ -1402,6 +1442,12 @@ namespace MHServerEmu.Games.Powers
             float bounceMult = 1f + Math.Max(-1f, curve.GetAt(hitCount));
 
             ApplyDamageMultiplier(results.Properties, bounceMult);
+            return true;
+        }
+
+        private bool CalculateResultDamageBonusReservoir(PowerResults results)
+        {
+            // TODO PropertyEnum.DamageBonusReservoir
             return true;
         }
 
@@ -1762,6 +1808,12 @@ namespace MHServerEmu.Games.Powers
                 results.SetDamageForClient(damageType, damage);
             }
 
+            return true;
+        }
+
+        private bool CalculateResultDamageTransfer(PowerResults results, WorldEntity target)
+        {
+            // TODO, used for SurturRaid - MistressOfMagma
             return true;
         }
 
