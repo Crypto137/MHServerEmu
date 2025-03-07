@@ -12,6 +12,8 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Grouping;
 using MHServerEmu.Games;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -26,6 +28,7 @@ namespace MHServerEmu.Commands.Implementations
 
             PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
+            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
@@ -51,9 +54,10 @@ namespace MHServerEmu.Commands.Implementations
             using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
             using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
             {
-                var avatarProp = player.CurrentAvatar.Properties;
-                int health = avatarProp[PropertyEnum.HealthMax];
-                properties[PropertyEnum.HealthBase] = avatarProp[PropertyEnum.HealthBase];
+                properties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
+                properties[PropertyEnum.CharacterLevel] = 60;
+                properties[PropertyEnum.CombatLevel] = 60;
+                properties[PropertyEnum.Rank] = agentProto.Rank;
 
                 settings.EntityRef = agentRef;
                 settings.Position = dummy.RegionLocation.Position;
@@ -61,8 +65,13 @@ namespace MHServerEmu.Commands.Implementations
                 settings.RegionId = region.Id;
 
                 var agent = manager.CreateEntity(settings);
-                agent.Properties[PropertyEnum.HealthMax] = health;
-                agent.Properties[PropertyEnum.Health] = health;
+                agent.CombatLevel = agent.CharacterLevel;
+
+                if (agentProto.ModifiersGuaranteed.HasValue())
+                    foreach (var boost in agentProto.ModifiersGuaranteed)
+                        agent.Properties[PropertyEnum.EnemyBoost, boost] = true;
+
+                agent.Properties[PropertyEnum.Health] = agent.Properties[PropertyEnum.HealthMax];
             }
 
             return string.Empty;
