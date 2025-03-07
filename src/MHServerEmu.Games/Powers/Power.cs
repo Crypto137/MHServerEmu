@@ -1008,6 +1008,8 @@ namespace MHServerEmu.Games.Powers
                     payloadCombatLevel = targetCombatLevel;
                 }
 
+                payload.IncrementHitCount(target.Id);
+
                 PowerResults targetResults = new();
                 payload.InitPowerResultsForTarget(targetResults, target);
                 targetResults.SetKeywordsMask(payload.KeywordsMask);

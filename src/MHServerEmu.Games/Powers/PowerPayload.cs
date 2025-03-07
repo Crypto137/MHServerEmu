@@ -33,6 +33,8 @@ namespace MHServerEmu.Games.Powers
         [ThreadStatic]
         public static PowerPayload ReusableTickerPayload;
 
+        private readonly Dictionary<ulong, int> _hitCountDict = new();
+
         private ulong _propertySourceEntityId;
         private WorldEntityPrototype _powerOwnerProto;
         private WorldEntityPrototype _ultimatePowerOwnerProto;
@@ -279,6 +281,24 @@ namespace MHServerEmu.Games.Powers
         {
             TargetId = targetId;
             TargetPosition = targetPosition;
+        }
+
+        /// <summary>
+        /// Increments the number of times the specified target has been hit by this <see cref="PowerPayload"/>.
+        /// </summary>
+        public void IncrementHitCount(ulong targetId)
+        {
+            _hitCountDict.TryGetValue(targetId, out int count);
+            _hitCountDict[targetId] = ++count;
+        }
+
+        /// <summary>
+        /// Returns the number of times the specified target has been hit by this <see cref="PowerPayload"/>.
+        /// </summary>
+        public int GetHitCount(ulong targetId)
+        {
+            _hitCountDict.TryGetValue(targetId, out int count);
+            return count;
         }
 
         /// <summary>
@@ -1009,6 +1029,10 @@ namespace MHServerEmu.Games.Powers
             // Apply other modifiers
             CalculateResultDamageDifficultyScaling(results, target, out float difficultyMult);
 
+            CalculateResultDamageLiveTuningModifier(results);
+
+            CalculateResultDamageBounceModifier(results, target);
+
             CalculateResultDamageVulnerabilityModifier(results, target);
 
             CalculateResultDamageBlockModifier(results, target);
@@ -1362,6 +1386,22 @@ namespace MHServerEmu.Games.Powers
             float tuningDamageMult = LiveTuningManager.GetLivePowerTuningVar(powerProto, tuningVar);
 
             ApplyDamageMultiplier(results.Properties, tuningDamageMult);
+            return true;
+        }
+
+        private bool CalculateResultDamageBounceModifier(PowerResults results, WorldEntity target)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamageBounceModifier(): powerProto == null");
+
+            Curve curve = powerProto.BounceDamagePctToSameIdCurve.AsCurve();
+            if (curve == null)
+                return true;
+
+            int hitCount = GetHitCount(target.Id);
+            float bounceMult = 1f + Math.Max(-1f, curve.GetAt(hitCount));
+
+            ApplyDamageMultiplier(results.Properties, bounceMult);
             return true;
         }
 
