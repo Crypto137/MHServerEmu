@@ -820,6 +820,10 @@ namespace MHServerEmu.Games.Powers
                 CalculateResultNegativeStatusRemoval(targetResults, target);
             }
 
+            // Check Teleport property
+            if (calculateForTarget)
+                CalculateResultTeleport(targetResults, target);
+
             // Copy extra properties
             targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefBase);
             targetResults.Properties.CopyProperty(Properties, PropertyEnum.CreatorEntityAssetRefCurrent);
@@ -2154,6 +2158,61 @@ namespace MHServerEmu.Games.Powers
             }
 
             return numRemoved > 0;
+        }
+
+        private void CalculateResultTeleport(PowerResults results, WorldEntity target)
+        {
+            if (target.Properties[PropertyEnum.NoForcedMovement]) return;
+            if (target.Locomotor == null) return;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.Teleport))
+            {
+                float distance = kvp.Value;
+                if (distance < 0) return;
+
+                Property.FromParam(kvp.Key, 0, out int ownerId);
+
+                var targetLocation = target.RegionLocation;
+                var region = targetLocation.Region;
+                if (region == null) return;
+
+                bool teleport;
+                var teleportRef = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.Teleport).PrototypeDataRef;
+
+                if (Properties[PropertyEnum.IgnoreNegativeStatusResist])
+                    teleport = true;
+                else if (target.Properties[PropertyEnum.CCResistAlwaysAll] || target.Properties[PropertyEnum.CCResistAlways, teleportRef])
+                    teleport = false;
+                else
+                {
+                    int ccResistScore = target.Properties[PropertyEnum.CCResistScore, teleportRef] + target.Properties[PropertyEnum.CCResistScoreAll];
+                    float resistPercent = target.GetNegStatusResistPercent(ccResistScore, Properties);
+                    teleport = resistPercent != 1.0f;
+                }
+
+                if (teleport)
+                {
+                    var targetPositon = targetLocation.Position;
+                    var ownerPosition = PowerOwnerPosition;
+
+                    var startPosition = ownerId != 0 ? ownerPosition : targetPositon;
+
+                    var dir = Vector3.Normalize2D(targetPositon - ownerPosition);
+                    targetPositon = startPosition + dir * distance;
+                    var teleportPositon = targetPositon;
+
+                    var result = region.NaviMesh.FindPointOnLineToOccupy(ref teleportPositon, startPosition, targetPositon,
+                        distance, target.Bounds, target.Locomotor.PathFlags, BlockingCheckFlags.CheckGroundMovementPowers, false);
+
+                    if (result != Navi.PointOnLineResult.Failed)
+                    {
+                        results.Flags |= PowerResultFlags.Teleport;
+                        results.TeleportPosition = teleportPositon;
+                    }
+                }
+
+                return;
+            }
         }
 
         private bool CalculateResultHitReaction(PowerResults results, WorldEntity target)
