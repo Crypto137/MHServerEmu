@@ -637,12 +637,13 @@ namespace MHServerEmu.Games.Powers
 
             CalculateOverTimeHealing(target, overTimeProperties, timeSeconds);
             CalculateOverTimeResourceChange(target, overTimeProperties, timeSeconds);
+            CalculateOverTimeDamageAccumulationChange(overTimeProperties, timeSeconds);
         }
 
         /// <summary>
         /// Calculates damage for a tick of an over time effect.
         /// </summary>
-        public bool CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
+        private bool CalculateOverTimeDamage(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             // DoTs require a full power payload for calculations
             PowerPrototype powerProto = PowerPrototype;
@@ -696,7 +697,7 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates healing for a tick of an over time effect.
         /// </summary>
-        public void CalculateOverTimeHealing(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
+        private void CalculateOverTimeHealing(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             // Check if our target can receive healing
 
@@ -732,7 +733,7 @@ namespace MHServerEmu.Games.Powers
         /// <summary>
         /// Calculates primary and secondary resource change for a tick of an over time effect.
         /// </summary>
-        public void CalculateOverTimeResourceChange(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
+        private void CalculateOverTimeResourceChange(WorldEntity target, PropertyCollection overTimeProperties, float timeSeconds)
         {
             if (target is not Avatar avatar)
                 return;
@@ -793,6 +794,17 @@ namespace MHServerEmu.Games.Powers
                 Properties[PropertyEnum.SecondaryResourceChange] = secondaryResourceChange;
         }
 
+        private void CalculateOverTimeDamageAccumulationChange(PropertyCollection overTimeProperties, float timeSeconds)
+        {
+            foreach (var kvp in overTimeProperties.IteratePropertyRange(PropertyEnum.DamageAccumulationCOT))
+            {
+                Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                DamageType damageType = (DamageType)damageTypeValue;
+
+                Properties[PropertyEnum.DamageAccumulationChange, damageType] = kvp.Value * timeSeconds;
+            }
+        }
+
         #endregion
 
         #region Result Calculations
@@ -828,6 +840,7 @@ namespace MHServerEmu.Games.Powers
 
                     CalculateResultHealing(targetResults, target);
                     CalculateResultResourceChanges(targetResults, target);
+                    CalculateResultDamageAccumulation(targetResults);
                 }
 
                 // Dodging can still remove conditions
@@ -865,6 +878,7 @@ namespace MHServerEmu.Games.Powers
 
             CalculateResultHealing(targetResults, target);
             CalculateResultResourceChanges(targetResults, target);
+            CalculateResultDamageAccumulation(targetResults);
         }
 
         private bool CalculateResultDamage(PowerResults results, WorldEntity target)
@@ -1457,7 +1471,8 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamageBonusReservoir(PowerResults results)
         {
-            // TODO PropertyEnum.DamageBonusReservoir
+            // PropertyEnum.DamageBonusReservoir - appears to be unused in 1.48/1.52
+            // Was used for Iron Man's Shield Overload in 1.10
             return true;
         }
 
@@ -1741,7 +1756,66 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamageShieldModifier(PowerResults results, WorldEntity target)
         {
-            // TODO
+            ConditionCollection conditionCollection = target.ConditionCollection;
+            if (conditionCollection == null)
+                return true;
+
+            List<ulong> conditionCheckList = ListPool<ulong>.Instance.Get();
+
+            foreach (Condition condition in conditionCollection.IterateConditions(true))
+            {
+                bool expirationCheckNeeded = false;
+                PropertyCollection conditionProperties = condition.Properties;
+
+                for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+                {
+                    float damageTotal = results.Properties[PropertyEnum.Damage, damageType];
+                    if (damageTotal <= 0f)
+                        continue;
+
+                    float damageShieldPercent = conditionProperties[PropertyEnum.DamageShieldPercent, damageType];
+                    damageShieldPercent += conditionProperties[PropertyEnum.DamageShieldPercent, DamageType.Any];
+                    if (damageShieldPercent == 0f)
+                        continue;
+
+                    float damageShielded = damageTotal * damageShieldPercent;
+
+                    expirationCheckNeeded |= ApplyDamageToShield(target, conditionProperties, damageType, damageTotal, ref damageShielded);
+
+                    if (conditionProperties[PropertyEnum.DamageShieldRegensFromDamage, damageType] == false)
+                        expirationCheckNeeded |= ApplyDamageToShield(target, conditionProperties, damageType, damageTotal, ref damageShielded);
+
+                    Logger.Debug($"damageTotal = {damageTotal}, damageShielded = {damageShielded} (damageShieldPercent = {damageShieldPercent})");
+                    results.Properties[PropertyEnum.Damage, damageType] = damageTotal - damageShielded;
+                }
+
+                if (expirationCheckNeeded)
+                    conditionCheckList.Add(condition.Id);
+            }
+
+            while (conditionCheckList.Count > 0)
+            {
+                int index = conditionCheckList.Count - 1;
+                Condition condition = conditionCollection.GetCondition(conditionCheckList[index]);
+                conditionCheckList.RemoveAt(index);
+
+                if (condition == null)
+                    continue;
+
+                PropertyCollection conditionProperties = condition.Properties;
+
+                bool isExpired = false;
+
+                for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+                    isExpired |= CheckDamageShieldExpiration(target, conditionProperties, damageType);
+
+                isExpired |= CheckDamageShieldExpiration(target, conditionProperties, DamageType.Any);
+
+                if (isExpired && conditionProperties[PropertyEnum.DamageShieldRemoveWhenExpired])
+                    results.AddConditionToRemove(condition.Id);
+            }
+
+            ListPool<ulong>.Instance.Return(conditionCheckList);
             return true;
         }
 
@@ -1903,6 +1977,23 @@ namespace MHServerEmu.Games.Powers
                 secondaryResourceChange += target.Properties[PropertyEnum.SecondaryResourceMax] * secondaryResourceChangePct;
 
             results.Properties[PropertyEnum.SecondaryResourceChange] = secondaryResourceChange;
+
+            return true;
+        }
+
+        private bool CalculateResultDamageAccumulation(PowerResults results)
+        {
+            // Start with the precalculated damage accumulation change (e.g. from an over time effect)
+            results.Properties.CopyPropertyRange(Properties, PropertyEnum.DamageAccumulationChange);
+
+            // Apply base change - is this used?
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.DamageAccumulationChangeBase))
+            {
+                Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                DamageType damageType = (DamageType)damageTypeValue;
+
+                results.Properties.AdjustProperty((float)kvp.Value, new(PropertyEnum.DamageAccumulationChange, damageType));
+            }
 
             return true;
         }
@@ -3084,6 +3175,63 @@ namespace MHServerEmu.Games.Powers
             ListPool<ulong>.Instance.Return(removeList);
             return numStacksToApply;
         }
+
+        #region Damage Shield
+
+        private static bool ApplyDamageToShield(WorldEntity target, PropertyCollection conditionProperties, DamageType damageType, float damageTotal, ref float damageShielded)
+        {
+            bool expirationCheckNeeded = false;
+
+            float damageAccumulationLimit = target.GetDamageAccumulationLimit(conditionProperties, damageType);
+            int numHitLimit = conditionProperties[PropertyEnum.DamageShieldNumHitLimit, damageType];
+
+            float damageAccumulationRemaining = 0f;
+            if (damageAccumulationLimit > 0f)
+                damageAccumulationRemaining = damageAccumulationLimit - conditionProperties[PropertyEnum.DamageAccumulation, damageType];
+
+            if (conditionProperties[PropertyEnum.DamageShieldRegensFromDamage, damageType])
+            {
+                // Regen shield from damage if needed
+                conditionProperties.AdjustProperty(-damageShielded, new(PropertyEnum.DamageAccumulation, damageType));
+
+                if (damageType != DamageType.Any)
+                    conditionProperties.AdjustProperty(-damageShielded, new(PropertyEnum.DamageAccumulation, DamageType.Any));
+            }
+            else if (damageAccumulationLimit > 0f && damageShielded > 0f && (numHitLimit > 0 || numHitLimit == -1))
+            {
+                // Accumulate damage if this is a finite shield (DamageAccumulationLimit > 0f or NumHitLimit > 0)
+                damageShielded = Math.Min(damageShielded, Math.Min(damageTotal, damageAccumulationRemaining));
+                conditionProperties.AdjustProperty(damageShielded, new(PropertyEnum.DamageAccumulation, damageType));
+
+                if (conditionProperties[PropertyEnum.DamageAccumulation, damageType] >= damageAccumulationLimit)
+                    expirationCheckNeeded = true;
+
+                if (numHitLimit > -1)
+                {
+                    conditionProperties.AdjustProperty(-1, new(PropertyEnum.DamageShieldNumHitLimit, damageType));
+                    expirationCheckNeeded = true;
+                }
+            }
+
+            return expirationCheckNeeded;
+        }
+
+        private static bool CheckDamageShieldExpiration(WorldEntity target, PropertyCollection conditionProperties, DamageType damageType)
+        {
+            bool isExpired = false;
+
+            float damageAccumulationLimit = target.GetDamageAccumulationLimit(conditionProperties, damageType);
+
+            if (damageAccumulationLimit > 0f && conditionProperties[PropertyEnum.DamageAccumulation, damageType] >= damageAccumulationLimit)
+                isExpired = true;
+
+            if (conditionProperties[PropertyEnum.DamageShieldNumHitLimit, damageType] == 0)
+                isExpired = true;
+
+            return isExpired;
+        }
+
+        #endregion
 
         /// <summary>
         /// Returns the HealthMax value of the provided <see cref="WorldEntity"/> adjusted for the specified combat level.

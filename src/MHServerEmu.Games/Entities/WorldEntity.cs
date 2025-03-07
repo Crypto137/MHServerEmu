@@ -1860,7 +1860,10 @@ namespace MHServerEmu.Games.Entities
             ApplyHealthPowerResults(powerResults, ultimateOwner);
 
             if (powerResults.IsAvoided == false)
+            {
                 ApplyResourcePowerResults(powerResults);
+                ApplyDamageAccumulationPowerResults(powerResults);
+            }
 
             return true;
         }
@@ -2188,6 +2191,42 @@ namespace MHServerEmu.Games.Entities
             Properties[PropertyEnum.SecondaryResource] = secondaryResource;
         }
 
+        private void ApplyDamageAccumulationPowerResults(PowerResults powerResults)
+        {
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null)
+                return;
+
+            Dictionary<DamageType, float> adjustDict = DictionaryPool<DamageType, float>.Instance.Get();
+
+            foreach (Condition condition in conditionCollection)
+            {
+                PropertyCollection conditionProps = condition.Properties;
+
+                foreach (var kvp in conditionProps.IteratePropertyRange(PropertyEnum.DamageAccumulationLimit))
+                {
+                    Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                    DamageType damageType = (DamageType)damageTypeValue;
+
+                    float damageAccumulationChange = powerResults.Properties[PropertyEnum.DamageAccumulationChange, damageType];
+                    if (damageAccumulationChange == 0f)
+                        continue;
+
+                    float accumulationLimit = GetDamageAccumulationLimit(conditionProps, damageType);
+                    accumulationLimit -= conditionProps[PropertyEnum.DamageAccumulation, damageType];
+
+                    adjustDict.Add(damageType, Math.Min(damageAccumulationChange, accumulationLimit));
+                }
+
+                foreach (var kvp in adjustDict)
+                    conditionProps.AdjustProperty(kvp.Value, new(PropertyEnum.DamageAccumulation, kvp.Key));
+
+                adjustDict.Clear();
+            }
+
+            DictionaryPool<DamageType, float>.Instance.Return(adjustDict);
+        }
+
         public void ApplyPropertyTicker(PropertyTicker.TickData tickData)
         {
             //Logger.Debug($"ApplyPropertyTicker(): [{tickData}] => [{this}]");
@@ -2462,6 +2501,32 @@ namespace MHServerEmu.Games.Entities
 
                     break;
             }
+        }
+
+        public float GetDamageAccumulationLimit(PropertyCollection conditionProperties, DamageType damageType)
+        {
+            float damageAccumulationLimit = conditionProperties[PropertyEnum.DamageAccumulationLimit, damageType];
+
+            if (damageAccumulationLimit > 0f)
+                damageAccumulationLimit += Properties[PropertyEnum.DamageAccumulationLimitBonus];
+
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+            foreach (var kvp in conditionProperties.IteratePropertyRange(PropertyEnum.DamageShieldScaleByStat))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId propertyInfoProtoRef);
+                if (propertyInfoProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                PropertyEnum scaleByProperty = propertyInfoTable.GetPropertyEnumFromPrototype(propertyInfoProtoRef);
+                float scaleByValue = Properties[scaleByProperty];
+                damageAccumulationLimit += scaleByValue * kvp.Value;
+            }
+
+            float damageAccumScaleByPlayers = conditionProperties[PropertyEnum.DamageAccumScaleByPlayers];
+            if (damageAccumScaleByPlayers > 0f)
+                damageAccumulationLimit *= damageAccumScaleByPlayers;
+
+            return damageAccumulationLimit;
         }
 
         public void TriggerEntityActionEventAlly(EntitySelectorActionEventType eventType)
