@@ -1027,7 +1027,7 @@ namespace MHServerEmu.Games.Powers
             target.TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedPriorResist, results, healthDelta);
 
             // Apply other modifiers
-            CalculateResultDamageSplit(results);
+            CalculateResultDamageSplitBetweenTargets(results);
 
             CalculateResultDamagePvPScaling(results, target);
 
@@ -1359,9 +1359,19 @@ namespace MHServerEmu.Games.Powers
             value += maxDistanceBonus * distanceBonusMult;
         }
 
-        private bool CalculateResultDamageSplit(PowerResults results)
+        private bool CalculateResultDamageSplitBetweenTargets(PowerResults results)
         {
-            // TODO, used for SurturRaid - Surtur
+            // Used for SurturRaid (including Rogue's stolen power for Lord Brimstone) and MoleMan
+            if (Properties[PropertyEnum.DamageSplitBetweenTargets] == false)
+                return true;
+
+            int targetsHit = Math.Max(1, Properties[PropertyEnum.TargetsHit]);
+            if (targetsHit == 1)
+                return true;
+
+            float splitMult = 1f / targetsHit;
+
+            ApplyDamageMultiplier(results.Properties, splitMult);
             return true;
         }
 
