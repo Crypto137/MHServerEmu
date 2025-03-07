@@ -1007,14 +1007,17 @@ namespace MHServerEmu.Games.Powers
             target.TryActivateOnGotDamagedProcs(ProcTriggerType.OnGotDamagedPriorResist, results, healthDelta);
 
             // Apply other modifiers
-            float difficultyMult = 1f;
-            CalculateResultDamageDifficultyScaling(results, target, ref difficultyMult);
+            CalculateResultDamageDifficultyScaling(results, target, out float difficultyMult);
 
             CalculateResultDamageVulnerabilityModifier(results, target);
 
             CalculateResultDamageBlockModifier(results, target);
 
             CalculateResultDamageDefenseModifier(results, target);
+
+            CalculateResultDamagePctResistModifier(results, target);
+
+            CalculateResultDamageShieldModifier(results, target);   // DamageShield needs to be applied before DamageConversion (e.g. Psylocke's barrier)
 
             CalculateResultDamageConversion(results, target, difficultyMult);
 
@@ -1324,8 +1327,10 @@ namespace MHServerEmu.Games.Powers
             value += maxDistanceBonus * distanceBonusMult;
         }
 
-        private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, ref float difficultyMult)
+        private bool CalculateResultDamageDifficultyScaling(PowerResults results, WorldEntity target, out float difficultyMult)
         {
+            difficultyMult = 1f;
+
             // Do not apply difficulty scaling to player vs player or mob vs mob damage
             if (target.CanBePlayerOwned() == IsPlayerPayload)
                 return true;
@@ -1526,6 +1531,121 @@ namespace MHServerEmu.Games.Powers
                 results.Properties[PropertyEnum.Damage, i] = damage;
             }
 
+            return true;
+        }
+
+        private bool CalculateResultDamagePctResistModifier(PowerResults results, WorldEntity target)
+        {
+            PowerPrototype powerProto = PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "CalculateResultDamagePctResistModifier(): powerProto == null");
+
+            Span<float> damageValues = stackalloc float[(int)DamageType.NumDamageTypes];
+            damageValues.Clear();
+
+            // Calculate damage mitigation by DamagePctResist
+            foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+            {
+                float damage = kvp.Value;
+                if (damage == 0f)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                DamageType damageType = (DamageType)damageTypeValue;
+
+                // DamagePctResist
+                float damagePctResist = target.Properties[PropertyEnum.DamagePctResist, damageType];
+                damagePctResist += target.Properties[PropertyEnum.DamagePctResist, DamageType.Any];
+
+                // DamagePctResistFromGear
+                damagePctResist += target.Properties[PropertyEnum.DamagePctResistFromGear, damageType];
+                damagePctResist += target.Properties[PropertyEnum.DamagePctResistFromGear, DamageType.Any];
+
+                // DamagePctResistVsPower / DamagePctResistVsPowerKeyword
+                float damagePctResistVsPower = target.Properties[PropertyEnum.DamagePctResistVsPower, powerProto.DataRef];
+                float damagePctResistVsPowerKeyword = 0f;
+
+                foreach (var powerKeywordKvp in target.Properties.IteratePropertyRange(PropertyEnum.DamagePctResistVsPowerKeyword))
+                {
+                    Property.FromParam(powerKeywordKvp.Key, 0, out PrototypeId keywordProtoRef);
+                    KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+                    if (keywordProto == null)
+                    {
+                        Logger.Warn("CalculateResultDamagePctResistModifier(): keywordProto == null");
+                        continue;
+                    }
+
+                    if (powerProto.HasKeyword(keywordProto))
+                        damagePctResistVsPowerKeyword = Math.Max(damagePctResistVsPowerKeyword, powerKeywordKvp.Value);
+                }
+
+                damagePctResist += Math.Max(damagePctResistVsPower, damagePctResistVsPowerKeyword);
+
+                // DamagePctResistFromAngle / DamagePctResistFromDistance
+                if (target.IsInWorld)
+                {
+                    float damagePctResistFromPosition = 0f;
+
+                    Vector3 ownerPosition = Power.IsMissileEffect(powerProto) ? UltimateOwnerPosition : PowerOwnerPosition;
+
+                    foreach (var angleKvp in target.Properties.IteratePropertyRange(PropertyEnum.DamagePctResistFromAngle))
+                    {
+                        Property.FromParam(angleKvp.Key, 0, out int angle);
+                        if (WorldEntity.CheckWithinAngle(target.RegionLocation.Position, target.Forward, ownerPosition, angle))
+                            damagePctResistFromPosition = Math.Max(damagePctResistFromPosition, angleKvp.Value);
+                    }
+
+                    foreach (var distanceKvp in target.Properties.IteratePropertyRange(PropertyEnum.DamagePctResistFromDistance))
+                    {
+                        Property.FromParam(distanceKvp.Key, 0, out int distanceThreshold);
+                        if (distanceThreshold <= 0)
+                            continue;
+
+                        float distanceSquared = Vector3.DistanceSquared(target.RegionLocation.Position, ownerPosition);
+                        if (distanceSquared > (distanceThreshold * distanceThreshold))
+                            damagePctResistFromPosition = Math.Max(damagePctResistFromPosition, distanceKvp.Value);
+                    }
+
+                    damagePctResist += damagePctResistFromPosition;
+                }
+                else
+                {
+                    Logger.Warn("CalculateResultDamagePctResistModifier(): target.IsInWorld == false");
+                }
+
+                // DamagePctResistVsRank
+                float damagePctResistVsRank = 0f;
+                PrototypeId powerOwnerRankProtoRef = Properties[PropertyEnum.Rank];
+                foreach (var rankKvp in target.Properties.IteratePropertyRange(PropertyEnum.DamagePctResistVsRank))
+                {
+                    Property.FromParam(rankKvp.Key, 0, out PrototypeId paramRankProtoRef);
+                    if (powerOwnerRankProtoRef == paramRankProtoRef)
+                        damagePctResistVsRank = Math.Max(damagePctResistVsRank, rankKvp.Value);
+                }
+
+                damagePctResist += Math.Clamp(damagePctResistVsRank, 0f, 1f);
+
+                // Apply damage pct resist
+                float damagePctResistMult = 1f - Math.Clamp(damagePctResist, 0f, 1f);
+
+                damageValues[(int)damageType] = damage * damagePctResistMult;
+            }
+
+            // Set mitigated damage
+            for (int i = 0; i < damageValues.Length; i++)
+            {
+                float damage = damageValues[i];
+                if (damage == 0f)
+                    continue;
+
+                results.Properties[PropertyEnum.Damage, i] = damage;
+            }
+
+            return true;
+        }
+
+        private bool CalculateResultDamageShieldModifier(PowerResults results, WorldEntity target)
+        {
+            // TODO
             return true;
         }
 
