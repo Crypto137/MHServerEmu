@@ -265,11 +265,10 @@ namespace MHServerEmu.Core.VectorMath
         public static Vector3 NextVector3(GRandom random, Vector3 vector, Vector3 variance)
         {
             Vector3 halfVaiance = variance / 2.0f;
-            return new Vector3(
-                random.NextFloat(vector.X - halfVaiance.X, vector.X + halfVaiance.X),
-                random.NextFloat(vector.Y - halfVaiance.Y, vector.Y + halfVaiance.Y),
-                random.NextFloat(vector.Z - halfVaiance.Z, vector.Z + halfVaiance.Z)
-            );
+            float z = random.NextFloat(vector.Z - halfVaiance.Z, vector.Z + halfVaiance.Z);
+            float y = random.NextFloat(vector.Y - halfVaiance.Y, vector.Y + halfVaiance.Y);
+            float x = random.NextFloat(vector.X - halfVaiance.X, vector.X + halfVaiance.X);
+            return new Vector3(x, y, z);
         }
 
         public static Vector3 ToRadians(Vector3 angle)
