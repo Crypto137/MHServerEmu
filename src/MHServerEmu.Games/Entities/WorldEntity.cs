@@ -515,7 +515,7 @@ namespace MHServerEmu.Games.Entities
 
             if (summoner is not Avatar avatar) return;
             
-            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeyword;
+            var vanityKeyword = GameDatabase.KeywordGlobalsPrototype.VanityPetKeywordPrototype;
             if (HasKeyword(vanityKeyword))
             {
                 var player = avatar.GetOwnerOfType<Player>();
