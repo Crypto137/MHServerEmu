@@ -18,7 +18,8 @@ namespace MHServerEmu.Games.Powers.Conditions
         public static Func<ConditionType> IsConditionOfTypeFunc { get; } = IsConditionOfType;
 
         public static Func IsConditionCancelOnHitFunc { get; } = IsConditionCancelOnHit;
-        public static Func IsConditionCancelOnKilledFunc { get; } = IsConditionCancelOnKilled;        
+        public static Func IsConditionCancelOnKilledFunc { get; } = IsConditionCancelOnKilled;
+        public static Func<PrototypeId> IsConditionWithPrototypeFunc { get; } = IsConditionWithPrototype;
         public static Func<PowerPrototype> IsConditionCancelOnPowerUseFunc { get; } = IsConditionCancelOnPowerUse;
         public static Func<PowerPrototype> IsConditionCancelOnPowerUsePostFunc { get; } = IsConditionCancelOnPowerUsePost;
 
@@ -82,6 +83,11 @@ namespace MHServerEmu.Games.Powers.Conditions
 
             return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUsePost) &&
                 (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+        }
+
+        private static bool IsConditionWithPrototype(Condition condition, PrototypeId protoRef)
+        {
+            return condition.ConditionPrototypeRef == protoRef;
         }
     }
 }
