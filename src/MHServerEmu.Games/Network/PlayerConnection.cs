@@ -1620,9 +1620,24 @@ namespace MHServerEmu.Games.Network
             var newItemGlintPlayed = message.As<NetMessageNewItemGlintPlayed>();
             if (newItemGlintPlayed == null) return Logger.WarnReturn(false, $"OnNewItemGlintPlayed(): Failed to retrieve message");
 
-            Logger.Warn($"OnNewItemGlintPlayed(): {newItemGlintPlayed}");
+            if (Player.Id != newItemGlintPlayed.PlayerId)
+                return Logger.WarnReturn(false, $"OnNewItemGlintPlayed(): Player entity id mismatch, expected {Player.Id}, got {newItemGlintPlayed.PlayerId}");
 
-            // What causes this to be sent? Do we need it?
+            EntityManager entityManager = Game.EntityManager;
+
+            for (int i = 0; i < newItemGlintPlayed.ItemIdsCount; i++)
+            {
+                ulong itemId = newItemGlintPlayed.ItemIdsList[i];
+                Item item = entityManager.GetEntity<Item>(itemId);
+                if (item == null)
+                    return Logger.WarnReturn(false, "OnNewItemGlintPlayed(): item == null");
+
+                Player owner = item.GetOwnerOfType<Player>();
+                if (owner != Player)
+                    return Logger.WarnReturn(false, $"OnNewItemGlintPlayed(): Player [{Player}] attempted to clear glint of item [{item}] belonging to other player [{owner}]");
+
+                item.Properties.RemoveProperty(PropertyEnum.ItemRecentlyAddedGlint);
+            }
 
             return true;
         }
@@ -1640,7 +1655,7 @@ namespace MHServerEmu.Games.Network
 
             Player owner = item.GetOwnerOfType<Player>();
             if (owner != Player)
-                return Logger.WarnReturn(false, $"OnNewItemHighlightCleared(): Player {Player} attempted to clear highlight of item {item} belonging to other player {owner}");
+                return Logger.WarnReturn(false, $"OnNewItemHighlightCleared(): Player [{Player}] attempted to clear highlight of item [{item}] belonging to other player [{owner}]");
 
             item.SetRecentlyAdded(false);
             return true;
