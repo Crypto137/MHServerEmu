@@ -1771,7 +1771,7 @@ namespace MHServerEmu.Games.Powers
                     expirationCheckNeeded |= ApplyDamageToShield(target, conditionProperties, damageType, damageTotal, ref damageShielded);
 
                     if (conditionProperties[PropertyEnum.DamageShieldRegensFromDamage, damageType] == false)
-                        expirationCheckNeeded |= ApplyDamageToShield(target, conditionProperties, damageType, damageTotal, ref damageShielded);
+                        expirationCheckNeeded |= ApplyDamageToShield(target, conditionProperties, DamageType.Any, damageTotal, ref damageShielded);
 
                     results.Properties[PropertyEnum.Damage, damageType] = damageTotal - damageShielded;
                 }
