@@ -5,15 +5,12 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Grouping;
 using MHServerEmu.Games;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
@@ -34,8 +31,6 @@ namespace MHServerEmu.Commands.Implementations
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
-            var manager = playerConnection.Game.EntityManager;
-
             var region = player.GetRegion();
             if (region.PrototypeDataRef != (PrototypeId)12181996598405306634) // TrainingRoomSHIELDRegion
                 return "Player is not in Training Room";
@@ -52,28 +47,7 @@ namespace MHServerEmu.Commands.Implementations
             if (found == false) return "Dummy is not found";
             dummy.SetDormant(true);
 
-            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
-            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
-            {
-                properties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
-                properties[PropertyEnum.CharacterLevel] = 60;
-                properties[PropertyEnum.CombatLevel] = 60;
-                properties[PropertyEnum.Rank] = agentProto.Rank;
-
-                settings.EntityRef = agentRef;
-                settings.Position = dummy.RegionLocation.Position;
-                settings.Orientation = dummy.RegionLocation.Orientation;
-                settings.RegionId = region.Id;
-
-                var agent = manager.CreateEntity(settings);
-                agent.CombatLevel = agent.CharacterLevel;
-
-                if (agentProto.ModifiersGuaranteed.HasValue())
-                    foreach (var boost in agentProto.ModifiersGuaranteed)
-                        agent.Properties[PropertyEnum.EnemyBoost, boost] = true;
-
-                agent.Properties[PropertyEnum.Health] = agent.Properties[PropertyEnum.HealthMax];
-            }
+            EntityHelper.CreateAgent(agentProto, player.CurrentAvatar, dummy.RegionLocation.Position, dummy.RegionLocation.Orientation);
 
             return string.Empty;
         }
@@ -187,7 +161,7 @@ namespace MHServerEmu.Commands.Implementations
             if (entity2 == null) return $"No entity found for {entityId2}";
 
             Bounds bounds = entity1.Bounds;
-            bool isBlocked = Games.Regions.Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
+            bool isBlocked = Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
         }
 
@@ -245,39 +219,13 @@ namespace MHServerEmu.Commands.Implementations
 
             for (int i = 0; i < count; i++)
             {
-                Vector3 spawnPosition = avatar.RegionLocation.Position;
-                if (GetSpawnPositionNearAvatar(avatar, region, agentProto.Bounds, 250, out spawnPosition) == false)
+                if (EntityHelper.GetSpawnPositionNearAvatar(avatar, region, agentProto.Bounds, 250, out Vector3 positon) == false)
                     return "No space found to spawn the entity";
-
-                using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
-                entitySettings.EntityRef = agentRef;
-                entitySettings.Position = spawnPosition;
-                entitySettings.Orientation = Orientation.FromDeltaVector(avatar.RegionLocation.Position - entitySettings.Position);
-                entitySettings.RegionId = avatar.Region.Id;
-                entitySettings.Cell = avatar.Cell;
-                entitySettings.IsPopulation = true;
-
-
-                using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                settingsProperties.RemovePropertyRange(PropertyEnum.EnemyBoost);
-                settingsProperties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
-                settingsProperties[PropertyEnum.Rank] = agentProto.Rank;
-                settingsProperties[PropertyEnum.CharacterLevel] = avatar.CharacterLevel;
-                settingsProperties[PropertyEnum.CombatLevel] = avatar.CharacterLevel;
-                entitySettings.Properties = settingsProperties;
-
-                WorldEntity entity = game.EntityManager.CreateEntity(entitySettings) as WorldEntity;
+                var orientation = Orientation.FromDeltaVector(avatar.RegionLocation.Position - positon);
+                EntityHelper.CreateAgent(agentProto, avatar, positon, orientation);
             }
 
             return $"Created!";
-        }
-
-        private bool GetSpawnPositionNearAvatar(Avatar avatar, Region region, BoundsPrototype entityBoundsPrototype, float maxDistance, out Vector3 spawnPositionResult)
-        {
-            Bounds entityBounds = new();
-            entityBounds.InitializeFromPrototype(entityBoundsPrototype);
-            entityBounds.Center = avatar.RegionLocation.Position + avatar.Forward * 120;
-            return region.ChoosePositionAtOrNearPoint(entityBounds, avatar.Locomotor.PathFlags, PositionCheckFlags.CanBeBlockedEntity, BlockingCheckFlags.None, maxDistance, out spawnPositionResult, maxPositionTests: 32);
         }
     }
 }
