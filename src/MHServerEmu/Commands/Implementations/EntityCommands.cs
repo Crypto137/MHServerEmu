@@ -5,13 +5,13 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Properties;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Grouping;
 using MHServerEmu.Games;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -26,11 +26,10 @@ namespace MHServerEmu.Commands.Implementations
 
             PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
+            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
-
-            var manager = playerConnection.Game.EntityManager;
 
             var region = player.GetRegion();
             if (region.PrototypeDataRef != (PrototypeId)12181996598405306634) // TrainingRoomSHIELDRegion
@@ -48,22 +47,7 @@ namespace MHServerEmu.Commands.Implementations
             if (found == false) return "Dummy is not found";
             dummy.SetDormant(true);
 
-            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
-            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
-            {
-                var avatarProp = player.CurrentAvatar.Properties;
-                int health = avatarProp[PropertyEnum.HealthMax];
-                properties[PropertyEnum.HealthBase] = avatarProp[PropertyEnum.HealthBase];
-
-                settings.EntityRef = agentRef;
-                settings.Position = dummy.RegionLocation.Position;
-                settings.Orientation = dummy.RegionLocation.Orientation;
-                settings.RegionId = region.Id;
-
-                var agent = manager.CreateEntity(settings);
-                agent.Properties[PropertyEnum.HealthMax] = health;
-                agent.Properties[PropertyEnum.Health] = health;
-            }
+            EntityHelper.CreateAgent(agentProto, player.CurrentAvatar, dummy.RegionLocation.Position, dummy.RegionLocation.Orientation);
 
             return string.Empty;
         }
@@ -177,7 +161,7 @@ namespace MHServerEmu.Commands.Implementations
             if (entity2 == null) return $"No entity found for {entityId2}";
 
             Bounds bounds = entity1.Bounds;
-            bool isBlocked = Games.Regions.Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
+            bool isBlocked = Region.IsBoundsBlockedByEntity(bounds, entity2, BlockingCheckFlags.CheckSpawns);
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
         }
 
@@ -205,6 +189,43 @@ namespace MHServerEmu.Commands.Implementations
             avatar.ChangeRegionPosition(teleportPoint, null, ChangePositionFlags.Teleport);
 
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
+        }
+
+        [Command("create", "create entity near the avatar based on pattern (ignore the case) and count (default 1).\nUsage:\nentity create bosses/venom 2", AccountUserLevel.Admin)]
+        public string Create(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help entity create' to get help.";
+            
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            if(game == null)
+                return "Game not found.";
+
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
+
+            Region region = avatar.Region;
+            if (region == null) return "No region found.";
+
+            PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
+            if (agentRef == PrototypeId.Invalid) return string.Empty;
+
+            var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
+
+            int count = 1;
+            if (@params.Length == 2)
+                int.TryParse(@params[1], out count);
+
+            for (int i = 0; i < count; i++)
+            {
+                if (EntityHelper.GetSpawnPositionNearAvatar(avatar, region, agentProto.Bounds, 250, out Vector3 positon) == false)
+                    return "No space found to spawn the entity";
+                var orientation = Orientation.FromDeltaVector(avatar.RegionLocation.Position - positon);
+                EntityHelper.CreateAgent(agentProto, avatar, positon, orientation);
+            }
+
+            return $"Created!";
         }
     }
 }

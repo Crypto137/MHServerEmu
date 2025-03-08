@@ -1,6 +1,8 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -52,11 +54,39 @@ namespace MHServerEmu.Games.Entities
             return orb;
         }
 
-        private static PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
+        public static Agent CreateAgent(AgentPrototype agentProto, Avatar avatar, Vector3 spawnPosition, Orientation orientation)
         {
-            WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
-            if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
-            return invisibleId;
+            var region = avatar.Region;
+
+            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            entitySettings.EntityRef = agentProto.DataRef;
+            entitySettings.Position = spawnPosition;
+            entitySettings.Orientation = orientation;
+            entitySettings.RegionId = region.Id;
+            entitySettings.IsPopulation = true;
+
+            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settingsProperties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
+            settingsProperties[PropertyEnum.Rank] = agentProto.Rank;
+            settingsProperties[PropertyEnum.CharacterLevel] = avatar.CharacterLevel;
+            settingsProperties[PropertyEnum.CombatLevel] = avatar.CharacterLevel;
+            entitySettings.Properties = settingsProperties;
+
+            var agent = avatar.Game.EntityManager.CreateEntity(entitySettings) as Agent;
+
+            if (agentProto.ModifiersGuaranteed.HasValue())
+                foreach (var boost in agentProto.ModifiersGuaranteed)
+                    agent.Properties[PropertyEnum.EnemyBoost, boost] = true;
+
+            return agent;
+        }
+
+        public static bool GetSpawnPositionNearAvatar(Avatar avatar, Region region, BoundsPrototype entityBoundsPrototype, float maxDistance, out Vector3 spawnPositionResult)
+        {
+            Bounds entityBounds = new();
+            entityBounds.InitializeFromPrototype(entityBoundsPrototype);
+            entityBounds.Center = avatar.RegionLocation.Position + avatar.Forward * 120;
+            return region.ChoosePositionAtOrNearPoint(entityBounds, avatar.Locomotor.PathFlags, PositionCheckFlags.CanBeBlockedEntity, BlockingCheckFlags.None, maxDistance, out spawnPositionResult, maxPositionTests: 32);
         }
     }
 }

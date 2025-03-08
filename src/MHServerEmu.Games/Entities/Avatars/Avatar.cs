@@ -3638,6 +3638,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             else
                 InitializeOmegaBonuses();
 
+            ApplyLiveTuneServerConditions();
+
             RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
             UpdateBoostConditionPauseState(region.PausesBoostConditions());
 
@@ -3699,6 +3701,32 @@ namespace MHServerEmu.Games.Entities.Avatars
             player.TryDoVendorXPCapRollover();
         }
 
+        private void ApplyLiveTuneServerConditions()
+        {
+            foreach (var conditionRef in GameDatabase.GlobalsPrototype.LiveTuneServerConditions)
+            {
+                var conditionProto = GameDatabase.GetPrototype<ConditionPrototype>(conditionRef);
+
+                if (LiveTuningManager.GetLiveConditionTuningVar(conditionProto, ConditionTuningVar.eCTV_Enabled) != 1.0f)
+                {
+                    if (ConditionCollection.GetConditionByRef(conditionRef) != null) continue;
+                    var condition = ConditionCollection.AllocateCondition();
+                    condition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game, Id, Id, Id, conditionProto, TimeSpan.Zero);
+                    ConditionCollection.AddCondition(condition);
+                }
+                else
+                {
+                    ConditionCollection.RemoveConditionsWithConditionPrototypeRef(conditionRef);
+                }
+            }
+        }
+
+        private void RemoveLiveTuneServerConditions()
+        {
+            foreach (var conditionRef in GameDatabase.GlobalsPrototype.LiveTuneServerConditions)
+                ConditionCollection.RemoveConditionsWithConditionPrototypeRef(conditionRef);
+        }
+
         public override void OnExitedWorld()
         {
             base.OnExitedWorld();
@@ -3725,6 +3753,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Cancel events
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler.CancelEvent(_refreshStatsPowerEvent);
+
+            // Remove LiveTuneServerConditions
+            RemoveLiveTuneServerConditions();
 
             // summoner condition
             foreach (var summon in new SummonedEntityIterator(this))
