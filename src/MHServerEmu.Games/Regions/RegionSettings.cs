@@ -105,6 +105,7 @@ namespace MHServerEmu.Games.Regions
 
         public void ResetEndless()
         {
+            DifficultyTierRef = PrototypeId.Invalid;
             Seed = 0;
             EndlessLevel = 0;
             Affixes.Clear();
@@ -122,14 +123,12 @@ namespace MHServerEmu.Games.Regions
         {
             Properties.Clear();
 
-            Properties.CopyProperty(properties, PropertyEnum.DifficultyTier);
-            Properties.CopyProperty(properties, PropertyEnum.RegionAffixDifficulty);
             Properties.CopyProperty(properties, PropertyEnum.DangerRoomScenarioItemDbGuid);
-
             Properties.CopyProperty(properties, PropertyEnum.DifficultyIndex);
             Properties.CopyProperty(properties, PropertyEnum.DamageRegionMobToPlayer);
             Properties.CopyProperty(properties, PropertyEnum.DamageRegionPlayerToMob);
 
+            DifficultyTierRef = properties[PropertyEnum.DifficultyTier];
             ItemRarity = properties[PropertyEnum.ItemRarity];
             PlayerGuidParty = properties[PropertyEnum.RestrictedToPlayerGuidParty];
 
