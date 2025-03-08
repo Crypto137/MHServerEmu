@@ -5190,6 +5190,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 var broadcasterController = broadcasterAgent.AIController;
                 if (broadcasterController == null) return;
 
+                // Fix to prevent bad state in situations when RNG picks lower cooldown values and things overlap poorly
+                if (ownerController.Brain?.GetState(0) == UsePower.Instance)
+                {
+                    ProceduralAI.Logger.Warn("[ProceduralProfileNickFuryTurretPrototype] OnAIBroadcastBlackboardEvent(): ownerController.Brain.GetState(0) == UsePower.Instance");
+                    return;
+                }
+
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Ready;
                 ownerController.SetTargetEntity(broadcasterController.TargetEntity);
             }
