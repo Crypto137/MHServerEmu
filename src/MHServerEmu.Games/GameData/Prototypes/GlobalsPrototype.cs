@@ -1151,9 +1151,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public KeywordPrototype DestructibleKeywordPrototype { get; private set; }
         [DoNotCopy]
+        public KeywordPrototype PetPowerKeywordPrototype { get; private set; }
+        [DoNotCopy]
+        public KeywordPrototype OrbEntityKeywordPrototype { get; private set; }
+        [DoNotCopy]
         public KeywordPrototype RangedPowerKeywordPrototype { get; private set; }
         [DoNotCopy]
         public KeywordPrototype StealthPowerKeywordPrototype { get; private set; }
+        [DoNotCopy]
+        public KeywordPrototype VanityPetKeywordPrototype { get; private set; }
 
         public override void PostProcess()
         {
@@ -1161,8 +1167,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             // Cache frequently used keyword prototype refs
             DestructibleKeywordPrototype = DestructibleKeyword.As<KeywordPrototype>();
+            PetPowerKeywordPrototype = PetPowerKeyword.As<KeywordPrototype>();
+            OrbEntityKeywordPrototype = OrbEntityKeyword.As<KeywordPrototype>();
             RangedPowerKeywordPrototype = RangedPowerKeyword.As<KeywordPrototype>();
             StealthPowerKeywordPrototype = StealthPowerKeyword.As<KeywordPrototype>();
+            VanityPetKeywordPrototype = VanityPetKeyword.As<KeywordPrototype>();
         }
     }
 

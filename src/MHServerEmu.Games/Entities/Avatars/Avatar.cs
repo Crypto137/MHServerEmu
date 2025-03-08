@@ -3072,7 +3072,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (keywordGlobals == null) return Logger.WarnReturn((Agent)null, "GetCurrentVanityPet(): keywordGlobals == null");
 
             foreach (var summoned in new SummonedEntityIterator(this))
-                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeyword))
+                if (summoned is Agent pet && pet.HasKeyword(keywordGlobals.VanityPetKeywordPrototype))
                     return pet;
 
             return null;
