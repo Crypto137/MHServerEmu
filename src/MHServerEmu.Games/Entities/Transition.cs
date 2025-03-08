@@ -286,9 +286,9 @@ namespace MHServerEmu.Games.Entities
             Orientation targetRot = transition.RegionLocation.Orientation;
             targetPos += transitionProto.CalcSpawnOffset(targetRot);
 
-            uint cellId = transition.Properties[PropertyEnum.MapCellId];
-            uint areaId = transition.Properties[PropertyEnum.MapAreaId];
-            Logger.Debug($"TeleportToTransition(): targetPos={targetPos}, areaId={areaId}, cellId={cellId}");
+            //uint cellId = transition.Properties[PropertyEnum.MapCellId];
+            //uint areaId = transition.Properties[PropertyEnum.MapAreaId];
+            //Logger.Debug($"TeleportToTransition(): targetPos={targetPos}, areaId={areaId}, cellId={cellId}");
 
             ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;

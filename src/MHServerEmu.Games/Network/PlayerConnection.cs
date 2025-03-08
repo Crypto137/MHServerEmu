@@ -1369,7 +1369,6 @@ namespace MHServerEmu.Games.Network
             if (tryMoveInventoryContentsToGeneral == null) return Logger.WarnReturn(false, $"OnTryMoveInventoryContentsToGeneral(): Failed to retrieve message");
 
             PrototypeId sourceInventoryProtoRef = (PrototypeId)tryMoveInventoryContentsToGeneral.SourceInventoryPrototype;
-            Logger.Debug($"OnTryMoveInventoryContentsToGeneral(): {sourceInventoryProtoRef.GetName()} for {Player}");
 
             Inventory sourceInventory = Player.GetInventoryByRef(sourceInventoryProtoRef);
             if (sourceInventory == null)

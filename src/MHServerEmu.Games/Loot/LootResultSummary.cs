@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.Loot
                     break;
 
                 case LootType.RealMoney:
-                    Logger.Debug($"Add(): realMoney=[{lootResult.Amount}]");
+                    //Logger.Debug($"Add(): realMoney=[{lootResult.Amount}]");
                     RealMoney += lootResult.RealMoneyProto.NumMin;
                     Types |= LootType.RealMoney;
                     break;

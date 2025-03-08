@@ -1109,7 +1109,6 @@ namespace MHServerEmu.Games.Entities
                 PowerActivationSettings settings = new(targetId, targetPosition, procPowerOwner.RegionLocation.Position);
                 settings.PowerResults = powerResults;
 
-                Logger.Debug($"OnPetHit(): {powerProto} for [{procPowerOwner}] (pet=[{pet}])");
                 procPowerOwner.ActivateProcPower(procPower, ref settings, this);
             }
 

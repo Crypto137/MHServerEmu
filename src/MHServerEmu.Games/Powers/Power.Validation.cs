@@ -542,8 +542,6 @@ namespace MHServerEmu.Games.Powers
             if (powerProto.TargetRestrictionEval == null)
                 return true;
 
-            Logger.Debug("TargetPassesRestrictionEval()");
-
             using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
             evalContext.Game = target.Game;
             evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, powerProto.Properties);

@@ -5343,7 +5343,7 @@ namespace MHServerEmu.Games.Powers
 
         private bool ScheduleExtraActivationTimeout(ExtraActivateOnSubsequentPrototype extraActivateOnSubsequent)
         {
-            Logger.Debug($"ScheduleExtraActivationTimeout(): [{this}]");
+            //Logger.Debug($"ScheduleExtraActivationTimeout(): [{this}]");
 
             int timeoutLengthMS = extraActivateOnSubsequent.GetTimeoutLengthMS(Properties[PropertyEnum.PowerRank]);
             
