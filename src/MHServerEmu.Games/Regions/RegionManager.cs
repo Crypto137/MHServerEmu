@@ -224,6 +224,9 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
+            // Reset preferred difficulty
+            regionContext.DifficultyTierRef = PrototypeId.Invalid;
+
             return region;
         }
 
