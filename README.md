@@ -76,11 +76,11 @@ Download the latest stable or nightly build and overwrite your existing files. N
 
 **Will there be any wipes?**
 
-We plan to force a fresh start when version 1.0 comes out. Your data will not be deleted, but it will no longer be compatible with the server. You will be to continue using your existing data on whatever the last 0.x version is going to be.
+We plan to force a fresh start when version 1.0 comes out. Your data will not be deleted, but it will no longer be compatible with the server. You will be able to continue using your existing data on whatever the last 0.x version is going to be.
 
 **Are you going to support other versions of the game, like the ones from before the Biggest Update Ever (BUE) came out?**
 
-Yes, we do plan to implement support for other versions of the game after 1.52 is fully restored. The final pre-BUE version (1.48) is the highest priority.
+Yes, we do plan to implement support for other versions of the game after 1.52 is fully restored. The final pre-BUE version (1.48) has the highest priority.
 
 **Are you going to add new content to the game (heroes, team-ups, powers, etc.)?**
 
