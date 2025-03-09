@@ -62,7 +62,7 @@ Some features are still being worked on, including, but not limited to:
 
 - PvP
 
-You can find update to date information on what we are working on in [our roadmap](https://github.com/users/Crypto137/projects/5).
+You can find up to date information on what we are working on in [our roadmap](https://github.com/users/Crypto137/projects/5).
 
 ## FAQ
 
