@@ -20,6 +20,7 @@ namespace MHServerEmu.PlayerManagement
         private readonly Dictionary<ulong, Game> _gameDict = new();
 
         private int _targetGameInstanceCount = -1;
+        private int _playerCountDivisor = 1;
 
         public int GameCount { get => _gameDict.Count; }
 
@@ -28,7 +29,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public GameManager() { }
 
-        public void InitializeGames(int gameInstanceCount)
+        public void InitializeGames(int gameInstanceCount, int playerCountDivisor)
         {
             // Should always have at least 1 game instance
             gameInstanceCount = Math.Max(gameInstanceCount, 1);
@@ -37,6 +38,7 @@ namespace MHServerEmu.PlayerManagement
                 CreateGame();
 
             _targetGameInstanceCount = gameInstanceCount;
+            _playerCountDivisor = Math.Max(playerCountDivisor, 1);
         }
 
         /// <summary>
@@ -120,7 +122,10 @@ namespace MHServerEmu.PlayerManagement
 
             foreach (Game game in _gameDict.Values)
             {
-                int playerCount = game.PlayerCount;
+                // Divide player count to make sure:
+                // - Instances are not underpopulated at lower player counts
+                // - Players logging in at the same time are more likely to be put into the same instance
+                int playerCount = game.PlayerCount / _playerCountDivisor;
                 if (playerCount < lowestPlayerCount)
                 {
                     resultGame = game;
