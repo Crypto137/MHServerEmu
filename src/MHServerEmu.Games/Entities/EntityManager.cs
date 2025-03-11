@@ -46,7 +46,10 @@ namespace MHServerEmu.Games.Entities
         private readonly Dictionary<ulong, Entity> _entityDict = new();
         private readonly Dictionary<ulong, Entity> _entityDbGuidDict = new();
         private readonly HashSet<ulong> _entitiesPendingCondemnedPowerDeletion = new();
-        private readonly LinkedList<ulong> _entitiesPendingDestruction = new();     // NOTE: Change this to a regular List<ulong> if this causes GC issues
+
+        private readonly LinkedList<ulong> _entitiesPendingDestruction = new();
+        private readonly Stack<LinkedListNode<ulong>> _entityDestroyListNodeStack = new();
+        private int _numDestroyListNodeChunks = 0;
 
         public Event<Entity> DestroyEntityEvent = new();
 
@@ -303,7 +306,9 @@ namespace MHServerEmu.Games.Entities
             // Finish destruction
             entity.SetStatus(EntityStatus.PendingDestroy, false);
             entity.SetStatus(EntityStatus.Destroyed, true);
-            _entitiesPendingDestruction.AddLast(entity.Id);    // Enqueue entity for deletion at the end of the next frame
+
+            // Enqueue entity for deletion at the end of the frame
+            _entitiesPendingDestruction.AddLast(GetDestroyListNode(entity.Id));    
 
             // Remove entity from the game
             entity.ExitGame();
@@ -467,6 +472,30 @@ namespace MHServerEmu.Games.Entities
             _entitiesPendingCondemnedPowerDeletion.Clear();
         }
 
+        private LinkedListNode<ulong> GetDestroyListNode(ulong entityId)
+        {
+            const int NodeChunkSize = 256;
+
+            if (_entityDestroyListNodeStack.Count == 0)
+            {
+                Logger.Debug($"GetDestroyListNode(): Allocating chunk {++_numDestroyListNodeChunks} for {_game}");
+                for (int i = 0; i < NodeChunkSize; i++)
+                    _entityDestroyListNodeStack.Push(new(0));
+            }
+
+            LinkedListNode<ulong> destroyNode = _entityDestroyListNodeStack.Pop();
+            destroyNode.Value = entityId;
+            return destroyNode;
+        }
+
+        private void ReturnDestroyListNode(LinkedListNode<ulong> destroyNode)
+        {
+            if (destroyNode.List != null)
+                throw new Exception("Attempted to return a destroy list node that is currently in a list.");
+
+            _entityDestroyListNodeStack.Push(destroyNode);
+        }
+
         private bool ProcessDestroyed()
         {
             if (_game == null) return Logger.WarnReturn(false, "ProcessDestroyed(): _game == null");
@@ -474,7 +503,8 @@ namespace MHServerEmu.Games.Entities
             // Delete all destroyed entities
             while (_entitiesPendingDestruction.Count > 0)
             {
-                ulong entityId = _entitiesPendingDestruction.First.Value;
+                LinkedListNode<ulong> deleteNode = _entitiesPendingDestruction.First;
+                ulong entityId = deleteNode.Value;
 
                 if (_entityDict.TryGetValue(entityId, out Entity entity))
                     DeleteEntity(entity);
@@ -482,6 +512,7 @@ namespace MHServerEmu.Games.Entities
                     Logger.Warn($"ProcessDestroyed(): Failed to get entity for enqueued id {entityId}");
 
                 _entitiesPendingDestruction.RemoveFirst();
+                ReturnDestroyListNode(deleteNode);
             }
 
             return true;
@@ -491,12 +522,15 @@ namespace MHServerEmu.Games.Entities
         {
             if (destroyedEntity == null) return Logger.WarnReturn(false, "ProcessPendingDestroyImmediate(): destroyedEntity == null");
 
-            // Remove destroyed entity from pending
-            if (_entitiesPendingDestruction.Remove(destroyedEntity.Id) == false)
-                Logger.WarnReturn(false, $"ProcessPendingDestroyImmediate(): Entity {destroyedEntity} is not found in the pending destruction list");
+            LinkedListNode<ulong> destroyNode = _entitiesPendingDestruction.Find(destroyedEntity.Id);
+            if (destroyNode == null)
+                return Logger.WarnReturn(false, $"ProcessPendingDestroyImmediate(): Entity {destroyedEntity} is not found in the pending destruction list");
 
-            // Delete it manually
+            // Delete the entity manually and remove it from the list
             DeleteEntity(destroyedEntity);
+            _entitiesPendingDestruction.Remove(destroyNode);
+            ReturnDestroyListNode(destroyNode);
+
             return true;
         }
 
