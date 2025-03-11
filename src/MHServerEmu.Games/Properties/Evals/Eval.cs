@@ -3041,7 +3041,7 @@ namespace MHServerEmu.Games.Properties.Evals
                     if (agent.GetPowerProgressionInfo(calcPowerRankProto.Power, out PowerProgressionInfo powerInfo) == false)
                         return evalVar;
 
-                    int powerRank = agent.ComputePowerRank(powerInfo, agent.PowerSpecIndexActive);
+                    int powerRank = agent.ComputePowerRank(ref powerInfo, agent.PowerSpecIndexActive);
                     if (showNextRank) powerRank++;
 
                     evalVar.SetInt(powerRank);

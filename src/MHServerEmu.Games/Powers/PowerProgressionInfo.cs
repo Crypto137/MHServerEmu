@@ -5,7 +5,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Powers
 {
-    public class PowerProgressionInfo
+    public struct PowerProgressionInfo
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -61,12 +61,14 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        public IEnumerable<PrototypeId> PrerequisitePowerRefs { get => _progressionEntryPrototype?.GetPrerequisites(); }
-        public IEnumerable<PrototypeId> AntirequisitePowerRefs { get => _progressionEntryPrototype?.GetAntirequisites(); }
+        public PrototypeId[] PrerequisitePowerRefs { get => _progressionEntryPrototype?.GetPrerequisites(); }
+        public PrototypeId[] AntirequisitePowerRefs { get => _progressionEntryPrototype?.GetAntirequisites(); }
         public bool IsUltimatePower { get => PowerPrototype != null && Power.IsUltimatePower(PowerPrototype); }
         public bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.IsTrait; }
         public bool IsTalent { get => _talentEntryPrototype != null && _talentGroupPrototype != null; }
         public bool IsPassivePowerOnAvatarWhileAway { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileAway; }
+
+        public PowerProgressionInfo() { }
 
         public bool InitForAvatar(PowerProgressionEntryPrototype powerProgressionEntryPrototype, PrototypeId mappedPowerRef, PrototypeId powerTabRef)
         {

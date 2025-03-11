@@ -235,7 +235,7 @@ namespace MHServerEmu.Games.Entities
             return Properties[PropertyEnum.PowerRankCurrentBest, powerRef];
         }
 
-        public int ComputePowerRank(PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        public int ComputePowerRank(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             return 0;
             // Not Implemented
