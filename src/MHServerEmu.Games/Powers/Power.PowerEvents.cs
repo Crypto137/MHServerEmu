@@ -10,6 +10,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -1311,27 +1312,25 @@ namespace MHServerEmu.Games.Powers
         // 31
         private bool DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)
         {
-            //Logger.Trace($"DoPowerEventActionPetItemDonate()");
-
-            // We need the right context
             if (triggeredPowerEvent.PowerEventContext is not PowerEventContextPetDonateItemPrototype itemDonateContext)
                 return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): Incompatible power event context type");
 
-            // We need a player to give credits to
-            Player player = Owner.GetOwnerOfType<Player>();
+            Avatar avatar = Owner as Avatar;
+            if (avatar == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): avatar == null");
+
+            Player player = avatar.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): player == null");
 
-            // Region to search for items to vacuum
-            Region region = Owner.Region;
+            Region region = avatar.Region;
             if (region == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): region == null");
 
             // Find items to vacuum
-            Sphere vacuumVolume = new(Owner.RegionLocation.Position, itemDonateContext.Radius);
-            Stack<Item> vacuumStack = new();
+            Sphere vacuumVolume = new(avatar.RegionLocation.Position, itemDonateContext.Radius);
             DataDirectory dataDirectory = DataDirectory.Instance;
             BlueprintId donationBlueprint = dataDirectory.GetPrototypeBlueprintDataRef(GameDatabase.AdvancementGlobalsPrototype.PetTechDonationItemPrototype);
             RarityPrototype rarityThresholdProto = itemDonateContext.RarityThreshold.As<RarityPrototype>();
 
+            List<Item> vacuumedItems = ListPool<Item>.Instance.Get();
             foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new()))
             {
                 // Skip non-item world entities
@@ -1353,27 +1352,26 @@ namespace MHServerEmu.Games.Powers
                 if (itemRarityProto.Tier > rarityThresholdProto.Tier)
                     continue;
 
-                // Push the item to the stack
-                vacuumStack.Push(item);
+                // Add the item to the vacuum list
+                vacuumedItems.Add(item);
             }
 
-            // TODO: Proper donation
-
-            // Destroy vacuumed items
-            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
-            uint creditsToAdd = 0;
-
-            while (vacuumStack.Count > 0)
+            // Acquire vacuumed items
+            foreach (Item item in vacuumedItems)
             {
-                Item item = vacuumStack.Pop();
-                creditsToAdd += item.GetSellPrice(player);
+                if (item.Properties.HasProperty(PropertyEnum.RestrictedToPlayerGuid))
+                {
+                    PrototypeId rarityProtoRef = item.Properties[PropertyEnum.ItemRarity];
+                    player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProtoRef.As<Prototype>()));
+                }
+
+                // TODO: PetTech donation
+                int sellPrice = Math.Max(MathHelper.RoundUpToInt(item.GetSellPrice(player) * (float)avatar.Properties[PropertyEnum.PetTechDonationMultiplier]), 1);
+                player.AcquireCredits(sellPrice);
                 item.Destroy();
             }
 
-            // Add credits for all vacuumed items
-            if (creditsToAdd > 0)
-                player.Properties[PropertyEnum.Currency, creditsProtoRef] += creditsToAdd;
-
+            ListPool<Item>.Instance.Return(vacuumedItems);
             return true;
         }
 

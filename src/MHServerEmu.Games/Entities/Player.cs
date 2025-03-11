@@ -992,6 +992,18 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
+        public bool AcquireCredits(int amount)
+        {
+            if (amount <= 0)
+                return false;
+
+            CurrencyPrototype creditsProto = GameDatabase.CurrencyGlobalsPrototype.CreditsPrototype;
+            Properties.AdjustProperty(amount, new(PropertyEnum.Currency, creditsProto.DataRef));
+            OnScoringEvent(new(ScoringEventType.CurrencyCollected, creditsProto, amount));
+
+            return true;
+        }
+
         public bool AcquireCurrencyItem(Entity entity)
         {
             if (entity.IsCurrencyItem() == false)

@@ -1190,6 +1190,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GenoshaRaid { get; protected set; }
         public PrototypeId DangerRoomMerits { get; protected set; }
         public PrototypeId GazillioniteGs { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public CurrencyPrototype CreditsPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            CreditsPrototype = Credits.As<CurrencyPrototype>();
+        }
     }
 
     public class GamepadInputAssetPrototype : Prototype

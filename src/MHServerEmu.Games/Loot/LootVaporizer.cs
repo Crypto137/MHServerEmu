@@ -1,7 +1,8 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Behavior.StaticAI;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
@@ -9,6 +10,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Loot
 {
@@ -19,16 +21,11 @@ namespace MHServerEmu.Games.Loot
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static readonly Prototype CreditsProto = GameDatabase.CurrencyGlobalsPrototype.Credits.As<Prototype>();
-
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="LootResult"/> should be vaporized.
         /// </summary>
         public static bool ShouldVaporizeLootResult(Player player, in LootResult lootResult, PrototypeId avatarProtoRef)
         {
-            // REMOVEME: Disabled until vaporization rewards are working
-            return false;
-
             if (player == null)
                 return false;
 
@@ -84,7 +81,6 @@ namespace MHServerEmu.Games.Loot
                 
                 foreach (ItemSpec itemSpec in vaporizedItemSpecs)
                 {
-                    Logger.Debug($"VaporizeLootResultSummary(): {itemSpec.ItemProtoRef.GetName()}");
                     VaporizeItemSpec(player, itemSpec);
                     resultMessageBuilder.AddItems(NetStructVaporizedItem.CreateBuilder()
                         .SetItemProtoId((ulong)itemSpec.ItemProtoRef)
@@ -93,7 +89,7 @@ namespace MHServerEmu.Games.Loot
 
                 foreach (int credits in vaporizedCredits)
                 {
-                    VaporizeCredits(player, credits);
+                    player.AcquireCredits(credits);
                     resultMessageBuilder.AddItems(NetStructVaporizedItem.CreateBuilder()
                         .SetCredits(credits));
                 }
@@ -107,15 +103,22 @@ namespace MHServerEmu.Games.Loot
 
         private static bool VaporizeItemSpec(Player player, ItemSpec itemSpec)
         {
-            // TODO
-            player.OnScoringEvent(new(ScoringEventType.ItemCollected, itemSpec.ItemProtoRef.As<Prototype>(), itemSpec.RarityProtoRef.As<Prototype>(), itemSpec.StackCount));
-            return true;
-        }
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): avatar == null");
 
-        private static bool VaporizeCredits(Player player, int amount)
-        {
-            // TODO
-            player.OnScoringEvent(new(ScoringEventType.CurrencyCollected, CreditsProto, amount));
+            ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): itemProto == null");
+
+            int sellPrice = itemProto.Cost.GetNoStackSellPriceInCredits(player, itemSpec, null) * itemSpec.StackCount;
+            int vaporizeCredits = MathHelper.RoundUpToInt(sellPrice * (float)avatar.Properties[PropertyEnum.VaporizeSellPriceMultiplier]);
+
+            // TODO: PetTech donation
+
+            // Vaporization appears to be giving more credits than vacuuming, is this intended? To compensate for the lack of affixes?
+            vaporizeCredits += Math.Max(MathHelper.RoundUpToInt(sellPrice * (float)avatar.Properties[PropertyEnum.PetTechDonationMultiplier]), 1);
+
+            player.AcquireCredits(vaporizeCredits);
+            player.OnScoringEvent(new(ScoringEventType.ItemCollected, itemSpec.ItemProtoRef.As<Prototype>(), itemSpec.RarityProtoRef.As<Prototype>(), itemSpec.StackCount));
             return true;
         }
     }
