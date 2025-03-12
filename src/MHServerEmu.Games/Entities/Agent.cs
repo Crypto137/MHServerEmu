@@ -229,16 +229,60 @@ namespace MHServerEmu.Games.Entities
             return powerProto.HasKeyword(keywordPrototype);
         }
 
-        public int GetPowerRank(PrototypeId powerRef)
+        public int GetPowerRank(PrototypeId powerProtoRef)
         {
-            if (powerRef == PrototypeId.Invalid) return 0;
-            return Properties[PropertyEnum.PowerRankCurrentBest, powerRef];
+            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetPowerRank(): powerProtoRef == PrototypeId.Invalid");
+            return Properties[PropertyEnum.PowerRankCurrentBest, powerProtoRef];
         }
 
-        public int ComputePowerRank(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        public int GetPowerRankBase(PrototypeId powerProtoRef)
         {
-            return 0;
-            // Not Implemented
+            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetPowerRank(): powerProtoRef == PrototypeId.Invalid");
+            return Properties[PropertyEnum.PowerRankBase, powerProtoRef];
+        }
+
+        public int ComputePowerRank(ref PowerProgressionInfo powerInfo, int specIndex, out int rankBase)
+        {
+            rankBase = ComputePowerRankBase(ref powerInfo, specIndex);
+
+            // TODO: Bonuses
+
+            return rankBase;
+        }
+
+        protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex)
+        {
+            int rankBase = PowerProgressionInfo.RankLocked;
+
+            // Do not apply bonuses to non-progression powers
+            if (powerInfo.IsInPowerProgression == false)
+                return GetPowerRankBase(powerInfo.PowerRef);
+
+            if (powerInfo.IsUltimatePower)
+                rankBase = Properties[PropertyEnum.AvatarPowerUltimatePoints];
+            else if (CharacterLevel >= powerInfo.GetRequiredLevel())
+                rankBase = powerInfo.GetStartingRank();
+
+            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex);
+
+            if (Properties[PropertyEnum.PowersUnlockAll])
+                return Math.Max(1, rankMax);
+
+            rankBase += powerInfo.GetStartingRank();
+            return Math.Min(rankBase, rankMax);
+        }
+
+        public int GetMaxPossibleRankForPowerAtCurrentLevel(ref PowerProgressionInfo powerInfo, int specIndex)
+        {
+            return GetMaxPossibleRankForPowerAtLevel(ref powerInfo, specIndex, CharacterLevel, out _, out _);
+        }
+
+        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, out bool prereqFilter, out bool antireqFilter)
+        {
+            // TODO
+            prereqFilter = false;
+            antireqFilter = false;
+            return 1;
         }
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)

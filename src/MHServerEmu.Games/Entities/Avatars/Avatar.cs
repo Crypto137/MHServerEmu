@@ -1150,6 +1150,40 @@ namespace MHServerEmu.Games.Entities.Avatars
             return info.IsValid;
         }
 
+        protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        {
+            // Check avatar-specific overrides
+            if (powerInfo.IsInPowerProgression)
+            {
+                // Talents
+                if (powerInfo.IsTalent)
+                {
+                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
+                        return PowerProgressionInfo.RankLocked;
+
+                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
+                }
+            }
+            else
+            {
+                // Mapped powers
+                PrototypeId originalPowerProtoRef = GetOriginalPowerFromMappedPower(powerInfo.PowerRef);
+                if (originalPowerProtoRef != PrototypeId.Invalid)
+                    return GetPowerRank(originalPowerProtoRef);
+
+                // Transform powers
+                AvatarPrototype avatarProto = AvatarPrototype;
+                if (avatarProto == null) return Logger.WarnReturn(0, "ComputePowerRankBase(): avatarProto == null");
+
+                TransformModePrototype transformModeProto = avatarProto.FindTransformModeThatAssignsPower(powerInfo.PowerRef);
+                if (transformModeProto != null && transformModeProto.UseRankOfPower != PrototypeId.Invalid)
+                    return GetPowerRank(transformModeProto.UseRankOfPower);
+            }
+
+            // Fall back to base implementation if we didn't find any avatar-specific overrides 
+            return base.ComputePowerRankBase(ref powerInfo, powerSpecIndexActive);
+        }
+
         public override int GetLatestPowerProgressionVersion()
         {
             if (AvatarPrototype == null) return 0;
@@ -1689,6 +1723,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             ActivatePower(statsPower, ref settings);
 
             return true;
+        }
+
+        #endregion
+
+        #region Talents (Specialization Powers)
+
+        public bool IsTalentPowerEnabledForSpec(PrototypeId talentPowerProtoRef, int specIndex)
+        {
+            return Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerProtoRef];
         }
 
         #endregion

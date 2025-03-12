@@ -9,6 +9,8 @@ namespace MHServerEmu.Games.Powers
     {
         // TODO?: Potentially make this struct readonly, constructors private and Init() functions static
 
+        public const int RankLocked = -1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ProgressionEntryPrototype _progressionEntryPrototype;

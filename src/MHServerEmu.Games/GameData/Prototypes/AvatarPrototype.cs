@@ -292,6 +292,45 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
+        public TransformModePrototype FindTransformModeThatAssignsPower(PrototypeId powerProtoRef)
+        {
+            if (TransformModes.IsNullOrEmpty())
+                return null;
+
+            foreach (TransformModeEntryPrototype entryProto in TransformModes)
+            {
+                if (entryProto.TransformMode == PrototypeId.Invalid)
+                    continue;
+
+                TransformModePrototype transformModeProto = entryProto.TransformMode.As<TransformModePrototype>();
+                if (transformModeProto == null)
+                {
+                    Logger.Warn("FindTransformModeThatAssignsPower(): transformModeProto == null");
+                    continue;
+                }
+
+                if (transformModeProto.DefaultEquippedAbilities.HasValue())
+                {
+                    foreach (AbilityAssignmentPrototype abilityAssignment in transformModeProto.DefaultEquippedAbilities)
+                    {
+                        if (abilityAssignment.Ability == powerProtoRef)
+                            return transformModeProto;
+                    }
+                }
+
+                if (transformModeProto.HiddenPassivePowers.HasValue())
+                {
+                    foreach (PrototypeId hiddenPassivePowerProtoRef in transformModeProto.HiddenPassivePowers)
+                    {
+                        if (hiddenPassivePowerProtoRef == powerProtoRef)
+                            return transformModeProto;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided costume is approved for use.
         /// </summary>
