@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace MHServerEmu.Games.GameData.HardTuning
+namespace MHServerEmu.Games.GameData.PatchManager
 {
-    public readonly struct HardTuningUpdateValue
+    public readonly struct PrototypePatchUpdateValue
     {
         public string Prototype { get; }
         public string Path { get; }
@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.GameData.HardTuning
         public string FieldName { get; }
 
         [JsonConstructor]
-        public HardTuningUpdateValue(string prototype, string path, string description, string value)
+        public PrototypePatchUpdateValue(string prototype, string path, string description, string value)
         {
             Prototype = prototype;
             Path = path;

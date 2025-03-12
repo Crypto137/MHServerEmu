@@ -4,7 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData.HardTuning;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Locales;
@@ -92,8 +92,8 @@ namespace MHServerEmu.Games.GameData
             // Initialize LocaleManager
             LocaleManager.Instance.Initialize();
 
-            // Initialize HardTuningManager
-            HardTuningManager.Instance.Initialize();
+            // Initialize PrototypePatchManager
+            PrototypePatchManager.Instance.Initialize();
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();

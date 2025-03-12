@@ -4,58 +4,58 @@ using MHServerEmu.Games.GameData.Prototypes;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace MHServerEmu.Games.GameData.HardTuning
+namespace MHServerEmu.Games.GameData.PatchManager
 {
-    public class HardTuningManager
+    public class PrototypePatchManager
     {
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private PrototypeId _currentProtoRef;
-        private readonly Dictionary<PrototypeId, List<HardTuningUpdateValue>> _hardTuningDict = new();
+        private readonly Dictionary<PrototypeId, List<PrototypePatchUpdateValue>> _hardTuningDict = new();
         private Dictionary<Prototype, string> _pathDict = new ();
 
-        public static HardTuningManager Instance { get; } = new();
+        public static PrototypePatchManager Instance { get; } = new();
 
         public void Initialize()
         {
-            LoadHardTuningDataFromDisk();
+            LoadPatchDataFromDisk();
         }
 
-        private bool LoadHardTuningDataFromDisk()
+        private bool LoadPatchDataFromDisk()
         {
-            string hardTuningDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
-            if (Directory.Exists(hardTuningDirectory) == false)
-                return Logger.WarnReturn(false, "LoadHardTuningDataFromDisk(): Game data directory not found");
+            string patchDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
+            if (Directory.Exists(patchDirectory) == false)
+                return Logger.WarnReturn(false, "LoadPatchDataFromDisk(): Game data directory not found");
 
             int count = 0;
 
             // Read all .json files that start with HardTuningData
-            foreach (string filePath in FileHelper.GetFilesWithPrefix(hardTuningDirectory, "HardTuningData", "json"))
+            foreach (string filePath in FileHelper.GetFilesWithPrefix(patchDirectory, "PatchData", "json"))
             {
                 string fileName = Path.GetFileName(filePath);
 
-                HardTuningUpdateValue[] updateValues = FileHelper.DeserializeJson<HardTuningUpdateValue[]>(filePath);
+                PrototypePatchUpdateValue[] updateValues = FileHelper.DeserializeJson<PrototypePatchUpdateValue[]>(filePath);
                 if (updateValues == null)
                 {
-                    Logger.Warn($"LoadHardTuningDataFromDisk(): Failed to parse {fileName}, skipping");
+                    Logger.Warn($"LoadPatchDataFromDisk(): Failed to parse {fileName}, skipping");
                     continue;
                 }
 
-                foreach (HardTuningUpdateValue value in updateValues)
+                foreach (PrototypePatchUpdateValue value in updateValues)
                 {
                     PrototypeId prototypeId = GameDatabase.GetPrototypeRefByName(value.Prototype);
                     if (prototypeId == PrototypeId.Invalid) continue;
-                    AddHardTuningValue(prototypeId, value);
+                    AddPatchValue(prototypeId, value);
                     count++;
                 }
 
-                Logger.Trace($"Parsed hard tuning data from {fileName}");
+                Logger.Trace($"Parsed patch data from {fileName}");
             }
 
-            return Logger.InfoReturn(true, $"Loaded {count} hard tuning values");
+            return Logger.InfoReturn(true, $"Loaded {count} patches");
         }
 
-        private void AddHardTuningValue(PrototypeId prototypeId, in HardTuningUpdateValue value)
+        private void AddPatchValue(PrototypeId prototypeId, in PrototypePatchUpdateValue value)
         {
             if (_hardTuningDict.TryGetValue(prototypeId, out var hardTuningList) == false)
             {
@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.GameData.HardTuning
                 CheckAndUpdate(entry, prototype, currentPath);
         }
 
-        private static bool CheckAndUpdate(HardTuningUpdateValue entry, Prototype prototype, string currentPath)
+        private static bool CheckAndUpdate(PrototypePatchUpdateValue entry, Prototype prototype, string currentPath)
         {
             if (currentPath.StartsWith('.')) currentPath = currentPath[1..];
 
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.GameData.HardTuning
             return Convert.ChangeType(stringValue, targetType);
         }
 
-        private static void UpdateValue(Prototype prototype, PropertyInfo fieldInfo, HardTuningUpdateValue entry)
+        private static void UpdateValue(Prototype prototype, PropertyInfo fieldInfo, PrototypePatchUpdateValue entry)
         {
             try
             {

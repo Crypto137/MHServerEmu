@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
-using MHServerEmu.Games.GameData.HardTuning;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public void PostProcessContainedPrototypes(Prototype prototype)
         {
-            bool hardTuning = HardTuningManager.Instance.PreCheck(prototype.DataRef);
+            bool hardTuning = PrototypePatchManager.Instance.PreCheck(prototype.DataRef);
 
             foreach (CachedPrototypeField cachedField in GetPostProcessablePrototypeFields(prototype.GetType()))
             {
@@ -297,7 +297,7 @@ namespace MHServerEmu.Games.GameData
                         var embeddedPrototype = (Prototype)fieldInfo.GetValue(prototype);
                         if (embeddedPrototype != null)
                         {
-                            if (hardTuning) HardTuningManager.Instance.SetPath(prototype, embeddedPrototype, fieldInfo.Name);
+                            if (hardTuning) PrototypePatchManager.Instance.SetPath(prototype, embeddedPrototype, fieldInfo.Name);
                             embeddedPrototype.PostProcess();
                         }
                         break;
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.GameData
                         int index = 0;
                         foreach (Prototype element in prototypeCollection)
                         {
-                            if (hardTuning) HardTuningManager.Instance.SetPathIndex(prototype, element, fieldInfo.Name, index++);
+                            if (hardTuning) PrototypePatchManager.Instance.SetPathIndex(prototype, element, fieldInfo.Name, index++);
                             element.PostProcess();
                         }
                         
@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.GameData
                 }
             }
 
-            if (hardTuning) HardTuningManager.Instance.PostOverride(prototype);
+            if (hardTuning) PrototypePatchManager.Instance.PostOverride(prototype);
         }
 
         private CachedPrototypeField[] GetPostProcessablePrototypeFields(Type type)
