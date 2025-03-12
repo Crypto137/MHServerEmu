@@ -10,5 +10,11 @@
         "Path": "Objectives[1].SuccessConditions.Conditions[0].TargetFilter.Filters[0].Keyword",
         "Description": "Fix Chest mission Keyword to Mob",
         "Value": "6870096780498112679"
+    },
+    {
+        "Prototype": "Missions/Prototypes/PVEEndgame/AgeOfUltron/AgeOfUltronKismetController.prototype",
+        "Path": "Objectives[0].OnSuccessActions[1].DelayInSeconds",
+        "Description": "Fix Delay for AgeOfUltronBossSpawner",
+        "Value": "12.5"
     }
 ]

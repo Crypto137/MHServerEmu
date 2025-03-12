@@ -370,11 +370,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return new MissionActionTimedAction(owner, this);
         }
-
-        public void SetDelayInSeconds(double delayInSeconds)
-        {
-            DelayInSeconds = delayInSeconds;
-        }
     }
 
     public class MissionActionScoringEventTimerEndPrototype : MissionActionPrototype
