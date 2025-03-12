@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.ComponentModel;
 using System.Reflection;
@@ -43,6 +44,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
                 foreach (PrototypePatchUpdateValue value in updateValues)
                 {
+                    if (value.Enabled == false) continue;
                     PrototypeId prototypeId = GameDatabase.GetPrototypeRefByName(value.Prototype);
                     if (prototypeId == PrototypeId.Invalid) continue;
                     AddPatchValue(prototypeId, value);
@@ -131,12 +133,20 @@ namespace MHServerEmu.Games.GameData.PatchManager
         {
             string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
             _pathDict[child] = $"{parentPath}.{fieldName}";
+            UpdateProtoRef(parent.DataRef);
+        }
+
+        private void UpdateProtoRef(PrototypeId dataRef)
+        {
+            if (dataRef != PrototypeId.Invalid && _currentProtoRef == PrototypeId.Invalid)
+                _currentProtoRef = dataRef;
         }
 
         public void SetPathIndex(Prototype parent, Prototype child, string fieldName, int index)
         {
             string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
             _pathDict[child] = $"{parentPath}.{fieldName}[{index}]";
+            UpdateProtoRef(parent.DataRef);
         }
     }
 }

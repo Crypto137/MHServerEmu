@@ -4,6 +4,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 {
     public readonly struct PrototypePatchUpdateValue
     {
+        public bool Enabled { get; }
         public string Prototype { get; }
         public string Path { get; }
         public string Description { get; }
@@ -15,8 +16,9 @@ namespace MHServerEmu.Games.GameData.PatchManager
         public string FieldName { get; }
 
         [JsonConstructor]
-        public PrototypePatchUpdateValue(string prototype, string path, string description, string value)
+        public PrototypePatchUpdateValue(bool enabled, string prototype, string path, string description, string value)
         {
+            Enabled = enabled;
             Prototype = prototype;
             Path = path;
             Description = description;
