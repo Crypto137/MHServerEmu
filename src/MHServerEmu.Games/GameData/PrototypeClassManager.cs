@@ -283,7 +283,7 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public void PostProcessContainedPrototypes(Prototype prototype)
         {
-            bool hardTuning = PrototypePatchManager.Instance.PreCheck(prototype.DataRef);
+            bool hasPatch = PrototypePatchManager.Instance.PreCheck(prototype.DataRef);
 
             foreach (CachedPrototypeField cachedField in GetPostProcessablePrototypeFields(prototype.GetType()))
             {
@@ -297,7 +297,7 @@ namespace MHServerEmu.Games.GameData
                         var embeddedPrototype = (Prototype)fieldInfo.GetValue(prototype);
                         if (embeddedPrototype != null)
                         {
-                            if (hardTuning) PrototypePatchManager.Instance.SetPath(prototype, embeddedPrototype, fieldInfo.Name);
+                            if (hasPatch) PrototypePatchManager.Instance.SetPath(prototype, embeddedPrototype, fieldInfo.Name);
                             embeddedPrototype.PostProcess();
                         }
                         break;
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.GameData
                         int index = 0;
                         foreach (Prototype element in prototypeCollection)
                         {
-                            if (hardTuning) PrototypePatchManager.Instance.SetPathIndex(prototype, element, fieldInfo.Name, index++);
+                            if (hasPatch) PrototypePatchManager.Instance.SetPathIndex(prototype, element, fieldInfo.Name, index++);
                             element.PostProcess();
                         }
                         
@@ -327,7 +327,7 @@ namespace MHServerEmu.Games.GameData
                 }
             }
 
-            if (hardTuning) PrototypePatchManager.Instance.PostOverride(prototype);
+            if (hasPatch) PrototypePatchManager.Instance.PostOverride(prototype);
         }
 
         private CachedPrototypeField[] GetPostProcessablePrototypeFields(Type type)

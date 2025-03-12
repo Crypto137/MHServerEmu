@@ -11,7 +11,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private PrototypeId _currentProtoRef;
-        private readonly Dictionary<PrototypeId, List<PrototypePatchUpdateValue>> _hardTuningDict = new();
+        private readonly Dictionary<PrototypeId, List<PrototypePatchUpdateValue>> _patchDict = new();
         private Dictionary<Prototype, string> _pathDict = new ();
 
         public static PrototypePatchManager Instance { get; } = new();
@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
             int count = 0;
 
-            // Read all .json files that start with HardTuningData
+            // Read all .json files that start with PatchData
             foreach (string filePath in FileHelper.GetFilesWithPrefix(patchDirectory, "PatchData", "json"))
             {
                 string fileName = Path.GetFileName(filePath);
@@ -57,12 +57,12 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         private void AddPatchValue(PrototypeId prototypeId, in PrototypePatchUpdateValue value)
         {
-            if (_hardTuningDict.TryGetValue(prototypeId, out var hardTuningList) == false)
+            if (_patchDict.TryGetValue(prototypeId, out var patchList) == false)
             {
-                hardTuningList = [];
-                _hardTuningDict[prototypeId] = hardTuningList;
+                patchList = [];
+                _patchDict[prototypeId] = patchList;
             }
-            hardTuningList.Add(value);
+            patchList.Add(value);
         }
 
         public bool PreCheck(PrototypeId protoRef)
@@ -70,7 +70,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (protoRef == PrototypeId.Invalid) 
                 return _currentProtoRef != PrototypeId.Invalid;
 
-            if (_hardTuningDict.ContainsKey(protoRef))
+            if (_patchDict.ContainsKey(protoRef))
                 _currentProtoRef = protoRef;
             else
                 _currentProtoRef = PrototypeId.Invalid;
@@ -82,7 +82,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public void PostOverride(Prototype prototype)
         {
-            if (_hardTuningDict.TryGetValue(_currentProtoRef, out var list) == false) return; 
+            if (_patchDict.TryGetValue(_currentProtoRef, out var list) == false) return; 
             if (_pathDict.TryGetValue(prototype, out var currentPath) == false) return;
 
             foreach (var entry in list)
