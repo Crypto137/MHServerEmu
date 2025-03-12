@@ -1,0 +1,14 @@
+[
+    {
+        "Prototype": "Missions/Prototypes/Story/CH04EastSide/TreasureRooms/CH04TR07Basement.prototype",
+        "Path": "Objectives[0].SuccessConditions.Conditions[0].Region",
+        "Description": "Fix Chest mission Region to CH04TR07Basement",
+        "Value": "3901343846271426331"
+    },
+    {
+        "Prototype": "Missions/Prototypes/Story/CH04EastSide/TreasureRooms/CH04TR07Basement.prototype",
+        "Path": "Objectives[1].SuccessConditions.Conditions[0].TargetFilter.Filters[0].Keyword",
+        "Description": "Fix Chest mission Keyword to Mob",
+        "Value": "6870096780498112679"
+    }
+]
