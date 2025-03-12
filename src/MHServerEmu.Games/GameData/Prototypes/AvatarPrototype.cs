@@ -460,7 +460,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsTrait { get; protected set; }
 
         public override int GetRequiredLevel() => Level;
-        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.StartingRank : 0;
+        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.Rank : 0;
 
         public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
         public override PrototypeId[] GetPrerequisites() => Prerequisites;

@@ -723,14 +723,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Ability { get; protected set; }
 
-        [DoNotCopy]
-        public int StartingRank { get; private set; }
+        //---
 
-        public override void PostProcess()
-        {
-            base.PostProcess();
-            StartingRank = 1;
-        }
+        [DoNotCopy]
+        public int Rank { get => 1; }  // NOTE: This was a real prototype field in 1.48
     }
 
     public class AbilityAutoAssignmentSlotPrototype : Prototype
