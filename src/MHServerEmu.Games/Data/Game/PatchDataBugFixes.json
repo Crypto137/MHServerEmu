@@ -26,5 +26,12 @@
         "Path": "PopulationSpawns[2].Population.UsePopulationMarker",
         "Description": "Fix DeadEndChestMarker for CH04TR05Barber",
         "Value": "17169140681234780994"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Spawners/Mission/TRBonusChestSpawner.prototype",
+        "Path": "SpawnSequence[0].Object.Entity",
+        "Description": "Fix Hidden Chest for TRTavernRegion / LegendaryCH08Doomstadt2",
+        "Value": "9710110594970293035"
     }
 ]

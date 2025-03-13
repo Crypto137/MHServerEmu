@@ -90,13 +90,6 @@ namespace MHServerEmu.Games.Entities
                     return;
                 }
 
-                // HardFix for LegendaryCH08Doomstadt2
-                if (PrototypeDataRef == (PrototypeId)15992471948099589621) // TRBonusChestSpawner
-                {
-                    var popObject = spawnerProto.SpawnSequence[0].Object as PopulationEntityPrototype;
-                    popObject.SetEntity((PrototypeId)9710110594970293035); // ShieldCrateGreen => ShieldCrateOrnate
-                }
-
                 SpawnEntry(NextSequence(spawnerProto.SpawnSequence));
             }
         }
