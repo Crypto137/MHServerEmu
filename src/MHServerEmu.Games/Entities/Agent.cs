@@ -13,6 +13,7 @@ using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Network;
@@ -277,12 +278,72 @@ namespace MHServerEmu.Games.Entities
             return GetMaxPossibleRankForPowerAtLevel(ref powerInfo, specIndex, CharacterLevel, out _, out _);
         }
 
-        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, out bool prereqFilter, out bool antireqFilter)
+        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, out bool filteredByPrereq, out bool filteredByAntireq)
         {
-            // TODO
-            prereqFilter = false;
-            antireqFilter = false;
-            return 1;
+            filteredByPrereq = false;
+            filteredByAntireq = false;
+
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): this is not Avatar && IsTeamUpAgent == false");
+
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): powerProto == null");
+
+            if (powerInfo.IsInPowerProgression == false)
+            {
+                if (powerProto.UsableByAll == false)
+                    return PowerProgressionInfo.RankLocked;
+
+                return GetPowerRankBase(powerInfo.PowerRef);    
+            }
+
+            if (powerInfo.GetRequiredLevel() > level)
+                return PowerProgressionInfo.RankLocked;
+
+            if (Properties[PropertyEnum.PowersUnlockAll] == false)
+            {
+                // Check prerequisites
+                PrototypeId[] prereqs = powerInfo.PrerequisitePowerRefs;
+                if (prereqs.HasValue())
+                {
+                    foreach (PrototypeId prereqProtoRef in prereqs)
+                    {
+                        if (GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo) == false)
+                            return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo) == false");
+
+                        if (preReqPowerInfo.GetRequiredLevel() > level)
+                        {
+                            filteredByPrereq = true;
+                            return 0;
+                        }
+                    }
+                }
+
+                // Check antirequisites
+                PrototypeId[] antireqs = powerInfo.AntirequisitePowerRefs;
+                if (antireqs.HasValue())
+                {
+                    foreach (PrototypeId antireqProtoRef in antireqs)
+                    {
+                        if (GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo) == false)
+                            return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo) == false");
+
+                        // Shouldn't this be <=?
+                        if (antiReqPowerInfo.GetRequiredLevel() < level)
+                        {
+                            filteredByAntireq = true;
+                            return 0;
+                        }
+                    }
+                }
+            }
+
+            if (powerInfo.CanBeRankedUp() == false)
+                return powerInfo.GetStartingRank();
+
+            Curve maxRankAtCharLevelCurve = powerInfo.GetMaxRankCurve();
+            if (maxRankAtCharLevelCurve == null) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): maxRankAtCharLevelCurve == null");
+
+            return maxRankAtCharLevelCurve.GetIntAt(level);
         }
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
