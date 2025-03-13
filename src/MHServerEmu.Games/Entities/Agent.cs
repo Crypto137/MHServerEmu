@@ -244,11 +244,96 @@ namespace MHServerEmu.Games.Entities
 
         public int ComputePowerRank(ref PowerProgressionInfo powerInfo, int specIndex, out int rankBase)
         {
+            rankBase = PowerProgressionInfo.RankLocked;
+
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "ComputePowerRank(): this is not Avatar && IsTeamUpAgent == false");
+
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(0, "ComputePowerRank(): powerProto == null");
+
             rankBase = ComputePowerRankBase(ref powerInfo, specIndex);
 
-            // TODO: Bonuses
+            int rankCurrentBest = Math.Max(0, rankBase);
 
-            return rankBase;
+            if (powerInfo.IsInPowerProgression == false && powerProto.PowerCategory == PowerCategoryType.NormalPower && powerProto.UsableByAll == false)
+                return rankCurrentBest;
+
+            if (powerInfo.IsInPowerProgression == false || powerInfo.CanBeRankedUp() == false)
+                return rankCurrentBest;
+
+            PrototypeId powerTabRef = powerInfo.PowerTabRef;
+            PrototypeId[] antireqs = powerInfo.AntirequisitePowerRefs;
+
+            // +rank works only for powers that are already at rank 1 or above
+            int powerBoost = 0;
+            bool canBeBoosted = rankBase > 0 && Properties.HasProperty(PropertyEnum.PowerBoost);
+
+            // Ultimates and powers with antireqs cannot be granted
+            int powerGrantRank = 0;
+            bool canBeGranted = powerProto.IsUltimate == false && antireqs.IsNullOrEmpty() && Properties.HasProperty(PropertyEnum.PowerGrantRank);
+
+            // Get boosts (+rank)
+            if (canBeBoosted)
+            {
+                powerBoost += Properties[PropertyEnum.PowerBoost, powerInfo.PowerRef];
+
+                // Ultimates are not affected by +all and +tab boosts
+                if (powerProto.IsUltimate == false)
+                {
+                    powerBoost += Properties[PropertyEnum.PowerBoost, PrototypeId.Invalid];
+
+                    if (powerTabRef != PrototypeId.Invalid)
+                        powerBoost += Properties[PropertyEnum.PowerBoost, powerTabRef, PrototypeDataRef];
+                }
+            }
+
+            // Get grant
+            if (canBeGranted)
+            {
+                powerGrantRank = Properties[PropertyEnum.PowerGrantRank, powerInfo.PowerRef];
+
+                powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, PrototypeId.Invalid]);
+
+                if (powerTabRef != PrototypeId.Invalid)
+                    powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, powerTabRef, PrototypeDataRef]);
+            }
+
+            // Keyword bonuses
+            if (canBeBoosted || canBeGranted)
+            {
+                PrototypeId[] keywords = powerProto.Keywords;
+
+                // Check for keyword overrides from mapped power
+                PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
+                if (mappedPowerRef != PrototypeId.Invalid)
+                {
+                    PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
+                    if (mappedPowerProto == null) return Logger.WarnReturn(0, "ComputePowerRank(): mappedPowerProto == null");
+
+                    keywords = mappedPowerProto.Keywords;
+                }
+
+                if (keywords.HasValue())
+                {
+                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword;
+
+                    foreach (PrototypeId keywordProtoRef in keywords)
+                    {
+                        if (canBeBoosted && (powerProto.IsUltimate == false || keywordProtoRef == ultimatePowerKeyword))
+                            powerBoost += Properties[PropertyEnum.PowerBoost, keywordProtoRef];
+
+                        if (canBeGranted)
+                            powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, keywordProtoRef]);
+                    }
+                }
+            }
+
+            // Cap power boost (+30 for a total of rank 50)
+            powerBoost = Math.Min(GameDatabase.AdvancementGlobalsPrototype.PowerBoostMax, powerBoost);
+            
+            // Return final best rank
+            rankCurrentBest = Math.Max(rankCurrentBest + powerBoost, powerGrantRank);
+            return rankCurrentBest;
         }
 
         protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex)
