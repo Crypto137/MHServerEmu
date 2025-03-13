@@ -377,10 +377,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool ApprovedForUse()
         {
-            // TODO: console support
-                   
-            if (DisabledMissions.Contains((MissionPrototypeId)DataRef)) return false;
-            if (EnabledMissions.Contains((MissionPrototypeId)DataRef)) return true;    
+            // TODO: console support                   
             return GameDatabase.DesignStateOk(DesignState);
         }
 

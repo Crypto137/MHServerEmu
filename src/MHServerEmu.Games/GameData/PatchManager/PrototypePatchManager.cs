@@ -10,7 +10,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
     {
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private PrototypeId _currentProtoRef;
+        private Stack<PrototypeId> _protoStack = new();
         private readonly Dictionary<PrototypeId, List<PrototypePatchUpdateValue>> _patchDict = new();
         private Dictionary<Prototype, string> _pathDict = new ();
 
@@ -68,38 +68,45 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public bool PreCheck(PrototypeId protoRef)
         {
-            if (protoRef == PrototypeId.Invalid || DataDirectory.Instance.PrototypeIsADefaultPrototype(protoRef)) 
-                return _currentProtoRef != PrototypeId.Invalid;
+            if (protoRef != PrototypeId.Invalid && _patchDict.ContainsKey(protoRef))
+                _protoStack.Push(protoRef);
 
-            if (_patchDict.ContainsKey(protoRef))
-                _currentProtoRef = protoRef;
-            else
-                _currentProtoRef = PrototypeId.Invalid;
-
-            _pathDict.Clear();
-
-            return _currentProtoRef != PrototypeId.Invalid;
+            return _protoStack.Count > 0;
         }
 
         public void PostOverride(Prototype prototype)
         {
-            if (_patchDict.TryGetValue(_currentProtoRef, out var list) == false) return; 
-            if (_pathDict.TryGetValue(prototype, out var currentPath) == false) return;
+            if (_protoStack.Count == 0) return;
+
+            string currentPath = string.Empty;
+            if (prototype.DataRef == PrototypeId.Invalid 
+                && _pathDict.TryGetValue(prototype, out currentPath) == false) return;
+
+            PrototypeId patchProtoRef;
+            if (prototype.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(prototype.DataRef))
+                patchProtoRef = _protoStack.Pop();
+            else
+                patchProtoRef = _protoStack.Peek();
+
+            if (_patchDict.TryGetValue(patchProtoRef, out var list) == false) return;
 
             foreach (var entry in list)
                 CheckAndUpdate(entry, prototype, currentPath);
+
+            if (_protoStack.Count == 0)
+                _pathDict.Clear();
         }
 
         private static bool CheckAndUpdate(PrototypePatchUpdateValue entry, Prototype prototype, string currentPath)
         {
             if (currentPath.StartsWith('.')) currentPath = currentPath[1..];
-
             if (entry.СlearPath != currentPath) return false;
 
             var fieldInfo = prototype.GetType().GetProperty(entry.FieldName);
             if (fieldInfo == null) return false;
 
             UpdateValue(prototype, fieldInfo, entry);
+            Logger.Debug($"Update {entry.Prototype} {entry.Path} = {entry.Value}");
 
             return true;
         }
@@ -131,21 +138,15 @@ namespace MHServerEmu.Games.GameData.PatchManager
         public void SetPath(Prototype parent, Prototype child, string fieldName)
         {
             string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
+            if (parent.DataRef != PrototypeId.Invalid) parentPath = string.Empty;
             _pathDict[child] = $"{parentPath}.{fieldName}";
-            UpdateProtoRef(parent.DataRef);
-        }
-
-        private void UpdateProtoRef(PrototypeId dataRef)
-        {
-            if (dataRef != PrototypeId.Invalid && _currentProtoRef == PrototypeId.Invalid)
-                _currentProtoRef = dataRef;
         }
 
         public void SetPathIndex(Prototype parent, Prototype child, string fieldName, int index)
         {
             string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
+            if (parent.DataRef != PrototypeId.Invalid) parentPath = string.Empty;
             _pathDict[child] = $"{parentPath}.{fieldName}[{index}]";
-            UpdateProtoRef(parent.DataRef);
         }
     }
 }
