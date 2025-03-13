@@ -47,5 +47,12 @@
         "Path": "SpawnSequence[3].Count",
         "Description": "Off AsgardFrostGolemRanged for NorwayFrostGolemsSpawner",
         "Value": "0"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Resource/Encounters/CH09Norway/OM_ForgottenPyre_Reward.encounter",
+        "Path": "MarkerSet.Markers[1].EncounterSpawnPhase",
+        "Description": "Fix phase for SHIELDAgentForgottenPyreEvent",
+        "Value": "0"
     }
 ]
