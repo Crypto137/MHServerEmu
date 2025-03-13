@@ -936,26 +936,51 @@ namespace MHServerEmu.Games.Entities
             return false;
         }
 
-        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
+        public virtual bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo powerInfo)
         {
             // Note: this implementation is meant only for team-up agents
 
-            info = new();
+            powerInfo = new();
 
             if (powerProtoRef == PrototypeId.Invalid)
                 return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
 
-            var teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
+            AgentTeamUpPrototype teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
             if (teamUpProto == null)
                 return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
 
-            var powerProgressionEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
-            if (powerProgressionEntry != null)
-                info.InitForTeamUp(powerProgressionEntry);
+            TeamUpPowerProgressionEntryPrototype powerProgEntry = GameDataTables.Instance.PowerOwnerTable.GetTeamUpPowerProgressionEntry(teamUpProto.DataRef, powerProtoRef);
+            if (powerProgEntry != null)
+                powerInfo.InitForTeamUp(powerProgEntry);
             else
-                info.InitNonProgressionPower(powerProtoRef);
+                powerInfo.InitNonProgressionPower(powerProtoRef);
 
-            return info.IsValid;
+            return powerInfo.IsValid;
+        }
+
+        public virtual bool GetPowerProgressionInfos(List<PowerProgressionInfo> powerInfoList)
+        {
+            AgentTeamUpPrototype teamUpProto = PrototypeDataRef.As<AgentTeamUpPrototype>();
+            if (teamUpProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): teamUpProto == null");
+
+            if (teamUpProto.PowerProgression.HasValue())
+            {
+                foreach (TeamUpPowerProgressionEntryPrototype powerProgEntry in teamUpProto.PowerProgression)
+                {
+                    if (powerProgEntry.Power == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("GetPowerProgressionInfos(): powerProgEntry.Power == PrototypeId.Invalid");
+                        continue;
+                    }
+
+                    PowerProgressionInfo powerInfo = new();
+                    powerInfo.InitForTeamUp(powerProgEntry);
+                    powerInfoList.Add(powerInfo);
+                }
+            }
+
+            return true;
         }
 
         public virtual void InitializeLevel(int newLevel)
