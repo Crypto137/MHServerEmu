@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.ComponentModel;
 using System.Reflection;
@@ -69,7 +68,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public bool PreCheck(PrototypeId protoRef)
         {
-            if (protoRef == PrototypeId.Invalid) 
+            if (protoRef == PrototypeId.Invalid || DataDirectory.Instance.PrototypeIsADefaultPrototype(protoRef)) 
                 return _currentProtoRef != PrototypeId.Invalid;
 
             if (_patchDict.ContainsKey(protoRef))

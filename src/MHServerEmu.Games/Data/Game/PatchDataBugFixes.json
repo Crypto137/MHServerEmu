@@ -54,5 +54,12 @@
         "Path": "MarkerSet.Markers[1].EncounterSpawnPhase",
         "Description": "Fix phase for SHIELDAgentForgottenPyreEvent",
         "Value": "0"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Story/CH09Asgard/Events/MetaGame/MGForgottenPyre/MGForgottenPyre.prototype",
+        "Path": "Objectives[0].Name",
+        "Description": "Fix long name for MGForgottenPyre",
+        "Value": "6053780125440214290"
     }
 ]
