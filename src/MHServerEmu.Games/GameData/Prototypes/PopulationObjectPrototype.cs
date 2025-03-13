@@ -137,11 +137,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
 
         public override float GetAverageSize() => 1.0f;
-
-        public void SetEntity(PrototypeId entityRef)
-        {
-            Entity = entityRef;
-        }
     }
 
     public class PopulationClusterFixedPrototype : PopulationObjectPrototype

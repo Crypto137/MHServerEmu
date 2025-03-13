@@ -83,15 +83,7 @@ namespace MHServerEmu.Games.Entities
             var spawnerProto = SpawnerPrototype;
             int count = SpawnedCount();
             if (count < spawnerProto.SpawnSimultaneousMax)
-            {
-                if (PrototypeDataRef == (PrototypeId)966079004089914920) // NorwayFrostGolemsSpawner
-                {
-                    if (count < 3) SpawnEntry(spawnerProto.SpawnSequence[0]);
-                    return;
-                }
-
                 SpawnEntry(NextSequence(spawnerProto.SpawnSequence));
-            }
         }
 
         private int SpawnedCount()

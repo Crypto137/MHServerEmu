@@ -33,5 +33,19 @@
         "Path": "SpawnSequence[0].Object.Entity",
         "Description": "Fix Hidden Chest for TRTavernRegion / LegendaryCH08Doomstadt2",
         "Value": "9710110594970293035"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Spawners/CH9/NorwayFrostGolemsSpawner.prototype",
+        "Path": "SpawnSequence[1].Count",
+        "Description": "Off AsgardFrostGolemMelee for NorwayFrostGolemsSpawner",
+        "Value": "0"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Spawners/CH9/NorwayFrostGolemsSpawner.prototype",
+        "Path": "SpawnSequence[3].Count",
+        "Description": "Off AsgardFrostGolemRanged for NorwayFrostGolemsSpawner",
+        "Value": "0"
     }
 ]
