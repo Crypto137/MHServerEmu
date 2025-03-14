@@ -1186,9 +1186,15 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        protected bool InitializePowerProgressionPowers(bool forceUnassign)
+        /// <summary>
+        /// Updates the rank of all powers in the power progression for this avatar or team-up.
+        /// </summary>
+        /// <remarks>
+        /// Calling this can lead to powers being both assigned and unassigned.
+        /// </remarks>
+        protected bool UpdatePowerProgressionPowers(bool forceUnassign)
         {
-            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "InitializePowerProgressionPowers(): this is not Avatar && IsTeamUpAgent == false");
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerProgressionPowers(): this is not Avatar && IsTeamUpAgent == false");
 
             List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
             GetPowerProgressionInfos(powerInfoList);
@@ -1200,7 +1206,7 @@ namespace MHServerEmu.Games.Entities
                 // Talents have their own thing
                 if (powerInfo.IsTalent)
                 {
-                    Logger.Warn("InitializePowerProgressionPowers(): powerInfo.IsTalent");
+                    Logger.Warn("UpdatePowerProgressionPowers(): powerInfo.IsTalent");
                     continue;
                 }
 
@@ -1354,7 +1360,7 @@ namespace MHServerEmu.Games.Entities
 
             // Unlock new powers
             if (TeamUpOwner != null)
-                InitializePowerProgressionPowers(false);
+                UpdatePowerProgressionPowers(false);
 
             // Update player owner property if reached level cap
             Player owner = GetOwnerOfType<Player>();
@@ -2187,7 +2193,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsTeamUpAgent == false) return;
             AssignTeamUpAgentStylePowers();
-            InitializePowerProgressionPowers(false);
+            UpdatePowerProgressionPowers(false);
         }
 
         private void AssignTeamUpAgentStylePowers()

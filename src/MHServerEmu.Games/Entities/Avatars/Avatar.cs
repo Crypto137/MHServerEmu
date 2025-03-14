@@ -57,6 +57,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
+        private PrototypeId _travelPowerOverrideProtoRef = PrototypeId.Invalid;
+
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
@@ -1174,13 +1176,31 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool InitializePowers()
         {
-            Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "InitializePowers(): player == null");
+            PowerIndexProperties defaultIndexProps = new(0, CharacterLevel, CombatLevel);
 
-            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
+            AssignGameFunctionPowers(defaultIndexProps);
+
+            // Initialize resources
+            InitializePrimaryManaBehaviors();
+            InitializeSecondaryManaBehaviors();
+
+            AssignItemPowers();
+
+            AssignEmotePowers(defaultIndexProps);
+
+            // Assign hidden passive powers (this needs to happen before updating power progression powers)
+            AssignHiddenPassivePowers(defaultIndexProps);
+
+            UpdatePowerProgressionPowers(false);
+
+            UpdateTravelPower();
+
+            return true;
+        }
+
+        private bool AssignGameFunctionPowers(in PowerIndexProperties indexProps)
+        {
             AvatarPrototype avatarPrototype = AvatarPrototype;
-
-            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
 
             // Add game function powers (the order is the same as captured packets)
             AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower, indexProps);
@@ -1195,80 +1215,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             ScheduleStatsPowerRefresh();
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
-            // Initialize resources (TODO: Separate InitializePowers() into multiple methods and move this out of here)
-            InitializePrimaryManaBehaviors();
-            InitializeSecondaryManaBehaviors();
-
-            // Item Powers
-            AssignItemPowers();
-
-            // Emotes
-            // Starting emotes
-            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
-            {
-                PrototypeId emoteProtoRef = emoteAssignment.Ability;
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"InitializePowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
-
-            // Unlockable emotes
-            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
-            {
-                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"InitializePowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
-
-            // Assign hidden passive powers (these need to be assigned before progression table powers)
-            if (avatarPrototype.HiddenPassivePowers.HasValue())
-            {
-                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
-                {
-                    if (GetPower(abilityAssignmentProto.Ability) == null)
-                        AssignPower(abilityAssignmentProto.Ability, indexProps);
-                }
-            }
-
-            // Power progression powers
-            InitializePowerProgressionPowers(false);
-
-            // Travel
-            AssignPower(avatarPrototype.TravelPower, indexProps);
-
-            return true;
-        }
-
-        private bool RestoreSelfAppliedPowerConditions()
-        {
-            // Powers are unassigned when avatar exits world, but the conditions remain.
-            // We need to reconnect existing conditions to the newly reassigned powers.
-
-            ConditionCollection conditionCollection = ConditionCollection;
-            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
-
-            List<ulong> conditionCleanupList = ListPool<ulong>.Instance.Get();
-
-            // Try to restore condition connections for self-applied powers
-            foreach (Condition condition in ConditionCollection.IterateConditions(false))
-            {
-                PowerPrototype powerProto = condition.CreatorPowerPrototype;
-                if (powerProto == null)
-                    continue;
-
-                if (Power.GetTargetingShape(powerProto) != TargetingShapeType.Self)
-                    continue;
-
-                if (conditionCollection.TryRestorePowerCondition(condition, this) == false)
-                    conditionCleanupList.Add(condition.Id);
-            }
-
-            // Clean up conditions that are no longer valid
-            foreach (ulong conditionId in conditionCleanupList)
-                conditionCollection.RemoveCondition(conditionId);
-
-            ListPool<ulong>.Instance.Return(conditionCleanupList);
             return true;
         }
 
@@ -1355,6 +1301,54 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+        private bool AssignEmotePowers(in PowerIndexProperties indexProps)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "AssignEmotePowers(): player == null");
+
+            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
+
+            // Starting emotes
+            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
+            {
+                PrototypeId emoteProtoRef = emoteAssignment.Ability;
+                if (GetPower(emoteProtoRef) != null)
+                    continue;
+
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignEmotePowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            // Unlockable emotes
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
+                if (GetPower(emoteProtoRef) != null)
+                    continue;
+
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignEmotePowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            return true;
+        }
+
+        private bool AssignHiddenPassivePowers(in PowerIndexProperties indexProps)
+        {
+            AvatarPrototype avatarPrototype = AvatarPrototype;
+
+            if (avatarPrototype.HiddenPassivePowers.HasValue())
+            {
+                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
+                {
+                    if (GetPower(abilityAssignmentProto.Ability) == null)
+                        AssignPower(abilityAssignmentProto.Ability, indexProps);
+                }
+            }
+
+            return true;
+        }
+
         private void AssignRegionPowers()
         {
             Region region = Region;
@@ -1395,6 +1389,38 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 AssignPower(metaGameProto.BodysliderOverride, new());
             }
+        }
+
+        private bool RestoreSelfAppliedPowerConditions()
+        {
+            // Powers are unassigned when avatar exits world, but the conditions remain.
+            // We need to reconnect existing conditions to the newly reassigned powers.
+
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
+
+            List<ulong> conditionCleanupList = ListPool<ulong>.Instance.Get();
+
+            // Try to restore condition connections for self-applied powers
+            foreach (Condition condition in ConditionCollection.IterateConditions(false))
+            {
+                PowerPrototype powerProto = condition.CreatorPowerPrototype;
+                if (powerProto == null)
+                    continue;
+
+                if (Power.GetTargetingShape(powerProto) != TargetingShapeType.Self)
+                    continue;
+
+                if (conditionCollection.TryRestorePowerCondition(condition, this) == false)
+                    conditionCleanupList.Add(condition.Id);
+            }
+
+            // Clean up conditions that are no longer valid
+            foreach (ulong conditionId in conditionCleanupList)
+                conditionCollection.RemoveCondition(conditionId);
+
+            ListPool<ulong>.Instance.Return(conditionCleanupList);
+            return true;
         }
 
         protected override bool CanThrow(WorldEntity throwableEntity)
@@ -1771,6 +1797,53 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return PrototypeId.Invalid;
+        }
+
+        #endregion
+
+        #region Travel Powers
+
+        public PrototypeId GetTravelPowerRef()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTravelPowerRef(): avatarProto == null");
+
+            if (_travelPowerOverrideProtoRef != PrototypeId.Invalid)
+                return _travelPowerOverrideProtoRef;
+
+            return avatarProto.TravelPower;
+        }
+
+        public void SetTravelPowerOverride(PrototypeId travelPowerOverrideProtoRef)
+        {
+            // Called by mapped powers
+            _travelPowerOverrideProtoRef = travelPowerOverrideProtoRef;
+        }
+
+        /// <summary>
+        /// Assigns or unassign the travel power for this <see cref="Avatar"/> based on character level.
+        /// </summary>
+        private bool UpdateTravelPower()
+        {
+            PrototypeId travelPowerRef = GetTravelPowerRef();
+            if (travelPowerRef == PrototypeId.Invalid)
+                return true;
+
+            int characterLevel = CharacterLevel;
+            if (characterLevel >= GameDatabase.AdvancementGlobalsPrototype.TravelPowerUnlockLevel)
+            {
+                if (GetPower(travelPowerRef) == null)
+                {
+                    PowerIndexProperties indexProps = new(1, characterLevel, CombatLevel);
+                    AssignPower(travelPowerRef, indexProps);
+                }
+            }
+            else
+            {
+                UnassignPower(travelPowerRef);
+            }
+
+            return true;
         }
 
         #endregion
@@ -2205,8 +2278,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Unlock new powers
             if (IsInWorld)
             {
-                // TODO: Talents, travel power
-                InitializePowerProgressionPowers(false);
+                // TODO: Talents
+                UpdatePowerProgressionPowers(false);
+                UpdateTravelPower();
             }
 
             // Restore health if needed
