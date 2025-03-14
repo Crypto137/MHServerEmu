@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -820,8 +821,8 @@ namespace MHServerEmu.Games.Properties
             {
                 case PropertyDataType.Real:
                 case PropertyDataType.Curve:        return BitConverter.SingleToUInt32Bits(value.RawFloat);
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return CodedOutputStream.EncodeZigZag64(value.RawLong);
+                case PropertyDataType.Integer:      return MathHelper.SwizzleSignBit(value.RawLong);
+                case PropertyDataType.Time:         return MathHelper.SwizzleSignBit(value.RawLong - (long)Game.StartTime.TotalMilliseconds);
                 case PropertyDataType.Prototype:    return (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value.RawLong);
                 default:                            return (ulong)value.RawLong;
             }
@@ -835,11 +836,11 @@ namespace MHServerEmu.Games.Properties
             switch (type)
             {
                 case PropertyDataType.Real:
-                case PropertyDataType.Curve:        return new(BitConverter.ToSingle(BitConverter.GetBytes(bits)));
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return new(CodedInputStream.DecodeZigZag64(bits));
-                case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
-                default:                            return new((long)bits);
+                case PropertyDataType.Curve:        return BitConverter.UInt32BitsToSingle((uint)bits);
+                case PropertyDataType.Integer:      return MathHelper.UnswizzleSignBit(bits);
+                case PropertyDataType.Time:         return (long)Game.StartTime.TotalMilliseconds + MathHelper.UnswizzleSignBit(bits);
+                case PropertyDataType.Prototype:    return GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits);
+                default:                            return (long)bits;
             }
         }
 
