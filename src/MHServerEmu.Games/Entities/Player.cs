@@ -250,16 +250,19 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
             }
 
-            // HACK: Unlock avatars here too
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            if (Game.CustomGameOptions.AutoUnlockAvatars)
             {
-                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-                UnlockAvatar(avatarRef, false);
+                // HACK: Unlock avatars here too
+                foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                    UnlockAvatar(avatarRef, false);
+                }
             }
 
-            // HACK: And team-ups as well
-            if (Game.GameOptions.TeamUpSystemEnabled)
+            if (Game.GameOptions.TeamUpSystemEnabled && Game.CustomGameOptions.AutoUnlockTeamUps)
             {
+                // HACK: And team-ups as well
                 Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
                 if (teamUpLibrary.Count == 0)
                 {
