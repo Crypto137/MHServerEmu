@@ -1306,8 +1306,22 @@ namespace MHServerEmu.Games.Entities
 
         public int GetLevelCapForCharacter(PrototypeId agentProtoRef)
         {
-            // TODO
-            return 60;
+            AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
+
+            switch (agentProto)
+            {
+                case AvatarPrototype avatarProto:
+                    if (HasAvatarAsStarter(agentProtoRef))
+                        return Avatar.GetStarterAvatarLevelCap();
+
+                    return Avatar.GetAvatarLevelCap();
+
+                case AgentTeamUpPrototype teamUpProto:
+                    return Agent.GetTeamUpLevelCap();
+
+                default:
+                    return Logger.WarnReturn(0, $"GetLevelCapForCharacter(): Agent is neither an Avatar nor a Team-Up: [{agentProto}]");
+            }
         }
 
         public void SetAvatarLibraryProperties()
@@ -1953,6 +1967,17 @@ namespace MHServerEmu.Games.Entities
         {
             AvatarUnlockType unlockType = GetAvatarUnlockType(avatarRef);
             return unlockType != AvatarUnlockType.None && unlockType != AvatarUnlockType.Starter;
+        }
+
+        public bool HasAvatarAsStarter(PrototypeId avatarRef)
+        {
+            AvatarUnlockType unlockType = GetAvatarUnlockType(avatarRef);
+            return unlockType == AvatarUnlockType.Starter;
+        }
+
+        public bool HasAvatarAsCappedStarter(Avatar avatar)
+        {
+            return HasAvatarAsStarter(avatar.PrototypeDataRef) && avatar.CharacterLevel >= Avatar.GetStarterAvatarLevelCap();
         }
 
         public AvatarUnlockType GetAvatarUnlockType(PrototypeId avatarRef)

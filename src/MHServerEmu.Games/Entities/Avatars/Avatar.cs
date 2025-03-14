@@ -2132,6 +2132,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(0L, "AwardXP(): player == null");
 
+            // No more XP for capped starters
+            if (player.HasAvatarAsCappedStarter(this))
+                return 0;
+
             long awardedAmount = base.AwardXP(amount, showXPAwardedText);
 
             // Award alternate advancement XP (omega or infinity)
@@ -2178,6 +2182,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
             return advancementProto != null ? advancementProto.GetAvatarLevelCap() : 0;
+        }
+
+        public static int GetStarterAvatarLevelCap()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            return advancementProto != null ? advancementProto.StarterAvatarLevelCap : 0;
         }
 
         public bool IsAtMaxPrestigeLevel()
