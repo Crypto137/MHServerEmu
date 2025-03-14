@@ -1010,8 +1010,6 @@ namespace MHServerEmu.Games.Entities
             PowerPrototype powerProto = powerInfo.PowerPrototype;
             if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
 
-            PrototypeId powerProtoRef = powerProto.DataRef;
-
             if (powerInfo.IsTalent) return Logger.WarnReturn(false, "UpdatePowerRank(): powerInfo.IsTalent");
 
             // Check if this is a team-up passive that applies to the owner avatar
@@ -1046,6 +1044,10 @@ namespace MHServerEmu.Games.Entities
 
             if (powerOwner == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerOwner == null");
 
+            // No need to assign/unassign powers if the owner is not in the world
+            if (powerOwner.IsInWorld == false || powerOwner.TestStatus(EntityStatus.ExitingWorld))
+                return false;
+
             int rankBase = -1;
             int rankCurrentBest = 0;
 
@@ -1053,6 +1055,16 @@ namespace MHServerEmu.Games.Entities
                 rankCurrentBest = ComputePowerRank(ref powerInfo, PowerSpecIndexActive, out rankBase);
 
             // Do the actual rank update
+            return powerOwner.DoPowerRankUpdate(ref powerInfo, forceUnassign, rankBase, rankCurrentBest);
+        }
+
+        private bool DoPowerRankUpdate(ref PowerProgressionInfo powerInfo, bool forceUnassign, int rankBase, int rankCurrentBest)
+        {
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+
+            PrototypeId powerProtoRef = powerProto.DataRef;
+
             int rankOldBest = GetPowerRank(powerProtoRef);
             Properties[PropertyEnum.PowerRankBase, powerProtoRef] = rankBase;
 
@@ -1107,7 +1119,6 @@ namespace MHServerEmu.Games.Entities
             RefreshDependentPassivePowers(powerProto, rankCurrentBest);
             return true;
         }
-
 
         #endregion
 
@@ -1172,6 +1183,31 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
+            return true;
+        }
+
+        protected bool InitializePowerProgressionPowers(bool forceUnassign)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "InitializePowerProgressionPowers(): this is not Avatar && IsTeamUpAgent == false");
+
+            List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
+            GetPowerProgressionInfos(powerInfoList);
+
+            for (int i = 0; i < powerInfoList.Count; i++)
+            {
+                PowerProgressionInfo powerInfo = powerInfoList[i];
+
+                // Talents have their own thing
+                if (powerInfo.IsTalent)
+                {
+                    Logger.Warn("InitializePowerProgressionPowers(): powerInfo.IsTalent");
+                    continue;
+                }
+
+                UpdatePowerRank(ref powerInfo, forceUnassign);
+            }
+
+            ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
             return true;
         }
 
@@ -1311,13 +1347,21 @@ namespace MHServerEmu.Games.Entities
         protected virtual bool OnLevelUp(int oldLevel, int newLevel, bool restoreHealthAndEndurance = true)
         {
             if (IsTeamUpAgent == false) return Logger.WarnReturn(false, "OnLevelUp(): IsTeamUpAgent == false");
+            
+            // Restore health if needed
+            if (restoreHealthAndEndurance && IsDead == false)
+                Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
 
+            // Unlock new powers
+            if (TeamUpOwner != null)
+                InitializePowerProgressionPowers(false);
+
+            // Update player owner property if reached level cap
             Player owner = GetOwnerOfType<Player>();
             if (owner != null && IsAtLevelCap)
                 owner.Properties.AdjustProperty(1, PropertyEnum.TeamUpsAtMaxLevelPersistent);
 
-            Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMaxOther];
-
+            // Notify the client
             SendLevelUpMessage();
             return true;
         }
@@ -1956,16 +2000,20 @@ namespace MHServerEmu.Games.Entities
             if (base.OnPowerAssigned(power) == false)
                 return false;
 
-            // Set rank for normal powers
-            // REMOVEME: Remove IsTeamUpAgent and set rank only for non-power progression avatar powers
-            // after we implement proper power progression
-            if ((this is Avatar || IsTeamUpAgent) && power.IsNormalPower() && power.IsEmotePower() == false)
-            {
-                Properties[PropertyEnum.PowerRankBase, power.PrototypeDataRef] = 1;
-                Properties[PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef] = 1;
+            // Make sure non-power progression powers and talents assigned to avatars always have at least rank 1
+            bool isPowerProgressionPower = PowerCollection.ContainsPower(power.PrototypeDataRef, true);
 
-                // TODO: Move this to rank assignment
-                RefreshDependentPassivePowers(power.Prototype, 1);
+            if (this is Avatar &&
+                (isPowerProgressionPower == false || power.IsTalentPower()) &&
+                power.IsNormalPower() && power.IsEmotePower() == false)
+            {
+                PropertyId rankBaseProp = new(PropertyEnum.PowerRankBase, power.PrototypeDataRef);
+                if (Properties.HasProperty(rankBaseProp) == false)
+                    Properties[rankBaseProp] = 1;
+
+                PropertyId rankCurrentBestProp = new(PropertyEnum.PowerRankCurrentBest, power.PrototypeDataRef);
+                if (Properties.HasProperty(rankCurrentBestProp) == false)
+                    Properties[rankCurrentBestProp] = 1;
             }
 
             if (IsDormant == false)
@@ -2139,7 +2187,7 @@ namespace MHServerEmu.Games.Entities
         {
             if (IsTeamUpAgent == false) return;
             AssignTeamUpAgentStylePowers();
-            // TODO Assign Progression Powers
+            InitializePowerProgressionPowers(false);
         }
 
         private void AssignTeamUpAgentStylePowers()

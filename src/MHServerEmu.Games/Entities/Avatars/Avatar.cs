@@ -130,17 +130,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
 
-            // REMOVEME
-            // Unlock all stealable powers for Rogue
-            if (avatarProto.StealablePowersAllowed.HasValue())
-            {
-                foreach (PrototypeId stealablePowerInfoProtoRef in avatarProto.StealablePowersAllowed)
-                {
-                    var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
-                    Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
-                }
-            }
-
             // Initialize AbilityKeyMapping
             if (_abilityKeyMappingList.Count == 0)
             {
@@ -1242,54 +1231,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
-            // Progression table powers
-            indexProps = new(1, CharacterLevel, CombatLevel);   // use rank 1 for power progression (todo: remove this when we have everything working properly)
-
-            List<PowerProgressionEntryPrototype> powerProgEntryList = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
-            if (avatarPrototype.GetPowersUnlockedAtLevel(powerProgEntryList, -1, true))
-            {
-                foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
-                    AssignPower(powerProgEntry.PowerAssignment.Ability, indexProps);
-            }
-
-            ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntryList);
-
-            // Mapped powers (power replacements from talents)
-            // AvatarPrototype -> TalentGroups -> Talents -> Talent -> ActionsTriggeredOnPowerEvent -> PowerEventContext -> MappedPower
-            foreach (var talentGroup in avatarPrototype.TalentGroups)
-            {
-                foreach (var talentEntry in talentGroup.Talents)
-                {
-                    var talent = talentEntry.Talent.As<SpecializationPowerPrototype>();
-
-                    foreach (var powerEventAction in talent.ActionsTriggeredOnPowerEvent)
-                    {
-                        if (powerEventAction.PowerEventContext is PowerEventContextMapPowersPrototype mapPowerEvent)
-                        {
-                            foreach (MapPowerPrototype mapPower in mapPowerEvent.MappedPowers)
-                            {
-                                AssignPower(mapPower.MappedPower, indexProps);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Stolen powers for Rogue
-            if (avatarPrototype.StealablePowersAllowed.HasValue())
-            {
-                foreach (PrototypeId stealablePowerInfoProtoRef in avatarPrototype.StealablePowersAllowed)
-                {
-                    var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
-                    
-                    // Skip assigning stealable passives for now
-                    PowerPrototype powerProto = stealablePowerInfo.Power.As<PowerPrototype>();
-                    if (powerProto.Activation == PowerActivationType.Passive)
-                        continue;
-
-                    AssignPower(stealablePowerInfo.Power, indexProps);
-                }
-            }
+            // Power progression powers
+            InitializePowerProgressionPowers(false);
 
             // Travel
             AssignPower(avatarPrototype.TravelPower, indexProps);
@@ -2258,6 +2201,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Notify clients
             SendLevelUpMessage();
+
+            // Unlock new powers
+            if (IsInWorld)
+            {
+                // TODO: Talents, travel power
+                InitializePowerProgressionPowers(false);
+            }
 
             // Restore health if needed
             if (restoreHealthAndEndurance && IsDead == false)
