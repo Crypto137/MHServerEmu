@@ -294,7 +294,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
 
             // Avatar
-            BlueprintId avatarBlueprintRef = GetWorldEntityBlueprintDataRef();
+            BlueprintId avatarBlueprintRef = GetAvatarBlueprintDataRef();
 
             for (int i = 0; i < _perAvatarTuningVars.Count; i++)
             {
