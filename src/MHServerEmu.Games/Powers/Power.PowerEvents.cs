@@ -970,18 +970,36 @@ namespace MHServerEmu.Games.Powers
             if (triggeredPowerEvent.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext)
                 return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): triggeredPowerEvent.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext");
 
-            Avatar avatar = Owner as Avatar;
-            Player player = avatar?.GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
+            if (Owner.IsInWorld == false) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): Owner.IsInWorld == false");
 
-            List<Player> playerList = ListPool<Player>.Instance.Get();
+            Avatar avatar = Owner as Avatar;
+
+            HashSet<Player> recipientPlayers = HashSetPool<Player>.Instance.Get();
 
             if (lootTableContext.IncludeNearbyAvatars)
-                ComputeNearbyPlayers(avatar.Region, avatar.RegionLocation.Position, 0, false, playerList);
-            else
-                playerList.Add(player);
+            {
+                List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
+                ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, false, nearbyPlayerList);
 
-            int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : avatar.CharacterLevel;
+                foreach (Player player in nearbyPlayerList)
+                    recipientPlayers.Add(player);
+
+                ListPool<Player>.Instance.Return(nearbyPlayerList);
+            }
+            else if (avatar == null)
+            {
+                return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): avatar == null");
+            }
+            
+            if (avatar != null)
+            {
+                Player player = avatar.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
+
+                recipientPlayers.Add(player);
+            }
+
+            int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : Owner.CharacterLevel;
 
             Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
             {
@@ -989,14 +1007,14 @@ namespace MHServerEmu.Games.Powers
             };
 
             int recipientId = 1;
-            foreach (Player recipient in playerList)
+            foreach (Player recipient in recipientPlayers)
             {
                 using LootInputSettings lootSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                lootSettings.Initialize(LootContext.Drop, recipient, avatar, level);
+                lootSettings.Initialize(LootContext.Drop, recipient, Owner, level);
                 Game.LootManager.AwardLootFromTables(tables, lootSettings, recipientId++);
             }
 
-            ListPool<Player>.Instance.Return(playerList);
+            HashSetPool<Player>.Instance.Return(recipientPlayers);
             return true;
         }
 
