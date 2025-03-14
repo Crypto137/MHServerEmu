@@ -3550,6 +3550,19 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             switch (id.Enum)
             {
+                case PropertyEnum.AvatarPowerUltimatePoints:
+                    if (IsInWorld)
+                    {
+                        if (GetPowerProgressionInfo(UltimatePowerRef, out PowerProgressionInfo powerInfo) == false)
+                        {
+                            Logger.Warn($"OnPropertyChange(): Failed to get ultimate power progression info for [{this}]");
+                            return;
+                        }
+
+                        UpdatePowerRank(ref powerInfo, false);
+                    }
+                    break;
+
                 case PropertyEnum.OmegaRank:
                 case PropertyEnum.InfinityGemBonusRank:
                 case PropertyEnum.PvPUpgrades:
