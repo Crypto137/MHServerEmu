@@ -156,6 +156,49 @@ namespace MHServerEmu.Games.Entities
 
         #region Powers
 
+        public PowerUseResult ActivatePerformPower(PrototypeId powerRef)
+        {
+            if (this is Avatar) return PowerUseResult.GenericError;
+            if (powerRef == PrototypeId.Invalid) return PowerUseResult.AbilityMissing;
+
+            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return PowerUseResult.GenericError;
+
+            if (HasPowerInPowerCollection(powerRef) == false)
+            {
+                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+                var power = AssignPower(powerRef, indexProps);
+                if (power == null) return PowerUseResult.GenericError;
+            }
+
+            if (powerProto.Activation != PowerActivationType.Passive)
+            {
+                var power = GetPower(powerRef);
+                if (power == null) return PowerUseResult.AbilityMissing;
+
+                if (powerProto.IsToggled && power.IsToggledOn()) return PowerUseResult.Success;
+                var result = CanActivatePower(power, InvalidId, Vector3.Zero);
+                if (result != PowerUseResult.Success) return result;
+
+                PowerActivationSettings powerSettings = new(Id, Vector3.Zero, RegionLocation.Position);
+                powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                return ActivatePower(powerRef, ref powerSettings);
+            }
+
+            return PowerUseResult.Success;
+        }
+
+        public void RemoveMissionActionReferencedPowers(PrototypeId missionRef)
+        {
+            if (missionRef == PrototypeId.Invalid) return;
+            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
+            if (missionProto == null) return;
+            var referencedPowers = missionProto.MissionActionReferencedPowers;
+            if (referencedPowers == null) return;
+            foreach (var referencedPower in referencedPowers)
+                UnassignPower(referencedPower);
+        }
+
         protected override void ResurrectFromOther(WorldEntity ultimateOwner)
         {
             Properties[PropertyEnum.NoLootDrop] = true;
@@ -228,311 +271,6 @@ namespace MHServerEmu.Games.Entities
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
             if (keywordPrototype == null) return Logger.WarnReturn(false, "HasPowerWithKeyword(): keywordPrototype == null");
             return powerProto.HasKeyword(keywordPrototype);
-        }
-
-        public int GetPowerRank(PrototypeId powerProtoRef)
-        {
-            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetPowerRank(): powerProtoRef == PrototypeId.Invalid");
-            return Properties[PropertyEnum.PowerRankCurrentBest, powerProtoRef];
-        }
-
-        public int GetPowerRankBase(PrototypeId powerProtoRef)
-        {
-            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetPowerRank(): powerProtoRef == PrototypeId.Invalid");
-            return Properties[PropertyEnum.PowerRankBase, powerProtoRef];
-        }
-
-        public int ComputePowerRank(ref PowerProgressionInfo powerInfo, int specIndex, out int rankBase)
-        {
-            rankBase = PowerProgressionInfo.RankLocked;
-
-            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "ComputePowerRank(): this is not Avatar && IsTeamUpAgent == false");
-
-            PowerPrototype powerProto = powerInfo.PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(0, "ComputePowerRank(): powerProto == null");
-
-            rankBase = ComputePowerRankBase(ref powerInfo, specIndex);
-
-            int rankCurrentBest = Math.Max(0, rankBase);
-
-            if (powerInfo.IsInPowerProgression == false && powerProto.PowerCategory == PowerCategoryType.NormalPower && powerProto.UsableByAll == false)
-                return rankCurrentBest;
-
-            if (powerInfo.IsInPowerProgression == false || powerInfo.CanBeRankedUp() == false)
-                return rankCurrentBest;
-
-            PrototypeId powerTabRef = powerInfo.PowerTabRef;
-            PrototypeId[] antireqs = powerInfo.AntirequisitePowerRefs;
-
-            // +rank works only for powers that are already at rank 1 or above
-            int powerBoost = 0;
-            bool canBeBoosted = rankBase > 0 && Properties.HasProperty(PropertyEnum.PowerBoost);
-
-            // Ultimates and powers with antireqs cannot be granted
-            int powerGrantRank = 0;
-            bool canBeGranted = powerProto.IsUltimate == false && antireqs.IsNullOrEmpty() && Properties.HasProperty(PropertyEnum.PowerGrantRank);
-
-            // Get boosts (+rank)
-            if (canBeBoosted)
-            {
-                powerBoost += Properties[PropertyEnum.PowerBoost, powerInfo.PowerRef];
-
-                // Ultimates are not affected by +all and +tab boosts
-                if (powerProto.IsUltimate == false)
-                {
-                    powerBoost += Properties[PropertyEnum.PowerBoost, PrototypeId.Invalid];
-
-                    if (powerTabRef != PrototypeId.Invalid)
-                        powerBoost += Properties[PropertyEnum.PowerBoost, powerTabRef, PrototypeDataRef];
-                }
-            }
-
-            // Get grant
-            if (canBeGranted)
-            {
-                powerGrantRank = Properties[PropertyEnum.PowerGrantRank, powerInfo.PowerRef];
-
-                powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, PrototypeId.Invalid]);
-
-                if (powerTabRef != PrototypeId.Invalid)
-                    powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, powerTabRef, PrototypeDataRef]);
-            }
-
-            // Keyword bonuses
-            if (canBeBoosted || canBeGranted)
-            {
-                PrototypeId[] keywords = powerProto.Keywords;
-
-                // Check for keyword overrides from mapped power
-                PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
-                if (mappedPowerRef != PrototypeId.Invalid)
-                {
-                    PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
-                    if (mappedPowerProto == null) return Logger.WarnReturn(0, "ComputePowerRank(): mappedPowerProto == null");
-
-                    keywords = mappedPowerProto.Keywords;
-                }
-
-                if (keywords.HasValue())
-                {
-                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword;
-
-                    foreach (PrototypeId keywordProtoRef in keywords)
-                    {
-                        if (canBeBoosted && (powerProto.IsUltimate == false || keywordProtoRef == ultimatePowerKeyword))
-                            powerBoost += Properties[PropertyEnum.PowerBoost, keywordProtoRef];
-
-                        if (canBeGranted)
-                            powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, keywordProtoRef]);
-                    }
-                }
-            }
-
-            // Cap power boost (+30 for a total of rank 50)
-            powerBoost = Math.Min(GameDatabase.AdvancementGlobalsPrototype.PowerBoostMax, powerBoost);
-            
-            // Return final best rank
-            rankCurrentBest = Math.Max(rankCurrentBest + powerBoost, powerGrantRank);
-            return rankCurrentBest;
-        }
-
-        protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex)
-        {
-            int rankBase = PowerProgressionInfo.RankLocked;
-
-            // Do not apply bonuses to non-progression powers
-            if (powerInfo.IsInPowerProgression == false)
-                return GetPowerRankBase(powerInfo.PowerRef);
-
-            if (powerInfo.IsUltimatePower)
-                rankBase = Properties[PropertyEnum.AvatarPowerUltimatePoints];
-            else if (CharacterLevel >= powerInfo.GetRequiredLevel())
-                rankBase = powerInfo.GetStartingRank();
-
-            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex);
-
-            if (Properties[PropertyEnum.PowersUnlockAll])
-                return Math.Max(1, rankMax);
-
-            rankBase += powerInfo.GetStartingRank();
-            return Math.Min(rankBase, rankMax);
-        }
-
-        public int GetMaxPossibleRankForPowerAtCurrentLevel(ref PowerProgressionInfo powerInfo, int specIndex)
-        {
-            return GetMaxPossibleRankForPowerAtLevel(ref powerInfo, specIndex, CharacterLevel, out _, out _);
-        }
-
-        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, out bool filteredByPrereq, out bool filteredByAntireq)
-        {
-            filteredByPrereq = false;
-            filteredByAntireq = false;
-
-            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): this is not Avatar && IsTeamUpAgent == false");
-
-            PowerPrototype powerProto = powerInfo.PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): powerProto == null");
-
-            if (powerInfo.IsInPowerProgression == false)
-            {
-                if (powerProto.UsableByAll == false)
-                    return PowerProgressionInfo.RankLocked;
-
-                return GetPowerRankBase(powerInfo.PowerRef);    
-            }
-
-            if (powerInfo.GetRequiredLevel() > level)
-                return PowerProgressionInfo.RankLocked;
-
-            if (Properties[PropertyEnum.PowersUnlockAll] == false)
-            {
-                // Check prerequisites
-                PrototypeId[] prereqs = powerInfo.PrerequisitePowerRefs;
-                if (prereqs.HasValue())
-                {
-                    foreach (PrototypeId prereqProtoRef in prereqs)
-                    {
-                        if (GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo) == false)
-                            return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo) == false");
-
-                        if (preReqPowerInfo.GetRequiredLevel() > level)
-                        {
-                            filteredByPrereq = true;
-                            return 0;
-                        }
-                    }
-                }
-
-                // Check antirequisites
-                PrototypeId[] antireqs = powerInfo.AntirequisitePowerRefs;
-                if (antireqs.HasValue())
-                {
-                    foreach (PrototypeId antireqProtoRef in antireqs)
-                    {
-                        if (GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo) == false)
-                            return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo) == false");
-
-                        // Shouldn't this be <=?
-                        if (antiReqPowerInfo.GetRequiredLevel() < level)
-                        {
-                            filteredByAntireq = true;
-                            return 0;
-                        }
-                    }
-                }
-            }
-
-            if (powerInfo.CanBeRankedUp() == false)
-                return powerInfo.GetStartingRank();
-
-            Curve maxRankAtCharLevelCurve = powerInfo.GetMaxRankCurve();
-            if (maxRankAtCharLevelCurve == null) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): maxRankAtCharLevelCurve == null");
-
-            return maxRankAtCharLevelCurve.GetIntAt(level);
-        }
-
-        protected virtual bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
-        {
-            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerRank(): this is not Avatar && IsTeamUpAgent == false");
-
-            PowerPrototype powerProto = powerInfo.PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
-
-            PrototypeId powerProtoRef = powerProto.DataRef;
-
-            if (powerInfo.IsTalent) return Logger.WarnReturn(false, "UpdatePowerRank(): powerInfo.IsTalent");
-
-            // Check if this is a team-up passive that applies to the owner avatar
-            Agent powerOwner = this;
-            bool computeRank = true;
-            
-            if (IsTeamUpAgent && powerProto.Activation == PowerActivationType.Passive)
-            {
-                // We may not have an owner yet early in the initialization process
-                Avatar teamUpOwner = TeamUpOwner;
-                if (teamUpOwner == null)
-                    return false;
-
-                // Make sure this team-up is selected
-                computeRank &= teamUpOwner.CurrentTeamUpAgent == this;
-
-                bool isPassivePowerOnAvatarWhileAway = powerInfo.IsPassivePowerOnAvatarWhileAway;
-                bool isPassivePowerOnAvatarWhileSummoned = powerInfo.IsPassivePowerOnAvatarWhileSummoned;
-
-                if (isPassivePowerOnAvatarWhileAway || isPassivePowerOnAvatarWhileSummoned)
-                {
-                    // Override power owner and check if team-up status (away or summoned) matches what the passive requires
-                    powerOwner = teamUpOwner;
-
-                    if (IsAliveInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
-                        computeRank &= isPassivePowerOnAvatarWhileSummoned;
-                    else
-                        computeRank &= isPassivePowerOnAvatarWhileAway;
-                }
-;            }
-
-            if (powerOwner == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerOwner == null");
-
-            int rankBase = -1;
-            int rankCurrentBest = 0;
-
-            if (computeRank)
-                rankCurrentBest = ComputePowerRank(ref powerInfo, PowerSpecIndexActive, out rankBase);
-
-            // Do the actual rank update
-            int rankOldBest = GetPowerRank(powerProtoRef);
-            Properties[PropertyEnum.PowerRankBase, powerProtoRef] = rankBase;
-
-            // Unassign if needed
-            bool reassign = false;
-            if (forceUnassign)
-            {
-                bool unassigned = UnassignPower(powerProtoRef);
-                RefreshDependentPassivePowers(powerProto, 0);
-
-                if (unassigned && rankCurrentBest > 0)
-                    reassign = true;
-            }
-
-            // Turn off toggle powers if the new rank is 0
-            if (rankCurrentBest == 0)
-            {
-                Properties.RemoveProperty(new(PropertyEnum.PowerToggleOn, powerProtoRef));
-                Properties.RemoveProperty(new(PropertyEnum.PowerToggleInPrevRegion, powerProtoRef));
-            }
-
-            // Early exit if nothing more to do
-            if (reassign == false && rankCurrentBest == rankOldBest)
-                return false;
-
-            Properties[PropertyEnum.PowerRankCurrentBest, powerProtoRef] = rankCurrentBest;
-
-            Power power = GetPower(powerProtoRef);
-            if (rankCurrentBest > 0)
-            {
-                // We are gaining or refreshing a power
-                if (power != null)
-                {
-                    // We are refreshing an existing power
-                    power.Rank = rankCurrentBest;
-                    power.ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.PowerRank);
-                }
-                else
-                {
-                    // We are gaining a new power
-                    PowerIndexProperties indexProps = new(rankCurrentBest, CharacterLevel, CombatLevel);
-                    AssignPower(powerProtoRef, indexProps);
-                }
-            }
-            else
-            {
-                // We are losing the power
-                if (power != null)
-                    UnassignPower(powerProtoRef);
-            }
-
-            RefreshDependentPassivePowers(powerProto, rankCurrentBest);
-            return true;
         }
 
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
@@ -977,53 +715,403 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        #endregion
-
-        #region Combat State
-
-        public override bool EnterCombat()
+        /// <summary>
+        /// Activates passive powers and toggled powers that were previous on.
+        /// </summary>
+        private void TryAutoActivatePowersInCollection()
         {
-            if (TestStatus(EntityStatus.ExitingWorld))
+            if (PowerCollection == null)
+                return;
+
+            // Need to use a temporary list here because activating a power can add a condition that will assign a proc power
+            List<Power> powerList = ListPool<Power>.Instance.Get();
+
+            foreach (var kvp in PowerCollection)
+                powerList.Add(kvp.Value.Power);
+
+            foreach (Power power in powerList)
+                TryAutoActivatePower(power);
+
+            ListPool<Power>.Instance.Return(powerList);
+        }
+
+        /// <summary>
+        /// Activates the provided power if it's a passive power or a toggle power that was previosuly toggled on.
+        /// </summary>
+        private bool TryAutoActivatePower(Power power)
+        {
+            if (IsInWorld == false || IsSimulated == false || IsDead)
                 return false;
 
-            AgentPrototype agentProto = AgentPrototype;
-            TimeSpan inCombatTime = TimeSpan.FromMilliseconds(agentProto.InCombatTimerMS);
-            
-            // If already in combat, restart combat timer
-            if (Properties[PropertyEnum.IsInCombat])
+            PowerPrototype powerProto = power?.Prototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "TryAutoActivatePower(): powerProto == null");
+
+            bool wasToggled = false;
+            bool shouldActivate = false;
+
+            if (power.IsToggledOn() || power.IsToggleInPrevRegion())
             {
-                Game.GameEventScheduler.RescheduleEvent(_exitCombatEvent, inCombatTime);
-                return true;
+                wasToggled = true;
+
+                Properties[PropertyEnum.PowerToggleOn, power.PrototypeDataRef] = false;
+                Properties[PropertyEnum.PowerToggleInPrevRegion, power.PrototypeDataRef] = false;
+
+                shouldActivate = powerProto.PowerCategory != PowerCategoryType.ProcEffect;
             }
 
-            // Enter combat if not currently in combat
-            ScheduleEntityEvent(_exitCombatEvent, inCombatTime);
+            shouldActivate |= power.GetActivationType() == PowerActivationType.Passive;
 
-            Properties[PropertyEnum.IsInCombat] = true;
-            TryActivateOnInCombatProcs();
-            TriggerEntityActionEvent(EntitySelectorActionEventType.OnEnteredCombat);
+            if (shouldActivate == false)
+                return false;
 
-            return true;
-        }
+            TargetingStylePrototype targetingStyleProto = powerProto.GetTargetingStyle();
+            ulong targetId = targetingStyleProto.TargetingShape == TargetingShapeType.Self ? Id : InvalidId;
+            Vector3 position = RegionLocation.Position;
 
-        public bool ExitCombat()
-        {
-            if (Properties[PropertyEnum.IsInCombat] == false)
-                return Logger.WarnReturn(false, $"ExitCombat(): Agent [{this}] is not in combat");
+            PowerActivationSettings settings = new(targetId, position, position);
+            settings.Flags |= PowerActivationSettingsFlags.NoOnPowerUseProcs | PowerActivationSettingsFlags.AutoActivate;
 
-            if (_exitCombatEvent.IsValid)
-                Game.GameEventScheduler.CancelEvent(_exitCombatEvent);
+            // Extra settings for combo/item powers
+            if (power.IsComboEffect())
+            {
+                settings.TriggeringPowerRef = power.Properties[PropertyEnum.TriggeringPowerRef, power.PrototypeDataRef];
+            }
+            else if (power.IsItemPower() && this is Avatar avatar)
+            {
+                settings.ItemSourceId = avatar.FindOwnedItemThatGrantsPower(power.PrototypeDataRef);
+                if (settings.ItemSourceId == InvalidId)
+                    return Logger.WarnReturn(false, "TryAutoActivatePower(): settings.ItemSourceId == InvalidId");
+            }
 
-            Properties[PropertyEnum.IsInCombat] = false;
-            TryActivateOnOutCombatProcs();
-            TriggerEntityActionEvent(EntitySelectorActionEventType.OnExitedCombat);
+            PowerUseResult result = CanActivatePower(power, settings.TargetEntityId, settings.TargetPosition, settings.Flags, settings.ItemSourceId);
+            if (result == PowerUseResult.Success)
+            {
+                result = ActivatePower(power, ref settings);
+                if (result != PowerUseResult.Success)
+                    Logger.Warn($"TryAutoActivatePower(): Failed to auto-activate power [{powerProto}] for [{this}] for reason [{result}]");
+            }
+            else if (result == PowerUseResult.RegionRestricted && wasToggled)
+            {
+                Properties[PropertyEnum.PowerToggleInPrevRegion, power.PrototypeDataRef] = true;
+            }
 
-            return true;
+            return result == PowerUseResult.Success;
         }
 
         #endregion
 
-        #region Progression
+        #region Power Ranks
+
+        public int GetPowerRank(PrototypeId powerProtoRef)
+        {
+            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetPowerRank(): powerProtoRef == PrototypeId.Invalid");
+            return Properties[PropertyEnum.PowerRankCurrentBest, powerProtoRef];
+        }
+
+        public int GetPowerRankBase(PrototypeId powerProtoRef)
+        {
+            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(0, "GetPowerRank(): powerProtoRef == PrototypeId.Invalid");
+            return Properties[PropertyEnum.PowerRankBase, powerProtoRef];
+        }
+
+        public int ComputePowerRank(ref PowerProgressionInfo powerInfo, int specIndex, out int rankBase)
+        {
+            rankBase = PowerProgressionInfo.RankLocked;
+
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "ComputePowerRank(): this is not Avatar && IsTeamUpAgent == false");
+
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(0, "ComputePowerRank(): powerProto == null");
+
+            rankBase = ComputePowerRankBase(ref powerInfo, specIndex);
+
+            int rankCurrentBest = Math.Max(0, rankBase);
+
+            if (powerInfo.IsInPowerProgression == false && powerProto.PowerCategory == PowerCategoryType.NormalPower && powerProto.UsableByAll == false)
+                return rankCurrentBest;
+
+            if (powerInfo.IsInPowerProgression == false || powerInfo.CanBeRankedUp() == false)
+                return rankCurrentBest;
+
+            PrototypeId powerTabRef = powerInfo.PowerTabRef;
+            PrototypeId[] antireqs = powerInfo.AntirequisitePowerRefs;
+
+            // +rank works only for powers that are already at rank 1 or above
+            int powerBoost = 0;
+            bool canBeBoosted = rankBase > 0 && Properties.HasProperty(PropertyEnum.PowerBoost);
+
+            // Ultimates and powers with antireqs cannot be granted
+            int powerGrantRank = 0;
+            bool canBeGranted = powerProto.IsUltimate == false && antireqs.IsNullOrEmpty() && Properties.HasProperty(PropertyEnum.PowerGrantRank);
+
+            // Get boosts (+rank)
+            if (canBeBoosted)
+            {
+                powerBoost += Properties[PropertyEnum.PowerBoost, powerInfo.PowerRef];
+
+                // Ultimates are not affected by +all and +tab boosts
+                if (powerProto.IsUltimate == false)
+                {
+                    powerBoost += Properties[PropertyEnum.PowerBoost, PrototypeId.Invalid];
+
+                    if (powerTabRef != PrototypeId.Invalid)
+                        powerBoost += Properties[PropertyEnum.PowerBoost, powerTabRef, PrototypeDataRef];
+                }
+            }
+
+            // Get grant
+            if (canBeGranted)
+            {
+                powerGrantRank = Properties[PropertyEnum.PowerGrantRank, powerInfo.PowerRef];
+
+                powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, PrototypeId.Invalid]);
+
+                if (powerTabRef != PrototypeId.Invalid)
+                    powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, powerTabRef, PrototypeDataRef]);
+            }
+
+            // Keyword bonuses
+            if (canBeBoosted || canBeGranted)
+            {
+                PrototypeId[] keywords = powerProto.Keywords;
+
+                // Check for keyword overrides from mapped power
+                PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
+                if (mappedPowerRef != PrototypeId.Invalid)
+                {
+                    PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
+                    if (mappedPowerProto == null) return Logger.WarnReturn(0, "ComputePowerRank(): mappedPowerProto == null");
+
+                    keywords = mappedPowerProto.Keywords;
+                }
+
+                if (keywords.HasValue())
+                {
+                    PrototypeId ultimatePowerKeyword = GameDatabase.KeywordGlobalsPrototype.UltimatePowerKeyword;
+
+                    foreach (PrototypeId keywordProtoRef in keywords)
+                    {
+                        if (canBeBoosted && (powerProto.IsUltimate == false || keywordProtoRef == ultimatePowerKeyword))
+                            powerBoost += Properties[PropertyEnum.PowerBoost, keywordProtoRef];
+
+                        if (canBeGranted)
+                            powerGrantRank = Math.Max(powerGrantRank, Properties[PropertyEnum.PowerGrantRank, keywordProtoRef]);
+                    }
+                }
+            }
+
+            // Cap power boost (+30 for a total of rank 50)
+            powerBoost = Math.Min(GameDatabase.AdvancementGlobalsPrototype.PowerBoostMax, powerBoost);
+
+            // Return final best rank
+            rankCurrentBest = Math.Max(rankCurrentBest + powerBoost, powerGrantRank);
+            return rankCurrentBest;
+        }
+
+        protected virtual int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int specIndex)
+        {
+            int rankBase = PowerProgressionInfo.RankLocked;
+
+            // Do not apply bonuses to non-progression powers
+            if (powerInfo.IsInPowerProgression == false)
+                return GetPowerRankBase(powerInfo.PowerRef);
+
+            if (powerInfo.IsUltimatePower)
+                rankBase = Properties[PropertyEnum.AvatarPowerUltimatePoints];
+            else if (CharacterLevel >= powerInfo.GetRequiredLevel())
+                rankBase = powerInfo.GetStartingRank();
+
+            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, specIndex);
+
+            if (Properties[PropertyEnum.PowersUnlockAll])
+                return Math.Max(1, rankMax);
+
+            rankBase += powerInfo.GetStartingRank();
+            return Math.Min(rankBase, rankMax);
+        }
+
+        public int GetMaxPossibleRankForPowerAtCurrentLevel(ref PowerProgressionInfo powerInfo, int specIndex)
+        {
+            return GetMaxPossibleRankForPowerAtLevel(ref powerInfo, specIndex, CharacterLevel, out _, out _);
+        }
+
+        public int GetMaxPossibleRankForPowerAtLevel(ref PowerProgressionInfo powerInfo, int specIndex, int level, out bool filteredByPrereq, out bool filteredByAntireq)
+        {
+            filteredByPrereq = false;
+            filteredByAntireq = false;
+
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): this is not Avatar && IsTeamUpAgent == false");
+
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): powerProto == null");
+
+            if (powerInfo.IsInPowerProgression == false)
+            {
+                if (powerProto.UsableByAll == false)
+                    return PowerProgressionInfo.RankLocked;
+
+                return GetPowerRankBase(powerInfo.PowerRef);
+            }
+
+            if (powerInfo.GetRequiredLevel() > level)
+                return PowerProgressionInfo.RankLocked;
+
+            if (Properties[PropertyEnum.PowersUnlockAll] == false)
+            {
+                // Check prerequisites
+                PrototypeId[] prereqs = powerInfo.PrerequisitePowerRefs;
+                if (prereqs.HasValue())
+                {
+                    foreach (PrototypeId prereqProtoRef in prereqs)
+                    {
+                        if (GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo) == false)
+                            return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): GetPowerProgressionInfo(prereqProtoRef, out PowerProgressionInfo preReqPowerInfo) == false");
+
+                        if (preReqPowerInfo.GetRequiredLevel() > level)
+                        {
+                            filteredByPrereq = true;
+                            return 0;
+                        }
+                    }
+                }
+
+                // Check antirequisites
+                PrototypeId[] antireqs = powerInfo.AntirequisitePowerRefs;
+                if (antireqs.HasValue())
+                {
+                    foreach (PrototypeId antireqProtoRef in antireqs)
+                    {
+                        if (GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo) == false)
+                            return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): GetPowerProgressionInfo(antireqProtoRef, out PowerProgressionInfo antiReqPowerInfo) == false");
+
+                        // Shouldn't this be <=?
+                        if (antiReqPowerInfo.GetRequiredLevel() < level)
+                        {
+                            filteredByAntireq = true;
+                            return 0;
+                        }
+                    }
+                }
+            }
+
+            if (powerInfo.CanBeRankedUp() == false)
+                return powerInfo.GetStartingRank();
+
+            Curve maxRankAtCharLevelCurve = powerInfo.GetMaxRankCurve();
+            if (maxRankAtCharLevelCurve == null) return Logger.WarnReturn(0, "GetMaxPossibleRankForPowerAtLevel(): maxRankAtCharLevelCurve == null");
+
+            return maxRankAtCharLevelCurve.GetIntAt(level);
+        }
+
+        protected virtual bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerRank(): this is not Avatar && IsTeamUpAgent == false");
+
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+
+            PrototypeId powerProtoRef = powerProto.DataRef;
+
+            if (powerInfo.IsTalent) return Logger.WarnReturn(false, "UpdatePowerRank(): powerInfo.IsTalent");
+
+            // Check if this is a team-up passive that applies to the owner avatar
+            Agent powerOwner = this;
+            bool computeRank = true;
+
+            if (IsTeamUpAgent && powerProto.Activation == PowerActivationType.Passive)
+            {
+                // We may not have an owner yet early in the initialization process
+                Avatar teamUpOwner = TeamUpOwner;
+                if (teamUpOwner == null)
+                    return false;
+
+                // Make sure this team-up is selected
+                computeRank &= teamUpOwner.CurrentTeamUpAgent == this;
+
+                bool isPassivePowerOnAvatarWhileAway = powerInfo.IsPassivePowerOnAvatarWhileAway;
+                bool isPassivePowerOnAvatarWhileSummoned = powerInfo.IsPassivePowerOnAvatarWhileSummoned;
+
+                if (isPassivePowerOnAvatarWhileAway || isPassivePowerOnAvatarWhileSummoned)
+                {
+                    // Override power owner and check if team-up status (away or summoned) matches what the passive requires
+                    powerOwner = teamUpOwner;
+
+                    if (IsAliveInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+                        computeRank &= isPassivePowerOnAvatarWhileSummoned;
+                    else
+                        computeRank &= isPassivePowerOnAvatarWhileAway;
+                }
+;
+            }
+
+            if (powerOwner == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerOwner == null");
+
+            int rankBase = -1;
+            int rankCurrentBest = 0;
+
+            if (computeRank)
+                rankCurrentBest = ComputePowerRank(ref powerInfo, PowerSpecIndexActive, out rankBase);
+
+            // Do the actual rank update
+            int rankOldBest = GetPowerRank(powerProtoRef);
+            Properties[PropertyEnum.PowerRankBase, powerProtoRef] = rankBase;
+
+            // Unassign if needed
+            bool reassign = false;
+            if (forceUnassign)
+            {
+                bool unassigned = UnassignPower(powerProtoRef);
+                RefreshDependentPassivePowers(powerProto, 0);
+
+                if (unassigned && rankCurrentBest > 0)
+                    reassign = true;
+            }
+
+            // Turn off toggle powers if the new rank is 0
+            if (rankCurrentBest == 0)
+            {
+                Properties.RemoveProperty(new(PropertyEnum.PowerToggleOn, powerProtoRef));
+                Properties.RemoveProperty(new(PropertyEnum.PowerToggleInPrevRegion, powerProtoRef));
+            }
+
+            // Early exit if nothing more to do
+            if (reassign == false && rankCurrentBest == rankOldBest)
+                return false;
+
+            Properties[PropertyEnum.PowerRankCurrentBest, powerProtoRef] = rankCurrentBest;
+
+            Power power = GetPower(powerProtoRef);
+            if (rankCurrentBest > 0)
+            {
+                // We are gaining or refreshing a power
+                if (power != null)
+                {
+                    // We are refreshing an existing power
+                    power.Rank = rankCurrentBest;
+                    power.ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.PowerRank);
+                }
+                else
+                {
+                    // We are gaining a new power
+                    PowerIndexProperties indexProps = new(rankCurrentBest, CharacterLevel, CombatLevel);
+                    AssignPower(powerProtoRef, indexProps);
+                }
+            }
+            else
+            {
+                // We are losing the power
+                if (power != null)
+                    UnassignPower(powerProtoRef);
+            }
+
+            RefreshDependentPassivePowers(powerProto, rankCurrentBest);
+            return true;
+        }
+
+
+        #endregion
+
+        #region Power Progression
 
         public virtual int GetLatestPowerProgressionVersion()
         {
@@ -1086,6 +1174,54 @@ namespace MHServerEmu.Games.Entities
 
             return true;
         }
+
+        #endregion
+
+        #region Combat State
+
+        public override bool EnterCombat()
+        {
+            if (TestStatus(EntityStatus.ExitingWorld))
+                return false;
+
+            AgentPrototype agentProto = AgentPrototype;
+            TimeSpan inCombatTime = TimeSpan.FromMilliseconds(agentProto.InCombatTimerMS);
+            
+            // If already in combat, restart combat timer
+            if (Properties[PropertyEnum.IsInCombat])
+            {
+                Game.GameEventScheduler.RescheduleEvent(_exitCombatEvent, inCombatTime);
+                return true;
+            }
+
+            // Enter combat if not currently in combat
+            ScheduleEntityEvent(_exitCombatEvent, inCombatTime);
+
+            Properties[PropertyEnum.IsInCombat] = true;
+            TryActivateOnInCombatProcs();
+            TriggerEntityActionEvent(EntitySelectorActionEventType.OnEnteredCombat);
+
+            return true;
+        }
+
+        public bool ExitCombat()
+        {
+            if (Properties[PropertyEnum.IsInCombat] == false)
+                return Logger.WarnReturn(false, $"ExitCombat(): Agent [{this}] is not in combat");
+
+            if (_exitCombatEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_exitCombatEvent);
+
+            Properties[PropertyEnum.IsInCombat] = false;
+            TryActivateOnOutCombatProcs();
+            TriggerEntityActionEvent(EntitySelectorActionEventType.OnExitedCombat);
+
+            return true;
+        }
+
+        #endregion
+
+        #region Leveling
 
         public virtual void InitializeLevel(int newLevel)
         {
@@ -1218,17 +1354,6 @@ namespace MHServerEmu.Games.Entities
 
             foreach (var summon in new SummonedEntityIterator(this))
                 summon.CombatLevel = combatLevel;
-        }
-
-        public void RemoveMissionActionReferencedPowers(PrototypeId missionRef)
-        {
-            if (missionRef == PrototypeId.Invalid) return;
-            var missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionRef);
-            if (missionProto == null) return;
-            var referencedPowers = missionProto.MissionActionReferencedPowers;
-            if (referencedPowers == null) return;
-            foreach (var referencedPower in referencedPowers) 
-                UnassignPower(referencedPower);
         }
 
         #endregion
@@ -2080,6 +2205,19 @@ namespace MHServerEmu.Games.Entities
             if (maxLevel > 0) Properties[PropertyEnum.TeamUpsAtMaxLevel] = maxLevel;
         }
 
+        public bool IsPermanentTeamUpStyle()
+        {
+            if (Prototype is not AgentTeamUpPrototype teamUpProto) return false;
+            if (teamUpProto.Styles.IsNullOrEmpty()) return false;
+
+            int styleIndex = Properties[PropertyEnum.TeamUpStyle];
+            if (styleIndex < 0 || styleIndex >= teamUpProto.Styles.Length) return false;
+            var style = teamUpProto.Styles[styleIndex];
+            if (style == null) return false;
+
+            return style.IsPermanent;
+        }
+
         #endregion
 
         #region PersistentAgents
@@ -2415,127 +2553,12 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public PowerUseResult ActivatePerformPower(PrototypeId powerRef)
-        {
-            if (this is Avatar) return PowerUseResult.GenericError;
-            if (powerRef == PrototypeId.Invalid) return PowerUseResult.AbilityMissing;
-
-            var powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
-            if (powerProto == null) return PowerUseResult.GenericError;
-
-            if (HasPowerInPowerCollection(powerRef) == false)
-            {
-                PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
-                var power = AssignPower(powerRef, indexProps);
-                if (power == null) return PowerUseResult.GenericError;
-            }
-
-            if (powerProto.Activation != PowerActivationType.Passive)
-            {
-                var power = GetPower(powerRef);
-                if (power == null) return PowerUseResult.AbilityMissing;
-
-                if (powerProto.IsToggled && power.IsToggledOn()) return PowerUseResult.Success;
-                var result = CanActivatePower(power, InvalidId, Vector3.Zero);
-                if (result != PowerUseResult.Success) return result;
-
-                PowerActivationSettings powerSettings = new(Id, Vector3.Zero, RegionLocation.Position);
-                powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
-                return ActivatePower(powerRef, ref powerSettings);
-            }
-
-            return PowerUseResult.Success;
-        }
-
         public void DrawPath(EntityHelper.TestOrb orbRef)
         {
             if (EntityHelper.DebugOrb == false) return;
             if (Locomotor.HasPath)
                 foreach(var node in Locomotor.LocomotionState.PathNodes)
                     EntityHelper.CrateOrb(orbRef, node.Vertex, Region);
-        }
-
-        /// <summary>
-        /// Activates passive powers and toggled powers that were previous on.
-        /// </summary>
-        private void TryAutoActivatePowersInCollection()
-        {
-            if (PowerCollection == null)
-                return;
-
-            // Need to use a temporary list here because activating a power can add a condition that will assign a proc power
-            List<Power> powerList = ListPool<Power>.Instance.Get();
-
-            foreach (var kvp in PowerCollection)
-                powerList.Add(kvp.Value.Power);
-
-            foreach (Power power in powerList)
-                TryAutoActivatePower(power);
-
-            ListPool<Power>.Instance.Return(powerList);
-        }
-
-        /// <summary>
-        /// Activates the provided power if it's a passive power or a toggle power that was previosuly toggled on.
-        /// </summary>
-        private bool TryAutoActivatePower(Power power)
-        {
-            if (IsInWorld == false || IsSimulated == false || IsDead)
-                return false;
-
-            PowerPrototype powerProto = power?.Prototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "TryAutoActivatePower(): powerProto == null");
-
-            bool wasToggled = false;
-            bool shouldActivate = false;
-
-            if (power.IsToggledOn() || power.IsToggleInPrevRegion())
-            {
-                wasToggled = true;
-
-                Properties[PropertyEnum.PowerToggleOn, power.PrototypeDataRef] = false;
-                Properties[PropertyEnum.PowerToggleInPrevRegion, power.PrototypeDataRef] = false;
-
-                shouldActivate = powerProto.PowerCategory != PowerCategoryType.ProcEffect;
-            }
-
-            shouldActivate |= power.GetActivationType() == PowerActivationType.Passive;
-
-            if (shouldActivate == false)
-                return false;
-
-            TargetingStylePrototype targetingStyleProto = powerProto.GetTargetingStyle();
-            ulong targetId = targetingStyleProto.TargetingShape == TargetingShapeType.Self ? Id : InvalidId;
-            Vector3 position = RegionLocation.Position;
-
-            PowerActivationSettings settings = new(targetId, position, position);
-            settings.Flags |= PowerActivationSettingsFlags.NoOnPowerUseProcs | PowerActivationSettingsFlags.AutoActivate;
-
-            // Extra settings for combo/item powers
-            if (power.IsComboEffect())
-            {
-                settings.TriggeringPowerRef = power.Properties[PropertyEnum.TriggeringPowerRef, power.PrototypeDataRef];
-            }
-            else if (power.IsItemPower() && this is Avatar avatar)
-            {
-                settings.ItemSourceId = avatar.FindOwnedItemThatGrantsPower(power.PrototypeDataRef);
-                if (settings.ItemSourceId == InvalidId)
-                    return Logger.WarnReturn(false, "TryAutoActivatePower(): settings.ItemSourceId == InvalidId");
-            }
-
-            PowerUseResult result = CanActivatePower(power, settings.TargetEntityId, settings.TargetPosition, settings.Flags, settings.ItemSourceId);
-            if (result == PowerUseResult.Success)
-            {
-                result = ActivatePower(power, ref settings);
-                if (result != PowerUseResult.Success)
-                    Logger.Warn($"TryAutoActivatePower(): Failed to auto-activate power [{powerProto}] for [{this}] for reason [{result}]");
-            }
-            else if (result == PowerUseResult.RegionRestricted && wasToggled)
-            {
-                Properties[PropertyEnum.PowerToggleInPrevRegion, power.PrototypeDataRef] = true;
-            }
-
-            return result == PowerUseResult.Success;
         }
 
         public void StartHitReactionCooldown()
@@ -2546,19 +2569,6 @@ namespace MHServerEmu.Games.Entities
         public bool IsHitReactionOnCooldown()
         {
             return _hitReactionCooldownEnd > Game.CurrentTime;
-        }
-
-        public bool IsPermanentTeamUpStyle()
-        {
-            if (Prototype is not AgentTeamUpPrototype teamUpProto) return false;
-            if (teamUpProto.Styles.IsNullOrEmpty()) return false;
-
-            int styleIndex = Properties[PropertyEnum.TeamUpStyle];
-            if (styleIndex < 0 || styleIndex >= teamUpProto.Styles.Length) return false;
-            var style = teamUpProto.Styles[styleIndex];
-            if (style == null) return false;
-
-            return style.IsPermanent;
         }
 
         #region Scheduled Events

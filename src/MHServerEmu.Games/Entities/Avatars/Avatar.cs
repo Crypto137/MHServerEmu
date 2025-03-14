@@ -97,6 +97,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(Game game) : base(game) { }
 
+        public override string ToString()
+        {
+            return $"{base.ToString()}, Player={_playerName?.Get()} (0x{_ownerPlayerDbId:X})";
+        }
+
         public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
@@ -1049,33 +1054,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             return result;
         }
 
-        public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
-        {
-            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
-            {
-                if ((PrototypeId)kvp.Value != mappedPowerRef) continue;
-                Property.FromParam(kvp.Key, 0, out PrototypeId originalPower);
-                return originalPower;
-            }
-
-            return PrototypeId.Invalid;
-        }
-
-        public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
-        {
-            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
-            {
-                PrototypeId mappedPowerRef = kvp.Value;
-
-                if (mappedPowerRef == PrototypeId.Invalid)
-                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
-
-                return mappedPowerRef;
-            }
-
-            return PrototypeId.Invalid;
-        }
-
         public override bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
@@ -1090,182 +1068,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             int powerKeywordChange = Properties[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
 
             return powerKeywordChange == (int)TriBool.True || (powerProto.HasKeyword(keywordPrototype) && powerKeywordChange != (int)TriBool.False);
-        }
-
-        public override bool HasPowerInPowerProgression(PrototypeId powerRef)
-        {
-            if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
-                return true;
-
-            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
-                return true;
-
-            return false;
-        }
-
-        public override bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo powerInfo)
-        {
-            powerInfo = new();
-
-            if (powerProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
-
-            PrototypeId progressionInfoPower = powerProtoRef;
-            PrototypeId mappedPowerRef;
-
-            // Check if this is a mapped power
-            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(powerProtoRef);
-            if (originalPowerRef != PrototypeId.Invalid)
-            {
-                mappedPowerRef = powerProtoRef;
-                progressionInfoPower = originalPowerRef;
-            }
-            else
-            {
-                mappedPowerRef = GetMappedPowerFromOriginalPower(powerProtoRef);
-            }
-
-            PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
-
-            // Initialize info
-            // Case 1 - Progression Power
-            PowerProgressionEntryPrototype powerProgressionEntry = powerOwnerTable.GetPowerProgressionEntry(avatarProto.DataRef, progressionInfoPower);
-            if (powerProgressionEntry != null)
-            {
-                PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
-                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
-
-                powerInfo.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
-                return powerInfo.IsValid;
-            }
-
-            // Case 2 - Talent
-            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
-            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
-            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
-            {
-                powerInfo.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
-                return powerInfo.IsValid;
-            }
-
-            // Case 3 - Non-Progression Power
-            powerInfo.InitNonProgressionPower(powerProtoRef);
-            return powerInfo.IsValid;
-        }
-
-        public override bool GetPowerProgressionInfos(List<PowerProgressionInfo> powerInfoList)
-        {
-            AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "GetPowerProgressionInfos(): avatarProto == null");
-
-            if (avatarProto.PowerProgressionTables.HasValue())
-            {
-                foreach (PowerProgressionTablePrototype powerProgTableProto in avatarProto.PowerProgressionTables)
-                {
-                    if (powerProgTableProto.PowerProgressionEntries.IsNullOrEmpty())
-                        continue;
-
-                    foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgTableProto.PowerProgressionEntries)
-                    {
-                        AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
-                        if (abilityAssignmentProto == null)
-                        {
-                            Logger.Warn("GetPowerProgressionInfos(): abilityAssignmentProto == null");
-                            continue;
-                        }
-
-                        PrototypeId mappedPowerRef = GetMappedPowerFromOriginalPower(abilityAssignmentProto.Ability);
-
-                        PowerProgressionInfo powerInfo = new();
-                        powerInfo.InitForAvatar(powerProgEntry, mappedPowerRef, powerProgTableProto.PowerProgTableTabRef);
-                        powerInfoList.Add(powerInfo);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
-        {
-            // Check avatar-specific overrides
-            if (powerInfo.IsInPowerProgression)
-            {
-                // Talents
-                if (powerInfo.IsTalent)
-                {
-                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
-                        return PowerProgressionInfo.RankLocked;
-
-                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
-                }
-            }
-            else
-            {
-                // Mapped powers
-                PrototypeId originalPowerProtoRef = GetOriginalPowerFromMappedPower(powerInfo.PowerRef);
-                if (originalPowerProtoRef != PrototypeId.Invalid)
-                    return GetPowerRank(originalPowerProtoRef);
-
-                // Transform powers
-                AvatarPrototype avatarProto = AvatarPrototype;
-                if (avatarProto == null) return Logger.WarnReturn(0, "ComputePowerRankBase(): avatarProto == null");
-
-                TransformModePrototype transformModeProto = avatarProto.FindTransformModeThatAssignsPower(powerInfo.PowerRef);
-                if (transformModeProto != null && transformModeProto.UseRankOfPower != PrototypeId.Invalid)
-                    return GetPowerRank(transformModeProto.UseRankOfPower);
-            }
-
-            // Fall back to base implementation if we didn't find any avatar-specific overrides 
-            return base.ComputePowerRankBase(ref powerInfo, powerSpecIndexActive);
-        }
-
-        protected override bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
-        {
-            PowerPrototype powerProto = powerInfo.PowerPrototype;
-            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
-
-            if (powerProto.Activation == PowerActivationType.Passive && IsPowerAllowedInCurrentTransformMode(powerInfo.PowerRef) == false)
-                return false;
-
-            if (base.UpdatePowerRank(ref powerInfo, forceUnassign) == false)
-                return false;
-
-            // Update mapped power if needed
-            PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
-            if (mappedPowerRef != PrototypeId.Invalid)
-            {
-                // Check for recursion
-                if (mappedPowerRef == powerInfo.PowerRef)
-                    return Logger.WarnReturn(false, $"UpdatePowerRank(): Recursion detected for mapped power {mappedPowerRef.GetName()}");
-
-                PowerProgressionInfo mappedPowerInfo = new();
-                mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
-                UpdatePowerRank(ref mappedPowerInfo, forceUnassign);
-            }
-
-            // Fire scoring events
-            Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "UpdatePowerRank(): player == null");
-
-            int powerRank = GetPowerRank(powerProto.DataRef);
-
-            player.OnScoringEvent(new(ScoringEventType.PowerRank, powerProto, powerRank));
-
-            if (powerProto.IsUltimate)
-                player.OnScoringEvent(new(ScoringEventType.PowerRankUltimate, powerRank));
-
-            return true;
-        }
-
-        public override int GetLatestPowerProgressionVersion()
-        {
-            if (AvatarPrototype == null) return 0;
-            return AvatarPrototype.PowerProgressionVersion;
         }
 
         public bool IsValidTargetForCurrentPower(WorldEntity target)
@@ -1805,11 +1607,227 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Power Ranks
+
+        protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        {
+            // Check avatar-specific overrides
+            if (powerInfo.IsInPowerProgression)
+            {
+                // Talents
+                if (powerInfo.IsTalent)
+                {
+                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
+                        return PowerProgressionInfo.RankLocked;
+
+                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
+                }
+            }
+            else
+            {
+                // Mapped powers
+                PrototypeId originalPowerProtoRef = GetOriginalPowerFromMappedPower(powerInfo.PowerRef);
+                if (originalPowerProtoRef != PrototypeId.Invalid)
+                    return GetPowerRank(originalPowerProtoRef);
+
+                // Transform powers
+                AvatarPrototype avatarProto = AvatarPrototype;
+                if (avatarProto == null) return Logger.WarnReturn(0, "ComputePowerRankBase(): avatarProto == null");
+
+                TransformModePrototype transformModeProto = avatarProto.FindTransformModeThatAssignsPower(powerInfo.PowerRef);
+                if (transformModeProto != null && transformModeProto.UseRankOfPower != PrototypeId.Invalid)
+                    return GetPowerRank(transformModeProto.UseRankOfPower);
+            }
+
+            // Fall back to base implementation if we didn't find any avatar-specific overrides 
+            return base.ComputePowerRankBase(ref powerInfo, powerSpecIndexActive);
+        }
+
+        protected override bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
+        {
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+
+            if (powerProto.Activation == PowerActivationType.Passive && IsPowerAllowedInCurrentTransformMode(powerInfo.PowerRef) == false)
+                return false;
+
+            if (base.UpdatePowerRank(ref powerInfo, forceUnassign) == false)
+                return false;
+
+            // Update mapped power if needed
+            PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
+            if (mappedPowerRef != PrototypeId.Invalid)
+            {
+                // Check for recursion
+                if (mappedPowerRef == powerInfo.PowerRef)
+                    return Logger.WarnReturn(false, $"UpdatePowerRank(): Recursion detected for mapped power {mappedPowerRef.GetName()}");
+
+                PowerProgressionInfo mappedPowerInfo = new();
+                mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
+                UpdatePowerRank(ref mappedPowerInfo, forceUnassign);
+            }
+
+            // Fire scoring events
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UpdatePowerRank(): player == null");
+
+            int powerRank = GetPowerRank(powerProto.DataRef);
+
+            player.OnScoringEvent(new(ScoringEventType.PowerRank, powerProto, powerRank));
+
+            if (powerProto.IsUltimate)
+                player.OnScoringEvent(new(ScoringEventType.PowerRankUltimate, powerRank));
+
+            return true;
+        }
+
+
+        #endregion
+
+        #region Power Progression
+
+        public override int GetLatestPowerProgressionVersion()
+        {
+            if (AvatarPrototype == null) return 0;
+            return AvatarPrototype.PowerProgressionVersion;
+        }
+
+        public override bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            return false;
+        }
+
+        public override bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo powerInfo)
+        {
+            powerInfo = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
+
+            PrototypeId progressionInfoPower = powerProtoRef;
+            PrototypeId mappedPowerRef;
+
+            // Check if this is a mapped power
+            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(powerProtoRef);
+            if (originalPowerRef != PrototypeId.Invalid)
+            {
+                mappedPowerRef = powerProtoRef;
+                progressionInfoPower = originalPowerRef;
+            }
+            else
+            {
+                mappedPowerRef = GetMappedPowerFromOriginalPower(powerProtoRef);
+            }
+
+            PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
+
+            // Initialize info
+            // Case 1 - Progression Power
+            PowerProgressionEntryPrototype powerProgressionEntry = powerOwnerTable.GetPowerProgressionEntry(avatarProto.DataRef, progressionInfoPower);
+            if (powerProgressionEntry != null)
+            {
+                PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
+                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
+
+                powerInfo.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
+                return powerInfo.IsValid;
+            }
+
+            // Case 2 - Talent
+            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
+            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
+            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
+            {
+                powerInfo.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
+                return powerInfo.IsValid;
+            }
+
+            // Case 3 - Non-Progression Power
+            powerInfo.InitNonProgressionPower(powerProtoRef);
+            return powerInfo.IsValid;
+        }
+
+        public override bool GetPowerProgressionInfos(List<PowerProgressionInfo> powerInfoList)
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "GetPowerProgressionInfos(): avatarProto == null");
+
+            if (avatarProto.PowerProgressionTables.HasValue())
+            {
+                foreach (PowerProgressionTablePrototype powerProgTableProto in avatarProto.PowerProgressionTables)
+                {
+                    if (powerProgTableProto.PowerProgressionEntries.IsNullOrEmpty())
+                        continue;
+
+                    foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgTableProto.PowerProgressionEntries)
+                    {
+                        AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
+                        if (abilityAssignmentProto == null)
+                        {
+                            Logger.Warn("GetPowerProgressionInfos(): abilityAssignmentProto == null");
+                            continue;
+                        }
+
+                        PrototypeId mappedPowerRef = GetMappedPowerFromOriginalPower(abilityAssignmentProto.Ability);
+
+                        PowerProgressionInfo powerInfo = new();
+                        powerInfo.InitForAvatar(powerProgEntry, mappedPowerRef, powerProgTableProto.PowerProgTableTabRef);
+                        powerInfoList.Add(powerInfo);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
         #region Talents (Specialization Powers)
 
         public bool IsTalentPowerEnabledForSpec(PrototypeId talentPowerProtoRef, int specIndex)
         {
             return Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerProtoRef];
+        }
+
+        #endregion
+
+        #region Mapped Powers
+
+        public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                if ((PrototypeId)kvp.Value != mappedPowerRef) continue;
+                Property.FromParam(kvp.Key, 0, out PrototypeId originalPower);
+                return originalPower;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
+            {
+                PrototypeId mappedPowerRef = kvp.Value;
+
+                if (mappedPowerRef == PrototypeId.Invalid)
+                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
+
+                return mappedPowerRef;
+            }
+
+            return PrototypeId.Invalid;
         }
 
         #endregion
@@ -2066,7 +2084,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-        #region Progression
+        #region Leveling
 
         public override void InitializeLevel(int newLevel)
         {
@@ -3900,11 +3918,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         }
 
         #endregion
-
-        public override string ToString()
-        {
-            return $"{base.ToString()}, Player={_playerName?.Get()} (0x{_ownerPlayerDbId:X})";
-        }
 
         protected override void BuildString(StringBuilder sb)
         {
