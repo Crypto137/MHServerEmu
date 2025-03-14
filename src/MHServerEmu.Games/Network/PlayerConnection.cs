@@ -468,6 +468,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageRequestRemoveAndKillControlledAgent:   OnRequestRemoveAndKillControlledAgent(message); break;   // 58
                 case ClientToGameServerMessage.NetMessageDamageMeter:                       OnDamageMeter(message); break;                      // 59
                 case ClientToGameServerMessage.NetMessageMetaGameUpdateNotification:        OnMetaGameUpdateNotification(message); break;       // 63
+                case ClientToGameServerMessage.NetMessagePurchaseUnlock:                    OnPurchaseUnlock(message); break;                   // 72
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
                 case ClientToGameServerMessage.NetMessageNotifyLoadingScreenFinished:       OnNotifyLoadingScreenFinished(message); break;      // 86
@@ -526,7 +527,6 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGetCurrencyBalance:                                                                    // 69
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                                                                    // 70
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
-                case ClientToGameServerMessage.NetMessagePurchaseUnlock:                                                                        // 72
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
                     ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Billing);
                     break;
@@ -1201,6 +1201,20 @@ namespace MHServerEmu.Games.Network
             if (metaGameUpdate == null) return Logger.WarnReturn(false, $"OnMetaGameUpdateNotification(): Failed to retrieve message");
             var metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameUpdate.MetaGameEntityId);
             metaGame?.UpdatePlayerNotification(Player);
+            return true;
+        }
+
+        private bool OnPurchaseUnlock(MailboxMessage message)   // 72
+        {
+            var purchaseUnlock = message.As<NetMessagePurchaseUnlock>();
+            if (purchaseUnlock == null) return Logger.WarnReturn(false, $"OnPurchaseUnlock(): Failed to retrieve message");
+
+            PurchaseUnlockResult result = Player.PurchaseUnlock((PrototypeId)purchaseUnlock.AgentPrototypeId);
+
+            SendMessage(NetMessagePurchaseUnlockResponse.CreateBuilder()
+                .SetPurchaseUnlockResult((uint)result)
+                .Build());
+
             return true;
         }
 

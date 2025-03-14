@@ -54,10 +54,20 @@ namespace MHServerEmu.Games.Entities
         OpFailure,
     }
 
+    public enum PurchaseUnlockResult
+    {
+        Success,
+        AlreadyUnlocked,
+        CannotAfford,
+        UnknownFailure
+    }
+
     public partial class Player
     {
         private const int VendorMinLevel = 1;
         private const int VendorInvalidXP = -1;
+
+        private static readonly Item DummyItem = new(null);     // Dummy item instance to calculate character unlock ES costs
 
         private readonly HashSet<PrototypeId> _initializedVendorTypeProtoRefs = new();
         private readonly Dictionary<PrototypeId, VendorPurchaseData> _vendorPurchaseDataDict = new();   // InventoryPrototype key
@@ -337,6 +347,94 @@ namespace MHServerEmu.Games.Entities
         {
             // Assume all recipes are learned for now
             return true;
+        }
+
+        public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
+        {
+            AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "CanPurchaseUnlock(): agentProto == null");
+
+            if (agentProto is not AvatarPrototype && agentProto is not AgentTeamUpPrototype)
+                return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "CanPurchaseUnlock(): agentProto is not AvatarPrototype && agentProto is not AgentTeamUpPrototype");
+
+            if (agentProto.IsLiveTuningEnabled() == false)
+                return PurchaseUnlockResult.UnknownFailure;
+
+            ItemCostPrototype itemCostProto = GetItemCostPrototypeToUnlockWithEternitySplinters(agentProtoRef);
+            if (itemCostProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "CanPurchaseUnlock(): itemCostProto == null");
+
+            if (agentProto is AvatarPrototype)
+            {
+                if (HasAvatarFullyUnlocked(agentProtoRef))
+                    return PurchaseUnlockResult.AlreadyUnlocked;
+            }
+            else
+            {
+                if (IsTeamUpAgentUnlocked(agentProtoRef))
+                    return PurchaseUnlockResult.AlreadyUnlocked;
+            }
+
+            if (itemCostProto.CanAffordItem(this, DummyItem) == false)
+                return PurchaseUnlockResult.CannotAfford;
+
+            return PurchaseUnlockResult.Success;
+        }
+
+        public ItemCostPrototype GetItemCostPrototypeToUnlockWithEternitySplinters(PrototypeId agentProtoRef)
+        {
+            foreach (PrototypeId tokenProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CharacterTokenPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                CharacterTokenPrototype tokenProto = tokenProtoRef.As<CharacterTokenPrototype>();
+                if (tokenProto == null)
+                {
+                    Logger.Warn("GetItemCostPrototypeToUnlockWithEternitySplinters(): tokenProto == null");
+                    continue;
+                }
+
+                if (tokenProto.Character != agentProtoRef)
+                    continue;
+
+                if (tokenProto.GrantsCharacterUnlock == false)
+                    continue;
+
+                ItemCostPrototype itemCostProto = tokenProto.Cost;
+                if (itemCostProto == null)
+                    continue;
+
+                if (itemCostProto.HasEternitySplintersComponent() == false)
+                    continue;
+
+                return itemCostProto;
+            }
+
+            return null;
+        }
+
+        public PurchaseUnlockResult PurchaseUnlock(PrototypeId agentProtoRef)
+        {
+            PurchaseUnlockResult result = CanPurchaseUnlock(agentProtoRef);
+            if (result != PurchaseUnlockResult.Success)
+                return result;
+
+            AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
+            if (agentProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): agentProto == null");
+
+            ItemCostPrototype itemCostProto = GetItemCostPrototypeToUnlockWithEternitySplinters(agentProtoRef);
+            if (itemCostProto == null) return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): itemCostProto == null");
+
+            if (agentProto is AvatarPrototype)
+            {
+                if (UnlockAvatar(agentProtoRef, true) == false)
+                    return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): UnlockAvatar(agentProtoRef, true) == false");
+            }
+            else
+            {
+                if (UnlockTeamUpAgent(agentProtoRef, true) == false)
+                    return Logger.WarnReturn(PurchaseUnlockResult.UnknownFailure, "PurchaseUnlock(): UnlockTeamUpAgent(agentProtoRef, true) == false");
+            }
+
+            itemCostProto.PayItemCost(this, DummyItem);
+            return PurchaseUnlockResult.Success;
         }
 
         private void InitializeVendors()
