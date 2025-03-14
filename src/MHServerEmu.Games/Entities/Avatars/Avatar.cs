@@ -756,9 +756,16 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
-            // TODO: IsPowerAllowedInCurrentTransformMode()
+            if (IsPowerAllowedInCurrentTransformMode(powerProto.DataRef) == false)
+                return PowerUseResult.NotAllowedByTransformMode;
 
             return base.CanTriggerPower(powerProto, power, flags);
+        }
+
+        public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
+        {
+            // TODO
+            return true;
         }
 
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
@@ -1215,6 +1222,44 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Fall back to base implementation if we didn't find any avatar-specific overrides 
             return base.ComputePowerRankBase(ref powerInfo, powerSpecIndexActive);
+        }
+
+        protected override bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
+        {
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+
+            if (powerProto.Activation == PowerActivationType.Passive && IsPowerAllowedInCurrentTransformMode(powerInfo.PowerRef) == false)
+                return false;
+
+            if (base.UpdatePowerRank(ref powerInfo, forceUnassign) == false)
+                return false;
+
+            // Update mapped power if needed
+            PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
+            if (mappedPowerRef != PrototypeId.Invalid)
+            {
+                // Check for recursion
+                if (mappedPowerRef == powerInfo.PowerRef)
+                    return Logger.WarnReturn(false, $"UpdatePowerRank(): Recursion detected for mapped power {mappedPowerRef.GetName()}");
+
+                PowerProgressionInfo mappedPowerInfo = new();
+                mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
+                UpdatePowerRank(ref mappedPowerInfo, forceUnassign);
+            }
+
+            // Fire scoring events
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UpdatePowerRank(): player == null");
+
+            int powerRank = GetPowerRank(powerProto.DataRef);
+
+            player.OnScoringEvent(new(ScoringEventType.PowerRank, powerProto, powerRank));
+
+            if (powerProto.IsUltimate)
+                player.OnScoringEvent(new(ScoringEventType.PowerRankUltimate, powerRank));
+
+            return true;
         }
 
         public override int GetLatestPowerProgressionVersion()
@@ -3450,7 +3495,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         }
 
         #endregion
-
 
         #region Event Handlers
 

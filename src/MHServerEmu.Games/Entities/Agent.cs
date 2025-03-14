@@ -431,6 +431,110 @@ namespace MHServerEmu.Games.Entities
             return maxRankAtCharLevelCurve.GetIntAt(level);
         }
 
+        protected virtual bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerRank(): this is not Avatar && IsTeamUpAgent == false");
+
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+
+            PrototypeId powerProtoRef = powerProto.DataRef;
+
+            if (powerInfo.IsTalent) return Logger.WarnReturn(false, "UpdatePowerRank(): powerInfo.IsTalent");
+
+            // Check if this is a team-up passive that applies to the owner avatar
+            Agent powerOwner = this;
+            bool computeRank = true;
+            
+            if (IsTeamUpAgent && powerProto.Activation == PowerActivationType.Passive)
+            {
+                // We may not have an owner yet early in the initialization process
+                Avatar teamUpOwner = TeamUpOwner;
+                if (teamUpOwner == null)
+                    return false;
+
+                // Make sure this team-up is selected
+                computeRank &= teamUpOwner.CurrentTeamUpAgent == this;
+
+                bool isPassivePowerOnAvatarWhileAway = powerInfo.IsPassivePowerOnAvatarWhileAway;
+                bool isPassivePowerOnAvatarWhileSummoned = powerInfo.IsPassivePowerOnAvatarWhileSummoned;
+
+                if (isPassivePowerOnAvatarWhileAway || isPassivePowerOnAvatarWhileSummoned)
+                {
+                    // Override power owner and check if team-up status (away or summoned) matches what the passive requires
+                    powerOwner = teamUpOwner;
+
+                    if (IsAliveInWorld && TestStatus(EntityStatus.ExitingWorld) == false)
+                        computeRank &= isPassivePowerOnAvatarWhileSummoned;
+                    else
+                        computeRank &= isPassivePowerOnAvatarWhileAway;
+                }
+;            }
+
+            if (powerOwner == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerOwner == null");
+
+            int rankBase = -1;
+            int rankCurrentBest = 0;
+
+            if (computeRank)
+                rankCurrentBest = ComputePowerRank(ref powerInfo, PowerSpecIndexActive, out rankBase);
+
+            // Do the actual rank update
+            int rankOldBest = GetPowerRank(powerProtoRef);
+            Properties[PropertyEnum.PowerRankBase, powerProtoRef] = rankBase;
+
+            // Unassign if needed
+            bool reassign = false;
+            if (forceUnassign)
+            {
+                bool unassigned = UnassignPower(powerProtoRef);
+                RefreshDependentPassivePowers(powerProto, 0);
+
+                if (unassigned && rankCurrentBest > 0)
+                    reassign = true;
+            }
+
+            // Turn off toggle powers if the new rank is 0
+            if (rankCurrentBest == 0)
+            {
+                Properties.RemoveProperty(new(PropertyEnum.PowerToggleOn, powerProtoRef));
+                Properties.RemoveProperty(new(PropertyEnum.PowerToggleInPrevRegion, powerProtoRef));
+            }
+
+            // Early exit if nothing more to do
+            if (reassign == false && rankCurrentBest == rankOldBest)
+                return false;
+
+            Properties[PropertyEnum.PowerRankCurrentBest, powerProtoRef] = rankCurrentBest;
+
+            Power power = GetPower(powerProtoRef);
+            if (rankCurrentBest > 0)
+            {
+                // We are gaining or refreshing a power
+                if (power != null)
+                {
+                    // We are refreshing an existing power
+                    power.Rank = rankCurrentBest;
+                    power.ScheduleIndexPropertiesReapplication(PowerIndexPropertyFlags.PowerRank);
+                }
+                else
+                {
+                    // We are gaining a new power
+                    PowerIndexProperties indexProps = new(rankCurrentBest, CharacterLevel, CombatLevel);
+                    AssignPower(powerProtoRef, indexProps);
+                }
+            }
+            else
+            {
+                // We are losing the power
+                if (power != null)
+                    UnassignPower(powerProtoRef);
+            }
+
+            RefreshDependentPassivePowers(powerProto, rankCurrentBest);
+            return true;
+        }
+
         public IsInPositionForPowerResult IsInPositionForPower(Power power, WorldEntity target, Vector3 targetPosition)
         {
             var targetingProto = power.TargetingStylePrototype;

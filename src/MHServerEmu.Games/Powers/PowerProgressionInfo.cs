@@ -37,6 +37,7 @@ namespace MHServerEmu.Games.Powers
         public readonly bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.IsTrait; }
         public readonly bool IsTalent { get => _talentEntryPrototype != null && _talentGroupPrototype != null; }
         public readonly bool IsPassivePowerOnAvatarWhileAway { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileAway; }
+        public readonly bool IsPassivePowerOnAvatarWhileSummoned { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileSummoned; }
 
         public PowerProgressionInfo() { }
 
