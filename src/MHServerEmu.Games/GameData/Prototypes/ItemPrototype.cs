@@ -834,6 +834,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return agentProto?.ApprovedForUse() == true;
         }
 
+        public override bool IsLiveTuningEnabled()
+        {
+            if (base.IsLiveTuningEnabled() == false)
+                return false;
+
+            return IsLiveTuningEnabled(Character);
+        }
+
         public bool HasUnlockedCharacter(Player player)
         {
             Prototype characterProto = Character.As<Prototype>();

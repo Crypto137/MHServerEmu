@@ -1578,6 +1578,25 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Power Ranks
 
+        public InteractionValidateResult CanUpgradeUltimate()
+        {
+            PrototypeId ultimateRef = UltimatePowerRef;
+            if (ultimateRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "CanUpgradeUltimate(): ultimateRef == ultimateRef == PrototypeId.Invalid");
+
+            GetPowerProgressionInfo(ultimateRef, out PowerProgressionInfo powerInfo);
+            int powerSpec = PowerSpecIndexActive;
+
+            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, powerSpec);
+            if (rankMax < 0)
+                return InteractionValidateResult.AvatarUltimateNotUnlocked;
+
+            int rankBase = ComputePowerRankBase(ref powerInfo, powerSpec);
+            if (rankBase >= rankMax)
+                return InteractionValidateResult.AvatarUltimateAlreadyMaxedOut;
+
+            return InteractionValidateResult.Success;
+        }
+
         protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
         {
             // Check avatar-specific overrides
@@ -2486,12 +2505,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return false;
-        }
-
-        public InteractionValidateResult CanUpgradeUltimate()
-        {
-            // TODO
-            return InteractionValidateResult.AvatarUltimateAlreadyMaxedOut;
         }
 
         #endregion
