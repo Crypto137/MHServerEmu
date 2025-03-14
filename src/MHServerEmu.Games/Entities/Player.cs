@@ -257,6 +257,17 @@ namespace MHServerEmu.Games.Entities
                 UnlockAvatar(avatarRef, false);
             }
 
+            // HACK: And team-ups as well
+            if (Game.GameOptions.TeamUpSystemEnabled)
+            {
+                Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+                if (teamUpLibrary.Count == 0)
+                {
+                    foreach (PrototypeId teamUpRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                        UnlockTeamUpAgent(teamUpRef, false);
+                }
+            }
+
             _newPlayerUISystemsUnlocked = true;
         }
 
@@ -1151,34 +1162,39 @@ namespace MHServerEmu.Games.Entities
             return GetTeamUpAgent(teamUpRef) != null;
         }
 
-        public void UnlockTeamUpAgent(PrototypeId teamUpRef)
+        public bool UnlockTeamUpAgent(PrototypeId teamUpRef, bool sendToClient = true)
         {
-            if (IsTeamUpAgentUnlocked(teamUpRef)) return;
+            if (Game.GameOptions.TeamUpSystemEnabled == false)
+                return false;
 
-            var manager = Game?.EntityManager;
-            if (manager == null) return;
+            if (IsTeamUpAgentUnlocked(teamUpRef))
+                return Logger.WarnReturn(false, $"UnlockTeamUpAgent(): Player [{this}] is trying to unlock team-up {teamUpRef.GetName()} that is already unlocked");
 
-            var teamUpProto = GameDatabase.GetPrototype<AgentTeamUpPrototype>(teamUpRef);
-            if (teamUpProto == null) return;
+            AgentTeamUpPrototype teamUpProto = GameDatabase.GetPrototype<AgentTeamUpPrototype>(teamUpRef);
+            if (teamUpProto == null) return Logger.WarnReturn(false, "UnlockTeamUpAgent(): teamUpProto == null");
 
-            var inventory = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-            if (inventory == null) return;
+            Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (teamUpLibrary == null) return Logger.WarnReturn(false, "UnlockTeamUpAgent(): teamUpLibrary == null");
 
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
-            settings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+            settings.InventoryLocation = new(Id, teamUpLibrary.PrototypeDataRef);
             settings.EntityRef = teamUpRef;
 
-            var teamUp = manager.CreateEntity(settings) as Agent;
-            if (teamUp == null) return;
+            Agent teamUp = Game.EntityManager.CreateEntity(settings) as Agent;
+            if (teamUp == null)
+                return Logger.WarnReturn(false, $"UnlockTeamUpAgent(): Failed to create team-up agent entity {teamUpRef.GetName()} for player [{this}]");
 
+            teamUp.InitializeLevel(1);
             teamUp.CombatLevel = 1;
-            // TODO ExperiencePoints
 
             teamUp.Properties[PropertyEnum.PowerProgressionVersion] = teamUp.GetLatestPowerProgressionVersion();
 
-            SendNewTeamUpAcquired(teamUpRef);
+            if (sendToClient)
+                SendNewTeamUpAcquired(teamUpRef);
 
             GetRegion()?.PlayerUnlockedTeamUpEvent.Invoke(new(this, teamUpRef));
+
+            return true;
         }
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)

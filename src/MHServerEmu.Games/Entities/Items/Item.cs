@@ -606,7 +606,25 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            // TODO: Special interactions (e.g. character tokens)
+            // Do special interactions for specific item types
+            switch (itemProto)
+            {
+                case CharacterTokenPrototype characterTokenProto:
+                    wasUsed |= DoCharacterTokenInteraction(characterTokenProto, player, avatar);
+                    break;
+
+                case InventoryStashTokenPrototype inventoryStashTokenProto:
+                    wasUsed |= DoInventoryStashTokenInteraction(inventoryStashTokenProto, player);
+                    break;
+
+                case EmoteTokenPrototype emoteTokenProto:
+                    wasUsed |= DoEmoteTokenInteraction(emoteTokenProto, player);
+                    break;
+
+                case CraftingRecipePrototype craftingRecipeProto:
+                    wasUsed |= DoCraftingRecipeInteraction(craftingRecipeProto, player);
+                    break;
+            }
 
             // Consume if this is a consumable item that was successfully used
             // NOTE: Power-based consumable items get consumed when their power is activated in OnUsePowerActivated().
@@ -614,6 +632,61 @@ namespace MHServerEmu.Games.Entities.Items
                 DecrementStack();
 
             return true;
+        }
+
+        private bool DoCharacterTokenInteraction(CharacterTokenPrototype characterTokenProto, Player player, Avatar avatar)
+        {
+            bool wasUsed = false;
+
+            PrototypeId characterProtoRef = characterTokenProto.Character;
+
+            EntityPrototype characterProto = characterTokenProto.Character.As<EntityPrototype>();
+            if (characterProto == null) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): characterProto == null");
+
+            if (characterProto is AvatarPrototype avatarProto)
+            {
+                if (characterTokenProto.GrantsCharacterUnlock && player.HasAvatarFullyUnlocked(characterProtoRef) == false)
+                {
+                    wasUsed = player.UnlockAvatar(characterProtoRef, true);
+                }
+
+                if (wasUsed == false && characterTokenProto.GrantsUltimateUpgrade)
+                {
+                    // Upgrade ultimate if the token wasn't used to unlock the avatar
+                    if (avatar.PrototypeDataRef != characterTokenProto.Character) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): avatar.PrototypeDataRef != characterTokenProto.Character");
+
+                    if (avatar.CanUpgradeUltimate() == InteractionValidateResult.Success)
+                    {
+                        avatar.Properties.AdjustProperty(1, PropertyEnum.AvatarPowerUltimatePoints);
+                        wasUsed = true;
+                    }
+                }
+            }
+            else if (characterProto is AgentTeamUpPrototype teamUpProto)
+            {
+                if (player.IsTeamUpAgentUnlocked(characterProtoRef) == false)
+                    wasUsed = player.UnlockTeamUpAgent(characterProtoRef);
+            }
+
+            return wasUsed;
+        }
+
+        private bool DoInventoryStashTokenInteraction(InventoryStashTokenPrototype inventoryStashTokenProto, Player player)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool DoEmoteTokenInteraction(EmoteTokenPrototype emoteTokenProto, Player player)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
+        {
+            // TODO
+            return false;
         }
 
         public bool OnUsePowerActivated()

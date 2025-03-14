@@ -816,6 +816,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
+        public bool GrantsCharacterUnlock { get => TokenType == CharacterTokenType.UnlockCharacterOnly || TokenType == CharacterTokenType.UnlockCharOrUpgradeUlt; }
+        [DoNotCopy]
+        public bool GrantsUltimateUpgrade { get => TokenType == CharacterTokenType.UpgradeUltimateOnly || TokenType == CharacterTokenType.UnlockCharOrUpgradeUlt; }
+
+        [DoNotCopy]
         public bool IsForAvatar { get => Character.As<AvatarPrototype>() != null; }
         [DoNotCopy]
         public bool IsForTeamUp { get => Character.As<AgentTeamUpPrototype>() != null; }
