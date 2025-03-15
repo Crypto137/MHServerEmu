@@ -1250,11 +1250,88 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private bool UpdatePowerGrant(PrototypeId boostParamProtoRef)
+        private bool UpdatePowerGrant(PrototypeId grantParamProtoRef)
         {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerGrant(): this is not Avatar && IsTeamUpAgent == false");
+
             // This probably shouldn't be happening in 1.52
-            Logger.Debug($"UpdatePowerGrant(): {boostParamProtoRef.GetName()} for [{this}]");
-           
+            Logger.Debug($"UpdatePowerGrant(): {grantParamProtoRef.GetName()} for [{this}]");
+
+            Prototype grantParamProto = grantParamProtoRef.As<Prototype>();
+
+            bool isGrantAll = grantParamProtoRef == PrototypeId.Invalid;
+            bool isGrantTab = grantParamProto is PowerProgTableTabRefPrototype;
+            bool isGrantKeyword = grantParamProto is KeywordPrototype;
+
+            if (isGrantAll == false && isGrantTab == false && isGrantKeyword == false)
+            {
+                // This is a grant of a specific power
+                GetPowerProgressionInfo(grantParamProtoRef, out PowerProgressionInfo powerInfo);
+
+                DoPowerGrantUpdate(ref powerInfo);
+                return true;
+            }
+
+            // This is a grant of multiple powers
+            List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
+            GetPowerProgressionInfos(powerInfoList);
+
+            for (int i = 0; i < powerInfoList.Count; i++)
+            {
+                PowerProgressionInfo powerInfo = powerInfoList[i];
+
+                PowerPrototype powerProto = powerInfo.PowerPrototype;
+                if (powerProto == null)
+                {
+                    Logger.Warn("UpdatePowerGrant(): powerProto == null");
+                    continue;
+                }
+
+                // Skip powers that cannot be grants
+                if (powerInfo.IsUltimatePower)
+                    continue;
+
+                if (powerProto.IsTravelPower)
+                    continue;
+
+                if (powerInfo.AntirequisitePowerRefs.HasValue())
+                    continue;
+
+                // Check tab
+                if (isGrantTab && powerInfo.PowerTabRef != grantParamProtoRef)
+                    continue;
+
+                // Check keywords
+                if (isGrantKeyword && HasPowerWithKeyword(powerProto, grantParamProtoRef) == false)
+                    continue;
+
+                // All checks are okay, do the update
+                DoPowerGrantUpdate(ref powerInfo);
+            }
+
+            ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
+            return true;
+        }
+
+        private bool DoPowerGrantUpdate(ref PowerProgressionInfo powerInfo)
+        {
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "DoPowerGrantUpdate(): powerProto == null");
+
+            int rankBefore = GetPowerRank(powerInfo.PowerRef);
+            
+            if (UpdatePowerRank(ref powerInfo, false) == false)
+                return false;
+
+            // Show HUD tutorial for power-granting items if needed
+            if (rankBefore <= 0 && powerProto.Activation != PowerActivationType.Passive)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "DoPowerGrantUpdate(): player == null");
+
+                player.ShowHUDTutorial(GameDatabase.UIGlobalsPrototype.PowerGrantItemTutorialTip.As<HUDTutorialPrototype>());
+            }
+
             return true;
         }
 
