@@ -47,5 +47,12 @@
         "Path": "Objectives[0].Name",
         "Description": "Fix long name for MGForgottenPyre",
         "Value": "6053780125440214290"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Regions/EndGame/TierX/PatrolMidtown/ConnectionTargets/ConnectionNodes/XManhattanToHellsKitchenNode.prototype",
+        "Path": "Target",
+        "Description": "Fix Cosmic Midtown elevator",
+        "Value": "17615247274427293857"
     }
 ]
