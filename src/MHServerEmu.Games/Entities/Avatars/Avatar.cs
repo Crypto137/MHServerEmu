@@ -1028,6 +1028,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public override TimeSpan GetPowerInterruptCooldown(PowerPrototype powerProto)
+        {
+            // Not interrupt cooldowns for avatars
+            return TimeSpan.Zero;
+        }
+
         public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
         {
             AbilityKeyMapping keyMapping = CurrentAbilityKeyMapping;
