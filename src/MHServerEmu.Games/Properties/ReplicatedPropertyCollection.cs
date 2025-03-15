@@ -30,7 +30,13 @@ namespace MHServerEmu.Games.Properties
             if (messageDispatcher == null) return Logger.WarnReturn(false, "Bind(): messageDispatcher == null");
 
             if (IsBound)
+            {
+                // If already bound to the dispatcher we need, all good
+                if (_messageDispatcher == messageDispatcher)
+                    return true;
+
                 return Logger.WarnReturn(false, $"Bind(): Already bound with replicationId {_replicationId} to {_messageDispatcher}");
+            }
 
             _messageDispatcher = messageDispatcher;
             _interestPolicies = interestPolicies;
