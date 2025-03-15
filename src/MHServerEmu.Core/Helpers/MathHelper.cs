@@ -75,12 +75,13 @@
 
         public static ulong SwizzleSignBit(long value)
         {
-            return (ulong)((value << 1) | (value >> 63));
+            ulong bits = (ulong)value;
+            return (bits << 1) | (bits >> 63);
         }
 
-        public static long UnswizzleSignBit(ulong value)
+        public static long UnswizzleSignBit(ulong bits)
         {
-            return (long)((value >> 1) | (value << 63));
+            return (long)((bits >> 1) | (bits << 63));
         }
 
         public static float Round(float value)
