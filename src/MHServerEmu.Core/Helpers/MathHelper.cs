@@ -73,6 +73,17 @@
             return value & ~(value - 1);
         }
 
+        public static ulong SwizzleSignBit(long value)
+        {
+            ulong bits = (ulong)value;
+            return (bits << 1) | (bits >> 63);
+        }
+
+        public static long UnswizzleSignBit(ulong bits)
+        {
+            return (long)((bits >> 1) | (bits << 63));
+        }
+
         public static float Round(float value)
         {
             if (value < 0.0f)

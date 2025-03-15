@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Dialog;
@@ -482,6 +483,58 @@ namespace MHServerEmu.Games.Entities
             }
 
             return base.GetAbilityCooldownTimeRemaining(powerProto);
+        }
+
+        public override TimeSpan GetPowerInterruptCooldown(PowerPrototype powerProto)
+        {
+            TimeSpan interruptCooldownMax = TimeSpan.Zero;
+
+            // Check interrupt cooldowns for triggered powers
+            if (powerProto.ActionsTriggeredOnPowerEvent.HasValue())
+            {
+                foreach (PowerEventActionPrototype triggeredPowerEvent in powerProto.ActionsTriggeredOnPowerEvent)
+                {
+                    if (triggeredPowerEvent.EventAction != PowerEventActionType.UsePower)
+                        continue;
+
+                    switch (triggeredPowerEvent.PowerEvent)
+                    {
+                        case PowerEventType.OnContactTime:
+                        case PowerEventType.OnPowerApply:
+                        case PowerEventType.OnPowerEnd:
+                        case PowerEventType.OnPowerStart:
+                            if (triggeredPowerEvent.Power == powerProto.DataRef)
+                            {
+                                Logger.Warn($"GetPowerInterruptCooldown(): Infinite power loop detected in {powerProto}!");
+                                continue;
+                            }
+
+                            PowerPrototype triggeredPowerProto = triggeredPowerEvent.Power.As<PowerPrototype>();
+                            if (triggeredPowerProto == null)
+                            {
+                                Logger.Warn("GetPowerInterruptCooldown(): triggeredPowerProto == null");
+                                continue;
+                            }
+
+                            interruptCooldownMax = Clock.Max(interruptCooldownMax, GetPowerInterruptCooldown(triggeredPowerProto));
+                            break;
+                    }
+                }
+            }
+
+            // Check interrupt cooldown for the power itself
+            Power power = GetPower(powerProto.DataRef);
+            if (power != null && power.WasLastActivateInterrupted)
+            {
+                AgentPrototype agentProto = AgentPrototype;
+                if (agentProto == null) return Logger.WarnReturn(TimeSpan.Zero, "GetPowerInterruptCooldown(): agentProto == null");
+
+                BehaviorProfilePrototype behaviorProfile = agentProto.BehaviorProfile;
+                if (behaviorProfile != null)
+                    interruptCooldownMax = Clock.Max(interruptCooldownMax, TimeSpan.FromMilliseconds(behaviorProfile.InterruptCooldownMS));
+            }
+
+            return interruptCooldownMax;
         }
 
         public bool StartThrowing(ulong entityId)
