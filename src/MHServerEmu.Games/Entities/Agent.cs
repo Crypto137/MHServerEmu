@@ -1173,6 +1173,91 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        private bool UpdatePowerBoost(PrototypeId boostParamProtoRef)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerBoost(): this is not Avatar && IsTeamUpAgent == false");
+
+            // This probably shouldn't be happening in 1.52
+            Logger.Debug($"UpdatePowerBoost(): {boostParamProtoRef.GetName()} for [{this}]");
+
+            Prototype boostParamProto = boostParamProtoRef.As<Prototype>();
+
+            bool isBoostToAll = boostParamProtoRef == PrototypeId.Invalid;
+            bool isBoostToTab = boostParamProto is PowerProgTableTabRefPrototype;
+            bool isBoostToKeyword = boostParamProto is KeywordPrototype;
+
+            if (isBoostToAll == false && isBoostToTab == false && isBoostToKeyword == false)
+            {
+                // This is a boost to a specific power
+                GetPowerProgressionInfo(boostParamProtoRef, out PowerProgressionInfo powerInfo);
+
+                // Non-power progression powers and talents are not affected by boosts
+                if (powerInfo.IsInPowerProgression && powerInfo.IsTalent == false)
+                    UpdatePowerRank(ref powerInfo, false);
+
+                return true;
+            }
+
+            // This is a boost to multiple powers
+            List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
+            GetPowerProgressionInfos(powerInfoList);
+
+            for (int i = 0; i < powerInfoList.Count; i++)
+            {
+                PowerProgressionInfo powerInfo = powerInfoList[i];
+
+                PowerPrototype powerProto = powerInfo.PowerPrototype;
+                if (powerProto == null)
+                {
+                    Logger.Warn("UpdatePowerBoost(): powerProto == null");
+                    continue;
+                }
+
+                // Ultimates are not affected by boosts to all/tab
+                if (powerInfo.IsUltimatePower && (isBoostToAll || isBoostToTab))
+                    continue;
+
+                // Check tab
+                if (isBoostToTab && powerInfo.PowerTabRef != boostParamProtoRef)
+                    continue;
+
+                // Check keywords
+                if (isBoostToKeyword)
+                {
+                    PowerPrototype keywordSourceProto = powerProto;
+
+                    // Check for mapped power overrides
+                    PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
+                    if (mappedPowerRef != PrototypeId.Invalid)
+                    {
+                        keywordSourceProto = mappedPowerRef.As<PowerPrototype>();
+                        if (keywordSourceProto == null)
+                        {
+                            Logger.Warn("UpdatePowerBoost(): keywordSourceProto == null");
+                            continue;
+                        }
+                    }
+
+                    if (HasPowerWithKeyword(keywordSourceProto, boostParamProtoRef) == false)
+                        continue;
+                }
+
+                // All checks are okay, do the update
+                UpdatePowerRank(ref powerInfo, false);
+            }
+
+            ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
+            return true;
+        }
+
+        private bool UpdatePowerGrant(PrototypeId boostParamProtoRef)
+        {
+            // This probably shouldn't be happening in 1.52
+            Logger.Debug($"UpdatePowerGrant(): {boostParamProtoRef.GetName()} for [{this}]");
+           
+            return true;
+        }
+
         #endregion
 
         #region Power Progression
@@ -1831,6 +1916,16 @@ namespace MHServerEmu.Games.Entities
                     RegisterForPendingPhysicsResolve();
                     if (!IsVisibleWhenDormant) Properties[PropertyEnum.Visible] = !dormant;
 
+                    break;
+
+                case PropertyEnum.PowerBoost:
+                    Property.FromParam(id, 0, out PrototypeId powerBoostProtoRef);
+                    UpdatePowerBoost(powerBoostProtoRef);
+                    break;
+
+                case PropertyEnum.PowerGrantRank:
+                    Property.FromParam(id, 0, out PrototypeId powerGrantProtoRef);
+                    UpdatePowerGrant(powerGrantProtoRef);
                     break;
             }
 
