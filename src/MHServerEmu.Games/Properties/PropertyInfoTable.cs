@@ -36,7 +36,10 @@ namespace MHServerEmu.Games.Properties
             ("Weekday",                         typeof(Weekday)),
             ("AffixPositionType",               typeof(AffixPosition)),
             ("ManaType",                        typeof(ManaType)),
-            ("Ranks",                           typeof(Rank))
+            ("Ranks",                           typeof(Rank)),
+
+            // Extra bindings not present in the client here, but scattered across various asset enum lookup instances
+            ("RegionBehavior",                  typeof(RegionBehavior)),
         };
 
         private readonly List<PropertyInfo> _propertyInfoList = new(ExpectedNumberOfProperties);
