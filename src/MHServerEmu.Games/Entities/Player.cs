@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
-        private readonly EventPointer<PlayedTimeEvent> _playedTimeEvent = new();
+        private readonly EventPointer<CheckHoursPlayedEvent> _checkHoursPlayedEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
@@ -457,7 +457,7 @@ namespace MHServerEmu.Games.Entities
             base.EnterGame(settings);
 
             InitializeVendors();
-            SchedulePlayedTimeEvent();
+            ScheduleCheckHoursPlayedEvent();
             UpdateUISystemLocks();
         }
 
@@ -2345,39 +2345,44 @@ namespace MHServerEmu.Games.Entities
             return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());
         }
 
-        public TimeSpan TimePlayed()
+        public TimeSpan GetTimePlayed()
         {
             TimeSpan timePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
 
-            var avatar = CurrentAvatar;
+            Avatar avatar = CurrentAvatar;
             if (avatar != null)
-                timePlayed += avatar.TimePlayed() - avatar.Properties[PropertyEnum.AvatarTotalTimePlayed];
+                timePlayed += avatar.GetTimePlayed() - avatar.Properties[PropertyEnum.AvatarTotalTimePlayed];
 
             return timePlayed;
         }
 
-        private void PlayedTimeUpdate()
+        public void UpdateTimePlayed()
         {
-            int count = (int)Math.Floor(TimePlayed().TotalHours);
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = GetTimePlayed();
+        }
+
+        private void CheckHoursPlayed()
+        {
+            int count = (int)Math.Floor(GetTimePlayed().TotalHours);
             OnScoringEvent(new(ScoringEventType.HoursPlayed, count));
 
-            var avatar = CurrentAvatar;
+            Avatar avatar = CurrentAvatar;
             if (avatar != null)
             {
-                count = (int)Math.Floor(avatar.TimePlayed().TotalHours);
+                count = (int)Math.Floor(avatar.GetTimePlayed().TotalHours);
                 OnScoringEvent(new(ScoringEventType.HoursPlayedByAvatar, avatar.Prototype, count));
             }
 
-            SchedulePlayedTimeEvent();
+            ScheduleCheckHoursPlayedEvent();
         }
 
-        private void SchedulePlayedTimeEvent()
+        private void ScheduleCheckHoursPlayedEvent()
         {
-            if (_playedTimeEvent.IsValid) return;
+            if (_checkHoursPlayedEvent.IsValid) return;
             var scheduler = Game?.GameEventScheduler;
             if (scheduler == null) return;
-            scheduler.ScheduleEvent(_playedTimeEvent, TimeSpan.FromMinutes(1), _pendingEvents);
-            _playedTimeEvent.Get().Initialize(this);
+            scheduler.ScheduleEvent(_checkHoursPlayedEvent, TimeSpan.FromMinutes(1), _pendingEvents);
+            _checkHoursPlayedEvent.Get().Initialize(this);
         }
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
@@ -2554,9 +2559,9 @@ namespace MHServerEmu.Games.Entities
             protected override CallbackDelegate GetCallback() => (t) => (t as Player).SwitchAvatar();
         }
 
-        private class PlayedTimeEvent : CallMethodEvent<Player>
+        private class CheckHoursPlayedEvent : CallMethodEvent<Player>
         {
-            protected override CallbackDelegate GetCallback() => (player) => player.PlayedTimeUpdate();
+            protected override CallbackDelegate GetCallback() => (player) => player.CheckHoursPlayed();
         }
 
         private struct TeleportData

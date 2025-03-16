@@ -6,6 +6,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
@@ -121,16 +122,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
-        }
-
-        public override void OnPostInit(EntitySettings settings)
-        {
-            base.OnPostInit(settings);
-
-            // TODO: Clean this up
-            // AvatarLastActiveTime is needed for missions to show up in the tracker
-            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
-            Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
         }
 
         public override bool ApplyInitialReplicationState(ref EntitySettings settings)
@@ -3982,6 +3973,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             else
                 InitializeOmegaBonuses();
 
+            // Last active time is checked in onEnteredWorldSetTransformMode() and ObjectiveTracker::doTrackerUpdate()
+            Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
+
             ApplyLiveTuneServerConditions();
 
             RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
@@ -4084,12 +4078,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             CancelEnduranceEvents();
 
-            if (player != null) player.Properties[PropertyEnum.AvatarTotalTimePlayed] = player.TimePlayed();
-            Properties[PropertyEnum.AvatarTotalTimePlayed] = TimePlayed();
-            Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
-
             // Pause boosts while not in the world
             UpdateBoostConditionPauseState(true);
+
+            RemoveLiveTuneServerConditions();
+
+            UpdateTimePlayed(player);
 
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
@@ -4098,29 +4092,42 @@ namespace MHServerEmu.Games.Entities.Avatars
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler.CancelEvent(_refreshStatsPowerEvent);
 
-            // Remove LiveTuneServerConditions
-            RemoveLiveTuneServerConditions();
-
-            // summoner condition
+            // Remove summoner conditions
             foreach (var summon in new SummonedEntityIterator(this))
                 summon.RemoveSummonerCondition(Id);
-        }
-
-        public TimeSpan TimePlayed()
-        {
-            TimeSpan timePlayed = TimeSpan.Zero;
-            TimeSpan totalTimePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
-            TimeSpan startTime = Properties[PropertyEnum.AvatarTimePlayedStart];
-
-            if (startTime != TimeSpan.Zero)
-                timePlayed = Game.CurrentTime - startTime;
-
-            return totalTimePlayed + timePlayed;
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
         {
             base.OnLocomotionStateChanged(oldState, newState);
+        }
+
+        #endregion
+
+        #region Time
+
+        public TimeSpan GetTimePlayed()
+        {
+            TimeSpan savedTimePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
+
+            TimeSpan currentTimePlayed = TimeSpan.Zero;
+            TimeSpan startTime = Properties[PropertyEnum.AvatarTimePlayedStart];
+            if (startTime != TimeSpan.Zero)
+                currentTimePlayed = Game.CurrentTime - startTime;
+
+            return savedTimePlayed + currentTimePlayed;
+        }
+
+        private void UpdateTimePlayed(Player player)
+        {
+            player?.UpdateTimePlayed();
+
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = GetTimePlayed();
+            Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
+
+            // AvatarLastActiveCalendarTime is used by the client to choose the voice line to play when the client logs in
+            Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
+            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = (long)Clock.UnixTime.TotalMilliseconds;
         }
 
         #endregion
