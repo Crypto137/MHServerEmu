@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public PrototypeId GetAbilityInAbilitySlot(AbilitySlot abilitySlot)
         {
-            if (IsActiveAbilitySlot(abilitySlot) == false)
+            if (Avatar.IsActiveAbilitySlot(abilitySlot) == false)
                 return Logger.WarnReturn(PrototypeId.Invalid, $"GetAbilityInAbilitySlot(): Invalid ability slot {abilitySlot}");
 
             switch (abilitySlot)
@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case AbilitySlot.DedicatedUltimateSlot: return PrototypeId.Invalid;     // TODO (if we need this)
             }
 
-            if (IsActionKeyAbilitySlot(abilitySlot) == false)
+            if (Avatar.IsActionKeyAbilitySlot(abilitySlot) == false)
                 return Logger.WarnReturn(PrototypeId.Invalid, $"GetAbilityInAbilitySlot(): Unhandled ability slot {abilitySlot}");
 
             // Action keys
@@ -143,7 +143,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// </summary>
         public bool SetAbilityInAbilitySlot(PrototypeId abilityPrototypeId, AbilitySlot abilitySlot)
         {
-            if (IsActiveAbilitySlot(abilitySlot) == false)
+            if (Avatar.IsActiveAbilitySlot(abilitySlot) == false)
                 return Logger.WarnReturn(false, $"SetAbilityInAbilitySlot(): Invalid ability slot {abilitySlot}");
 
             switch (abilitySlot)
@@ -166,7 +166,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     break;
 
                 default:    // action key slots
-                    if (IsActionKeyAbilitySlot(abilitySlot) == false)
+                    if (Avatar.IsActionKeyAbilitySlot(abilitySlot) == false)
                         return Logger.WarnReturn(false, $"SetAbilityInAbilitySlot(): Unhandled ability slot {abilitySlot}");
 
                     int index = ConvertSlotToArrayIndex(abilitySlot);
@@ -240,32 +240,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntryList);
             return hotkeyDataList.Count > 0;
-        }
-
-        // In the client these ability slot checks are in Avatar, but they make more sense here
-
-        /// <summary>
-        /// Checks if an <see cref="AbilitySlot"/> is valid.
-        /// </summary>
-        private static bool IsActiveAbilitySlot(AbilitySlot slot)
-        {
-            return slot > AbilitySlot.Invalid && slot < AbilitySlot.NumSlotsTotal;
-        }
-
-        /// <summary>
-        /// Checks if an <see cref="AbilitySlot"/> is an action key slot (non-mouse bindable slot).
-        /// </summary>
-        private static bool IsActionKeyAbilitySlot(AbilitySlot slot)
-        {
-            return slot >= AbilitySlot.ActionKey0 && slot <= AbilitySlot.ActionKey5;
-        }
-
-        /// <summary>
-        /// Checks if an <see cref="AbilitySlot"/> is a dedicated ability slot (ultimate, travel, etc.).
-        /// </summary>
-        private static bool IsDedicatedAbilitySlot(AbilitySlot slot)
-        {
-            return slot > AbilitySlot.NumActions && slot < AbilitySlot.NumSlotsTotal;
         }
 
         /// <summary>

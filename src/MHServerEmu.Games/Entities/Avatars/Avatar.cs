@@ -1916,37 +1916,127 @@ namespace MHServerEmu.Games.Entities.Avatars
             return false;
         }
 
-        public void SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
+        public bool SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
         {
-            // TODO: Refactor this
+            if (IsAbilityEquippableInSlot(abilityProtoRef, slot, skipEquipValidation) != AbilitySlotOpValidateResult.Success)
+                return false;
 
-            AbilityKeyMapping abilityKeyMapping = _currentAbilityKeyMapping;
+            AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
+            if (keyMapping == null) return Logger.WarnReturn(false, "SlotAbility(): keyMapping == null");
+
+            bool wasEquipped = HasPowerEquipped(abilityProtoRef);
+
+            // Unslot the currently slotted ability if it's something else to trigger unequip
+            PrototypeId slottedAbilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
+            if (slottedAbilityProtoRef != PrototypeId.Invalid && slottedAbilityProtoRef != abilityProtoRef)
+            {
+                if (UnslotAbility(slot, false) == false)
+                    Logger.Warn($"SlotAbility(): Failed to unslot ability {abilityProtoRef.GetName()} in slot {slot}");
+            }
 
             // Set
-            abilityKeyMapping.SetAbilityInAbilitySlot(abilityProtoRef, slot);
+            keyMapping.SetAbilityInAbilitySlot(abilityProtoRef, slot);
+
+            // Trigger equip
+            if (wasEquipped == false)
+            {
+                Power power = GetPower(abilityProtoRef);
+                power?.OnEquipped();
+            }
+
+            // Notify the client if needed
+            if (sendToClient)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "SlotAbility(): player == null");
+
+                if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                {
+                    player.SendMessage(NetMessageAbilitySlotToAbilityBarFromServer.CreateBuilder()
+                        .SetAvatarId(Id)
+                        .SetPrototypeRefId((ulong)abilityProtoRef)
+                        .SetSlotNumber((uint)slot)
+                        .Build());
+                }
+            }
+
+            return true;
         }
 
-        public void UnslotAbility(AbilitySlot slot, bool sendToClient)
+        public bool UnslotAbility(AbilitySlot slot, bool sendToClient)
         {
-            // TODO: Refactor this
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(false, "UnslotAbility(): AbilityKeyMapping.IsActiveAbilitySlot(slot) == false");
 
-            AbilityKeyMapping abilityKeyMapping = _currentAbilityKeyMapping;
+            AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
+            if (keyMapping == null) return Logger.WarnReturn(false, "UnslotAbility(): keyMapping == null");
+
+            PrototypeId abilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
+            if (abilityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnslotAbility(): abilityProtoRef == PrototypeId.Invalid");
 
             // Remove by assigning invalid id
-            abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
+            keyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
+
+            // Trigger unequip
+            if (HasPowerEquipped(abilityProtoRef) == false)
+            {
+                Power power = GetPower(abilityProtoRef);
+                power?.OnUnequipped();
+            }
+
+            // Notify the client if needed
+            if (sendToClient)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "UnslotAbility(): player == null");
+
+                if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                {
+                    player.SendMessage(NetMessageAbilityUnslotFromAbilityBarFromServer.CreateBuilder()
+                        .SetAvatarId(Id)
+                        .SetSlotNumber((uint)slot)
+                        .Build());
+                }
+            }
+
+            return true;
         }
 
-        public void SwapAbilities(AbilitySlot slotA, AbilitySlot slotB, bool sendToClient)
+        public bool SwapAbilities(AbilitySlot slotA, AbilitySlot slotB, bool sendToClient)
         {
-            // TODO: Refactor this
+            // Check A to B
+            if (ValidateAbilitySwap(slotA, slotB) != AbilitySlotOpValidateResult.Success)
+                return false;
 
-            AbilityKeyMapping abilityKeyMapping = _currentAbilityKeyMapping;
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return Logger.WarnReturn(false, "SwapAbilities(): keyMapping == null");
 
-            // Swap            
-            PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
-            PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
+            // Check B to A - this is allowed to be invalid, in which case we just discard B
+            if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Success)
+                UnslotAbility(slotB, false);
+
+            // Do the swap            
+            PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
+            PrototypeId abilityB = keyMapping.GetAbilityInAbilitySlot(slotB);
+            keyMapping.SetAbilityInAbilitySlot(abilityB, slotA);
+            keyMapping.SetAbilityInAbilitySlot(abilityA, slotB);
+
+            // Notify the client if needed
+            if (sendToClient)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "SwapAbilities(): player == null");
+
+                if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                {
+                    player.SendMessage(NetMessageAbilitySwapInAbilityBarFromServer.CreateBuilder()
+                        .SetAvatarId(Id)
+                        .SetSlotNumberA((uint)slotA)
+                        .SetSlotNumberB((uint)slotB)
+                        .Build());
+                }
+            }
+
+            return true;
         }
 
         public bool RefreshAbilityKeyMapping(bool sendToClient)
@@ -2043,6 +2133,47 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return keyMapping;
+        }
+
+        private AbilityKeyMapping GetAbilityKeyMappingIgnoreTransient(int powerSpecIndex)
+        {
+            return GetOrCreateAbilityKeyMapping(powerSpecIndex, PrototypeId.Invalid);
+        }
+
+        private AbilitySlotOpValidateResult IsAbilityEquippableInSlot(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation)
+        {
+            // TODO
+            return AbilitySlotOpValidateResult.Success;
+        }
+
+        private AbilitySlotOpValidateResult ValidateAbilitySwap(AbilitySlot slotFrom, AbilitySlot slotTo)
+        {
+            // TODO
+            return AbilitySlotOpValidateResult.Success;
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="AbilitySlot"/> is valid.
+        /// </summary>
+        public static bool IsActiveAbilitySlot(AbilitySlot slot)
+        {
+            return slot > AbilitySlot.Invalid && slot < AbilitySlot.NumSlotsTotal;
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="AbilitySlot"/> is an action key slot (non-mouse bindable slot).
+        /// </summary>
+        public static bool IsActionKeyAbilitySlot(AbilitySlot slot)
+        {
+            return slot >= AbilitySlot.ActionKey0 && slot <= AbilitySlot.ActionKey5;
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="AbilitySlot"/> is a dedicated ability slot (ultimate, travel, etc.).
+        /// </summary>
+        public static bool IsDedicatedAbilitySlot(AbilitySlot slot)
+        {
+            return slot > AbilitySlot.NumActions && slot < AbilitySlot.NumSlotsTotal;
         }
 
         #endregion
@@ -2526,9 +2657,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
                     if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
                     {
-                        // TODO: Avatar.SlotAbility()
                         foreach (HotkeyData hotkeyData in hotkeyDataList)
-                            keyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                            SlotAbility(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot, false, true);
                     }
 
                     ListPool<HotkeyData>.Instance.Return(hotkeyDataList);

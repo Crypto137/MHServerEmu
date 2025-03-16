@@ -43,6 +43,19 @@ namespace MHServerEmu.Games.Entities.Avatars
         NumRequestTypes
     }
 
+    public enum AbilitySlotOpValidateResult
+    {
+        Success,
+        PowerNotUsableByAvatar,
+        PowerNotActive,
+        PowerSlotMismatch,
+        PowerNotUnlocked,
+        Result5,
+        Result6,
+        AvatarIsInCombat,
+        Result8
+    }
+
     public enum CanSetInfinityRankResult
     {
         Success,
