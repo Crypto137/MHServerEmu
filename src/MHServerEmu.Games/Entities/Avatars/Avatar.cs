@@ -1871,14 +1871,49 @@ namespace MHServerEmu.Games.Entities.Avatars
             return result;
         }
 
-        public bool IsControlPowerSlotted()
+        public Power GetPowerInSlot(AbilitySlot slot)
+        {
+            // Merged with getPowerInSlot(), which is only needed for the client
+            if (slot < 0 || _currentAbilityKeyMapping == null)
+                return null;
+
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+
+            PrototypeId abilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
+            if (abilityProtoRef == PrototypeId.Invalid)
+                return null;
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            return abilityProto switch
+            {
+                PowerPrototype          => GetPower(abilityProtoRef),
+                ItemPrototype itemProto => GetPower(itemProto.GetOnUsePower()),
+                _ => null,
+            };
+        }
+
+        public bool HasPowerEquipped(PrototypeId powerProtoRef)
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null)
+                return Logger.WarnReturn(false, "HasPowerEquipped():");
+
+            return keyMapping.ContainsAbilityInActiveSlot(powerProtoRef);
+        }
+
+        public bool HasControlPowerEquipped()
         {
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
             if (keyMapping == null) return false;
 
-            // TODO Crypto do this
+            for (AbilitySlot slot = AbilitySlot.PrimaryAction; slot < AbilitySlot.NumActions; slot++)
+            {
+                Power power = GetPowerInSlot(slot);
+                if (power != null && power.IsControlPower)
+                    return true;
+            }
 
-            return true;
+            return false;
         }
 
         public void SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
@@ -3472,7 +3507,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SummonControlledAgentWithDuration()
         {
-            if (IsControlPowerSlotted() == false) return;
+            if (HasControlPowerEquipped() == false) return;
 
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;

@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Entities.Avatars
     }
 
     /// <summary>
-    /// Binds abilities to slots.
+    /// Binds abilities to slots. Abilities refers to both powers and items that can be slotted on the action bar.
     /// </summary>
     public class AbilityKeyMapping : ISerialize
     {
@@ -52,6 +52,19 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public AbilityKeyMapping() { }
 
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"{nameof(_powerSpecIndex)}: {_powerSpecIndex}");
+            sb.AppendLine($"{nameof(_shouldPersist)}: {_shouldPersist}");
+            sb.AppendLine($"{nameof(_associatedTransformMode)}: {GameDatabase.GetPrototypeName(_associatedTransformMode)}");
+            sb.AppendLine($"{nameof(_primaryAction)}: {GameDatabase.GetPrototypeName(_primaryAction)}");
+            sb.AppendLine($"{nameof(_secondaryAction)}: {GameDatabase.GetPrototypeName(_secondaryAction)}");
+            for (int i = 0; i < _actionKeys.Length; i++)
+                sb.AppendLine($"{nameof(_actionKeys)}[{i}]: {GameDatabase.GetPrototypeName(_actionKeys[i])}");
+            return sb.ToString();
+        }
+
         public bool Serialize(Archive archive)
         {
             bool success = true;
@@ -64,19 +77,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             success &= Serializer.Transfer(archive, ref _actionKeys);
 
             return success;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(_powerSpecIndex)}: {_powerSpecIndex}");
-            sb.AppendLine($"{nameof(_shouldPersist)}: {_shouldPersist}");
-            sb.AppendLine($"{nameof(_associatedTransformMode)}: {GameDatabase.GetPrototypeName(_associatedTransformMode)}");
-            sb.AppendLine($"{nameof(_primaryAction)}: {GameDatabase.GetPrototypeName(_primaryAction)}");
-            sb.AppendLine($"{nameof(_secondaryAction)}: {GameDatabase.GetPrototypeName(_secondaryAction)}");
-            for (int i = 0; i < _actionKeys.Length; i++)
-                sb.AppendLine($"{nameof(_actionKeys)}[{i}]: {GameDatabase.GetPrototypeName(_actionKeys[i])}");
-            return sb.ToString();
         }
 
         /// <summary>
@@ -106,21 +106,36 @@ namespace MHServerEmu.Games.Entities.Avatars
             return _actionKeys[index];
         }
 
-        public void GetActiveAbilitySlotsContainingProtoRef(PrototypeId powerProtoRef, List<AbilitySlot> abilitySlotList)
+        public void GetActiveAbilitySlotsContainingProtoRef(PrototypeId abilityProtoRef, List<AbilitySlot> abilitySlotList)
         {
-            if (_primaryAction == powerProtoRef)
+            if (_primaryAction == abilityProtoRef)
                 abilitySlotList.Add(AbilitySlot.PrimaryAction);
 
-            if (_secondaryAction == powerProtoRef)
+            if (_secondaryAction == abilityProtoRef)
                 abilitySlotList.Add(AbilitySlot.SecondaryAction);
 
             // TODO: DedicatedHealSlot, DedicatedPetTechSlot, DedicatedTeamUpSlot, DedicatedUltimateSlot
 
             for (int i = 0; i < _actionKeys.Length; i++)
             {
-                if (_actionKeys[i] == powerProtoRef)
+                if (_actionKeys[i] == abilityProtoRef)
                     abilitySlotList.Add(AbilitySlot.ActionKey0 + i);
             }
+        }
+
+        public bool ContainsAbilityInActiveSlot(PrototypeId abilityProtoRef)
+        {
+            // TODO: Check dedicated slots (if needed)
+            if (_primaryAction == abilityProtoRef || _secondaryAction == abilityProtoRef)
+                return true;
+
+            foreach (PrototypeId actionKey in _actionKeys)
+            {
+                if (actionKey == abilityProtoRef)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
