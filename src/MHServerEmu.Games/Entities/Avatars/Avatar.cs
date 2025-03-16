@@ -50,6 +50,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private RepString _playerName = new();
         private ulong _ownerPlayerDbId;
         private List<AbilityKeyMapping> _abilityKeyMappingList = new();
+        private AbilityKeyMapping _currentAbilityKeyMapping;
 
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
@@ -62,7 +63,6 @@ namespace MHServerEmu.Games.Entities.Avatars
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
-        public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }   // TODO: Save reference
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
         public Agent CurrentVanityPet { get => GetCurrentVanityPet(); }
 
@@ -123,22 +123,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             base.OnPostInit(settings);
 
-            // TODO: Clean up this hardcoded mess
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-
-            // Properties
+            // TODO: Clean this up
             // AvatarLastActiveTime is needed for missions to show up in the tracker
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
             Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
-
-            // Initialize AbilityKeyMapping
-            if (_abilityKeyMappingList.Count == 0)
-            {
-                AbilityKeyMapping abilityKeyMapping = new();
-                abilityKeyMapping.SlotDefaultAbilities(this);
-                _abilityKeyMappingList.Add(abilityKeyMapping);
-            }
         }
 
         public override bool ApplyInitialReplicationState(ref EntitySettings settings)
@@ -1863,7 +1851,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
         {
-            AbilityKeyMapping keyMapping = CurrentAbilityKeyMapping;
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
             if (keyMapping == null)
                 return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
 
@@ -1877,7 +1865,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsControlPowerSlotted()
         {
-            var keyMapping = CurrentAbilityKeyMapping;
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
             if (keyMapping == null) return false;
 
             // TODO Crypto do this
@@ -1889,7 +1877,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // TODO: Refactor this
 
-            AbilityKeyMapping abilityKeyMapping = CurrentAbilityKeyMapping;
+            AbilityKeyMapping abilityKeyMapping = _currentAbilityKeyMapping;
 
             // Set
             abilityKeyMapping.SetAbilityInAbilitySlot(abilityProtoRef, slot);
@@ -1899,7 +1887,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // TODO: Refactor this
 
-            AbilityKeyMapping abilityKeyMapping = CurrentAbilityKeyMapping;
+            AbilityKeyMapping abilityKeyMapping = _currentAbilityKeyMapping;
 
             // Remove by assigning invalid id
             abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
@@ -1909,13 +1897,49 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // TODO: Refactor this
 
-            AbilityKeyMapping abilityKeyMapping = CurrentAbilityKeyMapping;
+            AbilityKeyMapping abilityKeyMapping = _currentAbilityKeyMapping;
 
             // Swap            
             PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
             PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
             abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
+        }
+
+        public bool RefreshAbilityKeyMapping(bool sendToClient)
+        {
+            // NOTE: The server has nothing to send to client here, but we are keeping the bool arg for now to keep the API the same as the client
+
+            _currentAbilityKeyMapping = GetOrCreateAbilityKeyMapping(PowerSpecIndexActive, CurrentTransformMode);
+            if (_currentAbilityKeyMapping == null) return Logger.WarnReturn(false, "RefreshAbilityKeyMapping(): _currentAbilityKeyMapping == null");
+
+            _currentAbilityKeyMapping.InitDedicatedAbilitySlots(this);
+
+            return true;
+        }
+
+        private void InitAbilityKeyMappings()
+        {
+            RefreshAbilityKeyMapping(false);
+            CleanUpAbilityKeyMappingsAfterRespec();
+        }
+
+        private void CleanUpAbilityKeyMappingsAfterRespec()
+        {
+            // TODO
+        }
+
+        private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int specIndex, PrototypeId transformModeProtoRef)
+        {
+            // TODO: Refactor this
+            if (_abilityKeyMappingList.Count == 0)
+            {
+                AbilityKeyMapping abilityKeyMapping = new();
+                abilityKeyMapping.SlotDefaultAbilities(this);
+                _abilityKeyMappingList.Add(abilityKeyMapping);
+            }
+
+            return _abilityKeyMappingList[0];
         }
 
         #endregion
@@ -2393,15 +2417,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // Slot ALL default abilities
                 // (this is dumb, but we have to do this to avoid desync with the client, see CAvatar::autoSlotPowers())
-                AbilityKeyMapping currentAbilityKeyMapping = CurrentAbilityKeyMapping;
-                if (CurrentAbilityKeyMapping != null)
+                AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+                if (keyMapping != null)
                 {
                     List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
-                    if (currentAbilityKeyMapping.GetDefaultAbilities(hotkeyDataList, this))
+                    if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
                     {
                         // TODO: Avatar.SlotAbility()
                         foreach (HotkeyData hotkeyData in hotkeyDataList)
-                            currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                            keyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
                     }
 
                     ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
@@ -3862,6 +3886,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 else
                     Properties.RemoveProperty(PropertyEnum.AvatarTeamUpAgent);
             }
+
+            InitAbilityKeyMappings();
 
             base.OnEnteredWorld(settings);
 

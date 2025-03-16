@@ -458,6 +458,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;                      // 40
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;                     // 42
                 case ClientToGameServerMessage.NetMessageChangeDifficulty:                  OnChangeDifficulty(message); break;                 // 43
+                case ClientToGameServerMessage.NetMessageRefreshAbilityKeyMapping:          OnRefreshAbilityKeyMapping(message); break;         // 45
                 case ClientToGameServerMessage.NetMessageAbilitySlotToAbilityBar:           OnAbilitySlotToAbilityBar(message); break;          // 46
                 case ClientToGameServerMessage.NetMessageAbilityUnslotFromAbilityBar:       OnAbilityUnslotFromAbilityBar(message); break;      // 47
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
@@ -1043,6 +1044,22 @@ namespace MHServerEmu.Games.Network
             Logger.Trace($"OnChangeDifficulty(): Setting preferred difficulty for {Player.CurrentAvatar} to {difficultyTierProtoRef.GetName()}");
             Player.CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference] = difficultyTierProtoRef;
 
+            return true;
+        }
+
+        private bool OnRefreshAbilityKeyMapping(MailboxMessage message) // 45
+        {
+            var refreshAbilityKeyMapping = message.As<NetMessageRefreshAbilityKeyMapping>();
+            if (refreshAbilityKeyMapping == null) return Logger.WarnReturn(false, $"OnRefreshAbilityKeyMapping(): Failed to retrieve message");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(refreshAbilityKeyMapping.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnRefreshAbilityKeyMapping(): avatar == null");
+
+            Player owner = avatar.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnRefreshAbilityKeyMapping(): Player [{Player}] is attempting to refresh ability key mapping for avatar [{avatar}] that belongs to another player");
+
+            avatar.RefreshAbilityKeyMapping(false);
             return true;
         }
 

@@ -162,6 +162,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public void InitDedicatedAbilitySlots(Avatar avatar)
+        {
+            // TODO
+        }
+
         /// <summary>
         /// Slots default abilities into all slots.
         /// </summary>
