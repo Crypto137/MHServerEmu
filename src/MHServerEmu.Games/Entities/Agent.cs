@@ -2577,7 +2577,7 @@ namespace MHServerEmu.Games.Entities
                 var avatar = Game.EntityManager.GetEntityByDbGuid<Avatar>(masterGuid);
                 if (avatar == null) return;
 
-                if (avatar.IsControlPowerSlot())
+                if (avatar.IsControlPowerSlotted())
                 {
                     SetAsPersistent(avatar, false);
                 }

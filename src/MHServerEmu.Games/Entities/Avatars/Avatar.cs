@@ -1037,20 +1037,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             return TimeSpan.Zero;
         }
 
-        public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
-        {
-            AbilityKeyMapping keyMapping = CurrentAbilityKeyMapping;
-            if (keyMapping == null)
-                return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
-
-            List<AbilitySlot> abilitySlotList = ListPool<AbilitySlot>.Instance.Get();
-            keyMapping.GetActiveAbilitySlotsContainingProtoRef(powerProtoRef, abilitySlotList);
-            AbilitySlot result = abilitySlotList.Count > 0 ? abilitySlotList[0] : AbilitySlot.Invalid;
-
-            ListPool<AbilitySlot>.Instance.Return(abilitySlotList);
-            return result;
-        }
-
         public override bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
@@ -1869,6 +1855,67 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        #endregion
+
+        #region Ability Slot Management
+
+        public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
+        {
+            AbilityKeyMapping keyMapping = CurrentAbilityKeyMapping;
+            if (keyMapping == null)
+                return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
+
+            List<AbilitySlot> abilitySlotList = ListPool<AbilitySlot>.Instance.Get();
+            keyMapping.GetActiveAbilitySlotsContainingProtoRef(powerProtoRef, abilitySlotList);
+            AbilitySlot result = abilitySlotList.Count > 0 ? abilitySlotList[0] : AbilitySlot.Invalid;
+
+            ListPool<AbilitySlot>.Instance.Return(abilitySlotList);
+            return result;
+        }
+
+        public bool IsControlPowerSlotted()
+        {
+            var keyMapping = CurrentAbilityKeyMapping;
+            if (keyMapping == null) return false;
+
+            // TODO Crypto do this
+
+            return true;
+        }
+
+        public void SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
+        {
+            // TODO: Refactor this
+
+            AbilityKeyMapping abilityKeyMapping = CurrentAbilityKeyMapping;
+
+            // Set
+            abilityKeyMapping.SetAbilityInAbilitySlot(abilityProtoRef, slot);
+        }
+
+        public void UnslotAbility(AbilitySlot slot, bool sendToClient)
+        {
+            // TODO: Refactor this
+
+            AbilityKeyMapping abilityKeyMapping = CurrentAbilityKeyMapping;
+
+            // Remove by assigning invalid id
+            abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
+        }
+
+        public void SwapAbilities(AbilitySlot slotA, AbilitySlot slotB, bool sendToClient)
+        {
+            // TODO: Refactor this
+
+            AbilityKeyMapping abilityKeyMapping = CurrentAbilityKeyMapping;
+
+            // Swap            
+            PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
+            PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
+            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
         }
 
         #endregion
@@ -3333,7 +3380,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SummonControlledAgentWithDuration()
         {
-            if (IsControlPowerSlot() == false) return;
+            if (IsControlPowerSlotted() == false) return;
 
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;
@@ -3440,16 +3487,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (controlled.InventoryLocation.IsValid)
                 controlled.ChangeInventoryLocation(null);
-        }
-
-        public bool IsControlPowerSlot()
-        {
-            var keyMapping = CurrentAbilityKeyMapping;
-            if (keyMapping == null) return false;
-
-            // TODO Crypto do this
-
-            return true;
         }
 
         public Agent GetControlledAgent()

@@ -1048,45 +1048,49 @@ namespace MHServerEmu.Games.Network
 
         private bool OnAbilitySlotToAbilityBar(MailboxMessage message)  // 46
         {
-            var slotToAbilityBar = message.As<NetMessageAbilitySlotToAbilityBar>();
-            if (slotToAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySlotToAbilityBar(): Failed to retrieve message");
+            var abilitySlotToAbilityBar = message.As<NetMessageAbilitySlotToAbilityBar>();
+            if (abilitySlotToAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySlotToAbilityBar(): Failed to retrieve message");
 
-            var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
-            PrototypeId prototypeRefId = (PrototypeId)slotToAbilityBar.PrototypeRefId;
-            AbilitySlot slotNumber = (AbilitySlot)slotToAbilityBar.SlotNumber;
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(abilitySlotToAbilityBar.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnAbilitySlotToAbilityBar(): avatar == null");
 
-            // Set
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeRefId, slotNumber);
+            Player owner = avatar.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnAbilitySlotToAbilityBar(): Player [{Player}] is attempting to slot ability for avatar [{avatar}] that belongs to another player");
+
+            avatar.SlotAbility((PrototypeId)abilitySlotToAbilityBar.PrototypeRefId, (AbilitySlot)abilitySlotToAbilityBar.SlotNumber, false, false);
             return true;
         }
 
         private bool OnAbilityUnslotFromAbilityBar(MailboxMessage message)  // 47
         {
-            var unslotFromAbilityBar = message.As<NetMessageAbilityUnslotFromAbilityBar>();
-            if (unslotFromAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilityUnslotFromAbilityBar(): Failed to retrieve message");
+            var abilityUnslotFromAbilityBar = message.As<NetMessageAbilityUnslotFromAbilityBar>();
+            if (abilityUnslotFromAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilityUnslotFromAbilityBar(): Failed to retrieve message");
 
-            var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
-            AbilitySlot slotNumber = (AbilitySlot)unslotFromAbilityBar.SlotNumber;
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(abilityUnslotFromAbilityBar.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnAbilityUnslotFromAbilityBar(): avatar == null");
 
-            // Remove by assigning invalid id
-            abilityKeyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slotNumber);
+            Player owner = avatar.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnAbilityUnslotFromAbilityBar(): Player [{Player}] is attempting to unslot ability for avatar [{avatar}] that belongs to another player");
+
+            avatar.UnslotAbility((AbilitySlot)abilityUnslotFromAbilityBar.SlotNumber, false);
             return true;
         }
 
         private bool OnAbilitySwapInAbilityBar(MailboxMessage message)  // 48
         {
-            var swapInAbilityBar = message.As<NetMessageAbilitySwapInAbilityBar>();
-            if (swapInAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySwapInAbilityBar(): Failed to retrieve message");
+            var abilitySwapInAbilityBar = message.As<NetMessageAbilitySwapInAbilityBar>();
+            if (abilitySwapInAbilityBar == null) return Logger.WarnReturn(false, $"OnAbilitySwapInAbilityBar(): Failed to retrieve message");
 
-            var abilityKeyMapping = Player.CurrentAvatar.CurrentAbilityKeyMapping;
-            AbilitySlot slotA = (AbilitySlot)swapInAbilityBar.SlotNumberA;
-            AbilitySlot slotB = (AbilitySlot)swapInAbilityBar.SlotNumberB;
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(abilitySwapInAbilityBar.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnAbilitySwapInAbilityBar(): avatar == null");
 
-            // Swap
-            PrototypeId prototypeA = abilityKeyMapping.GetAbilityInAbilitySlot(slotA);
-            PrototypeId prototypeB = abilityKeyMapping.GetAbilityInAbilitySlot(slotB);
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeB, slotA);
-            abilityKeyMapping.SetAbilityInAbilitySlot(prototypeA, slotB);
+            Player owner = avatar.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnAbilitySwapInAbilityBar(): Player [{Player}] is attempting to swap abilities for avatar [{avatar}] that belongs to another player");
+
+            avatar.SwapAbilities((AbilitySlot)abilitySwapInAbilityBar.SlotNumberA, (AbilitySlot)abilitySwapInAbilityBar.SlotNumberB, false);
             return true;
         }
 
