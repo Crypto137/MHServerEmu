@@ -53,7 +53,6 @@ namespace MHServerEmu.Games.Entities
         public override bool IsTeamUpAgent { get => AgentPrototype is AgentTeamUpPrototype; }
         public Avatar TeamUpOwner { get => Game.EntityManager.GetEntity<Avatar>(Properties[PropertyEnum.TeamUpOwnerId]); }
         public override int Throwability { get => Properties[PropertyEnum.Throwability]; }
-        public int PowerSpecIndexActive { get; set; }
         public bool IsVisibleWhenDormant { get => AgentPrototype.WakeStartsVisible; }
         public override bool IsWakingUp { get => _wakeEndEvent.IsValid; }
         public override bool IsDormant { get => base.IsDormant || IsWakingUp; }
@@ -1105,7 +1104,7 @@ namespace MHServerEmu.Games.Entities
             int rankCurrentBest = 0;
 
             if (computeRank)
-                rankCurrentBest = ComputePowerRank(ref powerInfo, PowerSpecIndexActive, out rankBase);
+                rankCurrentBest = ComputePowerRank(ref powerInfo, GetPowerSpecIndexActive(), out rankBase);
 
             // Do the actual rank update
             return powerOwner.DoPowerRankUpdate(ref powerInfo, forceUnassign, rankBase, rankCurrentBest);
@@ -1430,6 +1429,23 @@ namespace MHServerEmu.Games.Entities
 
             ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
             return true;
+        }
+
+        #endregion
+
+        #region Multi-Spec
+
+        public int GetPowerSpecIndexActive()
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetPowerSpecIndexActive(): this is not Avatar && IsTeamUpAgent == false");
+            return Properties[PropertyEnum.PowerSpecIndexActive];
+        }
+
+        public virtual int GetPowerSpecIndexUnlocked()
+        {
+            if (IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetPowerSpecIndexUnlocked(): IsTeamUpAgent == false");
+
+            return GameDatabase.AdvancementGlobalsPrototype.MaxPowerSpecIndexForTeamUps;
         }
 
         #endregion

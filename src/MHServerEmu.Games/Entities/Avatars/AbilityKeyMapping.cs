@@ -185,6 +185,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
         }
 
+        public void SlotDefaultAbilitiesForTransformMode(TransformModePrototype transformModeProto)
+        {
+            // TODO
+        }
+
         public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
         {
             AvatarPrototype avatarProto = avatar.AvatarPrototype;

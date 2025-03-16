@@ -406,6 +406,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
 
         [DoNotCopy]
+        public int MaxPowerSpecIndexForAvatars { get => Math.Max(0, AvatarPowerSpecsMax - 1); }
+        [DoNotCopy]
+        public int MaxPowerSpecIndexForTeamUps { get => Math.Max(0, TeamUpPowerSpecsMax - 1); }
+
+        [DoNotCopy]
         public EvalPrototype AvatarThrowabilityEvalPrototype { get; private set; }
 
         [DoNotCopy]

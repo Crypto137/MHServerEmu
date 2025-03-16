@@ -33,6 +33,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 {
     public partial class Avatar : Agent
     {
+        private const int MaxNumTransientAbilityKeyMappings = 1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
 
@@ -49,8 +51,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private RepString _playerName = new();
         private ulong _ownerPlayerDbId;
-        private List<AbilityKeyMapping> _abilityKeyMappingList = new();
-        private AbilityKeyMapping _currentAbilityKeyMapping;
+
+        private List<AbilityKeyMapping> _abilityKeyMappings = new();    // Persistent ability key mappings for each spec
+        private List<AbilityKeyMapping> _transientAbilityKeyMappings;   // Non-persistent ability key mappings used for transform modes (init on demand)
+        private AbilityKeyMapping _currentAbilityKeyMapping;            // Reference to the currently active ability key mapping
 
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
@@ -198,7 +202,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
             }
 
-            success &= Serializer.Transfer(archive, ref _abilityKeyMappingList);
+            success &= Serializer.Transfer(archive, ref _abilityKeyMappings);
 
             return success;
         }
@@ -1564,7 +1568,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (ultimateRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "CanUpgradeUltimate(): ultimateRef == ultimateRef == PrototypeId.Invalid");
 
             GetPowerProgressionInfo(ultimateRef, out PowerProgressionInfo powerInfo);
-            int powerSpec = PowerSpecIndexActive;
+            int powerSpec = GetPowerSpecIndexActive();
 
             int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, powerSpec);
             if (rankMax < 0)
@@ -1760,6 +1764,19 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Multi-Spec
+
+        public override int GetPowerSpecIndexUnlocked()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+                return 0;
+
+            return player.PowerSpecIndexUnlocked;
+        }
+
+        #endregion
+
         #region Talents (Specialization Powers)
 
         public bool IsTalentPowerEnabledForSpec(PrototypeId talentPowerProtoRef, int specIndex)
@@ -1910,7 +1927,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             // NOTE: The server has nothing to send to client here, but we are keeping the bool arg for now to keep the API the same as the client
 
-            _currentAbilityKeyMapping = GetOrCreateAbilityKeyMapping(PowerSpecIndexActive, CurrentTransformMode);
+            _currentAbilityKeyMapping = GetOrCreateAbilityKeyMapping(GetPowerSpecIndexActive(), CurrentTransformMode);
             if (_currentAbilityKeyMapping == null) return Logger.WarnReturn(false, "RefreshAbilityKeyMapping(): _currentAbilityKeyMapping == null");
 
             _currentAbilityKeyMapping.InitDedicatedAbilitySlots(this);
@@ -1929,17 +1946,77 @@ namespace MHServerEmu.Games.Entities.Avatars
             // TODO
         }
 
-        private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int specIndex, PrototypeId transformModeProtoRef)
+        private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
         {
-            // TODO: Refactor this
-            if (_abilityKeyMappingList.Count == 0)
+            AbilityKeyMapping keyMapping = null;
+
+            if (powerSpecIndex < 0 || powerSpecIndex > GetPowerSpecIndexUnlocked()) return Logger.WarnReturn(keyMapping, "GetOrCreateAbilityKeyMapping(): powerSpecIndex < 0 || powerSpecIndex > GetPowerSpecIndexUnlocked()");
+
+            TransformModePrototype transformModeProto = transformModeProtoRef.As<TransformModePrototype>();
+            if (transformModeProto != null && transformModeProto.PowersAreSlottable == false)
             {
-                AbilityKeyMapping abilityKeyMapping = new();
-                abilityKeyMapping.SlotDefaultAbilities(this);
-                _abilityKeyMappingList.Add(abilityKeyMapping);
+                // Fixed key mappings for transform modes
+
+                // Transient ability key mappings are stored in a fixed array with a length of 1 in the client.
+                // Not sure if there were more of them in older versions, so for now I'm keeping it the same.
+                // Initializing this collection on demand to avoid allocations for avatars with no transform modes
+                // (the vast majority of them).
+                _transientAbilityKeyMappings ??= new(MaxNumTransientAbilityKeyMappings);
+
+                foreach (AbilityKeyMapping transientKeyMapping in _transientAbilityKeyMappings)
+                {
+                    if (transientKeyMapping?.AssociatedTransformMode == transformModeProtoRef)
+                    {
+                        keyMapping = transientKeyMapping;
+                        break;
+                    }
+                }
+
+                if (keyMapping == null)
+                {
+                    if (_transientAbilityKeyMappings.Count >= MaxNumTransientAbilityKeyMappings)
+                        return Logger.WarnReturn(keyMapping, "GetOrCreateAbilityKeyMapping(): _transientAbilityKeyMappings.Count >= MaxNumTransientAbilityKeyMappings");
+
+                    keyMapping = new();
+                    _transientAbilityKeyMappings.Add(keyMapping);
+
+                    keyMapping.AssociatedTransformMode = transformModeProtoRef;
+                    keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
+
+                    keyMapping.PowerSpecIndex = powerSpecIndex;
+                    keyMapping.ShouldPersist = false;       // Will be flagged to persist if anything gets changed
+                }
+            }
+            else
+            {
+                // Normal key mapping and transform modes with swappable slots
+                foreach (AbilityKeyMapping keyMappingToCheck in _abilityKeyMappings)
+                {
+                    // Pre-BUE this is where mapping index would also be checked
+                    if (keyMappingToCheck.PowerSpecIndex == powerSpecIndex)
+                    {
+                        keyMapping = keyMappingToCheck;
+                        break;
+                    }
+                }
+
+                if (keyMapping == null)
+                {
+                    keyMapping = new();
+                    _abilityKeyMappings.Add(keyMapping);
+
+                    // AssociatedTransformMode doesn't seem to be getting used here, is this correct?
+                    if (transformModeProto != null && transformModeProto.PowersAreSlottable)
+                        keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
+                    else
+                        keyMapping.SlotDefaultAbilities(this);
+
+                    keyMapping.PowerSpecIndex = powerSpecIndex;
+                    keyMapping.ShouldPersist = false;       // Will be flagged to persist if anything gets changed
+                }
             }
 
-            return _abilityKeyMappingList[0];
+            return keyMapping;
         }
 
         #endregion
@@ -4062,8 +4139,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
             }
 
-            for (int i = 0; i < _abilityKeyMappingList.Count; i++)
-                sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
+            for (int i = 0; i < _abilityKeyMappings.Count; i++)
+                sb.AppendLine($"{nameof(_abilityKeyMappings)}[{i}]: {_abilityKeyMappings[i]}");
         }
 
         #region Scheduled Events
