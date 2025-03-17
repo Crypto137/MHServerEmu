@@ -1795,6 +1795,17 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Mapped Powers
 
+        public bool HasMappedPower(PrototypeId mappedPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                if (kvp.Value == mappedPowerRef)
+                    return true;
+            }
+
+            return false;
+        }
+
         public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
         {
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
@@ -2158,6 +2169,49 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private AbilitySlotOpValidateResult IsAbilityEquippableInSlot(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation)
         {
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsAbilityEquippableInSlot(): IsActiveAbilitySlot(slot) == false");
+
+            if (Properties.HasProperty(PropertyEnum.IsInCombat))
+            {
+                // Only mapped powers are allowed to be equipp;ed in combat
+                if (HasMappedPower(abilityProtoRef) || GetMappedPowerFromOriginalPower(abilityProtoRef) != PrototypeId.Invalid)
+                    return AbilitySlotOpValidateResult.Success;
+
+                return AbilitySlotOpValidateResult.AvatarIsInCombat;
+            }
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            PowerPrototype powerProto = abilityProto as PowerPrototype;
+            ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+            if (powerProto == null && itemProto?.AbilitySettings == null)
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsAbilityEquippableInSlot(): powerProto == null && itemProto?.AbilitySettings == null");
+
+            if (powerProto != null)
+            {
+                // Mapped powers have their own validation
+                if (HasMappedPower(abilityProtoRef))
+                    return AbilitySlotOpValidateResult.Success;
+
+                if (skipEquipValidation == false)
+                {
+                    AbilitySlotOpValidateResult isPowerEquippableResult = IsPowerEquippable(abilityProtoRef);
+                    if (isPowerEquippableResult != AbilitySlotOpValidateResult.Success)
+                        return isPowerEquippableResult;
+                }
+            }
+
+            if (itemProto != null)
+            {
+                if (itemProto.AbilitySettings.OnlySlottableWhileEquipped && FindAbilityItem(itemProto) == InvalidId)
+                    return AbilitySlotOpValidateResult.ItemNotEquipped;
+            }
+
+            return CheckAbilitySlotRestrictions(abilityProtoRef, slot);
+        }
+
+        private AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId powerProtoRef)
+        {
             // TODO
             return AbilitySlotOpValidateResult.Success;
         }
@@ -2190,6 +2244,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         public static bool IsDedicatedAbilitySlot(AbilitySlot slot)
         {
             return slot > AbilitySlot.NumActions && slot < AbilitySlot.NumSlotsTotal;
+        }
+
+        public static AbilitySlotOpValidateResult CheckAbilitySlotRestrictions(PrototypeId abilityProtoRef, AbilitySlot activeSlot)
+        {
+            // TODO
+            return AbilitySlotOpValidateResult.Success;
         }
 
         #endregion

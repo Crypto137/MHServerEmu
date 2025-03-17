@@ -51,9 +51,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         PowerSlotMismatch,
         PowerNotUnlocked,
         Result5,
-        Result6,
+        ItemNotEquipped,
         AvatarIsInCombat,
-        Result8
+        UnknownFailure
     }
 
     public enum CanSetInfinityRankResult
