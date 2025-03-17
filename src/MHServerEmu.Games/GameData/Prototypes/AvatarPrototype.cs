@@ -68,6 +68,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override int LiveTuneEternitySplinterCost { get => (int)LiveTuningManager.GetLiveAvatarTuningVar(this, AvatarEntityTuningVar.eAETV_EternitySplinterPrice); }
 
         [DoNotCopy]
+        public bool HasPowerProgressionTables { get => PowerProgressionTables.HasValue(); }
+
+        [DoNotCopy]
         public PrimaryResourceManaBehaviorPrototype[] PrimaryResourceBehaviorsCache { get; private set; }
         [DoNotCopy]
         public SecondaryResourceManaBehaviorPrototype SecondaryResourceBehaviorCache { get; private set; }
@@ -290,6 +293,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             return null;
+        }
+
+        public bool HasPowerInPowerProgression(PrototypeId powerProtoRef)
+        {
+            return GetPowerProgressionEntryForPower(powerProtoRef) != null;
         }
 
         public TransformModePrototype FindTransformModeThatAssignsPower(PrototypeId powerProtoRef)

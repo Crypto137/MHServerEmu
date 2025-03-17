@@ -2212,7 +2212,41 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId powerProtoRef)
         {
-            // TODO
+            AbilitySlotOpValidateResult staticResult = IsPowerEquippable(PrototypeDataRef, powerProtoRef);
+            if (staticResult != AbilitySlotOpValidateResult.Success)
+                return staticResult;
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): avatarProto == null");
+
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): powerProto == null");
+
+            if (powerProto.PowerCategory == PowerCategoryType.NormalPower)
+            {
+                int powerRank = GetPowerRank(powerProtoRef);
+                if (powerRank <= 0)
+                    return AbilitySlotOpValidateResult.PowerNotUnlocked;
+            }
+
+            return AbilitySlotOpValidateResult.Success;
+        }
+
+        private static AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId avatarProtoRef, PrototypeId powerProtoRef)
+        {
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): powerProto == null");
+
+            if (powerProto.UsableByAll)
+                return AbilitySlotOpValidateResult.Success;
+
+            // Check avatar-specific restrictions
+            AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): avatarProto == null");
+
+            if (avatarProto.HasPowerProgressionTables == false || avatarProto.HasPowerInPowerProgression(powerProtoRef) == false)
+                return AbilitySlotOpValidateResult.PowerNotUsableByAvatar;
+
             return AbilitySlotOpValidateResult.Success;
         }
 
