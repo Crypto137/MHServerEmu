@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         PowerNotActive,
         PowerSlotMismatch,
         PowerNotUnlocked,
-        Result5,
+        SwapSameSlot,
         ItemNotEquipped,
         AvatarIsInCombat,
         UnknownFailure

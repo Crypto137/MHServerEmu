@@ -2250,9 +2250,22 @@ namespace MHServerEmu.Games.Entities.Avatars
             return AbilitySlotOpValidateResult.Success;
         }
 
-        private AbilitySlotOpValidateResult ValidateAbilitySwap(AbilitySlot slotFrom, AbilitySlot slotTo)
+        private AbilitySlotOpValidateResult ValidateAbilitySwap(AbilitySlot slotA, AbilitySlot slotB)
         {
-            // TODO
+            // This is a one way check, in this case slotA is the source and slotB is the destination
+            if (slotA == slotB)
+                return AbilitySlotOpValidateResult.SwapSameSlot;
+
+            if (IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false)
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.PowerSlotMismatch, "ValidateAbilitySwap(): IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false");
+
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "ValidateAbilitySwap(): keyMapping == null");
+
+            PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
+            if (abilityA != PrototypeId.Invalid && IsAbilityEquippableInSlot(abilityA, slotB, true) != AbilitySlotOpValidateResult.Success)
+                return AbilitySlotOpValidateResult.PowerSlotMismatch;
+
             return AbilitySlotOpValidateResult.Success;
         }
 
