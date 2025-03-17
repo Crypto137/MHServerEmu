@@ -2246,10 +2246,85 @@ namespace MHServerEmu.Games.Entities.Avatars
             return slot > AbilitySlot.NumActions && slot < AbilitySlot.NumSlotsTotal;
         }
 
-        public static AbilitySlotOpValidateResult CheckAbilitySlotRestrictions(PrototypeId abilityProtoRef, AbilitySlot activeSlot)
+        public static AbilitySlotOpValidateResult CheckAbilitySlotRestrictions(PrototypeId abilityProtoRef, AbilitySlot slot)
         {
-            // TODO
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "CheckAbilitySlotRestrictions(): IsActiveAbilitySlot(slot) == false");
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            PowerPrototype powerProto = abilityProto as PowerPrototype;
+            ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+            if (powerProto == null && itemProto?.AbilitySettings == null)
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "CheckAbilitySlotRestrictions(): powerProto == null && itemProto?.AbilitySettings == null");
+
+            if (powerProto != null)
+            {
+                if (powerProto.Activation != PowerActivationType.Instant &&
+                    powerProto.Activation != PowerActivationType.InstantTargeted &&
+                    powerProto.Activation != PowerActivationType.TwoStageTargeted)
+                {
+                    return AbilitySlotOpValidateResult.PowerNotActive;
+                }
+            }
+
+            if (CanActionSlotContainPowerOrItem(abilityProtoRef, slot) == false)
+                return AbilitySlotOpValidateResult.PowerSlotMismatch;
+
             return AbilitySlotOpValidateResult.Success;
+        }
+
+        public static bool CanActionSlotContainPowerOrItem(PrototypeId abilityProtoRef, AbilitySlot slot)
+        {
+            if (abilityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanActionSlotContainPowerOrItem(): abilityProtoRef == PrototypeId.Invalid");
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(false, "CanActionSlotContainPowerOrItem(): IsActiveAbilitySlot(slot) == false");
+
+            // Dedicated slots (medkit, ultimate, etc.) cannot hold arbitrary abilities
+            if (IsDedicatedAbilitySlot(slot))
+                return false;
+
+            if (ValidAbilitySlotItemOrPower(abilityProtoRef) == false)
+                return false;
+
+            AbilitySlotRestrictionPrototype restrictionProto = GetAbilitySlotRestrictionPrototype(abilityProtoRef);
+
+            if (restrictionProto == null)
+                return true;
+
+            if (restrictionProto.LeftMouseSlotOK && slot == AbilitySlot.PrimaryAction)
+                return true;
+
+            if (restrictionProto.RightMouseSlotOK && slot == AbilitySlot.SecondaryAction)
+                return true;
+
+            if (restrictionProto.ActionKeySlotOK && IsActionKeyAbilitySlot(slot))
+                return true;
+
+            return false;
+        }
+
+        public static bool ValidAbilitySlotItemOrPower(PrototypeId abilityProtoRef)
+        {
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            PowerPrototype powerProto = abilityProto as PowerPrototype;
+            ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+            return powerProto != null || itemProto?.AbilitySettings != null;
+        }
+
+        public static AbilitySlotRestrictionPrototype GetAbilitySlotRestrictionPrototype(PrototypeId abilityProtoRef)
+        {
+            if (abilityProtoRef == PrototypeId.Invalid)
+                return null;
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+
+            if (abilityProto is PowerPrototype powerProto)
+                return powerProto.SlotRestriction;
+
+            if (abilityProto is ItemPrototype itemProto)
+                return itemProto.AbilitySettings.AbilitySlotRestriction;
+
+            return null;
         }
 
         #endregion
