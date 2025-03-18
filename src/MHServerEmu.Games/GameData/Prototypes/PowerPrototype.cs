@@ -667,6 +667,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId RestrictionKeyword { get; protected set; }
         public int RestrictionKeywordCount { get; protected set; }
         public PrototypeId RestrictionBannerMessage { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public KeywordPrototype RestrictionKeywordPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            RestrictionKeywordPrototype = RestrictionKeyword.As<KeywordPrototype>();
+        }
     }
 
     public class PowerEventContextTransformModePrototype : PowerEventContextPrototype

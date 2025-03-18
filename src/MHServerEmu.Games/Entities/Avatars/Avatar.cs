@@ -1956,7 +1956,71 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool CanAssignStolenPower(PrototypeId stolenPowerRefToAssign, PrototypeId currentStolenPowerRef)
         {
-            // TODO
+            if (stolenPowerRefToAssign == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanAssignStolenPower(): stolenPowerRefToAssign == PrototypeId.Invalid");
+
+            PowerPrototype stolenPowerProto = stolenPowerRefToAssign.As<PowerPrototype>();
+            if (stolenPowerProto == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): stolenPowerProto == null");
+
+            GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
+            if (globals.StolenPowerRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (PrototypeId restrictionProtoRef in globals.StolenPowerRestrictions)
+            {
+                StolenPowerRestrictionPrototype restrictionProto = restrictionProtoRef.As<StolenPowerRestrictionPrototype>();
+                if (restrictionProto == null)
+                {
+                    Logger.Warn("CanAssignStolenPower(): restrictionProto == null");
+                    continue;
+                }
+
+                KeywordPrototype keywordProto = restrictionProto.RestrictionKeywordPrototype;
+
+                if (keywordProto == null || restrictionProto.RestrictionKeywordCount <= 0)
+                    continue;
+
+                if (stolenPowerProto.HasKeyword(keywordProto) == false)
+                    continue;
+
+                int count = 0;
+                bool hasMaxCount = false;
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                {
+                    PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
+                    if (mappedPowerProto == null)
+                    {
+                        Logger.Warn("CanAssignStolenPower(): mappedPowerProto == null");
+                        continue;
+                    }
+
+                    if (mappedPowerProto.HasKeyword(keywordProto) == false)
+                        continue;
+
+                    count++;
+                    if (count >= restrictionProto.RestrictionKeywordCount)
+                    {
+                        hasMaxCount = true;
+                        break;
+                    }
+                }
+
+                if (hasMaxCount == false)
+                    continue;
+
+                // Max count for this restriction reached, stolen power cannot be assigned
+
+                // Notify the player about this
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): player == null");
+
+                BannerMessagePrototype bannerMessageProto = restrictionProto.RestrictionBannerMessage.As<BannerMessagePrototype>();
+                if (bannerMessageProto == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): bannerMessageProto == null");
+
+                player.SendBannerMessage(bannerMessageProto);
+
+                return false;
+            }
+
             return true;
         }
 
