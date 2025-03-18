@@ -1,12 +1,15 @@
 ﻿using System.Text;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -85,6 +88,42 @@ namespace MHServerEmu.Commands.Implementations
             PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
 
             return $"activePowerRef={GameDatabase.GetPrototypeName(activePowerRef)}, continuousPowerRef={GameDatabase.GetPrototypeName(continuousPowerRef)}";
+        }
+
+        [Command("cooldownreset", "Resets all cooldowns and charges.\nUsage: power cooldownreset")]
+        public string CooldownReset(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+
+            // Player cooldowns
+            Player player = playerConnection.Player;
+            foreach (PropertyEnum cooldownProperty in Property.CooldownProperties)
+                player.Properties.RemovePropertyRange(cooldownProperty);
+
+            // Avatar cooldowns
+            Avatar avatar = player.CurrentAvatar;
+            foreach (PropertyEnum cooldownProperty in Property.CooldownProperties)
+                avatar.Properties.RemovePropertyRange(cooldownProperty);
+
+            // Avatar charges
+            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+            foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMax))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                if (powerProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                setDict[new(PropertyEnum.PowerChargesAvailable, powerProtoRef)] = kvp.Value;
+            }
+
+            foreach (var kvp in setDict)
+                avatar.Properties[kvp.Key] = kvp.Value;
+
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
+
+            return $"All cooldowns and charges have been reset.";
         }
     }
 }

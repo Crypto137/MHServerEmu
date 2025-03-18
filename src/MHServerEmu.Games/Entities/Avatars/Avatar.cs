@@ -4716,10 +4716,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                             Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef] = newValue;
 
                         // Cancel generation of the next charge by resetting the cooldown
-                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDuration, powerProtoRef));
-                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef));
-                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, powerProtoRef));
-                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef));
+                        foreach (PropertyEnum cooldownProperty in Property.CooldownProperties)
+                            Properties.RemoveProperty(new(cooldownProperty, powerProtoRef));
                     }
                     else if (chargesAvailable < newValue)
                     {

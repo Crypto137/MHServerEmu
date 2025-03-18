@@ -136,6 +136,14 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum.SecondaryResourceCOTPct
         };
 
+        public static readonly PropertyEnum[] CooldownProperties = new PropertyEnum[]
+        {
+            PropertyEnum.PowerCooldownDuration,
+            PropertyEnum.PowerCooldownDurationPersistent,
+            PropertyEnum.PowerCooldownStartTime,
+            PropertyEnum.PowerCooldownStartTimePersistent
+        };
+
         public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out AssetId assetId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
