@@ -1841,9 +1841,43 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
-        public CanToggleTalentResult CanToggleTalentPower(PrototypeId talentPowerRef, int specIndex, bool enterWorld, bool enable)
+        public CanToggleTalentResult CanToggleTalentPower(PrototypeId talentPowerRef, int specIndex, bool enteringWorld, bool enable)
         {
-            // TODO
+            SpecializationPowerPrototype talentPowerProto = talentPowerRef.As<SpecializationPowerPrototype>();
+            if (talentPowerProto == null)
+                return CanToggleTalentResult.GenericError;
+
+            // Skip combat check if this avatar is entering the world
+            if (enteringWorld == false && Properties.HasProperty(PropertyEnum.IsInCombat))
+                return CanToggleTalentResult.InCombat;
+
+            int specIndexUnlocked = GetPowerSpecIndexUnlocked();
+            if (specIndex > specIndexUnlocked) return Logger.WarnReturn(CanToggleTalentResult.GenericError, "CanToggleTalentPower(): specIndex < specIndexUnlocked");
+
+            GetPowerProgressionInfo(talentPowerRef, out PowerProgressionInfo talentPowerInfo);
+
+            if (CharacterLevel < talentPowerInfo.GetRequiredLevel())
+                return CanToggleTalentResult.LevelRequirement;
+
+            uint talentGroupIndex = GameDataTables.Instance.PowerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
+            if (talentGroupIndex == TalentGroupIndexInvalid)
+                return Logger.WarnReturn(CanToggleTalentResult.GenericError, $"CanToggleTalentPower(): Talent missing its talent group index for some reason!\nTalent: {talentPowerProto}\nOwner: [{this}]\nenteringWorld: {enteringWorld}");
+
+            // Skip evla check if this avatar is entering the world
+            if (enable && enteringWorld == false && talentPowerProto.EvalCanEnable.HasValue())
+            {
+                foreach (EvalPrototype evalProto in talentPowerProto.EvalCanEnable)
+                {
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, null);
+                    evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, this);
+                    evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, ConditionCollection);
+
+                    if (Eval.RunBool(evalProto, evalContext) == false)
+                        return CanToggleTalentResult.RestrictiveCondition;
+                }
+            }
+
             return CanToggleTalentResult.Success;
         }
 
@@ -2434,7 +2468,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private AbilitySlotOpValidateResult IsAbilityEquippableInSlot(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation)
         {
-            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsAbilityEquippableInSlot(): IsActiveAbilitySlot(slot) == false");
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsAbilityEquippableInSlot(): IsActiveAbilitySlot(slot) == false");
 
             if (Properties.HasProperty(PropertyEnum.IsInCombat))
             {
@@ -2450,7 +2484,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             ItemPrototype itemProto = abilityProto as ItemPrototype;
 
             if (powerProto == null && itemProto?.AbilitySettings == null)
-                return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsAbilityEquippableInSlot(): powerProto == null && itemProto?.AbilitySettings == null");
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsAbilityEquippableInSlot(): powerProto == null && itemProto?.AbilitySettings == null");
 
             if (powerProto != null)
             {
@@ -2482,10 +2516,10 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return staticResult;
 
             AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): avatarProto == null");
+            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): avatarProto == null");
 
             PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): powerProto == null");
+            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
 
             if (powerProto.PowerCategory == PowerCategoryType.NormalPower)
             {
@@ -2500,14 +2534,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         private static AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId avatarProtoRef, PrototypeId powerProtoRef)
         {
             PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
-            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): powerProto == null");
+            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
 
             if (powerProto.UsableByAll)
                 return AbilitySlotOpValidateResult.Success;
 
             // Check avatar-specific restrictions
             AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
-            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "IsPowerEquippable(): avatarProto == null");
+            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): avatarProto == null");
 
             if (avatarProto.HasPowerProgressionTables == false || avatarProto.HasPowerInPowerProgression(powerProtoRef) == false)
                 return AbilitySlotOpValidateResult.PowerNotUsableByAvatar;
@@ -2525,7 +2559,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return Logger.WarnReturn(AbilitySlotOpValidateResult.PowerSlotMismatch, "ValidateAbilitySwap(): IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false");
 
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-            if (keyMapping == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "ValidateAbilitySwap(): keyMapping == null");
+            if (keyMapping == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "ValidateAbilitySwap(): keyMapping == null");
 
             PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
             if (abilityA != PrototypeId.Invalid && IsAbilityEquippableInSlot(abilityA, slotB, true) != AbilitySlotOpValidateResult.Success)
@@ -2560,14 +2594,14 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public static AbilitySlotOpValidateResult CheckAbilitySlotRestrictions(PrototypeId abilityProtoRef, AbilitySlot slot)
         {
-            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "CheckAbilitySlotRestrictions(): IsActiveAbilitySlot(slot) == false");
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "CheckAbilitySlotRestrictions(): IsActiveAbilitySlot(slot) == false");
 
             Prototype abilityProto = abilityProtoRef.As<Prototype>();
             PowerPrototype powerProto = abilityProto as PowerPrototype;
             ItemPrototype itemProto = abilityProto as ItemPrototype;
 
             if (powerProto == null && itemProto?.AbilitySettings == null)
-                return Logger.WarnReturn(AbilitySlotOpValidateResult.UnknownFailure, "CheckAbilitySlotRestrictions(): powerProto == null && itemProto?.AbilitySettings == null");
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "CheckAbilitySlotRestrictions(): powerProto == null && itemProto?.AbilitySettings == null");
 
             if (powerProto != null)
             {

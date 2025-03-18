@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         SwapSameSlot,
         ItemNotEquipped,
         AvatarIsInCombat,
-        UnknownFailure
+        GenericError
     }
 
     public enum CanToggleTalentResult
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         InCombat,
         RestrictiveCondition,
         LevelRequirement,
-        UnknownFailure
+        GenericError
     }
 
     public enum CanSetInfinityRankResult
