@@ -327,12 +327,18 @@ namespace MHServerEmu.Games.Powers
 
         public void HandleTriggerPowerEventOnSpecializationPowerAssigned()      // 27
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSpecializationPowerAssigned, ref settings);
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerUnassigned()    // 28
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSpecializationPowerUnassigned, ref settings);
         }
 
         public void HandleTriggerPowerEventOnEntityControlled()                 // 29
