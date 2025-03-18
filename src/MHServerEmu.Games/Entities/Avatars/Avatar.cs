@@ -2817,11 +2817,26 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (GetPower(powerProtoRef) == null)
                 {
                     if (AssignPower(powerProtoRef, indexProps) == null)
-                        Logger.Warn($"InitializeManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
+                        Logger.Warn($"AssignManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
                 }
             }
 
             return true;
+        }
+
+        private void UnassignManaBehaviorPowers(ManaBehaviorPrototype manaBehaviorProto)
+        {
+            if (manaBehaviorProto.Powers.IsNullOrEmpty())
+                return;
+
+            foreach (PrototypeId powerProtoRef in manaBehaviorProto.Powers)
+            {
+                if (GetPower(powerProtoRef) != null)
+                {
+                    if (UnassignPower(powerProtoRef) == false)
+                        Logger.Warn($"UnassignManaBehaviorPowers(): Failed to unassign mana behavior power {powerProtoRef.GetName()} from [{this}]");
+                }
+            }
         }
 
         public PrimaryResourceManaBehaviorPrototype[] GetPrimaryResourceManaBehaviors()
@@ -4578,6 +4593,31 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 case PropertyEnum.SecondaryResourceMaxPipsChg:
                     Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + (int)newValue;
+                    break;
+
+                case PropertyEnum.SecondaryResourceOverride:
+                    if (oldValue != PrototypeId.Invalid)
+                    {
+                        // Clear old override behavior
+                        SecondaryResourceManaBehaviorPrototype manaBehaviorOverrideProto = GameDatabase.GetPrototype<SecondaryResourceManaBehaviorPrototype>(oldValue);
+                        if (manaBehaviorOverrideProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): manaBehaviorOverrideProto == null");
+                            break;
+                        }
+
+                        UnassignManaBehaviorPowers(manaBehaviorOverrideProto);
+                    }
+                    else
+                    {
+                        // Clear default behavior (if any)
+                        SecondaryResourceManaBehaviorPrototype defaultManaBehaviorProto = AvatarPrototype?.SecondaryResourceBehaviorCache;
+                        if (defaultManaBehaviorProto != null)
+                            UnassignManaBehaviorPowers(defaultManaBehaviorProto);
+                    }
+
+                    // Initialize the new override
+                    InitializeSecondaryManaBehaviors();
                     break;
 
                 case PropertyEnum.StatAllModifier:
