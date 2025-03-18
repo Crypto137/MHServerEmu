@@ -4437,6 +4437,25 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
                     break;
 
+                case PropertyEnum.AvatarMappedPower:
+                    Property.FromParam(id, 0, out PrototypeId originalPowerRef);
+                    PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
+                    if (originalPowerProto == null)
+                    {
+                        Logger.Warn("OnPropertyChange(): originalPowerProto == null");
+                        return;
+                    }
+
+                    if (originalPowerProto.IsTravelPower)
+                    {
+                        PrototypeId mappedPowerRef = GetMappedPowerFromOriginalPower(originalPowerRef);
+                        SetTravelPowerOverride(mappedPowerRef);
+
+                        _currentAbilityKeyMapping?.SetAbilityInAbilitySlot(GetTravelPowerRef(), AbilitySlot.TravelPower);
+                    }
+
+                    break;
+
                 case PropertyEnum.OmegaRank:
                 case PropertyEnum.InfinityGemBonusRank:
                 case PropertyEnum.PvPUpgrades:
