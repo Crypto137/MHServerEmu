@@ -1322,9 +1322,44 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 30
-        private void DoPowerEventActionStealPower(ulong targetId)
+        private bool DoPowerEventActionStealPower(ulong targetId)
         {
-            Logger.Warn($"DoPowerEventActionStealPower(): Not implemented");
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): Owner is not Avatar avatar");
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): player == null");
+
+            // Non-agent targets don't have stealable powers
+            Agent target = Game.EntityManager.GetEntity<Agent>(targetId);
+            if (target == null)
+                return true;
+
+            AgentPrototype agentProto = target.AgentPrototype;
+            if (agentProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): agentProto == null");
+
+            // Check if there is a power to steal
+            StealablePowerInfoPrototype stealablePowerInfoProto = agentProto.StealablePower.As<StealablePowerInfoPrototype>();
+            if (stealablePowerInfoProto == null)
+                return true;
+
+            PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
+            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): stolenPowerRef == PrototypeId.Invalid");
+
+            BannerMessagePrototype bannerMessageProto = null;
+            if (avatar.IsStolenPowerAvailable(stealablePowerInfoProto.Power) == false)
+            {
+                avatar.Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef] = true;
+                bannerMessageProto = GameDatabase.UIGlobalsPrototype.MessageStolenPowerAvailable.As<BannerMessagePrototype>();
+            }
+            else
+            {
+                bannerMessageProto = GameDatabase.UIGlobalsPrototype.MessageStolenPowerDuplicate.As<BannerMessagePrototype>();
+            }
+
+            if (bannerMessageProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): bannerMessageProto == null");
+            player.SendBannerMessage(bannerMessageProto);
+
+            return true;
         }
 
         // 31
