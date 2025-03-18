@@ -199,6 +199,56 @@ namespace MHServerEmu.Games.Entities.Avatars
             return success;
         }
 
+        public override void OnUnpackComplete(Archive archive)
+        {
+            base.OnUnpackComplete(archive);
+
+            // Restore persistent cooldowns
+            if (archive.IsPersistent)
+            {
+                Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownDurationPersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent
+                    if (Power.IsCooldownPersistent(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownDuration, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownStartTimePersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent
+                    if (Power.IsCooldownPersistent(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownStartTime, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in setDict)
+                    Properties[kvp.Key] = kvp.Value;
+
+                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
+            }
+        }
+
         public void SetPlayer(Player player)
         {
             _playerName.Set(player.GetName());
@@ -4768,6 +4818,40 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     break;
                 }
+
+                case PropertyEnum.PowerCooldownDuration:
+                    if (IsInWorld)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                        PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            break;
+                        }
+
+                        if (Power.IsCooldownPersistent(powerProto))
+                            Properties[PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef] = newValue;
+                    }
+
+                    break;
+
+                case PropertyEnum.PowerCooldownStartTime:
+                    if (IsInWorld)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                        PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            break;
+                        }
+
+                        if (Power.IsCooldownPersistent(powerProto))
+                            Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
+                    }
+
+                    break;
             }
         }
 

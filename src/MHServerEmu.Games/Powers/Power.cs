@@ -3185,6 +3185,11 @@ namespace MHServerEmu.Games.Powers
             return powerProto.CooldownOnPlayer;
         }
 
+        public static bool IsCooldownPersistent(PowerPrototype powerProto)
+        {
+            return powerProto.CooldownIsPersistentToDatabase || powerProto.IsUltimate;
+        }
+
         public bool TriggersComboPowerOnEvent(PowerEventType eventType)
         {
             PowerPrototype powerProto = Prototype;

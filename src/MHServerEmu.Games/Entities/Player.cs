@@ -237,6 +237,38 @@ namespace MHServerEmu.Games.Entities
                         }
                     }
                     break;
+
+                case PropertyEnum.PowerCooldownDuration:
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                        PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            break;
+                        }
+
+                        if (Power.IsCooldownPersistent(powerProto))
+                            Properties[PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef] = newValue;
+
+                        break;
+                    }
+
+                case PropertyEnum.PowerCooldownStartTime:
+                {
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnPropertyChange(): powerProto == null");
+                        break;
+                    }
+
+                    if (Power.IsCooldownPersistent(powerProto))
+                        Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
+
+                    break;
+                }
             }
         }
 
@@ -311,6 +343,51 @@ namespace MHServerEmu.Games.Entities
                 Inventory inventory = GetInventoryByRef(invProtoRef);
                 if (inventory == null && AddInventory(invProtoRef) == false)
                     Logger.Warn($"OnUnpackComplete(): Failed to add inventory, invProtoRef={invProtoRef.GetName()}");
+            }
+
+            // Restore persistent cooldowns
+            if (archive.IsPersistent)
+            {
+                Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownDurationPersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent or stored on player
+                    if (Power.IsCooldownPersistent(powerProto) == false || Power.IsCooldownOnPlayer(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownDuration, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownStartTimePersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent or stored on player
+                    if (Power.IsCooldownPersistent(powerProto) == false || Power.IsCooldownOnPlayer(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownStartTime, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in setDict)
+                    Properties[kvp.Key] = kvp.Value;
+
+                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
             }
         }
 
