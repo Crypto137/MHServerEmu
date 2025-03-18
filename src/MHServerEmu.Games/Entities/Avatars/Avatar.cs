@@ -4645,6 +4645,129 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (IsInWorld)
                         ScheduleStatsPowerRefresh();
                     break;
+
+                case PropertyEnum.PowerChargesMax:
+                {
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                    if (powerProtoRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("OnPropertyChange(): powerProtoRef == PrototypeId.Invalid");
+                        break;
+                    }
+
+                    int chargesAvailable = Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+                    if (newValue.RawLong < oldValue.RawLong)
+                    {
+                        // Remove extra charges if the max number went down
+                        if (newValue >= chargesAvailable)
+                            break;
+
+                        if (newValue > 0 && TestStatus(EntityStatus.ExitingWorld) == false)
+                            Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef] = newValue;
+
+                        // Cancel generation of the next charge by resetting the cooldown
+                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDuration, powerProtoRef));
+                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef));
+                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, powerProtoRef));
+                        Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef));
+                    }
+                    else if (chargesAvailable < newValue)
+                    {
+                        // Start generating charges if we can now have more of them
+                        Power power = GetPower(powerProtoRef);
+                        if (power != null && power.IsOnCooldown() == false)
+                            power.StartCooldown();
+                    }
+
+                    break;
+                }
+
+                case PropertyEnum.PowerChargesMaxBonus:
+                {
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+
+                    int chargesMaxOld = Properties[PropertyEnum.PowerChargesMax, powerProtoRef];
+                    int chargesMaxNew = chargesMaxOld - oldValue + newValue;
+
+                    Power power = GetPower(powerProtoRef);
+
+                    // This indicates whether this power has charges on its own or all extra charges are coming from bonuses
+                    bool hasBaselineCharges = power != null && power.Properties.HasProperty(PropertyEnum.PowerChargesMax);
+
+                    if (chargesMaxOld == 0)
+                    {
+                        // Initialize charges for powers that don't have baseline charges
+                        PropertyId chargesAvailableProp = new(PropertyEnum.PowerChargesAvailable, powerProtoRef);
+                        if (power != null && power.IsOnCooldown() == false && Properties.HasProperty(chargesAvailableProp) == false)
+                            Properties[chargesAvailableProp] = 1;
+
+                        if (chargesMaxNew == 1 && hasBaselineCharges == false)
+                            chargesMaxNew++;
+                    }
+                    else if (chargesMaxNew == 1 && hasBaselineCharges == false)
+                    {
+                        // Revert to normal behavior if this power doesn't have baseline charges
+                        chargesMaxNew = 0;
+                    }
+
+                    Properties[PropertyEnum.PowerChargesMax, powerProtoRef] = chargesMaxNew;
+                    break;
+                }
+
+                case PropertyEnum.PowerChargesMaxBonusForKwd:
+                {
+                    // These will be applied when the power is assigned if currently not in the world
+                    if (IsAliveInWorld == false)
+                        break;
+
+                    Property.FromParam(id, 0, out PrototypeId keywordProtoRef);
+
+                    // Apply bonus to power progression powers
+                    List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
+                    GetPowerProgressionInfos(powerInfoList);
+
+                    foreach (PowerProgressionInfo powerInfo in powerInfoList)
+                    {
+                        PowerPrototype powerProto = powerInfo.PowerPrototype;
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            continue;
+                        }
+
+                        if (HasPowerWithKeyword(powerProto, keywordProtoRef) == false)
+                            continue;
+
+                        Properties[PropertyEnum.PowerChargesMaxBonus, powerProto.DataRef] = newValue;
+                    }
+
+                    ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
+
+                    // Apply bonus to mapped powers
+                    Dictionary<PropertyId, PropertyValue> mappedPowerDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                    foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                        mappedPowerDict.Add(kvp.Key, kvp.Value);
+
+                    foreach (var kvp in mappedPowerDict)
+                    {
+                        PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
+                        if (mappedPowerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): mappedPowerProto == null");
+                            continue;
+                        }
+
+                        if (HasPowerWithKeyword(mappedPowerProto, keywordProtoRef) == false)
+                            continue;
+
+                        Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
+                    }
+
+                    DictionaryPool<PropertyId, PropertyValue>.Instance.Return(mappedPowerDict);
+
+                    break;
+                }
             }
         }
 
