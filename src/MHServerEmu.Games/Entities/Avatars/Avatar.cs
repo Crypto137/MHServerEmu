@@ -368,6 +368,22 @@ namespace MHServerEmu.Games.Entities.Avatars
                 Properties.RemoveProperty(PropertyEnum.SecondaryResource);
         }
 
+        public override bool Resurrect()
+        {
+            Properties[PropertyEnum.HasResurrectPending] = false;
+
+            bool success = base.Resurrect();
+
+            foreach (PrimaryResourceManaBehaviorPrototype primaryManaBehaviorProto in GetPrimaryResourceManaBehaviors())
+            {
+                ManaType manaType = primaryManaBehaviorProto.ManaType;
+                float endurance = primaryManaBehaviorProto.StartsEmpty ? 0f : Properties[PropertyEnum.EnduranceMax, manaType];
+                Properties[PropertyEnum.Endurance, manaType] = endurance;
+            }
+
+            return success;
+        }
+
         public bool DoDeathRelease(DeathReleaseRequestType requestType)
         {
             // Resurrect
