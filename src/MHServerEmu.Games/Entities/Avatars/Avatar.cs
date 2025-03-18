@@ -2298,7 +2298,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
         {
-            if (IsAbilityEquippableInSlot(abilityProtoRef, slot, skipEquipValidation) != AbilitySlotOpValidateResult.Success)
+            if (IsAbilityEquippableInSlot(abilityProtoRef, slot, skipEquipValidation) != AbilitySlotOpValidateResult.Valid)
                 return false;
 
             AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
@@ -2384,14 +2384,14 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool SwapAbilities(AbilitySlot slotA, AbilitySlot slotB, bool sendToClient)
         {
             // Check A to B
-            if (ValidateAbilitySwap(slotA, slotB) != AbilitySlotOpValidateResult.Success)
+            if (ValidateAbilitySwap(slotA, slotB) != AbilitySlotOpValidateResult.Valid)
                 return false;
 
             AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
             if (keyMapping == null) return Logger.WarnReturn(false, "SwapAbilities(): keyMapping == null");
 
             // Check B to A - this is allowed to be invalid, in which case we just discard B
-            if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Success)
+            if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Valid)
                 UnslotAbility(slotB, false);
 
             // Do the swap            
@@ -2528,7 +2528,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // Only mapped powers are allowed to be equipp;ed in combat
                 if (HasMappedPower(abilityProtoRef) || GetMappedPowerFromOriginalPower(abilityProtoRef) != PrototypeId.Invalid)
-                    return AbilitySlotOpValidateResult.Success;
+                    return AbilitySlotOpValidateResult.Valid;
 
                 return AbilitySlotOpValidateResult.AvatarIsInCombat;
             }
@@ -2544,12 +2544,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // Mapped powers have their own validation
                 if (HasMappedPower(abilityProtoRef))
-                    return AbilitySlotOpValidateResult.Success;
+                    return AbilitySlotOpValidateResult.Valid;
 
                 if (skipEquipValidation == false)
                 {
                     AbilitySlotOpValidateResult isPowerEquippableResult = IsPowerEquippable(abilityProtoRef);
-                    if (isPowerEquippableResult != AbilitySlotOpValidateResult.Success)
+                    if (isPowerEquippableResult != AbilitySlotOpValidateResult.Valid)
                         return isPowerEquippableResult;
                 }
             }
@@ -2566,7 +2566,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId powerProtoRef)
         {
             AbilitySlotOpValidateResult staticResult = IsPowerEquippable(PrototypeDataRef, powerProtoRef);
-            if (staticResult != AbilitySlotOpValidateResult.Success)
+            if (staticResult != AbilitySlotOpValidateResult.Valid)
                 return staticResult;
 
             AvatarPrototype avatarProto = AvatarPrototype;
@@ -2582,7 +2582,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     return AbilitySlotOpValidateResult.PowerNotUnlocked;
             }
 
-            return AbilitySlotOpValidateResult.Success;
+            return AbilitySlotOpValidateResult.Valid;
         }
 
         private static AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId avatarProtoRef, PrototypeId powerProtoRef)
@@ -2591,7 +2591,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
 
             if (powerProto.UsableByAll)
-                return AbilitySlotOpValidateResult.Success;
+                return AbilitySlotOpValidateResult.Valid;
 
             // Check avatar-specific restrictions
             AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
@@ -2600,7 +2600,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (avatarProto.HasPowerProgressionTables == false || avatarProto.HasPowerInPowerProgression(powerProtoRef) == false)
                 return AbilitySlotOpValidateResult.PowerNotUsableByAvatar;
 
-            return AbilitySlotOpValidateResult.Success;
+            return AbilitySlotOpValidateResult.Valid;
         }
 
         private AbilitySlotOpValidateResult ValidateAbilitySwap(AbilitySlot slotA, AbilitySlot slotB)
@@ -2616,10 +2616,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (keyMapping == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "ValidateAbilitySwap(): keyMapping == null");
 
             PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
-            if (abilityA != PrototypeId.Invalid && IsAbilityEquippableInSlot(abilityA, slotB, true) != AbilitySlotOpValidateResult.Success)
+            if (abilityA != PrototypeId.Invalid && IsAbilityEquippableInSlot(abilityA, slotB, true) != AbilitySlotOpValidateResult.Valid)
                 return AbilitySlotOpValidateResult.PowerSlotMismatch;
 
-            return AbilitySlotOpValidateResult.Success;
+            return AbilitySlotOpValidateResult.Valid;
         }
 
         /// <summary>
@@ -2670,7 +2670,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (CanActionSlotContainPowerOrItem(abilityProtoRef, slot) == false)
                 return AbilitySlotOpValidateResult.PowerSlotMismatch;
 
-            return AbilitySlotOpValidateResult.Success;
+            return AbilitySlotOpValidateResult.Valid;
         }
 
         public static bool CanActionSlotContainPowerOrItem(PrototypeId abilityProtoRef, AbilitySlot slot)

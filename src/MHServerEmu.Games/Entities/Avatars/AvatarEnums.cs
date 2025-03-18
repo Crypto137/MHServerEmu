@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
     public enum AbilitySlotOpValidateResult
     {
-        Success,
+        Valid,
         PowerNotUsableByAvatar,
         PowerNotActive,
         PowerSlotMismatch,

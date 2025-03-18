@@ -208,6 +208,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
         {
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "GetDefaultAbilities(): avatarProto == null");
 
             List<PowerProgressionEntryPrototype> powerProgEntryList = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
             if (avatarProto.GetPowersUnlockedAtLevel(powerProgEntryList, avatar.CharacterLevel, true, startingLevel))
@@ -219,22 +220,41 @@ namespace MHServerEmu.Games.Entities.Avatars
                         continue;
 
                     // Skip powers that don't have auto-assignment defined
-                    AbilityAutoAssignmentSlotPrototype autoAssignmentSlot = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
-                    if (autoAssignmentSlot == null)
+                    AbilityAutoAssignmentSlotPrototype powerAssignmentProto = avatarProto.GetPowerInAbilityAutoAssignmentSlot(powerProgEntry.PowerAssignment.Ability);
+                    if (powerAssignmentProto == null)
                         continue;
+
+                    PrototypeId abilityToBeSlotted = powerAssignmentProto.Ability;
 
                     // Get ability slot 
-                    GamepadSlotBindingPrototype gamepadSlotBinding = GameDatabase.GetPrototype<GamepadSlotBindingPrototype>(autoAssignmentSlot.Slot);
-                    var abilitySlot = (AbilitySlot)gamepadSlotBinding.PCSlotNumber;  // Avatar::ChooseGamePadSlot()
+                    GamepadSlotBindingPrototype gamepadSlotProto = GameDatabase.GetPrototype<GamepadSlotBindingPrototype>(powerAssignmentProto.Slot);
+                    if (gamepadSlotProto == null)
+                    {
+                        Logger.Warn($"GetDefaultAbilities(): Failed to get the gamepad slot using data ref in the Ability Auto Assignment Slot:\nAvatar: [{avatar}]");
+                        continue;
+                    }
+
+                    // Avatar::ChooseGamePadSlot() - we don't need this on PC
+                    AbilitySlot slot = (AbilitySlot)gamepadSlotProto.PCSlotNumber;
 
                     // Override only empty slots
-                    if (GetAbilityInAbilitySlot(abilitySlot) != PrototypeId.Invalid)
+                    if (GetAbilityInAbilitySlot(slot) != PrototypeId.Invalid)
                         continue;
 
-                    // TODO: Avatar::GetMappedPowerFromOriginalPower()
-                    // TODO: Avatar::CheckAbilitySlotRestrictions()
+                    // Check if the ability to be slotted is mapped to something else (e.g. Jean Grey)
+                    PrototypeId mappedPowerRef = avatar.GetMappedPowerFromOriginalPower(abilityToBeSlotted);
+                    if (mappedPowerRef != PrototypeId.Invalid)
+                        abilityToBeSlotted = mappedPowerRef;
 
-                    hotkeyDataList.Add(new HotkeyData(autoAssignmentSlot.Ability, abilitySlot));
+                    // Check slot restrictions
+                    AbilitySlotOpValidateResult slotResult = Avatar.CheckAbilitySlotRestrictions(abilityToBeSlotted, slot);
+                    if (slotResult != AbilitySlotOpValidateResult.Valid)
+                    {
+                        Logger.Warn($"GetDefaultAbilities(): Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nAvatar: [{avatar}]\nAbility: [{abilityToBeSlotted.GetName()}]");
+                        continue;
+                    }
+
+                    hotkeyDataList.Add(new HotkeyData(abilityToBeSlotted, slot));
                 }
             }
 
