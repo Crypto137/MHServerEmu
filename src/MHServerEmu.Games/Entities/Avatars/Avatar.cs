@@ -1810,23 +1810,26 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (enable)
             {
-                // Turn off mutually exclusive talents (belonging to the same group)
-                PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
-
-                uint talentGroupIndex = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
-                if (talentGroupIndex == TalentGroupIndexInvalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentGroupIndex == TalentGroupIndexInvalid");
-
-                List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
-                GetTalentPowersForSpec(specIndex, talentPowerList);
-
-                foreach (PrototypeId talentPowerRefToCheck in talentPowerList)
+                if (Game.CustomGameOptions.AllowSameGroupTalents == false)
                 {
-                    uint talentGroupIndexToCheck = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRefToCheck);
-                    if (talentGroupIndexToCheck == talentGroupIndex)
-                        UnassignTalentPower(talentPowerRefToCheck, specIndex);
-                }
+                    // Turn off mutually exclusive talents (belonging to the same group)
+                    PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
 
-                ListPool<PrototypeId>.Instance.Return(talentPowerList);
+                    uint talentGroupIndex = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
+                    if (talentGroupIndex == TalentGroupIndexInvalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentGroupIndex == TalentGroupIndexInvalid");
+
+                    List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+                    GetTalentPowersForSpec(specIndex, talentPowerList);
+
+                    foreach (PrototypeId talentPowerRefToCheck in talentPowerList)
+                    {
+                        uint talentGroupIndexToCheck = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRefToCheck);
+                        if (talentGroupIndexToCheck == talentGroupIndex)
+                            UnassignTalentPower(talentPowerRefToCheck, specIndex);
+                    }
+
+                    ListPool<PrototypeId>.Instance.Return(talentPowerList);
+                }
 
                 // Enable
                 AssignTalentPower(talentPowerRef, specIndex);
