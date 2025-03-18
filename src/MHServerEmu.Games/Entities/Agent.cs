@@ -58,6 +58,12 @@ namespace MHServerEmu.Games.Entities
         public override bool IsDormant { get => base.IsDormant || IsWakingUp; }
         public virtual bool IsAtLevelCap { get => CharacterLevel >= GetTeamUpLevelCap(); }
 
+        public override AOINetworkPolicyValues CompatibleReplicationChannels
+        {
+            // Make sure temporary controlled agents (e.g. Magik's Eternal Servitude) are always replicated to the client
+            get => base.CompatibleReplicationChannels | (Properties.HasProperty(PropertyEnum.ControlledAgentHasSummonDur) ? AOINetworkPolicyValues.AOIChannelOwner : 0);
+        }
+
         public Agent(Game game) : base(game) { }
 
         public override bool Initialize(EntitySettings settings)
