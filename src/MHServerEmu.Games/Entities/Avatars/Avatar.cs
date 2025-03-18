@@ -1883,20 +1883,74 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool AssignTalentPower(PrototypeId talentPowerRef, int specIndex)
         {
-            // TODO
+            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AssignTalentPower(): talentPowerRef == PrototypeId.Invalid");
+
+            SpecializationPowerPrototype talentPowerProto = talentPowerRef.As<SpecializationPowerPrototype>();
+            if (talentPowerProto == null) return Logger.WarnReturn(false, "AssignTalentPower(): talentPowerProto == null");
+
+            if (IsInWorld && specIndex == GetPowerSpecIndexActive())
+            {
+                // Assign the talent power if the spec is currently active
+                // Talent powers always have a rank of 1
+                PowerIndexProperties indexProps = new(1, CharacterLevel, CombatLevel);
+                Power talentPower = AssignPower(talentPowerRef, indexProps);
+                if (talentPower == null) return Logger.WarnReturn(false, "AssignTalentPower(): talentPower == null");
+
+                talentPower.HandleTriggerPowerEventOnSpecializationPowerAssigned();
+                RefreshDependentPassivePowers(talentPowerProto, 1);
+            }
+
             Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef] = true;
             return true;
         }
 
         private bool UnassignTalentPower(PrototypeId talentPowerRef, int specIndex, bool isSwitchingSpec = false)
         {
-            // TODO
+            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignTalentPower(): talentPowerRef == PrototypeId.Invalid");
+
+            Power talentPower = GetPower(talentPowerRef);
+            if (talentPower != null && IsInWorld && specIndex == GetPowerSpecIndexActive())
+            {
+                // Unassign the talent power if the spec is currently active
+                PowerPrototype talentPowerProto = talentPower.Prototype;
+                if (talentPowerProto == null) return Logger.WarnReturn(false, "UnassignTalentPower(): talentPowerProto == null");
+
+                if (UnassignPower(talentPowerRef) == false)
+                    return Logger.WarnReturn(false, $"UnassignTalentPower(): Failed to unassign talent power {talentPowerProto} for owner [{this}]");
+
+                talentPower.HandleTriggerPowerEventOnSpecializationPowerUnassigned();
+                RefreshDependentPassivePowers(talentPowerProto, 0);                
+            }
 
             // Do not remove the property if we are simply switching specs
             if (isSwitchingSpec == false)
                 Properties.RemoveProperty(new(PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef));
 
             return true;
+        }
+
+        private void UpdateTalentPowers()
+        {
+            int specIndex = GetPowerSpecIndexActive();
+
+            List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+            GetTalentPowersForSpec(specIndex, talentPowerList);
+
+            foreach (PrototypeId talentPowerRef in talentPowerList)
+            {
+                bool enabled = Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef];
+                if (CanToggleTalentPower(talentPowerRef, specIndex, true, enabled) == CanToggleTalentResult.Success)
+                {
+                    if (GetPower(talentPowerRef) == null)
+                        AssignTalentPower(talentPowerRef, specIndex);
+                }
+                else
+                {
+                    UnassignTalentPower(talentPowerRef, specIndex);
+                }
+            }
+
+            ListPool<PrototypeId>.Instance.Return(talentPowerList);
         }
 
         #endregion
@@ -3115,7 +3169,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Unlock new powers
             if (IsInWorld)
             {
-                // TODO: Talents
+                UpdateTalentPowers();
                 UpdatePowerProgressionPowers(false);
                 UpdateTravelPower();
             }
@@ -4657,6 +4711,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     foreach(var waypointUnlockRef in regionProto.WaypointAutoUnlockList)
                         player.UnlockWaypoint(waypointUnlockRef);
             }
+
+            UpdateTalentPowers();
 
             var missionManager = player.MissionManager;
             if (missionManager != null)

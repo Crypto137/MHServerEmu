@@ -751,7 +751,7 @@ namespace MHServerEmu.Games.Entities
             return power.IsInRange(position, RangeCheckType.Activation);
         }
 
-        private void RefreshDependentPassivePowers(PowerPrototype powerProto, int rank)
+        protected void RefreshDependentPassivePowers(PowerPrototype powerProto, int rank)
         {
             if (powerProto.RefreshDependentPassivePowers.IsNullOrEmpty())
                 return;
