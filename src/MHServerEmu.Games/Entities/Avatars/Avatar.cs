@@ -35,6 +35,7 @@ namespace MHServerEmu.Games.Entities.Avatars
     public partial class Avatar : Agent
     {
         private const int MaxNumTransientAbilityKeyMappings = 1;
+        private const uint TalentGroupIndexInvalid = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
@@ -1786,9 +1787,82 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Talents (Specialization Powers)
 
-        public bool IsTalentPowerEnabledForSpec(PrototypeId talentPowerProtoRef, int specIndex)
+        public void GetTalentPowersForSpec(int specIndex, List<PrototypeId> talentPowerList)
         {
-            return Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerProtoRef];
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarSpecializationPower, specIndex))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId talentPowerRef);
+                talentPowerList.Add(talentPowerRef);
+            }
+        }
+
+        public bool IsTalentPowerEnabledForSpec(PrototypeId talentPowerRef, int specIndex)
+        {
+            return Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef];
+        }
+
+        public bool EnableTalentPower(PrototypeId talentPowerRef, int specIndex, bool enable)
+        {
+            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentPowerRef == PrototypeId.Invalid");
+
+            SpecializationPowerPrototype talentProto = talentPowerRef.As<SpecializationPowerPrototype>();
+            if (talentProto == null) return Logger.WarnReturn(false, "EnableTalentPower(): talentProto == null");
+
+            if (enable)
+            {
+                // Turn off mutually exclusive talents (belonging to the same group)
+                PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
+
+                uint talentGroupIndex = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
+                if (talentGroupIndex == TalentGroupIndexInvalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentGroupIndex == TalentGroupIndexInvalid");
+
+                List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+                GetTalentPowersForSpec(specIndex, talentPowerList);
+
+                foreach (PrototypeId talentPowerRefToCheck in talentPowerList)
+                {
+                    uint talentGroupIndexToCheck = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRefToCheck);
+                    if (talentGroupIndexToCheck == talentGroupIndex)
+                        UnassignTalentPower(talentPowerRefToCheck, specIndex);
+                }
+
+                ListPool<PrototypeId>.Instance.Return(talentPowerList);
+
+                // Enable
+                AssignTalentPower(talentPowerRef, specIndex);
+            }
+            else
+            {
+                // Disable
+                UnassignTalentPower(talentPowerRef, specIndex);
+            }
+
+            Logger.Debug($"EnableTalentPower(): {talentPowerRef.GetName()} = {enable} (spec={specIndex})");
+            return true;
+        }
+
+        public CanToggleTalentResult CanToggleTalentPower(PrototypeId talentPowerRef, int specIndex, bool enterWorld, bool enable)
+        {
+            // TODO
+            return CanToggleTalentResult.Success;
+        }
+
+        private bool AssignTalentPower(PrototypeId talentPowerRef, int specIndex)
+        {
+            // TODO
+            Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef] = true;
+            return true;
+        }
+
+        private bool UnassignTalentPower(PrototypeId talentPowerRef, int specIndex, bool isSwitchingSpec = false)
+        {
+            // TODO
+
+            // Do not remove the property if we are simply switching specs
+            if (isSwitchingSpec == false)
+                Properties.RemoveProperty(new(PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef));
+
+            return true;
         }
 
         #endregion

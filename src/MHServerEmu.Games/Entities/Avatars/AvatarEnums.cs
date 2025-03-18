@@ -56,6 +56,15 @@ namespace MHServerEmu.Games.Entities.Avatars
         UnknownFailure
     }
 
+    public enum CanToggleTalentResult
+    {
+        Success,
+        InCombat,
+        RestrictiveCondition,
+        LevelRequirement,
+        UnknownFailure
+    }
+
     public enum CanSetInfinityRankResult
     {
         Success,
