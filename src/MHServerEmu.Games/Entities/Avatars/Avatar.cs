@@ -1793,7 +1793,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-        #region Mapped Powers
+        #region Mapped Powers (and Stolen Powers)
 
         public bool HasMappedPower(PrototypeId mappedPowerRef)
         {
@@ -1831,6 +1831,133 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return PrototypeId.Invalid;
+        }
+
+        public bool MapPower(PrototypeId originalPowerRef, PrototypeId mappedPowerRef)
+        {
+            if (originalPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "MapPower(): originalPowerRef == PrototypeId.Invalid");
+            if (mappedPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "MapPower(): mappedPowerRef == PrototypeId.Invalid");
+
+            PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
+            if (mappedPowerProto == null) return Logger.WarnReturn(false, "MapPower(): mappedPowerProto == null");
+
+            Logger.Debug($"MapPower(): {originalPowerRef.GetName()} => {mappedPowerRef.GetName()}");
+
+            // Map
+            Properties[PropertyEnum.AvatarMappedPower, originalPowerRef] = mappedPowerRef;
+
+            // Refresh powers
+            GetPowerProgressionInfo(originalPowerRef, out PowerProgressionInfo originalPowerInfo);
+            if (UpdatePowerRank(ref originalPowerInfo, false) == false)
+            {
+                // If the original power's rank didn't change as a result of the update,
+                // we need to update the mapped power's rank manually
+                PowerProgressionInfo mappedPowerInfo = new();
+                mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
+                UpdatePowerRank(ref mappedPowerInfo, false);
+            }
+
+            // Replace the slotted original power if it was usable
+            if (GetPowerRank(originalPowerRef) > 0)
+            {
+                List<AbilitySlot> slotList = ListPool<AbilitySlot>.Instance.Get();
+                int specIndex = GetPowerSpecIndexActive();
+
+                foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
+                {
+                    if (keyMapping.PowerSpecIndex != specIndex)
+                        continue;
+
+                    keyMapping.GetActiveAbilitySlotsContainingProtoRef(originalPowerRef, slotList);
+                    if (slotList.Count == 0)
+                        continue;
+
+                    foreach (AbilitySlot slot in slotList)
+                    {
+                        if (SlotAbility(mappedPowerRef, slot, true, true) == false)
+                            Logger.Warn($"MapPower(): Failed to slot mapped power {mappedPowerProto} in slot {slot} for avatar [{this}]");
+                    }
+
+                    slotList.Clear();
+                }
+
+                ListPool<AbilitySlot>.Instance.Return(slotList);
+            }
+
+            return true;
+        }
+
+        public bool UnassignMappedPower(PrototypeId mappedPowerRef)
+        {
+            if (mappedPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignMappedPower(): mappedPowerRef == PrototypeId.Invalid");
+
+            // Early return if this power is not mapped (valid result)
+            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(mappedPowerRef);
+            if (originalPowerRef == PrototypeId.Invalid)
+                return true;
+
+            PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
+            if (originalPowerProto == null) return Logger.WarnReturn(false, "UnassignMappedPower(): originalPowerProto == null");
+
+            Logger.Debug($"UnassignMappedPower(): {mappedPowerRef.GetName()}");
+
+            // Restore the original power in key mappings
+            List<AbilitySlot> slotList = ListPool<AbilitySlot>.Instance.Get();
+            int specIndex = GetPowerSpecIndexActive();
+
+            foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
+            {
+                if (keyMapping.PowerSpecIndex != specIndex)
+                    continue;
+
+                keyMapping.GetActiveAbilitySlotsContainingProtoRef(mappedPowerRef, slotList);
+                if (slotList.Count == 0)
+                    continue;
+
+                foreach (AbilitySlot slot in slotList)
+                {
+                    if (SlotAbility(originalPowerRef, slot, true, true) == false)
+                        Logger.Warn($"UnassignMappedPower(): Failed to slot original power {originalPowerProto} in slot {slot} for avatar [{this}]");
+                }
+
+                slotList.Clear();
+            }
+
+            ListPool<AbilitySlot>.Instance.Return(slotList);
+
+            // Unassign
+            UnassignPower(mappedPowerRef);
+            Properties.RemoveProperty(new(PropertyEnum.AvatarMappedPower, originalPowerRef));
+
+            // Refresh the original power
+            GetPowerProgressionInfo(originalPowerRef, out PowerProgressionInfo originalPowerInfo);
+            UpdatePowerRank(ref originalPowerInfo, false);
+
+            return true;
+        }
+
+        public void UnassignAllMappedPowers()
+        {
+            while (Properties.HasProperty(PropertyEnum.AvatarMappedPower))
+            {
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                {
+                    UnassignMappedPower(kvp.Value);
+                    break;
+                }
+            }
+        }
+
+        public bool IsStolenPowerAvailable(PrototypeId stolenPowerRef)
+        {
+            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsStolenPowerAvailable(): stolenPowerRef == PrototypeId.Invalid");
+            return Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef];
+        }
+
+        public bool CanAssignStolenPower(PrototypeId stolenPowerRefToAssign, PrototypeId currentStolenPowerRef)
+        {
+            // TODO
+            return true;
         }
 
         #endregion

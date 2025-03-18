@@ -1703,12 +1703,29 @@ namespace MHServerEmu.Games.Network
             var assignStolenPower = message.As<NetMessageAssignStolenPower>();
             if (assignStolenPower == null) return Logger.WarnReturn(false, $"OnAssignStolenPower(): Failed to retrieve message");
 
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(assignStolenPower.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnAssignStolenPower(): avatar == null");
+
+            Player owner = avatar.GetOwnerOfType<Player>();
+            if (owner != Player)
+                return Logger.WarnReturn(false, $"OnAssignStolenPower(): Player [{Player}] is attempting to assign stolen power for avatar [{avatar}] that belongs to another player");
+
             PrototypeId stealingPowerRef = (PrototypeId)assignStolenPower.StealingPowerProtoId;
+            if (stealingPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnAssignStolenPower(): stealingPowerRef == PrototypeId.Invalid");
+
             PrototypeId stolenPowerRef = (PrototypeId)assignStolenPower.StolenPowerProtoId;
+            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnAssignStolenPower(): stolenPowerRef == PrototypeId.Invalid");
 
-            Avatar avatar = Player.CurrentAvatar;
-            avatar.Properties[PropertyEnum.AvatarMappedPower, stealingPowerRef] = stolenPowerRef;
+            if (avatar.IsStolenPowerAvailable(stolenPowerRef) == false) return Logger.WarnReturn(false, "OnAssignStolenPower(): avatar.IsStolenPowerAvailable(stolenPowerRef) == false");
 
+            PrototypeId currentStolenPowerRef = avatar.GetMappedPowerFromOriginalPower(stealingPowerRef);
+            if (avatar.CanAssignStolenPower(stolenPowerRef, currentStolenPowerRef) == false)
+                return false;
+
+            if (currentStolenPowerRef != PrototypeId.Invalid)
+                avatar.UnassignMappedPower(currentStolenPowerRef);
+
+            avatar.MapPower(stealingPowerRef, stolenPowerRef);
             return true;
         }
 

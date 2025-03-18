@@ -1394,15 +1394,51 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 32
-        private void DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionMapPowers(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextMapPowersPrototype mapPowersContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionMapPowers(): Incompatible power event context type");
+
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionMapPowers(): Owner is not Avatar avatar");
+
+            if (mapPowersContext.MappedPowers.IsNullOrEmpty())
+                return true;
+
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            foreach (MapPowerPrototype mapPowerProto in mapPowersContext.MappedPowers)
+            {
+                if (mapPowerProto.OriginalPower == continuousPowerRef)
+                    avatar.ClearContinuousPower();
+
+                avatar.MapPower(mapPowerProto.OriginalPower, mapPowerProto.MappedPower);
+            }
+
+            return true;
         }
 
         // 33
-        private void DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionUnassignMappedPowers(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextUnassignMappedPowersPrototype unassignMappedPowersContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionUnassignMappedPowers(): Incompatible power event context type");
+
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionUnassignMappedPowers(): Owner is not Avatar avatar");
+
+            if (unassignMappedPowersContext.MappedPowersToUnassign.IsNullOrEmpty())
+                return true;
+
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            foreach (MapPowerPrototype mapPowerProto in unassignMappedPowersContext.MappedPowersToUnassign)
+            {
+                if (mapPowerProto.MappedPower == continuousPowerRef)
+                    avatar.ClearContinuousPower();
+
+                avatar.UnassignMappedPower(mapPowerProto.MappedPower);
+            }
+
+            return true;
         }
 
         // 34
