@@ -126,13 +126,113 @@ namespace MHServerEmu.Games.GameData.PatchManager
             try
             {
                 Type fieldType = fieldInfo.PropertyType;
-                object convertedValue = ConvertValue(entry.Value, fieldType);
-                fieldInfo.SetValue(prototype, convertedValue);
+                if (entry.InsertValue)
+                {
+                    InsertValue(prototype, fieldInfo, entry.Value);
+                }
+                else
+                {
+                    object convertedValue = ConvertValue(entry.Value, fieldType);
+                    fieldInfo.SetValue(prototype, convertedValue);
+                }
             }
             catch (Exception ex)
             {
                 Logger.WarnException(ex, $"Failed UpdateValue: [{entry.Prototype}] [{entry.Path}] {ex.Message}");
             }
+        }
+
+        private static void InsertValue(Prototype prototype, PropertyInfo fieldInfo, string valueStruct)
+        {
+            Type fieldType = fieldInfo.PropertyType; 
+            if (fieldType.IsArray == false)
+                throw new InvalidOperationException($"Field {fieldInfo.Name} is not array.");     
+
+            var values = ParseValueStruct(valueStruct);
+
+            if (values.ContainsKey("Type") == false)
+                throw new InvalidOperationException($"Type not found");
+
+            string typeName = values["Type"];
+            Type elementType = fieldType.GetElementType(); 
+
+            if (elementType == null || IsTypeCompatible(elementType, typeName) == false)
+                throw new InvalidOperationException($"Type {typeName} is not assignable for {elementType?.Name}.");
+
+            var currentArray = (Array)fieldInfo.GetValue(prototype);
+
+            int newLength = CalcNewLength(currentArray, values);
+            var newArray = Array.CreateInstance(elementType, newLength);
+
+            if (currentArray != null)
+                Array.Copy(currentArray, newArray, currentArray.Length);
+
+            AddElements(newArray, elementType, values, currentArray.Length);
+
+            fieldInfo.SetValue(prototype, newArray);
+        }
+
+        private static int CalcNewLength(Array currentArray, Dictionary<string, string> values)
+        {
+            int currentLength = currentArray?.Length ?? 0;
+            int valuesCount = 1;
+            if (values.TryGetValue("Values", out var strArray))
+            {
+                int length = strArray.Split(';').Length;
+                if (length > 1) valuesCount = length;
+            }
+            return currentLength + valuesCount;
+        }
+
+        private static bool IsTypeCompatible(Type baseType, string typeName)
+        {
+            Type derivedType = Type.GetType($"{baseType.Namespace}.{typeName}");
+            return derivedType == null
+                ? throw new InvalidOperationException($"Type {typeName} not found.")
+                : baseType.IsAssignableFrom(derivedType);
+        }
+
+        private static void AddElements(Array newArray, Type elementType, Dictionary<string, string> values, int lastIndex)
+        {
+            if (elementType.IsClass)
+            {
+                // TODO
+            }
+            else if (values.TryGetValue("Values", out string strArray))
+            {
+                var valueElements = strArray.Split(';');
+                foreach (var valueString in valueElements)
+                {
+                    object elementValue = ConvertValue(valueString, elementType);
+                    newArray.SetValue(elementValue, lastIndex++);
+                }
+            }
+            else if (values.TryGetValue("Value", out string valueString))
+            {
+                object elementValue = ConvertValue(valueString, elementType);
+                newArray.SetValue(elementValue, lastIndex);
+            }
+        }
+
+        private static Dictionary<string, string> ParseValueStruct(string valueStruct)
+        {
+            valueStruct = valueStruct.Trim('{', '}');
+            var keyValuePairs = valueStruct.Split(',');
+            var result = new Dictionary<string, string>();
+
+            foreach (var pair in keyValuePairs)
+            {
+                var parts = pair.Split(':');
+                if (parts.Length != 2)
+                    throw new FormatException($"Wrong value format: {pair}");
+
+                string key = parts[0].Trim();
+                string value = parts[1].Trim();
+
+                result[key] = value;
+            }
+
+            return result;
         }
 
         public void SetPath(Prototype parent, Prototype child, string fieldName)

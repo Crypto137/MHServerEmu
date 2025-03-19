@@ -14,6 +14,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
         public string СlearPath { get; }
         [JsonIgnore]
         public string FieldName { get; }
+        [JsonIgnore]
+        public bool InsertValue { get; }
 
         [JsonConstructor]
         public PrototypePatchUpdateValue(bool enabled, string prototype, string path, string description, string value)
@@ -35,6 +37,15 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 СlearPath = path[..lastDotIndex];
                 FieldName = path[(lastDotIndex + 1)..];
             }
+
+            InsertValue = false;
+            int index = FieldName.LastIndexOf('[');
+            if (index != -1)
+            {
+                InsertValue = true;
+                FieldName = FieldName[..index];
+            }
+
         }
     }
 
