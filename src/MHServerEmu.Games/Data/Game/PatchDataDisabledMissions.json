@@ -4,6 +4,7 @@
         "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
         "Path": "DesignState",
         "Description": "Disable XMasGiftXChange",
+        "ValueType": "Enum",
         "Value": "NotInGame"
     },
     {
@@ -11,6 +12,7 @@
         "Prototype": "Missions/Prototypes/Act3/Ch09Asgard/Controllers/SiegeMissionGiverController.prototype",
         "Path": "DesignState",
         "Description": "Fix Conflict mission SiegeMissionGiverController",
+        "ValueType": "Enum",
         "Value": "NotInGame"
     },
     {
@@ -18,6 +20,7 @@
         "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/AgentsOfSHIELDEvent.prototype",
         "Path": "DesignState",
         "Description": "Disable AgentsOfSHIELDEvent until Leaderboards",
+        "ValueType": "Enum",
         "Value": "NotInGame"
     }
 ]
