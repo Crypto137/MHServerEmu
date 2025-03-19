@@ -2002,9 +2002,9 @@ namespace MHServerEmu.Games.Entities
             else
             {
                 // Calculate damage delta normally
-                healthDelta -= MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Physical]);
-                healthDelta -= MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Energy]);
-                healthDelta -= MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Damage, (int)DamageType.Mental]);
+                foreach (var kvp in powerResults.Properties.IteratePropertyRange(PropertyEnum.Damage))
+                    healthDelta -= MathHelper.RoundToInt64(kvp.Value);
+
                 healthDelta += MathHelper.RoundToInt64(powerResults.Properties[PropertyEnum.Healing]);
             }
 
@@ -2037,11 +2037,11 @@ namespace MHServerEmu.Games.Entities
                     return false;
             }
 
-            // Now apply the health delta
+            // Calculate the new health value
             health += healthDelta;
             health = Math.Clamp(health, Properties[PropertyEnum.HealthMin], Properties[PropertyEnum.HealthMax]);
 
-            // Change health to the new value
+            // Trigger health events
             WorldEntity powerUser = Game.EntityManager.GetEntity<WorldEntity>(powerResults.PowerOwnerId);
 
             long adjustHealth = health - startHealth;
@@ -2055,6 +2055,10 @@ namespace MHServerEmu.Games.Entities
                 region.AdjustHealthEvent.Invoke(new(this, ultimateOwner, player, adjustHealth, isDodged));
             }
 
+            if (powerResults.IsAvoided)
+                return false;
+
+            // Apply health change
             bool killed = false;
 
             if (health <= 0 && Properties[PropertyEnum.AIDefeated] == false)
@@ -2091,20 +2095,24 @@ namespace MHServerEmu.Games.Entities
                         TryActivateOnDeathProcs(powerResults);
                 }
 
-                var killFlags = KillFlags.None;
-                if (powerResults != null)
+                // Check health again in case a cheat death proc activated
+                if (Properties[PropertyEnum.Health] <= 0L)
                 {
-                    if (powerResults.Properties[PropertyEnum.NoLootDrop])
-                        killFlags |= KillFlags.NoLoot;
-                    if (powerResults.Properties[PropertyEnum.NoExpOnDeath])
-                        killFlags |= KillFlags.NoExp;
-                    if (powerResults.Properties[PropertyEnum.OnKillDestroyImmediate])
-                        killFlags |= KillFlags.DestroyImmediate;
-                }
+                    var killFlags = KillFlags.None;
+                    if (powerResults != null)
+                    {
+                        if (powerResults.Properties[PropertyEnum.NoLootDrop])
+                            killFlags |= KillFlags.NoLoot;
+                        if (powerResults.Properties[PropertyEnum.NoExpOnDeath])
+                            killFlags |= KillFlags.NoExp;
+                        if (powerResults.Properties[PropertyEnum.OnKillDestroyImmediate])
+                            killFlags |= KillFlags.DestroyImmediate;
+                    }
 
-                Kill(ultimateOwner, killFlags, powerUser);
-                killed = true;
-                TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
+                    Kill(ultimateOwner, killFlags, powerUser);
+                    killed = true;
+                    TriggerEntityActionEvent(EntitySelectorActionEventType.OnGotKilled);
+                }
             }
             else
             {
