@@ -2208,6 +2208,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                         continue;
                     }
 
+                    if (mappedPowerProto.DataRef == currentStolenPowerRef)
+                        continue;
+
                     if (mappedPowerProto.HasKeyword(keywordProto) == false)
                         continue;
 
