@@ -1,0 +1,18 @@
+[
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add StPatricksEventPowerUpTable",
+        "ValueType": "PrototypeDataRef",
+        "Value": 7592276506700879991
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add [ValentinesEventPowerupTable, VDayTable]",
+        "ValueType": "PrototypeDataRef[]",
+        "Value": [ 1089767944042846312, 7378732117961543855 ]
+    }
+]

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace MHServerEmu.Games.GameData.PatchManager
 {
-    public readonly struct PrototypePatchEntry
+    public class PrototypePatchEntry
     {
         public bool Enabled { get; }
         public string Prototype { get; }
@@ -17,6 +17,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
         public string FieldName { get; }
         [JsonIgnore]
         public bool InsertValue { get; }
+        [JsonIgnore]
+        public bool Patched { get; set; }
 
         [JsonConstructor]
         public PrototypePatchEntry(bool enabled, string prototype, string path, string description, ValueBase value)
@@ -46,6 +48,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 InsertValue = true;
                 FieldName = FieldName[..index];
             }
+
+            Patched = false;
         }
     }
 
@@ -74,12 +78,15 @@ namespace MHServerEmu.Games.GameData.PatchManager
             return valueType switch
             {
                 ValueType.String => new SimpleValue<string>(jsonElement.GetString(), valueType),
+                ValueType.Boolean => new SimpleValue<bool>(jsonElement.GetBoolean(), valueType),
                 ValueType.Float => new SimpleValue<float>(jsonElement.GetSingle(), valueType),
                 ValueType.Integer => new SimpleValue<int>(jsonElement.GetInt32(), valueType),
                 ValueType.Enum => new SimpleValue<string>(jsonElement.GetString(), valueType),
-                ValueType.PrototypeId => new SimpleValue<PrototypeId>((PrototypeId)jsonElement.GetUInt64(), valueType),
+                ValueType.PrototypeId or 
+                ValueType.PrototypeDataRef => new SimpleValue<PrototypeId>((PrototypeId)jsonElement.GetUInt64(), valueType),
                 ValueType.LocaleStringId => new SimpleValue<LocaleStringId>((LocaleStringId)jsonElement.GetUInt64(), valueType),
-                ValueType.PrototypeIdArray => new ArrayValue<PrototypeId>(jsonElement, valueType, x => (PrototypeId)x.GetUInt64()),
+                ValueType.PrototypeIdArray or
+                ValueType.PrototypeDataRefArray => new ArrayValue<PrototypeId>(jsonElement, valueType, x => (PrototypeId)x.GetUInt64()),
                 _ => throw new NotSupportedException($"Type {valueType} not support.")
             };
         }
@@ -93,14 +100,15 @@ namespace MHServerEmu.Games.GameData.PatchManager
     public enum ValueType
     {
         String,
+        Boolean,
         Float,
         Integer,
         Enum,
         PrototypeId,
         PrototypeIdArray,
         LocaleStringId,
-        Prototype,
-        PrototypeArray
+        PrototypeDataRef,
+        PrototypeDataRefArray
     }
 
     public abstract class ValueBase

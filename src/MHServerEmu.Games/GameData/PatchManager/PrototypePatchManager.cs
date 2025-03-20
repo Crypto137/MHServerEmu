@@ -70,10 +70,20 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public bool PreCheck(PrototypeId protoRef)
         {
-            if (protoRef != PrototypeId.Invalid && _patchDict.ContainsKey(protoRef))
-                _protoStack.Push(protoRef);
+            if (protoRef != PrototypeId.Invalid && _patchDict.TryGetValue(protoRef, out var list))
+            {
+                if (NotPatched(list))
+                    _protoStack.Push(protoRef);
+            }
 
             return _protoStack.Count > 0;
+        }
+
+        private static bool NotPatched(List<PrototypePatchEntry> list)
+        {
+            foreach (var entry in list)
+                if (entry.Patched == false) return true;
+            return false;
         }
 
         public void PostOverride(Prototype prototype)
@@ -90,10 +100,13 @@ namespace MHServerEmu.Games.GameData.PatchManager
             else
                 patchProtoRef = _protoStack.Peek();
 
+            if (prototype.DataRef != PrototypeId.Invalid && prototype.DataRef != patchProtoRef) return;
+
             if (_patchDict.TryGetValue(patchProtoRef, out var list) == false) return;
 
             foreach (var entry in list)
-                CheckAndUpdate(entry, prototype, currentPath);
+                if (entry.Patched == false)
+                    CheckAndUpdate(entry, prototype, currentPath);
 
             if (_protoStack.Count == 0)
                 _pathDict.Clear();
@@ -139,6 +152,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
                     object convertedValue = ConvertValue(entry.Value.GetValue(), fieldType);
                     fieldInfo.SetValue(prototype, convertedValue);
                 }
+                entry.Patched = true;
             }
             catch (Exception ex)
             {
@@ -157,7 +171,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
             var entryType = valueEntry.GetType();
             Type elementType = fieldType.GetElementType(); 
 
-            if (elementType == null || IsTypeCompatible(elementType, entryType) == false)
+            if (elementType == null || IsTypeCompatible(elementType, entryType, value.ValueType) == false)
                 throw new InvalidOperationException($"Type {value.ValueType} is not assignable for {elementType?.Name}.");
 
             var currentArray = (Array)fieldInfo.GetValue(prototype);
@@ -185,31 +199,41 @@ namespace MHServerEmu.Games.GameData.PatchManager
             return currentLength + valuesCount;
         }
 
-        private static bool IsTypeCompatible(Type baseType, Type entryType)
+        private static bool IsTypeCompatible(Type baseType, Type entryType, ValueType valueType)
         {
             if (entryType.IsArray) entryType = entryType.GetElementType();
-            return baseType.IsAssignableFrom(entryType);
+            if (valueType == ValueType.PrototypeDataRef || valueType == ValueType.PrototypeDataRefArray) 
+                entryType = typeof(Prototype);
+            return entryType.IsAssignableFrom(baseType);
         }
 
         private static void AddElements(Array newArray, Type elementType, object valueEntry, int lastIndex)
         {
-            if (elementType.IsClass)
-            {
-                // TODO
-            }
-            else if (valueEntry is Array array)
+            if (valueEntry is Array array)
             {
                 foreach (var entry in array)
                 {
-                    object elementValue = ConvertValue(entry, elementType);
+                    object elementValue = GetElementValue(entry, elementType);
                     newArray.SetValue(elementValue, lastIndex++);
                 }
             }
             else
             {
-                object elementValue = ConvertValue(valueEntry, elementType);
+                object elementValue = GetElementValue(valueEntry, elementType);
                 newArray.SetValue(elementValue, lastIndex);
             }
+        }
+
+        private static object GetElementValue(object valueEntry, Type elementType)
+        {
+            if (elementType.IsClass && valueEntry is PrototypeId dataRef)
+            {
+                var prototype = GameDatabase.GetPrototype<Prototype>(dataRef) 
+                    ?? throw new InvalidOperationException($"DataRef {dataRef} is not Prototype.");
+                valueEntry = prototype;
+            }
+
+            return ConvertValue(valueEntry, elementType);            
         }
 
         public void SetPath(Prototype parent, Prototype child, string fieldName)
