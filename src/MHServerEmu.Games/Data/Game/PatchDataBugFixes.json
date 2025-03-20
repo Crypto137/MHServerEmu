@@ -67,8 +67,8 @@
         "Enabled": true,
         "Prototype": "Entity/Alliances/Overrides/Controlled.prototype",
         "Path": "HostileTo[]",
-        "Description": "Add [GangBiker, GangShocker, GangHellbane, GangElectro] to Controlled Keywords",
+        "Description": "Add [GangBiker, GangShocker, GangHellbane, GangElectro, EnemyToEveryone] to Controlled Keywords",
         "ValueType": "PrototypeId[]",
-        "Value": [3046566727234031236, 11722709847486435174, 1849637429396115378, 3414168095237017445]
+        "Value": [ 3046566727234031236, 11722709847486435174, 1849637429396115378, 3414168095237017445, 4627307232939675976 ]
     }
 ]
