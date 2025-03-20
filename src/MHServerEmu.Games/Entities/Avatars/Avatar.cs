@@ -2384,6 +2384,19 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Properties[PropertyEnum.TransformModeStartTime, newTransformModeRef] = Game.CurrentTime;
             }
 
+            // Assign or unassign transform mode powers
+            if (newTransformModeRef != PrototypeId.Invalid)
+                UpdateTransformModeDefaultEquippedAbilities(newTransformModeRef, true);
+            else
+                UpdateTransformModeDefaultEquippedAbilities(oldTransformModeRef, false);
+
+            UpdateTransformModeAbilityKeyMapping(newTransformModeRef, oldTransformModeRef);
+
+            // TODO: Assign or unassign default mode powers
+
+            if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid && GetPower(_continuousPowerData.PowerProtoRef) != null)
+                ClearContinuousPower();
+
             return true;
         }
 
@@ -2471,6 +2484,69 @@ namespace MHServerEmu.Games.Entities.Avatars
             PowerUseResult result = ActivatePower(currentTransformModeProto.ExitTransformModePower, ref settings);
             if (result != PowerUseResult.Success)
                 return Logger.WarnReturn(false, $"DoTransformModeExitPowerCallback(): Failed to activate transform mode exit power for Avatar: [{this}]\nTransform mode: {currentTransformModeProto}");
+
+            return true;
+        }
+
+        private bool UpdateTransformModeAbilityKeyMapping(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
+        {
+            TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
+            TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
+
+            if (oldTransformModeProto == null && newTransformModeProto == null) return Logger.WarnReturn(false, "UpdateTransformModeAbilityKeyMapping(): oldTransformModeProto == null && newTransformModeProto == null");
+
+            if (oldTransformModeProto?.PowersAreSlottable == false || newTransformModeProto?.PowersAreSlottable == false)
+                RefreshAbilityKeyMapping(false);    // Swap to and from non-slottable transform mapping
+            else if (newTransformModeProto?.PowersAreSlottable == true)
+                RefreshAbilityKeyMapping(false);    // Swap to slottable transform mapping
+            else if (newTransformModeProto == null && oldTransformModeProto?.PowersAreSlottable == true)
+                RefreshAbilityKeyMapping(false);    // Swap back from slottable transform mapping
+
+            return true;
+        }
+
+        private bool UpdateTransformModeDefaultEquippedAbilities(PrototypeId transformModeRef, bool isEntering)
+        {
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "UpdateTransformModeDefaultEquippedAbilities(): transformModeProto == null");
+
+            // Nothing to update
+            if (transformModeProto.DefaultEquippedAbilities.IsNullOrEmpty())
+                return true;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+            foreach (AbilityAssignmentPrototype abilityAssignment in transformModeProto.DefaultEquippedAbilities)
+            {
+                PrototypeId abilityProtoRef = abilityAssignment.Ability;
+
+                if (abilityProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                // Abilities can also refer to items
+                PowerPrototype powerProto = abilityProtoRef.As<PowerPrototype>();
+                if (powerProto == null)
+                    continue;
+
+                // Power progression powers are handled separately
+                if (HasPowerInPowerProgression(abilityProtoRef))
+                    continue;
+
+                if (isEntering)
+                {
+                    if (HasPowerInPowerCollection(abilityProtoRef))
+                        continue;
+
+                    AssignPower(abilityProtoRef, indexProps);
+
+                    PowerProgressionInfo powerInfo = new();
+                    powerInfo.InitNonProgressionPower(abilityProtoRef);
+                    UpdatePowerRank(ref powerInfo, false);
+                }
+                else
+                {
+                    UnassignPower(abilityProtoRef);
+                }
+            }
 
             return true;
         }
