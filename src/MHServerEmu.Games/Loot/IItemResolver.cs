@@ -18,6 +18,7 @@ namespace MHServerEmu.Games.Loot
         public LootResolverFlags Flags { get; }
 
         public LootContext LootContext { get; }
+        public LootContext LootContextOverride { get; set; }
         public Player Player { get; }
         public Region Region { get; }
 

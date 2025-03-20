@@ -411,6 +411,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (Segment.EpsilonTest(noDropPercent, LiveTuningData.DefaultTuningVarValue) == false && resolver.CheckDropChance(settings, noDropPercent) == false)
                     continue;
 
+                // CUSTOM: Override loot context for live tuning drops to allow costumes to drop
+                resolver.LootContextOverride = LootContext.CashShop;
+
                 switch (entityProto)
                 {
                     case AgentPrototype agentProto:
@@ -424,7 +427,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     default:
                         Logger.Warn($"PickLiveTuningNodes(): None ItemPrototype or AgentPrototype being used in a live-tuning roll!\n Prototype: {entityProto}");
                         break;
-                } 
+                }
+
+                resolver.LootContextOverride = LootContext.None;
             }
 
             return result;
