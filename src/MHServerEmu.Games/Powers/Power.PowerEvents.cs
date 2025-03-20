@@ -1063,15 +1063,62 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 17
-        private void DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionTransformModeChange(): Not implemented");
+            if (Owner is not Avatar ownerAvatar) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): Owner is not Avatar ownerAvatar");
+
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTransformModePrototype contextProto)
+                return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): Incompatible power event context type");
+
+            PrototypeId transformModeRef = contextProto.TransformMode;
+
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): transformModeProto == null");
+
+            PrototypeId currentTransformMode = ownerAvatar.CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid && currentTransformMode != transformModeRef)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTransformModeChange(): Unexpected transform mode {currentTransformMode.GetName()} for avatar [{ownerAvatar}]");
+
+            // If already in this transform mode, toggle it off
+            if (currentTransformMode == transformModeRef)
+                transformModeRef = PrototypeId.Invalid;
+
+            ownerAvatar.ScheduleTransformModeChange(transformModeRef, currentTransformMode);
+            return true;
         }
 
         // 18
-        private void DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
+            if (Owner is not Avatar ownerAvatar) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): Owner is not Avatar ownerAvatar");
+
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTransformModePrototype contextProto)
+                return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): Incompatible power event context type");
+
+            PrototypeId transformModeRef = contextProto.TransformMode;
+
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformModeProto == null");
+
+            PrototypeId currentTransformMode = ownerAvatar.CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid && currentTransformMode != transformModeRef)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTransformModeStart(): Unexpected transform mode {currentTransformMode.GetName()} for avatar [{ownerAvatar}]");
+
+            PrototypeId transformComboPowerRef = currentTransformMode == PrototypeId.Invalid
+                ? transformModeProto.EnterTransformModePower
+                : transformModeProto.ExitTransformModePower;
+
+            if (transformComboPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformComboRef == PrototypeId.Invalid");
+
+            Power transformComboPower = ownerAvatar.PowerCollection.GetPower(transformComboPowerRef);
+            if (transformComboPower == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformComboPower == null");
+
+            PowerActivationSettings newSettings = settings;
+            newSettings.TriggeringPowerRef = PrototypeDataRef;
+            newSettings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            DoActivateComboPower(transformComboPower, triggeredPowerEvent, ref newSettings);
+            return true;
         }
 
         // 19

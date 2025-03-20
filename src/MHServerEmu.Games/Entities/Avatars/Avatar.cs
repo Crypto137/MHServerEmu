@@ -808,12 +808,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             return base.CanTriggerPower(powerProto, power, flags);
         }
 
-        public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
-        {
-            // TODO
-            return true;
-        }
-
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
             // Try to activate pending action (see CAvatar::ActivatePostPowerAction() for reference)
@@ -2286,6 +2280,21 @@ namespace MHServerEmu.Games.Entities.Avatars
                 UnassignPower(travelPowerRef);
             }
 
+            return true;
+        }
+
+        #endregion
+
+        #region Transform Modes
+
+        public void ScheduleTransformModeChange(PrototypeId transformModeRef, PrototypeId currentTransformModeRef, TimeSpan delay = default)
+        {
+            Logger.Debug($"ScheduleTransformModeChange(): [{currentTransformModeRef.GetName()}] => [{transformModeRef.GetName()}]");
+        }
+
+        public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
+        {
+            // TODO
             return true;
         }
 
