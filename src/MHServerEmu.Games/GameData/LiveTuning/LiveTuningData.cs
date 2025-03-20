@@ -323,7 +323,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             return _updateProtobuf;
         }
 
-        public bool GetLiveLootGroup(int lootGroupNum, out IEnumerable<WorldEntityPrototype> lootGroup)
+        public bool GetLiveLootGroup(int lootGroupNum, out IReadOnlyList<WorldEntityPrototype> lootGroup)
         {
             bool found = _lootGroupDict.TryGetValue(lootGroupNum, out List<WorldEntityPrototype> worldEntityProtoList);
             lootGroup = worldEntityProtoList;
