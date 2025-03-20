@@ -1055,6 +1055,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype DurationMSEval { get; protected set; }
         public TransformModeUnrealOverridePrototype[] UnrealClassOverrides { get; protected set; }
         public PrototypeId UseRankOfPower { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public TimeSpan GetDuration(Entity owner)
+        {
+            if (DurationMSEval == null)
+                return TimeSpan.Zero;
+
+            Game game = owner.Game;
+            if (game == null) return Logger.WarnReturn(TimeSpan.Zero, "GetDuration(): game == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = game;
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, owner?.Properties);
+
+            int durationMS = Eval.RunInt(DurationMSEval, evalContext);
+            return TimeSpan.FromMilliseconds(durationMS);
+        }
     }
 
     public class TransformModeEntryPrototype : Prototype

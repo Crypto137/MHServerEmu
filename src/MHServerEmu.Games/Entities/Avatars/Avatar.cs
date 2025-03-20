@@ -47,6 +47,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<RefreshStatsPowersEvent> _refreshStatsPowerEvent = new();
         private readonly EventPointer<DismissTeamUpAgentEvent> _dismissTeamUpAgentEvent = new();
         private readonly EventPointer<DespawnControlledEvent> _despawnControlledEvent = new();
+        private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
+        private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -384,6 +386,18 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            CancelPendingAction();
+
+            // Revert transform
+            if (CurrentTransformMode != PrototypeId.Invalid)
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+                scheduler.CancelEvent(_transformModeExitPowerEvent);
+                scheduler.CancelEvent(_transformModeChangeEvent);
+
+                DoTransformModeChangeCallback(PrototypeId.Invalid, CurrentTransformMode);
+            }
+
             base.OnKilled(killer, killFlags, directKiller);
 
             // Deplete resources if needed
@@ -2287,14 +2301,177 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Transform Modes
 
-        public void ScheduleTransformModeChange(PrototypeId transformModeRef, PrototypeId currentTransformModeRef, TimeSpan delay = default)
+        public bool ScheduleTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, TimeSpan delay = default)
         {
-            Logger.Debug($"ScheduleTransformModeChange(): [{currentTransformModeRef.GetName()}] => [{transformModeRef.GetName()}]");
+            Logger.Debug($"ScheduleTransformModeChange(): [{oldTransformModeRef.GetName()}] => [{newTransformModeRef.GetName()}] for {delay.TotalMilliseconds} ms");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+
+            TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
+            if (delay > TimeSpan.Zero && oldTransformModeProto != null)
+            {
+                // Schedule transform mode exit
+                PowerPrototype exitPowerProto = oldTransformModeProto.ExitTransformModePower.As<PowerPrototype>();
+                if (exitPowerProto == null) return Logger.WarnReturn(false, "ScheduleTransformModeChange(): exitPowerProto == null");
+
+                if (_transformModeExitPowerEvent.IsValid)
+                {
+                    scheduler.RescheduleEvent(_transformModeExitPowerEvent, delay);
+                    _transformModeExitPowerEvent.Get().Initialize(this, oldTransformModeRef);
+                }
+                else
+                {
+                    ScheduleEntityEvent(_transformModeExitPowerEvent, delay, oldTransformModeRef);
+                }
+            }
+            else
+            {
+                // Cancel exit
+                scheduler.CancelEvent(_transformModeExitPowerEvent);
+
+                // Schedule change
+                if (_transformModeChangeEvent.IsValid)
+                {
+                    scheduler.RescheduleEvent(_transformModeChangeEvent, delay);
+                    _transformModeChangeEvent.Get().Initialize(this, newTransformModeRef, oldTransformModeRef);
+                }
+                else
+                {
+                    ScheduleEntityEvent(_transformModeChangeEvent, delay, newTransformModeRef, oldTransformModeRef);
+                }
+            }
+
+            return true;
         }
 
         public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
         {
             // TODO
+            return true;
+        }
+
+        private bool OnTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, bool enterWorld, TimeSpan remainingDuration = default)
+        {
+            if (oldTransformModeRef == PrototypeId.Invalid && newTransformModeRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "OnTransformModeChange(): No transform mode specified!");
+
+            if (oldTransformModeRef != PrototypeId.Invalid && newTransformModeRef != PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"OnTransformModeChange(): Cannot go directly from one transform mode to another! oldTransformMode=[{oldTransformModeRef.GetName()}] newTransformMode=[{newTransformModeRef.GetName()}]");
+
+            Logger.Debug($"OnTransformModeChange(): [{oldTransformModeRef.GetName()}] => [{newTransformModeRef.GetName()}] (remainingDuration = {remainingDuration.TotalMilliseconds} ms) ");
+
+            if (newTransformModeRef == PrototypeId.Invalid)
+            {
+                CurrentTransformMode = PrototypeId.Invalid;
+                Properties.RemoveProperty(PropertyEnum.TransformMode);
+                Properties.RemoveProperty(new(PropertyEnum.TransformModeStartTime, oldTransformModeRef));
+            }
+            else
+            {
+                TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
+                if (newTransformModeProto == null) return Logger.WarnReturn(false, "OnTransformModeChange(): newTransformModeProto == null");
+
+                TimeSpan duration = remainingDuration > TimeSpan.Zero
+                    ? remainingDuration
+                    : newTransformModeProto.GetDuration(this);
+
+                // Schedule exit if this is a finite duration transform mode
+                if (duration > TimeSpan.Zero)
+                    ScheduleTransformModeChange(oldTransformModeRef, newTransformModeRef, duration);
+
+                Properties[PropertyEnum.TransformMode] = newTransformModeRef;
+                if (enterWorld == false)
+                    Properties[PropertyEnum.TransformModeStartTime, newTransformModeRef] = Game.CurrentTime;
+            }
+
+            return true;
+        }
+
+        private bool OnEnteredWorldSetTransformMode()
+        {
+            // Restore the previous transform mode (if any)
+            CurrentTransformMode = Properties[PropertyEnum.TransformMode];
+
+            if (CurrentTransformMode == PrototypeId.Invalid)
+                return true;
+
+            TransformModePrototype currentTransformModeProto = CurrentTransformMode.As<TransformModePrototype>();
+            if (currentTransformModeProto == null) return Logger.WarnReturn(false, "OnEnteredWorldSetTransformMode(): currentTransformModeProto == null");
+
+            TimeSpan transformModeDuration = currentTransformModeProto.GetDuration(this);
+
+            if (transformModeDuration == TimeSpan.Zero)
+            {
+                // TimeSpan.Zero indicates infinite duration
+                OnTransformModeChange(CurrentTransformMode, PrototypeId.Invalid, true);
+            }
+            else
+            {
+                // Calculate remaining time
+                TimeSpan transformModeStartTime = Properties[PropertyEnum.TransformModeStartTime, CurrentTransformMode];
+                TimeSpan avatarLastActiveTime = Properties[PropertyEnum.AvatarLastActiveTime];
+                TimeSpan elapsedDuration = Clock.Max(avatarLastActiveTime - transformModeStartTime, TimeSpan.Zero);
+
+                // Turn it back on if there is still time, or turn it off
+                if (elapsedDuration < transformModeDuration)
+                    OnTransformModeChange(CurrentTransformMode, PrototypeId.Invalid, true, transformModeDuration - elapsedDuration);
+                else
+                    OnTransformModeChange(PrototypeId.Invalid, CurrentTransformMode, true);
+            }
+
+            return true;
+        }
+
+        private void DoTransformModeChangeCallback(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
+        {
+            CurrentTransformMode = newTransformModeRef;
+            OnTransformModeChange(newTransformModeRef, oldTransformModeRef, false);
+        }
+
+        private bool DoTransformModeExitPowerCallback(PrototypeId fromTransformModeProtoRef)
+        {
+            if (fromTransformModeProtoRef != CurrentTransformMode) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): fromTransformModeProtoRef != CurrentTransformMode");
+            if (IsInWorld == false) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): IsInWorld == false");
+
+            TransformModePrototype currentTransformModeProto = CurrentTransformMode.As<TransformModePrototype>();
+            if (currentTransformModeProto == null) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): currentTransformModeProto == null");
+            if (currentTransformModeProto.ExitTransformModePower == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): currentTransformModeProto.ExitTransformModePower == PrototypeId.Invalid");
+
+            // Abort active powers
+            ClearContinuousPower();
+            CancelPendingAction();
+            ActivePower?.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
+
+            // Prepare exit power
+            Vector3 position = RegionLocation.Position;
+            PowerActivationSettings settings = new(Id, position, position);
+            settings.TriggeringPowerRef = currentTransformModeProto.EnterTransformModePower;
+            settings.FXRandomSeed = Game.Random.Next(1, 10000);
+
+            Power exitTransformModePower = GetPower(currentTransformModeProto.ExitTransformModePower);
+            if (exitTransformModePower != null)
+            {
+                TimeSpan delay = exitTransformModePower.GetFullExecutionTime() + TimeSpan.FromMilliseconds(1);
+                if (_transformModeChangeEvent.IsValid)
+                {
+                    Game.GameEventScheduler.RescheduleEvent(_transformModeChangeEvent, delay);
+                    _transformModeChangeEvent.Get().Initialize(this, PrototypeId.Invalid, fromTransformModeProtoRef);
+                }
+                else
+                {
+                    ScheduleEntityEvent(_transformModeChangeEvent, delay, PrototypeId.Invalid, fromTransformModeProtoRef);
+                }
+            }
+            else
+            {
+                Logger.Warn("DoTransformModeExitPowerCallback(): exitTransformModePower == null");
+            }
+
+            // Activate exit power
+            PowerUseResult result = ActivatePower(currentTransformModeProto.ExitTransformModePower, ref settings);
+            if (result != PowerUseResult.Success)
+                return Logger.WarnReturn(false, $"DoTransformModeExitPowerCallback(): Failed to activate transform mode exit power for Avatar: [{this}]\nTransform mode: {currentTransformModeProto}");
+
             return true;
         }
 
@@ -4968,6 +5145,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             else
                 InitializeOmegaBonuses();
 
+            OnEnteredWorldSetTransformMode();
+
             // Last active time is checked in onEnteredWorldSetTransformMode() and ObjectiveTracker::doTrackerUpdate()
             Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
 
@@ -5088,6 +5267,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Cancel events
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler.CancelEvent(_refreshStatsPowerEvent);
+            scheduler.CancelEvent(_transformModeExitPowerEvent);
+            scheduler.CancelEvent(_transformModeChangeEvent);
 
             // Remove summoner conditions
             foreach (var summon in new SummonedEntityIterator(this))
@@ -5233,6 +5414,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class UpdateEnduranceEvent : CallMethodEventParam1<Entity, ManaType>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).UpdateEndurance(p1);
+        }
+
+        private class TransformModeChangeEvent : CallMethodEventParam2<Entity, PrototypeId, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1, p2) => ((Avatar)t).DoTransformModeChangeCallback(p1, p2);
+        }
+
+        private class TransformModeExitPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoTransformModeExitPowerCallback(p1);
         }
 
         #endregion
