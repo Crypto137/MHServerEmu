@@ -1164,6 +1164,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public KeywordPrototype StealthPowerKeywordPrototype { get; private set; }
         [DoNotCopy]
+        public KeywordPrototype TeamUpAwayPowerKeywordPrototype { get; private set; }
+        [DoNotCopy]
         public KeywordPrototype VanityPetKeywordPrototype { get; private set; }
         [DoNotCopy]
         public KeywordPrototype OrbExperienceEntityKeywordPrototype { get; private set; }
@@ -1178,6 +1180,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             OrbEntityKeywordPrototype = OrbEntityKeyword.As<KeywordPrototype>();
             RangedPowerKeywordPrototype = RangedPowerKeyword.As<KeywordPrototype>();
             StealthPowerKeywordPrototype = StealthPowerKeyword.As<KeywordPrototype>();
+            TeamUpAwayPowerKeywordPrototype = TeamUpAwayPowerKeyword.As<KeywordPrototype>();
             VanityPetKeywordPrototype = VanityPetKeyword.As<KeywordPrototype>();
             OrbExperienceEntityKeywordPrototype = OrbExperienceEntityKeyword.As<KeywordPrototype>();
         }

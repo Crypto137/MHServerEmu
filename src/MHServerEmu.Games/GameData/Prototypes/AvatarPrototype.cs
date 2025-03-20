@@ -339,6 +339,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
+        public PrototypeId[] GetAllowedPowersForTransformMode(PrototypeId transformModeRef)
+        {
+            if (TransformModes.IsNullOrEmpty())
+                return null;
+
+            foreach (TransformModeEntryPrototype entryProto in TransformModes)
+            {
+                if (entryProto.TransformMode == transformModeRef)
+                    return entryProto.AllowedPowers;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided costume is approved for use.
         /// </summary>

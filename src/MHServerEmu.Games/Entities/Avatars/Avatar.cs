@@ -2346,8 +2346,40 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
         {
-            // TODO
-            return true;
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "IsPowerAllowedInCurrentTransformMode(): avatarProto == null");
+
+            return IsPowerAllowedInTransformMode(avatarProto, CurrentTransformMode, powerProtoRef);
+        }
+
+        public static bool IsPowerAllowedInTransformMode(AvatarPrototype avatarProto, PrototypeId transformModeRef, PrototypeId powerProtoRef)
+        {
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(false, "IsPowerAllowedInTransformMode(): powerProto == null");
+
+            if (Power.IsComboEffect(powerProto))
+                return true;
+
+            if (powerProto.UsableByAll)
+                return true;
+
+            if (powerProto.PowerCategory == PowerCategoryType.HiddenPassivePower)
+                return true;
+
+            if (powerProto.Activation == PowerActivationType.Passive && powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.TeamUpAwayPowerKeywordPrototype))
+                return true;
+
+            PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(transformModeRef);
+            if (allowedPowers == null)
+                return true;
+
+            foreach (PrototypeId allowedPowerProtoRef in allowedPowers)
+            {
+                if (allowedPowerProtoRef == powerProtoRef)
+                    return true;
+            }
+
+            return false;
         }
 
         private bool OnTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, bool enterWorld, TimeSpan remainingDuration = default)
@@ -2392,7 +2424,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             UpdateTransformModeAbilityKeyMapping(newTransformModeRef, oldTransformModeRef);
 
-            // TODO: Assign or unassign default mode powers
+            UpdateTransformModeAllowedPowers(newTransformModeRef, oldTransformModeRef);
 
             if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid && GetPower(_continuousPowerData.PowerProtoRef) != null)
                 ClearContinuousPower();
@@ -2545,6 +2577,119 @@ namespace MHServerEmu.Games.Entities.Avatars
                 else
                 {
                     UnassignPower(abilityProtoRef);
+                }
+            }
+
+            return true;
+        }
+
+        private bool UpdateTransformModeAllowedPowers(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "UpdateTransformModeAllowedPowers(): avatarProto == null");
+
+            // Look for powers that are not allowed in the new transform mode
+            List<PrototypeId> powerRemoveList = ListPool<PrototypeId>.Instance.Get();
+            
+            // Power collection
+            foreach (var kvp in PowerCollection)
+            {
+                Power power = kvp.Value.Power;
+                if (power == null)
+                {
+                    Logger.Warn("UpdateTransformModeAllowedPowers(): power == null");
+                    continue;
+                }
+
+                PrototypeId powerProtoRef = power.PrototypeDataRef;
+
+                bool isPassive = power.GetActivationType() == PowerActivationType.Passive;
+                bool isToggledOn = power.IsToggledOn();
+
+                if (isPassive || isToggledOn)
+                {
+                    if (IsPowerAllowedInCurrentTransformMode(powerProtoRef) == false)
+                    {
+                        if (isPassive)
+                            powerRemoveList.Add(powerProtoRef);
+                        else if (isToggledOn)
+                            power.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Unassign);
+                    }
+                }
+                else if (power.IsActive && isPassive == false)
+                {
+                    power.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
+                }
+            }
+
+            // Transform mode specific hidden passives (if we are exiting)
+            TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
+            if (oldTransformModeProto != null && oldTransformModeProto.HiddenPassivePowers.HasValue())
+            {
+                foreach (PrototypeId hiddenPassivePowerRef in oldTransformModeProto.HiddenPassivePowers)
+                    powerRemoveList.Add(hiddenPassivePowerRef);
+            }
+
+            // Remove the powers we found
+            while (powerRemoveList.Count > 0)
+            {
+                int index = powerRemoveList.Count - 1;
+                PrototypeId powerProtoRef = powerRemoveList[index];
+                powerRemoveList.RemoveAt(index);
+
+                // Remove all copies of this power
+                while (PowerCollection.GetPower(powerProtoRef) != null)
+                    PowerCollection.UnassignPower(powerProtoRef);
+            }
+            ListPool<PrototypeId>.Instance.Return(powerRemoveList);
+
+            // Assign newly allowed powers
+            PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(newTransformModeRef);
+            if (allowedPowers.IsNullOrEmpty()) return Logger.WarnReturn(false, "UpdateTransformModeAllowedPowers(): allowedPowers.IsNullOrEmpty()");
+
+            int characterLevel = CharacterLevel;
+            int combatLevel = CombatLevel;
+
+            foreach (PrototypeId allowedPowerRef in allowedPowers)
+            {
+                PowerPrototype powerProto = allowedPowerRef.As<PowerPrototype>();
+                if (powerProto == null)
+                {
+                    Logger.Warn("UpdateTransformModeAllowedPowers(): powerProto == null");
+                    continue;
+                }
+
+                if (powerProto.PowerCategory != PowerCategoryType.NormalPower)
+                    continue;
+
+                if (powerProto.Activation != PowerActivationType.Passive && powerProto.UsableByAll == false)
+                    continue;
+
+                // Do not assign if it doesn't have a rank or it is already assigned
+                int powerRank = GetPowerRank(allowedPowerRef);
+                if (powerRank <= 0 || GetPower(allowedPowerRef) != null)
+                    continue;
+
+                PowerIndexProperties indexProps = new(powerRank, characterLevel, combatLevel);
+                AssignPower(allowedPowerRef, indexProps);
+            }
+
+            // Assign transform mode specific hidden passives
+            TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
+            if (newTransformModeProto != null && newTransformModeProto.HiddenPassivePowers.HasValue())
+            {
+                PowerIndexProperties indexProps = new(0, characterLevel, combatLevel);
+
+                foreach (PrototypeId hiddenPassivePowerRef in newTransformModeProto.HiddenPassivePowers)
+                {
+                    if (PowerCollection.GetPower(hiddenPassivePowerRef) != null)
+                        continue;
+
+                    PowerCollection.AssignPower(hiddenPassivePowerRef, indexProps);
+
+                    PowerProgressionInfo powerInfo = new();
+                    powerInfo.InitNonProgressionPower(hiddenPassivePowerRef);
+                    UpdatePowerRank(ref powerInfo, false);
                 }
             }
 
