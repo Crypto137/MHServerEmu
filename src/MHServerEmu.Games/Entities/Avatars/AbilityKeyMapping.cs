@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -202,7 +203,39 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SlotDefaultAbilitiesForTransformMode(TransformModePrototype transformModeProto)
         {
-            // TODO
+            if (transformModeProto.DefaultEquippedAbilities.IsNullOrEmpty())
+                return;
+
+            AbilitySlot itSlot = 0;
+            for (int i = 0; i < transformModeProto.DefaultEquippedAbilities.Length; i++, itSlot++)
+            {
+                AbilityAssignmentPrototype abilityAssignment = transformModeProto.DefaultEquippedAbilities[i];
+                PrototypeId abilityProtoRef = abilityAssignment.Ability;
+
+                // Skip empty slots
+                if (abilityProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                // Not implementing prototype validation here since we don't really need it
+
+                // Validate slot
+                AbilitySlot abilitySlot = itSlot < AbilitySlot.NumActions ? itSlot : AbilitySlot.Invalid;
+                if (abilitySlot == AbilitySlot.Invalid)
+                {
+                    Logger.Warn($"SlotDefaultAbilitiesForTransformMode(): Failed an ability assignment because there are too many default abilities for TransformMode: [{transformModeProto}]");
+                    continue;
+                }
+
+                AbilitySlotOpValidateResult slotResult = Avatar.CheckAbilitySlotRestrictions(abilityProtoRef, abilitySlot);
+                if (slotResult != AbilitySlotOpValidateResult.Valid)
+                {
+                    Logger.Warn($"SlotDefaultAbilitiesForTransformMode(): Failed to slot ability because of slot restriction. SlotResult: [{slotResult}]\nTransformMode: [{transformModeProto}]\nAbility: [{abilityProtoRef.GetName()}]");
+                    continue;
+                }
+
+                // Do the slotting
+                SetAbilityInAbilitySlot(abilityProtoRef, abilitySlot);
+            }
         }
 
         public bool GetDefaultAbilities(List<HotkeyData> hotkeyDataList, Avatar avatar, int startingLevel = -1)
