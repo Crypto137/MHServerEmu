@@ -144,7 +144,7 @@ namespace MHServerEmu.Frontend
         {
             MuxPacket packet = new(muxId, MuxCommand.Data);
             packet.AddMessages(messages);
-            Connection.Send(packet);
+            Task.Run(() => Connection.Send(packet));
         }
 
         /// <summary>
