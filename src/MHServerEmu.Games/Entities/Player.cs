@@ -1964,7 +1964,7 @@ namespace MHServerEmu.Games.Entities
             for (int i = 0; i < _unlockedInventoryList.Count; i++)
                 sb.AppendLine($"{nameof(_unlockedInventoryList)}[{i}]: {GameDatabase.GetPrototypeName(_unlockedInventoryList[i])}");
 
-            if (_badges.Any())
+            if (_badges.Count > 0)
             {
                 sb.Append($"{nameof(_badges)}: ");
                 foreach (AvailableBadges badge in _badges)

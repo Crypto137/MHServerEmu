@@ -277,7 +277,9 @@ namespace MHServerEmu.Games.Network
         /// </remarks>
         public void FlushMessages()
         {
-            if (_pendingMessageList.Any() == false) return;
+            if (_pendingMessageList.Count == 0)
+                return;
+            
             _frontendClient.SendMessages(MuxChannel, _pendingMessageList);
             _pendingMessageList.Clear();
         }

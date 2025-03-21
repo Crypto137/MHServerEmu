@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public void Shutdown()
         {
-            while (_circleDict.Any())
+            while (_circleDict.Count > 0)
             {
                 CommunityCircle circle = _circleDict.Values.First();
                 DestroyCircle(circle);

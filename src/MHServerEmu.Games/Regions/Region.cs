@@ -605,7 +605,7 @@ namespace MHServerEmu.Games.Regions
 
         public Area GetStartArea()
         {
-            if (_startArea == null && Areas.Any())
+            if (_startArea == null && Areas.Count > 0)
                 _startArea = IterateAreas().First();
 
             return _startArea;

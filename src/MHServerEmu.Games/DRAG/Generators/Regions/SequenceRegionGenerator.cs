@@ -377,7 +377,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
         {
             if (entry == null) return;
 
-            if (entry.Сhildrens.Any())
+            if (entry.Сhildrens.Count > 0)
             {
                 List<SequenceStackEntry> toRemove = new();
 
@@ -700,7 +700,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
             PrototypeId area = WeightedArea.Area;
             areas.Add(area);
-            return areas.Any();
+            return areas.Count > 0;
         }
 
         public void AddChild(SequenceStackEntry entry)
@@ -758,7 +758,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
 
         }
 
-        public bool IsValid() => Edge.Length > 0 && ConnectionList.Any();
+        public bool IsValid() => Edge.Length > 0 && ConnectionList.Count > 0;
         public float GetLength() => Edge.Length;
 
     }
@@ -812,7 +812,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                 PushOrCleanEdge(edge);
             }
 
-            if (Edges.Any()) return true;
+            if (Edges.Count > 0) return true;
 
             return false;
         }
@@ -908,7 +908,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
             if (edgeReportA.HasEdge(Cell.Type.S) && edgeReportB.HasEdge(Cell.Type.N))
                 possibleEdges.Add(new(Cell.Type.S, Cell.Type.N));
 
-            if (possibleEdges.Any()) return true;
+            if (possibleEdges.Count > 0) return true;
 
             return false;
         }

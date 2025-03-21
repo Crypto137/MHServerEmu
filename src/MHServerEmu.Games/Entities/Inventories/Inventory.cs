@@ -72,10 +72,11 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public ulong GetAnyEntity()
         {
-            if (_entities.Any())
-                return _entities.First().Value.EntityId;
+            SortedDictionary<uint, InvEntry>.Enumerator enumerator = _entities.GetEnumerator();
+            if (enumerator.MoveNext() == false)
+                return 0;
 
-            return 0;
+            return enumerator.Current.Value.EntityId;
         }
 
         public Entity GetMatchingEntity(PrototypeId entityRef)
