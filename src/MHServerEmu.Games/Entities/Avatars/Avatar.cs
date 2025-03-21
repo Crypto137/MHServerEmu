@@ -1898,7 +1898,6 @@ namespace MHServerEmu.Games.Entities.Avatars
                 UnassignTalentPower(talentPowerRef, specIndex);
             }
 
-            Logger.Debug($"EnableTalentPower(): {talentPowerRef.GetName()} = {enable} (spec={specIndex})");
             return true;
         }
 
@@ -2064,8 +2063,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
             if (mappedPowerProto == null) return Logger.WarnReturn(false, "MapPower(): mappedPowerProto == null");
 
-            Logger.Debug($"MapPower(): {originalPowerRef.GetName()} => {mappedPowerRef.GetName()}");
-
             // Map
             Properties[PropertyEnum.AvatarMappedPower, originalPowerRef] = mappedPowerRef;
 
@@ -2121,8 +2118,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
             if (originalPowerProto == null) return Logger.WarnReturn(false, "UnassignMappedPower(): originalPowerProto == null");
-
-            Logger.Debug($"UnassignMappedPower(): {mappedPowerRef.GetName()}");
 
             // Restore the original power in key mappings
             List<AbilitySlot> slotList = ListPool<AbilitySlot>.Instance.Get();
@@ -2303,8 +2298,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool ScheduleTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, TimeSpan delay = default)
         {
-            Logger.Debug($"ScheduleTransformModeChange(): [{oldTransformModeRef.GetName()}] => [{newTransformModeRef.GetName()}] for {delay.TotalMilliseconds} ms");
-
             EventScheduler scheduler = Game.GameEventScheduler;
 
             TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
@@ -2389,8 +2382,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (oldTransformModeRef != PrototypeId.Invalid && newTransformModeRef != PrototypeId.Invalid)
                 return Logger.WarnReturn(false, $"OnTransformModeChange(): Cannot go directly from one transform mode to another! oldTransformMode=[{oldTransformModeRef.GetName()}] newTransformMode=[{newTransformModeRef.GetName()}]");
-
-            Logger.Debug($"OnTransformModeChange(): [{oldTransformModeRef.GetName()}] => [{newTransformModeRef.GetName()}] (remainingDuration = {remainingDuration.TotalMilliseconds} ms) ");
 
             if (newTransformModeRef == PrototypeId.Invalid)
             {
