@@ -1468,6 +1468,12 @@ namespace MHServerEmu.Games.Network
             if (owner != Player)
                 return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): Player [{Player}] is attempting to select avatar synergies for avatar [{avatar}] that belongs to another player");
 
+            // Check synergy limit
+            int synergyCount = selectAvatarSynergies.AvatarPrototypesCount;
+            int synergyCountLimit = GameDatabase.GlobalsPrototype.AvatarSynergyConcurrentLimit;
+            if (synergyCount > synergyCountLimit)
+                return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): Player [{Player}] is attempting to select more avatar synergies ({synergyCount}) than allowed ({synergyCountLimit})");
+
             // Do not allow to change synergies in combat
             if (avatar.Properties[PropertyEnum.IsInCombat])
                 return false;

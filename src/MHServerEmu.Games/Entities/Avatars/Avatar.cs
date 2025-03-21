@@ -4893,9 +4893,91 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Synergies
 
-        public void UpdateAvatarSynergyCondition()
+        public bool UpdateAvatarSynergyCondition()
         {
             Logger.Debug($"UpdateAvatarSynergyCondition(): [{this}]");
+
+            PrototypeId avatarSynergyConditionRef = GameDatabase.GlobalsPrototype.AvatarSynergyCondition;
+            if (avatarSynergyConditionRef == PrototypeId.Invalid)
+                return true;
+
+            ConditionPrototype avatarSynergyConditionProto = avatarSynergyConditionRef.As<ConditionPrototype>();
+            if (avatarSynergyConditionProto == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyCondition(): avatarSynergyConditionProto == null");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyCondition(): player == null");
+
+            using PropertyCollection avatarSynergyProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+
+            // Ignoring avatar mode here
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel, (int)AvatarMode.Normal))
+            {
+                int level = kvp.Value;
+
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarProtoRef);
+                if (Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] == false)
+                    continue;
+
+                AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                if (avatarProto == null)
+                {
+                    Logger.Warn("UpdateAvatarSynergyCondition(): avatarProto == null");
+                    continue;
+                }
+
+                bool canUseSynergy = false;
+                foreach (AvatarSynergyEntryPrototype synergyProto in avatarProto.SynergyTable)
+                {
+                    if (synergyProto is not AvatarSynergyEvalEntryPrototype evalSynergyProto)
+                    {
+                        Logger.Warn("UpdateAvatarSynergyCondition(): synergyProto is not AvatarSynergyEvalEntryPrototype evalSynergyProto");
+                        continue;
+                    }
+
+                    if (level < evalSynergyProto.Level)
+                        continue;
+
+                    canUseSynergy |= true;
+
+                    if (evalSynergyProto.SynergyEval == null)
+                        continue;
+
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, avatarSynergyProperties);
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, Properties);
+
+                    Eval.RunBool(evalSynergyProto.SynergyEval, evalContext);
+                }
+
+                if (canUseSynergy == false)
+                    Properties.RemoveProperty(new(PropertyEnum.AvatarSynergySelected, avatarProtoRef));
+            }
+
+            // See if there is a synergy condition we don't know about
+            if (_avatarSynergyConditionId == ConditionCollection.InvalidConditionId)
+                _avatarSynergyConditionId = ConditionCollection.GetConditionIdByRef(avatarSynergyConditionRef);
+
+            // Remove the existing synergy condition
+            if (_avatarSynergyConditionId != ConditionCollection.InvalidConditionId)
+            {
+                ConditionCollection.RemoveCondition(_avatarSynergyConditionId);
+                _avatarSynergyConditionId = ConditionCollection.InvalidConditionId;
+            }
+
+            // Add a new synergy condition
+            Condition avatarSynergyCondition = ConditionCollection.AllocateCondition();
+            if (avatarSynergyCondition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game,
+                Id, Id, Id, avatarSynergyConditionProto, TimeSpan.Zero, avatarSynergyProperties))
+            {
+                ConditionCollection.AddCondition(avatarSynergyCondition);
+                _avatarSynergyConditionId = avatarSynergyCondition.Id;
+            }
+            else
+            {
+                ConditionCollection.DeleteCondition(avatarSynergyCondition);
+            }
+
+            return true;
         }
 
         private bool UpdateAvatarSynergyUnlocks(int oldLevel, int newLevel)
@@ -4910,9 +4992,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (avatarProto.SynergyTable.IsNullOrEmpty())
                 return true;
 
-            foreach (AvatarSynergyEntryPrototype synergyEntryProto in avatarProto.SynergyTable)
+            foreach (AvatarSynergyEntryPrototype synergyProto in avatarProto.SynergyTable)
             {
-                if (oldLevel < synergyEntryProto.Level && newLevel >= synergyEntryProto.Level)
+                if (oldLevel < synergyProto.Level && newLevel >= synergyProto.Level)
                 {
                     player.Properties[PropertyEnum.AvatarSynergyNewUnlock, PrototypeDataRef] = true;
                     break;
