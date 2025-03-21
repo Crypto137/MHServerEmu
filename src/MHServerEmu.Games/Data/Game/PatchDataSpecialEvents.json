@@ -14,5 +14,29 @@
         "Description": "Add [ValentinesEventPowerupTable, VDayTable]",
         "ValueType": "PrototypeDataRef[]",
         "Value": [ 1089767944042846312, 7378732117961543855 ]
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add AnniversaryCakeDropTable drop BirthdayCakeSlice at 4 June",
+        "ValueType": "PrototypeDataRef",
+        "Value": 10570310015585883894
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
+        "Path": "Choices[]",
+        "Description": "Add AprilFoolsTable drop GemOfTheWurst at 1 April",
+        "ValueType": "PrototypeDataRef",
+        "Value": 13919124432858911542
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add AustraliaDayTable drop Koala at 26 January",
+        "ValueType": "PrototypeDataRef",
+        "Value": 5244862316186571775
     }
 ]
