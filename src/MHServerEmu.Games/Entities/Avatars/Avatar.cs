@@ -4980,6 +4980,54 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public bool UpdateAvatarSynergyExperienceBonus()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyExperienceBonus(): player == null");
+
+            if (player.GameplayOptions.GetOptionSetting(Options.GameplayOptionSetting.DisableHeroSynergyBonusXP) == 1)
+            {
+                Properties.RemoveProperty(PropertyEnum.ExperienceBonusAvatarSynergy);
+                Logger.Debug($"UpdateAvatarSynergyExperienceBonus(): Disabled bonus XP for [{this}]");
+                return true;
+            }
+
+            // Get requirements from advancement globals
+            AdvancementGlobalsPrototype advancementGlobals = GameDatabase.AdvancementGlobalsPrototype;
+            Curve normalBonusCurve = advancementGlobals.ExperienceBonusAvatarSynergy.AsCurve();
+            Curve cappedBonusMaxCurve = advancementGlobals.ExperienceBonusLevel60Synergy.AsCurve();
+            int originalMaxLevel = advancementGlobals.OriginalMaxLevel;
+
+            float experienceBonus = 0f;
+            int numLevelCappedAvatars = 0;
+
+            // Ignoring avatar mode here
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel, (int)AvatarMode.Normal))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId avatarProtoRef);
+                if (avatarProtoRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn("UpdateAvatarSynergyExperienceBonus(): avatarProtoRef == PrototypeId.Invalid");
+                    continue;
+                }
+
+                // Level cap bonus is applied below based on the total number of capped avatars
+                int level = player.GetMaxCharacterLevelAttainedForAvatar(avatarProtoRef);
+                if (level < originalMaxLevel)
+                    experienceBonus += normalBonusCurve.GetAt(level);
+                else
+                    numLevelCappedAvatars++;
+            }
+
+            experienceBonus += cappedBonusMaxCurve.GetAt(numLevelCappedAvatars);
+            experienceBonus = Math.Min(experienceBonus, advancementGlobals.ExperienceBonusAvatarSynergyMax);
+
+            Properties[PropertyEnum.ExperienceBonusAvatarSynergy] = experienceBonus;
+
+            Logger.Debug($"UpdateAvatarSynergyExperienceBonus(): Enabled bonus XP - {experienceBonus * 100f}%");
+            return true;
+        }
+
         private bool UpdateAvatarSynergyUnlocks(int oldLevel, int newLevel)
         {
             Player player = GetOwnerOfType<Player>();
@@ -5488,6 +5536,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
 
             UpdateAvatarSynergyCondition();
+            UpdateAvatarSynergyExperienceBonus();
+            CurrentTeamUpAgent?.SetTeamUpsAtMaxLevel(player);   // Needed to calculate team-up synergies
 
             ApplyLiveTuneServerConditions();
 

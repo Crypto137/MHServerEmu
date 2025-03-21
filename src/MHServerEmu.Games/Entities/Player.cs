@@ -1996,7 +1996,8 @@ namespace MHServerEmu.Games.Entities
             GameplayOptions newOptions = new(clientOptions.OptionsData);
             _gameplayOptions = newOptions;
 
-            // TODO: Process new options
+            // TODO: Update chat channels
+            CurrentAvatar?.UpdateAvatarSynergyExperienceBonus();
         }
 
         public bool IsTargetable(AlliancePrototype allianceProto)
