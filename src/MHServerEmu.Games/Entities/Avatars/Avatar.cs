@@ -68,6 +68,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private PrototypeId _travelPowerOverrideProtoRef = PrototypeId.Invalid;
 
+        private ulong _avatarSynergyConditionId = ConditionCollection.InvalidConditionId;
+
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
@@ -3632,6 +3634,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (statsChanged == false)
                 ScheduleStatsPowerRefresh();
 
+            if (IsInWorld)
+                UpdateAvatarSynergyCondition();
+
             // Notify clients
             SendLevelUpMessage();
 
@@ -3694,7 +3699,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         protected override void SetCharacterLevel(int characterLevel)
         {
+            int oldLevel = CharacterLevel;
+
             base.SetCharacterLevel(characterLevel);
+
+            if (characterLevel != oldLevel)
+                UpdateAvatarSynergyUnlocks(oldLevel, characterLevel);
 
             Player player = GetOwnerOfType<Player>();
             if (player == null) return;
@@ -4881,6 +4891,39 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Synergies
+
+        public void UpdateAvatarSynergyCondition()
+        {
+            Logger.Debug($"UpdateAvatarSynergyCondition(): [{this}]");
+        }
+
+        private bool UpdateAvatarSynergyUnlocks(int oldLevel, int newLevel)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyUnlocks(): player == null");
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "UpdateAvatarSynergyUnlocks(): avatarProto == null");
+
+            // No synergies to unlock
+            if (avatarProto.SynergyTable.IsNullOrEmpty())
+                return true;
+
+            foreach (AvatarSynergyEntryPrototype synergyEntryProto in avatarProto.SynergyTable)
+            {
+                if (oldLevel < synergyEntryProto.Level && newLevel >= synergyEntryProto.Level)
+                {
+                    player.Properties[PropertyEnum.AvatarSynergyNewUnlock, PrototypeDataRef] = true;
+                    break;
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
         #region Event Handlers
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -5362,6 +5405,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Last active time is checked in onEnteredWorldSetTransformMode() and ObjectiveTracker::doTrackerUpdate()
             Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
 
+            UpdateAvatarSynergyCondition();
+
             ApplyLiveTuneServerConditions();
 
             RestoreSelfAppliedPowerConditions();     // This needs to happen after we assign powers
@@ -5468,6 +5513,13 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Pause boosts while not in the world
             UpdateBoostConditionPauseState(true);
+
+            // Remove the avatar synergy condition
+            if (_avatarSynergyConditionId != ConditionCollection.InvalidConditionId)
+            {
+                ConditionCollection.RemoveCondition(_avatarSynergyConditionId);
+                _avatarSynergyConditionId = ConditionCollection.InvalidConditionId;
+            }
 
             RemoveLiveTuneServerConditions();
 
