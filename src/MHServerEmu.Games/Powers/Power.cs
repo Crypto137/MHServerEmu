@@ -192,6 +192,32 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            if (Owner is Avatar avatar && (avatar.HasPowerInPowerProgression(PrototypeDataRef) || avatar.HasMappedPower(PrototypeDataRef)))
+            {
+                Dictionary<PropertyId, PropertyValue> bonusDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMaxBonusForKwd))
+                    bonusDict.Add(kvp.Key, kvp.Value);
+
+                foreach (var kvp in bonusDict)
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                    KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+                    if (keywordProto == null)
+                    {
+                        Logger.Warn("OnAssign(): keywordProto == null");
+                        continue;
+                    }
+
+                    if (HasKeyword(keywordProto) == false)
+                        continue;
+
+                    avatar.Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
+                }
+
+                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(bonusDict);
+            }
+
             return true;
         }
 
@@ -3157,6 +3183,11 @@ namespace MHServerEmu.Games.Powers
         public static bool IsCooldownOnPlayer(PowerPrototype powerProto)
         {
             return powerProto.CooldownOnPlayer;
+        }
+
+        public static bool IsCooldownPersistent(PowerPrototype powerProto)
+        {
+            return powerProto.CooldownIsPersistentToDatabase || powerProto.IsUltimate;
         }
 
         public bool TriggersComboPowerOnEvent(PowerEventType eventType)

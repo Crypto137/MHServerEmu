@@ -606,7 +606,25 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            // TODO: Special interactions (e.g. character tokens)
+            // Do special interactions for specific item types
+            switch (itemProto)
+            {
+                case CharacterTokenPrototype characterTokenProto:
+                    wasUsed |= DoCharacterTokenInteraction(characterTokenProto, player, avatar);
+                    break;
+
+                case InventoryStashTokenPrototype inventoryStashTokenProto:
+                    wasUsed |= DoInventoryStashTokenInteraction(inventoryStashTokenProto, player);
+                    break;
+
+                case EmoteTokenPrototype emoteTokenProto:
+                    wasUsed |= DoEmoteTokenInteraction(emoteTokenProto, player);
+                    break;
+
+                case CraftingRecipePrototype craftingRecipeProto:
+                    wasUsed |= DoCraftingRecipeInteraction(craftingRecipeProto, player);
+                    break;
+            }
 
             // Consume if this is a consumable item that was successfully used
             // NOTE: Power-based consumable items get consumed when their power is activated in OnUsePowerActivated().
@@ -614,6 +632,61 @@ namespace MHServerEmu.Games.Entities.Items
                 DecrementStack();
 
             return true;
+        }
+
+        private bool DoCharacterTokenInteraction(CharacterTokenPrototype characterTokenProto, Player player, Avatar avatar)
+        {
+            bool wasUsed = false;
+
+            PrototypeId characterProtoRef = characterTokenProto.Character;
+
+            EntityPrototype characterProto = characterTokenProto.Character.As<EntityPrototype>();
+            if (characterProto == null) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): characterProto == null");
+
+            if (characterProto is AvatarPrototype)
+            {
+                if (characterTokenProto.GrantsCharacterUnlock && player.HasAvatarFullyUnlocked(characterProtoRef) == false)
+                {
+                    wasUsed = player.UnlockAvatar(characterProtoRef, true);
+                }
+
+                if (wasUsed == false && characterTokenProto.GrantsUltimateUpgrade)
+                {
+                    // Upgrade ultimate if the token wasn't used to unlock the avatar
+                    if (avatar.PrototypeDataRef != characterTokenProto.Character) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): avatar.PrototypeDataRef != characterTokenProto.Character");
+
+                    if (avatar.CanUpgradeUltimate() == InteractionValidateResult.Success)
+                    {
+                        avatar.Properties.AdjustProperty(1, PropertyEnum.AvatarPowerUltimatePoints);
+                        wasUsed = true;
+                    }
+                }
+            }
+            else if (characterProto is AgentTeamUpPrototype)
+            {
+                if (player.IsTeamUpAgentUnlocked(characterProtoRef) == false)
+                    wasUsed = player.UnlockTeamUpAgent(characterProtoRef);
+            }
+
+            return wasUsed;
+        }
+
+        private bool DoInventoryStashTokenInteraction(InventoryStashTokenPrototype inventoryStashTokenProto, Player player)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool DoEmoteTokenInteraction(EmoteTokenPrototype emoteTokenProto, Player player)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
+        {
+            // TODO
+            return false;
         }
 
         public bool OnUsePowerActivated()
@@ -1380,7 +1453,6 @@ namespace MHServerEmu.Games.Entities.Items
             ItemPrototype itemProto = ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): itemProto == null");
 
-
             if (itemProto.IsUsable == false)
                 return InteractionValidateResult.ItemNotUsable;
 
@@ -1468,15 +1540,18 @@ namespace MHServerEmu.Games.Entities.Items
             //
             // Subtype-specific validation
             //
+            
+            switch (itemProto)
+            {
+                case CharacterTokenPrototype characterTokenProto:
+                    return PlayerCanUseCharacterToken(player, avatar, characterTokenProto);
 
-            if (itemProto is CharacterTokenPrototype characterTokenProto)
-                return PlayerCanUseCharacterToken(player, avatar, characterTokenProto);
+                case InventoryStashTokenPrototype inventoryStashTokenProto:
+                    return PlayerCanUseInventoryStashToken(player, inventoryStashTokenProto);
 
-            if (itemProto is InventoryStashTokenPrototype inventoryStashTokenProto)
-                return PlayerCanUseInventoryStashToken(player, inventoryStashTokenProto);
-
-            if (itemProto is EmoteTokenPrototype emoteTokenProto)
-                return PlayerCanUseEmoteToken(player, emoteTokenProto);
+                case EmoteTokenPrototype emoteTokenProto:
+                    return PlayerCanUseEmoteToken(player, emoteTokenProto);
+            }
 
             if (IsCraftingRecipe)
                 return PlayerCanUseCraftingRecipe(player);
@@ -1501,8 +1576,37 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUseCharacterToken(Player player, Avatar avatar, CharacterTokenPrototype characterTokenProto)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUseCharacterToken(): {characterTokenProto}");
+            if (characterTokenProto.IsLiveTuningEnabled() == false)
+                return InteractionValidateResult.ItemNotUsable;
+
+            if (characterTokenProto.GrantsCharacterUnlock)
+            {
+                // If this is an unlock token and the character is locked, this is valid use
+                if (characterTokenProto.HasUnlockedCharacter(player) == false)
+                    return InteractionValidateResult.Success;
+
+                // If this character is already unlocked and this token cannot be used to upgrade the ultimate, there is nothing to do
+                if (characterTokenProto.GrantsUltimateUpgrade == false)
+                    return InteractionValidateResult.CharacterAlreadyUnlocked;
+            }
+
+            if (characterTokenProto.GrantsUltimateUpgrade)
+            {
+                // Team-ups do not have ultimate powers, so these checks concern only avatars
+
+                // Cannot upgrade ultimates of locked avatars
+                if (player.HasAvatarFullyUnlocked(characterTokenProto.Character) == false)
+                    return InteractionValidateResult.CharacterNotYetUnlocked;
+
+                // Cannot upgrade ultimates of library avatars
+                if (avatar.PrototypeDataRef != characterTokenProto.Character)
+                    return InteractionValidateResult.AvatarUltimateUpgradeCurrentOnly;
+
+                // Skipping AvatarMode check present in the client here because avatar modes never got implemented
+
+                return avatar.CanUpgradeUltimate();
+            }
+
             return InteractionValidateResult.UnknownFailure;
         }
 

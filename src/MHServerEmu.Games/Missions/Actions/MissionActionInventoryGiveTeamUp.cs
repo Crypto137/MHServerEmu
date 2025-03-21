@@ -23,7 +23,12 @@ namespace MHServerEmu.Games.Missions.Actions
             if (Mission.GetParticipants(participants))
             {
                 foreach (Player player in participants)
+                {
+                    if (player.IsTeamUpAgentUnlocked(teamUpRef))
+                        continue;
+
                     player.UnlockTeamUpAgent(teamUpRef);
+                }
             }
             ListPool<Player>.Instance.Return(participants);
         }

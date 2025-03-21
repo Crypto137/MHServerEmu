@@ -6,6 +6,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Dialog;
@@ -33,6 +34,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 {
     public partial class Avatar : Agent
     {
+        private const int MaxNumTransientAbilityKeyMappings = 1;
+        private const uint TalentGroupIndexInvalid = 0;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly TimeSpan StandardContinuousPowerRecheckDelay = TimeSpan.FromMilliseconds(150);
 
@@ -43,13 +47,18 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<RefreshStatsPowersEvent> _refreshStatsPowerEvent = new();
         private readonly EventPointer<DismissTeamUpAgentEvent> _dismissTeamUpAgentEvent = new();
         private readonly EventPointer<DespawnControlledEvent> _despawnControlledEvent = new();
+        private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
+        private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
 
         private RepString _playerName = new();
         private ulong _ownerPlayerDbId;
-        private List<AbilityKeyMapping> _abilityKeyMappingList = new();
+
+        private List<AbilityKeyMapping> _abilityKeyMappings = new();    // Persistent ability key mappings for each spec
+        private List<AbilityKeyMapping> _transientAbilityKeyMappings;   // Non-persistent ability key mappings used for transform modes (init on demand)
+        private AbilityKeyMapping _currentAbilityKeyMapping;            // Reference to the currently active ability key mapping
 
         private ulong _guildId = GuildMember.InvalidGuildId;
         private string _guildName = string.Empty;
@@ -57,10 +66,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly PendingPowerData _continuousPowerData = new();
         private readonly PendingAction _pendingAction = new();
 
+        private PrototypeId _travelPowerOverrideProtoRef = PrototypeId.Invalid;
+
         public uint AvatarWorldInstanceId { get; } = 1;
         public string PlayerName { get => _playerName.Get(); }
         public ulong OwnerPlayerDbId { get => _ownerPlayerDbId; }
-        public AbilityKeyMapping CurrentAbilityKeyMapping { get => _abilityKeyMappingList.FirstOrDefault(); }   // TODO: Save reference
         public Agent CurrentTeamUpAgent { get => GetTeamUpAgent(Properties[PropertyEnum.AvatarTeamUpAgent]); }
         public Agent CurrentVanityPet { get => GetCurrentVanityPet(); }
 
@@ -97,6 +107,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public Avatar(Game game) : base(game) { }
 
+        public override string ToString()
+        {
+            return $"{base.ToString()}, Player={_playerName?.Get()} (0x{_ownerPlayerDbId:X})";
+        }
+
         public override bool Initialize(EntitySettings settings)
         {
             base.Initialize(settings);
@@ -110,39 +125,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
-        }
-
-        public override void OnPostInit(EntitySettings settings)
-        {
-            base.OnPostInit(settings);
-
-            // TODO: Clean up this hardcoded mess
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-
-            // Properties
-            // AvatarLastActiveTime is needed for missions to show up in the tracker
-            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = 1509657924421;  // Nov 02 2017 21:25:24 GMT+0000
-            Properties[PropertyEnum.AvatarLastActiveTime] = 161351646299;
-
-            // REMOVEME
-            // Unlock all stealable powers for Rogue
-            if (avatarProto.StealablePowersAllowed.HasValue())
-            {
-                foreach (PrototypeId stealablePowerInfoProtoRef in avatarProto.StealablePowersAllowed)
-                {
-                    var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
-                    Properties[PropertyEnum.StolenPowerAvailable, stealablePowerInfo.Power] = true;
-                }
-            }
-
-            // Initialize AbilityKeyMapping
-            if (_abilityKeyMappingList.Count == 0)
-            {
-                AbilityKeyMapping abilityKeyMapping = new();
-                abilityKeyMapping.SlotDefaultAbilities(this);
-                _abilityKeyMappingList.Add(abilityKeyMapping);
-            }
         }
 
         public override bool ApplyInitialReplicationState(ref EntitySettings settings)
@@ -214,9 +196,59 @@ namespace MHServerEmu.Games.Entities.Avatars
                     success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
             }
 
-            success &= Serializer.Transfer(archive, ref _abilityKeyMappingList);
+            success &= Serializer.Transfer(archive, ref _abilityKeyMappings);
 
             return success;
+        }
+
+        public override void OnUnpackComplete(Archive archive)
+        {
+            base.OnUnpackComplete(archive);
+
+            // Restore persistent cooldowns
+            if (archive.IsPersistent)
+            {
+                Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownDurationPersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent
+                    if (Power.IsCooldownPersistent(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownDuration, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownStartTimePersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent
+                    if (Power.IsCooldownPersistent(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownStartTime, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in setDict)
+                    Properties[kvp.Key] = kvp.Value;
+
+                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
+            }
         }
 
         public void SetPlayer(Player player)
@@ -354,6 +386,18 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            CancelPendingAction();
+
+            // Revert transform
+            if (CurrentTransformMode != PrototypeId.Invalid)
+            {
+                EventScheduler scheduler = Game.GameEventScheduler;
+                scheduler.CancelEvent(_transformModeExitPowerEvent);
+                scheduler.CancelEvent(_transformModeChangeEvent);
+
+                DoTransformModeChangeCallback(PrototypeId.Invalid, CurrentTransformMode);
+            }
+
             base.OnKilled(killer, killFlags, directKiller);
 
             // Deplete resources if needed
@@ -772,7 +816,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
-            // TODO: IsPowerAllowedInCurrentTransformMode()
+            if (IsPowerAllowedInCurrentTransformMode(powerProto.DataRef) == false)
+                return PowerUseResult.NotAllowedByTransformMode;
 
             return base.CanTriggerPower(powerProto, power, flags);
         }
@@ -1050,47 +1095,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             return TimeSpan.Zero;
         }
 
-        public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
-        {
-            AbilityKeyMapping keyMapping = CurrentAbilityKeyMapping;
-            if (keyMapping == null)
-                return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
-
-            List<AbilitySlot> abilitySlotList = ListPool<AbilitySlot>.Instance.Get();
-            keyMapping.GetActiveAbilitySlotsContainingProtoRef(powerProtoRef, abilitySlotList);
-            AbilitySlot result = abilitySlotList.Count > 0 ? abilitySlotList[0] : AbilitySlot.Invalid;
-
-            ListPool<AbilitySlot>.Instance.Return(abilitySlotList);
-            return result;
-        }
-
-        public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
-        {
-            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
-            {
-                if ((PrototypeId)kvp.Value != mappedPowerRef) continue;
-                Property.FromParam(kvp.Key, 0, out PrototypeId originalPower);
-                return originalPower;
-            }
-
-            return PrototypeId.Invalid;
-        }
-
-        public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
-        {
-            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
-            {
-                PrototypeId mappedPowerRef = kvp.Value;
-
-                if (mappedPowerRef == PrototypeId.Invalid)
-                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
-
-                return mappedPowerRef;
-            }
-
-            return PrototypeId.Invalid;
-        }
-
         public override bool HasPowerWithKeyword(PowerPrototype powerProto, PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordPrototype = GameDatabase.GetPrototype<KeywordPrototype>(keywordProtoRef);
@@ -1105,77 +1109,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             int powerKeywordChange = Properties[PropertyEnum.PowerKeywordChange, powerProto.DataRef, keywordProtoRef];
 
             return powerKeywordChange == (int)TriBool.True || (powerProto.HasKeyword(keywordPrototype) && powerKeywordChange != (int)TriBool.False);
-        }
-
-        public override bool HasPowerInPowerProgression(PrototypeId powerRef)
-        {
-            if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
-                return true;
-
-            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
-                return true;
-
-            return false;
-        }
-
-        public override bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo info)
-        {
-            info = new();
-
-            if (powerProtoRef == PrototypeId.Invalid)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
-
-            AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null)
-                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
-
-            PrototypeId progressionInfoPower = powerProtoRef;
-            PrototypeId mappedPowerRef;
-
-            // Check if this is a mapped power
-            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(powerProtoRef);
-            if (originalPowerRef != PrototypeId.Invalid)
-            {
-                mappedPowerRef = powerProtoRef;
-                progressionInfoPower = originalPowerRef;
-            }
-            else
-            {
-                mappedPowerRef = GetMappedPowerFromOriginalPower(powerProtoRef);
-            }
-
-            PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
-
-            // Initialize info
-            // Case 1 - Progression Power
-            PowerProgressionEntryPrototype powerProgressionEntry = powerOwnerTable.GetPowerProgressionEntry(avatarProto.DataRef, progressionInfoPower);
-            if (powerProgressionEntry != null)
-            {
-                PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
-                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
-
-                info.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
-                return info.IsValid;
-            }
-
-            // Case 2 - Talent
-            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
-            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
-            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
-            {
-                info.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
-                return info.IsValid;
-            }
-
-            // Case 3 - Non-Progression Power
-            info.InitNonProgressionPower(powerProtoRef);
-            return info.IsValid;
-        }
-
-        public override int GetLatestPowerProgressionVersion()
-        {
-            if (AvatarPrototype == null) return 0;
-            return AvatarPrototype.PowerProgressionVersion;
         }
 
         public bool IsValidTargetForCurrentPower(WorldEntity target)
@@ -1293,13 +1226,31 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         private bool InitializePowers()
         {
-            Player player = GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "InitializePowers(): player == null");
+            PowerIndexProperties defaultIndexProps = new(0, CharacterLevel, CombatLevel);
 
-            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
+            AssignGameFunctionPowers(defaultIndexProps);
+
+            // Initialize resources
+            InitializePrimaryManaBehaviors();
+            InitializeSecondaryManaBehaviors();
+
+            AssignItemPowers();
+
+            AssignEmotePowers(defaultIndexProps);
+
+            // Assign hidden passive powers (this needs to happen before updating power progression powers)
+            AssignHiddenPassivePowers(defaultIndexProps);
+
+            UpdatePowerProgressionPowers(false);
+
+            UpdateTravelPower();
+
+            return true;
+        }
+
+        private bool AssignGameFunctionPowers(in PowerIndexProperties indexProps)
+        {
             AvatarPrototype avatarPrototype = AvatarPrototype;
-
-            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
 
             // Add game function powers (the order is the same as captured packets)
             AssignPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower, indexProps);
@@ -1314,126 +1265,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             ScheduleStatsPowerRefresh();
             AssignPower(GameDatabase.GlobalsPrototype.AvatarHealPower, indexProps);
 
-            // Initialize resources (TODO: Separate InitializePowers() into multiple methods and move this out of here)
-            InitializePrimaryManaBehaviors();
-            InitializeSecondaryManaBehaviors();
-
-            // Item Powers
-            AssignItemPowers();
-
-            // Emotes
-            // Starting emotes
-            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
-            {
-                PrototypeId emoteProtoRef = emoteAssignment.Ability;
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"InitializePowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
-
-            // Unlockable emotes
-            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
-            {
-                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
-                if (GetPower(emoteProtoRef) != null) continue;
-                if (AssignPower(emoteProtoRef, indexProps) == null)
-                    Logger.Warn($"InitializePowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
-            }
-
-            // Assign hidden passive powers (these need to be assigned before progression table powers)
-            if (avatarPrototype.HiddenPassivePowers.HasValue())
-            {
-                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
-                {
-                    if (GetPower(abilityAssignmentProto.Ability) == null)
-                        AssignPower(abilityAssignmentProto.Ability, indexProps);
-                }
-            }
-
-            // Progression table powers
-            indexProps = new(1, CharacterLevel, CombatLevel);   // use rank 1 for power progression (todo: remove this when we have everything working properly)
-
-            List<PowerProgressionEntryPrototype> powerProgEntryList = ListPool<PowerProgressionEntryPrototype>.Instance.Get();
-            if (avatarPrototype.GetPowersUnlockedAtLevel(powerProgEntryList, -1, true))
-            {
-                foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgEntryList)
-                    AssignPower(powerProgEntry.PowerAssignment.Ability, indexProps);
-            }
-
-            ListPool<PowerProgressionEntryPrototype>.Instance.Return(powerProgEntryList);
-
-            // Mapped powers (power replacements from talents)
-            // AvatarPrototype -> TalentGroups -> Talents -> Talent -> ActionsTriggeredOnPowerEvent -> PowerEventContext -> MappedPower
-            foreach (var talentGroup in avatarPrototype.TalentGroups)
-            {
-                foreach (var talentEntry in talentGroup.Talents)
-                {
-                    var talent = talentEntry.Talent.As<SpecializationPowerPrototype>();
-
-                    foreach (var powerEventAction in talent.ActionsTriggeredOnPowerEvent)
-                    {
-                        if (powerEventAction.PowerEventContext is PowerEventContextMapPowersPrototype mapPowerEvent)
-                        {
-                            foreach (MapPowerPrototype mapPower in mapPowerEvent.MappedPowers)
-                            {
-                                AssignPower(mapPower.MappedPower, indexProps);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Stolen powers for Rogue
-            if (avatarPrototype.StealablePowersAllowed.HasValue())
-            {
-                foreach (PrototypeId stealablePowerInfoProtoRef in avatarPrototype.StealablePowersAllowed)
-                {
-                    var stealablePowerInfo = stealablePowerInfoProtoRef.As<StealablePowerInfoPrototype>();
-                    
-                    // Skip assigning stealable passives for now
-                    PowerPrototype powerProto = stealablePowerInfo.Power.As<PowerPrototype>();
-                    if (powerProto.Activation == PowerActivationType.Passive)
-                        continue;
-
-                    AssignPower(stealablePowerInfo.Power, indexProps);
-                }
-            }
-
-            // Travel
-            AssignPower(avatarPrototype.TravelPower, indexProps);
-
-            return true;
-        }
-
-        private bool RestoreSelfAppliedPowerConditions()
-        {
-            // Powers are unassigned when avatar exits world, but the conditions remain.
-            // We need to reconnect existing conditions to the newly reassigned powers.
-
-            ConditionCollection conditionCollection = ConditionCollection;
-            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
-
-            List<ulong> conditionCleanupList = ListPool<ulong>.Instance.Get();
-
-            // Try to restore condition connections for self-applied powers
-            foreach (Condition condition in ConditionCollection.IterateConditions(false))
-            {
-                PowerPrototype powerProto = condition.CreatorPowerPrototype;
-                if (powerProto == null)
-                    continue;
-
-                if (Power.GetTargetingShape(powerProto) != TargetingShapeType.Self)
-                    continue;
-
-                if (conditionCollection.TryRestorePowerCondition(condition, this) == false)
-                    conditionCleanupList.Add(condition.Id);
-            }
-
-            // Clean up conditions that are no longer valid
-            foreach (ulong conditionId in conditionCleanupList)
-                conditionCollection.RemoveCondition(conditionId);
-
-            ListPool<ulong>.Instance.Return(conditionCleanupList);
             return true;
         }
 
@@ -1520,6 +1351,54 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
+        private bool AssignEmotePowers(in PowerIndexProperties indexProps)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "AssignEmotePowers(): player == null");
+
+            PlayerPrototype playerPrototype = player.Prototype as PlayerPrototype;
+
+            // Starting emotes
+            foreach (AbilityAssignmentPrototype emoteAssignment in playerPrototype.StartingEmotes)
+            {
+                PrototypeId emoteProtoRef = emoteAssignment.Ability;
+                if (GetPower(emoteProtoRef) != null)
+                    continue;
+
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignEmotePowers(): Failed to assign starting emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            // Unlockable emotes
+            foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarEmoteUnlocked, PrototypeDataRef))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId emoteProtoRef);
+                if (GetPower(emoteProtoRef) != null)
+                    continue;
+
+                if (AssignPower(emoteProtoRef, indexProps) == null)
+                    Logger.Warn($"AssignEmotePowers(): Failed to assign unlockable emote {GameDatabase.GetPrototypeName(emoteProtoRef)} to {this}");
+            }
+
+            return true;
+        }
+
+        private bool AssignHiddenPassivePowers(in PowerIndexProperties indexProps)
+        {
+            AvatarPrototype avatarPrototype = AvatarPrototype;
+
+            if (avatarPrototype.HiddenPassivePowers.HasValue())
+            {
+                foreach (AbilityAssignmentPrototype abilityAssignmentProto in avatarPrototype.HiddenPassivePowers)
+                {
+                    if (GetPower(abilityAssignmentProto.Ability) == null)
+                        AssignPower(abilityAssignmentProto.Ability, indexProps);
+                }
+            }
+
+            return true;
+        }
+
         private void AssignRegionPowers()
         {
             Region region = Region;
@@ -1560,6 +1439,38 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 AssignPower(metaGameProto.BodysliderOverride, new());
             }
+        }
+
+        private bool RestoreSelfAppliedPowerConditions()
+        {
+            // Powers are unassigned when avatar exits world, but the conditions remain.
+            // We need to reconnect existing conditions to the newly reassigned powers.
+
+            ConditionCollection conditionCollection = ConditionCollection;
+            if (conditionCollection == null) return Logger.WarnReturn(false, "RestoreSelfAppliedPowerConditions(): conditionCollection == null");
+
+            List<ulong> conditionCleanupList = ListPool<ulong>.Instance.Get();
+
+            // Try to restore condition connections for self-applied powers
+            foreach (Condition condition in ConditionCollection.IterateConditions(false))
+            {
+                PowerPrototype powerProto = condition.CreatorPowerPrototype;
+                if (powerProto == null)
+                    continue;
+
+                if (Power.GetTargetingShape(powerProto) != TargetingShapeType.Self)
+                    continue;
+
+                if (conditionCollection.TryRestorePowerCondition(condition, this) == false)
+                    conditionCleanupList.Add(condition.Id);
+            }
+
+            // Clean up conditions that are no longer valid
+            foreach (ulong conditionId in conditionCleanupList)
+                conditionCollection.RemoveCondition(conditionId);
+
+            ListPool<ulong>.Instance.Return(conditionCleanupList);
+            return true;
         }
 
         protected override bool CanThrow(WorldEntity throwableEntity)
@@ -1715,6 +1626,1572 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Power Ranks
+
+        public InteractionValidateResult CanUpgradeUltimate()
+        {
+            PrototypeId ultimateRef = UltimatePowerRef;
+            if (ultimateRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "CanUpgradeUltimate(): ultimateRef == ultimateRef == PrototypeId.Invalid");
+
+            GetPowerProgressionInfo(ultimateRef, out PowerProgressionInfo powerInfo);
+            int powerSpec = GetPowerSpecIndexActive();
+
+            int rankMax = GetMaxPossibleRankForPowerAtCurrentLevel(ref powerInfo, powerSpec);
+            if (rankMax < 0)
+                return InteractionValidateResult.AvatarUltimateNotUnlocked;
+
+            int rankBase = ComputePowerRankBase(ref powerInfo, powerSpec);
+            if (rankBase >= rankMax)
+                return InteractionValidateResult.AvatarUltimateAlreadyMaxedOut;
+
+            return InteractionValidateResult.Success;
+        }
+
+        protected override int ComputePowerRankBase(ref PowerProgressionInfo powerInfo, int powerSpecIndexActive)
+        {
+            // Check avatar-specific overrides
+            if (powerInfo.IsInPowerProgression)
+            {
+                // Talents
+                if (powerInfo.IsTalent)
+                {
+                    if (powerInfo.GetRequiredLevel() > CharacterLevel)
+                        return PowerProgressionInfo.RankLocked;
+
+                    return IsTalentPowerEnabledForSpec(powerInfo.PowerRef, powerSpecIndexActive) ? 1 : 0;
+                }
+            }
+            else
+            {
+                // Mapped powers
+                PrototypeId originalPowerProtoRef = GetOriginalPowerFromMappedPower(powerInfo.PowerRef);
+                if (originalPowerProtoRef != PrototypeId.Invalid)
+                    return GetPowerRank(originalPowerProtoRef);
+
+                // Transform powers
+                AvatarPrototype avatarProto = AvatarPrototype;
+                if (avatarProto == null) return Logger.WarnReturn(0, "ComputePowerRankBase(): avatarProto == null");
+
+                TransformModePrototype transformModeProto = avatarProto.FindTransformModeThatAssignsPower(powerInfo.PowerRef);
+                if (transformModeProto != null && transformModeProto.UseRankOfPower != PrototypeId.Invalid)
+                    return GetPowerRank(transformModeProto.UseRankOfPower);
+            }
+
+            // Fall back to base implementation if we didn't find any avatar-specific overrides 
+            return base.ComputePowerRankBase(ref powerInfo, powerSpecIndexActive);
+        }
+
+        protected override bool UpdatePowerRank(ref PowerProgressionInfo powerInfo, bool forceUnassign)
+        {
+            PowerPrototype powerProto = powerInfo.PowerPrototype;
+            if (powerProto == null) return Logger.WarnReturn(false, "UpdatePowerRank(): powerProto == null");
+
+            if (powerProto.Activation == PowerActivationType.Passive && IsPowerAllowedInCurrentTransformMode(powerInfo.PowerRef) == false)
+                return false;
+
+            if (base.UpdatePowerRank(ref powerInfo, forceUnassign) == false)
+                return false;
+
+            // Update mapped power if needed
+            PrototypeId mappedPowerRef = powerInfo.MappedPowerRef;
+            if (mappedPowerRef != PrototypeId.Invalid)
+            {
+                // Check for recursion
+                if (mappedPowerRef == powerInfo.PowerRef)
+                    return Logger.WarnReturn(false, $"UpdatePowerRank(): Recursion detected for mapped power {mappedPowerRef.GetName()}");
+
+                PowerProgressionInfo mappedPowerInfo = new();
+                mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
+                UpdatePowerRank(ref mappedPowerInfo, forceUnassign);
+            }
+
+            // Fire scoring events
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "UpdatePowerRank(): player == null");
+
+            int powerRank = GetPowerRank(powerProto.DataRef);
+
+            player.OnScoringEvent(new(ScoringEventType.PowerRank, powerProto, powerRank));
+
+            if (powerProto.IsUltimate)
+                player.OnScoringEvent(new(ScoringEventType.PowerRankUltimate, powerRank));
+
+            return true;
+        }
+
+
+        #endregion
+
+        #region Power Progression
+
+        public override int GetLatestPowerProgressionVersion()
+        {
+            if (AvatarPrototype == null) return 0;
+            return AvatarPrototype.PowerProgressionVersion;
+        }
+
+        public override bool HasPowerInPowerProgression(PrototypeId powerRef)
+        {
+            if (GameDataTables.Instance.PowerOwnerTable.GetPowerProgressionEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            if (GameDataTables.Instance.PowerOwnerTable.GetTalentEntry(PrototypeDataRef, powerRef) != null)
+                return true;
+
+            return false;
+        }
+
+        public override bool GetPowerProgressionInfo(PrototypeId powerProtoRef, out PowerProgressionInfo powerInfo)
+        {
+            powerInfo = new();
+
+            if (powerProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerProtoRef == PrototypeId.Invalid");
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null)
+                return Logger.WarnReturn(false, "GetPowerProgressionInfo(): avatarProto == null");
+
+            PrototypeId progressionInfoPower = powerProtoRef;
+            PrototypeId mappedPowerRef;
+
+            // Check if this is a mapped power
+            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(powerProtoRef);
+            if (originalPowerRef != PrototypeId.Invalid)
+            {
+                mappedPowerRef = powerProtoRef;
+                progressionInfoPower = originalPowerRef;
+            }
+            else
+            {
+                mappedPowerRef = GetMappedPowerFromOriginalPower(powerProtoRef);
+            }
+
+            PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
+
+            // Initialize info
+            // Case 1 - Progression Power
+            PowerProgressionEntryPrototype powerProgressionEntry = powerOwnerTable.GetPowerProgressionEntry(avatarProto.DataRef, progressionInfoPower);
+            if (powerProgressionEntry != null)
+            {
+                PrototypeId powerTabRef = powerOwnerTable.GetPowerProgressionTab(avatarProto.DataRef, progressionInfoPower);
+                if (powerTabRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "GetPowerProgressionInfo(): powerTabRef == PrototypeId.Invalid");
+
+                powerInfo.InitForAvatar(powerProgressionEntry, mappedPowerRef, powerTabRef);
+                return powerInfo.IsValid;
+            }
+
+            // Case 2 - Talent
+            var talentEntryPair = powerOwnerTable.GetTalentEntryPair(avatarProto.DataRef, progressionInfoPower);
+            var talentGroupPair = powerOwnerTable.GetTalentGroupPair(avatarProto.DataRef, progressionInfoPower);
+            if (talentEntryPair.Item1 != null && talentGroupPair.Item1 != null)
+            {
+                powerInfo.InitForAvatar(talentEntryPair.Item1, talentGroupPair.Item1, talentEntryPair.Item2, talentGroupPair.Item2);
+                return powerInfo.IsValid;
+            }
+
+            // Case 3 - Non-Progression Power
+            powerInfo.InitNonProgressionPower(powerProtoRef);
+            return powerInfo.IsValid;
+        }
+
+        public override bool GetPowerProgressionInfos(List<PowerProgressionInfo> powerInfoList)
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "GetPowerProgressionInfos(): avatarProto == null");
+
+            if (avatarProto.PowerProgressionTables.HasValue())
+            {
+                foreach (PowerProgressionTablePrototype powerProgTableProto in avatarProto.PowerProgressionTables)
+                {
+                    if (powerProgTableProto.PowerProgressionEntries.IsNullOrEmpty())
+                        continue;
+
+                    foreach (PowerProgressionEntryPrototype powerProgEntry in powerProgTableProto.PowerProgressionEntries)
+                    {
+                        AbilityAssignmentPrototype abilityAssignmentProto = powerProgEntry.PowerAssignment;
+                        if (abilityAssignmentProto == null)
+                        {
+                            Logger.Warn("GetPowerProgressionInfos(): abilityAssignmentProto == null");
+                            continue;
+                        }
+
+                        PrototypeId mappedPowerRef = GetMappedPowerFromOriginalPower(abilityAssignmentProto.Ability);
+
+                        PowerProgressionInfo powerInfo = new();
+                        powerInfo.InitForAvatar(powerProgEntry, mappedPowerRef, powerProgTableProto.PowerProgTableTabRef);
+                        powerInfoList.Add(powerInfo);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Multi-Spec
+
+        public override int GetPowerSpecIndexUnlocked()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+                return 0;
+
+            return player.PowerSpecIndexUnlocked;
+        }
+
+        #endregion
+
+        #region Talents (Specialization Powers)
+
+        public void GetTalentPowersForSpec(int specIndex, List<PrototypeId> talentPowerList)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarSpecializationPower, specIndex))
+            {
+                Property.FromParam(kvp.Key, 1, out PrototypeId talentPowerRef);
+                talentPowerList.Add(talentPowerRef);
+            }
+        }
+
+        public bool IsTalentPowerEnabledForSpec(PrototypeId talentPowerRef, int specIndex)
+        {
+            return Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef];
+        }
+
+        public bool EnableTalentPower(PrototypeId talentPowerRef, int specIndex, bool enable)
+        {
+            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentPowerRef == PrototypeId.Invalid");
+
+            SpecializationPowerPrototype talentProto = talentPowerRef.As<SpecializationPowerPrototype>();
+            if (talentProto == null) return Logger.WarnReturn(false, "EnableTalentPower(): talentProto == null");
+
+            if (enable)
+            {
+                if (Game.CustomGameOptions.AllowSameGroupTalents == false)
+                {
+                    // Turn off mutually exclusive talents (belonging to the same group)
+                    PowerOwnerTable powerOwnerTable = GameDataTables.Instance.PowerOwnerTable;
+
+                    uint talentGroupIndex = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
+                    if (talentGroupIndex == TalentGroupIndexInvalid) return Logger.WarnReturn(false, "EnableTalentPower(): talentGroupIndex == TalentGroupIndexInvalid");
+
+                    List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+                    GetTalentPowersForSpec(specIndex, talentPowerList);
+
+                    foreach (PrototypeId talentPowerRefToCheck in talentPowerList)
+                    {
+                        uint talentGroupIndexToCheck = powerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRefToCheck);
+                        if (talentGroupIndexToCheck == talentGroupIndex)
+                            UnassignTalentPower(talentPowerRefToCheck, specIndex);
+                    }
+
+                    ListPool<PrototypeId>.Instance.Return(talentPowerList);
+                }
+
+                // Enable
+                AssignTalentPower(talentPowerRef, specIndex);
+            }
+            else
+            {
+                // Disable
+                UnassignTalentPower(talentPowerRef, specIndex);
+            }
+
+            Logger.Debug($"EnableTalentPower(): {talentPowerRef.GetName()} = {enable} (spec={specIndex})");
+            return true;
+        }
+
+        public CanToggleTalentResult CanToggleTalentPower(PrototypeId talentPowerRef, int specIndex, bool enteringWorld, bool enable)
+        {
+            SpecializationPowerPrototype talentPowerProto = talentPowerRef.As<SpecializationPowerPrototype>();
+            if (talentPowerProto == null)
+                return CanToggleTalentResult.GenericError;
+
+            // Skip combat check if this avatar is entering the world
+            if (enteringWorld == false && Properties.HasProperty(PropertyEnum.IsInCombat))
+                return CanToggleTalentResult.InCombat;
+
+            int specIndexUnlocked = GetPowerSpecIndexUnlocked();
+            if (specIndex > specIndexUnlocked) return Logger.WarnReturn(CanToggleTalentResult.GenericError, "CanToggleTalentPower(): specIndex < specIndexUnlocked");
+
+            GetPowerProgressionInfo(talentPowerRef, out PowerProgressionInfo talentPowerInfo);
+
+            if (CharacterLevel < talentPowerInfo.GetRequiredLevel())
+                return CanToggleTalentResult.LevelRequirement;
+
+            uint talentGroupIndex = GameDataTables.Instance.PowerOwnerTable.GetTalentGroupIndex(PrototypeDataRef, talentPowerRef);
+            if (talentGroupIndex == TalentGroupIndexInvalid)
+                return Logger.WarnReturn(CanToggleTalentResult.GenericError, $"CanToggleTalentPower(): Talent missing its talent group index for some reason!\nTalent: {talentPowerProto}\nOwner: [{this}]\nenteringWorld: {enteringWorld}");
+
+            // Skip evla check if this avatar is entering the world
+            if (enable && enteringWorld == false && talentPowerProto.EvalCanEnable.HasValue())
+            {
+                foreach (EvalPrototype evalProto in talentPowerProto.EvalCanEnable)
+                {
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, null);
+                    evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, this);
+                    evalContext.SetReadOnlyVar_ConditionCollectionPtr(EvalContext.Var1, ConditionCollection);
+
+                    if (Eval.RunBool(evalProto, evalContext) == false)
+                        return CanToggleTalentResult.RestrictiveCondition;
+                }
+            }
+
+            return CanToggleTalentResult.Success;
+        }
+
+        private bool AssignTalentPower(PrototypeId talentPowerRef, int specIndex)
+        {
+            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AssignTalentPower(): talentPowerRef == PrototypeId.Invalid");
+
+            SpecializationPowerPrototype talentPowerProto = talentPowerRef.As<SpecializationPowerPrototype>();
+            if (talentPowerProto == null) return Logger.WarnReturn(false, "AssignTalentPower(): talentPowerProto == null");
+
+            if (IsInWorld && specIndex == GetPowerSpecIndexActive())
+            {
+                // Assign the talent power if the spec is currently active
+                // Talent powers always have a rank of 1
+                PowerIndexProperties indexProps = new(1, CharacterLevel, CombatLevel);
+                Power talentPower = AssignPower(talentPowerRef, indexProps);
+                if (talentPower == null) return Logger.WarnReturn(false, "AssignTalentPower(): talentPower == null");
+
+                talentPower.HandleTriggerPowerEventOnSpecializationPowerAssigned();
+                RefreshDependentPassivePowers(talentPowerProto, 1);
+            }
+
+            Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef] = true;
+            return true;
+        }
+
+        private bool UnassignTalentPower(PrototypeId talentPowerRef, int specIndex, bool isSwitchingSpec = false)
+        {
+            if (talentPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignTalentPower(): talentPowerRef == PrototypeId.Invalid");
+
+            Power talentPower = GetPower(talentPowerRef);
+            if (talentPower != null && IsInWorld && specIndex == GetPowerSpecIndexActive())
+            {
+                // Unassign the talent power if the spec is currently active
+                PowerPrototype talentPowerProto = talentPower.Prototype;
+                if (talentPowerProto == null) return Logger.WarnReturn(false, "UnassignTalentPower(): talentPowerProto == null");
+
+                if (UnassignPower(talentPowerRef) == false)
+                    return Logger.WarnReturn(false, $"UnassignTalentPower(): Failed to unassign talent power {talentPowerProto} for owner [{this}]");
+
+                talentPower.HandleTriggerPowerEventOnSpecializationPowerUnassigned();
+                RefreshDependentPassivePowers(talentPowerProto, 0);                
+            }
+
+            // Do not remove the property if we are simply switching specs
+            if (isSwitchingSpec == false)
+                Properties.RemoveProperty(new(PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef));
+
+            return true;
+        }
+
+        private void UpdateTalentPowers()
+        {
+            int specIndex = GetPowerSpecIndexActive();
+
+            List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+            GetTalentPowersForSpec(specIndex, talentPowerList);
+
+            foreach (PrototypeId talentPowerRef in talentPowerList)
+            {
+                bool enabled = Properties[PropertyEnum.AvatarSpecializationPower, specIndex, talentPowerRef];
+                if (CanToggleTalentPower(talentPowerRef, specIndex, true, enabled) == CanToggleTalentResult.Success)
+                {
+                    if (GetPower(talentPowerRef) == null)
+                        AssignTalentPower(talentPowerRef, specIndex);
+                }
+                else
+                {
+                    UnassignTalentPower(talentPowerRef, specIndex);
+                }
+            }
+
+            ListPool<PrototypeId>.Instance.Return(talentPowerList);
+        }
+
+        #endregion
+
+        #region Mapped Powers (and Stolen Powers)
+
+        public bool HasMappedPower(PrototypeId mappedPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                if (kvp.Value == mappedPowerRef)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public PrototypeId GetOriginalPowerFromMappedPower(PrototypeId mappedPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+            {
+                if ((PrototypeId)kvp.Value != mappedPowerRef) continue;
+                Property.FromParam(kvp.Key, 0, out PrototypeId originalPower);
+                return originalPower;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        public PrototypeId GetMappedPowerFromOriginalPower(PrototypeId originalPowerRef)
+        {
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower, originalPowerRef))
+            {
+                PrototypeId mappedPowerRef = kvp.Value;
+
+                if (mappedPowerRef == PrototypeId.Invalid)
+                    Logger.Warn("GetMappedPowerFromOriginalPower(): mappedPowerRefTemp == PrototypeId.Invalid");
+
+                return mappedPowerRef;
+            }
+
+            return PrototypeId.Invalid;
+        }
+
+        public bool MapPower(PrototypeId originalPowerRef, PrototypeId mappedPowerRef)
+        {
+            if (originalPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "MapPower(): originalPowerRef == PrototypeId.Invalid");
+            if (mappedPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "MapPower(): mappedPowerRef == PrototypeId.Invalid");
+
+            PowerPrototype mappedPowerProto = mappedPowerRef.As<PowerPrototype>();
+            if (mappedPowerProto == null) return Logger.WarnReturn(false, "MapPower(): mappedPowerProto == null");
+
+            Logger.Debug($"MapPower(): {originalPowerRef.GetName()} => {mappedPowerRef.GetName()}");
+
+            // Map
+            Properties[PropertyEnum.AvatarMappedPower, originalPowerRef] = mappedPowerRef;
+
+            // Refresh powers
+            GetPowerProgressionInfo(originalPowerRef, out PowerProgressionInfo originalPowerInfo);
+            if (UpdatePowerRank(ref originalPowerInfo, false) == false)
+            {
+                // If the original power's rank didn't change as a result of the update,
+                // we need to update the mapped power's rank manually
+                PowerProgressionInfo mappedPowerInfo = new();
+                mappedPowerInfo.InitNonProgressionPower(mappedPowerRef);
+                UpdatePowerRank(ref mappedPowerInfo, false);
+            }
+
+            // Replace the slotted original power if it was usable
+            if (GetPowerRank(originalPowerRef) > 0)
+            {
+                List<AbilitySlot> slotList = ListPool<AbilitySlot>.Instance.Get();
+                int specIndex = GetPowerSpecIndexActive();
+
+                foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
+                {
+                    if (keyMapping.PowerSpecIndex != specIndex)
+                        continue;
+
+                    keyMapping.GetActiveAbilitySlotsContainingProtoRef(originalPowerRef, slotList);
+                    if (slotList.Count == 0)
+                        continue;
+
+                    foreach (AbilitySlot slot in slotList)
+                    {
+                        if (SlotAbility(mappedPowerRef, slot, true, true) == false)
+                            Logger.Warn($"MapPower(): Failed to slot mapped power {mappedPowerProto} in slot {slot} for avatar [{this}]");
+                    }
+
+                    slotList.Clear();
+                }
+
+                ListPool<AbilitySlot>.Instance.Return(slotList);
+            }
+
+            return true;
+        }
+
+        public bool UnassignMappedPower(PrototypeId mappedPowerRef)
+        {
+            if (mappedPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnassignMappedPower(): mappedPowerRef == PrototypeId.Invalid");
+
+            // Early return if this power is not mapped (valid result)
+            PrototypeId originalPowerRef = GetOriginalPowerFromMappedPower(mappedPowerRef);
+            if (originalPowerRef == PrototypeId.Invalid)
+                return true;
+
+            PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
+            if (originalPowerProto == null) return Logger.WarnReturn(false, "UnassignMappedPower(): originalPowerProto == null");
+
+            Logger.Debug($"UnassignMappedPower(): {mappedPowerRef.GetName()}");
+
+            // Restore the original power in key mappings
+            List<AbilitySlot> slotList = ListPool<AbilitySlot>.Instance.Get();
+            int specIndex = GetPowerSpecIndexActive();
+
+            foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
+            {
+                if (keyMapping.PowerSpecIndex != specIndex)
+                    continue;
+
+                keyMapping.GetActiveAbilitySlotsContainingProtoRef(mappedPowerRef, slotList);
+                if (slotList.Count == 0)
+                    continue;
+
+                foreach (AbilitySlot slot in slotList)
+                {
+                    if (SlotAbility(originalPowerRef, slot, true, true) == false)
+                        Logger.Warn($"UnassignMappedPower(): Failed to slot original power {originalPowerProto} in slot {slot} for avatar [{this}]");
+                }
+
+                slotList.Clear();
+            }
+
+            ListPool<AbilitySlot>.Instance.Return(slotList);
+
+            // Unassign
+            UnassignPower(mappedPowerRef);
+            Properties.RemoveProperty(new(PropertyEnum.AvatarMappedPower, originalPowerRef));
+
+            // Refresh the original power
+            GetPowerProgressionInfo(originalPowerRef, out PowerProgressionInfo originalPowerInfo);
+            UpdatePowerRank(ref originalPowerInfo, false);
+
+            return true;
+        }
+
+        public void UnassignAllMappedPowers()
+        {
+            while (Properties.HasProperty(PropertyEnum.AvatarMappedPower))
+            {
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                {
+                    UnassignMappedPower(kvp.Value);
+                    break;
+                }
+            }
+        }
+
+        public bool IsStolenPowerAvailable(PrototypeId stolenPowerRef)
+        {
+            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsStolenPowerAvailable(): stolenPowerRef == PrototypeId.Invalid");
+            return Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef];
+        }
+
+        public bool CanAssignStolenPower(PrototypeId stolenPowerRefToAssign, PrototypeId currentStolenPowerRef)
+        {
+            if (stolenPowerRefToAssign == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanAssignStolenPower(): stolenPowerRefToAssign == PrototypeId.Invalid");
+
+            PowerPrototype stolenPowerProto = stolenPowerRefToAssign.As<PowerPrototype>();
+            if (stolenPowerProto == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): stolenPowerProto == null");
+
+            GlobalsPrototype globals = GameDatabase.GlobalsPrototype;
+            if (globals.StolenPowerRestrictions.IsNullOrEmpty())
+                return true;
+
+            foreach (PrototypeId restrictionProtoRef in globals.StolenPowerRestrictions)
+            {
+                StolenPowerRestrictionPrototype restrictionProto = restrictionProtoRef.As<StolenPowerRestrictionPrototype>();
+                if (restrictionProto == null)
+                {
+                    Logger.Warn("CanAssignStolenPower(): restrictionProto == null");
+                    continue;
+                }
+
+                KeywordPrototype keywordProto = restrictionProto.RestrictionKeywordPrototype;
+
+                if (keywordProto == null || restrictionProto.RestrictionKeywordCount <= 0)
+                    continue;
+
+                if (stolenPowerProto.HasKeyword(keywordProto) == false)
+                    continue;
+
+                int count = 0;
+                bool hasMaxCount = false;
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                {
+                    PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
+                    if (mappedPowerProto == null)
+                    {
+                        Logger.Warn("CanAssignStolenPower(): mappedPowerProto == null");
+                        continue;
+                    }
+
+                    if (mappedPowerProto.DataRef == currentStolenPowerRef)
+                        continue;
+
+                    if (mappedPowerProto.HasKeyword(keywordProto) == false)
+                        continue;
+
+                    count++;
+                    if (count >= restrictionProto.RestrictionKeywordCount)
+                    {
+                        hasMaxCount = true;
+                        break;
+                    }
+                }
+
+                if (hasMaxCount == false)
+                    continue;
+
+                // Max count for this restriction reached, stolen power cannot be assigned
+
+                // Notify the player about this
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): player == null");
+
+                BannerMessagePrototype bannerMessageProto = restrictionProto.RestrictionBannerMessage.As<BannerMessagePrototype>();
+                if (bannerMessageProto == null) return Logger.WarnReturn(false, "CanAssignStolenPower(): bannerMessageProto == null");
+
+                player.SendBannerMessage(bannerMessageProto);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Travel Powers
+
+        public PrototypeId GetTravelPowerRef()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(PrototypeId.Invalid, "GetTravelPowerRef(): avatarProto == null");
+
+            if (_travelPowerOverrideProtoRef != PrototypeId.Invalid)
+                return _travelPowerOverrideProtoRef;
+
+            return avatarProto.TravelPower;
+        }
+
+        public void SetTravelPowerOverride(PrototypeId travelPowerOverrideProtoRef)
+        {
+            // Called by mapped powers
+            _travelPowerOverrideProtoRef = travelPowerOverrideProtoRef;
+        }
+
+        /// <summary>
+        /// Assigns or unassign the travel power for this <see cref="Avatar"/> based on character level.
+        /// </summary>
+        private bool UpdateTravelPower()
+        {
+            PrototypeId travelPowerRef = GetTravelPowerRef();
+            if (travelPowerRef == PrototypeId.Invalid)
+                return true;
+
+            int characterLevel = CharacterLevel;
+            if (characterLevel >= GameDatabase.AdvancementGlobalsPrototype.TravelPowerUnlockLevel)
+            {
+                if (GetPower(travelPowerRef) == null)
+                {
+                    PowerIndexProperties indexProps = new(1, characterLevel, CombatLevel);
+                    AssignPower(travelPowerRef, indexProps);
+                }
+            }
+            else
+            {
+                UnassignPower(travelPowerRef);
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Transform Modes
+
+        public bool ScheduleTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, TimeSpan delay = default)
+        {
+            Logger.Debug($"ScheduleTransformModeChange(): [{oldTransformModeRef.GetName()}] => [{newTransformModeRef.GetName()}] for {delay.TotalMilliseconds} ms");
+
+            EventScheduler scheduler = Game.GameEventScheduler;
+
+            TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
+            if (delay > TimeSpan.Zero && oldTransformModeProto != null)
+            {
+                // Schedule transform mode exit
+                PowerPrototype exitPowerProto = oldTransformModeProto.ExitTransformModePower.As<PowerPrototype>();
+                if (exitPowerProto == null) return Logger.WarnReturn(false, "ScheduleTransformModeChange(): exitPowerProto == null");
+
+                if (_transformModeExitPowerEvent.IsValid)
+                {
+                    scheduler.RescheduleEvent(_transformModeExitPowerEvent, delay);
+                    _transformModeExitPowerEvent.Get().Initialize(this, oldTransformModeRef);
+                }
+                else
+                {
+                    ScheduleEntityEvent(_transformModeExitPowerEvent, delay, oldTransformModeRef);
+                }
+            }
+            else
+            {
+                // Cancel exit
+                scheduler.CancelEvent(_transformModeExitPowerEvent);
+
+                // Schedule change
+                if (_transformModeChangeEvent.IsValid)
+                {
+                    scheduler.RescheduleEvent(_transformModeChangeEvent, delay);
+                    _transformModeChangeEvent.Get().Initialize(this, newTransformModeRef, oldTransformModeRef);
+                }
+                else
+                {
+                    ScheduleEntityEvent(_transformModeChangeEvent, delay, newTransformModeRef, oldTransformModeRef);
+                }
+            }
+
+            return true;
+        }
+
+        public bool IsPowerAllowedInCurrentTransformMode(PrototypeId powerProtoRef)
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "IsPowerAllowedInCurrentTransformMode(): avatarProto == null");
+
+            return IsPowerAllowedInTransformMode(avatarProto, CurrentTransformMode, powerProtoRef);
+        }
+
+        public static bool IsPowerAllowedInTransformMode(AvatarPrototype avatarProto, PrototypeId transformModeRef, PrototypeId powerProtoRef)
+        {
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(false, "IsPowerAllowedInTransformMode(): powerProto == null");
+
+            if (Power.IsComboEffect(powerProto))
+                return true;
+
+            if (powerProto.UsableByAll)
+                return true;
+
+            if (powerProto.PowerCategory == PowerCategoryType.HiddenPassivePower)
+                return true;
+
+            if (powerProto.Activation == PowerActivationType.Passive && powerProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.TeamUpAwayPowerKeywordPrototype))
+                return true;
+
+            PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(transformModeRef);
+            if (allowedPowers == null)
+                return true;
+
+            foreach (PrototypeId allowedPowerProtoRef in allowedPowers)
+            {
+                if (allowedPowerProtoRef == powerProtoRef)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool OnTransformModeChange(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef, bool enterWorld, TimeSpan remainingDuration = default)
+        {
+            if (oldTransformModeRef == PrototypeId.Invalid && newTransformModeRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(false, "OnTransformModeChange(): No transform mode specified!");
+
+            if (oldTransformModeRef != PrototypeId.Invalid && newTransformModeRef != PrototypeId.Invalid)
+                return Logger.WarnReturn(false, $"OnTransformModeChange(): Cannot go directly from one transform mode to another! oldTransformMode=[{oldTransformModeRef.GetName()}] newTransformMode=[{newTransformModeRef.GetName()}]");
+
+            Logger.Debug($"OnTransformModeChange(): [{oldTransformModeRef.GetName()}] => [{newTransformModeRef.GetName()}] (remainingDuration = {remainingDuration.TotalMilliseconds} ms) ");
+
+            if (newTransformModeRef == PrototypeId.Invalid)
+            {
+                CurrentTransformMode = PrototypeId.Invalid;
+                Properties.RemoveProperty(PropertyEnum.TransformMode);
+                Properties.RemoveProperty(new(PropertyEnum.TransformModeStartTime, oldTransformModeRef));
+            }
+            else
+            {
+                TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
+                if (newTransformModeProto == null) return Logger.WarnReturn(false, "OnTransformModeChange(): newTransformModeProto == null");
+
+                TimeSpan duration = remainingDuration > TimeSpan.Zero
+                    ? remainingDuration
+                    : newTransformModeProto.GetDuration(this);
+
+                // Schedule exit if this is a finite duration transform mode
+                if (duration > TimeSpan.Zero)
+                    ScheduleTransformModeChange(oldTransformModeRef, newTransformModeRef, duration);
+
+                Properties[PropertyEnum.TransformMode] = newTransformModeRef;
+                if (enterWorld == false)
+                    Properties[PropertyEnum.TransformModeStartTime, newTransformModeRef] = Game.CurrentTime;
+            }
+
+            // Assign or unassign transform mode powers
+            if (newTransformModeRef != PrototypeId.Invalid)
+                UpdateTransformModeDefaultEquippedAbilities(newTransformModeRef, true);
+            else
+                UpdateTransformModeDefaultEquippedAbilities(oldTransformModeRef, false);
+
+            UpdateTransformModeAbilityKeyMapping(newTransformModeRef, oldTransformModeRef);
+
+            UpdateTransformModeAllowedPowers(newTransformModeRef, oldTransformModeRef);
+
+            if (_continuousPowerData.PowerProtoRef != PrototypeId.Invalid && GetPower(_continuousPowerData.PowerProtoRef) != null)
+                ClearContinuousPower();
+
+            return true;
+        }
+
+        private bool OnEnteredWorldSetTransformMode()
+        {
+            // Restore the previous transform mode (if any)
+            CurrentTransformMode = Properties[PropertyEnum.TransformMode];
+
+            if (CurrentTransformMode == PrototypeId.Invalid)
+                return true;
+
+            TransformModePrototype currentTransformModeProto = CurrentTransformMode.As<TransformModePrototype>();
+            if (currentTransformModeProto == null) return Logger.WarnReturn(false, "OnEnteredWorldSetTransformMode(): currentTransformModeProto == null");
+
+            TimeSpan transformModeDuration = currentTransformModeProto.GetDuration(this);
+
+            if (transformModeDuration == TimeSpan.Zero)
+            {
+                // TimeSpan.Zero indicates infinite duration
+                OnTransformModeChange(CurrentTransformMode, PrototypeId.Invalid, true);
+            }
+            else
+            {
+                // Calculate remaining time
+                TimeSpan transformModeStartTime = Properties[PropertyEnum.TransformModeStartTime, CurrentTransformMode];
+                TimeSpan avatarLastActiveTime = Properties[PropertyEnum.AvatarLastActiveTime];
+                TimeSpan elapsedDuration = Clock.Max(avatarLastActiveTime - transformModeStartTime, TimeSpan.Zero);
+
+                // Turn it back on if there is still time, or turn it off
+                if (elapsedDuration < transformModeDuration)
+                    OnTransformModeChange(CurrentTransformMode, PrototypeId.Invalid, true, transformModeDuration - elapsedDuration);
+                else
+                    OnTransformModeChange(PrototypeId.Invalid, CurrentTransformMode, true);
+            }
+
+            return true;
+        }
+
+        private void DoTransformModeChangeCallback(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
+        {
+            CurrentTransformMode = newTransformModeRef;
+            OnTransformModeChange(newTransformModeRef, oldTransformModeRef, false);
+        }
+
+        private bool DoTransformModeExitPowerCallback(PrototypeId fromTransformModeProtoRef)
+        {
+            if (fromTransformModeProtoRef != CurrentTransformMode) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): fromTransformModeProtoRef != CurrentTransformMode");
+            if (IsInWorld == false) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): IsInWorld == false");
+
+            TransformModePrototype currentTransformModeProto = CurrentTransformMode.As<TransformModePrototype>();
+            if (currentTransformModeProto == null) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): currentTransformModeProto == null");
+            if (currentTransformModeProto.ExitTransformModePower == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoTransformModeExitPowerCallback(): currentTransformModeProto.ExitTransformModePower == PrototypeId.Invalid");
+
+            // Abort active powers
+            ClearContinuousPower();
+            CancelPendingAction();
+            ActivePower?.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
+
+            // Prepare exit power
+            Vector3 position = RegionLocation.Position;
+            PowerActivationSettings settings = new(Id, position, position);
+            settings.TriggeringPowerRef = currentTransformModeProto.EnterTransformModePower;
+            settings.FXRandomSeed = Game.Random.Next(1, 10000);
+
+            Power exitTransformModePower = GetPower(currentTransformModeProto.ExitTransformModePower);
+            if (exitTransformModePower != null)
+            {
+                TimeSpan delay = exitTransformModePower.GetFullExecutionTime() + TimeSpan.FromMilliseconds(1);
+                if (_transformModeChangeEvent.IsValid)
+                {
+                    Game.GameEventScheduler.RescheduleEvent(_transformModeChangeEvent, delay);
+                    _transformModeChangeEvent.Get().Initialize(this, PrototypeId.Invalid, fromTransformModeProtoRef);
+                }
+                else
+                {
+                    ScheduleEntityEvent(_transformModeChangeEvent, delay, PrototypeId.Invalid, fromTransformModeProtoRef);
+                }
+            }
+            else
+            {
+                Logger.Warn("DoTransformModeExitPowerCallback(): exitTransformModePower == null");
+            }
+
+            // Activate exit power
+            PowerUseResult result = ActivatePower(currentTransformModeProto.ExitTransformModePower, ref settings);
+            if (result != PowerUseResult.Success)
+                return Logger.WarnReturn(false, $"DoTransformModeExitPowerCallback(): Failed to activate transform mode exit power for Avatar: [{this}]\nTransform mode: {currentTransformModeProto}");
+
+            return true;
+        }
+
+        private bool UpdateTransformModeAbilityKeyMapping(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
+        {
+            TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
+            TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
+
+            if (oldTransformModeProto == null && newTransformModeProto == null) return Logger.WarnReturn(false, "UpdateTransformModeAbilityKeyMapping(): oldTransformModeProto == null && newTransformModeProto == null");
+
+            if (oldTransformModeProto?.PowersAreSlottable == false || newTransformModeProto?.PowersAreSlottable == false)
+                RefreshAbilityKeyMapping(false);    // Swap to and from non-slottable transform mapping
+            else if (newTransformModeProto?.PowersAreSlottable == true)
+                RefreshAbilityKeyMapping(false);    // Swap to slottable transform mapping
+            else if (newTransformModeProto == null && oldTransformModeProto?.PowersAreSlottable == true)
+                RefreshAbilityKeyMapping(false);    // Swap back from slottable transform mapping
+
+            return true;
+        }
+
+        private bool UpdateTransformModeDefaultEquippedAbilities(PrototypeId transformModeRef, bool isEntering)
+        {
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "UpdateTransformModeDefaultEquippedAbilities(): transformModeProto == null");
+
+            // Nothing to update
+            if (transformModeProto.DefaultEquippedAbilities.IsNullOrEmpty())
+                return true;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+            foreach (AbilityAssignmentPrototype abilityAssignment in transformModeProto.DefaultEquippedAbilities)
+            {
+                PrototypeId abilityProtoRef = abilityAssignment.Ability;
+
+                if (abilityProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                // Abilities can also refer to items
+                PowerPrototype powerProto = abilityProtoRef.As<PowerPrototype>();
+                if (powerProto == null)
+                    continue;
+
+                // Power progression powers are handled separately
+                if (HasPowerInPowerProgression(abilityProtoRef))
+                    continue;
+
+                if (isEntering)
+                {
+                    if (HasPowerInPowerCollection(abilityProtoRef))
+                        continue;
+
+                    AssignPower(abilityProtoRef, indexProps);
+
+                    PowerProgressionInfo powerInfo = new();
+                    powerInfo.InitNonProgressionPower(abilityProtoRef);
+                    UpdatePowerRank(ref powerInfo, false);
+                }
+                else
+                {
+                    UnassignPower(abilityProtoRef);
+                }
+            }
+
+            return true;
+        }
+
+        private bool UpdateTransformModeAllowedPowers(PrototypeId newTransformModeRef, PrototypeId oldTransformModeRef)
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "UpdateTransformModeAllowedPowers(): avatarProto == null");
+
+            // Look for powers that are not allowed in the new transform mode
+            List<PrototypeId> powerRemoveList = ListPool<PrototypeId>.Instance.Get();
+            
+            // Power collection
+            foreach (var kvp in PowerCollection)
+            {
+                Power power = kvp.Value.Power;
+                if (power == null)
+                {
+                    Logger.Warn("UpdateTransformModeAllowedPowers(): power == null");
+                    continue;
+                }
+
+                PrototypeId powerProtoRef = power.PrototypeDataRef;
+
+                bool isPassive = power.GetActivationType() == PowerActivationType.Passive;
+                bool isToggledOn = power.IsToggledOn();
+
+                if (isPassive || isToggledOn)
+                {
+                    if (IsPowerAllowedInCurrentTransformMode(powerProtoRef) == false)
+                    {
+                        if (isPassive)
+                            powerRemoveList.Add(powerProtoRef);
+                        else if (isToggledOn)
+                            power.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Unassign);
+                    }
+                }
+                else if (power.IsActive && isPassive == false)
+                {
+                    power.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Force);
+                }
+            }
+
+            // Transform mode specific hidden passives (if we are exiting)
+            TransformModePrototype oldTransformModeProto = oldTransformModeRef.As<TransformModePrototype>();
+            if (oldTransformModeProto != null && oldTransformModeProto.HiddenPassivePowers.HasValue())
+            {
+                foreach (PrototypeId hiddenPassivePowerRef in oldTransformModeProto.HiddenPassivePowers)
+                    powerRemoveList.Add(hiddenPassivePowerRef);
+            }
+
+            // Remove the powers we found
+            while (powerRemoveList.Count > 0)
+            {
+                int index = powerRemoveList.Count - 1;
+                PrototypeId powerProtoRef = powerRemoveList[index];
+                powerRemoveList.RemoveAt(index);
+
+                // Remove all copies of this power
+                while (PowerCollection.GetPower(powerProtoRef) != null)
+                    PowerCollection.UnassignPower(powerProtoRef);
+            }
+            ListPool<PrototypeId>.Instance.Return(powerRemoveList);
+
+            // Assign newly allowed powers
+            PrototypeId[] allowedPowers = avatarProto.GetAllowedPowersForTransformMode(newTransformModeRef);
+            if (allowedPowers.IsNullOrEmpty()) return Logger.WarnReturn(false, "UpdateTransformModeAllowedPowers(): allowedPowers.IsNullOrEmpty()");
+
+            int characterLevel = CharacterLevel;
+            int combatLevel = CombatLevel;
+
+            foreach (PrototypeId allowedPowerRef in allowedPowers)
+            {
+                PowerPrototype powerProto = allowedPowerRef.As<PowerPrototype>();
+                if (powerProto == null)
+                {
+                    Logger.Warn("UpdateTransformModeAllowedPowers(): powerProto == null");
+                    continue;
+                }
+
+                if (powerProto.PowerCategory != PowerCategoryType.NormalPower)
+                    continue;
+
+                if (powerProto.Activation != PowerActivationType.Passive && powerProto.UsableByAll == false)
+                    continue;
+
+                // Do not assign if it doesn't have a rank or it is already assigned
+                int powerRank = GetPowerRank(allowedPowerRef);
+                if (powerRank <= 0 || GetPower(allowedPowerRef) != null)
+                    continue;
+
+                PowerIndexProperties indexProps = new(powerRank, characterLevel, combatLevel);
+                AssignPower(allowedPowerRef, indexProps);
+            }
+
+            // Assign transform mode specific hidden passives
+            TransformModePrototype newTransformModeProto = newTransformModeRef.As<TransformModePrototype>();
+            if (newTransformModeProto != null && newTransformModeProto.HiddenPassivePowers.HasValue())
+            {
+                PowerIndexProperties indexProps = new(0, characterLevel, combatLevel);
+
+                foreach (PrototypeId hiddenPassivePowerRef in newTransformModeProto.HiddenPassivePowers)
+                {
+                    if (PowerCollection.GetPower(hiddenPassivePowerRef) != null)
+                        continue;
+
+                    PowerCollection.AssignPower(hiddenPassivePowerRef, indexProps);
+
+                    PowerProgressionInfo powerInfo = new();
+                    powerInfo.InitNonProgressionPower(hiddenPassivePowerRef);
+                    UpdatePowerRank(ref powerInfo, false);
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Ability Slot Management
+
+        public AbilitySlot GetPowerSlot(PrototypeId powerProtoRef)
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null)
+                return Logger.WarnReturn(AbilitySlot.Invalid, $"GetPowerSlot(): No current keyMapping when calling GetPowerSlot [{powerProtoRef.GetName()}]");
+
+            List<AbilitySlot> abilitySlotList = ListPool<AbilitySlot>.Instance.Get();
+            keyMapping.GetActiveAbilitySlotsContainingProtoRef(powerProtoRef, abilitySlotList);
+            AbilitySlot result = abilitySlotList.Count > 0 ? abilitySlotList[0] : AbilitySlot.Invalid;
+
+            ListPool<AbilitySlot>.Instance.Return(abilitySlotList);
+            return result;
+        }
+
+        public Power GetPowerInSlot(AbilitySlot slot)
+        {
+            // Merged with getPowerInSlot(), which is only needed for the client
+            if (slot < 0 || _currentAbilityKeyMapping == null)
+                return null;
+
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+
+            PrototypeId abilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
+            if (abilityProtoRef == PrototypeId.Invalid)
+                return null;
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            return abilityProto switch
+            {
+                PowerPrototype          => GetPower(abilityProtoRef),
+                ItemPrototype itemProto => GetPower(itemProto.GetOnUsePower()),
+                _ => null,
+            };
+        }
+
+        public bool HasPowerEquipped(PrototypeId powerProtoRef)
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null)
+                return Logger.WarnReturn(false, "HasPowerEquipped():");
+
+            return keyMapping.ContainsAbilityInActiveSlot(powerProtoRef);
+        }
+
+        public bool HasControlPowerEquipped()
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return false;
+
+            for (AbilitySlot slot = AbilitySlot.PrimaryAction; slot < AbilitySlot.NumActions; slot++)
+            {
+                Power power = GetPowerInSlot(slot);
+                if (power != null && power.IsControlPower)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool SlotAbility(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation, bool sendToClient)
+        {
+            if (IsAbilityEquippableInSlot(abilityProtoRef, slot, skipEquipValidation) != AbilitySlotOpValidateResult.Valid)
+                return false;
+
+            AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
+            if (keyMapping == null) return Logger.WarnReturn(false, "SlotAbility(): keyMapping == null");
+
+            bool wasEquipped = HasPowerEquipped(abilityProtoRef);
+
+            // Unslot the currently slotted ability if it's something else to trigger unequip
+            PrototypeId slottedAbilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
+            if (slottedAbilityProtoRef != PrototypeId.Invalid && slottedAbilityProtoRef != abilityProtoRef)
+            {
+                if (UnslotAbility(slot, false) == false)
+                    Logger.Warn($"SlotAbility(): Failed to unslot ability {abilityProtoRef.GetName()} in slot {slot}");
+            }
+
+            // Set
+            keyMapping.SetAbilityInAbilitySlot(abilityProtoRef, slot);
+
+            // Trigger equip
+            if (wasEquipped == false)
+            {
+                Power power = GetPower(abilityProtoRef);
+                power?.OnEquipped();
+            }
+
+            // Notify the client if needed
+            if (sendToClient)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "SlotAbility(): player == null");
+
+                if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                {
+                    player.SendMessage(NetMessageAbilitySlotToAbilityBarFromServer.CreateBuilder()
+                        .SetAvatarId(Id)
+                        .SetPrototypeRefId((ulong)abilityProtoRef)
+                        .SetSlotNumber((uint)slot)
+                        .Build());
+                }
+            }
+
+            return true;
+        }
+
+        public bool UnslotAbility(AbilitySlot slot, bool sendToClient)
+        {
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(false, "UnslotAbility(): AbilityKeyMapping.IsActiveAbilitySlot(slot) == false");
+
+            AbilityKeyMapping keyMapping = GetAbilityKeyMappingIgnoreTransient(GetPowerSpecIndexActive());
+            if (keyMapping == null) return Logger.WarnReturn(false, "UnslotAbility(): keyMapping == null");
+
+            PrototypeId abilityProtoRef = keyMapping.GetAbilityInAbilitySlot(slot);
+            if (abilityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "UnslotAbility(): abilityProtoRef == PrototypeId.Invalid");
+
+            // Remove by assigning invalid id
+            keyMapping.SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
+
+            // Trigger unequip
+            if (HasPowerEquipped(abilityProtoRef) == false)
+            {
+                Power power = GetPower(abilityProtoRef);
+                power?.OnUnequipped();
+            }
+
+            // Notify the client if needed
+            if (sendToClient)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "UnslotAbility(): player == null");
+
+                if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                {
+                    player.SendMessage(NetMessageAbilityUnslotFromAbilityBarFromServer.CreateBuilder()
+                        .SetAvatarId(Id)
+                        .SetSlotNumber((uint)slot)
+                        .Build());
+                }
+            }
+
+            return true;
+        }
+
+        public bool SwapAbilities(AbilitySlot slotA, AbilitySlot slotB, bool sendToClient)
+        {
+            // Check A to B
+            if (ValidateAbilitySwap(slotA, slotB) != AbilitySlotOpValidateResult.Valid)
+                return false;
+
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return Logger.WarnReturn(false, "SwapAbilities(): keyMapping == null");
+
+            // Check B to A - this is allowed to be invalid, in which case we just discard B
+            if (ValidateAbilitySwap(slotB, slotA) != AbilitySlotOpValidateResult.Valid)
+                UnslotAbility(slotB, false);
+
+            // Do the swap            
+            PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
+            PrototypeId abilityB = keyMapping.GetAbilityInAbilitySlot(slotB);
+            keyMapping.SetAbilityInAbilitySlot(abilityB, slotA);
+            keyMapping.SetAbilityInAbilitySlot(abilityA, slotB);
+
+            // Notify the client if needed
+            if (sendToClient)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "SwapAbilities(): player == null");
+
+                if (player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+                {
+                    player.SendMessage(NetMessageAbilitySwapInAbilityBarFromServer.CreateBuilder()
+                        .SetAvatarId(Id)
+                        .SetSlotNumberA((uint)slotA)
+                        .SetSlotNumberB((uint)slotB)
+                        .Build());
+                }
+            }
+
+            return true;
+        }
+
+        public bool RefreshAbilityKeyMapping(bool sendToClient)
+        {
+            // NOTE: The server has nothing to send to client here, but we are keeping the bool arg for now to keep the API the same as the client
+
+            _currentAbilityKeyMapping = GetOrCreateAbilityKeyMapping(GetPowerSpecIndexActive(), CurrentTransformMode);
+            if (_currentAbilityKeyMapping == null) return Logger.WarnReturn(false, "RefreshAbilityKeyMapping(): _currentAbilityKeyMapping == null");
+
+            _currentAbilityKeyMapping.InitDedicatedAbilitySlots(this);
+
+            return true;
+        }
+
+        private void InitAbilityKeyMappings()
+        {
+            RefreshAbilityKeyMapping(false);
+            CleanUpAbilityKeyMappingsAfterRespec();
+        }
+
+        private void CleanUpAbilityKeyMappingsAfterRespec()
+        {
+            // TODO
+        }
+
+        private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
+        {
+            AbilityKeyMapping keyMapping = null;
+
+            if (powerSpecIndex < 0 || powerSpecIndex > GetPowerSpecIndexUnlocked()) return Logger.WarnReturn(keyMapping, "GetOrCreateAbilityKeyMapping(): powerSpecIndex < 0 || powerSpecIndex > GetPowerSpecIndexUnlocked()");
+
+            TransformModePrototype transformModeProto = transformModeProtoRef.As<TransformModePrototype>();
+            if (transformModeProto != null && transformModeProto.PowersAreSlottable == false)
+            {
+                // Fixed key mappings for transform modes
+
+                // Transient ability key mappings are stored in a fixed array with a length of 1 in the client.
+                // Not sure if there were more of them in older versions, so for now I'm keeping it the same.
+                // Initializing this collection on demand to avoid allocations for avatars with no transform modes
+                // (the vast majority of them).
+                _transientAbilityKeyMappings ??= new(MaxNumTransientAbilityKeyMappings);
+
+                foreach (AbilityKeyMapping transientKeyMapping in _transientAbilityKeyMappings)
+                {
+                    if (transientKeyMapping?.AssociatedTransformMode == transformModeProtoRef)
+                    {
+                        keyMapping = transientKeyMapping;
+                        break;
+                    }
+                }
+
+                if (keyMapping == null)
+                {
+                    if (_transientAbilityKeyMappings.Count >= MaxNumTransientAbilityKeyMappings)
+                        return Logger.WarnReturn(keyMapping, "GetOrCreateAbilityKeyMapping(): _transientAbilityKeyMappings.Count >= MaxNumTransientAbilityKeyMappings");
+
+                    keyMapping = new();
+                    _transientAbilityKeyMappings.Add(keyMapping);
+
+                    keyMapping.AssociatedTransformMode = transformModeProtoRef;
+                    keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
+
+                    keyMapping.PowerSpecIndex = powerSpecIndex;
+                    keyMapping.ShouldPersist = false;       // Will be flagged to persist if anything gets changed
+                }
+            }
+            else
+            {
+                // Normal key mapping and transform modes with swappable slots
+                foreach (AbilityKeyMapping keyMappingToCheck in _abilityKeyMappings)
+                {
+                    // Pre-BUE this is where mapping index would also be checked
+                    if (keyMappingToCheck.PowerSpecIndex == powerSpecIndex)
+                    {
+                        keyMapping = keyMappingToCheck;
+                        break;
+                    }
+                }
+
+                if (keyMapping == null)
+                {
+                    keyMapping = new();
+                    _abilityKeyMappings.Add(keyMapping);
+
+                    // AssociatedTransformMode doesn't seem to be getting used here, is this correct?
+                    if (transformModeProto != null && transformModeProto.PowersAreSlottable)
+                        keyMapping.SlotDefaultAbilitiesForTransformMode(transformModeProto);
+                    else
+                        keyMapping.SlotDefaultAbilities(this);
+
+                    keyMapping.PowerSpecIndex = powerSpecIndex;
+                    keyMapping.ShouldPersist = false;       // Will be flagged to persist if anything gets changed
+                }
+            }
+
+            return keyMapping;
+        }
+
+        private AbilityKeyMapping GetAbilityKeyMappingIgnoreTransient(int powerSpecIndex)
+        {
+            return GetOrCreateAbilityKeyMapping(powerSpecIndex, PrototypeId.Invalid);
+        }
+
+        private AbilitySlotOpValidateResult IsAbilityEquippableInSlot(PrototypeId abilityProtoRef, AbilitySlot slot, bool skipEquipValidation)
+        {
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsAbilityEquippableInSlot(): IsActiveAbilitySlot(slot) == false");
+
+            if (Properties.HasProperty(PropertyEnum.IsInCombat))
+            {
+                // Only mapped powers are allowed to be equipp;ed in combat
+                if (HasMappedPower(abilityProtoRef) || GetMappedPowerFromOriginalPower(abilityProtoRef) != PrototypeId.Invalid)
+                    return AbilitySlotOpValidateResult.Valid;
+
+                return AbilitySlotOpValidateResult.AvatarIsInCombat;
+            }
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            PowerPrototype powerProto = abilityProto as PowerPrototype;
+            ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+            if (powerProto == null && itemProto?.AbilitySettings == null)
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsAbilityEquippableInSlot(): powerProto == null && itemProto?.AbilitySettings == null");
+
+            if (powerProto != null)
+            {
+                // Mapped powers have their own validation
+                if (HasMappedPower(abilityProtoRef))
+                    return AbilitySlotOpValidateResult.Valid;
+
+                if (skipEquipValidation == false)
+                {
+                    AbilitySlotOpValidateResult isPowerEquippableResult = IsPowerEquippable(abilityProtoRef);
+                    if (isPowerEquippableResult != AbilitySlotOpValidateResult.Valid)
+                        return isPowerEquippableResult;
+                }
+            }
+
+            if (itemProto != null)
+            {
+                if (itemProto.AbilitySettings.OnlySlottableWhileEquipped && FindAbilityItem(itemProto) == InvalidId)
+                    return AbilitySlotOpValidateResult.ItemNotEquipped;
+            }
+
+            return CheckAbilitySlotRestrictions(abilityProtoRef, slot);
+        }
+
+        private AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId powerProtoRef)
+        {
+            AbilitySlotOpValidateResult staticResult = IsPowerEquippable(PrototypeDataRef, powerProtoRef);
+            if (staticResult != AbilitySlotOpValidateResult.Valid)
+                return staticResult;
+
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): avatarProto == null");
+
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
+
+            if (powerProto.PowerCategory == PowerCategoryType.NormalPower)
+            {
+                int powerRank = GetPowerRank(powerProtoRef);
+                if (powerRank <= 0)
+                    return AbilitySlotOpValidateResult.PowerNotUnlocked;
+            }
+
+            return AbilitySlotOpValidateResult.Valid;
+        }
+
+        private static AbilitySlotOpValidateResult IsPowerEquippable(PrototypeId avatarProtoRef, PrototypeId powerProtoRef)
+        {
+            PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+            if (powerProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): powerProto == null");
+
+            if (powerProto.UsableByAll)
+                return AbilitySlotOpValidateResult.Valid;
+
+            // Check avatar-specific restrictions
+            AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+            if (avatarProto == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "IsPowerEquippable(): avatarProto == null");
+
+            if (avatarProto.HasPowerProgressionTables == false || avatarProto.HasPowerInPowerProgression(powerProtoRef) == false)
+                return AbilitySlotOpValidateResult.PowerNotUsableByAvatar;
+
+            return AbilitySlotOpValidateResult.Valid;
+        }
+
+        private AbilitySlotOpValidateResult ValidateAbilitySwap(AbilitySlot slotA, AbilitySlot slotB)
+        {
+            // This is a one way check, in this case slotA is the source and slotB is the destination
+            if (slotA == slotB)
+                return AbilitySlotOpValidateResult.SwapSameSlot;
+
+            if (IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false)
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.PowerSlotMismatch, "ValidateAbilitySwap(): IsActiveAbilitySlot(slotA) == false || IsActiveAbilitySlot(slotB) == false");
+
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "ValidateAbilitySwap(): keyMapping == null");
+
+            PrototypeId abilityA = keyMapping.GetAbilityInAbilitySlot(slotA);
+            if (abilityA != PrototypeId.Invalid && IsAbilityEquippableInSlot(abilityA, slotB, true) != AbilitySlotOpValidateResult.Valid)
+                return AbilitySlotOpValidateResult.PowerSlotMismatch;
+
+            return AbilitySlotOpValidateResult.Valid;
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="AbilitySlot"/> is valid.
+        /// </summary>
+        public static bool IsActiveAbilitySlot(AbilitySlot slot)
+        {
+            return slot > AbilitySlot.Invalid && slot < AbilitySlot.NumSlotsTotal;
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="AbilitySlot"/> is an action key slot (non-mouse bindable slot).
+        /// </summary>
+        public static bool IsActionKeyAbilitySlot(AbilitySlot slot)
+        {
+            return slot >= AbilitySlot.ActionKey0 && slot <= AbilitySlot.ActionKey5;
+        }
+
+        /// <summary>
+        /// Checks if an <see cref="AbilitySlot"/> is a dedicated ability slot (ultimate, travel, etc.).
+        /// </summary>
+        public static bool IsDedicatedAbilitySlot(AbilitySlot slot)
+        {
+            return slot > AbilitySlot.NumActions && slot < AbilitySlot.NumSlotsTotal;
+        }
+
+        public static AbilitySlotOpValidateResult CheckAbilitySlotRestrictions(PrototypeId abilityProtoRef, AbilitySlot slot)
+        {
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "CheckAbilitySlotRestrictions(): IsActiveAbilitySlot(slot) == false");
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            PowerPrototype powerProto = abilityProto as PowerPrototype;
+            ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+            if (powerProto == null && itemProto?.AbilitySettings == null)
+                return Logger.WarnReturn(AbilitySlotOpValidateResult.GenericError, "CheckAbilitySlotRestrictions(): powerProto == null && itemProto?.AbilitySettings == null");
+
+            if (powerProto != null)
+            {
+                if (powerProto.Activation != PowerActivationType.Instant &&
+                    powerProto.Activation != PowerActivationType.InstantTargeted &&
+                    powerProto.Activation != PowerActivationType.TwoStageTargeted)
+                {
+                    return AbilitySlotOpValidateResult.PowerNotActive;
+                }
+            }
+
+            if (CanActionSlotContainPowerOrItem(abilityProtoRef, slot) == false)
+                return AbilitySlotOpValidateResult.PowerSlotMismatch;
+
+            return AbilitySlotOpValidateResult.Valid;
+        }
+
+        public static bool CanActionSlotContainPowerOrItem(PrototypeId abilityProtoRef, AbilitySlot slot)
+        {
+            if (abilityProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "CanActionSlotContainPowerOrItem(): abilityProtoRef == PrototypeId.Invalid");
+            if (IsActiveAbilitySlot(slot) == false) return Logger.WarnReturn(false, "CanActionSlotContainPowerOrItem(): IsActiveAbilitySlot(slot) == false");
+
+            // Dedicated slots (medkit, ultimate, etc.) cannot hold arbitrary abilities
+            if (IsDedicatedAbilitySlot(slot))
+                return false;
+
+            if (ValidAbilitySlotItemOrPower(abilityProtoRef) == false)
+                return false;
+
+            AbilitySlotRestrictionPrototype restrictionProto = GetAbilitySlotRestrictionPrototype(abilityProtoRef);
+
+            if (restrictionProto == null)
+                return true;
+
+            if (restrictionProto.LeftMouseSlotOK && slot == AbilitySlot.PrimaryAction)
+                return true;
+
+            if (restrictionProto.RightMouseSlotOK && slot == AbilitySlot.SecondaryAction)
+                return true;
+
+            if (restrictionProto.ActionKeySlotOK && IsActionKeyAbilitySlot(slot))
+                return true;
+
+            return false;
+        }
+
+        public static bool ValidAbilitySlotItemOrPower(PrototypeId abilityProtoRef)
+        {
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+            PowerPrototype powerProto = abilityProto as PowerPrototype;
+            ItemPrototype itemProto = abilityProto as ItemPrototype;
+
+            return powerProto != null || itemProto?.AbilitySettings != null;
+        }
+
+        public static AbilitySlotRestrictionPrototype GetAbilitySlotRestrictionPrototype(PrototypeId abilityProtoRef)
+        {
+            if (abilityProtoRef == PrototypeId.Invalid)
+                return null;
+
+            Prototype abilityProto = abilityProtoRef.As<Prototype>();
+
+            if (abilityProto is PowerPrototype powerProto)
+                return powerProto.SlotRestriction;
+
+            if (abilityProto is ItemPrototype itemProto)
+                return itemProto.AbilitySettings.AbilitySlotRestriction;
+
+            return null;
+        }
+
+        #endregion
+
         #region Resources
 
         public bool CanGainOrRegenEndurance(ManaType manaType)
@@ -1803,11 +3280,26 @@ namespace MHServerEmu.Games.Entities.Avatars
                 if (GetPower(powerProtoRef) == null)
                 {
                     if (AssignPower(powerProtoRef, indexProps) == null)
-                        Logger.Warn($"InitializeManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
+                        Logger.Warn($"AssignManaBehaviorPowers(): Failed to assign mana behavior power {powerProtoRef.GetName()} to [{this}]");
                 }
             }
 
             return true;
+        }
+
+        private void UnassignManaBehaviorPowers(ManaBehaviorPrototype manaBehaviorProto)
+        {
+            if (manaBehaviorProto.Powers.IsNullOrEmpty())
+                return;
+
+            foreach (PrototypeId powerProtoRef in manaBehaviorProto.Powers)
+            {
+                if (GetPower(powerProtoRef) != null)
+                {
+                    if (UnassignPower(powerProtoRef) == false)
+                        Logger.Warn($"UnassignManaBehaviorPowers(): Failed to unassign mana behavior power {powerProtoRef.GetName()} from [{this}]");
+                }
+            }
         }
 
         public PrimaryResourceManaBehaviorPrototype[] GetPrimaryResourceManaBehaviors()
@@ -1967,7 +3459,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-        #region Progression
+        #region Leveling
 
         public override void InitializeLevel(int newLevel)
         {
@@ -1979,6 +3471,10 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(0L, "AwardXP(): player == null");
+
+            // No more XP for capped starters
+            if (player.HasAvatarAsCappedStarter(this))
+                return 0;
 
             long awardedAmount = base.AwardXP(amount, showXPAwardedText);
 
@@ -2026,6 +3522,12 @@ namespace MHServerEmu.Games.Entities.Avatars
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
             return advancementProto != null ? advancementProto.GetAvatarLevelCap() : 0;
+        }
+
+        public static int GetStarterAvatarLevelCap()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            return advancementProto != null ? advancementProto.StarterAvatarLevelCap : 0;
         }
 
         public bool IsAtMaxPrestigeLevel()
@@ -2142,6 +3644,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Notify clients
             SendLevelUpMessage();
 
+            // Unlock new powers
+            if (IsInWorld)
+            {
+                UpdateTalentPowers();
+                UpdatePowerProgressionPowers(false);
+                UpdateTravelPower();
+            }
+
             // Restore health if needed
             if (restoreHealthAndEndurance && IsDead == false)
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
@@ -2170,15 +3680,14 @@ namespace MHServerEmu.Games.Entities.Avatars
             {
                 // Slot ALL default abilities
                 // (this is dumb, but we have to do this to avoid desync with the client, see CAvatar::autoSlotPowers())
-                AbilityKeyMapping currentAbilityKeyMapping = CurrentAbilityKeyMapping;
-                if (CurrentAbilityKeyMapping != null)
+                AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+                if (keyMapping != null)
                 {
                     List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
-                    if (currentAbilityKeyMapping.GetDefaultAbilities(hotkeyDataList, this))
+                    if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
                     {
-                        // TODO: Avatar.SlotAbility()
                         foreach (HotkeyData hotkeyData in hotkeyDataList)
-                            currentAbilityKeyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+                            SlotAbility(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot, false, true);
                     }
 
                     ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
@@ -2345,12 +3854,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return false;
-        }
-
-        public InteractionValidateResult CanUpgradeUltimate()
-        {
-            // TODO
-            return InteractionValidateResult.AvatarUltimateAlreadyMaxedOut;
         }
 
         #endregion
@@ -3163,7 +4666,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public void SummonControlledAgentWithDuration()
         {
-            if (IsControlPowerSlot() == false) return;
+            if (HasControlPowerEquipped() == false) return;
 
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return;
@@ -3270,16 +4773,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (controlled.InventoryLocation.IsValid)
                 controlled.ChangeInventoryLocation(null);
-        }
-
-        public bool IsControlPowerSlot()
-        {
-            var keyMapping = CurrentAbilityKeyMapping;
-            if (keyMapping == null) return false;
-
-            // TODO Crypto do this
-
-            return true;
         }
 
         public Agent GetControlledAgent()
@@ -3397,7 +4890,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-
         #region Event Handlers
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -3410,6 +4902,38 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             switch (id.Enum)
             {
+                case PropertyEnum.AvatarPowerUltimatePoints:
+                    if (IsInWorld)
+                    {
+                        if (GetPowerProgressionInfo(UltimatePowerRef, out PowerProgressionInfo powerInfo) == false)
+                        {
+                            Logger.Warn($"OnPropertyChange(): Failed to get ultimate power progression info for [{this}]");
+                            return;
+                        }
+
+                        UpdatePowerRank(ref powerInfo, false);
+                    }
+                    break;
+
+                case PropertyEnum.AvatarMappedPower:
+                    Property.FromParam(id, 0, out PrototypeId originalPowerRef);
+                    PowerPrototype originalPowerProto = originalPowerRef.As<PowerPrototype>();
+                    if (originalPowerProto == null)
+                    {
+                        Logger.Warn("OnPropertyChange(): originalPowerProto == null");
+                        return;
+                    }
+
+                    if (originalPowerProto.IsTravelPower)
+                    {
+                        PrototypeId mappedPowerRef = GetMappedPowerFromOriginalPower(originalPowerRef);
+                        SetTravelPowerOverride(mappedPowerRef);
+
+                        _currentAbilityKeyMapping?.SetAbilityInAbilitySlot(GetTravelPowerRef(), AbilitySlot.TravelPower);
+                    }
+
+                    break;
+
                 case PropertyEnum.OmegaRank:
                 case PropertyEnum.InfinityGemBonusRank:
                 case PropertyEnum.PvPUpgrades:
@@ -3534,6 +5058,31 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Properties[PropertyEnum.SecondaryResourceMaxPips] = Properties[PropertyEnum.SecondaryResourceMaxPipsBase] + (int)newValue;
                     break;
 
+                case PropertyEnum.SecondaryResourceOverride:
+                    if (oldValue != PrototypeId.Invalid)
+                    {
+                        // Clear old override behavior
+                        SecondaryResourceManaBehaviorPrototype manaBehaviorOverrideProto = GameDatabase.GetPrototype<SecondaryResourceManaBehaviorPrototype>(oldValue);
+                        if (manaBehaviorOverrideProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): manaBehaviorOverrideProto == null");
+                            break;
+                        }
+
+                        UnassignManaBehaviorPowers(manaBehaviorOverrideProto);
+                    }
+                    else
+                    {
+                        // Clear default behavior (if any)
+                        SecondaryResourceManaBehaviorPrototype defaultManaBehaviorProto = AvatarPrototype?.SecondaryResourceBehaviorCache;
+                        if (defaultManaBehaviorProto != null)
+                            UnassignManaBehaviorPowers(defaultManaBehaviorProto);
+                    }
+
+                    // Initialize the new override
+                    InitializeSecondaryManaBehaviors();
+                    break;
+
                 case PropertyEnum.StatAllModifier:
                 case PropertyEnum.StatDurability:
                 case PropertyEnum.StatDurabilityDmgPctPerPoint:
@@ -3555,6 +5104,161 @@ namespace MHServerEmu.Games.Entities.Avatars
                 case PropertyEnum.StatIntelligenceModifier:
                     if (IsInWorld)
                         ScheduleStatsPowerRefresh();
+                    break;
+
+                case PropertyEnum.PowerChargesMax:
+                {
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                    if (powerProtoRef == PrototypeId.Invalid)
+                    {
+                        Logger.Warn("OnPropertyChange(): powerProtoRef == PrototypeId.Invalid");
+                        break;
+                    }
+
+                    int chargesAvailable = Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef];
+                    if (newValue.RawLong < oldValue.RawLong)
+                    {
+                        // Remove extra charges if the max number went down
+                        if (newValue >= chargesAvailable)
+                            break;
+
+                        if (newValue > 0 && TestStatus(EntityStatus.ExitingWorld) == false)
+                            Properties[PropertyEnum.PowerChargesAvailable, powerProtoRef] = newValue;
+
+                        // Cancel generation of the next charge by resetting the cooldown
+                        foreach (PropertyEnum cooldownProperty in Property.CooldownProperties)
+                            Properties.RemoveProperty(new(cooldownProperty, powerProtoRef));
+                    }
+                    else if (chargesAvailable < newValue)
+                    {
+                        // Start generating charges if we can now have more of them
+                        Power power = GetPower(powerProtoRef);
+                        if (power != null && power.IsOnCooldown() == false)
+                            power.StartCooldown();
+                    }
+
+                    break;
+                }
+
+                case PropertyEnum.PowerChargesMaxBonus:
+                {
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+
+                    int chargesMaxOld = Properties[PropertyEnum.PowerChargesMax, powerProtoRef];
+                    int chargesMaxNew = chargesMaxOld - oldValue + newValue;
+
+                    Power power = GetPower(powerProtoRef);
+
+                    // This indicates whether this power has charges on its own or all extra charges are coming from bonuses
+                    bool hasBaselineCharges = power != null && power.Properties.HasProperty(PropertyEnum.PowerChargesMax);
+
+                    if (chargesMaxOld == 0)
+                    {
+                        // Initialize charges for powers that don't have baseline charges
+                        PropertyId chargesAvailableProp = new(PropertyEnum.PowerChargesAvailable, powerProtoRef);
+                        if (power != null && power.IsOnCooldown() == false && Properties.HasProperty(chargesAvailableProp) == false)
+                            Properties[chargesAvailableProp] = 1;
+
+                        if (chargesMaxNew == 1 && hasBaselineCharges == false)
+                            chargesMaxNew++;
+                    }
+                    else if (chargesMaxNew == 1 && hasBaselineCharges == false)
+                    {
+                        // Revert to normal behavior if this power doesn't have baseline charges
+                        chargesMaxNew = 0;
+                    }
+
+                    Properties[PropertyEnum.PowerChargesMax, powerProtoRef] = chargesMaxNew;
+                    break;
+                }
+
+                case PropertyEnum.PowerChargesMaxBonusForKwd:
+                {
+                    // These will be applied when the power is assigned if currently not in the world
+                    if (IsAliveInWorld == false)
+                        break;
+
+                    Property.FromParam(id, 0, out PrototypeId keywordProtoRef);
+
+                    // Apply bonus to power progression powers
+                    List<PowerProgressionInfo> powerInfoList = ListPool<PowerProgressionInfo>.Instance.Get();
+                    GetPowerProgressionInfos(powerInfoList);
+
+                    foreach (PowerProgressionInfo powerInfo in powerInfoList)
+                    {
+                        PowerPrototype powerProto = powerInfo.PowerPrototype;
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            continue;
+                        }
+
+                        if (HasPowerWithKeyword(powerProto, keywordProtoRef) == false)
+                            continue;
+
+                        Properties[PropertyEnum.PowerChargesMaxBonus, powerProto.DataRef] = newValue;
+                    }
+
+                    ListPool<PowerProgressionInfo>.Instance.Return(powerInfoList);
+
+                    // Apply bonus to mapped powers
+                    Dictionary<PropertyId, PropertyValue> mappedPowerDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                    foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                        mappedPowerDict.Add(kvp.Key, kvp.Value);
+
+                    foreach (var kvp in mappedPowerDict)
+                    {
+                        PowerPrototype mappedPowerProto = GameDatabase.GetPrototype<PowerPrototype>(kvp.Value);
+                        if (mappedPowerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): mappedPowerProto == null");
+                            continue;
+                        }
+
+                        if (HasPowerWithKeyword(mappedPowerProto, keywordProtoRef) == false)
+                            continue;
+
+                        Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
+                    }
+
+                    DictionaryPool<PropertyId, PropertyValue>.Instance.Return(mappedPowerDict);
+
+                    break;
+                }
+
+                case PropertyEnum.PowerCooldownDuration:
+                    if (IsInWorld)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                        PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            break;
+                        }
+
+                        if (Power.IsCooldownPersistent(powerProto))
+                            Properties[PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef] = newValue;
+                    }
+
+                    break;
+
+                case PropertyEnum.PowerCooldownStartTime:
+                    if (IsInWorld)
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                        PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            break;
+                        }
+
+                        if (Power.IsCooldownPersistent(powerProto))
+                            Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
+                    }
+
                     break;
             }
         }
@@ -3644,6 +5348,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     Properties.RemoveProperty(PropertyEnum.AvatarTeamUpAgent);
             }
 
+            InitAbilityKeyMappings();
+
             base.OnEnteredWorld(settings);
 
             Properties[PropertyEnum.AvatarTimePlayedStart] = Game.CurrentTime;
@@ -3659,6 +5365,11 @@ namespace MHServerEmu.Games.Entities.Avatars
                 InitializeInfinityBonuses();
             else
                 InitializeOmegaBonuses();
+
+            OnEnteredWorldSetTransformMode();
+
+            // Last active time is checked in onEnteredWorldSetTransformMode() and ObjectiveTracker::doTrackerUpdate()
+            Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
 
             ApplyLiveTuneServerConditions();
 
@@ -3679,6 +5390,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                     foreach(var waypointUnlockRef in regionProto.WaypointAutoUnlockList)
                         player.UnlockWaypoint(waypointUnlockRef);
             }
+
+            UpdateTalentPowers();
 
             var missionManager = player.MissionManager;
             if (missionManager != null)
@@ -3762,12 +5475,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             CancelEnduranceEvents();
 
-            if (player != null) player.Properties[PropertyEnum.AvatarTotalTimePlayed] = player.TimePlayed();
-            Properties[PropertyEnum.AvatarTotalTimePlayed] = TimePlayed();
-            Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
-
             // Pause boosts while not in the world
             UpdateBoostConditionPauseState(true);
+
+            RemoveLiveTuneServerConditions();
+
+            UpdateTimePlayed(player);
 
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
@@ -3775,25 +5488,12 @@ namespace MHServerEmu.Games.Entities.Avatars
             // Cancel events
             EventScheduler scheduler = Game.GameEventScheduler;
             scheduler.CancelEvent(_refreshStatsPowerEvent);
+            scheduler.CancelEvent(_transformModeExitPowerEvent);
+            scheduler.CancelEvent(_transformModeChangeEvent);
 
-            // Remove LiveTuneServerConditions
-            RemoveLiveTuneServerConditions();
-
-            // summoner condition
+            // Remove summoner conditions
             foreach (var summon in new SummonedEntityIterator(this))
                 summon.RemoveSummonerCondition(Id);
-        }
-
-        public TimeSpan TimePlayed()
-        {
-            TimeSpan timePlayed = TimeSpan.Zero;
-            TimeSpan totalTimePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
-            TimeSpan startTime = Properties[PropertyEnum.AvatarTimePlayedStart];
-
-            if (startTime != TimeSpan.Zero)
-                timePlayed = Game.CurrentTime - startTime;
-
-            return totalTimePlayed + timePlayed;
         }
 
         public override void OnLocomotionStateChanged(LocomotionState oldState, LocomotionState newState)
@@ -3803,10 +5503,33 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
-        public override string ToString()
+        #region Time
+
+        public TimeSpan GetTimePlayed()
         {
-            return $"{base.ToString()}, Player={_playerName?.Get()} (0x{_ownerPlayerDbId:X})";
+            TimeSpan savedTimePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
+
+            TimeSpan currentTimePlayed = TimeSpan.Zero;
+            TimeSpan startTime = Properties[PropertyEnum.AvatarTimePlayedStart];
+            if (startTime != TimeSpan.Zero)
+                currentTimePlayed = Game.CurrentTime - startTime;
+
+            return savedTimePlayed + currentTimePlayed;
         }
+
+        private void UpdateTimePlayed(Player player)
+        {
+            player?.UpdateTimePlayed();
+
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = GetTimePlayed();
+            Properties[PropertyEnum.AvatarTimePlayedStart] = TimeSpan.Zero;
+
+            // AvatarLastActiveCalendarTime is used by the client to choose the voice line to play when the client logs in
+            Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
+            Properties[PropertyEnum.AvatarLastActiveCalendarTime] = (long)Clock.UnixTime.TotalMilliseconds;
+        }
+
+        #endregion
 
         protected override void BuildString(StringBuilder sb)
         {
@@ -3822,8 +5545,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                 sb.AppendLine($"{nameof(_guildMembership)}: {_guildMembership}");
             }
 
-            for (int i = 0; i < _abilityKeyMappingList.Count; i++)
-                sb.AppendLine($"{nameof(_abilityKeyMappingList)}[{i}]: {_abilityKeyMappingList[i]}");
+            for (int i = 0; i < _abilityKeyMappings.Count; i++)
+                sb.AppendLine($"{nameof(_abilityKeyMappings)}[{i}]: {_abilityKeyMappings[i]}");
         }
 
         #region Scheduled Events
@@ -3912,6 +5635,16 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class UpdateEnduranceEvent : CallMethodEventParam1<Entity, ManaType>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).UpdateEndurance(p1);
+        }
+
+        private class TransformModeChangeEvent : CallMethodEventParam2<Entity, PrototypeId, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1, p2) => ((Avatar)t).DoTransformModeChangeCallback(p1, p2);
+        }
+
+        private class TransformModeExitPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoTransformModeExitPowerCallback(p1);
         }
 
         #endregion

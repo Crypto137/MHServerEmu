@@ -327,12 +327,18 @@ namespace MHServerEmu.Games.Powers
 
         public void HandleTriggerPowerEventOnSpecializationPowerAssigned()      // 27
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSpecializationPowerAssigned, ref settings);
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerUnassigned()    // 28
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSpecializationPowerUnassigned, ref settings);
         }
 
         public void HandleTriggerPowerEventOnEntityControlled()                 // 29
@@ -1057,15 +1063,62 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 17
-        private void DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionTransformModeChange(): Not implemented");
+            if (Owner is not Avatar ownerAvatar) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): Owner is not Avatar ownerAvatar");
+
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTransformModePrototype contextProto)
+                return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): Incompatible power event context type");
+
+            PrototypeId transformModeRef = contextProto.TransformMode;
+
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): transformModeProto == null");
+
+            PrototypeId currentTransformMode = ownerAvatar.CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid && currentTransformMode != transformModeRef)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTransformModeChange(): Unexpected transform mode {currentTransformMode.GetName()} for avatar [{ownerAvatar}]");
+
+            // If already in this transform mode, toggle it off
+            if (currentTransformMode == transformModeRef)
+                transformModeRef = PrototypeId.Invalid;
+
+            ownerAvatar.ScheduleTransformModeChange(transformModeRef, currentTransformMode);
+            return true;
         }
 
         // 18
-        private void DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
+            if (Owner is not Avatar ownerAvatar) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): Owner is not Avatar ownerAvatar");
+
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTransformModePrototype contextProto)
+                return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): Incompatible power event context type");
+
+            PrototypeId transformModeRef = contextProto.TransformMode;
+
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformModeProto == null");
+
+            PrototypeId currentTransformMode = ownerAvatar.CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid && currentTransformMode != transformModeRef)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTransformModeStart(): Unexpected transform mode {currentTransformMode.GetName()} for avatar [{ownerAvatar}]");
+
+            PrototypeId transformComboPowerRef = currentTransformMode == PrototypeId.Invalid
+                ? transformModeProto.EnterTransformModePower
+                : transformModeProto.ExitTransformModePower;
+
+            if (transformComboPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformComboRef == PrototypeId.Invalid");
+
+            Power transformComboPower = ownerAvatar.PowerCollection.GetPower(transformComboPowerRef);
+            if (transformComboPower == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformComboPower == null");
+
+            PowerActivationSettings newSettings = settings;
+            newSettings.TriggeringPowerRef = PrototypeDataRef;
+            newSettings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            DoActivateComboPower(transformComboPower, triggeredPowerEvent, ref newSettings);
+            return true;
         }
 
         // 19
@@ -1322,9 +1375,44 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 30
-        private void DoPowerEventActionStealPower(ulong targetId)
+        private bool DoPowerEventActionStealPower(ulong targetId)
         {
-            Logger.Warn($"DoPowerEventActionStealPower(): Not implemented");
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): Owner is not Avatar avatar");
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): player == null");
+
+            // Non-agent targets don't have stealable powers
+            Agent target = Game.EntityManager.GetEntity<Agent>(targetId);
+            if (target == null)
+                return true;
+
+            AgentPrototype agentProto = target.AgentPrototype;
+            if (agentProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): agentProto == null");
+
+            // Check if there is a power to steal
+            StealablePowerInfoPrototype stealablePowerInfoProto = agentProto.StealablePower.As<StealablePowerInfoPrototype>();
+            if (stealablePowerInfoProto == null)
+                return true;
+
+            PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
+            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): stolenPowerRef == PrototypeId.Invalid");
+
+            BannerMessagePrototype bannerMessageProto = null;
+            if (avatar.IsStolenPowerAvailable(stealablePowerInfoProto.Power) == false)
+            {
+                avatar.Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef] = true;
+                bannerMessageProto = GameDatabase.UIGlobalsPrototype.MessageStolenPowerAvailable.As<BannerMessagePrototype>();
+            }
+            else
+            {
+                bannerMessageProto = GameDatabase.UIGlobalsPrototype.MessageStolenPowerDuplicate.As<BannerMessagePrototype>();
+            }
+
+            if (bannerMessageProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): bannerMessageProto == null");
+            player.SendBannerMessage(bannerMessageProto);
+
+            return true;
         }
 
         // 31
@@ -1394,15 +1482,51 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 32
-        private void DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionMapPowers(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextMapPowersPrototype mapPowersContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionMapPowers(): Incompatible power event context type");
+
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionMapPowers(): Owner is not Avatar avatar");
+
+            if (mapPowersContext.MappedPowers.IsNullOrEmpty())
+                return true;
+
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            foreach (MapPowerPrototype mapPowerProto in mapPowersContext.MappedPowers)
+            {
+                if (mapPowerProto.OriginalPower == continuousPowerRef)
+                    avatar.ClearContinuousPower();
+
+                avatar.MapPower(mapPowerProto.OriginalPower, mapPowerProto.MappedPower);
+            }
+
+            return true;
         }
 
         // 33
-        private void DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionUnassignMappedPowers(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextUnassignMappedPowersPrototype unassignMappedPowersContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionUnassignMappedPowers(): Incompatible power event context type");
+
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionUnassignMappedPowers(): Owner is not Avatar avatar");
+
+            if (unassignMappedPowersContext.MappedPowersToUnassign.IsNullOrEmpty())
+                return true;
+
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            foreach (MapPowerPrototype mapPowerProto in unassignMappedPowersContext.MappedPowersToUnassign)
+            {
+                if (mapPowerProto.MappedPower == continuousPowerRef)
+                    avatar.ClearContinuousPower();
+
+                avatar.UnassignMappedPower(mapPowerProto.MappedPower);
+            }
+
+            return true;
         }
 
         // 34
