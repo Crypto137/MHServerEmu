@@ -46,6 +46,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     return LootRollResult.Failure;
             }
 
+            // Never roll XP for capped starter avatars
+            Player player = settings.Player;
+            Avatar avatar = player?.CurrentAvatar;
+            if (avatar != null && player.HasAvatarAsCappedStarter(avatar) && agentProto.HasKeyword(GameDatabase.KeywordGlobalsPrototype.OrbExperienceEntityKeywordPrototype))
+                return result;
+
             RestrictionTestFlags restrictionFlags = RestrictionTestFlags.All;
             if (settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.PreviewOnly) || settings.DropChanceModifiers.HasFlag(LootDropChanceModifiers.IgnoreCooldown))
                 restrictionFlags &= ~RestrictionTestFlags.Cooldown;
@@ -431,6 +437,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             LootRollResult result = LootRollResult.NoRoll;
+
+            // Never roll XP for capped starter avatars
+            Player player = settings.Player;
+            Avatar avatar = player?.CurrentAvatar;
+            if (avatar != null && player.HasAvatarAsCappedStarter(avatar))
+                return result;
 
             if (XPCurve == CurveId.Invalid)
                 return result;

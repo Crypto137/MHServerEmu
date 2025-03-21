@@ -103,7 +103,7 @@ namespace MHServerEmu.Games.Regions
             Seed = settings.Seed;
             PopulationThemeOverrideRef = settings.PopulationThemeOverrideRef;            
 
-            if (settings.ConnectedCells != null && settings.ConnectedCells.Any())
+            if (settings.ConnectedCells != null && settings.ConnectedCells.Count > 0)
                 CellConnections.AddRange(settings.ConnectedCells);
 
             Settings = settings;

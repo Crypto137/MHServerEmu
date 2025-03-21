@@ -358,6 +358,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public static bool IsLiveTuningEnabled(PrototypeId worldEntityProtoRef)
+        {
+            WorldEntityPrototype thisProto = worldEntityProtoRef.As<WorldEntityPrototype>();
+            if (thisProto == null)
+                return Logger.WarnReturn(false, $"IsLiveTuningEnabled(): Attempting to check LiveTuningDefaultEnabled on something that is not a WorldEntityPrototype!\n DataRef: {worldEntityProtoRef.GetName()}");
+
+            return thisProto.IsLiveTuningEnabled();
+        }
+
         public bool IsLiveTuningVendorEnabled()
         {
             if (IsLiveTuningEnabled() == false)

@@ -301,7 +301,7 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
-        public static bool GetLiveLootGroup(int lootGroupNum, out IEnumerable<WorldEntityPrototype> lootGroup)
+        public static bool GetLiveLootGroup(int lootGroupNum, out IReadOnlyList<WorldEntityPrototype> lootGroup)
         {
             lootGroup = Array.Empty<WorldEntityPrototype>();
 

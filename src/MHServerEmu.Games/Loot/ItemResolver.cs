@@ -35,7 +35,9 @@ namespace MHServerEmu.Games.Loot
         public GRandom Random { get; private set; }
         public LootResolverFlags Flags { get; private set; }
 
-        public LootContext LootContext { get => _context.LootContext; }
+        // CUSTOM: See LootTablePrototype.PickLiveTuningNodes() for why we need this
+        public LootContext LootContext { get => LootContextOverride != LootContext.None ? LootContextOverride : _context.LootContext; }
+        public LootContext LootContextOverride { get; set; }
         public Player Player { get => _context.Player; }
         public Region Region { get => _context.Region; }
 
@@ -83,6 +85,8 @@ namespace MHServerEmu.Games.Loot
 
             Random = default;
             Flags = default;
+
+            LootContextOverride = default;
         }
 
         public void Dispose()
