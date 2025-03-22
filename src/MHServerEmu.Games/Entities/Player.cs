@@ -623,21 +623,26 @@ namespace MHServerEmu.Games.Entities
         /// <summary>
         /// Returns <see cref="PrototypeId"/> values of all locked and/or unlocked stash tabs for this <see cref="Player"/>.
         /// </summary>
-        public IEnumerable<PrototypeId> GetStashInventoryProtoRefs(bool getLocked, bool getUnlocked)
+        public bool GetStashInventoryProtoRefs(List<PrototypeId> stashInvRefs, bool getLocked, bool getUnlocked)
         {
-            var playerProto = Prototype as PlayerPrototype;
-            if (playerProto == null) yield break;
-            if (playerProto.StashInventories == null) yield break;
+            if (Prototype is not PlayerPrototype playerProto) return Logger.WarnReturn(false, "GetStashInventoryProtoRefs(): Prototype is not PlayerPrototype playerProto");
+            if (playerProto.StashInventories.IsNullOrEmpty()) return Logger.WarnReturn(false, "GetStashInventoryProtoRefs(): playerProto.StashInventories.IsNullOrEmpty()");
 
             foreach (EntityInventoryAssignmentPrototype invAssignmentProto in playerProto.StashInventories)
             {
-                if (invAssignmentProto.Inventory == PrototypeId.Invalid) continue;
+                if (invAssignmentProto.Inventory == PrototypeId.Invalid)
+                {
+                    Logger.Warn("GetStashInventoryProtoRefs(): invAssignmentProto.Inventory == PrototypeId.Invalid");
+                    continue;
+                }
 
                 bool isLocked = GetInventoryByRef(invAssignmentProto.Inventory) == null;
 
                 if (isLocked && getLocked || isLocked == false && getUnlocked)
-                    yield return invAssignmentProto.Inventory;
+                    stashInvRefs.Add(invAssignmentProto.Inventory);
             }
+
+            return true;
         }
 
         /// <summary>
@@ -2027,11 +2032,21 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         private void OnEnterGameInitStashTabOptions()
         {
-            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(false, true))
+            List<PrototypeId> stashInvRefs = ListPool<PrototypeId>.Instance.Get();
+            if (GetStashInventoryProtoRefs(stashInvRefs, false, true))
             {
-                if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
-                    StashTabInsert(stashRef, 0);
+                foreach (PrototypeId stashRef in stashInvRefs)
+                {
+                    if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
+                        StashTabInsert(stashRef, 0);
+                }
             }
+            else
+            {
+                Logger.Warn("OnEnterGameInitStashTabOptions()(): GetStashInventoryProtoRefs(stashInvRefs, false, true) == false");
+            }
+
+            ListPool<PrototypeId>.Instance.Return(stashInvRefs);
         }
 
         public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
