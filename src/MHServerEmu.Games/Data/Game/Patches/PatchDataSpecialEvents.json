@@ -1,0 +1,74 @@
+[
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add AustraliaDayTable drop Koala at 26 January",
+        "ValueType": "PrototypeDataRef",
+        "Value": 5244862316186571775
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add [ValentinesEventPowerupTable, VDayTable] at 14 February",
+        "ValueType": "PrototypeDataRef[]",
+        "Value": [ 1089767944042846312, 7378732117961543855 ]
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add LunarNewYearTable at 17 Febrary",
+        "ValueType": "PrototypeDataRef",
+        "Value": 577300379588563992
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add StPatricksEventPowerUpTable at 17 March",
+        "ValueType": "PrototypeDataRef",
+        "Value": 7592276506700879991
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/EndgameDailies/Terminals/OdinsPalace/KurseTerminalLoot.prototype",
+        "Path": "Choices[]",
+        "Description": "Add AprilFoolsTable drop GemOfTheWurst at 1 April",
+        "ValueType": "PrototypeDataRef",
+        "Value": 13919124432858911542
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add AnniversaryCakeDropTable drop BirthdayCakeSlice at 4 June",
+        "ValueType": "PrototypeDataRef",
+        "Value": 10570310015585883894
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add HalloweenPowerupTable at 31 October",
+        "ValueType": "PrototypeDataRef",
+        "Value": 7708957262339380684
+    },
+    {
+        "Enabled": false,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "[Heroes for Hire] Add DogTagsCurrencyTable drop Gang Member Dog Tags",
+        "ValueType": "PrototypeDataRef",
+        "Value": 16587225871960839503
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/AgentsOfSHIELDEvent.prototype",
+        "Path": "DesignState",
+        "Description": "Disable AgentsOfSHIELDEvent until Leaderboards",
+        "ValueType": "Enum",
+        "Value": "NotInGame"
+    }
+]

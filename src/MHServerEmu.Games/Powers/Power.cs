@@ -192,6 +192,32 @@ namespace MHServerEmu.Games.Powers
                 }
             }
 
+            if (Owner is Avatar avatar && (avatar.HasPowerInPowerProgression(PrototypeDataRef) || avatar.HasMappedPower(PrototypeDataRef)))
+            {
+                Dictionary<PropertyId, PropertyValue> bonusDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMaxBonusForKwd))
+                    bonusDict.Add(kvp.Key, kvp.Value);
+
+                foreach (var kvp in bonusDict)
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId keywordProtoRef);
+                    KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
+                    if (keywordProto == null)
+                    {
+                        Logger.Warn("OnAssign(): keywordProto == null");
+                        continue;
+                    }
+
+                    if (HasKeyword(keywordProto) == false)
+                        continue;
+
+                    avatar.Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
+                }
+
+                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(bonusDict);
+            }
+
             return true;
         }
 
@@ -1624,14 +1650,7 @@ namespace MHServerEmu.Games.Powers
                 properties = player.Properties;
             }
 
-            // The client implementation uses AdjustProperty() here, but this can cause the cooldown duration to become negative.
-            // Is this an issue from the original game, or is there an underlying problem somewhere else?
-            //properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
-
-            // Custom implementation the does not allow negative PowerCooldownDuration
-            long cooldownDurationMS = properties[PropertyEnum.PowerCooldownDuration, PrototypeDataRef];
-            cooldownDurationMS += (long)offset.TotalMilliseconds;
-            properties[PropertyEnum.PowerCooldownDuration, PrototypeDataRef] = Math.Max(cooldownDurationMS, 0);
+            properties.AdjustProperty((int)offset.TotalMilliseconds, new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
 
             // Reschedule cooldown end event (since we are modifying an existing cooldown, there should be one)
             if (_endCooldownEvent.IsValid == false) return Logger.WarnReturn(false, "ModifyCooldown(): _endCooldownEvent.IsValid == false");
@@ -3164,6 +3183,11 @@ namespace MHServerEmu.Games.Powers
         public static bool IsCooldownOnPlayer(PowerPrototype powerProto)
         {
             return powerProto.CooldownOnPlayer;
+        }
+
+        public static bool IsCooldownPersistent(PowerPrototype powerProto)
+        {
+            return powerProto.CooldownIsPersistentToDatabase || powerProto.IsUltimate;
         }
 
         public bool TriggersComboPowerOnEvent(PowerEventType eventType)
@@ -5301,8 +5325,8 @@ namespace MHServerEmu.Games.Powers
             if (scheduler == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): scheduler == null");
 
             EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();
-            scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents);
-            deliverPayloadEvent.Get()?.Initialize(payload);
+            if (scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents))
+                deliverPayloadEvent.Get().Initialize(payload);
 
             return true;
         }

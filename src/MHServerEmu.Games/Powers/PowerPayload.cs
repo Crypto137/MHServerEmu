@@ -676,10 +676,10 @@ namespace MHServerEmu.Games.Powers
 
                 // ----
                 // Calculate flat unmodified damage (not affected by scaling)
-                float damageUnmodified = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodified];
+                float damageUnmodified = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodified, damageType];
 
                 // Apply per-rank unmodified damage
-                float damageOverTimeBaseUnmodPerRank = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodPerRank];
+                float damageOverTimeBaseUnmodPerRank = overTimeProperties[PropertyEnum.DamageOverTimeBaseUnmodPerRank, damageType];
                 int powerRank = Properties[PropertyEnum.PowerRank];
                 damageUnmodified += damageOverTimeBaseUnmodPerRank * powerRank;
 

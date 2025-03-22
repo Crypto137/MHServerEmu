@@ -273,7 +273,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 }
             }
 
-            if (!failed && _requiredTransitions.Any())
+            if (!failed && _requiredTransitions.Count > 0)
             {
                 foreach (RegionTransitionSpec spec in _requiredTransitions)
                 {
@@ -304,7 +304,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
 
             if (Area != null)
             {
-                if (!failed && Area.RandomInstances.Any())
+                if (!failed && Area.RandomInstances.Count > 0)
                 {
                     foreach (var randomInstance in Area.RandomInstances)
                     {
@@ -702,7 +702,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 }
             }
 
-            return deleteList.Any();
+            return deleteList.Count > 0;
         }
 
         private bool GetCornerRadusDeletableCellList(List<Point2> deleteList, int radius, bool clear)
@@ -735,7 +735,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 UniqueAddDeletableCell(CellContainer, deleteList, radius, y);
             }
 
-            return deleteList.Any();
+            return deleteList.Count > 0;
         }
 
         private static void UniqueAddDeletableCell(GenCellGridContainer cellContainer, List<Point2> deleteList, int x, int y)

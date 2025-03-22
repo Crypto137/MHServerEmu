@@ -406,6 +406,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int MaxPrestigeLevel { get => PrestigeLevels.Length; }
 
         [DoNotCopy]
+        public int MaxPowerSpecIndexForAvatars { get => Math.Max(0, AvatarPowerSpecsMax - 1); }
+        [DoNotCopy]
+        public int MaxPowerSpecIndexForTeamUps { get => Math.Max(0, TeamUpPowerSpecsMax - 1); }
+
+        [DoNotCopy]
         public EvalPrototype AvatarThrowabilityEvalPrototype { get; private set; }
 
         [DoNotCopy]
@@ -1159,7 +1164,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public KeywordPrototype StealthPowerKeywordPrototype { get; private set; }
         [DoNotCopy]
+        public KeywordPrototype TeamUpAwayPowerKeywordPrototype { get; private set; }
+        [DoNotCopy]
         public KeywordPrototype VanityPetKeywordPrototype { get; private set; }
+        [DoNotCopy]
+        public KeywordPrototype OrbExperienceEntityKeywordPrototype { get; private set; }
 
         public override void PostProcess()
         {
@@ -1171,7 +1180,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             OrbEntityKeywordPrototype = OrbEntityKeyword.As<KeywordPrototype>();
             RangedPowerKeywordPrototype = RangedPowerKeyword.As<KeywordPrototype>();
             StealthPowerKeywordPrototype = StealthPowerKeyword.As<KeywordPrototype>();
+            TeamUpAwayPowerKeywordPrototype = TeamUpAwayPowerKeyword.As<KeywordPrototype>();
             VanityPetKeywordPrototype = VanityPetKeyword.As<KeywordPrototype>();
+            OrbExperienceEntityKeywordPrototype = OrbExperienceEntityKeyword.As<KeywordPrototype>();
         }
     }
 
@@ -1190,6 +1201,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId GenoshaRaid { get; protected set; }
         public PrototypeId DangerRoomMerits { get; protected set; }
         public PrototypeId GazillioniteGs { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public CurrencyPrototype CreditsPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            CreditsPrototype = Credits.As<CurrencyPrototype>();
+        }
     }
 
     public class GamepadInputAssetPrototype : Prototype

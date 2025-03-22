@@ -11,7 +11,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Missions;
-using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 
@@ -135,7 +134,9 @@ namespace MHServerEmu.Games.Loot
         /// </summary>
         public bool SpawnLootFromSummary(LootResultSummary lootResultSummary, LootInputSettings inputSettings, int recipientId = 1)
         {
-            if (lootResultSummary.Types == LootType.None)
+            LootType lootTypes = lootResultSummary.Types;
+
+            if (lootTypes == LootType.None)
                 return true;
 
             Player player = inputSettings.Player;
@@ -147,7 +148,39 @@ namespace MHServerEmu.Games.Loot
             Region region = recipient.Region;
             if (region == null) return Logger.WarnReturn(false, "SpawnLootFromSummary(): region == null");
 
-            // Instance the loot if instanced loot is not disabled by server config
+            // Trigger callbacks
+            if (lootTypes.HasFlag(LootType.CallbackNode))
+            {
+                foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
+                    callbackNode.OnResultsEvaluation(player, inputSettings.SourceEntity);
+            }
+
+            // Vanity titles
+            if (lootTypes.HasFlag(LootType.VanityTitle))
+            {
+                foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
+                    player.UnlockVanityTitle(vanityTitleProtoRef);
+            }
+
+            // Vendor XP
+            if (lootTypes.HasFlag(LootType.VendorXP))
+            {
+                foreach (VendorXPSummary vendorXPSummary in lootResultSummary.VendorXP)
+                    player.AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef);
+            }
+
+            // Check if there is any spawnable loot
+            if ((lootTypes & (LootType.Item | LootType.Agent | LootType.Credits | LootType.Currency)) == 0)
+                return true;
+
+            // Finalize vaporization (early exit if everything was vaporized)
+            ulong sourceEntityId = sourceEntity != null ? sourceEntity.Id : Entity.InvalidId;
+
+            if (LootVaporizer.VaporizeLootResultSummary(player, lootResultSummary, sourceEntityId) == false)
+                return true;
+
+            // Spawn what's left
+            // Instance the loot if instanced loot is not disabled by server config (TODO: fix non-instanced loot for orbs)
             ulong restrictedToPlayerGuid = Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
 
             // Temp property collection for transfering properties
@@ -156,13 +189,6 @@ namespace MHServerEmu.Games.Loot
 
             if (inputSettings.MissionProtoRef != PrototypeId.Invalid)
                 properties[PropertyEnum.MissionPrototype] = inputSettings.MissionProtoRef;
-
-            // Trigger callbacks
-            if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
-            {
-                foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
-                    callbackNode.OnResultsEvaluation(player, inputSettings.SourceEntity);
-            }
 
             // Determine drop source bounds
             Bounds bounds = sourceEntity != null ? sourceEntity.Bounds : recipient.Bounds;
@@ -186,23 +212,22 @@ namespace MHServerEmu.Games.Loot
 
             // Spawn items
             ulong regionId = region.Id;
-            ulong sourceEntityId = sourceEntity != null ? sourceEntity.Id : Entity.InvalidId;
 
-            if (lootResultSummary.Types.HasFlag(LootType.Item))
+            if (lootTypes.HasFlag(LootType.Item))
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                     SpawnItemInternal(itemSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
             }
 
             // Spawn agents (orbs)
-            if (lootResultSummary.Types.HasFlag(LootType.Agent))
+            if (lootTypes.HasFlag(LootType.Agent))
             {
                 foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
                     SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
             }
 
             // Spawn credits
-            if (lootResultSummary.Types.HasFlag(LootType.Credits))
+            if (lootTypes.HasFlag(LootType.Credits))
             {
                 foreach (int creditsAmount in lootResultSummary.Credits)
                 {
@@ -212,7 +237,7 @@ namespace MHServerEmu.Games.Loot
             }
 
             // Spawn other currencies (items or orbs)
-            if (lootResultSummary.Types.HasFlag(LootType.Currency))
+            if (lootTypes.HasFlag(LootType.Currency))
             {
                 foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
                 {
@@ -238,26 +263,14 @@ namespace MHServerEmu.Games.Loot
                 }
             }
 
-            // Vanity titles
-            if (lootResultSummary.Types.HasFlag(LootType.VanityTitle))
-            {
-                foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
-                    player.UnlockVanityTitle(vanityTitleProtoRef);
-            }
-
-            // Vendor XP
-            if (lootResultSummary.Types.HasFlag(LootType.VendorXP))
-            {
-                foreach (VendorXPSummary vendorXPSummary in lootResultSummary.VendorXP)
-                    player.AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef);
-            }
-
             return true;
         }
 
         public bool GiveLootFromSummary(LootResultSummary lootResultSummary, Player player, PrototypeId inventoryProtoRef = PrototypeId.Invalid, bool isMissionLoot = false)
         {
-            if (lootResultSummary.Types == LootType.None)
+            LootType lootTypes = lootResultSummary.Types;
+
+            if (lootTypes == LootType.None)
                 return true;
 
             bool success = true;
@@ -271,14 +284,14 @@ namespace MHServerEmu.Games.Loot
             EntityManager entityManager = Game.EntityManager;
 
             // Trigger callbacks
-            if (lootResultSummary.Types.HasFlag(LootType.CallbackNode))
+            if (lootTypes.HasFlag(LootType.CallbackNode))
             {
                 foreach (LootNodePrototype callbackNode in lootResultSummary.CallbackNodes)
                     callbackNode.OnResultsEvaluation(player, null);
             }
 
             // Create items
-            if (lootResultSummary.Types.HasFlag(LootType.Item))
+            if (lootTypes.HasFlag(LootType.Item))
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
                 {
@@ -305,7 +318,7 @@ namespace MHServerEmu.Games.Loot
             }
 
             // Create currency
-            if (lootResultSummary.Types.HasFlag(LootType.Currency))
+            if (lootTypes.HasFlag(LootType.Currency))
             {
                 foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
                 {
@@ -368,14 +381,14 @@ namespace MHServerEmu.Games.Loot
             }
 
             // Now spawn regular agents (i.e. orbs)
-            if (lootResultSummary.Types.HasFlag(LootType.Agent))
+            if (lootTypes.HasFlag(LootType.Agent))
             {
                 foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
                     SpawnAgentForPlayer(agentSpec, player, properties);
             }
 
             // Credits
-            if (lootResultSummary.Types.HasFlag(LootType.Credits))
+            if (lootTypes.HasFlag(LootType.Credits))
             {
                 foreach (int creditsAmount in lootResultSummary.Credits)
                 {
@@ -385,14 +398,14 @@ namespace MHServerEmu.Games.Loot
             }
 
             // Vanity titles
-            if (lootResultSummary.Types.HasFlag(LootType.VanityTitle))
+            if (lootTypes.HasFlag(LootType.VanityTitle))
             {
                 foreach (PrototypeId vanityTitleProtoRef in lootResultSummary.VanityTitles)
                     player.UnlockVanityTitle(vanityTitleProtoRef);
             }
 
             // Vendor XP
-            if (lootResultSummary.Types.HasFlag(LootType.VendorXP))
+            if (lootTypes.HasFlag(LootType.VendorXP))
             {
                 foreach (VendorXPSummary vendorXPSummary in lootResultSummary.VendorXP)
                     player.AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef);
@@ -401,25 +414,25 @@ namespace MHServerEmu.Games.Loot
             // Mission-exclusive rewards: experience, endurance / health bonuses, power points
             if (isMissionLoot)
             {
-                if (lootResultSummary.Types.HasFlag(LootType.Experience))
+                if (lootTypes.HasFlag(LootType.Experience))
                 {
                     Avatar avatar = player.CurrentAvatar;
                     avatar?.AwardXP(lootResultSummary.Experience, false);
                 }
 
-                if (lootResultSummary.Types.HasFlag(LootType.HealthBonus))
+                if (lootTypes.HasFlag(LootType.HealthBonus))
                 {
                     // TODO for 1.48
                     Logger.Warn("GiveLootFromSummary(): HealthBonus rewards are not yet implemented");
                 }
 
-                if (lootResultSummary.Types.HasFlag(LootType.EnduranceBonus))
+                if (lootTypes.HasFlag(LootType.EnduranceBonus))
                 {
                     // TODO for 1.48
                     Logger.Warn("GiveLootFromSummary(): EnduranceBonus rewards are not yet implemented");
                 }
 
-                if (lootResultSummary.Types.HasFlag(LootType.PowerPoints))
+                if (lootTypes.HasFlag(LootType.PowerPoints))
                 {
                     // TODO for 1.48
                     Logger.Warn("GiveLootFromSummary(): PowerPoints rewards are not yet implemented");
@@ -427,10 +440,7 @@ namespace MHServerEmu.Games.Loot
             }
             else
             {
-                if (lootResultSummary.Types.HasFlag(LootType.Experience) ||
-                    lootResultSummary.Types.HasFlag(LootType.HealthBonus) ||
-                    lootResultSummary.Types.HasFlag(LootType.EnduranceBonus) ||
-                    lootResultSummary.Types.HasFlag(LootType.PowerPoints))
+                if ((lootTypes & (LootType.Experience | LootType.HealthBonus | LootType.EnduranceBonus | LootType.PowerPoints)) != 0)
                 {
                     Logger.Warn($"GiveLootFromSummary(): Mission-only loot types found in a non-mission summary, Types=[{lootResultSummary.Types}]");
                 }

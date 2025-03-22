@@ -146,15 +146,52 @@ namespace MHServerEmu.Games.Entities.Items
             if (invLoc.IsValid)
             {
                 InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
-                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(invLoc.ContainerId);
+                Entity owner = Game.EntityManager.GetEntity<Entity>(invLoc.ContainerId);
+
+                // TODO: Binding
 
                 // Remove sold price after buyback
                 if (IsInBuybackInventory == false)
                     Properties.RemoveProperty(PropertyEnum.ItemSoldPrice);
 
-                // Start ticking
-                if (owner != null && inventoryProto.IsEquipmentInventory)
-                    StartTicking(owner);
+                if (inventoryProto.IsEquipmentInventory)
+                {
+                    // Start ticking
+                    if (owner != null)
+                        StartTicking(owner);
+
+                    // TODO: ScoringEventType.FullyUpgradedPetTech
+
+                    // Update granted power
+                    if (GetPowerGranted(out PrototypeId powerProtoRef))
+                    {
+                        if (owner is Avatar avatar)
+                            avatar.InitPowerFromCreationItem(this);
+                        else if (owner is Player player)
+                            player.InitPowerFromCreationItem(this);
+                    }
+
+                    // Apply team-up affixes to avatar if needed
+                    if (inventoryProto.Category == InventoryCategory.TeamUpEquipment)
+                    {
+                        if (owner is not Agent ownerAgent)
+                        {
+                            Logger.Warn("OnSelfAddedToOtherInventory(): owner is not Agent ownerAgent");
+                            return;
+                        }
+
+                        Player owningPlayer = ownerAgent.GetOwnerOfType<Player>();
+                        if (owningPlayer == null)
+                        {
+                            Logger.Warn("OnSelfAddedToOtherInventory(): player == null");
+                            return;
+                        }
+
+                        Avatar avatar = owningPlayer.CurrentAvatar;
+                        if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == ownerAgent)
+                            ApplyTeamUpAffixesToAvatar(avatar);
+                    }
+                }
             }
 
             base.OnSelfAddedToOtherInventory();
@@ -164,29 +201,83 @@ namespace MHServerEmu.Games.Entities.Items
         {
             base.OnSelfRemovedFromOtherInventory(prevInvLoc);
 
-            if (prevInvLoc.IsValid)
+            if (prevInvLoc.IsValid == false)
+                return;
+
+            InventoryPrototype inventoryProto = prevInvLoc.InventoryPrototype;
+            Entity prevOwner = Game.EntityManager.GetEntity<Entity>(prevInvLoc.ContainerId);
+
+            if (inventoryProto.Category == InventoryCategory.TeamUpEquipment)
             {
-                InventoryPrototype inventoryProto = prevInvLoc.InventoryPrototype;
-                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(prevInvLoc.ContainerId);
-                if (owner == null) return;
+                Player playerOwner = prevOwner?.GetOwnerOfType<Player>();
+                Avatar avatar = playerOwner?.CurrentAvatar;
 
-                var player = owner.GetOwnerOfType<Player>();
-                var avatar = player?.CurrentAvatar;
-                if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == owner)
+                if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == prevOwner)
                     RemoveTeamUpAffixesFromAvatar(avatar);
+            }
 
-                // Stop ticking
-                if (owner != null && inventoryProto.IsEquipmentInventory)
-                    StopTicking(owner);
+            if (prevOwner != null && inventoryProto.IsEquipmentInventory)
+                StopTicking(prevOwner);
+
+            // TODO: ScoringEventType.FullyUpgradedPetTech
+        }
+
+        public bool ApplyTeamUpAffixesToAvatar(Avatar avatar)
+        {
+            if (GetOwnerOfType<Player>() != avatar.GetOwnerOfType<Player>()) return Logger.WarnReturn(false, "ApplyTeamUpAffixesToAvatar(): GetOwnerOfType<Player>() != avatar.GetOwnerOfType<Player>()");
+            
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.Properties == null || copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("ApplyTeamUpAffixesToAvatar(): copyEntry.Properties == null || copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.AffixProto is not AffixTeamUpPrototype affixProto)
+                    continue;
+
+                if (affixProto.IsAppliedToOwnerAvatar == false)
+                    continue;
+
+                bool didAssignAllPowers = avatar.UpdateProcEffectPowers(copyEntry.Properties, true);
+                if (didAssignAllPowers == false)
+                    Logger.Warn($"ApplyTeamUpAffixesToAvatar(): UpdateProcEffectPowers failed in ApplyTeamUpAffixesToAvatar for affix=[{affixProto}] item=[{this}] avatar=[{avatar}]");
+
+                if (avatar.Properties.HasChildCollection(copyEntry.Properties))
+                    continue;
+                
+                avatar.Properties.AddChildCollection(copyEntry.Properties);
+            }
+
+            return true;
+        }
+
+        public void RemoveTeamUpAffixesFromAvatar(Avatar avatar)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.Properties == null || copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("RemoveTeamUpAffixesFromAvatar(): copyEntry.Properties == null || copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.AffixProto is not AffixTeamUpPrototype affixProto)
+                    continue;
+
+                if (affixProto.IsAppliedToOwnerAvatar == false)
+                    continue;
+
+                if (avatar.Properties.HasChildCollection(copyEntry.Properties) == false)
+                    continue;
+
+                if (copyEntry.Properties.RemoveFromParent(avatar.Properties))
+                    avatar.UpdateProcEffectPowers(copyEntry.Properties, false);
             }
         }
 
-        private void RemoveTeamUpAffixesFromAvatar(Avatar avatar)
-        {
-            // TODO
-        }
-
-        public void StartTicking(WorldEntity owner)
+        public void StartTicking(Entity owner)
         {
             if (_tickerId != PropertyTicker.InvalidId)
             {
@@ -197,7 +288,7 @@ namespace MHServerEmu.Games.Entities.Items
             _tickerId = owner.StartPropertyTicker(Properties, Id, Id, TimeSpan.FromMilliseconds(1000));
         }
 
-        public void StopTicking(WorldEntity owner)
+        public void StopTicking(Entity owner)
         {
             owner.StopPropertyTicker(_tickerId);
             _tickerId = PropertyTicker.InvalidId;
@@ -606,7 +697,25 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            // TODO: Special interactions (e.g. character tokens)
+            // Do special interactions for specific item types
+            switch (itemProto)
+            {
+                case CharacterTokenPrototype characterTokenProto:
+                    wasUsed |= DoCharacterTokenInteraction(characterTokenProto, player, avatar);
+                    break;
+
+                case InventoryStashTokenPrototype inventoryStashTokenProto:
+                    wasUsed |= DoInventoryStashTokenInteraction(inventoryStashTokenProto, player);
+                    break;
+
+                case EmoteTokenPrototype emoteTokenProto:
+                    wasUsed |= DoEmoteTokenInteraction(emoteTokenProto, player);
+                    break;
+
+                case CraftingRecipePrototype craftingRecipeProto:
+                    wasUsed |= DoCraftingRecipeInteraction(craftingRecipeProto, player);
+                    break;
+            }
 
             // Consume if this is a consumable item that was successfully used
             // NOTE: Power-based consumable items get consumed when their power is activated in OnUsePowerActivated().
@@ -614,6 +723,61 @@ namespace MHServerEmu.Games.Entities.Items
                 DecrementStack();
 
             return true;
+        }
+
+        private bool DoCharacterTokenInteraction(CharacterTokenPrototype characterTokenProto, Player player, Avatar avatar)
+        {
+            bool wasUsed = false;
+
+            PrototypeId characterProtoRef = characterTokenProto.Character;
+
+            EntityPrototype characterProto = characterTokenProto.Character.As<EntityPrototype>();
+            if (characterProto == null) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): characterProto == null");
+
+            if (characterProto is AvatarPrototype)
+            {
+                if (characterTokenProto.GrantsCharacterUnlock && player.HasAvatarFullyUnlocked(characterProtoRef) == false)
+                {
+                    wasUsed = player.UnlockAvatar(characterProtoRef, true);
+                }
+
+                if (wasUsed == false && characterTokenProto.GrantsUltimateUpgrade)
+                {
+                    // Upgrade ultimate if the token wasn't used to unlock the avatar
+                    if (avatar.PrototypeDataRef != characterTokenProto.Character) return Logger.WarnReturn(false, "DoCharacterTokenInteraction(): avatar.PrototypeDataRef != characterTokenProto.Character");
+
+                    if (avatar.CanUpgradeUltimate() == InteractionValidateResult.Success)
+                    {
+                        avatar.Properties.AdjustProperty(1, PropertyEnum.AvatarPowerUltimatePoints);
+                        wasUsed = true;
+                    }
+                }
+            }
+            else if (characterProto is AgentTeamUpPrototype)
+            {
+                if (player.IsTeamUpAgentUnlocked(characterProtoRef) == false)
+                    wasUsed = player.UnlockTeamUpAgent(characterProtoRef);
+            }
+
+            return wasUsed;
+        }
+
+        private bool DoInventoryStashTokenInteraction(InventoryStashTokenPrototype inventoryStashTokenProto, Player player)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool DoEmoteTokenInteraction(EmoteTokenPrototype emoteTokenProto, Player player)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
+        {
+            // TODO
+            return false;
         }
 
         public bool OnUsePowerActivated()
@@ -1380,7 +1544,6 @@ namespace MHServerEmu.Games.Entities.Items
             ItemPrototype itemProto = ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUse(): itemProto == null");
 
-
             if (itemProto.IsUsable == false)
                 return InteractionValidateResult.ItemNotUsable;
 
@@ -1468,15 +1631,18 @@ namespace MHServerEmu.Games.Entities.Items
             //
             // Subtype-specific validation
             //
+            
+            switch (itemProto)
+            {
+                case CharacterTokenPrototype characterTokenProto:
+                    return PlayerCanUseCharacterToken(player, avatar, characterTokenProto);
 
-            if (itemProto is CharacterTokenPrototype characterTokenProto)
-                return PlayerCanUseCharacterToken(player, avatar, characterTokenProto);
+                case InventoryStashTokenPrototype inventoryStashTokenProto:
+                    return PlayerCanUseInventoryStashToken(player, inventoryStashTokenProto);
 
-            if (itemProto is InventoryStashTokenPrototype inventoryStashTokenProto)
-                return PlayerCanUseInventoryStashToken(player, inventoryStashTokenProto);
-
-            if (itemProto is EmoteTokenPrototype emoteTokenProto)
-                return PlayerCanUseEmoteToken(player, emoteTokenProto);
+                case EmoteTokenPrototype emoteTokenProto:
+                    return PlayerCanUseEmoteToken(player, emoteTokenProto);
+            }
 
             if (IsCraftingRecipe)
                 return PlayerCanUseCraftingRecipe(player);
@@ -1501,8 +1667,37 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUseCharacterToken(Player player, Avatar avatar, CharacterTokenPrototype characterTokenProto)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUseCharacterToken(): {characterTokenProto}");
+            if (characterTokenProto.IsLiveTuningEnabled() == false)
+                return InteractionValidateResult.ItemNotUsable;
+
+            if (characterTokenProto.GrantsCharacterUnlock)
+            {
+                // If this is an unlock token and the character is locked, this is valid use
+                if (characterTokenProto.HasUnlockedCharacter(player) == false)
+                    return InteractionValidateResult.Success;
+
+                // If this character is already unlocked and this token cannot be used to upgrade the ultimate, there is nothing to do
+                if (characterTokenProto.GrantsUltimateUpgrade == false)
+                    return InteractionValidateResult.CharacterAlreadyUnlocked;
+            }
+
+            if (characterTokenProto.GrantsUltimateUpgrade)
+            {
+                // Team-ups do not have ultimate powers, so these checks concern only avatars
+
+                // Cannot upgrade ultimates of locked avatars
+                if (player.HasAvatarFullyUnlocked(characterTokenProto.Character) == false)
+                    return InteractionValidateResult.CharacterNotYetUnlocked;
+
+                // Cannot upgrade ultimates of library avatars
+                if (avatar.PrototypeDataRef != characterTokenProto.Character)
+                    return InteractionValidateResult.AvatarUltimateUpgradeCurrentOnly;
+
+                // Skipping AvatarMode check present in the client here because avatar modes never got implemented
+
+                return avatar.CanUpgradeUltimate();
+            }
+
             return InteractionValidateResult.UnknownFailure;
         }
 

@@ -700,7 +700,7 @@ namespace MHServerEmu.Games.Events
 
         private static bool GetPlayerHoursPlayedCount(Player player, ref int count)
         {
-            count = (int)Math.Floor(player.TimePlayed().TotalHours);
+            count = (int)Math.Floor(player.GetTimePlayed().TotalHours);
             return true;
         }
 
@@ -711,12 +711,12 @@ namespace MHServerEmu.Games.Events
             {
                 foreach (var avatar in new AvatarIterator(player))
                     if (avatar.Prototype == avatarProto)
-                        count += (int)Math.Floor(avatar.TimePlayed().TotalHours);
+                        count += (int)Math.Floor(avatar.GetTimePlayed().TotalHours);
             }
             else
             {
                 foreach (var avatar in new AvatarIterator(player))
-                    count = Math.Max((int)Math.Floor(avatar.TimePlayed().TotalHours), count);
+                    count = Math.Max((int)Math.Floor(avatar.GetTimePlayed().TotalHours), count);
             }
 
             return true;

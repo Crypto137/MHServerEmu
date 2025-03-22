@@ -667,6 +667,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public PrototypeId RestrictionKeyword { get; protected set; }
         public int RestrictionKeywordCount { get; protected set; }
         public PrototypeId RestrictionBannerMessage { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public KeywordPrototype RestrictionKeywordPrototype { get; private set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            RestrictionKeywordPrototype = RestrictionKeyword.As<KeywordPrototype>();
+        }
     }
 
     public class PowerEventContextTransformModePrototype : PowerEventContextPrototype
@@ -723,14 +735,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Ability { get; protected set; }
 
-        [DoNotCopy]
-        public int StartingRank { get; private set; }
+        //---
 
-        public override void PostProcess()
-        {
-            base.PostProcess();
-            StartingRank = 1;
-        }
+        [DoNotCopy]
+        public int Rank { get => 1; }  // NOTE: This was a real prototype field in 1.48
     }
 
     public class AbilityAutoAssignmentSlotPrototype : Prototype
@@ -1047,6 +1055,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public EvalPrototype DurationMSEval { get; protected set; }
         public TransformModeUnrealOverridePrototype[] UnrealClassOverrides { get; protected set; }
         public PrototypeId UseRankOfPower { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public TimeSpan GetDuration(Entity owner)
+        {
+            if (DurationMSEval == null)
+                return TimeSpan.Zero;
+
+            Game game = owner.Game;
+            if (game == null) return Logger.WarnReturn(TimeSpan.Zero, "GetDuration(): game == null");
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.Game = game;
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Default, owner?.Properties);
+
+            int durationMS = Eval.RunInt(DurationMSEval, evalContext);
+            return TimeSpan.FromMilliseconds(durationMS);
+        }
     }
 
     public class TransformModeEntryPrototype : Prototype

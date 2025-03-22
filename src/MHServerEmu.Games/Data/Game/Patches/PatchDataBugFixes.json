@@ -1,0 +1,82 @@
+[
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Story/CH04EastSide/TreasureRooms/CH04TR07Basement.prototype",
+        "Path": "Objectives[0].SuccessConditions.Conditions[0].Region",
+        "Description": "Fix Chest mission Region to CH04TR07Basement",
+        "ValueType": "PrototypeId",
+        "Value": 3901343846271426331
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Story/CH04EastSide/TreasureRooms/CH04TR07Basement.prototype",
+        "Path": "Objectives[1].SuccessConditions.Conditions[0].TargetFilter.Filters[0].Keyword",
+        "Description": "Fix Chest mission Keyword to Mob",
+        "ValueType": "PrototypeId",
+        "Value": 6870096780498112679
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/PVEEndgame/AgeOfUltron/AgeOfUltronKismetController.prototype",
+        "Path": "Objectives[0].OnSuccessActions[1].DelayInSeconds",
+        "Description": "Fix Delay for AgeOfUltronBossSpawner",
+        "ValueType": "Float",
+        "Value": 12.5
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Story/CH04EastSide/TreasureRooms/CH04TR05Barber.prototype",
+        "Path": "PopulationSpawns[2].Population.UsePopulationMarker",
+        "Description": "Fix DeadEndChestMarker for CH04TR05Barber",
+        "ValueType": "PrototypeId",
+        "Value": 17169140681234780994
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Spawners/Mission/TRBonusChestSpawner.prototype",
+        "Path": "SpawnSequence[0].Object.Entity",
+        "Description": "Fix Hidden Chest for TRTavernRegion / LegendaryCH08Doomstadt2",
+        "ValueType": "PrototypeId",
+        "Value": 9710110594970293035
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Resource/Encounters/CH09Norway/OM_ForgottenPyre_Reward.encounter",
+        "Path": "MarkerSet.Markers[1].EncounterSpawnPhase",
+        "Description": "Fix phase for SHIELDAgentForgottenPyreEvent",
+        "ValueType": "Integer",
+        "Value": 0
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Story/CH09Asgard/Events/MetaGame/MGForgottenPyre/MGForgottenPyre.prototype",
+        "Path": "Objectives[0].Name",
+        "Description": "Fix long name for MGForgottenPyre",
+        "ValueType": "LocaleStringId",
+        "Value": 6053780125440214290
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Regions/EndGame/TierX/PatrolMidtown/ConnectionTargets/ConnectionNodes/XManhattanToHellsKitchenNode.prototype",
+        "Path": "Target",
+        "Description": "Fix Cosmic Midtown elevator",
+        "ValueType": "PrototypeId",
+        "Value": 17615247274427293857
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Alliances/Overrides/Controlled.prototype",
+        "Path": "HostileTo[]",
+        "Description": "Add [GangBiker, GangShocker, GangHellbane, GangElectro, EnemyToEveryone] to Controlled Keywords",
+        "ValueType": "PrototypeId[]",
+        "Value": [ 3046566727234031236, 11722709847486435174, 1849637429396115378, 3414168095237017445, 4627307232939675976 ]
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/LegendaryQuests/LQStory/LegendaryCH07DinosaurJungle2.prototype",
+        "Path": "Objectives[2].SuccessConditions.Conditions[0].EntityFilter.Filters[0].EntityPrototype",
+        "Description": "Fix Raptor in Egg Hunt Legendary Mission",
+        "ValueType": "PrototypeId",
+        "Value": 16615558941252196555
+    }
+]

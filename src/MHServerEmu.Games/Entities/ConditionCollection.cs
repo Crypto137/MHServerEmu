@@ -4,7 +4,6 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -529,8 +528,6 @@ namespace MHServerEmu.Games.Entities
                 success = true;
                 //Logger.Trace($"AddCondition(): {condition} - {condition.Duration.TotalMilliseconds} ms");
 
-                condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
-
                 // Trigger additional effects
                 WorldEntity creator = _owner.Game.EntityManager.GetEntity<WorldEntity>(condition.CreatorId);
                 PowerPrototype powerProto = condition.CreatorPowerPrototype;
@@ -955,6 +952,7 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, $"InsertCondition(): Failed to insert condition id {condition.Id} for [{_owner}]");
 
             condition.Collection = this;
+            condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
             return true;
         }
 
@@ -1277,8 +1275,8 @@ namespace MHServerEmu.Games.Entities
                 EventPointer<RemoveConditionEvent> removeEvent = new();
                 condition.RemoveEvent = removeEvent;
 
-                _owner.Game.GameEventScheduler.ScheduleEvent(removeEvent, timeRemaining, _pendingEvents);
-                removeEvent.Get().Initialize(this, condition.Id);
+                if (_owner.Game.GameEventScheduler.ScheduleEvent(removeEvent, timeRemaining, _pendingEvents))
+                    removeEvent.Get().Initialize(this, condition.Id);
             }
 
             return true;

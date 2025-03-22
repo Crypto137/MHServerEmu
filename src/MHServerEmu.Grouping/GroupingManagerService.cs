@@ -45,10 +45,10 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
+        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
         {
-            foreach (MessagePackage message in messages)
-                Handle(client, message);
+            for (int i = 0; i < messages.Count; i++)
+                Handle(client, messages[i]);
         }
 
         public void Handle(ITcpClient tcpClient, MailboxMessage message)

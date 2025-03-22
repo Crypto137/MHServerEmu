@@ -36,10 +36,14 @@ namespace MHServerEmu.Games.Loot
             Region region = player.GetRegion();
 
             LootRollSettings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+            LootRollSettings.Player = player;
             LootRollSettings.UsableAvatar = avatar?.AvatarPrototype;
             LootRollSettings.UsablePercent = GameDatabase.LootGlobalsPrototype.LootUsableByRecipientPercent;
             LootRollSettings.Level = level;
             LootRollSettings.LevelForRequirementCheck = level;
+
+            if (avatar != null && avatar.CurrentTeamUpAgent != null)
+                LootRollSettings.UsableTeamUp = avatar.CurrentTeamUpAgent.AgentPrototype;
 
             if (region != null)
             {

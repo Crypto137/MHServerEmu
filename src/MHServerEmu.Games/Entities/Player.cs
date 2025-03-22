@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
-        private readonly EventPointer<PlayedTimeEvent> _playedTimeEvent = new();
+        private readonly EventPointer<CheckHoursPlayedEvent> _checkHoursPlayedEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
@@ -143,6 +143,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsolePlayer { get => false; }
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
+
         public bool IsInParty { get; internal set; }
         public static bool IsPlayerTradeEnabled { get; internal set; }
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
@@ -157,6 +158,8 @@ namespace MHServerEmu.Games.Entities
         public long InfinityXP { get => Properties[PropertyEnum.InfinityXP]; }
         public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
+        public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
+        public ulong TeamUpSynergyConditionId { get; set; }
 
         public Player(Game game) : base(game)
         {
@@ -231,10 +234,42 @@ namespace MHServerEmu.Games.Entities
                         {
                             teamUpAgent.SetTeamUpsAtMaxLevel(this);
                             if (teamUpAgent.IsInWorld) 
-                                teamUpAgent.AddTeamUpSynergyCondition();
+                                teamUpAgent.UpdateTeamUpSynergyCondition();
                         }
                     }
                     break;
+
+                case PropertyEnum.PowerCooldownDuration:
+                    {
+                        Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                        PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                        if (powerProto == null)
+                        {
+                            Logger.Warn("OnPropertyChange(): powerProto == null");
+                            break;
+                        }
+
+                        if (Power.IsCooldownPersistent(powerProto))
+                            Properties[PropertyEnum.PowerCooldownDurationPersistent, powerProtoRef] = newValue;
+
+                        break;
+                    }
+
+                case PropertyEnum.PowerCooldownStartTime:
+                {
+                    Property.FromParam(id, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnPropertyChange(): powerProto == null");
+                        break;
+                    }
+
+                    if (Power.IsCooldownPersistent(powerProto))
+                        Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
+
+                    break;
+                }
             }
         }
 
@@ -250,11 +285,25 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.UISystemLock, uiSystemLockRef] = 1;
             }
 
-            // HACK: Unlock avatars here too
-            foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            if (Game.CustomGameOptions.AutoUnlockAvatars)
             {
-                if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
-                UnlockAvatar(avatarRef, false);
+                // HACK: Unlock avatars here too
+                foreach (PrototypeId avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                    UnlockAvatar(avatarRef, false);
+                }
+            }
+
+            if (Game.GameOptions.TeamUpSystemEnabled && Game.CustomGameOptions.AutoUnlockTeamUps)
+            {
+                // HACK: And team-ups as well
+                Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+                if (teamUpLibrary.Count == 0)
+                {
+                    foreach (PrototypeId teamUpRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AgentTeamUpPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                        UnlockTeamUpAgent(teamUpRef, false);
+                }
             }
 
             _newPlayerUISystemsUnlocked = true;
@@ -295,6 +344,51 @@ namespace MHServerEmu.Games.Entities
                 Inventory inventory = GetInventoryByRef(invProtoRef);
                 if (inventory == null && AddInventory(invProtoRef) == false)
                     Logger.Warn($"OnUnpackComplete(): Failed to add inventory, invProtoRef={invProtoRef.GetName()}");
+            }
+
+            // Restore persistent cooldowns
+            if (archive.IsPersistent)
+            {
+                Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownDurationPersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent or stored on player
+                    if (Power.IsCooldownPersistent(powerProto) == false || Power.IsCooldownOnPlayer(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownDuration, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownStartTimePersistent))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                    PowerPrototype powerProto = powerProtoRef.As<PowerPrototype>();
+                    if (powerProto == null)
+                    {
+                        Logger.Warn("OnUnpackComplete(): powerProto == null");
+                        continue;
+                    }
+
+                    // Discard if no longer flagged as persistent or stored on player
+                    if (Power.IsCooldownPersistent(powerProto) == false || Power.IsCooldownOnPlayer(powerProto) == false)
+                        continue;
+
+                    setDict[new(PropertyEnum.PowerCooldownStartTime, powerProtoRef)] = kvp.Value;
+                }
+
+                foreach (var kvp in setDict)
+                    Properties[kvp.Key] = kvp.Value;
+
+                DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
             }
         }
 
@@ -441,7 +535,7 @@ namespace MHServerEmu.Games.Entities
             base.EnterGame(settings);
 
             InitializeVendors();
-            SchedulePlayedTimeEvent();
+            ScheduleCheckHoursPlayedEvent();
             UpdateUISystemLocks();
         }
 
@@ -529,21 +623,26 @@ namespace MHServerEmu.Games.Entities
         /// <summary>
         /// Returns <see cref="PrototypeId"/> values of all locked and/or unlocked stash tabs for this <see cref="Player"/>.
         /// </summary>
-        public IEnumerable<PrototypeId> GetStashInventoryProtoRefs(bool getLocked, bool getUnlocked)
+        public bool GetStashInventoryProtoRefs(List<PrototypeId> stashInvRefs, bool getLocked, bool getUnlocked)
         {
-            var playerProto = Prototype as PlayerPrototype;
-            if (playerProto == null) yield break;
-            if (playerProto.StashInventories == null) yield break;
+            if (Prototype is not PlayerPrototype playerProto) return Logger.WarnReturn(false, "GetStashInventoryProtoRefs(): Prototype is not PlayerPrototype playerProto");
+            if (playerProto.StashInventories.IsNullOrEmpty()) return Logger.WarnReturn(false, "GetStashInventoryProtoRefs(): playerProto.StashInventories.IsNullOrEmpty()");
 
             foreach (EntityInventoryAssignmentPrototype invAssignmentProto in playerProto.StashInventories)
             {
-                if (invAssignmentProto.Inventory == PrototypeId.Invalid) continue;
+                if (invAssignmentProto.Inventory == PrototypeId.Invalid)
+                {
+                    Logger.Warn("GetStashInventoryProtoRefs(): invAssignmentProto.Inventory == PrototypeId.Invalid");
+                    continue;
+                }
 
                 bool isLocked = GetInventoryByRef(invAssignmentProto.Inventory) == null;
 
                 if (isLocked && getLocked || isLocked == false && getUnlocked)
-                    yield return invAssignmentProto.Inventory;
+                    stashInvRefs.Add(invAssignmentProto.Inventory);
             }
+
+            return true;
         }
 
         /// <summary>
@@ -992,6 +1091,18 @@ namespace MHServerEmu.Games.Entities
             return result;
         }
 
+        public bool AcquireCredits(int amount)
+        {
+            if (amount <= 0)
+                return false;
+
+            CurrencyPrototype creditsProto = GameDatabase.CurrencyGlobalsPrototype.CreditsPrototype;
+            Properties.AdjustProperty(amount, new(PropertyEnum.Currency, creditsProto.DataRef));
+            OnScoringEvent(new(ScoringEventType.CurrencyCollected, creditsProto, amount));
+
+            return true;
+        }
+
         public bool AcquireCurrencyItem(Entity entity)
         {
             if (entity.IsCurrencyItem() == false)
@@ -1048,6 +1159,15 @@ namespace MHServerEmu.Games.Entities
                 .SetCurrentCurrencyBalance(balance)
                 .Build());
 
+            return true;
+        }
+
+        public bool InitPowerFromCreationItem(Item item)
+        {
+            // Only the current avatar is in the world and can have powers, so it's pointless to use AvatarIterator here like the client does
+            if (item.GetOwnerOfType<Player>() != this) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetOwnerOfType<Player>() != this");
+            
+            CurrentAvatar?.InitPowerFromCreationItem(item);
             return true;
         }
 
@@ -1139,34 +1259,39 @@ namespace MHServerEmu.Games.Entities
             return GetTeamUpAgent(teamUpRef) != null;
         }
 
-        public void UnlockTeamUpAgent(PrototypeId teamUpRef)
+        public bool UnlockTeamUpAgent(PrototypeId teamUpRef, bool sendToClient = true)
         {
-            if (IsTeamUpAgentUnlocked(teamUpRef)) return;
+            if (Game.GameOptions.TeamUpSystemEnabled == false)
+                return false;
 
-            var manager = Game?.EntityManager;
-            if (manager == null) return;
+            if (IsTeamUpAgentUnlocked(teamUpRef))
+                return Logger.WarnReturn(false, $"UnlockTeamUpAgent(): Player [{this}] is trying to unlock team-up {teamUpRef.GetName()} that is already unlocked");
 
-            var teamUpProto = GameDatabase.GetPrototype<AgentTeamUpPrototype>(teamUpRef);
-            if (teamUpProto == null) return;
+            AgentTeamUpPrototype teamUpProto = GameDatabase.GetPrototype<AgentTeamUpPrototype>(teamUpRef);
+            if (teamUpProto == null) return Logger.WarnReturn(false, "UnlockTeamUpAgent(): teamUpProto == null");
 
-            var inventory = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
-            if (inventory == null) return;
+            Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (teamUpLibrary == null) return Logger.WarnReturn(false, "UnlockTeamUpAgent(): teamUpLibrary == null");
 
             using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
-            settings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+            settings.InventoryLocation = new(Id, teamUpLibrary.PrototypeDataRef);
             settings.EntityRef = teamUpRef;
 
-            var teamUp = manager.CreateEntity(settings) as Agent;
-            if (teamUp == null) return;
+            Agent teamUp = Game.EntityManager.CreateEntity(settings) as Agent;
+            if (teamUp == null)
+                return Logger.WarnReturn(false, $"UnlockTeamUpAgent(): Failed to create team-up agent entity {teamUpRef.GetName()} for player [{this}]");
 
+            teamUp.InitializeLevel(1);
             teamUp.CombatLevel = 1;
-            // TODO ExperiencePoints
 
             teamUp.Properties[PropertyEnum.PowerProgressionVersion] = teamUp.GetLatestPowerProgressionVersion();
 
-            SendNewTeamUpAcquired(teamUpRef);
+            if (sendToClient)
+                SendNewTeamUpAcquired(teamUpRef);
 
             GetRegion()?.PlayerUnlockedTeamUpEvent.Invoke(new(this, teamUpRef));
+
+            return true;
         }
 
         public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
@@ -1278,8 +1403,22 @@ namespace MHServerEmu.Games.Entities
 
         public int GetLevelCapForCharacter(PrototypeId agentProtoRef)
         {
-            // TODO
-            return 60;
+            AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
+
+            switch (agentProto)
+            {
+                case AvatarPrototype avatarProto:
+                    if (HasAvatarAsStarter(agentProtoRef))
+                        return Avatar.GetStarterAvatarLevelCap();
+
+                    return Avatar.GetAvatarLevelCap();
+
+                case AgentTeamUpPrototype teamUpProto:
+                    return Agent.GetTeamUpLevelCap();
+
+                default:
+                    return Logger.WarnReturn(0, $"GetLevelCapForCharacter(): Agent is neither an Avatar nor a Team-Up: [{agentProto}]");
+            }
         }
 
         public void SetAvatarLibraryProperties()
@@ -1293,31 +1432,64 @@ namespace MHServerEmu.Games.Entities
 
             int maxAvatarLevel = 1;
 
+            TimeSpan timePlayed = TimeSpan.Zero;
+            int legendaryMissionsComplete = 0;
+            int pvpWins = 0;
+            int pvpLosses = 0;
+
             foreach (Avatar avatar in new AvatarIterator(this))
             {
                 PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
 
-                // Library Level
-                // NOTE: setting AvatarLibraryLevel above level 60 displays as prestige levels in the UI
-                int characterLevel = avatar.Properties[PropertyEnum.CharacterLevel];
-                maxAvatarLevel = Math.Max(characterLevel, maxAvatarLevel);
-                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarProtoRef] = characterLevel;
-
-                // Costume
+                // AvatarLibraryLevel will be set by running the level up logic in the avatar (see OnAvatarCharacterLevelChanged())
                 Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CostumeCurrent];
-
-                // Team-up
                 Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.AvatarTeamUpAgent];
 
-                // Unlock extra emotes
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
+                // Update max level
+                maxAvatarLevel = Math.Max(maxAvatarLevel, avatar.CharacterLevel);
+
+                // Add statistics to total
+                timePlayed += avatar.GetTimePlayed();
+                legendaryMissionsComplete += avatar.Properties[PropertyEnum.LegendaryMissionsComplete];
+                pvpWins += avatar.Properties[PropertyEnum.PvPWins];
+                pvpLosses += avatar.Properties[PropertyEnum.PvPLosses];
             }
 
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = maxAvatarLevel;
 
-            // TODO: Move mission manager somewhere else
-            _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = timePlayed;
+            Properties[PropertyEnum.LegendaryMissionsComplete] = legendaryMissionsComplete;
+            Properties[PropertyEnum.PvPWins] = pvpWins;
+            Properties[PropertyEnum.PvPLosses] = pvpLosses;
+        }
+
+        public void SetTeamUpLibraryProperties()
+        {
+            if (Properties.HasProperty(PropertyEnum.TeamUpsAtMaxLevelPersistent))
+                return;
+
+            Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (teamUpLibrary == null)
+                return;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            int teamUpsAtMaxLevel = 0;
+            foreach (var entry in teamUpLibrary)
+            {
+                Agent teamUpAgent = entityManager.GetEntity<Agent>(entry.Id);
+                if (teamUpAgent == null)
+                {
+                    Logger.Warn("SetTeamUpLibraryProperties(): teamUpAgent == null");
+                    continue;
+                }
+
+                if (teamUpAgent.IsAtLevelCap)
+                    teamUpsAtMaxLevel++;
+            }
+
+            if (teamUpsAtMaxLevel > 0)
+                Properties[PropertyEnum.TeamUpsAtMaxLevelPersistent] = teamUpsAtMaxLevel;
         }
 
         public void OnAvatarCharacterLevelChanged(Avatar avatar)
@@ -1840,7 +2012,7 @@ namespace MHServerEmu.Games.Entities
             for (int i = 0; i < _unlockedInventoryList.Count; i++)
                 sb.AppendLine($"{nameof(_unlockedInventoryList)}[{i}]: {GameDatabase.GetPrototypeName(_unlockedInventoryList[i])}");
 
-            if (_badges.Any())
+            if (_badges.Count > 0)
             {
                 sb.Append($"{nameof(_badges)}: ");
                 foreach (AvailableBadges badge in _badges)
@@ -1860,11 +2032,21 @@ namespace MHServerEmu.Games.Entities
         /// </summary>
         private void OnEnterGameInitStashTabOptions()
         {
-            foreach (PrototypeId stashRef in GetStashInventoryProtoRefs(false, true))
+            List<PrototypeId> stashInvRefs = ListPool<PrototypeId>.Instance.Get();
+            if (GetStashInventoryProtoRefs(stashInvRefs, false, true))
             {
-                if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
-                    StashTabInsert(stashRef, 0);
+                foreach (PrototypeId stashRef in stashInvRefs)
+                {
+                    if (_stashTabOptionsDict.ContainsKey(stashRef) == false)
+                        StashTabInsert(stashRef, 0);
+                }
             }
+            else
+            {
+                Logger.Warn("OnEnterGameInitStashTabOptions()(): GetStashInventoryProtoRefs(stashInvRefs, false, true) == false");
+            }
+
+            ListPool<PrototypeId>.Instance.Return(stashInvRefs);
         }
 
         public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
@@ -1872,7 +2054,8 @@ namespace MHServerEmu.Games.Entities
             GameplayOptions newOptions = new(clientOptions.OptionsData);
             _gameplayOptions = newOptions;
 
-            // TODO: Process new options
+            // TODO: Update chat channels
+            CurrentAvatar?.UpdateAvatarSynergyExperienceBonus();
         }
 
         public bool IsTargetable(AlliancePrototype allianceProto)
@@ -1925,6 +2108,17 @@ namespace MHServerEmu.Games.Entities
         {
             AvatarUnlockType unlockType = GetAvatarUnlockType(avatarRef);
             return unlockType != AvatarUnlockType.None && unlockType != AvatarUnlockType.Starter;
+        }
+
+        public bool HasAvatarAsStarter(PrototypeId avatarRef)
+        {
+            AvatarUnlockType unlockType = GetAvatarUnlockType(avatarRef);
+            return unlockType == AvatarUnlockType.Starter;
+        }
+
+        public bool HasAvatarAsCappedStarter(Avatar avatar)
+        {
+            return HasAvatarAsStarter(avatar.PrototypeDataRef) && avatar.CharacterLevel >= Avatar.GetStarterAvatarLevelCap();
         }
 
         public AvatarUnlockType GetAvatarUnlockType(PrototypeId avatarRef)
@@ -2282,44 +2476,49 @@ namespace MHServerEmu.Games.Entities
             AchievementManager.OnUpdateEventContext();
         }
 
-        public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode = AvatarMode.Normal)
         {
             return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());
         }
 
-        public TimeSpan TimePlayed()
+        public TimeSpan GetTimePlayed()
         {
             TimeSpan timePlayed = Properties[PropertyEnum.AvatarTotalTimePlayed];
 
-            var avatar = CurrentAvatar;
+            Avatar avatar = CurrentAvatar;
             if (avatar != null)
-                timePlayed += avatar.TimePlayed() - avatar.Properties[PropertyEnum.AvatarTotalTimePlayed];
+                timePlayed += avatar.GetTimePlayed() - avatar.Properties[PropertyEnum.AvatarTotalTimePlayed];
 
             return timePlayed;
         }
 
-        private void PlayedTimeUpdate()
+        public void UpdateTimePlayed()
         {
-            int count = (int)Math.Floor(TimePlayed().TotalHours);
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = GetTimePlayed();
+        }
+
+        private void CheckHoursPlayed()
+        {
+            int count = (int)Math.Floor(GetTimePlayed().TotalHours);
             OnScoringEvent(new(ScoringEventType.HoursPlayed, count));
 
-            var avatar = CurrentAvatar;
+            Avatar avatar = CurrentAvatar;
             if (avatar != null)
             {
-                count = (int)Math.Floor(avatar.TimePlayed().TotalHours);
+                count = (int)Math.Floor(avatar.GetTimePlayed().TotalHours);
                 OnScoringEvent(new(ScoringEventType.HoursPlayedByAvatar, avatar.Prototype, count));
             }
 
-            SchedulePlayedTimeEvent();
+            ScheduleCheckHoursPlayedEvent();
         }
 
-        private void SchedulePlayedTimeEvent()
+        private void ScheduleCheckHoursPlayedEvent()
         {
-            if (_playedTimeEvent.IsValid) return;
+            if (_checkHoursPlayedEvent.IsValid) return;
             var scheduler = Game?.GameEventScheduler;
             if (scheduler == null) return;
-            scheduler.ScheduleEvent(_playedTimeEvent, TimeSpan.FromMinutes(1), _pendingEvents);
-            _playedTimeEvent.Get().Initialize(this);
+            scheduler.ScheduleEvent(_checkHoursPlayedEvent, TimeSpan.FromMinutes(1), _pendingEvents);
+            _checkHoursPlayedEvent.Get().Initialize(this);
         }
 
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
@@ -2496,9 +2695,9 @@ namespace MHServerEmu.Games.Entities
             protected override CallbackDelegate GetCallback() => (t) => (t as Player).SwitchAvatar();
         }
 
-        private class PlayedTimeEvent : CallMethodEvent<Player>
+        private class CheckHoursPlayedEvent : CallMethodEvent<Player>
         {
-            protected override CallbackDelegate GetCallback() => (player) => player.PlayedTimeUpdate();
+            protected override CallbackDelegate GetCallback() => (player) => player.CheckHoursPlayed();
         }
 
         private struct TeleportData

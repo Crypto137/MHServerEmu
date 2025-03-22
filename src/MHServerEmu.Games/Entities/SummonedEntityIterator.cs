@@ -16,23 +16,25 @@ namespace MHServerEmu.Games.Entities
 
         public struct Enumerator : IEnumerator<WorldEntity>
         {
+            private readonly Inventory _inventory;
             private readonly EntityManager _manager;
-            private IEnumerator<Inventory.IterationEntry> _inventoryEnumerator;
+            private Inventory.Enumerator _inventoryEnumerator;
+
+            public WorldEntity Current { get; private set; } = default;
+            object IEnumerator.Current { get => Current; }
 
             public Enumerator(WorldEntity owner)
             {
+                _inventory = owner.GetInventory(InventoryConvenienceLabel.Summoned);
                 _manager = owner.Game?.EntityManager;
-                var inventory = owner.GetInventory(InventoryConvenienceLabel.Summoned);
-                _inventoryEnumerator = inventory?.GetEnumerator();
+
+                if (_inventory != null)
+                    _inventoryEnumerator = _inventory.GetEnumerator();
             }
-
-            public WorldEntity Current { get; private set; } = default;
-
-            object IEnumerator.Current { get => Current; }
 
             public bool MoveNext()
             {
-                if (_manager == null || _inventoryEnumerator == null)
+                if (_inventory == null || _manager == null)
                     return false;
 
                 while (_inventoryEnumerator.MoveNext())
@@ -48,15 +50,14 @@ namespace MHServerEmu.Games.Entities
                 return false;
             }
 
-            public void Reset()
-            {
-                _inventoryEnumerator?.Reset();
-                Current = default;
-            }
-
             public void Dispose()
             {
-                _inventoryEnumerator?.Dispose();
+                _inventoryEnumerator.Dispose();
+            }
+
+            public void Reset()
+            {
+                _inventoryEnumerator.Reset();
             }
         }
     }

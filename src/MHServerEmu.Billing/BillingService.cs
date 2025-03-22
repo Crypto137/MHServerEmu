@@ -73,10 +73,10 @@ namespace MHServerEmu.Billing
             Logger.Warn($"Handle(): Unhandled MessagePackage");
         }
 
-        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
+        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
         {
-            foreach (MessagePackage message in messages)
-                Handle(client, message);
+            for (int i = 0; i < messages.Count; i++)
+                Handle(client, messages[i]);
         }
 
         public void Handle(ITcpClient tcpClient, MailboxMessage message)
@@ -177,13 +177,29 @@ namespace MHServerEmu.Billing
                         result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
                     break;
 
+                case AvatarPrototype avatarProto:
+                    PrototypeId avatarProtoRef = avatarProto.DataRef;
+                    if (player.HasAvatarFullyUnlocked(avatarProtoRef))
+                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+                    else if (player.UnlockAvatar(avatarProtoRef, true))
+                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+                    break;
+
+                case AgentTeamUpPrototype teamUpProto:
+                    PrototypeId teamUpProtoRef = teamUpProto.DataRef;
+                    if (player.IsTeamUpAgentUnlocked(teamUpProtoRef))
+                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_ALREADY_HAVE_AVATAR;
+                    else if (player.UnlockTeamUpAgent(teamUpProtoRef, true))
+                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+                    break;
+
                 default:
                     // Return error for unhandled SKU types
                     Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}", LogCategory.MTXStore);
                     break;
             }
 
-            if (result == BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN)
+            if (result != BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS)
                 return result;
 
             // Adjust currency balance (do not allow negative balance in case somebody figures out some kind of exploit to get here)
