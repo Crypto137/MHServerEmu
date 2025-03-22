@@ -1308,7 +1308,7 @@ namespace MHServerEmu.Games.Missions
 
                 if (foundActive == false)
                 {
-                    if (sequence == float.MaxValue) // set all objectives as active
+                    if (sequence != float.MaxValue) // set all objectives as active
                     {
                         foreach (var objective in _objectiveDict.Values)
                         {
