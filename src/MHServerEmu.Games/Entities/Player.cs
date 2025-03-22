@@ -159,6 +159,7 @@ namespace MHServerEmu.Games.Entities
         public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
+        public ulong TeamUpSynergyConditionId { get; set; }
 
         public Player(Game game) : base(game)
         {
@@ -233,7 +234,7 @@ namespace MHServerEmu.Games.Entities
                         {
                             teamUpAgent.SetTeamUpsAtMaxLevel(this);
                             if (teamUpAgent.IsInWorld) 
-                                teamUpAgent.AddTeamUpSynergyCondition();
+                                teamUpAgent.UpdateTeamUpSynergyCondition();
                         }
                     }
                     break;

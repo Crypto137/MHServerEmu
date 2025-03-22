@@ -2049,7 +2049,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             // TeamUp synergy
-            AddTeamUpSynergyCondition();
+            UpdateTeamUpSynergyCondition();
 
             // AI
             // if (TestAI() == false) return;
@@ -2146,7 +2146,21 @@ namespace MHServerEmu.Games.Entities
             if (this is Avatar || IsTeamUpAgent)
                 Properties.RemovePropertyRange(PropertyEnum.PowerRankBase);
 
-            RemoveTeamUpSynergyCondition();
+            // Remove the team-up synergy condition
+            if (IsTeamUpAgent)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player != null)
+                {
+                    ulong teamUpSynergyConditionId = player.TeamUpSynergyConditionId;
+                    if (teamUpSynergyConditionId != ConditionCollection.InvalidConditionId)
+                    {
+                        ConditionCollection.RemoveCondition(teamUpSynergyConditionId);
+                        player.TeamUpSynergyConditionId = ConditionCollection.InvalidConditionId;
+                    }
+                }
+            }
+
             TeamUpOwner?.OnExitedWorldTeamUpAgent(this);
         }
 
@@ -2416,24 +2430,52 @@ namespace MHServerEmu.Games.Entities
 
         #region Team-Ups
 
-        public void AddTeamUpSynergyCondition()
+        public bool UpdateTeamUpSynergyCondition()
         {
-            if (IsTeamUpAgent == false) return;
+            // Non-team-up agents do not have team-up synergies
+            if (IsTeamUpAgent == false)
+                return true;
+            
+            // Need a player owner to get condition synergy data from
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+                return true;
 
-            var player = GetOwnerOfType<Player>();
-            if (player == null) return;
+            // See if there is a synergy condition to add
+            PrototypeId teamUpSynergyConditionRef = GameDatabase.GlobalsPrototype.TeamUpSynergyCondition;
+            if (teamUpSynergyConditionRef == PrototypeId.Invalid)
+                return true;
 
-            var teamUpSynergyCondition = GameDatabase.GlobalsPrototype.TeamUpSynergyCondition;
-            if (teamUpSynergyCondition == PrototypeId.Invalid) return;
+            ConditionPrototype teamUpSynergyConditionProto = teamUpSynergyConditionRef.As<ConditionPrototype>();
+            if (teamUpSynergyConditionProto == null) return Logger.WarnReturn(false, "UpdateTeamUpSynergyCondition(): teamUpSynergyConditionProto == null");
 
-            // TODO TeamUpSynergyCondition
-        }
+            // See if there is a synergy condition we don't know about
+            ulong teamUpSynergyConditionId = player.TeamUpSynergyConditionId;
+            if (teamUpSynergyConditionId == ConditionCollection.InvalidConditionId)
+                ConditionCollection.GetConditionIdByRef(teamUpSynergyConditionRef);
 
-        private void RemoveTeamUpSynergyCondition()
-        {
-            if (IsTeamUpAgent == false) return;
+            // Remove the existing synergy condition
+            if (teamUpSynergyConditionId != ConditionCollection.InvalidConditionId)
+            {
+                ConditionCollection.RemoveCondition(teamUpSynergyConditionId);
+                player.TeamUpSynergyConditionId = ConditionCollection.InvalidConditionId;
+            }
 
-            // TODO TeamUpSynergyCondition
+            // Add a new synergy condition
+            Condition teamUpSynergyCondition = ConditionCollection.AllocateCondition();
+
+            if (teamUpSynergyCondition.InitializeFromConditionPrototype(ConditionCollection.NextConditionId, Game,
+                Id, Id, Id, teamUpSynergyConditionProto, TimeSpan.Zero))
+            {
+                ConditionCollection.AddCondition(teamUpSynergyCondition);
+                player.TeamUpSynergyConditionId = teamUpSynergyCondition.Id;
+            }
+            else
+            {
+                ConditionCollection.DeleteCondition(teamUpSynergyCondition);
+            }
+
+            return true;
         }
 
         public void AssignTeamUpAgentPowers()
