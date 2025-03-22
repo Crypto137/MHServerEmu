@@ -159,6 +159,7 @@ namespace MHServerEmu.Games.Entities
         public long OmegaXP { get => Properties[PropertyEnum.OmegaXP]; }
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
+        public ulong TeamUpSynergyConditionId { get; set; }
 
         public Player(Game game) : base(game)
         {
@@ -233,7 +234,7 @@ namespace MHServerEmu.Games.Entities
                         {
                             teamUpAgent.SetTeamUpsAtMaxLevel(this);
                             if (teamUpAgent.IsInWorld) 
-                                teamUpAgent.AddTeamUpSynergyCondition();
+                                teamUpAgent.UpdateTeamUpSynergyCondition();
                         }
                     }
                     break;
@@ -1156,6 +1157,15 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool InitPowerFromCreationItem(Item item)
+        {
+            // Only the current avatar is in the world and can have powers, so it's pointless to use AvatarIterator here like the client does
+            if (item.GetOwnerOfType<Player>() != this) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetOwnerOfType<Player>() != this");
+            
+            CurrentAvatar?.InitPowerFromCreationItem(item);
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);
@@ -1996,7 +2006,8 @@ namespace MHServerEmu.Games.Entities
             GameplayOptions newOptions = new(clientOptions.OptionsData);
             _gameplayOptions = newOptions;
 
-            // TODO: Process new options
+            // TODO: Update chat channels
+            CurrentAvatar?.UpdateAvatarSynergyExperienceBonus();
         }
 
         public bool IsTargetable(AlliancePrototype allianceProto)
@@ -2417,7 +2428,7 @@ namespace MHServerEmu.Games.Entities
             AchievementManager.OnUpdateEventContext();
         }
 
-        public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode)
+        public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode = AvatarMode.Normal)
         {
             return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());
         }
