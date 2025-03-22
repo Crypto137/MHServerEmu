@@ -14,12 +14,13 @@ namespace MHServerEmu.Games.GameData.PatchManager
         private Stack<PrototypeId> _protoStack = new();
         private readonly Dictionary<PrototypeId, List<PrototypePatchEntry>> _patchDict = new();
         private Dictionary<Prototype, string> _pathDict = new ();
+        private bool _initialized = false;
 
         public static PrototypePatchManager Instance { get; } = new();
 
-        public void Initialize()
+        public void Initialize(bool enablePatchManager)
         {
-            LoadPatchDataFromDisk();
+            if (enablePatchManager) _initialized = LoadPatchDataFromDisk();
         }
 
         private bool LoadPatchDataFromDisk()
@@ -70,6 +71,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         public bool PreCheck(PrototypeId protoRef)
         {
+            if (_initialized == false) return false;
+
             if (protoRef != PrototypeId.Invalid && _patchDict.TryGetValue(protoRef, out var list))
             {
                 if (NotPatched(list))
@@ -121,7 +124,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (fieldInfo == null) return false;
 
             UpdateValue(prototype, fieldInfo, entry);
-            Logger.Debug($"Update {entry.Prototype} {entry.Path} = {entry.Value.GetValue()}");
+            Logger.Trace($"Patch Prototype: {entry.Prototype} {entry.Path} = {entry.Value.GetValue()}");
 
             return true;
         }

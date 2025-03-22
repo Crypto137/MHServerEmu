@@ -47,9 +47,6 @@
     <None Update="Data\Game\Achievements\eng.achievements.string">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\Patches\PatchDataDisabledMissions.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Data\Game\Patches\Off\PatchDataCarnival.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

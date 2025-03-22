@@ -93,7 +93,7 @@ namespace MHServerEmu.Games.GameData
             LocaleManager.Instance.Initialize();
 
             // Initialize PrototypePatchManager
-            PrototypePatchManager.Instance.Initialize();
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();
