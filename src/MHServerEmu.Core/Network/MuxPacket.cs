@@ -27,6 +27,7 @@ namespace MHServerEmu.Core.Network
         private const int HeaderSize = 6;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
         private readonly List<MessagePackage> _messageList = null;
 
@@ -69,14 +70,14 @@ namespace MHServerEmu.Core.Network
                     {
                         _messageList = new();
 
-                        byte[] buffer = ArrayPool<byte>.Shared.Rent(bodyLength);
+                        byte[] buffer = BufferPool.Rent(bodyLength);
                         reader.Read(buffer, 0, bodyLength);
 
                         CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
                         while (cis.IsAtEnd == false)
                             _messageList.Add(new(cis, MuxId));
 
-                        ArrayPool<byte>.Shared.Return(buffer);
+                        BufferPool.Return(buffer);
                     }
                 }
                 catch (Exception e)
@@ -193,14 +194,14 @@ namespace MHServerEmu.Core.Network
                 return Logger.WarnReturn(false, "SerializeBody(): Data packet contains no messages");
 
             // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(4096);
+            byte[] buffer = BufferPool.Rent(4096);
 
             CodedOutputStream cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, buffer);
             foreach (MessagePackage message in _messageList)
                 message.WriteTo(cos);
             cos.Flush();
 
-            ArrayPool<byte>.Shared.Return(buffer);
+            BufferPool.Return(buffer);
 
             return true;
         }
