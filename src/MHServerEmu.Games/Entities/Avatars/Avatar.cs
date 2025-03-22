@@ -1125,6 +1125,21 @@ namespace MHServerEmu.Games.Entities.Avatars
                 return IsHostileTo(target);
         }
 
+        public bool InitPowerFromCreationItem(Item item)
+        {
+            if (item.GetOwnerOfType<Player>() != GetOwnerOfType<Player>()) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetOwnerOfType<Player>() != GetOwnerOfType<Player>()");
+
+            if (item.GetPowerGranted(out PrototypeId powerProtoRef) == false) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetPowerGranted(out PrototypeId powerProtoRef) == false");
+            if (powerProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): powerProtoRef == PrototypeId.Invalid");
+
+            Power power = GetPower(powerProtoRef);
+            if (power == null)
+                return false;
+
+            power.Properties[PropertyEnum.ItemLevel] = item.Properties[PropertyEnum.ItemLevel];
+            return true;
+        }
+
         public ulong FindAbilityItem(ItemPrototype itemProto, ulong skipItemId = InvalidId)
         {
             List<Inventory> inventoryList = ListPool<Inventory>.Instance.Get();

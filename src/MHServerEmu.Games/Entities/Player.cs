@@ -1157,6 +1157,15 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public bool InitPowerFromCreationItem(Item item)
+        {
+            // Only the current avatar is in the world and can have powers, so it's pointless to use AvatarIterator here like the client does
+            if (item.GetOwnerOfType<Player>() != this) return Logger.WarnReturn(false, "InitPowerFromCreationItem(): item.GetOwnerOfType<Player>() != this");
+            
+            CurrentAvatar?.InitPowerFromCreationItem(item);
+            return true;
+        }
+
         protected override bool InitInventories(bool populateInventories)
         {
             bool success = base.InitInventories(populateInventories);

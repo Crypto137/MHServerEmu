@@ -2532,12 +2532,40 @@ namespace MHServerEmu.Games.Entities
 
         public void ApplyTeamUpAffixesToAvatar(Avatar avatar)
         {
-            // TODO Item.ApplyTeamUpAffixesToAvatar
+            EntityManager entityManager = Game.EntityManager;
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                foreach (var entry in inventory)
+                {
+                    Item item = entityManager.GetEntity<Item>(entry.Id);
+                    if (item == null)
+                    {
+                        Logger.Warn("ApplyTeamUpAffixesToAvatar(): item == null");
+                        continue;
+                    }
+
+                    item.ApplyTeamUpAffixesToAvatar(avatar);
+                }
+            }
         }
 
         public void RemoveTeamUpAffixesFromAvatar(Avatar avatar)
         {
-            // TODO Item.RemoveTeamUpAffixesFromAvatar
+            EntityManager entityManager = Game.EntityManager;
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                foreach (var entry in inventory)
+                {
+                    Item item = entityManager.GetEntity<Item>(entry.Id);
+                    if (item == null)
+                    {
+                        Logger.Warn("RemoveTeamUpAffixesFromAvatar(): item == null");
+                        continue;
+                    }
+
+                    item.RemoveTeamUpAffixesFromAvatar(avatar);
+                }
+            }
         }
 
         public void SetTeamUpsAtMaxLevel(Player player)
