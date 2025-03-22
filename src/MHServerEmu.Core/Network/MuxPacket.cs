@@ -34,14 +34,9 @@ namespace MHServerEmu.Core.Network
         public MuxCommand Command { get; }
 
         /// <summary>
-        /// Returns an <see cref="IEnumerable"/> collection of <see cref="MessagePackage"/> instances contained in this <see cref="MuxPacket"/>.
+        /// Returns an <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackage"/> instances contained in this <see cref="MuxPacket"/>.
         /// </summary>
-        public IEnumerable<MessagePackage> Messages { get => _messageList; }
-
-        /// <summary>
-        /// Returns the number of <see cref="MessagePackage"/> instances contained in this <see cref="MuxPacket"/>.
-        /// </summary>
-        public int NumMessages { get => _messageList != null ? _messageList.Count : 0; }
+        public IReadOnlyList<MessagePackage> Messages { get => _messageList; }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessagePackage"/> instances.

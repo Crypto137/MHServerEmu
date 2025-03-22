@@ -113,9 +113,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="IEnumerable{T}"/> of <see cref="MessagePackage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessages(ITcpClient client, IEnumerable<MessagePackage> messages, ServerType serverType)
+        public bool RouteMessages(ITcpClient client, IReadOnlyList<MessagePackage> messages, ServerType serverType)
         {
             int index = (int)serverType;
 
