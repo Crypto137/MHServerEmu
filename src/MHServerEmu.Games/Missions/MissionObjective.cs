@@ -268,7 +268,7 @@ namespace MHServerEmu.Games.Missions
             if (Mission.IsSuspended)
             {
                 _objectiveState = newState;
-                return false;
+                return true;
             }
 
             IsChangingState = true;
