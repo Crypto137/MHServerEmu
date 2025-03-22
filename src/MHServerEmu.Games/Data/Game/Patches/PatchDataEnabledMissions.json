@@ -1,0 +1,50 @@
+[
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act0/PlayOpening.prototype",
+        "Path": "DesignState",
+        "Description": "Enable Intro Movie",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act3/Ch09Asgard/Ambushes/Norway/NorwayFrostGolemsFaeAmbushV1.prototype",
+        "Path": "DesignState",
+        "Description": "Enable NorwayFrostGolemsFaeAmbushV1",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act3/Ch09Asgard/Ambushes/Norway/NorwayFrostGolemsFaeAmbushV2.prototype",
+        "Path": "DesignState",
+        "Description": "Enable NorwayFrostGolemsFaeAmbushV2",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act3/Ch09Asgard/Ambushes/Norway/NorwayFrostGolemsFaeAmbushV3.prototype",
+        "Path": "DesignState",
+        "Description": "Enable NorwayFrostGolemsFaeAmbushV3",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Spawners/CH9/NorwayFrostGolemsSpawner.prototype",
+        "Path": "SpawnSequence[1].Count",
+        "Description": "Off AsgardFrostGolemMelee for NorwayFrostGolemsSpawner",
+        "ValueType": "Integer",
+        "Value": 0
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Spawners/CH9/NorwayFrostGolemsSpawner.prototype",
+        "Path": "SpawnSequence[3].Count",
+        "Description": "Off AsgardFrostGolemRanged for NorwayFrostGolemsSpawner",
+        "ValueType": "Integer",
+        "Value": 0
+    }
+]

@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Locales;
@@ -90,6 +91,9 @@ namespace MHServerEmu.Games.GameData
 
             // Initialize LocaleManager
             LocaleManager.Instance.Initialize();
+
+            // Initialize PrototypePatchManager
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();

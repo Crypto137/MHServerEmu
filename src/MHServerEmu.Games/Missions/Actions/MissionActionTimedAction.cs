@@ -17,10 +17,6 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             // JuggernautEmergenceController
             _proto = prototype as MissionActionTimedActionPrototype;
-
-            // FIXME hardfix for AgeOfUltronKismetController
-            if (Mission.PrototypeDataRef == (PrototypeId)16958226890670743812)
-                _proto.SetDelayInSeconds(12.5);
         }
 
         public override void Destroy()

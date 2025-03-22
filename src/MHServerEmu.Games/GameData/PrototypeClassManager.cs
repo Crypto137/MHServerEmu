@@ -4,6 +4,7 @@ using System.Reflection.Emit;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
@@ -282,6 +283,8 @@ namespace MHServerEmu.Games.GameData
         /// </summary>
         public void PostProcessContainedPrototypes(Prototype prototype)
         {
+            bool hasPatch = PrototypePatchManager.Instance.PreCheck(prototype.DataRef);
+
             foreach (CachedPrototypeField cachedField in GetPostProcessablePrototypeFields(prototype.GetType()))
             {
                 System.Reflection.PropertyInfo fieldInfo = cachedField.FieldInfo;
@@ -292,16 +295,24 @@ namespace MHServerEmu.Games.GameData
                     case PrototypeFieldType.Mixin:
                         // Simple embedded prototypes
                         var embeddedPrototype = (Prototype)fieldInfo.GetValue(prototype);
-                        embeddedPrototype?.PostProcess();
+                        if (embeddedPrototype != null)
+                        {
+                            if (hasPatch) PrototypePatchManager.Instance.SetPath(prototype, embeddedPrototype, fieldInfo.Name);
+                            embeddedPrototype.PostProcess();
+                        }
                         break;
 
                     case PrototypeFieldType.ListPrototypePtr:
                         // List / vector collections of embedded prototypes (that we implemented as arrays)
                         var prototypeCollection = (IEnumerable<Prototype>)fieldInfo.GetValue(prototype);
                         if (prototypeCollection == null) continue;
-                        
+
+                        int index = 0;
                         foreach (Prototype element in prototypeCollection)
+                        {
+                            if (hasPatch) PrototypePatchManager.Instance.SetPathIndex(prototype, element, fieldInfo.Name, index++);
                             element.PostProcess();
+                        }
                         
                         break;
 
@@ -315,6 +326,8 @@ namespace MHServerEmu.Games.GameData
                         break;
                 }
             }
+
+            if (hasPatch) PrototypePatchManager.Instance.PostOverride(prototype);
         }
 
         private CachedPrototypeField[] GetPostProcessablePrototypeFields(Type type)

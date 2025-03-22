@@ -546,7 +546,7 @@ namespace MHServerEmu.Games.GameData.Calligraphy
         /// <summary>
         /// Copies field values from a <see cref="Prototype"/> with the specified data ref.
         /// </summary>
-        private static bool CopyPrototypeDataRefFields(Prototype destPrototype, PrototypeId sourceDataRef)
+        public static bool CopyPrototypeDataRefFields(Prototype destPrototype, PrototypeId sourceDataRef)
         {
             // Check to make sure our reference is valid
             if (sourceDataRef == PrototypeId.Invalid)

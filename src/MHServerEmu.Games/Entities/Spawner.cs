@@ -83,22 +83,7 @@ namespace MHServerEmu.Games.Entities
             var spawnerProto = SpawnerPrototype;
             int count = SpawnedCount();
             if (count < spawnerProto.SpawnSimultaneousMax)
-            {
-                if (PrototypeDataRef == (PrototypeId)966079004089914920) // NorwayFrostGolemsSpawner
-                {
-                    if (count < 3) SpawnEntry(spawnerProto.SpawnSequence[0]);
-                    return;
-                }
-
-                // HardFix for LegendaryCH08Doomstadt2
-                if (PrototypeDataRef == (PrototypeId)15992471948099589621) // TRBonusChestSpawner
-                {
-                    var popObject = spawnerProto.SpawnSequence[0].Object as PopulationEntityPrototype;
-                    popObject.SetEntity((PrototypeId)9710110594970293035); // ShieldCrateGreen => ShieldCrateOrnate
-                }
-
                 SpawnEntry(NextSequence(spawnerProto.SpawnSequence));
-            }
         }
 
         private int SpawnedCount()
