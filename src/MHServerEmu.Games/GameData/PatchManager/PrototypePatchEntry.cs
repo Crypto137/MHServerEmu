@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace MHServerEmu.Games.GameData.PatchManager
@@ -55,6 +58,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
     public class PatchEntryConverter : JsonConverter<PrototypePatchEntry>
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
         public override PrototypePatchEntry Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             using JsonDocument doc = JsonDocument.ParseValue(ref reader);
@@ -87,8 +91,77 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 ValueType.LocaleStringId => new SimpleValue<LocaleStringId>((LocaleStringId)jsonElement.GetUInt64(), valueType),
                 ValueType.PrototypeIdArray or
                 ValueType.PrototypeDataRefArray => new ArrayValue<PrototypeId>(jsonElement, valueType, x => (PrototypeId)x.GetUInt64()),
+                ValueType.Prototype => new SimpleValue<Prototype>(ParseJsonPrototype(jsonElement), valueType),
+                ValueType.PrototypeArray => new ArrayValue<Prototype>(jsonElement, valueType, ParseJsonPrototype),
                 _ => throw new NotSupportedException($"Type {valueType} not support.")
             };
+        }
+
+        public static Prototype ParseJsonPrototype(JsonElement jsonElement)
+        {
+
+            var referenceType = (PrototypeId)jsonElement.GetProperty("ParentDataRef").GetUInt64();
+            Type classType = GameDatabase.DataDirectory.GetPrototypeClassType(referenceType);
+            var prototype = GameDatabase.PrototypeClassManager.AllocatePrototype(classType);
+
+            CalligraphySerializer.CopyPrototypeDataRefFields(prototype, referenceType);
+            prototype.ParentDataRef = referenceType;
+
+            foreach (var property in jsonElement.EnumerateObject())
+            {
+                if (property.Name == "ParentDataRef") continue;
+                var fieldInfo = prototype.GetType().GetProperty(property.Name);
+                if (fieldInfo == null) continue;
+                Type fieldType = fieldInfo.PropertyType;
+                var element = ParseJsonElement(property.Value, fieldType);
+                try
+                {
+                    object convertedValue = PrototypePatchManager.ConvertValue(element, fieldType);
+                    fieldInfo.SetValue(prototype, convertedValue);
+                }
+                catch (Exception ex)
+                {
+                    Logger.ErrorException(ex, $"ParseJsonPrototype can't convert {element} in {fieldType.Name}");
+                }
+
+            }
+
+            return prototype;
+        }
+
+        public static object ParseJsonElement(JsonElement value, Type fieldType)
+        {
+            if (fieldType == typeof(PrototypeId))
+            {
+                if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt64(out ulong ulongValue))
+                    return (PrototypeId)ulongValue;
+            }
+
+            if (fieldType == typeof(LocaleStringId))
+            {
+                if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt64(out ulong ulongValue))
+                    return (LocaleStringId)ulongValue;
+            }
+
+            switch (value.ValueKind)
+            {
+                case JsonValueKind.String:
+                    return value.GetString();
+                case JsonValueKind.Number:
+                    if (value.TryGetUInt64(out ulong ulongValue))
+                        return ulongValue;
+                    else if (value.TryGetInt64(out long decimalValue))
+                        return decimalValue;
+                    else if (value.TryGetDouble(out double doubleValue))
+                        return doubleValue;
+                    else
+                        return value.GetRawText();
+                case JsonValueKind.True:
+                case JsonValueKind.False:
+                    return value.GetBoolean();
+                default:
+                    return value.ToString();
+            }
         }
 
         public override void Write(Utf8JsonWriter writer, PrototypePatchEntry value, JsonSerializerOptions options)
@@ -108,7 +181,9 @@ namespace MHServerEmu.Games.GameData.PatchManager
         PrototypeIdArray,
         LocaleStringId,
         PrototypeDataRef,
-        PrototypeDataRefArray
+        PrototypeDataRefArray,
+        Prototype,
+        PrototypeArray
     }
 
     public abstract class ValueBase
@@ -129,17 +204,6 @@ namespace MHServerEmu.Games.GameData.PatchManager
         }
 
         public override object GetValue() => Value;
-    }
-
-    public class PrototypeIdArrayValue : SimpleValue<PrototypeId[]>
-    {
-        public PrototypeIdArrayValue(JsonElement jsonElement) : base(ParseJsonElement(jsonElement), ValueType.PrototypeIdArray) { }
-        private static PrototypeId[] ParseJsonElement(JsonElement jsonElement)
-        {
-            var jsonArray = jsonElement.EnumerateArray().ToArray();
-            if (jsonArray.Length == 0) return [];
-            return Array.ConvertAll(jsonArray, x => (PrototypeId)x.GetUInt64());
-        }
     }
 
     public class ArrayValue<T> : SimpleValue<T[]>

@@ -24,7 +24,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
 
         private bool LoadPatchDataFromDisk()
         {
-            string patchDirectory = Path.Combine(FileHelper.DataDirectory, "Game");
+            string patchDirectory = Path.Combine(FileHelper.DataDirectory, "Game", "Patches");
             if (Directory.Exists(patchDirectory) == false)
                 return Logger.WarnReturn(false, "LoadPatchDataFromDisk(): Game data directory not found");
 
@@ -126,7 +126,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
             return true;
         }
 
-        private static object ConvertValue(object rawValue, Type targetType)
+        public static object ConvertValue(object rawValue, Type targetType)
         {
             if (targetType.IsInstanceOfType(rawValue))
                 return rawValue;
@@ -204,7 +204,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (entryType.IsArray) entryType = entryType.GetElementType();
             if (valueType == ValueType.PrototypeDataRef || valueType == ValueType.PrototypeDataRefArray) 
                 entryType = typeof(Prototype);
-            return entryType.IsAssignableFrom(baseType);
+            return baseType.IsAssignableFrom(entryType) || entryType.IsAssignableFrom(baseType);
         }
 
         private static void AddElements(Array newArray, Type elementType, object valueEntry, int lastIndex)

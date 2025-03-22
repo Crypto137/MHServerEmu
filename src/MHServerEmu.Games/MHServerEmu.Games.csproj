@@ -47,13 +47,16 @@
     <None Update="Data\Game\Achievements\eng.achievements.string">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\PatchDataDisabledMissions.json">
+    <None Update="Data\Game\Patches\PatchDataDisabledMissions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\PatchDataEnabledMissions.json">
+    <None Update="Data\Game\Patches\PatchDataCarnival.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\PatchDataBugFixes.json">
+    <None Update="Data\Game\Patches\PatchDataEnabledMissions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\PatchDataBugFixes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuningData.json">
@@ -65,9 +68,13 @@
     <None Update="Data\Game\LootDropWeightMultiplierOverrides.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\PatchDataSpecialEvents.json">
+    <None Update="Data\Game\Patches\PatchDataSpecialEvents.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Game\Patches\Off\" />
   </ItemGroup>
 
 </Project>
