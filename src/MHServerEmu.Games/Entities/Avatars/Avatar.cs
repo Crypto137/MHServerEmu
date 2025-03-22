@@ -4910,8 +4910,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public bool UpdateAvatarSynergyCondition()
         {
-            Logger.Debug($"UpdateAvatarSynergyCondition(): [{this}]");
-
             PrototypeId avatarSynergyConditionRef = GameDatabase.GlobalsPrototype.AvatarSynergyCondition;
             if (avatarSynergyConditionRef == PrototypeId.Invalid)
                 return true;
@@ -5003,7 +5001,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player.GameplayOptions.GetOptionSetting(Options.GameplayOptionSetting.DisableHeroSynergyBonusXP) == 1)
             {
                 Properties.RemoveProperty(PropertyEnum.ExperienceBonusAvatarSynergy);
-                Logger.Debug($"UpdateAvatarSynergyExperienceBonus(): Disabled bonus XP for [{this}]");
                 return true;
             }
 
@@ -5039,7 +5036,6 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             Properties[PropertyEnum.ExperienceBonusAvatarSynergy] = experienceBonus;
 
-            Logger.Debug($"UpdateAvatarSynergyExperienceBonus(): Enabled bonus XP - {experienceBonus * 100f}%");
             return true;
         }
 
