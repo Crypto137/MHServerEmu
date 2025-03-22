@@ -50,7 +50,7 @@
     <None Update="Data\Game\Patches\PatchDataDisabledMissions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\Patches\PatchDataCarnival.json">
+    <None Update="Data\Game\Patches\Off\PatchDataCarnival.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Patches\PatchDataEnabledMissions.json">
@@ -71,10 +71,6 @@
     <None Update="Data\Game\Patches\PatchDataSpecialEvents.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\Game\Patches\Off\" />
   </ItemGroup>
 
 </Project>
