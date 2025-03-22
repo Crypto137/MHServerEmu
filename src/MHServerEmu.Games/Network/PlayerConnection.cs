@@ -208,11 +208,12 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            Player.SetAvatarLibraryProperties();
-
             // Apply versioning if needed
             if (PlayerVersioning.Apply(Player) == false)
                 return false;
+
+            Player.SetAvatarLibraryProperties();
+            Player.SetTeamUpLibraryProperties();
 
             return true;
         }

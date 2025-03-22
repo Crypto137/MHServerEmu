@@ -1427,31 +1427,64 @@ namespace MHServerEmu.Games.Entities
 
             int maxAvatarLevel = 1;
 
+            TimeSpan timePlayed = TimeSpan.Zero;
+            int legendaryMissionsComplete = 0;
+            int pvpWins = 0;
+            int pvpLosses = 0;
+
             foreach (Avatar avatar in new AvatarIterator(this))
             {
                 PrototypeId avatarProtoRef = avatar.PrototypeDataRef;
 
-                // Library Level
-                // NOTE: setting AvatarLibraryLevel above level 60 displays as prestige levels in the UI
-                int characterLevel = avatar.Properties[PropertyEnum.CharacterLevel];
-                maxAvatarLevel = Math.Max(characterLevel, maxAvatarLevel);
-                Properties[PropertyEnum.AvatarLibraryLevel, 0, avatarProtoRef] = characterLevel;
-
-                // Costume
+                // AvatarLibraryLevel will be set by running the level up logic in the avatar (see OnAvatarCharacterLevelChanged())
                 Properties[PropertyEnum.AvatarLibraryCostume, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.CostumeCurrent];
-
-                // Team-up
                 Properties[PropertyEnum.AvatarLibraryTeamUp, 0, avatarProtoRef] = avatar.Properties[PropertyEnum.AvatarTeamUpAgent];
 
-                // Unlock extra emotes
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)11651334702101696313] = true; // Powers/Emotes/EmoteCongrats.prototype
-                Properties[PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, (PrototypeId)773103106671775187] = true;   // Powers/Emotes/EmoteDance.prototype
+                // Update max level
+                maxAvatarLevel = Math.Max(maxAvatarLevel, avatar.CharacterLevel);
+
+                // Add statistics to total
+                timePlayed += avatar.GetTimePlayed();
+                legendaryMissionsComplete += avatar.Properties[PropertyEnum.LegendaryMissionsComplete];
+                pvpWins += avatar.Properties[PropertyEnum.PvPWins];
+                pvpLosses += avatar.Properties[PropertyEnum.PvPLosses];
             }
 
             Properties[PropertyEnum.PlayerMaxAvatarLevel] = maxAvatarLevel;
 
-            // TODO: Move mission manager somewhere else
-            _missionManager.SetAvatar(CurrentAvatar.PrototypeDataRef);
+            Properties[PropertyEnum.AvatarTotalTimePlayed] = timePlayed;
+            Properties[PropertyEnum.LegendaryMissionsComplete] = legendaryMissionsComplete;
+            Properties[PropertyEnum.PvPWins] = pvpWins;
+            Properties[PropertyEnum.PvPLosses] = pvpLosses;
+        }
+
+        public void SetTeamUpLibraryProperties()
+        {
+            if (Properties.HasProperty(PropertyEnum.TeamUpsAtMaxLevelPersistent))
+                return;
+
+            Inventory teamUpLibrary = GetInventory(InventoryConvenienceLabel.TeamUpLibrary);
+            if (teamUpLibrary == null)
+                return;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            int teamUpsAtMaxLevel = 0;
+            foreach (var entry in teamUpLibrary)
+            {
+                Agent teamUpAgent = entityManager.GetEntity<Agent>(entry.Id);
+                if (teamUpAgent == null)
+                {
+                    Logger.Warn("SetTeamUpLibraryProperties(): teamUpAgent == null");
+                    continue;
+                }
+
+                if (teamUpAgent.IsAtLevelCap)
+                    teamUpsAtMaxLevel++;
+            }
+
+            if (teamUpsAtMaxLevel > 0)
+                Properties[PropertyEnum.TeamUpsAtMaxLevelPersistent] = teamUpsAtMaxLevel;
         }
 
         public void OnAvatarCharacterLevelChanged(Avatar avatar)
