@@ -25,7 +25,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Handles the provided <see cref="MessagePackage"/> instances from the specified <see cref="ITcpClient"/>.
         /// </summary>
-        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages);
+        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages);
 
         /// <summary>
         /// Handles the provided <see cref="MailboxMessage"/> instance from the specified <see cref="ITcpClient"/>.

@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Network.Parsing
             using (MemoryStream ms = new(File.ReadAllBytes(path)))
             {
                 MuxPacket packet = new(ms, false);
-                Logger.Info($"Loaded {packet.Messages.Count()} messages from {fileName}");
+                Logger.Info($"Loaded {packet.Messages.Count} messages from {fileName}");
                 return packet.Messages;
             }
         }

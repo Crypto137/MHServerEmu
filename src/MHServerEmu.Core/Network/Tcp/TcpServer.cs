@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.Buffers;
+using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Core.Logging;
 
@@ -9,9 +11,12 @@ namespace MHServerEmu.Core.Network.Tcp
     /// </summary>
     public abstract class TcpServer : IDisposable
     {
+        private const int SendBufferSize = 1024 * 512;  // 512 KB, enough to fit region loading packets + extra
+
         protected static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<Socket, TcpClientConnection> _connectionDict = new();
+        private readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Create(SendBufferSize, 50);  // 50 is the default number of buckets for ArrayPool
 
         private CancellationTokenSource _cts;
 
@@ -128,44 +133,29 @@ namespace MHServerEmu.Core.Network.Tcp
             }
         }
 
+        // NOTE: We do not return the number of bytes sent in Send() methods because
+        // they are meant to use as fire and forget to avoid lagging game instances.
+
         /// <summary>
         /// Sends data over the provided <see cref="TcpClientConnection">.
         /// </summary>
-        public int Send(TcpClientConnection connection, byte[] buffer, SocketFlags flags)
+        public void Send(TcpClientConnection connection, byte[] buffer, int size, SocketFlags flags = SocketFlags.None)
         {
-            return Send(connection, buffer, buffer.Length, flags);
+            ArgumentNullException.ThrowIfNull(connection);
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            Task.Run(async () => await SendAsync(connection, buffer, size, flags));
         }
 
         /// <summary>
         /// Sends data over the provided <see cref="TcpClientConnection">.
         /// </summary>
-        public int Send(TcpClientConnection connection, byte[] buffer, int size, SocketFlags flags)
+        public void Send(TcpClientConnection connection, IPacket packet, SocketFlags flags = SocketFlags.None)
         {
-            if (connection == null) throw new ArgumentNullException(nameof(connection));
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(connection);
+            ArgumentNullException.ThrowIfNull(packet);
 
-            int bytesSentTotal = 0;
-            int bytesRemaining = size;
-
-            try
-            {
-                while (bytesRemaining > 0)      // Send all bytes from our buffer
-                {
-                    int bytesSent = connection.Socket.Send(buffer, bytesSentTotal, bytesRemaining, flags);
-                    bytesRemaining -= bytesSent;
-                    bytesSentTotal += bytesSent;
-                }
-            }
-            catch (SocketException)
-            {
-                DisconnectClientInternal(connection);
-            }
-            catch (Exception e)
-            {
-                Logger.ErrorException(e, nameof(Send));
-            }
-
-            return bytesSentTotal;
+            Task.Run(async () => await SendAsync(connection, packet, flags));
         }
 
         #region Events
@@ -220,8 +210,6 @@ namespace MHServerEmu.Core.Network.Tcp
         /// </summary>
         private async Task AcceptConnectionsAsync()
         {
-            const int SendBufferSize = 1024 * 512;  // 512 KB, enough to fit region loading packets + extra
-
             const int MaxErrorCount = 100;
             int errorCount = 0;
 
@@ -321,6 +309,53 @@ namespace MHServerEmu.Core.Network.Tcp
                     return;
                 }
             }
+        }
+
+        /// <summary>
+        /// Sends a <see cref="byte"/> buffer over the provided <see cref="TcpClientConnection"/> asynchronously.
+        /// Return the number of bytes sent.
+        /// </summary>
+        private async Task<int> SendAsync(TcpClientConnection connection, byte[] buffer, int size, SocketFlags flags)
+        {
+            int bytesSentTotal = 0;
+            int bytesRemaining = size;
+
+            try
+            {
+                while (bytesRemaining > 0)      // Send all bytes from our buffer
+                {
+                    ReadOnlyMemory<byte> bytes = buffer.AsMemory(bytesSentTotal, bytesRemaining);
+                    int bytesSent = await connection.Socket.SendAsync(bytes, flags);
+                    bytesRemaining -= bytesSent;
+                    bytesSentTotal += bytesSent;
+                }
+            }
+            catch (SocketException)
+            {
+                DisconnectClientInternal(connection);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorException(e, nameof(Send));
+            }
+
+            return bytesSentTotal;
+        }
+
+        /// <summary>
+        /// Sends an <see cref="IPacket"/> over the provided <see cref="TcpClientConnection"/> asynchronously.
+        /// Returns the number of bytes sent.
+        /// </summary>
+        private async Task<int> SendAsync(TcpClientConnection connection, IPacket packet, SocketFlags flags = SocketFlags.None)
+        {
+            int size = packet.SerializedSize;
+            byte[] buffer = _bufferPool.Rent(size);
+
+            packet.Serialize(buffer);
+            int sent = await SendAsync(connection, buffer, size, flags);
+
+            _bufferPool.Return(buffer);
+            return sent;
         }
 
         #region IDisposable Implementation

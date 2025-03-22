@@ -208,11 +208,12 @@ namespace MHServerEmu.Games.Network
                 }
             }
 
-            Player.SetAvatarLibraryProperties();
-
             // Apply versioning if needed
             if (PlayerVersioning.Apply(Player) == false)
                 return false;
+
+            Player.SetAvatarLibraryProperties();
+            Player.SetTeamUpLibraryProperties();
 
             return true;
         }
@@ -1466,10 +1467,22 @@ namespace MHServerEmu.Games.Network
             // Validate ownership
             Player owner = avatar.GetOwnerOfType<Player>();
             if (owner != Player)
-                return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): {this} is attempting to set synergies of avatar {avatar} that does not belong to it!");
+                return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): Player [{Player}] is attempting to select avatar synergies for avatar [{avatar}] that belongs to another player");
 
+            // Check synergy limit
+            int synergyCount = selectAvatarSynergies.AvatarPrototypesCount;
+            int synergyCountLimit = GameDatabase.GlobalsPrototype.AvatarSynergyConcurrentLimit;
+            if (synergyCount > synergyCountLimit)
+                return Logger.WarnReturn(false, $"OnSelectAvatarSynergies(): Player [{Player}] is attempting to select more avatar synergies ({synergyCount}) than allowed ({synergyCountLimit})");
+
+            // Do not allow to change synergies in combat
+            if (avatar.Properties[PropertyEnum.IsInCombat])
+                return false;
+
+            // Clean up existing synergy selections
             avatar.Properties.RemovePropertyRange(PropertyEnum.AvatarSynergySelected);
 
+            // Apply new selections
             foreach (ulong avatarProtoId in selectAvatarSynergies.AvatarPrototypesList)
             {
                 PrototypeId avatarProtoRef = (PrototypeId)avatarProtoId;
@@ -1481,17 +1494,19 @@ namespace MHServerEmu.Games.Network
                     continue;
                 }
 
-                // TODO: Get level from prototypes and take prestige into account
-                Avatar synergyAvatar = owner.GetAvatar(avatarProtoRef);
-                if (synergyAvatar.CharacterLevel < 25)
+                int maxAvatarLevel = Player.GetMaxCharacterLevelAttainedForAvatar(avatarProtoRef);
+                if (maxAvatarLevel < avatarProto.SynergyUnlockLevel)
                 {
-                    Logger.Warn("OnSelectAvatarSynergies(): Attempting to set locked synergy");
+                    Logger.Warn("OnSelectAvatarSynergies(): maxAvatarLevel < avatarProto.SynergyUnlockLevel");
                     continue;
                 }
 
                 avatar.Properties[PropertyEnum.AvatarSynergySelected, avatarProtoRef] = true;
+                Player.Properties.RemoveProperty(new(PropertyEnum.AvatarSynergyNewUnlock, avatarProtoRef));
             }
 
+            // Update the synergy condition
+            avatar.UpdateAvatarSynergyCondition();
             return true;
         }
 

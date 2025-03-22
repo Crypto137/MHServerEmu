@@ -52,10 +52,10 @@ namespace MHServerEmu.Frontend
             _pendingMessageQueue.Enqueue(((FrontendClient)tcpClient, message));
         }
 
-        public void Handle(ITcpClient client, IEnumerable<MessagePackage> messages)
+        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
         {
-            foreach (MessagePackage message in messages)
-                Handle(client, message);
+            for (int i = 0; i < messages.Count; i++)
+                Handle(client, messages[i]);
         }
 
         public void Handle(ITcpClient client, MailboxMessage message)

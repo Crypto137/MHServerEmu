@@ -75,6 +75,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public SecondaryResourceManaBehaviorPrototype SecondaryResourceBehaviorCache { get; private set; }
 
+        [DoNotCopy]
+        public int SynergyUnlockLevel { get; private set; } = int.MaxValue;
+
         public override bool ApprovedForUse()
         {
             if (base.ApprovedForUse() == false) return false;
@@ -123,7 +126,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
-            // TODO: SynergyTable
+            if (SynergyTable.HasValue())
+            {
+                Array.Sort(SynergyTable, static (a, b) => a.Level.CompareTo(b.Level));
+                SynergyUnlockLevel = SynergyTable[0].Level;                
+            }
+
             // TODO: StealablePowersAllowed
 
             AvatarPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAvatarBlueprintDataRef());

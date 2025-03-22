@@ -146,15 +146,52 @@ namespace MHServerEmu.Games.Entities.Items
             if (invLoc.IsValid)
             {
                 InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
-                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(invLoc.ContainerId);
+                Entity owner = Game.EntityManager.GetEntity<Entity>(invLoc.ContainerId);
+
+                // TODO: Binding
 
                 // Remove sold price after buyback
                 if (IsInBuybackInventory == false)
                     Properties.RemoveProperty(PropertyEnum.ItemSoldPrice);
 
-                // Start ticking
-                if (owner != null && inventoryProto.IsEquipmentInventory)
-                    StartTicking(owner);
+                if (inventoryProto.IsEquipmentInventory)
+                {
+                    // Start ticking
+                    if (owner != null)
+                        StartTicking(owner);
+
+                    // TODO: ScoringEventType.FullyUpgradedPetTech
+
+                    // Update granted power
+                    if (GetPowerGranted(out PrototypeId powerProtoRef))
+                    {
+                        if (owner is Avatar avatar)
+                            avatar.InitPowerFromCreationItem(this);
+                        else if (owner is Player player)
+                            player.InitPowerFromCreationItem(this);
+                    }
+
+                    // Apply team-up affixes to avatar if needed
+                    if (inventoryProto.Category == InventoryCategory.TeamUpEquipment)
+                    {
+                        if (owner is not Agent ownerAgent)
+                        {
+                            Logger.Warn("OnSelfAddedToOtherInventory(): owner is not Agent ownerAgent");
+                            return;
+                        }
+
+                        Player owningPlayer = ownerAgent.GetOwnerOfType<Player>();
+                        if (owningPlayer == null)
+                        {
+                            Logger.Warn("OnSelfAddedToOtherInventory(): player == null");
+                            return;
+                        }
+
+                        Avatar avatar = owningPlayer.CurrentAvatar;
+                        if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == ownerAgent)
+                            ApplyTeamUpAffixesToAvatar(avatar);
+                    }
+                }
             }
 
             base.OnSelfAddedToOtherInventory();
@@ -164,29 +201,83 @@ namespace MHServerEmu.Games.Entities.Items
         {
             base.OnSelfRemovedFromOtherInventory(prevInvLoc);
 
-            if (prevInvLoc.IsValid)
+            if (prevInvLoc.IsValid == false)
+                return;
+
+            InventoryPrototype inventoryProto = prevInvLoc.InventoryPrototype;
+            Entity prevOwner = Game.EntityManager.GetEntity<Entity>(prevInvLoc.ContainerId);
+
+            if (inventoryProto.Category == InventoryCategory.TeamUpEquipment)
             {
-                InventoryPrototype inventoryProto = prevInvLoc.InventoryPrototype;
-                WorldEntity owner = Game.EntityManager.GetEntity<WorldEntity>(prevInvLoc.ContainerId);
-                if (owner == null) return;
+                Player playerOwner = prevOwner?.GetOwnerOfType<Player>();
+                Avatar avatar = playerOwner?.CurrentAvatar;
 
-                var player = owner.GetOwnerOfType<Player>();
-                var avatar = player?.CurrentAvatar;
-                if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == owner)
+                if (avatar != null && avatar.IsInWorld && avatar.CurrentTeamUpAgent == prevOwner)
                     RemoveTeamUpAffixesFromAvatar(avatar);
+            }
 
-                // Stop ticking
-                if (owner != null && inventoryProto.IsEquipmentInventory)
-                    StopTicking(owner);
+            if (prevOwner != null && inventoryProto.IsEquipmentInventory)
+                StopTicking(prevOwner);
+
+            // TODO: ScoringEventType.FullyUpgradedPetTech
+        }
+
+        public bool ApplyTeamUpAffixesToAvatar(Avatar avatar)
+        {
+            if (GetOwnerOfType<Player>() != avatar.GetOwnerOfType<Player>()) return Logger.WarnReturn(false, "ApplyTeamUpAffixesToAvatar(): GetOwnerOfType<Player>() != avatar.GetOwnerOfType<Player>()");
+            
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.Properties == null || copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("ApplyTeamUpAffixesToAvatar(): copyEntry.Properties == null || copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.AffixProto is not AffixTeamUpPrototype affixProto)
+                    continue;
+
+                if (affixProto.IsAppliedToOwnerAvatar == false)
+                    continue;
+
+                bool didAssignAllPowers = avatar.UpdateProcEffectPowers(copyEntry.Properties, true);
+                if (didAssignAllPowers == false)
+                    Logger.Warn($"ApplyTeamUpAffixesToAvatar(): UpdateProcEffectPowers failed in ApplyTeamUpAffixesToAvatar for affix=[{affixProto}] item=[{this}] avatar=[{avatar}]");
+
+                if (avatar.Properties.HasChildCollection(copyEntry.Properties))
+                    continue;
+                
+                avatar.Properties.AddChildCollection(copyEntry.Properties);
+            }
+
+            return true;
+        }
+
+        public void RemoveTeamUpAffixesFromAvatar(Avatar avatar)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.Properties == null || copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("RemoveTeamUpAffixesFromAvatar(): copyEntry.Properties == null || copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.AffixProto is not AffixTeamUpPrototype affixProto)
+                    continue;
+
+                if (affixProto.IsAppliedToOwnerAvatar == false)
+                    continue;
+
+                if (avatar.Properties.HasChildCollection(copyEntry.Properties) == false)
+                    continue;
+
+                if (copyEntry.Properties.RemoveFromParent(avatar.Properties))
+                    avatar.UpdateProcEffectPowers(copyEntry.Properties, false);
             }
         }
 
-        private void RemoveTeamUpAffixesFromAvatar(Avatar avatar)
-        {
-            // TODO
-        }
-
-        public void StartTicking(WorldEntity owner)
+        public void StartTicking(Entity owner)
         {
             if (_tickerId != PropertyTicker.InvalidId)
             {
@@ -197,7 +288,7 @@ namespace MHServerEmu.Games.Entities.Items
             _tickerId = owner.StartPropertyTicker(Properties, Id, Id, TimeSpan.FromMilliseconds(1000));
         }
 
-        public void StopTicking(WorldEntity owner)
+        public void StopTicking(Entity owner)
         {
             owner.StopPropertyTicker(_tickerId);
             _tickerId = PropertyTicker.InvalidId;

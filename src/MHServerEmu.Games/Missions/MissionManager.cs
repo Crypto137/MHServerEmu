@@ -660,13 +660,6 @@ namespace MHServerEmu.Games.Missions
             return mission;
         }
 
-        public bool SetAvatar(PrototypeId avatarPrototypeRef)
-        {
-            // TODO: Pass the avatar instance itself rather than its prototype and do all the necessary initialization
-            _avatarPrototypeRef = avatarPrototypeRef;
-            return true;
-        }
-
         public static bool HasReceivedRewardsForMission(Player player, Avatar avatar, PrototypeId missionRef)
         {
             if (avatar.Properties[PropertyEnum.MissionRewardReceived, missionRef])
