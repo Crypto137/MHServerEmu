@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -10,7 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionCurrencyCollected : MissionPlayerCondition
     {
         private MissionConditionCurrencyCollectedPrototype _proto;
-        private Action<CurrencyCollectedGameEvent> _currencyCollectedAction;
+        private Event<CurrencyCollectedGameEvent>.Action _currencyCollectedAction;
 
         public MissionConditionCurrencyCollected(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -46,7 +47,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnCurrencyCollected(CurrencyCollectedGameEvent evt)
+        private void OnCurrencyCollected(in CurrencyCollectedGameEvent evt)
         {
             var player = evt.Player;
             var currencyType = evt.CurrencyType;

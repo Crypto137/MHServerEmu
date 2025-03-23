@@ -51,11 +51,11 @@ namespace MHServerEmu.Games.MetaGames
         private readonly EventPointer<ActivateGameModeEvent> _scheduledActivateGameMode = new();
 
         private Dictionary<PrototypeId, MetaStateSpawnEvent> _metaStateSpawnEvents;
-        private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
-        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
-        private Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
-        private Action<PlayerRegionChangeGameEvent> _playerRegionChangeAction;
-        private Action<Entity> _destroyEntityAction;
+        private Event<PlayerEnteredRegionGameEvent>.Action _playerEnteredRegionAction;
+        private Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
+        private Event<EntityExitedWorldGameEvent>.Action _entityExitedWorldAction;
+        private Event<PlayerRegionChangeGameEvent>.Action _playerRegionChangeAction;
+        private Event<DestroyEntityEvent>.Action _destroyEntityAction;
         private int _modeIndex;
 
         public MetaGame(Game game) : base(game) 
@@ -436,7 +436,7 @@ namespace MHServerEmu.Games.MetaGames
 
         #region Player
 
-        private void OnPlayerRegionChange(PlayerRegionChangeGameEvent evt)
+        private void OnPlayerRegionChange(in PlayerRegionChangeGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -461,13 +461,13 @@ namespace MHServerEmu.Games.MetaGames
                 state.OnRemovePlayer(player);
         }
 
-        private void OnDestroyEntity(Entity entity)
+        private void OnDestroyEntity(in DestroyEntityEvent evt)
         {
-            if (entity is Player player)
+            if (evt.Entity is Player player)
                 RemovePlayer(player);
         }
 
-        private void OnPlayerEnteredRegion(PlayerEnteredRegionGameEvent evt)
+        private void OnPlayerEnteredRegion(in PlayerEnteredRegionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -527,7 +527,7 @@ namespace MHServerEmu.Games.MetaGames
 
         #region Discover
 
-        private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEntityEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             if (MetaGamePrototype?.DiscoverAvatarsForPlayers == true)
             {
@@ -573,7 +573,7 @@ namespace MHServerEmu.Games.MetaGames
                 player.DiscoverEntity(entity, true);
         }
 
-        private void OnEntityExitedWorld(EntityExitedWorldGameEvent evt)
+        private void OnEntityExitedWorld(in EntityExitedWorldGameEvent evt)
         {
             var entity = evt.Entity;
             if (entity != null) UniscoverEntity(entity);

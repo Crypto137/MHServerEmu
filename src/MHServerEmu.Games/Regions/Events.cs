@@ -2,6 +2,7 @@ using MHServerEmu.Games.Behavior;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -9,827 +10,415 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
 {
-    public struct EntityCollisionEvent
+    public readonly struct EntityCollisionEvent(WorldEntity who, WorldEntity whom) : IGameEventData
     {
-        public WorldEntity Who;
-        public WorldEntity Whom;
-
-        public EntityCollisionEvent(WorldEntity who, WorldEntity whom)
-        {
-            Who = who;
-            Whom = whom;
-        }
+        public readonly WorldEntity Who = who;
+        public readonly WorldEntity Whom = whom;
     }
 
-    public struct EntityInventoryChangedEvent
+    public readonly struct EntityInventoryChangedEvent(Entity entity) : IGameEventData
     {
-        public Entity Entity;
-
-        public EntityInventoryChangedEvent(Entity entity)
-        {
-            Entity = entity;
-        }
+        public readonly Entity Entity = entity;
     }
 
-    public struct EntityDeadGameEvent
+    public readonly struct EntityDeadGameEvent(WorldEntity defender, WorldEntity attacker, Player killer) : IGameEventData
     {
-        public WorldEntity Defender;
-        public WorldEntity Attacker;
-        public Player Killer;
-
-        public EntityDeadGameEvent(WorldEntity defender, WorldEntity attacker, Player killer)
-        {
-            Defender = defender;
-            Attacker = attacker;
-            Killer = killer;
-        }
+        public readonly WorldEntity Defender = defender;
+        public readonly WorldEntity Attacker = attacker;
+        public readonly Player Killer = killer;
     }
 
-    public struct ClusterEnemiesClearedGameEvent
+    public readonly struct ClusterEnemiesClearedGameEvent(SpawnGroup spawnGroup, ulong killerId) : IGameEventData
     {
-        public SpawnGroup SpawnGroup;
-        public ulong KillerId;
-
-        public ClusterEnemiesClearedGameEvent(SpawnGroup spawnGroup, ulong killerId)
-        {
-            SpawnGroup = spawnGroup;
-            KillerId = killerId;
-        }
+        public readonly SpawnGroup SpawnGroup = spawnGroup;
+        public readonly ulong KillerId = killerId;
     }
 
-    public struct EntityResurrectEvent
+    public readonly struct EntityResurrectEvent(WorldEntity entity) : IGameEventData
     {
-        public WorldEntity Entity;
-
-        public EntityResurrectEvent(WorldEntity entity)
-        {
-            Entity = entity;
-        }
+        public readonly WorldEntity Entity = entity;
     }
 
-    public struct EntityEnteredWorldGameEvent
+    public readonly struct EntityEnteredWorldGameEvent(WorldEntity entity) : IGameEventData
     {
-        public WorldEntity Entity;
-
-        public EntityEnteredWorldGameEvent(WorldEntity entity)
-        {
-            Entity = entity;
-        }
+        public readonly WorldEntity Entity = entity;
     }
 
-    public struct EntityExitedWorldGameEvent
+    public readonly struct EntityExitedWorldGameEvent(WorldEntity entity) : IGameEventData
     {
-        public WorldEntity Entity;
-
-        public EntityExitedWorldGameEvent(WorldEntity entity)
-        {
-            Entity = entity;
-        }
+        public readonly WorldEntity Entity = entity;
     }
 
-    public struct EntitySetSimulatedGameEvent
+    public readonly struct EntitySetSimulatedGameEvent(WorldEntity entity) : IGameEventData
     {
-        public WorldEntity Entity;
-
-        public EntitySetSimulatedGameEvent(WorldEntity entity)
-        {
-            Entity = entity;
-        }
+        public readonly WorldEntity Entity = entity;
     }
 
-    public struct EntitySetUnSimulatedGameEvent
+    public readonly struct EntitySetUnSimulatedGameEvent(WorldEntity entity) : IGameEventData
     {
-        public WorldEntity Entity;
-
-        public EntitySetUnSimulatedGameEvent(WorldEntity entity)
-        {
-            Entity = entity;
-        }
+        public readonly WorldEntity Entity = entity;
     }
 
-    public struct AIBroadcastBlackboardGameEvent
+    public readonly struct AIBroadcastBlackboardGameEvent(WorldEntity broadcaster, BehaviorBlackboard blackboard) : IGameEventData
     {
-        public WorldEntity Broadcaster;
-        public BehaviorBlackboard Blackboard;
-
-        public AIBroadcastBlackboardGameEvent(WorldEntity broadcaster, BehaviorBlackboard blackboard)
-        {
-            Broadcaster = broadcaster;
-            Blackboard = blackboard;
-        }
+        public readonly WorldEntity Broadcaster = broadcaster;
+        public readonly BehaviorBlackboard Blackboard = blackboard;
     }
 
-    public struct PlayerUnlockedTeamUpGameEvent
+    public readonly struct PlayerUnlockedTeamUpGameEvent(Player player, PrototypeId teamUpRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId TeamUpRef;
-
-        public PlayerUnlockedTeamUpGameEvent(Player player, PrototypeId teamUpRef)
-        {
-            Player = player;
-            TeamUpRef = teamUpRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId TeamUpRef = teamUpRef;
     }
 
-    public struct PlayerDeathLimitHitGameEvent
+    public readonly struct PlayerDeathLimitHitGameEvent(Player player, PrototypeId metaStateRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MetaStateRef;
-
-        public PlayerDeathLimitHitGameEvent(Player player, PrototypeId metaStateRef)
-        {
-            Player = player;
-            MetaStateRef = metaStateRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MetaStateRef = metaStateRef;
     }
 
-    public struct NotificationInteractGameEvent
+    public readonly struct NotificationInteractGameEvent(Player player, PrototypeId missionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MissionRef;
-
-        public NotificationInteractGameEvent(Player player, PrototypeId missionRef)
-        {
-            Player = player;
-            MissionRef = missionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MissionRef = missionRef;
     }
 
-    public struct PlayerDonatedItemGameEvent
+    public readonly struct PlayerDonatedItemGameEvent(Player player, Item item, int count) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-        public int Count;
-
-        public PlayerDonatedItemGameEvent(Player player, Item item, int count)
-        {
-            Player = player;
-            Item = item;
-            Count = count;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
+        public readonly int Count = count;
     }
 
-    public struct PlayerCraftedItemGameEvent
+    public readonly struct PlayerCraftedItemGameEvent(Player player, Item item, PrototypeId recipeRef, int count) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-        public PrototypeId RecipeRef;
-        public int Count;
-
-        public PlayerCraftedItemGameEvent(Player player, Item item, PrototypeId recipeRef, int count)
-        {
-            Player = player;
-            Item = item;
-            RecipeRef = recipeRef;
-            Count = count;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
+        public readonly PrototypeId RecipeRef = recipeRef;
+        public readonly int Count = count;
     }
 
-    public struct PlayerBoughtItemGameEvent
+    public readonly struct PlayerBoughtItemGameEvent(Player player, Item item, int count) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-        public int Count;
-
-        public PlayerBoughtItemGameEvent(Player player, Item item, int count)
-        {
-            Player = player;
-            Item = item;
-            Count = count;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
+        public readonly int Count = count;
     }
 
-    public struct PlayerCollectedItemGameEvent
+    public readonly struct PlayerCollectedItemGameEvent(Player player, Item item, int count) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-        public int Count;
-
-        public PlayerCollectedItemGameEvent(Player player, Item item, int count)
-        {
-            Player = player;
-            Item = item;
-            Count = count;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
+        public readonly int Count = count;
     }
 
-    public struct PlayerLostItemGameEvent
+    public readonly struct PlayerLostItemGameEvent(Player player, Item item, int count) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-        public int Count;
-
-        public PlayerLostItemGameEvent(Player player, Item item, int count)
-        {
-            Player = player;
-            Item = item;
-            Count = count;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
+        public readonly int Count = count;
     }
 
-    public struct PlayerPreItemPickupGameEvent
+    public readonly struct PlayerPreItemPickupGameEvent(Player player, Item item) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-
-        public PlayerPreItemPickupGameEvent(Player player, Item item)
-        {
-            Player = player;
-            Item = item;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
     }
 
-    public struct PlayerEquippedItemGameEvent
+    public readonly struct PlayerEquippedItemGameEvent(Player player, Item item) : IGameEventData
     {
-        public Player Player;
-        public Item Item;
-
-        public PlayerEquippedItemGameEvent(Player player, Item item)
-        {
-            Player = player;
-            Item = item;
-        }
+        public readonly Player Player = player;
+        public readonly Item Item = item;
     }
 
-    public struct SpawnerDefeatedGameEvent
+    public readonly struct SpawnerDefeatedGameEvent(Player player, Spawner spawner) : IGameEventData
     {
-        public Player Player;
-        public Spawner Spawner;
-
-        public SpawnerDefeatedGameEvent(Player player, Spawner spawner)
-        {
-            Player = player;
-            Spawner = spawner;
-        }
+        public readonly Player Player = player;
+        public readonly Spawner Spawner = spawner;
     }
 
-    public struct ThrowablePickedUpGameEvent
+    public readonly struct ThrowablePickedUpGameEvent(Player player, WorldEntity throwable) : IGameEventData
     {
-        public Player Player;
-        public WorldEntity Throwable;
-
-        public ThrowablePickedUpGameEvent(Player player, WorldEntity throwable)
-        {
-            Player = player;
-            Throwable = throwable;
-        }
+        public readonly Player Player = player;
+        public readonly WorldEntity Throwable = throwable;
     }
 
-    public struct PlayerInteractGameEvent
+    public readonly struct PlayerInteractGameEvent(Player player, WorldEntity interactableObject, PrototypeId missionRef) : IGameEventData
     {
-        public Player Player;
-        public WorldEntity InteractableObject;
-        public PrototypeId MissionRef;
-
-        public PlayerInteractGameEvent(Player player, WorldEntity interactableObject, PrototypeId missionRef)
-        {
-            Player = player;
-            InteractableObject = interactableObject;
-            MissionRef = missionRef;
-        }
+        public readonly Player Player = player;
+        public readonly WorldEntity InteractableObject = interactableObject;
+        public readonly PrototypeId MissionRef = missionRef;
     }
 
-    public struct OrbPickUpEvent
+    public readonly struct OrbPickUpEvent(Player player, WorldEntity orb) : IGameEventData
     {
-        public Player Player;
-        public WorldEntity Orb;
-
-        public OrbPickUpEvent(Player player, WorldEntity orb)
-        {
-            Player = player;
-            Orb = orb;
-        }
+        public readonly Player Player = player;
+        public readonly WorldEntity Orb = orb;
     }
 
-    public struct PlayerEnteredAreaGameEvent
+    public readonly struct PlayerEnteredAreaGameEvent(Player player, PrototypeId areaRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId AreaRef;
-
-        public PlayerEnteredAreaGameEvent(Player player, PrototypeId areaRef)
-        {
-            Player = player;
-            AreaRef = areaRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId AreaRef = areaRef;
     }
 
-    public struct PlayerLeftAreaGameEvent
+    public readonly struct PlayerLeftAreaGameEvent(Player player, PrototypeId areaRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId AreaRef;
-
-        public PlayerLeftAreaGameEvent(Player player, PrototypeId areaRef)
-        {
-            Player = player;
-            AreaRef = areaRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId AreaRef = areaRef;
     }
 
-    public struct PlayerBeginTravelToAreaGameEvent
+    public readonly struct PlayerBeginTravelToAreaGameEvent(Player player, PrototypeId areaRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId AreaRef;
-
-        public PlayerBeginTravelToAreaGameEvent(Player player, PrototypeId areaRef)
-        {
-            Player = player;
-            AreaRef = areaRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId AreaRef = areaRef;
     }
 
-    public struct EmotePerformedGameEvent
+    public readonly struct EmotePerformedGameEvent(Player player, PrototypeId emotePowerRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId EmotePowerRef;
-
-        public EmotePerformedGameEvent(Player player, PrototypeId emotePowerRef)
-        {
-            Player = player;
-            EmotePowerRef = emotePowerRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId EmotePowerRef = emotePowerRef;
     }
 
-    public struct PlayerBeginTravelToRegionGameEvent
+    public readonly struct PlayerBeginTravelToRegionGameEvent(Player player, PrototypeId regionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId RegionRef;
-
-        public PlayerBeginTravelToRegionGameEvent(Player player, PrototypeId regionRef)
-        {
-            Player = player;
-            RegionRef = regionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId RegionRef = regionRef;
     }
 
-    public struct LoadingScreenFinishedGameEvent
+    public readonly struct LoadingScreenFinishedGameEvent(Player player, PrototypeId regionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId RegionRef;
-
-        public LoadingScreenFinishedGameEvent(Player player, PrototypeId regionRef)
-        {
-            Player = player;
-            RegionRef = regionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId RegionRef = regionRef;
     }
 
-    public struct PlayerMetaGameCompleteGameEvent
+    public readonly struct PlayerMetaGameCompleteGameEvent(Player player, PrototypeId metaGameRef, MetaGameCompleteType completeType) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MetaGameRef;
-        public MetaGameCompleteType CompleteType;
-
-        public PlayerMetaGameCompleteGameEvent(Player player, PrototypeId metaGameRef, MetaGameCompleteType completeType)
-        {
-            Player = player;
-            MetaGameRef = metaGameRef;
-            CompleteType = completeType;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MetaGameRef = metaGameRef;
+        public readonly MetaGameCompleteType CompleteType = completeType;
     }
 
-    public struct PlayerEventTeamChangedGameEvent
+    public readonly struct PlayerEventTeamChangedGameEvent(Player player, PrototypeId eventTeamRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId EventTeamRef;
-
-        public PlayerEventTeamChangedGameEvent(Player player, PrototypeId eventTeamRef)
-        {
-            Player = player;
-            EventTeamRef = eventTeamRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId EventTeamRef = eventTeamRef;
     }
 
-    public struct KismetSeqFinishedGameEvent
+    public readonly struct KismetSeqFinishedGameEvent(Player player, PrototypeId kismetSeqRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId KismetSeqRef;
-
-        public KismetSeqFinishedGameEvent(Player player, PrototypeId kismetSeqRef)
-        {
-            Player = player;
-            KismetSeqRef = kismetSeqRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId KismetSeqRef = kismetSeqRef;
     }
 
-    public struct CinematicFinishedGameEvent
+    public readonly struct CinematicFinishedGameEvent(Player player, PrototypeId movieRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MovieRef;
-
-        public CinematicFinishedGameEvent(Player player, PrototypeId movieRef)
-        {
-            Player = player;
-            MovieRef = movieRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MovieRef = movieRef;
     }
-    public struct PlayerRequestMissionRewardsGameEvent
+    public readonly struct PlayerRequestMissionRewardsGameEvent(Player player, PrototypeId missionRef, uint conditionIndex, ulong entityId) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MissionRef;
-        public uint ConditionIndex;
-        public ulong EntityId;
-
-        public PlayerRequestMissionRewardsGameEvent(Player player, PrototypeId missionRef, uint conditionIndex, ulong entityId)
-        {
-            Player = player;
-            MissionRef = missionRef;
-            ConditionIndex = conditionIndex;
-            EntityId = entityId;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MissionRef = missionRef;
+        public readonly uint ConditionIndex = conditionIndex;
+        public readonly ulong EntityId = entityId;
     }
 
-    public struct AvatarUsedPowerGameEvent
+    public readonly struct AvatarUsedPowerGameEvent(Player player, Avatar avatar, PrototypeId powerRef, ulong targetEntityId) : IGameEventData
     {
-        public Player Player;
-        public Avatar Avatar;
-        public PrototypeId PowerRef;
-        public ulong TargetEntityId;
-
-        public AvatarUsedPowerGameEvent(Player player, Avatar avatar, PrototypeId powerRef, ulong targetEntityId)
-        {
-            Player = player;
-            Avatar = avatar;
-            PowerRef = powerRef;
-            TargetEntityId = targetEntityId;
-        }
+        public readonly Player Player = player;
+        public readonly Avatar Avatar = avatar;
+        public readonly PrototypeId PowerRef = powerRef;
+        public readonly ulong TargetEntityId = targetEntityId;
     }
 
-    public struct ActiveChapterChangedGameEvent
+    public readonly struct ActiveChapterChangedGameEvent(Player player, PrototypeId chapterRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId ChapterRef;
-
-        public ActiveChapterChangedGameEvent(Player player, PrototypeId chapterRef)
-        {
-            Player = player;
-            ChapterRef = chapterRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId ChapterRef = chapterRef;
     }
 
-    public struct PartySizeChangedGameEvent
+    public readonly struct PartySizeChangedGameEvent(Player player, int partySize) : IGameEventData
     {
-        public Player Player;
-        public int PartySize;
-
-        public PartySizeChangedGameEvent(Player player, int partySize)
-        {
-            Player = player;
-            PartySize = partySize;
-        }
+        public readonly Player Player = player;
+        public readonly int PartySize = partySize;
     }
 
-    public struct CurrencyCollectedGameEvent
+    public readonly struct CurrencyCollectedGameEvent(Player player, PrototypeId currency, int amount) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId CurrencyType;
-        public int Amount;
-
-        public CurrencyCollectedGameEvent(Player player, PrototypeId currency, int amount)
-        {
-            Player = player;
-            CurrencyType = currency;
-            Amount = amount;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId CurrencyType = currency;
+        public readonly int Amount = amount;
     }
 
-    public struct AvatarLeveledUpGameEvent
+    public readonly struct AvatarLeveledUpGameEvent(Player player, PrototypeId avatarRef, int level) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId AvatarRef;
-        public int Level;
-
-        public AvatarLeveledUpGameEvent(Player player, PrototypeId avatarRef, int level)
-        {
-            Player = player;
-            AvatarRef = avatarRef;
-            Level = level;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId AvatarRef = avatarRef;
+        public readonly int Level = level;
     }
 
-    public struct PlayerEnteredCellGameEvent
+    public readonly struct PlayerEnteredCellGameEvent(Player player, PrototypeId cellRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId CellRef;
-
-        public PlayerEnteredCellGameEvent(Player player, PrototypeId cellRef)
-        {
-            Player = player;
-            CellRef = cellRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId CellRef = cellRef;
     }
 
-    public struct PlayerLeftCellGameEvent
+    public readonly struct PlayerLeftCellGameEvent(Player player, PrototypeId cellRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId CellRef;
-
-        public PlayerLeftCellGameEvent(Player player, PrototypeId cellRef)
-        {
-            Player = player;
-            CellRef = cellRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId CellRef = cellRef;
     }
 
-    public struct PlayerUnlockedAvatarGameEvent
+    public readonly struct PlayerUnlockedAvatarGameEvent(Player player, PrototypeId avatarRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId AvatarRef;
-
-        public PlayerUnlockedAvatarGameEvent(Player player, PrototypeId avatarRef)
-        {
-            Player = player;
-            AvatarRef = avatarRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId AvatarRef = avatarRef;
     }
 
-    public struct PlayerSwitchedToAvatarGameEvent
+    public readonly struct PlayerSwitchedToAvatarGameEvent(Player player, PrototypeId avatarRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId AvatarRef;
-
-        public PlayerSwitchedToAvatarGameEvent(Player player, PrototypeId avatarRef)
-        {
-            Player = player;
-            AvatarRef = avatarRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId AvatarRef = avatarRef;
     }
 
-    public struct AvatarEnteredRegionGameEvent
+    public readonly struct AvatarEnteredRegionGameEvent(Player player, PrototypeId regionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId RegionRef;
-
-        public AvatarEnteredRegionGameEvent(Player player, PrototypeId regionRef)
-        {
-            Player = player;
-            RegionRef = regionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId RegionRef = regionRef;
     }
 
-    public struct PlayerEnteredRegionGameEvent
+    public readonly struct PlayerEnteredRegionGameEvent(Player player, PrototypeId regionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId RegionRef;
-
-        public PlayerEnteredRegionGameEvent(Player player, PrototypeId regionRef)
-        {
-            Player = player;
-            RegionRef = regionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId RegionRef = regionRef;
     }
 
-    public struct PlayerLeftRegionGameEvent
+    public readonly struct PlayerLeftRegionGameEvent(Player player, PrototypeId regionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId RegionRef;
-
-        public PlayerLeftRegionGameEvent(Player player, PrototypeId regionRef)
-        {
-            Player = player;
-            RegionRef = regionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId RegionRef = regionRef;
     }
 
-    public struct PlayerDeathRecordedEvent
+    public readonly struct PlayerDeathRecordedEvent(Player player) : IGameEventData
     {
-        public Player Player;
-
-        public PlayerDeathRecordedEvent(Player player)
-        {
-            Player = player;
-        }
+        public readonly Player Player = player;
     }
 
-    public struct PlayerRegionChangeGameEvent
+    public readonly struct PlayerRegionChangeGameEvent(Player player) : IGameEventData
     {
-        public Player Player;
-
-        public PlayerRegionChangeGameEvent(Player player)
-        {
-            Player = player;
-        }
+        public readonly Player Player = player;
     }
 
-    public struct PlayerFactionChangedGameEvent
+    public readonly struct PlayerFactionChangedGameEvent(Player player, PrototypeId factionRef) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId FactionRef;
-
-        public PlayerFactionChangedGameEvent(Player player, PrototypeId factionRef)
-        {
-            Player = player;
-            FactionRef = factionRef;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId FactionRef = factionRef;
     }
 
-    public struct OpenMissionCompleteGameEvent
+    public readonly struct OpenMissionCompleteGameEvent(PrototypeId missionRef) : IGameEventData
     {
-        public PrototypeId MissionRef;
-
-        public OpenMissionCompleteGameEvent(PrototypeId missionRef)
-        {
-            MissionRef = missionRef;
-        }
+        public readonly PrototypeId MissionRef = missionRef;
     }
 
-    public struct OpenMissionFailedGameEvent
+    public readonly struct OpenMissionFailedGameEvent(PrototypeId missionRef) : IGameEventData
     {
-        public PrototypeId MissionRef;
-
-        public OpenMissionFailedGameEvent(PrototypeId missionRef)
-        {
-            MissionRef = missionRef;
-        }
+        public readonly PrototypeId MissionRef = missionRef;
     }
 
-    public struct MissionObjectiveUpdatedGameEvent
+    public readonly struct MissionObjectiveUpdatedGameEvent(Player player, PrototypeId missionRef, long objectiveId) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MissionRef;
-        public long ObjectiveId;
-
-        public MissionObjectiveUpdatedGameEvent(Player player, PrototypeId missionRef, long objectiveId)
-        {
-            Player = player;
-            MissionRef = missionRef;
-            ObjectiveId = objectiveId;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MissionRef = missionRef;
+        public readonly long ObjectiveId = objectiveId;
     }
 
-    public struct PlayerCompletedMissionObjectiveGameEvent
+    public readonly struct PlayerCompletedMissionObjectiveGameEvent(Player player, PrototypeId missionRef, long objectiveId,
+        bool participant, bool contributor) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MissionRef;
-        public long ObjectiveId;
-        public bool Participant;
-        public bool Contributor;
-
-        public PlayerCompletedMissionObjectiveGameEvent(Player player, PrototypeId missionRef, long objectiveId, 
-            bool participant, bool contributor)
-        {
-            Player = player;
-            MissionRef = missionRef;
-            ObjectiveId = objectiveId;
-            Participant = participant;
-            Contributor = contributor;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MissionRef = missionRef;
+        public readonly long ObjectiveId = objectiveId;
+        public readonly bool Participant = participant;
+        public readonly bool Contributor = contributor;
     }
 
-    public struct PlayerCompletedMissionGameEvent
+    public readonly struct PlayerCompletedMissionGameEvent(Player player, PrototypeId missionRef, bool participant, bool contributor) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MissionRef;
-        public bool Participant;
-        public bool Contributor;
-
-        public PlayerCompletedMissionGameEvent(Player player, PrototypeId missionRef, bool participant, bool contributor)
-        {
-            Player = player;
-            MissionRef = missionRef;
-            Participant = participant;
-            Contributor = contributor;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MissionRef = missionRef;
+        public readonly bool Participant = participant;
+        public readonly bool Contributor = contributor;
     }
 
-    public struct PlayerFailedMissionGameEvent
+    public readonly struct PlayerFailedMissionGameEvent(Player player, PrototypeId missionRef, bool participant, bool contributor) : IGameEventData
     {
-        public Player Player;
-        public PrototypeId MissionRef;
-        public bool Participant;
-        public bool Contributor;
-
-        public PlayerFailedMissionGameEvent(Player player, PrototypeId missionRef, bool participant, bool contributor)
-        {
-            Player = player;
-            MissionRef = missionRef;
-            Participant = participant;
-            Contributor = contributor;
-        }
+        public readonly Player Player = player;
+        public readonly PrototypeId MissionRef = missionRef;
+        public readonly bool Participant = participant;
+        public readonly bool Contributor = contributor;
     }
 
-    public struct EntityStatusEffectGameEvent
+    public readonly struct EntityStatusEffectGameEvent(WorldEntity entity, Player player, PropertyEnum statusProp, bool status, bool negStatusEffect) : IGameEventData
     {
-        public WorldEntity Entity;
-        public Player Player;
-        public PropertyEnum StatusProp;
-        public bool Status;
-        public bool NegStatusEffect;
-
-        public EntityStatusEffectGameEvent(WorldEntity entity, Player player, PropertyEnum statusProp, bool status, bool negStatusEffect)
-        {
-            Entity = entity;
-            Player = player;
-            StatusProp = statusProp;
-            Status = status;
-            NegStatusEffect = negStatusEffect;
-        }
+        public readonly WorldEntity Entity = entity;
+        public readonly Player Player = player;
+        public readonly PropertyEnum StatusProp = statusProp;
+        public readonly bool Status = status;
+        public readonly bool NegStatusEffect = negStatusEffect;
     }
 
-    public struct AdjustHealthGameEvent
+    public readonly struct AdjustHealthGameEvent(WorldEntity entity, WorldEntity killer, Player player, long damage, bool dodged) : IGameEventData
     {
-        public WorldEntity Entity;
-        public WorldEntity Attacker;
-        public Player Player;
-        public long Damage;
-        public bool Dodged;
-
-        public AdjustHealthGameEvent(WorldEntity entity, WorldEntity killer, Player player, long damage, bool dodged)
-        {
-            Entity = entity;
-            Attacker = killer;
-            Player = player;
-            Damage = damage;
-            Dodged = dodged;
-        }
+        public readonly WorldEntity Entity = entity;
+        public readonly WorldEntity Attacker = killer;
+        public readonly Player Player = player;
+        public readonly long Damage = damage;
+        public readonly bool Dodged = dodged;
     }
 
-    public struct EntityAggroedGameEvent
+    public readonly struct EntityAggroedGameEvent(Player player, WorldEntity aggroEntity) : IGameEventData
     {
-        public Player Player;
-        public WorldEntity AggroEntity;
-
-        public EntityAggroedGameEvent(Player player, WorldEntity aggroEntity)
-        {
-            Player = player;
-            AggroEntity = aggroEntity;
-        }
+        public readonly Player Player = player;
+        public readonly WorldEntity AggroEntity = aggroEntity;
     }
 
-    public struct AreaCreatedGameEvent
+    public readonly struct AreaCreatedGameEvent(Area area) : IGameEventData
     {
-        public Area Area;
-
-        public AreaCreatedGameEvent(Area area)
-        {
-            Area = area;
-        }
+        public readonly Area Area = area;
     }
 
-    public struct CellCreatedGameEvent
+    public readonly struct CellCreatedGameEvent(Cell cell) : IGameEventData
     {
-        public Cell Cell;
-
-        public CellCreatedGameEvent(Cell cell)
-        {
-            Cell = cell;
-        }
+        public readonly Cell Cell = cell;
     }
 
-    public struct EntityEnteredAreaGameEvent
+    public readonly struct EntityEnteredAreaGameEvent(WorldEntity entity, Area area) : IGameEventData
     {
-        public WorldEntity Entity;
-        public Area Area;
-
-        public EntityEnteredAreaGameEvent(WorldEntity entity, Area area)
-        {
-            Entity = entity;
-            Area = area;
-        }
+        public readonly WorldEntity Entity = entity;
+        public readonly Area Area = area;
     }
 
-    public struct EntityLeftAreaGameEvent
+    public readonly struct EntityLeftAreaGameEvent(WorldEntity entity, Area area) : IGameEventData
     {
-        public WorldEntity Entity;
-        public Area Area;
-
-        public EntityLeftAreaGameEvent(WorldEntity entity, Area area)
-        {
-            Entity = entity;
-            Area = area;
-        }
+        public readonly WorldEntity Entity = entity;
+        public readonly Area Area = area;
     }
 
-    public struct EntityLeaveDormantGameEvent
+    public readonly struct EntityLeaveDormantGameEvent(WorldEntity entity) : IGameEventData
     {
-        public WorldEntity Entity;
-
-        public EntityLeaveDormantGameEvent(WorldEntity entity)
-        {
-            Entity = entity;
-        }
+        public readonly WorldEntity Entity = entity;
     }
 
-    public struct EntityEnteredMissionHotspotGameEvent
+    public readonly struct EntityEnteredMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot) : IGameEventData
     {
-        public WorldEntity Target;
-        public Hotspot Hotspot;
-
-        public EntityEnteredMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot)
-        {
-            Target = target;
-            Hotspot = hotspot;
-        }
+        public readonly WorldEntity Target = target;
+        public readonly Hotspot Hotspot = hotspot;
     }
 
-    public struct EntityLeftMissionHotspotGameEvent
+    public readonly struct EntityLeftMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot) : IGameEventData
     {
-        public WorldEntity Target;
-        public Hotspot Hotspot;
-
-        public EntityLeftMissionHotspotGameEvent(WorldEntity target, Hotspot hotspot)
-        {
-            Target = target;
-            Hotspot = hotspot;
-        }
+        public readonly WorldEntity Target = target;
+        public readonly Hotspot Hotspot = hotspot;
     }
 }

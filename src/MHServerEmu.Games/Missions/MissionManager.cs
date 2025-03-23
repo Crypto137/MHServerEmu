@@ -45,14 +45,14 @@ namespace MHServerEmu.Games.Missions
 
         public bool EventsRegistred { get; private set; }
 
-        private Action<AreaCreatedGameEvent> _areaCreatedAction;
-        private Action<CellCreatedGameEvent> _cellCreatedAction;
-        private Action<EntityEnteredMissionHotspotGameEvent> _entityEnteredMissionHotspotAction;
-        private Action<EntityLeftMissionHotspotGameEvent> _entityLeftMissionHotspotAction;
-        private Action<PlayerLeftRegionGameEvent> _playerLeftRegionAction;
-        private Action<PlayerInteractGameEvent> _playerInteractAction;
-        private Action<PlayerCompletedMissionGameEvent> _playerCompletedMissionAction;
-        private Action<PlayerFailedMissionGameEvent> _playerFailedMissionAction;
+        private Event<AreaCreatedGameEvent>.Action _areaCreatedAction;
+        private Event<CellCreatedGameEvent>.Action _cellCreatedAction;
+        private Event<EntityEnteredMissionHotspotGameEvent>.Action _entityEnteredMissionHotspotAction;
+        private Event<EntityLeftMissionHotspotGameEvent>.Action _entityLeftMissionHotspotAction;
+        private Event<PlayerLeftRegionGameEvent>.Action _playerLeftRegionAction;
+        private Event<PlayerInteractGameEvent>.Action _playerInteractAction;
+        private Event<PlayerCompletedMissionGameEvent>.Action _playerCompletedMissionAction;
+        private Event<PlayerFailedMissionGameEvent>.Action _playerFailedMissionAction;
 
         private ulong _regionId;
         private readonly HashSet<ulong> _missionInterestEntities;
@@ -749,7 +749,7 @@ namespace MHServerEmu.Games.Missions
             EventsRegistred = false;
         }
 
-        private void OnAreaCreated(AreaCreatedGameEvent evt)
+        private void OnAreaCreated(in AreaCreatedGameEvent evt)
         {
             var area = evt.Area;
             if (area == null || area.IsDynamicArea) return;
@@ -759,7 +759,7 @@ namespace MHServerEmu.Games.Missions
                     mission.RegisterAreaEvents(area);
         }
 
-        private void OnCellCreated(CellCreatedGameEvent evt)
+        private void OnCellCreated(in CellCreatedGameEvent evt)
         {
             var cell = evt.Cell;
             if (cell == null) return;
@@ -769,7 +769,7 @@ namespace MHServerEmu.Games.Missions
                     mission.RegisterCellEvents(cell);
         }
 
-        private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
+        private void OnEntityEnteredMissionHotspot(in EntityEnteredMissionHotspotGameEvent evt)
         {
             if (evt.Target is not Avatar avatar) return;
             var player = avatar.GetOwnerOfType<Player>();
@@ -784,7 +784,7 @@ namespace MHServerEmu.Games.Missions
             mission.OnPlayerEnteredMission(player);
         }
 
-        private void OnEntityLeftMissionHotspot(EntityLeftMissionHotspotGameEvent evt)
+        private void OnEntityLeftMissionHotspot(in EntityLeftMissionHotspotGameEvent evt)
         {
             if (evt.Target is not Avatar avatar) return;
             var player = avatar.GetOwnerOfType<Player>();
@@ -799,7 +799,7 @@ namespace MHServerEmu.Games.Missions
             mission.OnPlayerLeftMission(player);
         }
 
-        private void OnPlayerLeftRegion(PlayerLeftRegionGameEvent evt)
+        private void OnPlayerLeftRegion(in PlayerLeftRegionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -808,7 +808,7 @@ namespace MHServerEmu.Games.Missions
                     mission?.OnPlayerLeftRegion(player);
         }
 
-        private void OnPlayerInteract(PlayerInteractGameEvent evt)
+        private void OnPlayerInteract(in PlayerInteractGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -820,7 +820,7 @@ namespace MHServerEmu.Games.Missions
             SchedulePlayerInteract(player, target);
         }
 
-        private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
+        private void OnPlayerCompletedMission(in PlayerCompletedMissionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -855,7 +855,7 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private void OnPlayerFailedMission(PlayerFailedMissionGameEvent evt)
+        private void OnPlayerFailedMission(in PlayerFailedMissionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;

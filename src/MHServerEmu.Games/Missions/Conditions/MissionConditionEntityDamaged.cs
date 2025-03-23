@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -8,8 +9,8 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionEntityDamaged : MissionPlayerCondition
     {
         private MissionConditionEntityDamagedPrototype _proto;
-        private Action<AdjustHealthGameEvent> _adjustHealthAction;
-        private Action<EntityStatusEffectGameEvent> _entityStatusEffectAction;
+        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
+        private Event<EntityStatusEffectGameEvent>.Action _entityStatusEffectAction;
 
         public MissionConditionEntityDamaged(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -42,7 +43,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnAdjustHealth(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
         {
             if (evt.Attacker == null) return;
             var player = evt.Player;
@@ -55,7 +56,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 SetCompleted();
         }
 
-        private void OnEntityStatusEffect(EntityStatusEffectGameEvent evt)
+        private void OnEntityStatusEffect(in EntityStatusEffectGameEvent evt)
         {
             if (evt.NegStatusEffect == false) return;
             var player = evt.Player;

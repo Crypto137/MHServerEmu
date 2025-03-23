@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionAvatarIsActive : MissionPlayerCondition
     {
         private MissionConditionAvatarIsActivePrototype _proto;
-        private Action<PlayerSwitchedToAvatarGameEvent> _playerSwitchedToAvatarAction;
+        private Event<PlayerSwitchedToAvatarGameEvent>.Action _playerSwitchedToAvatarAction;
 
         public MissionConditionAvatarIsActive(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -41,7 +42,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerSwitchedToAvatar(PlayerSwitchedToAvatarGameEvent evt)
+        private void OnPlayerSwitchedToAvatar(in PlayerSwitchedToAvatarGameEvent evt)
         {
             var player = evt.Player;
             var avatarRef = evt.AvatarRef;

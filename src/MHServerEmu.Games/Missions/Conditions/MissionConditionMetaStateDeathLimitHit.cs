@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
@@ -9,7 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionMetaStateDeathLimitHit : MissionPlayerCondition
     {
         private MissionConditionMetaStateDeathLimitHitPrototype _proto;
-        private Action<PlayerDeathLimitHitGameEvent> _playerDeathLimitHitAction;
+        private Event<PlayerDeathLimitHitGameEvent>.Action _playerDeathLimitHitAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionMetaStateDeathLimitHit(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -40,7 +41,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerDeathLimitHit(PlayerDeathLimitHitGameEvent evt)
+        private void OnPlayerDeathLimitHit(in PlayerDeathLimitHitGameEvent evt)
         {
             var player = evt.Player;
             var metaStateRef = evt.MetaStateRef;

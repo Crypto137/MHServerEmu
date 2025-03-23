@@ -2,6 +2,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -11,9 +12,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionItemCollect : MissionPlayerCondition
     {
         private MissionConditionItemCollectPrototype _proto;
-        private Action<PlayerPreItemPickupGameEvent> _playerPreItemPickupAction;
-        private Action<PlayerCollectedItemGameEvent> _playerCollectedItemAction;
-        private Action<PlayerLostItemGameEvent> _playerLostItemAction;
+        private Event<PlayerPreItemPickupGameEvent>.Action _playerPreItemPickupAction;
+        private Event<PlayerCollectedItemGameEvent>.Action _playerCollectedItemAction;
+        private Event<PlayerLostItemGameEvent>.Action _playerLostItemAction;
 
         protected override long RequiredCount => _proto.Count;
 
@@ -85,7 +86,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
         }
 
-        private void OnPlayerPreItemPickup(PlayerPreItemPickupGameEvent evt)
+        private void OnPlayerPreItemPickup(in PlayerPreItemPickupGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;
@@ -98,7 +99,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
         }
 
-        private void OnPlayerCollectedItem(PlayerCollectedItemGameEvent evt)
+        private void OnPlayerCollectedItem(in PlayerCollectedItemGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;
@@ -107,7 +108,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             CollectItem(player, count);
         }
 
-        private void OnPlayerLostItem(PlayerLostItemGameEvent evt)
+        private void OnPlayerLostItem(in PlayerLostItemGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;

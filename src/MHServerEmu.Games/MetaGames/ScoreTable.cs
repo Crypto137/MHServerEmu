@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -69,8 +70,8 @@ namespace MHServerEmu.Games.MetaGames
         private ScoreTable _table;
         private ScoreTable.DataType _type;
         private int _index;
-        private Action<AdjustHealthGameEvent> _adjustHealthAction;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
+        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
 
         public ScoreTableType(ScoreTable table, ScoreTable.DataType type, int index)
         {
@@ -81,12 +82,12 @@ namespace MHServerEmu.Games.MetaGames
             _entityDeadAction = OnEntityDead;
         }
 
-        private void OnEntityDead(EntityDeadGameEvent evt)
+        private void OnEntityDead(in EntityDeadGameEvent evt)
         {
             // TODO
         }
 
-        private void OnAdjustHealth(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
         {
             // TODO
         }

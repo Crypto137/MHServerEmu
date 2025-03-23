@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionSpawnerDefeated : MissionPlayerCondition
     {
         private MissionConditionSpawnerDefeatedPrototype _proto;
-        private Action<SpawnerDefeatedGameEvent> _spawnerDefeatedAction;
+        private Event<SpawnerDefeatedGameEvent>.Action _spawnerDefeatedAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionSpawnerDefeated(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _spawnerDefeatedAction = OnSpawnerDefeated;
         }
 
-        private void OnSpawnerDefeated(SpawnerDefeatedGameEvent evt)
+        private void OnSpawnerDefeated(in SpawnerDefeatedGameEvent evt)
         {
             var player = evt.Player;
             var spawner = evt.Spawner;

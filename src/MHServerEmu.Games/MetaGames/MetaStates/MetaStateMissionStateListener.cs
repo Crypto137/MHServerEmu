@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,8 +8,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateMissionStateListener : MetaState
     {
 	    private MetaStateMissionStateListenerPrototype _proto;
-        private Action<OpenMissionCompleteGameEvent> _openMissionCompleteAction;
-        private Action<OpenMissionFailedGameEvent> _openMissionFailedAction;
+        private Event<OpenMissionCompleteGameEvent>.Action _openMissionCompleteAction;
+        private Event<OpenMissionFailedGameEvent>.Action _openMissionFailedAction;
 
         public MetaStateMissionStateListener(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -44,14 +45,14 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        private void OnOpenMissionComplete(in OpenMissionCompleteGameEvent evt)
         {
             var missionRef = evt.MissionRef;
             if (_proto.CompleteMissions.Contains(missionRef))
                 MetaGame.ScheduleActivateGameMode(_proto.CompleteMode);
         }
 
-        private void OnOpenMissionFailed(OpenMissionFailedGameEvent evt)
+        private void OnOpenMissionFailed(in OpenMissionFailedGameEvent evt)
         {
             var missionRef = evt.MissionRef;
             if (_proto.FailMissions.Contains(missionRef))

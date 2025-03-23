@@ -1,6 +1,7 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -11,7 +12,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionAvatarLevelUp : MissionPlayerCondition
     {
         private MissionConditionAvatarLevelUpPrototype _proto;
-        private Action<AvatarLeveledUpGameEvent> _avatarLeveledUpAction;
+        private Event<AvatarLeveledUpGameEvent>.Action _avatarLeveledUpAction;
 
         public MissionConditionAvatarLevelUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -77,7 +78,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return false;
         }
 
-        private void OnAvatarLeveledUp(AvatarLeveledUpGameEvent evt)
+        private void OnAvatarLeveledUp(in AvatarLeveledUpGameEvent evt)
         {
             var player = evt.Player;
             int level = evt.Level;

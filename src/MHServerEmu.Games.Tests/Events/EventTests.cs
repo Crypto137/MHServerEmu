@@ -10,8 +10,8 @@ namespace MHServerEmu.Games.Tests.Events
             const int HandlerCount = 15;
             const int RemoveIndex = 7;
 
-            Event<int> @event = new();
-            List<Action<int>> handlers = new();
+            Event<FakeEvent> @event = new();
+            List<Event<FakeEvent>.Action> handlers = new();
             bool[] results = new bool[HandlerCount];
 
             for (int i = 0; i < HandlerCount; i++)
@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Tests.Events
 
                 if (i == RemoveIndex)
                 {
-                    handlers.Add(eventType =>
+                    handlers.Add((in FakeEvent data) =>
                     {
                         results[index] = true;
                         @event.RemoveAction(handlers[RemoveIndex + 1]);
@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.Tests.Events
                 }
                 else
                 {
-                    handlers.Add(eventType =>
+                    handlers.Add((in FakeEvent data) =>
                     {
                         results[index] = true;
                     });
@@ -38,7 +38,7 @@ namespace MHServerEmu.Games.Tests.Events
             }
 
             // Check if everything but the removed event executed
-            @event.Invoke(0);
+            @event.Invoke(new(0));
             for (int i = 0; i < HandlerCount; i++)
             {
                 if (i == RemoveIndex + 1)
@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Tests.Events
 
             // Check again after removal
             Array.Clear(results);
-            @event.Invoke(0);
+            @event.Invoke(new(0));
             for (int i = 0; i < HandlerCount; i++)
             {
                 if (i == RemoveIndex + 1)
@@ -57,6 +57,11 @@ namespace MHServerEmu.Games.Tests.Events
                 else
                     Assert.True(results[i]);
             }
+        }
+
+        private readonly struct FakeEvent(int value) : IGameEventData
+        {
+            public readonly int Value = value;
         }
     }
 }

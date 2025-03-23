@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionActiveChapter : MissionPlayerCondition
     {
         private MissionConditionActiveChapterPrototype _proto;
-        private Action<ActiveChapterChangedGameEvent> _activeChapterChangedAction;
+        private Event<ActiveChapterChangedGameEvent>.Action _activeChapterChangedAction;
 
         public MissionConditionActiveChapter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -40,7 +41,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnActiveChapterChanged(ActiveChapterChangedGameEvent evt)
+        private void OnActiveChapterChanged(in ActiveChapterChangedGameEvent evt)
         {
             var player = evt.Player;
             var chapter = evt.ChapterRef;

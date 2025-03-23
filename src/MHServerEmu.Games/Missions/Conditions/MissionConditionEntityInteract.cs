@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -16,9 +17,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionEntityInteract : MissionPlayerCondition
     {
         private MissionConditionEntityInteractPrototype _proto;
-        private Action<PlayerInteractGameEvent> _playerInteractAction;
-        private Action<PlayerRequestMissionRewardsGameEvent> _playerRequestMissionRewardsAction;
-        private Action<CinematicFinishedGameEvent> _cinematicFinishedAction;
+        private Event<PlayerInteractGameEvent>.Action _playerInteractAction;
+        private Event<PlayerRequestMissionRewardsGameEvent>.Action _playerRequestMissionRewardsAction;
+        private Event<CinematicFinishedGameEvent>.Action _cinematicFinishedAction;
         private ulong _cinematicEntityId;
         private bool _cinematicEventRegistered;
 
@@ -41,7 +42,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 MissionObjective = listObjective;
         }
 
-        private void OnCinematicFinished(CinematicFinishedGameEvent evt)
+        private void OnCinematicFinished(in CinematicFinishedGameEvent evt)
         {
             var player = evt.Player;
             var movieRef = evt.MovieRef;
@@ -56,7 +57,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             Mission.MissionManager.SchedulePlayerInteract(player, entity);
         }
 
-        private void OnPlayerRequestMissionRewards(PlayerRequestMissionRewardsGameEvent evt)
+        private void OnPlayerRequestMissionRewards(in PlayerRequestMissionRewardsGameEvent evt)
         {
             var player = evt.Player;
             if (player == null || player != Player) return;
@@ -117,7 +118,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return lootSummary.HasAnyResult;
         }
 
-        private void OnPlayerInteract(PlayerInteractGameEvent evt)
+        private void OnPlayerInteract(in PlayerInteractGameEvent evt)
         {
             var player = evt.Player;
             var entity = evt.InteractableObject;

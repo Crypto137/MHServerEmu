@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -14,8 +15,8 @@ namespace MHServerEmu.Games.Powers
         public static bool Debug = false;
         protected static readonly Logger Logger = LogManager.CreateLogger();
         private readonly SituationalTriggerPrototype _proto;
-        private readonly Action<EntityCollisionEvent> _overlapBeginAction;
-        private readonly Action<EntityCollisionEvent> _overlapEndAction;
+        private readonly Event<EntityCollisionEvent>.Action _overlapBeginAction;
+        private readonly Event<EntityCollisionEvent>.Action _overlapEndAction;
 
         public SituationalPowerComponent PowerComponent { get; private set; }
         public WorldEntity PowerOwner { get => PowerComponent.Power?.Owner; }
@@ -122,7 +123,7 @@ namespace MHServerEmu.Games.Powers
             return canTrigger;
         }
 
-        private void OnOverlap(EntityCollisionEvent evt)
+        private void OnOverlap(in EntityCollisionEvent evt)
         {
             if (evt.Who == null || evt.Whom == null || evt.Who == evt.Whom) return;
             if (Debug) Logger.Debug($"OnOverlap[{PowerOwner.PrototypeName}] {evt.Who}");
@@ -136,7 +137,7 @@ namespace MHServerEmu.Games.Powers
     public class SituationalTriggerOnStatusEffect : SituationalTrigger
     {
         private readonly SituationalTriggerOnStatusEffectPrototype _proto;
-        private readonly Action<EntityStatusEffectGameEvent> _entityStatusEffectAction; 
+        private readonly Event<EntityStatusEffectGameEvent>.Action _entityStatusEffectAction; 
         
         public PropertyEnum StatusProp;
         public bool Status;
@@ -185,7 +186,7 @@ namespace MHServerEmu.Games.Powers
             Region?.EntityStatusEffectEvent.RemoveAction(_entityStatusEffectAction);
         }
 
-        private void OnStatusEffect(EntityStatusEffectGameEvent evt)
+        private void OnStatusEffect(in EntityStatusEffectGameEvent evt)
         {
             StatusProp = evt.StatusProp;
             Status = evt.Status;
@@ -198,11 +199,11 @@ namespace MHServerEmu.Games.Powers
     public class SituationalTriggerInvAndWorld : SituationalTrigger
     {
         private readonly SituationalTriggerInvAndWorldPrototype _proto;
-        private readonly Action<EntitySetSimulatedGameEvent> _entitySetSimulatedAction;
-        private readonly Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
-        private readonly Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
-        private readonly Action<EntityInventoryChangedEvent> _entityInventoryChangedAction;
-        private readonly Action<EntityResurrectEvent> _entityRessurectAction;
+        private readonly Event<EntitySetSimulatedGameEvent>.Action _entitySetSimulatedAction;
+        private readonly Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
+        private readonly Event<EntityExitedWorldGameEvent>.Action _entityExitedWorldAction;
+        private readonly Event<EntityInventoryChangedEvent>.Action _entityInventoryChangedAction;
+        private readonly Event<EntityResurrectEvent>.Action _entityRessurectAction;
 
         public SituationalTriggerInvAndWorld(SituationalTriggerPrototype prototype, SituationalPowerComponent powerComponent) : base(prototype, powerComponent)
         {
@@ -282,35 +283,35 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void OnSetSimulated(EntitySetSimulatedGameEvent evt)
+        private void OnSetSimulated(in EntitySetSimulatedGameEvent evt)
         {
             if (evt.Entity == null) return;
             if (Debug) Logger.Debug($"OnSetSimulated[{PowerOwner.PrototypeName}] {evt.Entity}");
             PowerComponent.OnTrigger(evt.Entity);
         }
 
-        private void OnEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             if (evt.Entity == null) return;
             if (Debug) Logger.Debug($"OnEnteredWorld[{PowerOwner.PrototypeName}] {evt.Entity}");
             PowerComponent.OnTrigger(evt.Entity);
         }
 
-        private void OnExitedWorld(EntityExitedWorldGameEvent evt)
+        private void OnExitedWorld(in EntityExitedWorldGameEvent evt)
         {
             if (evt.Entity == null) return;
             if (Debug) Logger.Debug($"OnExitedWorld[{PowerOwner.PrototypeName}] {evt.Entity}");
             PowerComponent.OnTrigger(evt.Entity);
         }
 
-        private void OnRessurect(EntityResurrectEvent evt)
+        private void OnRessurect(in EntityResurrectEvent evt)
         {
             if (evt.Entity == null) return;
             if (Debug) Logger.Debug($"OnRessurect[{PowerOwner.PrototypeName}] {evt.Entity}");
             PowerComponent.OnTrigger(evt.Entity);
         }
 
-        private void OnInventoryChanged(EntityInventoryChangedEvent evt)
+        private void OnInventoryChanged(in EntityInventoryChangedEvent evt)
         {
             if (evt.Entity is not WorldEntity entity) return;
             if (Debug) Logger.Debug($"OnInventoryChanged[{PowerOwner.PrototypeName}] {evt.Entity}");
