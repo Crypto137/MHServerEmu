@@ -4,9 +4,10 @@ namespace MHServerEmu.Games.Events
 {
     public class Event
     {
+        public const int InfiniteLoopCheckLimit = 5000; // in client 100000
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public const int InfiniteLoopCheckLimit = 5000; // in client 100000
         private readonly LinkedList<Action> _actionList = new();
         private readonly List<ActionIterator<Action>> _iteratorList = new();
         private int _infiniteLoopCheckCount = 0;
@@ -67,27 +68,10 @@ namespace MHServerEmu.Games.Events
         public void UnregisterCallbacks() => _actionList.Clear();
     }
 
-    public class ActionIterator<T>
-    {
-        private readonly LinkedList<T> _list;
-        public LinkedListNode<T> CurrentNode { get; set; }
-        public T Current => CurrentNode.Value;
-
-        public ActionIterator(LinkedList<T> list)
-        {
-            _list = list;
-            CurrentNode = _list.First;
-        }
-
-        public void MoveNext()
-        {
-            if (CurrentNode != null) CurrentNode = CurrentNode.Next;
-        }
-    }
-
     public class Event<T>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly LinkedList<Action<T>> _actionList = new();
         private readonly List<ActionIterator<Action<T>>> _iteratorList = new();
         private int _infiniteLoopCheckCount = 0;
@@ -146,5 +130,24 @@ namespace MHServerEmu.Games.Events
         }
 
         public void UnregisterCallbacks() => _actionList.Clear();
+    }
+
+    public class ActionIterator<T>
+    {
+        private readonly LinkedList<T> _list;
+
+        public LinkedListNode<T> CurrentNode { get; set; }
+        public T Current => CurrentNode.Value;
+
+        public ActionIterator(LinkedList<T> list)
+        {
+            _list = list;
+            CurrentNode = _list.First;
+        }
+
+        public void MoveNext()
+        {
+            if (CurrentNode != null) CurrentNode = CurrentNode.Next;
+        }
     }
 }
