@@ -9,7 +9,8 @@ namespace MHServerEmu.Games.Events
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly LinkedList<Action> _actionList = new();
-        private readonly List<ActionIterator<Action>> _iteratorList = new();
+        private readonly Stack<ActionIterator<Action>> _iteratorStack = new();
+        private readonly List<ActionIterator<Action>> _activeIteratorList = new();
         private int _infiniteLoopCheckCount = 0;
 
         public bool AddActionFront(Action action)
@@ -26,8 +27,8 @@ namespace MHServerEmu.Games.Events
             if (action == null) return Logger.ErrorReturn(false, "AddActionBack action == null");
             if (_infiniteLoopCheckCount >= InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionBack {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
 
-            var newNode = _actionList.AddLast(action);
-            foreach (var iterator in _iteratorList)
+            LinkedListNode<Action> newNode = _actionList.AddLast(action);
+            foreach (ActionIterator<Action> iterator in _activeIteratorList)
                 iterator.CurrentNode ??= newNode;
 
             return _infiniteLoopCheckCount < InfiniteLoopCheckLimit;
@@ -35,39 +36,70 @@ namespace MHServerEmu.Games.Events
 
         public void RemoveAction(Action action)
         {
-            if (action == null) return;
-            var nodeToRemove = _actionList.Find(action);
-            if (nodeToRemove == null) return;
+            if (action == null)
+                return;
 
-            foreach (var iterator in _iteratorList)
+            LinkedListNode<Action> nodeToRemove = _actionList.Find(action);
+            if (nodeToRemove == null)
+                return;
+
+            foreach (ActionIterator<Action> iterator in _activeIteratorList)
+            {
                 if (iterator.CurrentNode == nodeToRemove)
                     iterator.MoveNext();
+            }
 
             _actionList.Remove(nodeToRemove);
         }
 
         public void Invoke()
         {
-            if (_actionList.Count == 0) return;
+            if (_actionList.Count == 0)
+                return;
 
-            ActionIterator<Action> iterator = new(_actionList);
-            _iteratorList.Add(iterator);
+            ActionIterator<Action> iterator = GetIterator();
 
             while (iterator.CurrentNode != null)
             {
-                var action = iterator.Current;
+                Action action = iterator.Current;
                 iterator.MoveNext();
                 action();
                 _infiniteLoopCheckCount++;
             }
 
-            _iteratorList.Remove(iterator);
-            if (_iteratorList.Count == 0) _infiniteLoopCheckCount = 0;
+            ReturnIterator(iterator);
+
+            if (_activeIteratorList.Count == 0)
+                _infiniteLoopCheckCount = 0;
         }
 
         public void UnregisterCallbacks()
         {
             _actionList.Clear();
+        }
+
+        private ActionIterator<Action> GetIterator()
+        {
+            ActionIterator<Action> iterator;
+
+            if (_iteratorStack.Count == 0)
+            {
+                iterator = new(_actionList);
+            }
+            else
+            {
+                iterator = _iteratorStack.Pop();
+                iterator.Reset();
+            }
+
+            _activeIteratorList.Add(iterator);
+            return iterator;
+        }
+
+        private void ReturnIterator(ActionIterator<Action> iterator)
+        {
+            _activeIteratorList.Remove(iterator);
+            _iteratorStack.Push(iterator);
         }
     }
 
@@ -76,7 +108,8 @@ namespace MHServerEmu.Games.Events
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly LinkedList<Action> _actionList = new();
-        private readonly List<ActionIterator<Action>> _iteratorList = new();
+        private readonly Stack<ActionIterator<Action>> _iteratorStack = new();
+        private readonly List<ActionIterator<Action>> _activeIteratorList = new();
         private int _infiniteLoopCheckCount = 0;
 
         public delegate void Action(in T eventData);
@@ -95,8 +128,8 @@ namespace MHServerEmu.Games.Events
             if (action == null) return Logger.ErrorReturn(false, $"AddActionBack [{typeof(T).Name}]  action == null");
             if (_infiniteLoopCheckCount >= Event.InfiniteLoopCheckLimit) return Logger.ErrorReturn(false, $"AddActionBack [{typeof(T).Name}] {_infiniteLoopCheckCount} >= InfiniteLoopCheckLimit");
 
-            var newNode = _actionList.AddLast(action);
-            foreach (var iterator in _iteratorList)
+            LinkedListNode<Action> newNode = _actionList.AddLast(action);
+            foreach (ActionIterator<Action> iterator in _activeIteratorList)
                 iterator.CurrentNode ??= newNode;
 
             return _infiniteLoopCheckCount < Event.InfiniteLoopCheckLimit;
@@ -104,39 +137,70 @@ namespace MHServerEmu.Games.Events
 
         public void RemoveAction(Action action)
         {
-            if (action == null) return;
-            var nodeToRemove = _actionList.Find(action);
-            if (nodeToRemove == null) return;
+            if (action == null)
+                return;
 
-            foreach (var iterator in _iteratorList)
+            LinkedListNode<Action> nodeToRemove = _actionList.Find(action);
+            if (nodeToRemove == null)
+                return;
+
+            foreach (ActionIterator<Action> iterator in _activeIteratorList)
+            {
                 if (iterator.CurrentNode == nodeToRemove)
                     iterator.MoveNext();
+            }
 
             _actionList.Remove(nodeToRemove);
         }
 
         public void Invoke(T eventData)
         {
-            if (_actionList.Count == 0) return;
+            if (_actionList.Count == 0)
+                return;
 
-            ActionIterator<Action> iterator = new(_actionList);
-            _iteratorList.Add(iterator);
+            ActionIterator<Action> iterator = GetIterator();
 
             while (iterator.CurrentNode != null)
             {
-                var action = iterator.Current;
+                Action action = iterator.Current;
                 iterator.MoveNext();
                 action(eventData);
                 _infiniteLoopCheckCount++;
             }
 
-            _iteratorList.Remove(iterator);
-            if (_iteratorList.Count == 0) _infiniteLoopCheckCount = 0;
+            ReturnIterator(iterator);
+
+            if (_activeIteratorList.Count == 0)
+                _infiniteLoopCheckCount = 0;
         }
 
         public void UnregisterCallbacks()
         {
             _actionList.Clear();
+        }
+
+        private ActionIterator<Action> GetIterator()
+        {
+            ActionIterator<Action> iterator;
+
+            if (_iteratorStack.Count == 0)
+            {
+                iterator = new(_actionList);
+            }
+            else
+            {
+                iterator = _iteratorStack.Pop();
+                iterator.Reset();
+            }
+
+            _activeIteratorList.Add(iterator);
+            return iterator;
+        }
+
+        private void ReturnIterator(ActionIterator<Action> iterator)
+        {
+            _activeIteratorList.Remove(iterator);
+            _iteratorStack.Push(iterator);
         }
     }
 
@@ -162,7 +226,13 @@ namespace MHServerEmu.Games.Events
 
         public void MoveNext()
         {
-            if (CurrentNode != null) CurrentNode = CurrentNode.Next;
+            if (CurrentNode != null)
+                CurrentNode = CurrentNode.Next;
+        }
+
+        public void Reset()
+        {
+            CurrentNode = _list.First;
         }
     }
 }
