@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime;
+using System.Text;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Metrics.Categories
@@ -13,6 +14,11 @@ namespace MHServerEmu.Core.Metrics.Categories
         private long _totalCommittedBytes;
         private double _pauseTimePercentage;
         private readonly MetricTracker _pauseDurationTracker = new(512);
+
+        public MemoryMetrics()
+        {
+            Logger.Trace($"Garbage collection mode: {(GCSettings.IsServerGC ? "Server" : "Workstation")}");
+        }
 
         public void Update()
         {
