@@ -1228,8 +1228,11 @@ namespace MHServerEmu.Games.Entities
             if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Avatar>(null, "GetAvatar(): avatarProtoRef == PrototypeId.Invalid");
 
             AvatarIterator iterator = new(this, AvatarIteratorMode.IncludeArchived, avatarProtoRef);
+            AvatarIterator.Enumerator enumerator = iterator.GetEnumerator();
+            if (enumerator.MoveNext())
+                return enumerator.Current;
 
-            return iterator.FirstOrDefault();
+            return null;
         }
 
         public Avatar GetActiveAvatarById(ulong avatarEntityId)
