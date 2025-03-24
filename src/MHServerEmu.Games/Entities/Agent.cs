@@ -1680,10 +1680,96 @@ namespace MHServerEmu.Games.Entities
 
         #region Inventory
 
-        public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
+        public InventoryResult CanEquip(Item item, out PropertyEnum propertyRestriction)
         {
-            // TODO
-            return InventoryResult.Success;     // Bypass property restrictions
+            propertyRestriction = PropertyEnum.Invalid;
+
+            PrototypeId agentProtoRef = PrototypeDataRef;
+            if (agentProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquip(): agentProtoRef == PrototypeId.Invalid");
+
+            // Check EquippableBy
+            PrototypeId equippableBy = item.ItemSpec.EquippableBy;
+            if (equippableBy != PrototypeId.Invalid && equippableBy != agentProtoRef)
+                return InventoryResult.InvalidCharacterRestriction;
+
+            // Check binding
+            if (item.BindsToCharacterOnEquip && item.IsBoundToCharacter && item.BoundAgentProtoRef != agentProtoRef)
+                return InventoryResult.InvalidBound;
+
+            // Check item type
+            InventoryResult typeResult = CanEquipItemType(item.PrototypeDataRef);
+            if (typeResult != InventoryResult.Success)
+                return typeResult;
+
+            // Check requirement properties
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+            foreach (var kvp in item.Properties.IteratePropertyRange(PropertyEnum.Requirement))
+            {
+                float requiredValue = kvp.Value;
+                if (requiredValue <= 0f)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out PrototypeId propertyInfoProtoRef);
+                if (propertyInfoProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                PropertyEnum property = propertyInfoTable.GetPropertyEnumFromPrototype(propertyInfoProtoRef);
+                PropertyInfoPrototype propertyInfoProto = propertyInfoProtoRef.As<PropertyInfoPrototype>();
+                if (propertyInfoProto == null)
+                {
+                    Logger.Warn("CanEquip(): propertyInfoProto == null");
+                    continue;
+                }
+
+                float value = 0f;
+                switch (propertyInfoProto.Type)
+                {
+                    case PropertyDataType.Boolean:
+                        value = Properties[property] ? 1f : 0f;
+                        break;
+
+                    case PropertyDataType.Real:
+                        value = Properties[property];
+                        break;
+
+                    case PropertyDataType.Integer:
+                        value = (int)Properties[property];
+                        break;
+
+                    default:
+                        return Logger.WarnReturn(InventoryResult.Invalid, "CanEquip(): Invalid requirement property");
+                }
+
+                if (value < requiredValue)
+                {
+                    propertyRestriction = property;
+                    return InventoryResult.InvalidPropertyRestriction;
+                }
+            }
+
+            // All good
+            return InventoryResult.Success;
+        }
+
+        public InventoryResult CanEquipItemType(PrototypeId itemProtoRef)
+        {
+            if (itemProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquipItemType(): itemProtoRef == PrototypeId.Invalid");
+
+            ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquipItemType(): itemProto == null");
+
+            AgentPrototype agentProto = AgentPrototype;
+            if (agentProto == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquipItemType(): agentProto == null");
+
+            if (itemProto.IsUsableByAgent(agentProto) == false)
+            {
+                if (itemProto is CostumePrototype)
+                    return InventoryResult.InvalidCostumeForCharacter;
+
+                return InventoryResult.InvalidItemTypeForCharacter;
+            }
+
+            return InventoryResult.Success;
         }
 
         public bool RevealEquipmentToOwner()

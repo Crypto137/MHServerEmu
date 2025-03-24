@@ -3688,6 +3688,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 UpdateTravelPower();
             }
 
+            // Remove items that are no longer equippable (e.g. if we are leveling down via prestige)
+            CheckEquipmentRestrictions();
+
             // Restore health if needed
             if (restoreHealthAndEndurance && IsDead == false)
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
@@ -5111,6 +5114,68 @@ namespace MHServerEmu.Games.Entities.Avatars
             // TODO: Reset map discovery data
 
             return success;
+        }
+
+        private bool CheckEquipmentRestrictions()
+        {
+            // This can be called during initialization before this avatar has a player
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+                return true;
+
+            Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (deliveryBox == null) return Logger.WarnReturn(false, "CheckEquipmentRestrictions(): deliveryBox == null");
+
+            Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+            if (errorRecovery == null) return Logger.WarnReturn(false, "CheckEquipmentRestrictions(): errorRecovery == null");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            InventoryCollection inventoryCollection = player.InventoryCollection;
+
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                Inventory.Enumerator enumerator = inventory.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    Item item = entityManager.GetEntity<Item>(enumerator.Current.Id);
+                    if (item == null)
+                    {
+                        Logger.Warn("CheckEquipmentRestrictions(): item == null");
+                        continue;
+                    }
+
+                    if (inventory.PassesEquipmentRestrictions(item, out _) == InventoryResult.Success)
+                        continue;
+
+                    // Unequip items that don't pass the restrictions
+                    InventoryResult result = InventoryResult.Invalid;
+
+                    // General
+                    inventoryCollection.GetInventoryForItem(item, InventoryCategory.PlayerGeneral, out Inventory general);
+                    if (general != null)
+                        result = item.ChangeInventoryLocation(general);
+
+                    // Delivery Box
+                    if (result != InventoryResult.Success)
+                        result = item.ChangeInventoryLocation(deliveryBox);
+
+                    // Error Recovery
+                    if (result != InventoryResult.Success)
+                        result = item.ChangeInventoryLocation(errorRecovery);
+
+                    if (result != InventoryResult.Success)
+                    {
+                        Logger.Warn($"CheckEquipmentRestrictions(): Failed to remove equipped item [{item}] from avatar [{this}]");
+                        continue;
+                    }
+
+                    // Restart iteration on successful removal
+                    enumerator = inventory.GetEnumerator();
+                }
+            }
+
+            return true;
         }
 
         #endregion

@@ -66,7 +66,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         public bool IsEquipped { get => InventoryLocation.InventoryPrototype?.IsEquipmentInventory == true; }
         public bool IsInBuybackInventory { get => InventoryLocation.InventoryRef == GameDatabase.GlobalsPrototype.VendorBuybackInventory; }
+        
+        public bool BindsToAccountOnPickup { get => Properties[PropertyEnum.ItemBindsToAccountOnPickup]; }
+        public bool BindsToCharacterOnEquip { get => Properties[PropertyEnum.ItemBindsToCharacterOnEquip]; }
         public bool IsBoundToAccount { get => _itemSpec.GetBindingState(); }
+        public bool IsBoundToCharacter { get => _itemSpec.GetBindingState(out PrototypeId agentProtoRef) && agentProtoRef != PrototypeId.Invalid; }
+        public PrototypeId BoundAgentProtoRef { get => _itemSpec.GetBindingState(out PrototypeId agentProtoRef) ? agentProtoRef : PrototypeId.Invalid; }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
 
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }

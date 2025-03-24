@@ -46,6 +46,19 @@ namespace MHServerEmu.Commands.Implementations
             return $"Awarded {expToAdd} experience.";
         }
 
+        [Command("reset", "Resets the current avatar to level 1.\nUsage: level reset")]
+        public string Reset(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            avatar.InitializeLevel(1);
+
+            return "Reset to level 1.";
+        }
+
         [Command("maxinfinity", "Maxes out Infinity experience.\nUsage: level max")]
         public string MaxInfinity(string[] @params, FrontendClient client)
         {
