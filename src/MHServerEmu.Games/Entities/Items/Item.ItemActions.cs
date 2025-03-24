@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.ResetMissions:
-                    wasUsed |= DoItemActionResetMissions();
+                    wasUsed |= DoItemActionResetMissions(avatar);
                     break;
 
                 case ItemActionType.Respec:
@@ -219,10 +219,10 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool DoItemActionResetMissions()
+        private bool DoItemActionResetMissions(Avatar avatar)
         {
-            Logger.Debug($"DoItemActionResetMissions(): {this}");
-            return false;
+            Logger.Debug($"DoItemActionResetMissions(): {this} for [{avatar}]");
+            return avatar.ResetMissions();
         }
 
         private bool DoItemActionRespec()

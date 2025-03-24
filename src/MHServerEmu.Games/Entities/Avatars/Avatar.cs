@@ -22,6 +22,7 @@ using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
@@ -5070,6 +5071,46 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        #endregion
+
+        #region Prestige
+
+        public bool ResetMissions()
+        {
+            Logger.Trace($"ResetMissions(): [{this}]");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "ResetMissions(): player == null");
+
+            MissionManager missionManager = player.MissionManager;
+            if (missionManager == null) return Logger.WarnReturn(false, "ResetMissions(): missionManager == null");
+
+            RegionConnectionTargetPrototype targetProto = GameDatabase.GlobalsPrototype.DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "ResetMissions(): targetProto == null");
+
+            PrototypeId chapterProtoRef = GameDatabase.MissionGlobalsPrototype.InitialChapter;
+            
+            if (IsInWorld)
+            {
+                player.QueueLoadingScreen(targetProto.Region);
+                ExitWorld();
+            }
+
+            Properties.RemoveProperty(PropertyEnum.LastTownRegion);
+            foreach (PropertyEnum bodysliderProp in Property.BodysliderProperties)
+                Properties.RemoveProperty(bodysliderProp);
+
+            bool success = missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true);
+
+            if (success == false)
+                Logger.Warn($"ResetMissions(): Failed to reset missions for avatar [{this}]");
+
+            player.PlayerConnection.MoveToTarget(targetProto.DataRef);  // TODO: Check this when we overhaul the teleport system
+            // TODO: Reset map discovery data
+
+            return success;
         }
 
         #endregion
