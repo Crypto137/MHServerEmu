@@ -71,6 +71,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool BindsToCharacterOnEquip { get => Properties[PropertyEnum.ItemBindsToCharacterOnEquip]; }
         public bool IsBoundToAccount { get => _itemSpec.GetBindingState(); }
         public bool IsBoundToCharacter { get => _itemSpec.GetBindingState(out PrototypeId agentProtoRef) && agentProtoRef != PrototypeId.Invalid; }
+        public bool IsTradable { get => Properties[PropertyEnum.ItemIsTradable] && _itemSpec.GetTradeRestricted() == false; }
         public PrototypeId BoundAgentProtoRef { get => _itemSpec.GetBindingState(out PrototypeId agentProtoRef) ? agentProtoRef : PrototypeId.Invalid; }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
 
@@ -153,7 +154,24 @@ namespace MHServerEmu.Games.Entities.Items
                 InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
                 Entity owner = Game.EntityManager.GetEntity<Entity>(invLoc.ContainerId);
 
-                // TODO: Binding
+                // Account binding
+                if (Game.CustomGameOptions.DisableAccountBinding == false)
+                {
+                    // HACK: Do not account bind tradable items until we get the trade window implemented
+                    if (BindsToAccountOnPickup && IsTradable == false)
+                    {
+                        Player playerOwner = owner?.GetSelfOrOwnerOfType<Player>();
+                        if (playerOwner != null && IsBoundToAccount == false)
+                            SetBinding(true);
+                    }
+                }
+
+                // Character binding
+                if (Game.CustomGameOptions.DisableCharacterBinding == false)
+                {
+                    if (owner is Agent && BindsToCharacterOnEquip && IsBoundToCharacter == false)
+                        SetBinding(true, owner.PrototypeDataRef);
+                }
 
                 // Remove sold price after buyback
                 if (IsInBuybackInventory == false)
@@ -367,6 +385,28 @@ namespace MHServerEmu.Games.Entities.Items
         {
             _itemSpec.GetBindingState(out PrototypeId agentProtoRef);
             return agentProtoRef;
+        }
+
+        public bool SetBinding(bool bound, PrototypeId agentProtoRef = PrototypeId.Invalid, bool? tradeRestricted = null)
+        {
+            if (_itemSpec.SetBindingState(bound, agentProtoRef, tradeRestricted) == false)
+                return false;
+
+            Player player = GetOwnerOfType<Player>();
+            if (player != null && player.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
+            {
+                var messageBuilder = NetMessageItemBindingChanged.CreateBuilder()
+                    .SetItemId(Id)
+                    .SetAccountBound(bound)
+                    .SetCharacterProtoId((ulong)agentProtoRef);
+
+                if (tradeRestricted != null)
+                    messageBuilder.SetTradeRestricted(tradeRestricted == true);
+
+                player.SendMessage(messageBuilder.Build());
+            }
+
+            return true;
         }
 
         public bool GetPowerGranted(out PrototypeId powerProtoRef)
@@ -598,11 +638,12 @@ namespace MHServerEmu.Games.Entities.Items
                 {
                     foreach (ItemBindingSettingsEntryPrototype perRaritySettingProto in itemProto.BindingSettings.PerRaritySettings)
                     {
-                        if (perRaritySettingProto.RarityFilter != _itemSpec.RarityProtoRef) continue;
+                        if (perRaritySettingProto.RarityFilter != _itemSpec.RarityProtoRef)
+                            continue;
 
-                        Properties[PropertyEnum.ItemBindsToAccountOnPickup] = defaultSettings.BindsToAccountOnPickup;
-                        Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = defaultSettings.BindsToCharacterOnEquip;
-                        Properties[PropertyEnum.ItemIsTradable] = defaultSettings.IsTradable;
+                        Properties[PropertyEnum.ItemBindsToAccountOnPickup] = perRaritySettingProto.BindsToAccountOnPickup;
+                        Properties[PropertyEnum.ItemBindsToCharacterOnEquip] = perRaritySettingProto.BindsToCharacterOnEquip;
+                        Properties[PropertyEnum.ItemIsTradable] = perRaritySettingProto.IsTradable;
                     }
                 }
             }
