@@ -124,17 +124,6 @@ namespace MHServerEmu.Commands.Implementations
             return $"AI [{(enableAI ? "On" : "Off")}]";
         }
 
-        [Command("mission", "Usage: debug mission [on|off].", AccountUserLevel.Admin)]
-        public string Mission(string[] @params, FrontendClient client)
-        {
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
-                flags = Switch.Off;   // Default Off
-
-            MissionManager.Debug = (flags == Switch.On) ? true : false;
-
-            return $"Mission Log [{flags}]";
-        }
-
         [Command("metagame", "Usage: debug metagame [on|off].", AccountUserLevel.Admin)]
         public string Metagame(string[] @params, FrontendClient client)
         {
