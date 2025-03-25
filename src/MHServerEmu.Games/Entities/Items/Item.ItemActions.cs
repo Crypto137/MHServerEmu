@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.PrestigeMode:
-                    wasUsed |= DoItemActionPrestigeMode();
+                    wasUsed |= DoItemActionPrestigeMode(avatar);
                     break;
 
                 case ItemActionType.ReplaceSelfItem:
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case ItemActionType.ResetMissions:
-                    wasUsed |= DoItemActionResetMissions();
+                    wasUsed |= DoItemActionResetMissions(avatar);
                     break;
 
                 case ItemActionType.Respec:
@@ -146,10 +146,10 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool DoItemActionPrestigeMode()
+        private bool DoItemActionPrestigeMode(Avatar avatar)
         {
-            Logger.Debug($"DoItemActionPrestigeMode(): {this}");
-            return false;
+            Logger.Trace($"DoItemActionPrestigeMode(): [{this}] for [{avatar}]");
+            return avatar.ActivatePrestigeMode();
         }
 
         private bool DoItemActionReplaceSelfItem(PrototypeId itemProtoRef, Player player, Avatar avatar)
@@ -219,10 +219,10 @@ namespace MHServerEmu.Games.Entities.Items
             return false;
         }
 
-        private bool DoItemActionResetMissions()
+        private bool DoItemActionResetMissions(Avatar avatar)
         {
-            Logger.Debug($"DoItemActionResetMissions(): {this}");
-            return false;
+            Logger.Trace($"DoItemActionResetMissions(): [{this}] for [{avatar}]");
+            return avatar.ResetMissions();
         }
 
         private bool DoItemActionRespec()

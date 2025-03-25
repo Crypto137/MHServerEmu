@@ -1129,16 +1129,18 @@ namespace MHServerEmu.Games.Entities
 
         public InventoryResult CanChangeInventoryLocation(Inventory destInventory)
         {
-            PropertyEnum propertyEnum = PropertyEnum.Invalid;
-            return CanChangeInventoryLocation(destInventory, ref propertyEnum);
+            return CanChangeInventoryLocation(destInventory, out _);
         }
 
-        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, ref PropertyEnum propertyRestriction)
+        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, out PropertyEnum propertyRestriction)
         {
-            InventoryResult result = destInventory.PassesContainmentFilter(PrototypeDataRef);
-            if (result != InventoryResult.Success) return result;
+            propertyRestriction = PropertyEnum.Invalid;
 
-            return destInventory.PassesEquipmentRestrictions(this, ref propertyRestriction);
+            InventoryResult result = destInventory.PassesContainmentFilter(PrototypeDataRef);
+            if (result != InventoryResult.Success)
+                return result;
+
+            return destInventory.PassesEquipmentRestrictions(this, out propertyRestriction);
         }
 
         public InventoryResult ChangeInventoryLocation(Inventory destination, uint destSlot = Inventory.InvalidSlot)

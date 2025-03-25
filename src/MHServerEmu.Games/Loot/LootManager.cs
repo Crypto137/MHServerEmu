@@ -417,7 +417,7 @@ namespace MHServerEmu.Games.Loot
                 if (lootTypes.HasFlag(LootType.Experience))
                 {
                     Avatar avatar = player.CurrentAvatar;
-                    avatar?.AwardXP(lootResultSummary.Experience, false);
+                    avatar?.AwardXP(lootResultSummary.Experience, 0, false);
                 }
 
                 if (lootTypes.HasFlag(LootType.HealthBonus))

@@ -1432,6 +1432,65 @@ namespace MHServerEmu.Games.Missions
             _avatarPrototypeRef = avatar.PrototypeDataRef;
         }
 
+        public bool ResetAvatarMissionsForStoryWarp(PrototypeId chapterProtoRef, bool sendToClient)
+        {
+            Player player = Player;
+            if (player == null) return Logger.WarnReturn(false, "ResetMissions(): player == null");
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "ResetMissions(): avatar == null");
+
+            // Default to chapter 0 (full reset)
+            int chapterNumber = 0;
+            if (chapterProtoRef != PrototypeId.Invalid)
+            {
+                ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
+                if (chapterProto != null)
+                    chapterNumber = chapterProto.ChapterNumber;
+                else
+                    Logger.Warn("ResetMissions(): chapterProto == null");
+            }
+
+            player.SetActiveChapter(chapterProtoRef);
+
+            // Clear mission state
+            foreach (Mission mission in _missionDict.Values)
+            {
+                // Check chapter filter if needed
+                if (chapterProtoRef != PrototypeId.Invalid && mission.ShouldResetForStoryWarp(chapterNumber) == false)
+                    continue;
+
+                // Do not send to client yet, this will be done below
+                if (mission.State != MissionState.Invalid)
+                    mission.SetState(MissionState.Invalid, false);
+            }
+
+            // Set mission state to inactive
+            foreach (Mission mission in _missionDict.Values)
+            {
+                // Check chapter filter if needed
+                if (chapterProtoRef != PrototypeId.Invalid && mission.ShouldResetForStoryWarp(chapterNumber) == false)
+                    continue;
+
+                MissionPrototype missionProto = mission.Prototype;
+                if (missionProto == null)
+                {
+                    Logger.Warn("ResetAvatarMissionsForStoryWarp(): missionProto == null");
+                    continue;
+                }
+
+                bool hasConditions = missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null;
+                if (mission.IsAdvancedMission == false && hasConditions)
+                    mission.SetState(MissionState.Inactive, sendToClient);
+                else if (sendToClient)
+                    mission.SendToParticipants(MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.None);
+            }
+
+            // Force a save immediately
+            StoreAvatarMissions(avatar);
+            return true;
+        }
+
         public void UpdateMissionInterest()
         {
             if (Player == null) return;

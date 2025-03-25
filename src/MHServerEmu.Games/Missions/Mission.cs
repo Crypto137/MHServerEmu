@@ -1789,6 +1789,30 @@ namespace MHServerEmu.Games.Missions
             return Prototype.ShowInteractIndicators;
         }
 
+        public bool ShouldResetForStoryWarp(int chapterNumber)
+        {
+            MissionPrototype missionProto = Prototype;
+            if (missionProto == null) return Logger.WarnReturn(false, "ShouldResetForStoryWarp(): missionProto == null");
+
+            if (missionProto.SaveStatePerAvatar == false)
+                return false;
+
+            PrototypeId chapterProtoRef = missionProto.Chapter;
+            if (chapterProtoRef == PrototypeId.Invalid)
+                return true;
+
+            ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
+            if (chapterProto == null) return Logger.WarnReturn(false, "ShouldResetForStoryWarp(): chapterProto == null");
+
+            if (chapterProto.ResetsOnStoryWarp == false)
+                return false;
+
+            if (chapterProto.ChapterNumber < chapterNumber && chapterProtoRef != GameDatabase.MissionGlobalsPrototype.LegendaryChapter)
+                return false;
+
+            return true;
+        }
+
         public bool GetParticipants(List<Player> participants)
         {
             participants.Clear();

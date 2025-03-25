@@ -447,6 +447,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return levelingCurve.MaxPosition;
         }
 
+        public PrestigeLevelPrototype GetPrestigeLevelPrototype(int prestigeLevel)
+        {
+            if (prestigeLevel < 0 || prestigeLevel > MaxPrestigeLevel) return Logger.WarnReturn<PrestigeLevelPrototype>(null, "GetPrestigeLevelPrototype(): prestigeLevel < 0 || prestigeLevel > MaxPrestigeLevel");
+            if (PrestigeLevels.IsNullOrEmpty()) return Logger.WarnReturn<PrestigeLevelPrototype>(null, "GetPrestigeLevelPrototype(): PrestigeLevels.IsNullOrEmpty()");
+
+            return PrestigeLevels[prestigeLevel - 1].As<PrestigeLevelPrototype>();
+        }
+
         public int GetPrestigeLevelIndex(PrestigeLevelPrototype prestigeLevelProto)
         {
             return GetPrestigeLevelIndex(prestigeLevelProto.DataRef);

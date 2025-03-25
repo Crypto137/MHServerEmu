@@ -144,6 +144,17 @@ namespace MHServerEmu.Games.Properties
             PropertyEnum.PowerCooldownStartTimePersistent
         };
 
+        public static readonly PropertyEnum[] BodysliderProperties = new PropertyEnum[]
+        {
+            PropertyEnum.BodySliderAreaRef,
+            PropertyEnum.BodySliderEntityId,
+            PropertyEnum.BodySliderRegionId,
+            PropertyEnum.BodySliderRegionPos,
+            PropertyEnum.BodySliderRegionRef,
+            PropertyEnum.BodySliderDifficultyRef,
+            PropertyEnum.BodySliderRegionSeed
+        };
+
         public static void FromParam(PropertyEnum propertyEnum, int paramIndex, PropertyParam paramValue, out AssetId assetId)
         {
             PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);

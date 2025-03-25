@@ -35,6 +35,16 @@ namespace MHServerEmu.Games.Entities
         NoPowerLOS
     }
 
+    public enum PowersRespecReason    // UnrealGameAdapter::ShowPowersRespecNotificationDialog()
+    {
+        Invalid,
+        PlayerRequest,
+        Prestige,
+        VersionOutOfDate,
+        PointTotalInvalid,
+        SpecificPower
+    }
+
     public class Agent : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -1444,6 +1454,7 @@ namespace MHServerEmu.Games.Entities
         public int GetPowerSpecIndexActive()
         {
             if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetPowerSpecIndexActive(): this is not Avatar && IsTeamUpAgent == false");
+
             return Properties[PropertyEnum.PowerSpecIndexActive];
         }
 
@@ -1452,6 +1463,67 @@ namespace MHServerEmu.Games.Entities
             if (IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetPowerSpecIndexUnlocked(): IsTeamUpAgent == false");
 
             return GameDatabase.AdvancementGlobalsPrototype.MaxPowerSpecIndexForTeamUps;
+        }
+
+        public virtual bool RespecPowerSpec(int specIndex, PowersRespecReason reason, bool skipValidation = false, PrototypeId powerProtoRef = PrototypeId.Invalid)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "RespecPowerSpec(): this is not Avatar && IsTeamUpAgent == false");
+
+            if (skipValidation == false && CanRespecPowers() == false)
+                return false;
+
+            // Lock powers (V48_TODO: is this where in pre-BUE power points should be unassigned?)
+            if (specIndex == GetPowerSpecIndexActive())
+                UpdatePowerProgressionPowers(true);
+
+            // Clean up previous respecs
+            List<PropertyId> removeList = ListPool<PropertyId>.Instance.Get();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult, specIndex))
+                removeList.Add(kvp.Key);
+
+            foreach (PropertyId propId in removeList)
+                Properties.RemoveProperty(propId);
+
+            ListPool<PropertyId>.Instance.Return(removeList);
+
+            // Set the new respec
+            if (powerProtoRef == PrototypeId.Invalid)
+                powerProtoRef = GameDatabase.GlobalsPrototype.PowerPrototype;
+
+            Properties[PropertyEnum.PowersRespecResult, specIndex, (int)reason, powerProtoRef] = true;
+
+            return true;
+        }
+
+        public bool CanRespecPowers()
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "CanRespecPowers(): this is not Avatar && IsTeamUpAgent == false");
+
+            // Check for hub/training room overrides that always allow to respec
+            if (IsInWorld)
+            {
+                Region region = Region;
+                if (region == null) return Logger.WarnReturn(false, "CanRespecPowers(): region == null");
+
+                RegionPrototype regionProto = region.Prototype;
+                if (regionProto == null) return Logger.WarnReturn(false, "CanRespecPowers(): regionProto == null");
+
+                if (regionProto.SynergyEditAllowed)
+                    return true;
+            }
+
+            if (Properties[PropertyEnum.IsInCombat])
+                return false;
+
+            // Team-ups need to check their owner avatar because some of their powers are assigned to the owner as procs
+            if (IsTeamUpAgent)
+            {
+                Avatar teamUpOwner = TeamUpOwner;
+                if (teamUpOwner != null)
+                    return teamUpOwner.CanRespecPowers();
+            }
+
+            return true;
         }
 
         #endregion
@@ -1513,7 +1585,7 @@ namespace MHServerEmu.Games.Entities
             OnLevelUp(oldLevel, newLevel);
         }
 
-        public virtual long AwardXP(long amount, bool showXPAwardedText)
+        public virtual long AwardXP(long amount, long minAmount, bool showXPAwardedText)
         {
             if (this is not Avatar && IsTeamUpAgent == false)
                 return 0;
@@ -1522,15 +1594,18 @@ namespace MHServerEmu.Games.Entities
             Player owner = GetOwnerOfType<Player>();
             if (owner == null) return Logger.WarnReturn(0, "AwardXP(): owner == null");
 
-            // TODO: Apply PrestigeXPFactor
+            // Apply cosmic prestige penalty
+            long awardedAmount = Math.Max((long)(amount * GetPrestigeXPFactor()), minAmount);
+            if (awardedAmount <= 0)
+                return 0;
 
             if (IsAtLevelCap == false)
             {
-                Properties[PropertyEnum.ExperiencePoints] += amount;
+                Properties[PropertyEnum.ExperiencePoints] += awardedAmount;
                 TryLevelUp(owner);
             }
 
-            if (showXPAwardedText)
+            if (showXPAwardedText && owner.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
             {
                 owner.SendMessage(NetMessageShowXPAwardedText.CreateBuilder()
                     .SetXpAwarded(amount)
@@ -1549,6 +1624,11 @@ namespace MHServerEmu.Games.Entities
             if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
 
             return advancementProto.GetTeamUpLevelUpXPRequirement(level);
+        }
+
+        public virtual float GetPrestigeXPFactor()
+        {
+            return 1f;
         }
 
         public virtual int TryLevelUp(Player owner, bool isInitializing = false)
@@ -1680,10 +1760,96 @@ namespace MHServerEmu.Games.Entities
 
         #region Inventory
 
-        public InventoryResult CanEquip(Item item, ref PropertyEnum propertyRestriction)
+        public InventoryResult CanEquip(Item item, out PropertyEnum propertyRestriction)
         {
-            // TODO
-            return InventoryResult.Success;     // Bypass property restrictions
+            propertyRestriction = PropertyEnum.Invalid;
+
+            PrototypeId agentProtoRef = PrototypeDataRef;
+            if (agentProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquip(): agentProtoRef == PrototypeId.Invalid");
+
+            // Check EquippableBy
+            PrototypeId equippableBy = item.ItemSpec.EquippableBy;
+            if (equippableBy != PrototypeId.Invalid && equippableBy != agentProtoRef)
+                return InventoryResult.InvalidCharacterRestriction;
+
+            // Check binding
+            if (item.BindsToCharacterOnEquip && item.IsBoundToCharacter && item.BoundAgentProtoRef != agentProtoRef)
+                return InventoryResult.InvalidBound;
+
+            // Check item type
+            InventoryResult typeResult = CanEquipItemType(item.PrototypeDataRef);
+            if (typeResult != InventoryResult.Success)
+                return typeResult;
+
+            // Check requirement properties
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+            foreach (var kvp in item.Properties.IteratePropertyRange(PropertyEnum.Requirement))
+            {
+                float requiredValue = kvp.Value;
+                if (requiredValue <= 0f)
+                    continue;
+
+                Property.FromParam(kvp.Key, 0, out PrototypeId propertyInfoProtoRef);
+                if (propertyInfoProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                PropertyEnum property = propertyInfoTable.GetPropertyEnumFromPrototype(propertyInfoProtoRef);
+                PropertyInfoPrototype propertyInfoProto = propertyInfoProtoRef.As<PropertyInfoPrototype>();
+                if (propertyInfoProto == null)
+                {
+                    Logger.Warn("CanEquip(): propertyInfoProto == null");
+                    continue;
+                }
+
+                float value = 0f;
+                switch (propertyInfoProto.Type)
+                {
+                    case PropertyDataType.Boolean:
+                        value = Properties[property] ? 1f : 0f;
+                        break;
+
+                    case PropertyDataType.Real:
+                        value = Properties[property];
+                        break;
+
+                    case PropertyDataType.Integer:
+                        value = (int)Properties[property];
+                        break;
+
+                    default:
+                        return Logger.WarnReturn(InventoryResult.Invalid, "CanEquip(): Invalid requirement property");
+                }
+
+                if (value < requiredValue)
+                {
+                    propertyRestriction = property;
+                    return InventoryResult.InvalidPropertyRestriction;
+                }
+            }
+
+            // All good
+            return InventoryResult.Success;
+        }
+
+        public InventoryResult CanEquipItemType(PrototypeId itemProtoRef)
+        {
+            if (itemProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquipItemType(): itemProtoRef == PrototypeId.Invalid");
+
+            ItemPrototype itemProto = itemProtoRef.As<ItemPrototype>();
+            if (itemProto == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquipItemType(): itemProto == null");
+
+            AgentPrototype agentProto = AgentPrototype;
+            if (agentProto == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanEquipItemType(): agentProto == null");
+
+            if (itemProto.IsUsableByAgent(agentProto) == false)
+            {
+                if (itemProto is CostumePrototype)
+                    return InventoryResult.InvalidCostumeForCharacter;
+
+                return InventoryResult.InvalidItemTypeForCharacter;
+            }
+
+            return InventoryResult.Success;
         }
 
         public bool RevealEquipmentToOwner()

@@ -204,7 +204,12 @@ namespace MHServerEmu.Games.Network
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
                     Avatar avatar = entityManager.CreateEntity(avatarSettings) as Avatar;
-                    avatar?.InitializeLevel(1);
+                    if (avatar != null)
+                    {
+                        avatar.InitializeLevel(1);
+                        avatar.ResetResources(false);
+                        avatar.GiveStartingCostume();
+                    }
                 }
             }
 
@@ -1124,7 +1129,8 @@ namespace MHServerEmu.Games.Network
             // PowerUnlocked is a client-authoritative property, this message is used to keep the server in sync.
             // It is also flagged as ReplicateForTransfer, so it's supposed to persist until the client logs out.
             Avatar avatar = Game.EntityManager.GetEntity<Avatar>(powerRecentlyUnlocked.AvatarEntityId);
-            if (avatar == null) return Logger.WarnReturn(false, "OnPowerRecentlyUnlocked(): avatar == null");
+            if (avatar == null)
+                return false;
 
             // Get the power prototype instance to validate that this is a real power prototype
             PowerPrototype powerProto = ((PrototypeId)powerRecentlyUnlocked.PowerPrototypeId).As<PowerPrototype>();

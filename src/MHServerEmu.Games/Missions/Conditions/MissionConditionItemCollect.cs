@@ -71,8 +71,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             {
                 var avatar = player.CurrentAvatar;
                 if (avatar == null) return false;
-                PropertyEnum prop = 0;
-                if (avatar.CanEquip(item, ref prop) != InventoryResult.Success) return false;
+                if (avatar.CanEquip(item, out _) != InventoryResult.Success) return false;
             }
             return true;
         }
