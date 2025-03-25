@@ -4172,6 +4172,64 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
+        public bool GiveStartingCostume()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "GiveStartingCostume(): avatarProto == null");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "GiveStartingCostume(): player == null");
+
+            Inventory costumeInventory = GetInventory(InventoryConvenienceLabel.Costume);
+            if (costumeInventory == null) return Logger.WarnReturn(false, "GiveStartingCostume(): costumeInventory == null");
+
+            Inventory generalInventory = player.GetInventory(InventoryConvenienceLabel.General);
+            if (generalInventory == null) return Logger.WarnReturn(false, "GiveStartingCostume(): generalInventory == null");
+
+            Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (deliveryBox == null) return Logger.WarnReturn(false, "GiveStartingCostume(): deliveryBox == null");
+
+            Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+            if (errorRecovery == null) return Logger.WarnReturn(false, "GiveStartingCostume(): errorRecovery == null");
+
+            PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
+            if (startingCostumeProtoRef == PrototypeId.Invalid)
+                return true;
+
+            ItemSpec itemSpec = Game.LootManager.CreateItemSpec(startingCostumeProtoRef, LootContext.CashShop, player);
+
+            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            entitySettings.EntityRef = itemSpec.ItemProtoRef;
+            entitySettings.ItemSpec = itemSpec;
+
+            Item costume = Game.EntityManager.CreateEntity(entitySettings) as Item;
+            if (costume == null)
+                return Logger.WarnReturn(false, $"GiveStartingCostume(): Failed to create starting costume for avatar [{this}]");
+
+            InventoryResult result = costume.ChangeInventoryLocation(costumeInventory);
+
+            if (result != InventoryResult.Success)
+                result = costume.ChangeInventoryLocation(generalInventory);
+
+            if (result != InventoryResult.Success)
+                result = costume.ChangeInventoryLocation(deliveryBox);
+
+            if (result != InventoryResult.Success)
+            {
+                Logger.Error($"GiveStartingCostume(): Failed to put costume [{costume}] into delivery box for avatar [{this}]");
+                result = costume.ChangeInventoryLocation(errorRecovery);
+            }
+
+            if (result != InventoryResult.Success)
+            {
+                Logger.Error($"GiveStartingCostume(): Failed to put costume [{costume}] into error recovery for avatar [{this}]");
+                costume.Destroy();
+                return false;
+            }
+
+            return true;
+        }
+
         #endregion
 
         #region Loot
@@ -5350,12 +5408,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // HACK: Also give starting costume, although it was removed in 1.52
-            AvatarPrototype avatarProto = AvatarPrototype;
-            if (avatarProto == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): avatarProto == null");
-
-            PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
-            if (startingCostumeProtoRef != PrototypeId.Invalid)
-                Game.LootManager.GiveItem(startingCostumeProtoRef, LootContext.CashShop, player);
+            GiveStartingCostume();
 
             return true;
         }

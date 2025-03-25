@@ -204,7 +204,12 @@ namespace MHServerEmu.Games.Network
                     avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
 
                     Avatar avatar = entityManager.CreateEntity(avatarSettings) as Avatar;
-                    avatar?.InitializeLevel(1);
+                    if (avatar != null)
+                    {
+                        avatar.InitializeLevel(1);
+                        avatar.ResetResources(false);
+                        avatar.GiveStartingCostume();
+                    }
                 }
             }
 
