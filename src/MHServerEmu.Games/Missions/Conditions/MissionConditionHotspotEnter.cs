@@ -1,16 +1,17 @@
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionHotspotEnter : MissionPlayerCondition
     {
         private MissionConditionHotspotEnterPrototype _proto;
-        private Action<EntityEnteredMissionHotspotGameEvent> _entityEnteredMissionHotspotAction;
+        private Event<EntityEnteredMissionHotspotGameEvent>.Action _entityEnteredMissionHotspotAction;
 
         public MissionConditionHotspotEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -79,7 +80,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
+        private void OnEntityEnteredMissionHotspot(in EntityEnteredMissionHotspotGameEvent evt)
         {
             var entity = evt.Target;
             var hotspot = evt.Hotspot;

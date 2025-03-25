@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -18,8 +19,8 @@ namespace MHServerEmu.Games.Missions.Actions
         public PrototypeId Context { get => Owner.PrototypeDataRef; }
         public bool IsActive { get; private set; }
 
-        private Action<EntitySetSimulatedGameEvent> _entitySetSimulatedAction;
-        private Action<EntityLeaveDormantGameEvent> _entityLeaveDormantAction;
+        private Event<EntitySetSimulatedGameEvent>.Action _entitySetSimulatedAction;
+        private Event<EntityLeaveDormantGameEvent>.Action _entityLeaveDormantAction;
 
         public MissionActionList(IMissionActionOwner owner)
         {
@@ -114,12 +115,12 @@ namespace MHServerEmu.Games.Missions.Actions
             return true;
         }
 
-        private void OnEntitySetSimulated(EntitySetSimulatedGameEvent evt)
+        private void OnEntitySetSimulated(in EntitySetSimulatedGameEvent evt)
         {
             RunEntityActions(evt.Entity);
         }
 
-        private void OnEntityLeaveDormant(EntityLeaveDormantGameEvent evt)
+        private void OnEntityLeaveDormant(in EntityLeaveDormantGameEvent evt)
         {
             RunEntityActions(evt.Entity);
         }

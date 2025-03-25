@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime;
+using System.Text;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Metrics.Categories
@@ -11,8 +12,14 @@ namespace MHServerEmu.Core.Metrics.Categories
         private long[] _gcKindIndices = new long[4];
         private long[] _gcCounts = new long[GC.MaxGeneration + 1];
         private long _totalCommittedBytes;
+        private long _heapSizeBytes;
         private double _pauseTimePercentage;
         private readonly MetricTracker _pauseDurationTracker = new(512);
+
+        public MemoryMetrics()
+        {
+            Logger.Trace($"Garbage collection mode: {(GCSettings.IsServerGC ? "Server" : "Workstation")}");
+        }
 
         public void Update()
         {
@@ -50,6 +57,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             {
                 _gcIndex = memoryInfo.Index;
                 _totalCommittedBytes = memoryInfo.TotalCommittedBytes;
+                _heapSizeBytes = memoryInfo.HeapSizeBytes;
                 _pauseTimePercentage = memoryInfo.PauseTimePercentage;
             }
         }
@@ -61,6 +69,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             public long GCCountGen1 { get; }
             public long GCCountGen2 { get; }
             public long TotalCommittedBytes { get; }
+            public long HeapSizeBytes { get; }
             public double PauseTimePercentage { get; }
             public MetricTracker.ReportEntry PauseDuration { get; }
 
@@ -71,6 +80,7 @@ namespace MHServerEmu.Core.Metrics.Categories
                 GCCountGen1 = metrics._gcCounts[1];
                 GCCountGen2 = metrics._gcCounts[2];
                 TotalCommittedBytes = metrics._totalCommittedBytes;
+                HeapSizeBytes = metrics._heapSizeBytes;
                 PauseTimePercentage = metrics._pauseTimePercentage;
                 PauseDuration = metrics._pauseDurationTracker.AsReportEntry();
             }
@@ -82,6 +92,7 @@ namespace MHServerEmu.Core.Metrics.Categories
                 sb.AppendLine($"{nameof(GCIndex)}: {GCIndex}");
                 sb.AppendLine($"GCCounts: Gen0={GCCountGen0}, Gen1={GCCountGen1}, Gen2={GCCountGen2}");
                 sb.AppendLine($"{nameof(TotalCommittedBytes)}: {TotalCommittedBytes}");
+                sb.AppendLine($"{nameof(HeapSizeBytes)}: {HeapSizeBytes}");
                 sb.AppendLine($"{nameof(PauseTimePercentage)}: {PauseTimePercentage}%");
                 sb.AppendLine($"{nameof(PauseDuration)}: {PauseDuration}");
 

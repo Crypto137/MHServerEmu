@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,9 +8,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionRegionContains : MissionConditionContains
     {
         private MissionConditionRegionContainsPrototype _proto;
-        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
-        private Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
+        private Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
+        private Event<EntityExitedWorldGameEvent>.Action _entityExitedWorldAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
 
         public MissionConditionRegionContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -53,7 +54,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEntityEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             var entity = evt.Entity;
             if (entity == null) return;
@@ -61,7 +62,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 Count++;
         }
 
-        private void OnEntityExitedWorld(EntityExitedWorldGameEvent evt)
+        private void OnEntityExitedWorld(in EntityExitedWorldGameEvent evt)
         {
             var region = Region;
             if(region == null || region.TestStatus(RegionStatus.Shutdown)) return;
@@ -71,7 +72,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 Count--;
         }
 
-        private void OnEntityDead(EntityDeadGameEvent evt)
+        private void OnEntityDead(in EntityDeadGameEvent evt)
         {
             var entity = evt.Defender;
             if (entity == null || entity.IsInWorld == false) return;

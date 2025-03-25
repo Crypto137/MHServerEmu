@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateTimedBonus : MetaState
     {
         private MetaStateTimedBonusPrototype _proto;
-        private Action<OpenMissionCompleteGameEvent> _openMissionCompleteAction;
+        private Event<OpenMissionCompleteGameEvent>.Action _openMissionCompleteAction;
         private EventPointer<TimerEvent> _timerEvent = new();
         private readonly MissionActionList[] _onSuccessActionsList;
         private readonly MissionActionList[] _onFailActionsList;
@@ -89,7 +89,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             widget?.SetTimeRemaining(_entryProto.TimerForEntryMS);
         }
 
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        private void OnOpenMissionComplete(in OpenMissionCompleteGameEvent evt)
         {
             var missionRef = evt.MissionRef;
             if (missionRef == PrototypeId.Invalid) return;

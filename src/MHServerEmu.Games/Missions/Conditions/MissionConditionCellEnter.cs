@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionCellEnter : MissionPlayerCondition
     {
         private MissionConditionCellEnterPrototype _proto;
-        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
+        private Event<PlayerEnteredCellGameEvent>.Action _playerEnteredCellAction;
 
         public MissionConditionCellEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -41,7 +42,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerEnteredCell(PlayerEnteredCellGameEvent evt)
+        private void OnPlayerEnteredCell(in PlayerEnteredCellGameEvent evt)
         {
             var player = evt.Player;
             var cellRef = evt.CellRef;

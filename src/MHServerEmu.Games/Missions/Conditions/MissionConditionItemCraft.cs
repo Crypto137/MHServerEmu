@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -7,7 +8,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionItemCraft : MissionPlayerCondition
     {
         private MissionConditionItemCraftPrototype _proto;
-        private Action<PlayerCraftedItemGameEvent> _playerCraftedItemAction;
+        private Event<PlayerCraftedItemGameEvent>.Action _playerCraftedItemAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionItemCraft(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -18,7 +19,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _playerCraftedItemAction = OnPlayerCraftedItem;
         }
 
-        private void OnPlayerCraftedItem(PlayerCraftedItemGameEvent evt)
+        private void OnPlayerCraftedItem(in PlayerCraftedItemGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;

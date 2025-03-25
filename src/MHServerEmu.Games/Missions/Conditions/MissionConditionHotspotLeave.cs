@@ -1,16 +1,17 @@
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionHotspotLeave : MissionPlayerCondition
     {
         private MissionConditionHotspotLeavePrototype _proto;
-        private Action<EntityLeftMissionHotspotGameEvent> _entityLeftMissionHotspotAction;
+        private Event<EntityLeftMissionHotspotGameEvent>.Action _entityLeftMissionHotspotAction;
 
         public MissionConditionHotspotLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -79,7 +80,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnEntityLeftMissionHotspot(EntityLeftMissionHotspotGameEvent evt)
+        private void OnEntityLeftMissionHotspot(in EntityLeftMissionHotspotGameEvent evt)
         {
             var entity = evt.Target;
             var hotspot = evt.Hotspot;

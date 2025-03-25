@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateEntityModifier : MetaState
     {
         private MetaStateEntityModifierPrototype _proto;
-        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
+        private Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
 
         public MetaStateEntityModifier(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -36,7 +37,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
-        private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEntityEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             var entity = evt.Entity;
             if (entity == null || _proto.EntityFilter == null) return;

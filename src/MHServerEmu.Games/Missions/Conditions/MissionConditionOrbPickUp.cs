@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionOrbPickUp : MissionPlayerCondition
     {
         private MissionConditionOrbPickUpPrototype _proto;
-        private Action<OrbPickUpEvent> _orbPickUpAction;
+        private Event<OrbPickUpEvent>.Action _orbPickUpAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionOrbPickUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _orbPickUpAction = OnOrbPickUp;
         }
 
-        private void OnOrbPickUp(OrbPickUpEvent evt)
+        private void OnOrbPickUp(in OrbPickUpEvent evt)
         {
             var player = evt.Player;
             var orb = evt.Orb;

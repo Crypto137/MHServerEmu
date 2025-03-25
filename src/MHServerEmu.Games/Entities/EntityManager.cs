@@ -34,6 +34,11 @@ namespace MHServerEmu.Games.Entities
         public override InvasiveListNode<Entity> GetInvasiveListNode(Entity element, int listId) => element.GetInvasiveListNode(listId);
     }
 
+    public readonly struct DestroyEntityEvent(Entity entity) : IGameEventData
+    {
+        public readonly Entity Entity = entity;
+    }
+
     public class EntityManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -51,7 +56,7 @@ namespace MHServerEmu.Games.Entities
         private readonly Stack<LinkedListNode<ulong>> _entityDestroyListNodeStack = new();
         private int _numDestroyListNodeChunks = 0;
 
-        public Event<Entity> DestroyEntityEvent = new();
+        public Event<DestroyEntityEvent> DestroyEntityEvent = new();
 
         private ulong _nextEntityId = 1;
         private ulong GetNextEntityId() { return _nextEntityId++; }
@@ -294,7 +299,7 @@ namespace MHServerEmu.Games.Entities
             entity.SetStatus(EntityStatus.PendingDestroy, true);
 
             // invoke destroyed event
-            DestroyEntityEvent.Invoke(entity);
+            DestroyEntityEvent.Invoke(new(entity));
 
             // Destroy entities belonging to this entity
             entity.DestroyContained();

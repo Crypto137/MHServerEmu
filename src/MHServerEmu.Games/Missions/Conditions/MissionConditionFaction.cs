@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionFaction : MissionPlayerCondition
     {
         private MissionConditionFactionPrototype _proto;
-        private Action<PlayerFactionChangedGameEvent> _playerFactionChangedAction;
+        private Event<PlayerFactionChangedGameEvent>.Action _playerFactionChangedAction;
 
         public MissionConditionFaction(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -39,7 +40,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerFactionChanged(PlayerFactionChangedGameEvent evt)
+        private void OnPlayerFactionChanged(in PlayerFactionChangedGameEvent evt)
         {
             var player = evt.Player;
             var factionRef = evt.FactionRef;

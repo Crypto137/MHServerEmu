@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionThrowablePickUp : MissionPlayerCondition
     {
         private MissionConditionThrowablePickUpPrototype _proto;
-        private Action<ThrowablePickedUpGameEvent> _throwablePickedUpAction;
+        private Event<ThrowablePickedUpGameEvent>.Action _throwablePickedUpAction;
 
         public MissionConditionThrowablePickUp(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _throwablePickedUpAction = OnThrowablePickedUp;
         }
 
-        private void OnThrowablePickedUp(ThrowablePickedUpGameEvent evt)
+        private void OnThrowablePickedUp(in ThrowablePickedUpGameEvent evt)
         {
             var player = evt.Player;
             var throwable = evt.Throwable;

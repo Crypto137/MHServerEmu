@@ -2908,6 +2908,30 @@ namespace MHServerEmu.Games.Entities.Avatars
             CleanUpAbilityKeyMappingsAfterRespec();
         }
 
+        /// <summary>
+        /// Automatically slots powers for level up.
+        /// </summary>
+        private void AutoSlotPowers()
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null)
+                return;
+
+            // Slot ALL default abilities, including those that have already been unlocked.
+            // This is dumb, but we have to do this to avoid desync with the client. Also
+            // because this is probably happening in combat and the 1.52 client is stupid,
+            // we can't do the full SlotAbility() call here that does validation and events.
+            // See CAvatar::autoSlotPowers() for reference.
+            List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
+            if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
+            {
+                foreach (HotkeyData hotkeyData in hotkeyDataList)
+                    keyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+            }
+
+            ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
+        }
+
         private void CleanUpAbilityKeyMappingsAfterRespec()
         {
             // TODO
@@ -3688,22 +3712,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             if (IsInWorld)
-            {
-                // Slot ALL default abilities
-                // (this is dumb, but we have to do this to avoid desync with the client, see CAvatar::autoSlotPowers())
-                AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-                if (keyMapping != null)
-                {
-                    List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
-                    if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
-                    {
-                        foreach (HotkeyData hotkeyData in hotkeyDataList)
-                            SlotAbility(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot, false, true);
-                    }
-
-                    ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
-                }
-            }
+                AutoSlotPowers();
 
             var player = GetOwnerOfType<Player>();
             if (player == null) return false;

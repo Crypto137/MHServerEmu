@@ -80,10 +80,10 @@ namespace MHServerEmu.Games.Missions
         private EventPointer<IdleTimeoutEvent> _idleTimeoutEvent = new();
         private EventPointer<TimeLimitEvent> _timeLimitEvent = new();
 
-        private Action<PlayerEnteredAreaGameEvent> _playerEnteredAreaAction;
-        private Action<PlayerLeftAreaGameEvent> _playerLeftAreaAction;
-        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
-        private Action<PlayerLeftCellGameEvent> _playerLeftCellAction;
+        private Event<PlayerEnteredAreaGameEvent>.Action _playerEnteredAreaAction;
+        private Event<PlayerLeftAreaGameEvent>.Action _playerLeftAreaAction;
+        private Event<PlayerEnteredCellGameEvent>.Action _playerEnteredCellAction;
+        private Event<PlayerLeftCellGameEvent>.Action _playerLeftCellAction;
 
         private MissionState _state;
         private float _currentObjectiveSequence;
@@ -2489,7 +2489,7 @@ namespace MHServerEmu.Games.Missions
             cell.PlayerLeftCellEvent.AddActionBack(_playerLeftCellAction);
         }
 
-        public void OnAreaEntered(PlayerEnteredAreaGameEvent evt)
+        public void OnAreaEntered(in PlayerEnteredAreaGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -2497,21 +2497,21 @@ namespace MHServerEmu.Games.Missions
             OnPlayerEnteredMission(player);
         }
 
-        public void OnAreaLeft(PlayerLeftAreaGameEvent evt)
+        public void OnAreaLeft(in PlayerLeftAreaGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
             OnPlayerLeftMission(player);
         }
 
-        public void OnCellEntered(PlayerEnteredCellGameEvent evt)
+        public void OnCellEntered(in PlayerEnteredCellGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
             OnPlayerEnteredMission(player);
         }
 
-        public void OnCellLeft(PlayerLeftCellGameEvent evt)
+        public void OnCellLeft(in PlayerLeftCellGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
