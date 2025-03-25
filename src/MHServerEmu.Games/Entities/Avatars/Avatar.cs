@@ -5316,8 +5316,13 @@ namespace MHServerEmu.Games.Entities.Avatars
             ResetMissions();
 
             // Invoke achievement events
+            PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);
+            if (prestigeLevelProto == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): prestigeLevelProto == null");
+
             player.OnScoringEvent(new(ScoringEventType.AvatarPrestigeLevel, prestigeLevel));
-            // TODO: ScoringEventType.AvatarsAtPrestigeLevel
+
+            int avatarsAtPrestigeLevelCount = ScoringEvents.GetPlayerAvatarsAtPrestigeLevel(player, prestigeLevel);
+            player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevelCap, prestigeLevelProto, avatarsAtPrestigeLevelCount));
 
             return true;
         }

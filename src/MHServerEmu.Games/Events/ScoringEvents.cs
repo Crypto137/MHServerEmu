@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -458,7 +459,7 @@ namespace MHServerEmu.Games.Events
         public static int GetPlayerAvatarsAtLevelCap(Player player)
         {
             int levelCap = Avatar.GetAvatarLevelCap();
-            HashSet<PrototypeId> avatars = new();
+            HashSet<PrototypeId> avatars = HashSetPool<PrototypeId>.Instance.Get(); ;
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
@@ -467,7 +468,9 @@ namespace MHServerEmu.Games.Events
                 if (player.GetMaxCharacterLevelAttainedForAvatar(avatarRef, (AvatarMode)avatarMode) >= levelCap)
                     avatars.Add(avatarRef);
             }
-            return avatars.Count;
+            int count = avatars.Count;
+            HashSetPool<PrototypeId>.Instance.Return(avatars);
+            return count;
         }
 
         private static bool GetPlayerAvatarsAtLevelCapCount(Player player, ref int count)
@@ -478,7 +481,7 @@ namespace MHServerEmu.Games.Events
 
         public static int GetPlayerAvatarsAtPrestigeLevel(Player player, int prestigeLevel)
         {
-            HashSet<PrototypeId> avatars = new();
+            HashSet<PrototypeId> avatars = HashSetPool<PrototypeId>.Instance.Get();
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
@@ -487,7 +490,9 @@ namespace MHServerEmu.Games.Events
                 if (player.GetPrestigeLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= prestigeLevel)
                     avatars.Add(avatarRef);
             }
-            return avatars.Count;
+            int count = avatars.Count;
+            HashSetPool<PrototypeId>.Instance.Return(avatars);
+            return count;
         }
 
         private static bool GetPlayerAvatarsAtPrestigeLevelCount(Player player, in ScoringEventData eventData, ref int count)
@@ -512,7 +517,7 @@ namespace MHServerEmu.Games.Events
             if (advancementProto == null) return 0;
             int maxPrestigeLevel = advancementProto.MaxPrestigeLevel;
 
-            HashSet<PrototypeId> avatars = new();
+            HashSet<PrototypeId> avatars = HashSetPool<PrototypeId>.Instance.Get();
             foreach (var kvp in player.Properties.IteratePropertyRange(PropertyEnum.AvatarLibraryLevel))
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId avatarRef);
@@ -522,7 +527,9 @@ namespace MHServerEmu.Games.Events
                     && player.GetPrestigeLevelForAvatar(avatarRef, (AvatarMode)avatarMode) >= maxPrestigeLevel)
                     avatars.Add(avatarRef);
             }
-            return avatars.Count;
+            int count = avatars.Count;
+            HashSetPool<PrototypeId>.Instance.Return(avatars);
+            return count;
         }
 
         private static bool GetPlayerAvatarsAtPrestigeLevelCapCount(Player player, ref int count)
