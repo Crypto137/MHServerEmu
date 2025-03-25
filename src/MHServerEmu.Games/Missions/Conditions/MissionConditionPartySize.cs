@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionPartySize : MissionPlayerCondition
     {
         private MissionConditionPartySizePrototype _proto;
-        private Action<PartySizeChangedGameEvent> _partySizeChangedAction;
+        private Event<PartySizeChangedGameEvent>.Action _partySizeChangedAction;
 
         public MissionConditionPartySize(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -41,7 +42,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPartySizeChanged(PartySizeChangedGameEvent evt)
+        private void OnPartySizeChanged(in PartySizeChangedGameEvent evt)
         {
             var player = evt.Player;
             int partySize = evt.PartySize;

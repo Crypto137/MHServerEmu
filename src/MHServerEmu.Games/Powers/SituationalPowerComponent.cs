@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Powers
         private readonly HashSet<ulong> _triggeringEntities = new();
         private bool _registered;
 
-        private readonly Action<EntityDeadGameEvent> _deadAction;
+        private readonly Event<EntityDeadGameEvent>.Action _deadAction;
         private readonly EventPointer<PowerRelockEvent> _relockEvent = new();
         private readonly EventGroup _eventGroup = new();
 
@@ -310,7 +310,7 @@ namespace MHServerEmu.Games.Powers
             }
         }
 
-        private void OnDead(EntityDeadGameEvent evt)
+        private void OnDead(in EntityDeadGameEvent evt)
         {
             if (evt.Defender == null) return;
             OnTriggerRevert(evt.Defender.Id);

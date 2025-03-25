@@ -642,7 +642,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
-                avatar.AwardXP(xp, agent.Properties[PropertyEnum.ShowXPRewardText]);
+                avatar.AwardXP(xp, minXP, agent.Properties[PropertyEnum.ShowXPRewardText]);
             }
 
             // Alternate advancement experience

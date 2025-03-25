@@ -1,11 +1,12 @@
-﻿using MHServerEmu.Games.GameData.Prototypes;
+﻿using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionContains : MissionPlayerCondition
     {
-        private Action<PlayerEnteredRegionGameEvent> _playerEnteredRegionAction;
+        private Event<PlayerEnteredRegionGameEvent>.Action _playerEnteredRegionAction;
 
         public MissionConditionContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) : base(mission, owner, prototype)
         {
@@ -24,7 +25,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return count >= CountMin && count <= CountMax;
         }
 
-        private void OnPlayerEnteredRegion(PlayerEnteredRegionGameEvent evt)
+        private void OnPlayerEnteredRegion(in PlayerEnteredRegionGameEvent evt)
         {
             var player = evt.Player;
             var regionRef = evt.RegionRef;

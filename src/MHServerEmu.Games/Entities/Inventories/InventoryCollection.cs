@@ -44,11 +44,29 @@ namespace MHServerEmu.Games.Entities.Inventories
             return inventory;
         }
 
-        public bool GetInventoryForItem(Item item, InventoryCategory category, out Inventory inventory)
+        public bool GetInventoryForItem(Item item, InventoryCategory category, out Inventory outInventory)
         {
-            // TODO
-            inventory = null;
-            return false;
+            outInventory = null;
+
+            if (_owner == null) return Logger.WarnReturn(false, "GetInventoryForItem(): _owner == null");
+
+            // NOTE: The client uses the sort flag here, but it's bad for performance, so I will leave it out for now
+            foreach (Inventory inventory in new InventoryIterator(_owner/*, InventoryIterationFlags.SortByPrototypeRef*/))
+            {
+                if (inventory.Category != category)
+                    continue;
+
+                if (inventory.IsSlotAvailableForEntity(item, true) == false)
+                    continue;
+
+                if (item.CanChangeInventoryLocation(inventory) != InventoryResult.Success)
+                    continue;
+
+                outInventory = inventory;
+                return true;
+            }
+
+            return true;
         }
 
         public void Clear()

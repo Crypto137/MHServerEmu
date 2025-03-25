@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,7 +8,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     {
 
         private MissionConditionKismetSeqFinishedPrototype _proto;
-        private Action<KismetSeqFinishedGameEvent> _kismetSeqFinishedAction;
+        private Event<KismetSeqFinishedGameEvent>.Action _kismetSeqFinishedAction;
 
         public MissionConditionKismetSeqFinished(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _kismetSeqFinishedAction = OnKismetSeqFinished;
         }
 
-        private void OnKismetSeqFinished(KismetSeqFinishedGameEvent evt)
+        private void OnKismetSeqFinished(in KismetSeqFinishedGameEvent evt)
         {
             var player = evt.Player;
             var kismetSeqRef = evt.KismetSeqRef;

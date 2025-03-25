@@ -13,8 +13,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateMissionActivate : MetaState
     {
         private MetaStateMissionActivatePrototype _proto;
-        private Action<OpenMissionCompleteGameEvent> _openMissionCompleteAction;
-        private Action<OpenMissionFailedGameEvent> _openMissionFailedAction;
+        private Event<OpenMissionCompleteGameEvent>.Action _openMissionCompleteAction;
+        private Event<OpenMissionFailedGameEvent>.Action _openMissionFailedAction;
         private EventPointer<MissionCompleteEvent> _missionCompleteEvent;
 
         public MetaStateMissionActivate(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
@@ -125,7 +125,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             }
         }
 
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        private void OnOpenMissionComplete(in OpenMissionCompleteGameEvent evt)
         {
             if (evt.MissionRef != _proto.Mission) return;
             PlayerMetaStateComplete();
@@ -136,7 +136,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 OnMissionComplete();
         }
 
-        private void OnOpenMissionFailed(OpenMissionFailedGameEvent evt)
+        private void OnOpenMissionFailed(in OpenMissionFailedGameEvent evt)
         {
             if (evt.MissionRef != _proto.Mission) return;
 

@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionTeamUpIsUnlocked : MissionPlayerCondition
     {
         private MissionConditionTeamUpIsUnlockedPrototype _proto;
-        private Action<PlayerUnlockedTeamUpGameEvent> _playerUnlockedTeamUpAction;
+        private Event<PlayerUnlockedTeamUpGameEvent>.Action _playerUnlockedTeamUpAction;
 
         public MissionConditionTeamUpIsUnlocked(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -40,7 +41,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerUnlockedTeamUp(PlayerUnlockedTeamUpGameEvent evt)
+        private void OnPlayerUnlockedTeamUp(in PlayerUnlockedTeamUpGameEvent evt)
         {
             var player = evt.Player;
             var teamUpRef = evt.TeamUpRef;

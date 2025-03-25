@@ -8,6 +8,7 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -80,10 +81,10 @@ namespace MHServerEmu.Games.Missions
         private EventPointer<IdleTimeoutEvent> _idleTimeoutEvent = new();
         private EventPointer<TimeLimitEvent> _timeLimitEvent = new();
 
-        private Action<PlayerEnteredAreaGameEvent> _playerEnteredAreaAction;
-        private Action<PlayerLeftAreaGameEvent> _playerLeftAreaAction;
-        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
-        private Action<PlayerLeftCellGameEvent> _playerLeftCellAction;
+        private Event<PlayerEnteredAreaGameEvent>.Action _playerEnteredAreaAction;
+        private Event<PlayerLeftAreaGameEvent>.Action _playerLeftAreaAction;
+        private Event<PlayerEnteredCellGameEvent>.Action _playerEnteredCellAction;
+        private Event<PlayerLeftCellGameEvent>.Action _playerLeftCellAction;
 
         private MissionState _state;
         private float _currentObjectiveSequence;
@@ -1788,6 +1789,30 @@ namespace MHServerEmu.Games.Missions
             return Prototype.ShowInteractIndicators;
         }
 
+        public bool ShouldResetForStoryWarp(int chapterNumber)
+        {
+            MissionPrototype missionProto = Prototype;
+            if (missionProto == null) return Logger.WarnReturn(false, "ShouldResetForStoryWarp(): missionProto == null");
+
+            if (missionProto.SaveStatePerAvatar == false)
+                return false;
+
+            PrototypeId chapterProtoRef = missionProto.Chapter;
+            if (chapterProtoRef == PrototypeId.Invalid)
+                return true;
+
+            ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
+            if (chapterProto == null) return Logger.WarnReturn(false, "ShouldResetForStoryWarp(): chapterProto == null");
+
+            if (chapterProto.ResetsOnStoryWarp == false)
+                return false;
+
+            if (chapterProto.ChapterNumber < chapterNumber && chapterProtoRef != GameDatabase.MissionGlobalsPrototype.LegendaryChapter)
+                return false;
+
+            return true;
+        }
+
         public bool GetParticipants(List<Player> participants)
         {
             participants.Clear();
@@ -1953,13 +1978,38 @@ namespace MHServerEmu.Games.Missions
             return found;
         }
 
+        public void CleanupItemDrops()
+        {
+            var region = Region;
+            if (region == null) return;
+
+            var entityTracker = region.EntityTracker;
+            if (entityTracker == null) return;
+            var missionRef = PrototypeDataRef;
+
+            List<WorldEntity> destroyList = ListPool<WorldEntity>.Instance.Get();
+
+            foreach (var entity in entityTracker.Iterate(missionRef, Dialog.EntityTrackingFlag.SpawnedByMission))
+            {
+                if (entity is not Item) continue;
+                if (entity.MissionPrototype != missionRef) continue;
+                ulong playerGuid = entity.Properties[PropertyEnum.RestrictedToPlayerGuid];
+                if (playerGuid != 0 && _contributors.ContainsKey(playerGuid) == false) continue;
+                destroyList.Add(entity);
+            }
+
+            foreach (var entity in destroyList)
+                entity.Destroy();
+
+            ListPool<WorldEntity>.Instance.Return(destroyList);
+        }
+
         public void OnPlayerEnteredMission(Player player)
         {
             // if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
             CancelScheduledRemovePartipantEvent(player);
             AddParticipant(player);
         }
-
 
         public void OnPlayerLeftMission(Player player)
         {
@@ -2489,7 +2539,7 @@ namespace MHServerEmu.Games.Missions
             cell.PlayerLeftCellEvent.AddActionBack(_playerLeftCellAction);
         }
 
-        public void OnAreaEntered(PlayerEnteredAreaGameEvent evt)
+        public void OnAreaEntered(in PlayerEnteredAreaGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -2497,21 +2547,21 @@ namespace MHServerEmu.Games.Missions
             OnPlayerEnteredMission(player);
         }
 
-        public void OnAreaLeft(PlayerLeftAreaGameEvent evt)
+        public void OnAreaLeft(in PlayerLeftAreaGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
             OnPlayerLeftMission(player);
         }
 
-        public void OnCellEntered(PlayerEnteredCellGameEvent evt)
+        public void OnCellEntered(in PlayerEnteredCellGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
             OnPlayerEnteredMission(player);
         }
 
-        public void OnCellLeft(PlayerLeftCellGameEvent evt)
+        public void OnCellLeft(in PlayerLeftCellGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;

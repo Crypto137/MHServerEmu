@@ -295,8 +295,10 @@ namespace MHServerEmu.Games.Entities.Inventories
             return InventoryResult.Success;
         }
 
-        public InventoryResult PassesEquipmentRestrictions(Entity entity, ref PropertyEnum propertyRestriction)
+        public InventoryResult PassesEquipmentRestrictions(Entity entity, out PropertyEnum propertyRestriction)
         {
+            propertyRestriction = PropertyEnum.Invalid;
+
             InventoryResult result = InventoryResult.Success;
             if (IsEquipment == false) return result;
 
@@ -309,7 +311,7 @@ namespace MHServerEmu.Games.Entities.Inventories
             Item item = entity as Item;
             if (item == null) return Logger.WarnReturn(InventoryResult.InvalidNotAnItem, "PassesEquipmentRestrictions(): item == null");
 
-            result = inventoryAgentOwner.CanEquip(item, ref propertyRestriction);
+            result = inventoryAgentOwner.CanEquip(item, out propertyRestriction);
             if (result == InventoryResult.Success)
             {
                 Avatar inventoryAvatarOwner = inventoryOwner.GetSelfOrOwnerOfType<Avatar>();

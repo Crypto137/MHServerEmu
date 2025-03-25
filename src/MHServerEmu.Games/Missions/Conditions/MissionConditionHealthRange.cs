@@ -3,6 +3,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -12,7 +13,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionHealthRange : MissionPlayerCondition
     {
         private MissionConditionHealthRangePrototype _proto;
-        private Action<AdjustHealthGameEvent> _adjustHealthAction;
+        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
 
         public MissionConditionHealthRange(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -90,7 +91,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnAdjustHealth(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
         {
             if (evt.Dodged) return;
             var player = evt.Player;

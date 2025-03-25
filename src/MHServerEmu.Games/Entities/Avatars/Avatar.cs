@@ -21,7 +21,9 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
+using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
@@ -49,6 +51,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<DespawnControlledEvent> _despawnControlledEvent = new();
         private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
         private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
+        private readonly EventPointer<UnassignMappedPowersForRespecEvent> _unassignMappedPowersForRespec = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -1858,6 +1861,37 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player.PowerSpecIndexUnlocked;
         }
 
+        public override bool RespecPowerSpec(int specIndex, PowersRespecReason reason, bool skipValidation = false, PrototypeId powerProtoRef = PrototypeId.Invalid)
+        {
+            // Schedule deferred removal of mapped powers after respec finishes doing its thing
+            Game.GameEventScheduler.CancelEvent(_unassignMappedPowersForRespec);
+            ScheduleEntityEvent(_unassignMappedPowersForRespec, TimeSpan.FromMilliseconds(500));
+
+            // Unassign talents
+            List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+            GetTalentPowersForSpec(specIndex, talentPowerList);
+
+            foreach (PrototypeId talentPowerRef in talentPowerList)
+                UnassignTalentPower(talentPowerRef, specIndex);
+
+            if (talentPowerList.Count > 0)
+            {
+                // Set the new respec
+                if (powerProtoRef == PrototypeId.Invalid)
+                    powerProtoRef = GameDatabase.GlobalsPrototype.PowerPrototype;
+
+                Properties[PropertyEnum.PowersRespecResult, specIndex, (int)reason, powerProtoRef] = true;
+
+                // Early return (V48_TODO: this probably shouldn't happen for pre-BUE?)
+                ListPool<PrototypeId>.Instance.Return(talentPowerList);
+                return true;
+            }
+
+            // Fall back to base implementation if no talents were unassigned
+            ListPool<PrototypeId>.Instance.Return(talentPowerList);
+            return base.RespecPowerSpec(specIndex, reason, skipValidation, powerProtoRef);
+        }
+
         #endregion
 
         #region Talents (Specialization Powers)
@@ -2260,6 +2294,32 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        public bool CanStealPowers()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "CanStealPowers(): avatarProto == null");
+
+            return avatarProto.StealablePowersAllowed.HasValue();
+        }
+
+        private void UnassignMappedPowersForRespec()
+        {
+            // Rogue's mapped powers don't get reset on respec
+            if (CanStealPowers() == false)
+                return;
+
+            // Key mappings should have already been cleaned up by respec, so just remove the powers
+            List<PrototypeId> mappedPowerList = ListPool<PrototypeId>.Instance.Get();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                mappedPowerList.Add(kvp.Value);
+
+            foreach (PrototypeId mappedPowerRef in mappedPowerList)
+                UnassignPower(mappedPowerRef);
+
+            Properties.RemovePropertyRange(PropertyEnum.AvatarMappedPower);
+            ListPool<PrototypeId>.Instance.Return(mappedPowerList);
         }
 
         #endregion
@@ -2908,9 +2968,53 @@ namespace MHServerEmu.Games.Entities.Avatars
             CleanUpAbilityKeyMappingsAfterRespec();
         }
 
-        private void CleanUpAbilityKeyMappingsAfterRespec()
+        /// <summary>
+        /// Automatically slots powers for level up.
+        /// </summary>
+        private void AutoSlotPowers()
         {
-            // TODO
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null)
+                return;
+
+            // Slot ALL default abilities, including those that have already been unlocked.
+            // This is dumb, but we have to do this to avoid desync with the client. Also
+            // because this is probably happening in combat and the 1.52 client is stupid,
+            // we can't do the full SlotAbility() call here that does validation and events.
+            // See CAvatar::autoSlotPowers() for reference.
+            List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
+            if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
+            {
+                foreach (HotkeyData hotkeyData in hotkeyDataList)
+                    keyMapping.SetAbilityInAbilitySlot(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot);
+            }
+
+            ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
+        }
+
+        private bool CleanUpAbilityKeyMappingsAfterRespec()
+        {
+            if (IsInWorld == false) return Logger.WarnReturn(false, "CleanUpAbilityKeyMappingsAfterRespec(): IsInWorld == false");
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult))
+            {
+                Property.FromParam(kvp.Key, 0, out int specIndex);
+                Property.FromParam(kvp.Key, 1, out int reasonValue);
+
+                // Do not reset key mappings for player requested respecs
+                if ((PowersRespecReason)reasonValue == PowersRespecReason.PlayerRequest)
+                    continue;
+
+                foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
+                {
+                    if (keyMapping.PowerSpecIndex != specIndex)
+                        continue;
+
+                    keyMapping.CleanUpAfterRespec(this);
+                }
+            }
+
+            return true;
         }
 
         private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
@@ -3475,7 +3579,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             CombatLevel = newLevel;
         }
 
-        public override long AwardXP(long amount, bool showXPAwardedText)
+        public override long AwardXP(long amount, long minAmount, bool showXPAwardedText)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(0L, "AwardXP(): player == null");
@@ -3484,10 +3588,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player.HasAvatarAsCappedStarter(this))
                 return 0;
 
-            long awardedAmount = base.AwardXP(amount, showXPAwardedText);
+            // The base method applies the cosmic prestige xp penalty, we use the original amount to calculate AA/legendary/team-up xp
+            long awardedAmount = base.AwardXP(amount, minAmount, showXPAwardedText);
 
             // Award alternate advancement XP (omega or infinity)
-            // TODO: Remove the cosmic prestige experience penalty for omega / infinity
             if (Game.InfinitySystemEnabled)
             {
                 float infinityLiveTuningMult = 1f;
@@ -3521,7 +3625,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Award XP to the current team-up as well if there is one
-            CurrentTeamUpAgent?.AwardXP(amount, showXPAwardedText);
+            CurrentTeamUpAgent?.AwardXP(amount, 0, showXPAwardedText);
 
             return awardedAmount;
         }
@@ -3538,19 +3642,33 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto != null ? advancementProto.StarterAvatarLevelCap : 0;
         }
 
-        public bool IsAtMaxPrestigeLevel()
-        {
-            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
-            if (advancementProto == null) return false;
-            return PrestigeLevel >= advancementProto.MaxPrestigeLevel;
-        }
-
         public override long GetLevelUpXPRequirement(int level)
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
             if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
 
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
+        }
+
+        public override float GetPrestigeXPFactor()
+        {
+            int prestigeLevel = PrestigeLevel;
+            if (prestigeLevel == 0)
+                return 1f;
+
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+
+            Curve pctXPFromPrestigeLevelCurve = advancementProto.PctXPFromPrestigeLevelCurve.AsCurve();
+            if (pctXPFromPrestigeLevelCurve == null) return Logger.WarnReturn(1f, "GetPrestigeXPFactor(): pctXPFromPrestigeLevelCurve == null");
+
+            if (prestigeLevel == advancementProto.MaxPrestigeLevel)
+            {
+                float liveTuningXPPct = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_CosmicPrestigeXPPct);
+                if (liveTuningXPPct != 1f)
+                    return liveTuningXPPct;
+            }
+
+            return pctXPFromPrestigeLevelCurve.GetAt(prestigeLevel);
         }
 
         public override int TryLevelUp(Player owner, bool isInitializing = false)
@@ -3663,6 +3781,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 UpdateTravelPower();
             }
 
+            // Remove items that are no longer equippable (e.g. if we are leveling down via prestige)
+            CheckEquipmentRestrictions();
+
             // Restore health if needed
             if (restoreHealthAndEndurance && IsDead == false)
                 Properties[PropertyEnum.Health] = Properties[PropertyEnum.HealthMax];
@@ -3688,22 +3809,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             if (IsInWorld)
-            {
-                // Slot ALL default abilities
-                // (this is dumb, but we have to do this to avoid desync with the client, see CAvatar::autoSlotPowers())
-                AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
-                if (keyMapping != null)
-                {
-                    List<HotkeyData> hotkeyDataList = ListPool<HotkeyData>.Instance.Get();
-                    if (keyMapping.GetDefaultAbilities(hotkeyDataList, this))
-                    {
-                        foreach (HotkeyData hotkeyData in hotkeyDataList)
-                            SlotAbility(hotkeyData.AbilityProtoRef, hotkeyData.AbilitySlot, false, true);
-                    }
-
-                    ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
-                }
-            }
+                AutoSlotPowers();
 
             var player = GetOwnerOfType<Player>();
             if (player == null) return false;
@@ -4083,6 +4189,64 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // NOTE: Avatar mode is hardcoded to 0 since hardcore and ladder avatars never got implemented
             owner.Properties[PropertyEnum.AvatarLibraryCostume, 0, PrototypeDataRef] = costumeProtoRef;
+
+            return true;
+        }
+
+        public bool GiveStartingCostume()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "GiveStartingCostume(): avatarProto == null");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "GiveStartingCostume(): player == null");
+
+            Inventory costumeInventory = GetInventory(InventoryConvenienceLabel.Costume);
+            if (costumeInventory == null) return Logger.WarnReturn(false, "GiveStartingCostume(): costumeInventory == null");
+
+            Inventory generalInventory = player.GetInventory(InventoryConvenienceLabel.General);
+            if (generalInventory == null) return Logger.WarnReturn(false, "GiveStartingCostume(): generalInventory == null");
+
+            Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (deliveryBox == null) return Logger.WarnReturn(false, "GiveStartingCostume(): deliveryBox == null");
+
+            Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+            if (errorRecovery == null) return Logger.WarnReturn(false, "GiveStartingCostume(): errorRecovery == null");
+
+            PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
+            if (startingCostumeProtoRef == PrototypeId.Invalid)
+                return true;
+
+            ItemSpec itemSpec = Game.LootManager.CreateItemSpec(startingCostumeProtoRef, LootContext.CashShop, player);
+
+            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            entitySettings.EntityRef = itemSpec.ItemProtoRef;
+            entitySettings.ItemSpec = itemSpec;
+
+            Item costume = Game.EntityManager.CreateEntity(entitySettings) as Item;
+            if (costume == null)
+                return Logger.WarnReturn(false, $"GiveStartingCostume(): Failed to create starting costume for avatar [{this}]");
+
+            InventoryResult result = costume.ChangeInventoryLocation(costumeInventory);
+
+            if (result != InventoryResult.Success)
+                result = costume.ChangeInventoryLocation(generalInventory);
+
+            if (result != InventoryResult.Success)
+                result = costume.ChangeInventoryLocation(deliveryBox);
+
+            if (result != InventoryResult.Success)
+            {
+                Logger.Error($"GiveStartingCostume(): Failed to put costume [{costume}] into delivery box for avatar [{this}]");
+                result = costume.ChangeInventoryLocation(errorRecovery);
+            }
+
+            if (result != InventoryResult.Success)
+            {
+                Logger.Error($"GiveStartingCostume(): Failed to put costume [{costume}] into error recovery for avatar [{this}]");
+                costume.Destroy();
+                return false;
+            }
 
             return true;
         }
@@ -5065,6 +5229,218 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #endregion
 
+        #region Prestige
+
+        public bool ResetMissions()
+        {
+            Logger.Trace($"ResetMissions(): [{this}]");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "ResetMissions(): player == null");
+
+            MissionManager missionManager = player.MissionManager;
+            if (missionManager == null) return Logger.WarnReturn(false, "ResetMissions(): missionManager == null");
+
+            RegionConnectionTargetPrototype targetProto = GameDatabase.GlobalsPrototype.DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "ResetMissions(): targetProto == null");
+
+            PrototypeId chapterProtoRef = GameDatabase.MissionGlobalsPrototype.InitialChapter;
+            
+            if (IsInWorld)
+            {
+                player.QueueLoadingScreen(targetProto.Region);
+                ExitWorld();
+            }
+
+            Properties.RemoveProperty(PropertyEnum.LastTownRegion);
+            foreach (PropertyEnum bodysliderProp in Property.BodysliderProperties)
+                Properties.RemoveProperty(bodysliderProp);
+
+            bool success = missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true);
+
+            if (success == false)
+                Logger.Warn($"ResetMissions(): Failed to reset missions for avatar [{this}]");
+
+            // TODO: Fix this when we overhaul the teleport system
+            player.TEMP_ScheduleMoveToTarget(targetProto.DataRef, TimeSpan.FromMilliseconds(500));
+            // TODO: Reset map discovery data
+
+            return success;
+        }
+
+        public bool ActivatePrestigeMode()
+        {
+            Logger.Trace($"ActivatePrestigeMode(): [{this}]");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): player == null");
+
+            RegionConnectionTargetPrototype targetProto = GameDatabase.GlobalsPrototype.DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): targetProto == null");
+
+            if (CanActivatePrestigeMode() == false) return Logger.WarnReturn(false, "ActivatePrestigeMode(): CanActivatePrestigeMode() == false");
+
+            player.QueueLoadingScreen(targetProto.Region);
+
+            // Clear transform mode
+            PrototypeId currentTransformMode = CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid)
+                OnTransformModeChange(PrototypeId.Invalid, currentTransformMode, false);
+
+            // Exit
+            ExitWorld();
+
+            // Respec
+            UnassignAllMappedPowers();
+
+            int unlockedSpec = GetPowerSpecIndexUnlocked();
+            for (int i = 0; i <= unlockedSpec; i++)
+                RespecPowerSpec(i, PowersRespecReason.Prestige, true);
+
+            // Adjust properties
+            Properties.AdjustProperty(1, PropertyEnum.AvatarPrestigeLevel);
+            Properties[PropertyEnum.NumberOfDeaths] = 0;
+            Properties.RemoveProperty(PropertyEnum.DifficultyTierPreference);
+
+            // Get rid of controlled agents
+            RemoveAndKillControlledAgent();
+
+            // Reset level (this also removes equipment)
+            InitializeLevel(1);
+            ResetResources(false);
+
+            // Loot!
+            int prestigeLevel = PrestigeLevel;
+            AwardPrestigeLoot(prestigeLevel);
+
+            ResetMissions();
+
+            // Invoke achievement events
+            PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);
+            if (prestigeLevelProto == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): prestigeLevelProto == null");
+
+            player.OnScoringEvent(new(ScoringEventType.AvatarPrestigeLevel, prestigeLevel));
+
+            int avatarsAtPrestigeLevelCount = ScoringEvents.GetPlayerAvatarsAtPrestigeLevel(player, prestigeLevel);
+            player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevel, prestigeLevelProto, avatarsAtPrestigeLevelCount));
+
+            return true;
+        }
+
+        public bool IsAtMaxPrestigeLevel()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return false;
+            return PrestigeLevel >= advancementProto.MaxPrestigeLevel;
+        }
+
+        public bool CanActivatePrestigeMode()
+        {
+            if (PartyId != InvalidId)
+                return false;
+
+            if (CharacterLevel < GetAvatarLevelCap())
+                return false;
+
+            if (IsAtMaxPrestigeLevel())
+                return false;
+
+            return IsInTown();
+        }
+
+        private bool CheckEquipmentRestrictions()
+        {
+            // This can be called during initialization before this avatar has a player
+            Player player = GetOwnerOfType<Player>();
+            if (player == null)
+                return true;
+
+            Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
+            if (deliveryBox == null) return Logger.WarnReturn(false, "CheckEquipmentRestrictions(): deliveryBox == null");
+
+            Inventory errorRecovery = player.GetInventory(InventoryConvenienceLabel.ErrorRecovery);
+            if (errorRecovery == null) return Logger.WarnReturn(false, "CheckEquipmentRestrictions(): errorRecovery == null");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            InventoryCollection inventoryCollection = player.InventoryCollection;
+
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.Equipment))
+            {
+                Inventory.Enumerator enumerator = inventory.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    Item item = entityManager.GetEntity<Item>(enumerator.Current.Id);
+                    if (item == null)
+                    {
+                        Logger.Warn("CheckEquipmentRestrictions(): item == null");
+                        continue;
+                    }
+
+                    if (inventory.PassesEquipmentRestrictions(item, out _) == InventoryResult.Success)
+                        continue;
+
+                    // Unequip items that don't pass the restrictions
+                    InventoryResult result = InventoryResult.Invalid;
+
+                    // General
+                    inventoryCollection.GetInventoryForItem(item, InventoryCategory.PlayerGeneral, out Inventory general);
+                    if (general != null)
+                        result = item.ChangeInventoryLocation(general);
+
+                    // Delivery Box
+                    if (result != InventoryResult.Success)
+                        result = item.ChangeInventoryLocation(deliveryBox);
+
+                    // Error Recovery
+                    if (result != InventoryResult.Success)
+                        result = item.ChangeInventoryLocation(errorRecovery);
+
+                    if (result != InventoryResult.Success)
+                    {
+                        Logger.Warn($"CheckEquipmentRestrictions(): Failed to remove equipped item [{item}] from avatar [{this}]");
+                        continue;
+                    }
+
+                    // Restart iteration on successful removal
+                    enumerator = inventory.GetEnumerator();
+                }
+            }
+
+            return true;
+        }
+
+        private bool AwardPrestigeLoot(int prestigeLevel)
+        {
+            PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);
+            if (prestigeLevelProto == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): prestigeLevelProto == null");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): player == null");
+
+            // Award loot from the prestige loot table (BIF)
+            PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
+            if (prestigeLootTableProtoRef != PrototypeId.Invalid)
+            {
+                using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                settings.Initialize(LootContext.Initialization, player, null, 1);
+
+                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
+                {
+                    (prestigeLootTableProtoRef, LootActionType.Give)
+                };
+
+                Game.LootManager.AwardLootFromTables(tables, settings, 1);
+            }
+
+            // HACK: Also give starting costume, although it was removed in 1.52
+            GiveStartingCostume();
+
+            return true;
+        }
+
+        #endregion
+
         #region Event Handlers
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -5668,6 +6044,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             UpdateTimePlayed(player);
 
+            Properties.RemovePropertyRange(PropertyEnum.PowersRespecResult);
+
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
 
@@ -5831,6 +6209,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class TransformModeExitPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoTransformModeExitPowerCallback(p1);
+        }
+
+        private class UnassignMappedPowersForRespecEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).UnassignMappedPowersForRespec();
         }
 
         #endregion

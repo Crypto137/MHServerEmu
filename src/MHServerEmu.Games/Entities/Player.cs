@@ -1228,8 +1228,11 @@ namespace MHServerEmu.Games.Entities
             if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Avatar>(null, "GetAvatar(): avatarProtoRef == PrototypeId.Invalid");
 
             AvatarIterator iterator = new(this, AvatarIteratorMode.IncludeArchived, avatarProtoRef);
+            AvatarIterator.Enumerator enumerator = iterator.GetEnumerator();
+            if (enumerator.MoveNext())
+                return enumerator.Current;
 
-            return iterator.FirstOrDefault();
+            return null;
         }
 
         public Avatar GetActiveAvatarById(ulong avatarEntityId)
@@ -1796,6 +1799,13 @@ namespace MHServerEmu.Games.Entities
         {
             _teleportData.Set(regionId, position, orientation);
             QueueLoadingScreen(regionId);
+        }
+
+        public void TEMP_ScheduleMoveToTarget(PrototypeId targetProtoRef, TimeSpan delay)
+        {
+            // REMOVEME: Get rid of this when we overhaul the teleport system
+            EventPointer<MoveToTargetEvent> moveToTargetEvent = new();
+            ScheduleEntityEvent(moveToTargetEvent, delay, targetProtoRef);
         }
 
         public void OnCellLoaded(uint cellId, ulong regionId)
@@ -2698,6 +2708,11 @@ namespace MHServerEmu.Games.Entities
         private class CheckHoursPlayedEvent : CallMethodEvent<Player>
         {
             protected override CallbackDelegate GetCallback() => (player) => player.CheckHoursPlayed();
+        }
+
+        private class MoveToTargetEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).PlayerConnection.MoveToTarget(p1);
         }
 
         private struct TeleportData

@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionAvatarIsUnlocked : MissionPlayerCondition
     {
         private MissionConditionAvatarIsUnlockedPrototype _proto;
-        private Action<PlayerUnlockedAvatarGameEvent> _playerUnlockedAvatarAction;
+        private Event<PlayerUnlockedAvatarGameEvent>.Action _playerUnlockedAvatarAction;
 
         public MissionConditionAvatarIsUnlocked(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -40,7 +41,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerUnlockedAvatar(PlayerUnlockedAvatarGameEvent evt)
+        private void OnPlayerUnlockedAvatar(in PlayerUnlockedAvatarGameEvent evt)
         {
             var player = evt.Player;
             var avatarRef = evt.AvatarRef;

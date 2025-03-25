@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,9 +8,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionHotspotContains : MissionConditionContains
     {
         private MissionConditionHotspotContainsPrototype _proto;
-        private Action<EntityEnteredMissionHotspotGameEvent> _entityEnteredMissionHotspotAction;
-        private Action<EntityLeftMissionHotspotGameEvent> _entityLeftMissionHotspotAction;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
+        private Event<EntityEnteredMissionHotspotGameEvent>.Action _entityEnteredMissionHotspotAction;
+        private Event<EntityLeftMissionHotspotGameEvent>.Action _entityLeftMissionHotspotAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
 
         public MissionConditionHotspotContains(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -59,19 +60,19 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
+        private void OnEntityEnteredMissionHotspot(in EntityEnteredMissionHotspotGameEvent evt)
         {
             if (EvaluateEntity(evt.Target, evt.Hotspot))
                 Count++;
         }
 
-        private void OnEntityLeftMissionHotspot(EntityLeftMissionHotspotGameEvent evt)
+        private void OnEntityLeftMissionHotspot(in EntityLeftMissionHotspotGameEvent evt)
         {
             if (EvaluateEntity(evt.Target, evt.Hotspot))
                 Count--;
         }
 
-        private void OnEntityDeadAction(EntityDeadGameEvent evt)
+        private void OnEntityDeadAction(in EntityDeadGameEvent evt)
         {
             var entity = evt.Defender;
             if (entity == null) return;

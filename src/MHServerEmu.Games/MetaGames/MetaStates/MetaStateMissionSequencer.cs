@@ -12,8 +12,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateMissionSequencer : MetaState
     {
 	    private MetaStateMissionSequencerPrototype _proto;
-        private Action<OpenMissionCompleteGameEvent> _openMissionCompleteAction;
-        private Action<OpenMissionFailedGameEvent> _openMissionFailedAction;
+        private Event<OpenMissionCompleteGameEvent>.Action _openMissionCompleteAction;
+        private Event<OpenMissionFailedGameEvent>.Action _openMissionFailedAction;
         private EventPointer<SpawnEntryEvent> _spawnEntryEvent;
         private EventPointer<MissionCompleteEvent> _missionCompleteEvent;
         private List<MetaMissionEntryPrototype> _entries;
@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        private void OnOpenMissionComplete(in OpenMissionCompleteGameEvent evt)
         {
             if (_proto.Sequence.IsNullOrEmpty()) return;
             if (_index < 0 || _index >= _proto.Sequence.Length) return;
@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             }
         }
 
-        private void OnOpenMissionFailed(OpenMissionFailedGameEvent evt)
+        private void OnOpenMissionFailed(in OpenMissionFailedGameEvent evt)
         {
             if (_proto.Sequence.IsNullOrEmpty()) return;
             if (_index < 0 || _index >= _proto.Sequence.Length) return;
