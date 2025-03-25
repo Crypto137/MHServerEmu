@@ -35,6 +35,16 @@ namespace MHServerEmu.Games.Entities
         NoPowerLOS
     }
 
+    public enum PowersRespecReason    // UnrealGameAdapter::ShowPowersRespecNotificationDialog()
+    {
+        Invalid,
+        PlayerRequest,
+        Prestige,
+        VersionOutOfDate,
+        PointTotalInvalid,
+        SpecificPower
+    }
+
     public class Agent : WorldEntity
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -1444,6 +1454,7 @@ namespace MHServerEmu.Games.Entities
         public int GetPowerSpecIndexActive()
         {
             if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetPowerSpecIndexActive(): this is not Avatar && IsTeamUpAgent == false");
+
             return Properties[PropertyEnum.PowerSpecIndexActive];
         }
 
@@ -1452,6 +1463,67 @@ namespace MHServerEmu.Games.Entities
             if (IsTeamUpAgent == false) return Logger.WarnReturn(0, "GetPowerSpecIndexUnlocked(): IsTeamUpAgent == false");
 
             return GameDatabase.AdvancementGlobalsPrototype.MaxPowerSpecIndexForTeamUps;
+        }
+
+        public virtual bool RespecPowerSpec(int specIndex, PowersRespecReason reason, bool skipValidation = false, PrototypeId powerProtoRef = PrototypeId.Invalid)
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "RespecPowerSpec(): this is not Avatar && IsTeamUpAgent == false");
+
+            if (skipValidation == false && CanRespecPowers() == false)
+                return false;
+
+            // Lock powers (V48_TODO: is this where in pre-BUE power points should be unassigned?)
+            if (specIndex == GetPowerSpecIndexActive())
+                UpdatePowerProgressionPowers(true);
+
+            // Clean up previous respecs
+            List<PropertyId> removeList = ListPool<PropertyId>.Instance.Get();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult, specIndex))
+                removeList.Add(kvp.Key);
+
+            foreach (PropertyId propId in removeList)
+                Properties.RemoveProperty(propId);
+
+            ListPool<PropertyId>.Instance.Return(removeList);
+
+            // Set the new respec
+            if (powerProtoRef == PrototypeId.Invalid)
+                powerProtoRef = GameDatabase.GlobalsPrototype.PowerPrototype;
+
+            Properties[PropertyEnum.PowersRespecResult, specIndex, (int)reason, powerProtoRef] = true;
+
+            return true;
+        }
+
+        public bool CanRespecPowers()
+        {
+            if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "CanRespecPowers(): this is not Avatar && IsTeamUpAgent == false");
+
+            // Check for hub/training room overrides that always allow to respec
+            if (IsInWorld)
+            {
+                Region region = Region;
+                if (region == null) return Logger.WarnReturn(false, "CanRespecPowers(): region == null");
+
+                RegionPrototype regionProto = region.Prototype;
+                if (regionProto == null) return Logger.WarnReturn(false, "CanRespecPowers(): regionProto == null");
+
+                if (regionProto.SynergyEditAllowed)
+                    return true;
+            }
+
+            if (Properties[PropertyEnum.IsInCombat])
+                return false;
+
+            // Team-ups need to check their owner avatar because some of their powers are assigned to the owner as procs
+            if (IsTeamUpAgent)
+            {
+                Avatar teamUpOwner = TeamUpOwner;
+                if (teamUpOwner != null)
+                    return teamUpOwner.CanRespecPowers();
+            }
+
+            return true;
         }
 
         #endregion

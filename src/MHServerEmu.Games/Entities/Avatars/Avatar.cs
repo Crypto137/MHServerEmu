@@ -50,6 +50,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<DespawnControlledEvent> _despawnControlledEvent = new();
         private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
         private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
+        private readonly EventPointer<UnassignMappedPowersForRespecEvent> _unassignMappedPowersForRespec = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -1859,6 +1860,37 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player.PowerSpecIndexUnlocked;
         }
 
+        public override bool RespecPowerSpec(int specIndex, PowersRespecReason reason, bool skipValidation = false, PrototypeId powerProtoRef = PrototypeId.Invalid)
+        {
+            // Schedule deferred removal of mapped powers after respec finishes doing its thing
+            Game.GameEventScheduler.CancelEvent(_unassignMappedPowersForRespec);
+            ScheduleEntityEvent(_unassignMappedPowersForRespec, TimeSpan.FromMilliseconds(500));
+
+            // Unassign talents
+            List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+            GetTalentPowersForSpec(specIndex, talentPowerList);
+
+            foreach (PrototypeId talentPowerRef in talentPowerList)
+                UnassignTalentPower(talentPowerRef, specIndex);
+
+            if (talentPowerList.Count > 0)
+            {
+                // Set the new respec
+                if (powerProtoRef == PrototypeId.Invalid)
+                    powerProtoRef = GameDatabase.GlobalsPrototype.PowerPrototype;
+
+                Properties[PropertyEnum.PowersRespecResult, specIndex, (int)reason, powerProtoRef] = true;
+
+                // Early return (V48_TODO: this probably shouldn't happen for pre-BUE?)
+                ListPool<PrototypeId>.Instance.Return(talentPowerList);
+                return true;
+            }
+
+            // Fall back to base implementation if no talents were unassigned
+            ListPool<PrototypeId>.Instance.Return(talentPowerList);
+            return base.RespecPowerSpec(specIndex, reason, skipValidation, powerProtoRef);
+        }
+
         #endregion
 
         #region Talents (Specialization Powers)
@@ -2261,6 +2293,32 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        public bool CanStealPowers()
+        {
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "CanStealPowers(): avatarProto == null");
+
+            return avatarProto.StealablePowersAllowed.HasValue();
+        }
+
+        private void UnassignMappedPowersForRespec()
+        {
+            // Rogue's mapped powers don't get reset on respec
+            if (CanStealPowers() == false)
+                return;
+
+            // Key mappings should have already been cleaned up by respec, so just remove the powers
+            List<PrototypeId> mappedPowerList = ListPool<PrototypeId>.Instance.Get();
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.AvatarMappedPower))
+                mappedPowerList.Add(kvp.Value);
+
+            foreach (PrototypeId mappedPowerRef in mappedPowerList)
+                UnassignPower(mappedPowerRef);
+
+            Properties.RemovePropertyRange(PropertyEnum.AvatarMappedPower);
+            ListPool<PrototypeId>.Instance.Return(mappedPowerList);
         }
 
         #endregion
@@ -2933,9 +2991,29 @@ namespace MHServerEmu.Games.Entities.Avatars
             ListPool<HotkeyData>.Instance.Return(hotkeyDataList);
         }
 
-        private void CleanUpAbilityKeyMappingsAfterRespec()
+        private bool CleanUpAbilityKeyMappingsAfterRespec()
         {
-            // TODO
+            if (IsInWorld == false) return Logger.WarnReturn(false, "CleanUpAbilityKeyMappingsAfterRespec(): IsInWorld == false");
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowersRespecResult))
+            {
+                Property.FromParam(kvp.Key, 0, out int specIndex);
+                Property.FromParam(kvp.Key, 1, out int reasonValue);
+
+                // Do not reset key mappings for player requested respecs
+                if ((PowersRespecReason)reasonValue == PowersRespecReason.PlayerRequest)
+                    continue;
+
+                foreach (AbilityKeyMapping keyMapping in _abilityKeyMappings)
+                {
+                    if (keyMapping.PowerSpecIndex != specIndex)
+                        continue;
+
+                    keyMapping.CleanUpAfterRespec(this);
+                }
+            }
+
+            return true;
         }
 
         private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
@@ -5783,6 +5861,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             UpdateTimePlayed(player);
 
+            Properties.RemovePropertyRange(PropertyEnum.PowersRespecResult);
+
             // Store missions to Avatar
             player?.MissionManager?.StoreAvatarMissions(this);
 
@@ -5946,6 +6026,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class TransformModeExitPowerEvent : CallMethodEventParam1<Entity, PrototypeId>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoTransformModeExitPowerCallback(p1);
+        }
+
+        private class UnassignMappedPowersForRespecEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).UnassignMappedPowersForRespec();
         }
 
         #endregion

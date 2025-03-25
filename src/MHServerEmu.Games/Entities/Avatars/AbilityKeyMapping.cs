@@ -6,6 +6,7 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -142,7 +143,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         /// <summary>
         /// Sets the ability <see cref="PrototypeId"/> to the specified <see cref="AbilitySlot"/>.
         /// </summary>
-        public bool SetAbilityInAbilitySlot(PrototypeId abilityPrototypeId, AbilitySlot abilitySlot)
+        public bool SetAbilityInAbilitySlot(PrototypeId abilityProtoRef, AbilitySlot abilitySlot)
         {
             if (Avatar.IsActiveAbilitySlot(abilitySlot) == false)
                 return Logger.WarnReturn(false, $"SetAbilityInAbilitySlot(): Invalid ability slot {abilitySlot}");
@@ -150,11 +151,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             switch (abilitySlot)
             {
                 case AbilitySlot.PrimaryAction:
-                    _primaryAction = abilityPrototypeId;
+                    _primaryAction = abilityProtoRef;
                     ShouldPersist = true;
                     break;
                 case AbilitySlot.SecondaryAction:
-                    _secondaryAction = abilityPrototypeId;
+                    _secondaryAction = abilityProtoRef;
                     ShouldPersist = true;
                     break;
 
@@ -171,7 +172,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                         return Logger.WarnReturn(false, $"SetAbilityInAbilitySlot(): Unhandled ability slot {abilitySlot}");
 
                     int index = ConvertSlotToArrayIndex(abilitySlot);
-                    _actionKeys[index] = abilityPrototypeId;
+                    _actionKeys[index] = abilityProtoRef;
                     break;
             }
 
@@ -181,6 +182,34 @@ namespace MHServerEmu.Games.Entities.Avatars
         public void InitDedicatedAbilitySlots(Avatar avatar)
         {
             // TODO
+        }
+
+        public bool CleanUpAfterRespec(Avatar avatar)
+        {
+            AvatarPrototype avatarProto = avatar.AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "CleanUpAfterRespec(): avatarProto == null");
+
+            for (AbilitySlot slot = AbilitySlot.PrimaryAction; slot < AbilitySlot.NumActions; slot++)
+            {
+                PrototypeId abilityProtoRef = GetAbilityInAbilitySlot(slot);
+                if (abilityProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                // Do not remove slotted items
+                PowerPrototype powerProto = abilityProtoRef.As<PowerPrototype>();
+                if (powerProto == null)
+                    continue;
+
+                // Do not remove powers that are still available
+                avatar.GetPowerProgressionInfo(abilityProtoRef, out PowerProgressionInfo powerInfo);
+                if (avatar.ComputePowerRank(ref powerInfo, PowerSpecIndex, out _) > 0)
+                    continue;
+
+                SetAbilityInAbilitySlot(PrototypeId.Invalid, slot);
+            }
+
+            SlotDefaultAbilities(avatar);
+            return true;
         }
 
         /// <summary>
