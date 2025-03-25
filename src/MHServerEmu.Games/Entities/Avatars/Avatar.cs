@@ -21,6 +21,7 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
@@ -5325,9 +5326,38 @@ namespace MHServerEmu.Games.Entities.Avatars
             return true;
         }
 
-        private void AwardPrestigeLoot(int prestigeLevel)
+        private bool AwardPrestigeLoot(int prestigeLevel)
         {
-            // TODO
+            PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);
+            if (prestigeLevelProto == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): prestigeLevelProto == null");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): player == null");
+
+            // Award loot from the prestige loot table (BIF)
+            PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
+            if (prestigeLootTableProtoRef != PrototypeId.Invalid)
+            {
+                using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                settings.Initialize(LootContext.Initialization, player, null, 1);
+
+                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
+                {
+                    (prestigeLootTableProtoRef, LootActionType.Give)
+                };
+
+                Game.LootManager.AwardLootFromTables(tables, settings, 1);
+            }
+
+            // HACK: Also give starting costume, although it was removed in 1.52
+            AvatarPrototype avatarProto = AvatarPrototype;
+            if (avatarProto == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): avatarProto == null");
+
+            PrototypeId startingCostumeProtoRef = avatarProto.GetStartingCostumeForPlatform(Platforms.PC);
+            if (startingCostumeProtoRef != PrototypeId.Invalid)
+                Game.LootManager.GiveItem(startingCostumeProtoRef, LootContext.CashShop, player);
+
+            return true;
         }
 
         #endregion
