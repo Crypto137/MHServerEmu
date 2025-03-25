@@ -5322,7 +5322,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             player.OnScoringEvent(new(ScoringEventType.AvatarPrestigeLevel, prestigeLevel));
 
             int avatarsAtPrestigeLevelCount = ScoringEvents.GetPlayerAvatarsAtPrestigeLevel(player, prestigeLevel);
-            player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevelCap, prestigeLevelProto, avatarsAtPrestigeLevelCount));
+            player.OnScoringEvent(new(ScoringEventType.AvatarsAtPrestigeLevel, prestigeLevelProto, avatarsAtPrestigeLevelCount));
 
             return true;
         }
