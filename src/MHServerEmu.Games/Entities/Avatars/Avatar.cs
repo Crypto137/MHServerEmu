@@ -3579,7 +3579,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             CombatLevel = newLevel;
         }
 
-        public override long AwardXP(long amount, bool showXPAwardedText)
+        public override long AwardXP(long amount, long minAmount, bool showXPAwardedText)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(0L, "AwardXP(): player == null");
@@ -3588,10 +3588,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player.HasAvatarAsCappedStarter(this))
                 return 0;
 
-            long awardedAmount = base.AwardXP(amount, showXPAwardedText);
+            // The base method applies the cosmic prestige xp penalty, we use the original amount to calculate AA/legendary/team-up xp
+            long awardedAmount = base.AwardXP(amount, minAmount, showXPAwardedText);
 
             // Award alternate advancement XP (omega or infinity)
-            // TODO: Remove the cosmic prestige experience penalty for omega / infinity
             if (Game.InfinitySystemEnabled)
             {
                 float infinityLiveTuningMult = 1f;
@@ -3625,7 +3625,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             // Award XP to the current team-up as well if there is one
-            CurrentTeamUpAgent?.AwardXP(amount, showXPAwardedText);
+            CurrentTeamUpAgent?.AwardXP(amount, 0, showXPAwardedText);
 
             return awardedAmount;
         }
@@ -3648,6 +3648,27 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
 
             return advancementProto.GetAvatarLevelUpXPRequirement(level);
+        }
+
+        public override float GetPrestigeXPFactor()
+        {
+            int prestigeLevel = PrestigeLevel;
+            if (prestigeLevel == 0)
+                return 1f;
+
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+
+            Curve pctXPFromPrestigeLevelCurve = advancementProto.PctXPFromPrestigeLevelCurve.AsCurve();
+            if (pctXPFromPrestigeLevelCurve == null) return Logger.WarnReturn(1f, "GetPrestigeXPFactor(): pctXPFromPrestigeLevelCurve == null");
+
+            if (prestigeLevel == advancementProto.MaxPrestigeLevel)
+            {
+                float liveTuningXPPct = LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_CosmicPrestigeXPPct);
+                if (liveTuningXPPct != 1f)
+                    return liveTuningXPPct;
+            }
+
+            return pctXPFromPrestigeLevelCurve.GetAt(prestigeLevel);
         }
 
         public override int TryLevelUp(Player owner, bool isInitializing = false)

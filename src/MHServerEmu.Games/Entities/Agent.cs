@@ -1585,7 +1585,7 @@ namespace MHServerEmu.Games.Entities
             OnLevelUp(oldLevel, newLevel);
         }
 
-        public virtual long AwardXP(long amount, bool showXPAwardedText)
+        public virtual long AwardXP(long amount, long minAmount, bool showXPAwardedText)
         {
             if (this is not Avatar && IsTeamUpAgent == false)
                 return 0;
@@ -1594,15 +1594,18 @@ namespace MHServerEmu.Games.Entities
             Player owner = GetOwnerOfType<Player>();
             if (owner == null) return Logger.WarnReturn(0, "AwardXP(): owner == null");
 
-            // TODO: Apply PrestigeXPFactor
+            // Apply cosmic prestige penalty
+            long awardedAmount = Math.Max((long)(amount * GetPrestigeXPFactor()), minAmount);
+            if (awardedAmount <= 0)
+                return 0;
 
             if (IsAtLevelCap == false)
             {
-                Properties[PropertyEnum.ExperiencePoints] += amount;
+                Properties[PropertyEnum.ExperiencePoints] += awardedAmount;
                 TryLevelUp(owner);
             }
 
-            if (showXPAwardedText)
+            if (showXPAwardedText && owner.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
             {
                 owner.SendMessage(NetMessageShowXPAwardedText.CreateBuilder()
                     .SetXpAwarded(amount)
@@ -1621,6 +1624,11 @@ namespace MHServerEmu.Games.Entities
             if (advancementProto == null) return Logger.WarnReturn(0, "GetLevelUpXPRequirement(): advancementProto == null");
 
             return advancementProto.GetTeamUpLevelUpXPRequirement(level);
+        }
+
+        public virtual float GetPrestigeXPFactor()
+        {
+            return 1f;
         }
 
         public virtual int TryLevelUp(Player owner, bool isInitializing = false)

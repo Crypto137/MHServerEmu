@@ -25,7 +25,7 @@ namespace MHServerEmu.Commands.Implementations
             long xpNeeded = avatar.Properties[PropertyEnum.ExperiencePointsNeeded];
             long xpAmount = xpNeeded - xp;
 
-            avatar.AwardXP(xpAmount, true);            
+            avatar.AwardXP(xpAmount, xpAmount, true);            
 
             return $"Awarded {xpAmount} experience.";
         }
@@ -41,7 +41,7 @@ namespace MHServerEmu.Commands.Implementations
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ExperiencePoints);
             long expToAdd = (long)propertyInfo.Prototype.Max - avatar.Properties[PropertyEnum.ExperiencePoints];
 
-            avatar.AwardXP(expToAdd, true);
+            avatar.AwardXP(expToAdd, expToAdd, true);
 
             return $"Awarded {expToAdd} experience.";
         }
@@ -102,7 +102,7 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
-            avatar.AwardXP(amount, true);
+            avatar.AwardXP(amount, amount, true);
 
             return $"Awarded {amount} experience.";
         }
