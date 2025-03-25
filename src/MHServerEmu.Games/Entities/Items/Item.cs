@@ -1694,7 +1694,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return PlayerCanUseCraftingRecipe(player);
 
             if (HasItemActionType(ItemActionType.PrestigeMode))
-                return PlayerCanUsePrestigeMode(player, avatar);
+                return PlayerCanUsePrestigeMode(avatar);
 
             if (HasItemActionType(ItemActionType.AwardTeamUpXP))
                 return PlayerCanUseAwardTeamUpXP(player, avatar);
@@ -1768,11 +1768,12 @@ namespace MHServerEmu.Games.Entities.Items
             return InteractionValidateResult.UnknownFailure;
         }
 
-        private InteractionValidateResult PlayerCanUsePrestigeMode(Player player, Avatar avatar)
+        private InteractionValidateResult PlayerCanUsePrestigeMode(Avatar avatar)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUsePrestigeMode(): {avatar}");
-            return InteractionValidateResult.UnknownFailure;
+            if (avatar.CanActivatePrestigeMode() == false)
+                return InteractionValidateResult.ItemNotUsable;
+
+            return InteractionValidateResult.Success;
         }
 
         private InteractionValidateResult PlayerCanUseAwardTeamUpXP(Player player, Avatar avatar)

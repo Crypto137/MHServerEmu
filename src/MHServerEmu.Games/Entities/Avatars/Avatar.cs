@@ -3641,13 +3641,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             return advancementProto != null ? advancementProto.StarterAvatarLevelCap : 0;
         }
 
-        public bool IsAtMaxPrestigeLevel()
-        {
-            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
-            if (advancementProto == null) return false;
-            return PrestigeLevel >= advancementProto.MaxPrestigeLevel;
-        }
-
         public override long GetLevelUpXPRequirement(int level)
         {
             AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
@@ -5188,10 +5181,86 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (success == false)
                 Logger.Warn($"ResetMissions(): Failed to reset missions for avatar [{this}]");
 
-            player.PlayerConnection.MoveToTarget(targetProto.DataRef);  // TODO: Check this when we overhaul the teleport system
+            // TODO: Fix this when we overhaul the teleport system
+            player.TEMP_ScheduleMoveToTarget(targetProto.DataRef, TimeSpan.FromMilliseconds(500));
             // TODO: Reset map discovery data
 
             return success;
+        }
+
+        public bool ActivatePrestigeMode()
+        {
+            Logger.Trace($"ActivatePrestigeMode(): [{this}]");
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): player == null");
+
+            RegionConnectionTargetPrototype targetProto = GameDatabase.GlobalsPrototype.DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "ActivatePrestigeMode(): targetProto == null");
+
+            if (CanActivatePrestigeMode() == false) return Logger.WarnReturn(false, "ActivatePrestigeMode(): CanActivatePrestigeMode() == false");
+
+            player.QueueLoadingScreen(targetProto.Region);
+
+            // Clear transform mode
+            PrototypeId currentTransformMode = CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid)
+                OnTransformModeChange(PrototypeId.Invalid, currentTransformMode, false);
+
+            // Exit
+            ExitWorld();
+
+            // Respec
+            UnassignAllMappedPowers();
+
+            int unlockedSpec = GetPowerSpecIndexUnlocked();
+            for (int i = 0; i <= unlockedSpec; i++)
+                RespecPowerSpec(i, PowersRespecReason.Prestige, true);
+
+            // Adjust properties
+            Properties.AdjustProperty(1, PropertyEnum.AvatarPrestigeLevel);
+            Properties[PropertyEnum.NumberOfDeaths] = 0;
+            Properties.RemoveProperty(PropertyEnum.DifficultyTierPreference);
+
+            // Get rid of controlled agents
+            RemoveAndKillControlledAgent();
+
+            // Reset level (this also removes equipment)
+            InitializeLevel(1);
+            ResetResources(false);
+
+            // Loot!
+            int prestigeLevel = PrestigeLevel;
+            AwardPrestigeLoot(prestigeLevel);
+
+            ResetMissions();
+
+            // Invoke achievement events
+            player.OnScoringEvent(new(ScoringEventType.AvatarPrestigeLevel, prestigeLevel));
+            // TODO: ScoringEventType.AvatarsAtPrestigeLevel
+
+            return true;
+        }
+
+        public bool IsAtMaxPrestigeLevel()
+        {
+            AdvancementGlobalsPrototype advancementProto = GameDatabase.AdvancementGlobalsPrototype;
+            if (advancementProto == null) return false;
+            return PrestigeLevel >= advancementProto.MaxPrestigeLevel;
+        }
+
+        public bool CanActivatePrestigeMode()
+        {
+            if (PartyId != InvalidId)
+                return false;
+
+            if (CharacterLevel < GetAvatarLevelCap())
+                return false;
+
+            if (IsAtMaxPrestigeLevel())
+                return false;
+
+            return IsInTown();
         }
 
         private bool CheckEquipmentRestrictions()
@@ -5254,6 +5323,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private void AwardPrestigeLoot(int prestigeLevel)
+        {
+            // TODO
         }
 
         #endregion
