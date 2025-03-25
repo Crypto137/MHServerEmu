@@ -468,7 +468,8 @@ namespace MHServerEmu.Games.Missions
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
 
-            // TODO objetiveProto.ItemDropsCleanupRemaining
+            if (objetiveProto.ItemDrops.HasValue() && objetiveProto.ItemDropsCleanupRemaining)
+                Mission.CleanupItemDrops();
 
             if (_onStartActions != null && _onStartActions.Deactivate() == false) return false;
 
