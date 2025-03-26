@@ -2996,15 +2996,15 @@ namespace MHServerEmu.Games.Entities
                 foreach (var powerRef in EntityActionComponent.PerformPowers)
                     UnassignPower(powerRef);
                 EntityActionComponent.PerformPowers.Clear();
-                
-                // clear aggro range ?
-                /*if (AIController != null)
+
+                // clear aggro range override
+                if (AIController != null)
                 {
                     var collection = AIController.Blackboard.PropertyCollection;
-                    collection.RemoveProperty(PropertyEnum.AIAggroRangeAlly);
-                    collection.RemoveProperty(PropertyEnum.AIAggroRangeHostile);
+                    collection.RemoveProperty(PropertyEnum.AIAggroRangeOverrideAlly);
+                    collection.RemoveProperty(PropertyEnum.AIAggroRangeOverrideHostile);
                     collection.RemoveProperty(PropertyEnum.AIProximityRangeOverride);
-                }*/
+                }
             }
 
             if (IsInWorld)
@@ -3067,11 +3067,11 @@ namespace MHServerEmu.Games.Entities
                 var collection = AIController.Blackboard.PropertyCollection;
                 if (collection != null) 
                 {
-                    // set aggro range
+                    // set aggro range override
                     if (aiOverride.AIAggroRangeOverrideAlly > 0)
-                        collection[PropertyEnum.AIAggroRangeAlly] = (float)aiOverride.AIAggroRangeOverrideAlly;
+                        collection[PropertyEnum.AIAggroRangeOverrideAlly] = (float)aiOverride.AIAggroRangeOverrideAlly;
                     if (aiOverride.AIAggroRangeOverrideEnemy > 0)
-                        collection[PropertyEnum.AIAggroRangeHostile] = (float)aiOverride.AIAggroRangeOverrideEnemy;
+                        collection[PropertyEnum.AIAggroRangeOverrideHostile] = (float)aiOverride.AIAggroRangeOverrideEnemy;
                     if (aiOverride.AIProximityRangeOverride > 0)
                         collection[PropertyEnum.AIProximityRangeOverride] = (float)aiOverride.AIProximityRangeOverride;
                 }
