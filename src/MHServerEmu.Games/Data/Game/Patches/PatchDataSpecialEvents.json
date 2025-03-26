@@ -70,5 +70,29 @@
         "Description": "Disable AgentsOfSHIELDEvent until Leaderboards",
         "ValueType": "Enum",
         "Value": "NotInGame"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
+        "Path": "MarkerSet.Markers[27].EntityGuid",
+        "Description": "Add Dagger",
+        "ValueType": "PrototypeGuid",
+        "Value": 6158563480682235387
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
+        "Path": "MarkerSet.Markers[27].Position",
+        "Description": "Change Dagger position",
+        "ValueType": "Vector3",
+        "Value": [ -694.76, 2003.63, 160.97 ]
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
+        "Path": "MarkerSet.Markers[28].EntityGuid",
+        "Description": "Add Cloak",
+        "ValueType": "PrototypeGuid",
+        "Value": 13282508175937904349
     }
 ]
