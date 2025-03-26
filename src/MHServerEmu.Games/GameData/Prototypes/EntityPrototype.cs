@@ -558,6 +558,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     EntitySelectorActionEventType.OnDetectedEnemy |
                     EntitySelectorActionEventType.OnDetectedFriend |
                     EntitySelectorActionEventType.OnEnemyProximity |
+                    EntitySelectorActionEventType.OnDetectedPlayer |
                     EntitySelectorActionEventType.OnPlayerProximity;
 
                 foreach (var eventType in EventTypes)

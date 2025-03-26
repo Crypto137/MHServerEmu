@@ -3049,19 +3049,20 @@ namespace MHServerEmu.Games.Entities
                 // override AI
 
                 var brainRef = aiOverride.Brain;
-                if (brainRef == PrototypeId.Invalid) return false;
-
-                if (AIController == null)
+                if (brainRef != PrototypeId.Invalid)
                 {
-                    var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
-                    if (brain is not ProceduralAIProfilePrototype profile) return false;
-                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                    InitAIOverride(profile, properties);
-                    if (AIController == null) return false;
-                    AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+                    if (AIController == null)
+                    {
+                        var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
+                        if (brain is not ProceduralAIProfilePrototype profile) return false;
+                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        InitAIOverride(profile, properties);
+                        if (AIController == null) return false;
+                        AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+                    }
+                    else
+                        AIController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = brainRef;
                 }
-                else
-                    AIController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = brainRef;
 
                 var collection = AIController.Blackboard.PropertyCollection;
                 if (collection != null) 
