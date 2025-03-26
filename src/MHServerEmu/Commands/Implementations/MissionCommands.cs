@@ -80,7 +80,7 @@ namespace MHServerEmu.Commands.Implementations
             if (region == null) return "No region found.";
 
             mission = region.MissionManager?.FindMissionByDataRef(missionPrototypeId);
-            if (mission == null) return $"No mission found for {playerConnection.Player}";
+            if (mission == null) return $"No mission found for {region}";
 
             return null;
         }
