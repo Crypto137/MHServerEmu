@@ -30,34 +30,59 @@ namespace MHServerEmu.Commands.Implementations
         [Command("info", "Usage: mission info prototypeId.", AccountUserLevel.Admin)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
+            if (client == null)
+                return "You can only invoke this command from the game.";
 
-            if (@params.Length == 0) return "Invalid arguments. Type 'help mission info' to get help.";
+            if (@params.Length == 0)
+                return "Invalid arguments. Type 'help mission info' to get help.";
 
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PrototypeId missionPrototypeId)) == false)
                 return "No valid PrototypeId found. Type 'help mission info' to get help.";
+
+            string errorMessage = GetMission(client, missionPrototypeId, out Mission mission);
+            if (errorMessage != null) return errorMessage;
+
+            return mission.ToString();
+        }
+
+        [Command("reset", "Usage: mission reset prototypeId.", AccountUserLevel.Admin)]
+        public string Reset(string[] @params, FrontendClient client)
+        {
+            if (client == null)
+                return "You can only invoke this command from the game.";
+
+            if (@params.Length == 0)
+                return "Invalid arguments. Type 'help mission reset' to get help.";
+
+            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PrototypeId missionPrototypeId)) == false)
+                return "No valid PrototypeId found. Type 'help mission reset' to get help.";
+
+            string errorMessage = GetMission(client, missionPrototypeId, out Mission mission);
+            if (errorMessage != null) return errorMessage;
+
+            mission.RestartMission();
+
+            return $"{missionPrototypeId} restarted";
+        }
+
+        private string GetMission(FrontendClient client, PrototypeId missionPrototypeId, out Mission mission)
+        {
+            mission = null;
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             if (game == null) return "Game not found";
             if (playerConnection == null) return "PlayerConnection not found";
 
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
-            if (avatar == null || avatar.IsInWorld == false)
-                return "Avatar not found.";
+            mission = playerConnection.Player?.MissionManager?.FindMissionByDataRef(missionPrototypeId);
+            if (mission != null) return null;
 
-            Region region = avatar.Region;
+            Region region = playerConnection.Player.GetRegion();
             if (region == null) return "No region found.";
 
-            MissionManager missionManager = region.MissionManager;
-            if (missionManager == null) return "No MissionManager found.";
-
-            MissionPrototype missionProto = GameDatabase.GetPrototype<MissionPrototype>(missionPrototypeId);
-            if (missionProto == null) return "No valid Mission PrototypeId found. Type 'help mission info' to get help.";
-
-            Mission mission = MissionManager.FindMissionForPlayer(playerConnection.Player, missionPrototypeId);
+            mission = region.MissionManager?.FindMissionByDataRef(missionPrototypeId);
             if (mission == null) return $"No mission found for {playerConnection.Player}";
 
-            return mission.ToString();
+            return null;
         }
     }
 }
