@@ -50,7 +50,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         public bool EvaluateEntityFilter(EntityFilterPrototype entityFilter, WorldEntity entity)
         {
-            if (entity == null || entityFilter == null) return false;
+            if (entity == null || entityFilter == null || entity.IsControlledEntity) return false;
             return entityFilter.Evaluate(entity, new(Mission.PrototypeDataRef));
         }
 

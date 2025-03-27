@@ -4984,6 +4984,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (controlledInventory.Count > 0) return false;
 
+            // Trigger exited world event for controlled
+            Region?.EntityExitedWorldEvent.Invoke(new(controlled));
+
             controlled.Properties[PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId;
 
             controlled.AwardKillLoot(this, KillFlags.None, this);
