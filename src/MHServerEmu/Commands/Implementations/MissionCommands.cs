@@ -1,11 +1,8 @@
 ﻿using MHServerEmu.Commands.Attributes;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
-using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
@@ -47,7 +44,7 @@ namespace MHServerEmu.Commands.Implementations
             return "Story missions set to completed";
         }
 
-        [Command("region", "List all the mission prototypes in the current region.\nUsage: mission region", AccountUserLevel.Admin)]
+        [Command("region", "List all the mission prototypes in the current region.\nUsage: mission region")]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -58,11 +55,11 @@ namespace MHServerEmu.Commands.Implementations
             if (region == null) return "No region found.";
 
             ChatHelper.SendMetagameMessage(client, $"Missions in {region.PrototypeName} :", true);
-            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(k => GameDatabase.GetFormattedPrototypeName(k))), false);
+            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(GameDatabase.GetFormattedPrototypeName)), false);
             return string.Empty;
         }
 
-        [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].", AccountUserLevel.Admin)]
+        [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].")]
         public string Info(string[] @params, FrontendClient client)
         {
             if (client == null)
@@ -75,7 +72,44 @@ namespace MHServerEmu.Commands.Implementations
             if (errorMessage != null) return errorMessage;
 
             if (missionsFound.Count == 1)
-                return missionsFound[0].ToString();
+            {
+                var text = missionsFound[0].ToString();
+                ChatHelper.SendMetagameMessage(client, $"Mission info:", true);
+                ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", text), false);
+                return string.Empty;
+            }
+
+            ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
+            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+
+            return string.Empty;
+        }
+
+        [Command("complete", "Complete the given mission.\nUsage: mission complete [pattern].", AccountUserLevel.Admin)]
+        public string Complete(string[] @params, FrontendClient client)
+        {
+            if (client == null)
+                return "You can only invoke this command from the game.";
+
+            if (@params.Length == 0)
+                return "Invalid arguments. Type 'help mission complete' to get help.";
+
+            string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
+            if (errorMessage != null) return errorMessage;
+
+            if (missionsFound.Count == 1)
+            {
+                var mission = missionsFound[0];
+                if (mission != null && mission.State != MissionState.Completed)
+                {
+                    mission.SetState(MissionState.Completed, true);
+                    return $"{mission.PrototypeName} completed";
+                }
+                else
+                {
+                    return $"{mission.PrototypeName} already completed";
+                }
+            }
 
             ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
             ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);

@@ -1260,7 +1260,7 @@ namespace MHServerEmu.Games.Missions
 
             foreach (KeyValuePair<PrototypeId, Mission> entries in _missionDict)
             {
-                if (entries.Key.ToString().Contains(pattern) || entries.Value.PrototypeName.ToLower().Contains(pattern.ToLower()))
+                if (entries.Key.ToString().Contains(pattern) || entries.Value.Prototype.ToString().Contains(pattern, StringComparison.CurrentCultureIgnoreCase))
                     missionsFound.Add(entries.Value);
             }
 
