@@ -1308,6 +1308,31 @@ namespace MHServerEmu.Games.Entities
             return (index == 0) ? CurrentAvatar : null;
         }
 
+        public Avatar CreateAvatar(PrototypeId avatarProtoRef)
+        {
+            AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+            if (avatarProto == null) return Logger.WarnReturn<Avatar>(null, "CreateAvatar(): avatarProto == null");
+
+            if (GetAvatar(avatarProtoRef) != null)
+                return Logger.WarnReturn<Avatar>(null, $"CreateAvatar(): Player [{this}] is trying to create avatar {avatarProto} that is already unlocked");
+
+            Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
+            if (avatarLibrary == null) return Logger.WarnReturn<Avatar>(null, "CreateAvatar(): avatarLibrary == null");
+
+            using EntitySettings avatarSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            avatarSettings.EntityRef = avatarProtoRef;
+            avatarSettings.InventoryLocation = new(Id, avatarLibrary.PrototypeDataRef);
+
+            Avatar avatar = Game.EntityManager.CreateEntity(avatarSettings) as Avatar;
+            if (avatar == null) return Logger.ErrorReturn<Avatar>(null, "CreateAvatar(): avatar == null");
+
+            avatar.InitializeLevel(1);
+            avatar.ResetResources(false);
+            avatar.GiveStartingCostume();
+
+            return avatar;
+        }
+
         public Agent GetTeamUpAgent(PrototypeId teamUpProtoRef)
         {
             if (teamUpProtoRef == PrototypeId.Invalid) return Logger.WarnReturn<Agent>(null, "GetTeamUpAgent(): teamUpProtoRef == PrototypeId.Invalid");

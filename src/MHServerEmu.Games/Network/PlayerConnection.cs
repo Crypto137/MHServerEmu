@@ -190,27 +190,18 @@ namespace MHServerEmu.Games.Network
             if (Player.CurrentAvatar == null)
             {
                 // If we don't have an avatar after loading from the database it means this is a new player that we need to create avatars for
-                Inventory avatarLibrary = Player.GetInventory(InventoryConvenienceLabel.AvatarLibrary);
-                Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
-
-                PrototypeId defaultAvatarProtoRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
-
                 foreach (PrototypeId avatarRef in dataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                 {
-                    if (avatarRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
+                    if (avatarRef == (PrototypeId)6044485448390219466) //zzzBrevikOLD.prototype
+                        continue;
 
-                    using EntitySettings avatarSettings = ObjectPoolManager.Instance.Get<EntitySettings>();
-                    avatarSettings.EntityRef = avatarRef;
-                    avatarSettings.InventoryLocation = new(Player.Id, avatarRef == defaultAvatarProtoRef ? avatarInPlay.PrototypeDataRef : avatarLibrary.PrototypeDataRef);
-
-                    Avatar avatar = entityManager.CreateEntity(avatarSettings) as Avatar;
-                    if (avatar != null)
-                    {
-                        avatar.InitializeLevel(1);
-                        avatar.ResetResources(false);
-                        avatar.GiveStartingCostume();
-                    }
+                    Player.CreateAvatar(avatarRef);
                 }
+
+                // Put the default avatar into the play inventory
+                Avatar defaultAvatar = Player.GetAvatar(GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype);
+                Inventory avatarInPlay = Player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
+                defaultAvatar.ChangeInventoryLocation(avatarInPlay);
             }
 
             // Apply versioning if needed
