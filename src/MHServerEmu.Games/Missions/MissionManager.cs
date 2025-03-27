@@ -1249,6 +1249,24 @@ namespace MHServerEmu.Games.Missions
                 return null;
         }
 
+        /// <summary>
+        /// Return missions based on pattern. Used for MissionCommands
+        /// </summary>
+        public List<Mission> FindMissionsByPattern(string pattern)
+        {
+            List<Mission> missionsFound = new();
+            if (string.IsNullOrWhiteSpace(pattern) || _missionDict == null)
+                return missionsFound;
+
+            foreach (KeyValuePair<PrototypeId, Mission> entries in _missionDict)
+            {
+                if (entries.Key.ToString().Contains(pattern) || entries.Value.PrototypeName.ToLower().Contains(pattern.ToLower()))
+                    missionsFound.Add(entries.Value);
+            }
+
+            return missionsFound;
+        }
+
         public void ActivateMission(PrototypeId missionProtoRef)
         {
             var mission = MissionByDataRef(missionProtoRef);

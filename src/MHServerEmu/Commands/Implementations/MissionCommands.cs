@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Grouping;
 using static MHServerEmu.Commands.Implementations.DebugCommands;
 
 namespace MHServerEmu.Commands.Implementations
@@ -27,49 +28,10 @@ namespace MHServerEmu.Commands.Implementations
             return $"Mission Log [{flags}]";
         }
 
-        [Command("info", "Display information about the given mission.\nUsage: mission info prototypeId.", AccountUserLevel.Admin)]
-        public string Info(string[] @params, FrontendClient client)
-        {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
-            if (@params.Length == 0)
-                return "Invalid arguments. Type 'help mission info' to get help.";
-
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PrototypeId missionPrototypeId)) == false)
-                return "No valid PrototypeId found. Type 'help mission info' to get help.";
-
-            string errorMessage = GetMission(client, missionPrototypeId, out Mission mission);
-            if (errorMessage != null) return errorMessage;
-
-            return mission.ToString();
-        }
-
-        [Command("reset", "Restart the given mission.\nUsage: mission reset prototypeId.", AccountUserLevel.Admin)]
-        public string Reset(string[] @params, FrontendClient client)
-        {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
-            if (@params.Length == 0)
-                return "Invalid arguments. Type 'help mission reset' to get help.";
-
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out PrototypeId missionPrototypeId)) == false)
-                return "No valid PrototypeId found. Type 'help mission reset' to get help.";
-
-            string errorMessage = GetMission(client, missionPrototypeId, out Mission mission);
-            if (errorMessage != null) return errorMessage;
-
-            mission.RestartMission();
-
-            return $"{missionPrototypeId} restarted";
-        }
-
         [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory", AccountUserLevel.Admin)]
         public string CompleteStory(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             var manager = playerConnection.Player?.MissionManager;
@@ -85,22 +47,81 @@ namespace MHServerEmu.Commands.Implementations
             return "Story missions set to completed";
         }
 
-        private string GetMission(FrontendClient client, PrototypeId missionPrototypeId, out Mission mission)
+        [Command("region", "List all the mission prototypes in the current region.\nUsage: mission region", AccountUserLevel.Admin)]
+        public string Region(string[] @params, FrontendClient client)
         {
-            mission = null;
+            if (client == null) return "You can only invoke this command from the game.";
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            if (playerConnection == null) return "PlayerConnection not found";
+
+            Region region = playerConnection.Player.GetRegion();
+            if (region == null) return "No region found.";
+
+            ChatHelper.SendMetagameMessage(client, $"Missions in {region.PrototypeName} :", true);
+            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(k => GameDatabase.GetFormattedPrototypeName(k))), false);
+            return string.Empty;
+        }
+
+        [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].", AccountUserLevel.Admin)]
+        public string Info(string[] @params, FrontendClient client)
+        {
+            if (client == null)
+                return "You can only invoke this command from the game.";
+
+            if (@params.Length == 0)
+                return "Invalid arguments. Type 'help mission info' to get help.";
+
+            string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
+            if (errorMessage != null) return errorMessage;
+
+            if (missionsFound.Count == 1)
+                return missionsFound[0].ToString();
+
+            ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
+            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+
+            return string.Empty;
+        }
+
+        [Command("reset", "Restart the given mission.\nUsage: mission reset [pattern].", AccountUserLevel.Admin)]
+        public string Reset(string[] @params, FrontendClient client)
+        {
+            if (client == null)
+                return "You can only invoke this command from the game.";
+
+            if (@params.Length == 0)
+                return "Invalid arguments. Type 'help mission reset' to get help.";
+
+            string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
+            if (errorMessage != null) return errorMessage;
+
+            if (missionsFound.Count == 1)
+            {
+                missionsFound[0].RestartMission();
+                return $"{missionsFound[0].PrototypeName} restarted";
+            }
+
+            ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
+            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+
+            return string.Empty;
+        }
+
+        private string GetMissionFromPattern(FrontendClient client, string pattern, out List<Mission> missionsFound)
+        {
+            missionsFound = new();
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             if (game == null) return "Game not found";
             if (playerConnection == null) return "PlayerConnection not found";
 
-            mission = playerConnection.Player?.MissionManager?.FindMissionByDataRef(missionPrototypeId);
-            if (mission != null) return null;
+            missionsFound.AddRange(playerConnection.Player?.MissionManager?.FindMissionsByPattern(pattern));
 
             Region region = playerConnection.Player.GetRegion();
-            if (region == null) return "No region found.";
+            if (region != null)
+                missionsFound.AddRange(region.MissionManager?.FindMissionsByPattern(pattern));
 
-            mission = region.MissionManager?.FindMissionByDataRef(missionPrototypeId);
-            if (mission == null) return $"No mission found for {region}";
+            if (missionsFound.Count == 0) return $"No mission found";
 
             return null;
         }
