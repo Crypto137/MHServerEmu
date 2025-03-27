@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -73,14 +74,11 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
-        private MissionManager _missionManager;
-        private AchievementManager _achievementManager;
         private ReplicatedPropertyCollection _avatarProperties = new();
-        private ulong _shardId;
+        private ulong _shardId;     // This was probably used for database sharding, we don't need this
         private RepString _playerName = new();
         private ulong[] _consoleAccountIds = new ulong[(int)PlayerAvatarIndex.Count];
         private RepString _secondaryPlayerName = new();
-        private MatchQueueStatus _matchQueueStatus = new();
 
         // NOTE: EmailVerified and AccountCreationTimestamp are set in NetMessageGiftingRestrictionsUpdate that
         // should be sent in the packet right after logging in. NetMessageGetCurrencyBalanceResponse should be
@@ -96,11 +94,9 @@ namespace MHServerEmu.Games.Entities
 
         private Community _community;
         private List<PrototypeId> _unlockedInventoryList = new();
-        private SortedSet<AvailableBadges> _badges = new();
+        private SortedVector<AvailableBadges> _badges = new();
         private HashSet<ulong> _tagEntities = new();
         private Queue<PrototypeId> _kismetSeqQueue = new();
-        private GameplayOptions _gameplayOptions = new();
-        private AchievementState _achievementState = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
         // TODO: Serialize on migration
@@ -112,17 +108,13 @@ namespace MHServerEmu.Games.Entities
 
         public ArchiveVersion LastSerializedArchiveVersion { get; private set; } = ArchiveVersion.Current;    // Updated on serialization
 
-        // Accessors
-        public MissionManager MissionManager { get => _missionManager; }
-        public ulong ShardId { get => _shardId; }
-        public MatchQueueStatus MatchQueueStatus { get => _matchQueueStatus; }
-        public bool EmailVerified { get => _emailVerified; set => _emailVerified = value; }
-        public TimeSpan AccountCreationTimestamp { get => _accountCreationTimestamp; set => _accountCreationTimestamp = value; }
+        public MissionManager MissionManager { get; private set; }
+        public MatchQueueStatus MatchQueueStatus { get; private set; } = new();
         public override ulong PartyId { get => _partyId.Get(); }
         public Community Community { get => _community; }
-        public GameplayOptions GameplayOptions { get => _gameplayOptions; }
-        public AchievementState AchievementState { get => _achievementState; }
-        public AchievementManager AchievementManager { get => _achievementManager; }
+        public GameplayOptions GameplayOptions { get; private set; } = new();
+        public AchievementState AchievementState { get; private set; } = new();
+        public AchievementManager AchievementManager { get; private set; }
         public ScoringEventContext ScoringEventContext { get; set; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
@@ -163,10 +155,10 @@ namespace MHServerEmu.Games.Entities
 
         public Player(Game game) : base(game)
         {
-            _missionManager = new(Game, this);
-            _achievementManager = new(this);
+            MissionManager = new(Game, this);
+            AchievementManager = new(this);
             ScoringEventContext = new();
-            _gameplayOptions.SetOwner(this);
+            GameplayOptions.SetOwner(this);
         }
 
         public override bool Initialize(EntitySettings settings)
@@ -176,10 +168,8 @@ namespace MHServerEmu.Games.Entities
             PlayerConnection = settings.PlayerConnection;
             _playerName.Set(settings.PlayerName);
 
-            _shardId = 3;   // value from packet dumps
-
             Game.EntityManager.AddPlayer(this);
-            _matchQueueStatus.SetOwner(this);
+            MatchQueueStatus.SetOwner(this);
 
             _community = new(this);
             _community.Initialize();
@@ -214,7 +204,7 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: Clean up gameplay options init for new players
             if (settings.ArchiveData.IsNullOrEmpty())
-                _gameplayOptions.ResetToDefaults();
+                GameplayOptions.ResetToDefaults();
         }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -419,7 +409,7 @@ namespace MHServerEmu.Games.Entities
             if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
 
             if (archive.Version >= ArchiveVersion.AddedMissions)
-                success &= Serializer.Transfer(archive, ref _missionManager);
+                success &= Serializer.Transfer(archive, MissionManager);
 
             success &= Serializer.Transfer(archive, ref _avatarProperties);
 
@@ -430,7 +420,7 @@ namespace MHServerEmu.Games.Entities
                 success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
                 success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
                 success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
-                success &= Serializer.Transfer(archive, ref _matchQueueStatus);
+                success &= Serializer.Transfer(archive, MatchQueueStatus);
                 success &= Serializer.Transfer(archive, ref _emailVerified);
                 success &= Serializer.Transfer(archive, ref _accountCreationTimestamp);
 
@@ -439,10 +429,9 @@ namespace MHServerEmu.Games.Entities
                     success &= Serializer.Transfer(archive, ref _partyId);
                     success &= GuildMember.SerializeReplicationRuntimeInfo(archive, ref _guildId, ref _guildName, ref _guildMembership);
 
-                    // There is a string here that is always empty and is immediately discarded after reading, purpose unknown
+                    // Unused string, always empty
                     string emptyString = string.Empty;
                     success &= Serializer.Transfer(archive, ref emptyString);
-                    if (emptyString != string.Empty) Logger.Warn($"Serialize(): emptyString is not empty!");
                 }
             }
 
@@ -452,21 +441,20 @@ namespace MHServerEmu.Games.Entities
             if (hasCommunityData)
                 success &= Serializer.Transfer(archive, ref _community);
 
-            // Unknown bool, always false
+            // Unused bool, always false
             bool unkBool = false;
             success &= Serializer.Transfer(archive, ref unkBool);
-            if (unkBool) Logger.Warn($"Serialize(): unkBool is true!");
 
             success &= Serializer.Transfer(archive, ref _unlockedInventoryList);
 
             if (archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
                 success &= Serializer.Transfer(archive, ref _badges);
 
-            success &= Serializer.Transfer(archive, ref _gameplayOptions);
+            success &= Serializer.Transfer(archive, GameplayOptions);
 
-            // REMOVEME/TODO?: It seems achievement state is not supposed to be saved within player archives?
+            // Achievement state (NOTE: This is not saved in persistent archives in the client)
             if (archive.IsPersistent || archive.IsMigration || (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner)))
-                success &= Serializer.Transfer(archive, ref _achievementState);
+                success &= Serializer.Transfer(archive, AchievementState);
 
             success &= Serializer.Transfer(archive, ref _stashTabOptionsDict);
 
@@ -1206,20 +1194,36 @@ namespace MHServerEmu.Games.Entities
         /// <summary>
         /// Add the specified badge to this <see cref="Player"/>. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool AddBadge(AvailableBadges badge) => _badges.Add(badge);
+        public bool AddBadge(AvailableBadges badge)
+        {
+            return _badges.SortedInsert(badge);
+        }
 
         /// <summary>
         /// Removes the specified badge from this <see cref="Player"/>. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool RemoveBadge(AvailableBadges badge) => _badges.Remove(badge);
+        public bool RemoveBadge(AvailableBadges badge)
+        {
+            return _badges.Remove(badge);
+        }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="Player"/> has the specified badge.
         /// </summary>
-        public bool HasBadge(AvailableBadges badge) => _badges.Contains(badge);
+        public bool HasBadge(AvailableBadges badge)
+        {
+            return _badges.Contains(badge);
+        }
 
-        public void AddTag(WorldEntity entity) => _tagEntities.Add(entity.Id);
-        public void RemoveTag(WorldEntity entity) => _tagEntities.Remove(entity.Id);
+        public void AddTag(WorldEntity entity)
+        {
+            _tagEntities.Add(entity.Id);
+        }
+
+        public void RemoveTag(WorldEntity entity)
+        {
+            _tagEntities.Remove(entity.Id);
+        }
 
         #region Avatar and Team-Up Management
 
@@ -1998,14 +2002,14 @@ namespace MHServerEmu.Games.Entities
         {
             base.BuildString(sb);
 
-            sb.AppendLine($"{nameof(_missionManager)}: {_missionManager}");
+            sb.AppendLine($"{nameof(MissionManager)}: {MissionManager}");
             sb.AppendLine($"{nameof(_avatarProperties)}: {_avatarProperties}");
             sb.AppendLine($"{nameof(_shardId)}: {_shardId}");
             sb.AppendLine($"{nameof(_playerName)}: {_playerName}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[0]: {_consoleAccountIds[0]}");
             sb.AppendLine($"{nameof(_consoleAccountIds)}[1]: {_consoleAccountIds[1]}");
             sb.AppendLine($"{nameof(_secondaryPlayerName)}: {_secondaryPlayerName}");
-            sb.AppendLine($"{nameof(_matchQueueStatus)}: {_matchQueueStatus}");
+            sb.AppendLine($"{nameof(MatchQueueStatus)}: {MatchQueueStatus}");
             sb.AppendLine($"{nameof(_emailVerified)}: {_emailVerified}");
             sb.AppendLine($"{nameof(_accountCreationTimestamp)}: {Clock.UnixTimeToDateTime(_accountCreationTimestamp)}");
             sb.AppendLine($"{nameof(_partyId)}: {_partyId}");
@@ -2030,8 +2034,8 @@ namespace MHServerEmu.Games.Entities
                 sb.AppendLine();
             }
 
-            sb.AppendLine($"{nameof(_gameplayOptions)}: {_gameplayOptions}");
-            sb.AppendLine($"{nameof(_achievementState)}: {_achievementState}");
+            sb.AppendLine($"{nameof(GameplayOptions)}: {GameplayOptions}");
+            sb.AppendLine($"{nameof(AchievementState)}: {AchievementState}");
 
             foreach (var kvp in _stashTabOptionsDict)
                 sb.AppendLine($"{nameof(_stashTabOptionsDict)}[{GameDatabase.GetFormattedPrototypeName(kvp.Key)}]: {kvp.Value}");
@@ -2062,7 +2066,7 @@ namespace MHServerEmu.Games.Entities
         public void SetGameplayOptions(NetMessageSetPlayerGameplayOptions clientOptions)
         {
             GameplayOptions newOptions = new(clientOptions.OptionsData);
-            _gameplayOptions = newOptions;
+            GameplayOptions = newOptions;
 
             // TODO: Update chat channels
             CurrentAvatar?.UpdateAvatarSynergyExperienceBonus();
