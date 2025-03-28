@@ -151,7 +151,7 @@ namespace MHServerEmu.Games.Powers
             bool badEnd = (flags & (EndPowerFlags.Force | EndPowerFlags.ExitWorld | EndPowerFlags.Unassign)) != 0;
             if (badEnd || (goodEnd && powerProto.SummonsLiveWhilePowerActive))
                 if (powerProto.TrackInInventory)
-                    DestoySummoned(flags.HasFlag(EndPowerFlags.ExitWorld));
+                    DestroySummoned(flags.HasFlag(EndPowerFlags.ExitWorld));
 
             Game.GameEventScheduler.CancelEvent(_summonIntervalEvent);
             return true;
@@ -162,7 +162,7 @@ namespace MHServerEmu.Games.Powers
             base.OnEndChannelingPhase();
 
             if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
-                DestoySummoned(false);
+                DestroySummoned(false);
         }
 
         protected override bool SetToggleState(bool value, bool doNotStartCooldown = false)
@@ -172,7 +172,7 @@ namespace MHServerEmu.Games.Powers
             if (IsToggledOn() == false)
             {
                 if (SummonPowerPrototype?.SummonsLiveWhilePowerActive == true)
-                    DestoySummoned(false);
+                    DestroySummoned(false);
             }
 
             return true;
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games.Powers
 
             if (powerProto.ExtraActivation is ExtraActivateOnSubsequentPrototype extraActivate) 
                 if (extraActivate.ExtraActivateEffect == SubsequentActivateType.DestroySummonedEntity)
-                    if (DestoySummoned(false) == 0)
+                    if (DestroySummoned(false) == 0)
                         return PowerUseResult.ExtraActivationFailed;
 
             return base.RunExtraActivation(ref settings);
@@ -740,7 +740,7 @@ namespace MHServerEmu.Games.Powers
             return PowerUseResult.Success;
         }
 
-        private int DestoySummoned(bool exitWorld)
+        private int DestroySummoned(bool exitWorld)
         {
             int count = 0;
             var powerProto = SummonPowerPrototype;
