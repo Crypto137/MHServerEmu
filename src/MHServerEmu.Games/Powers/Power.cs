@@ -5325,8 +5325,8 @@ namespace MHServerEmu.Games.Powers
             if (scheduler == null) return Logger.WarnReturn(false, "SchedulePayloadDelivery(): scheduler == null");
 
             EventPointer<DeliverPayloadEvent> deliverPayloadEvent = new();
-            if (scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents))
-                deliverPayloadEvent.Get().Initialize(payload);
+            scheduler.ScheduleEvent(deliverPayloadEvent, deliveryDelay, payload.PendingEvents);
+            deliverPayloadEvent.Get().Initialize(payload);
 
             return true;
         }
