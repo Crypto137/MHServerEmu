@@ -169,7 +169,9 @@ namespace MHServerEmu.Games
                 playerConnection.Disconnect();
             NetworkManager.Update();        // We need this to process player saves (for now)
 
-            // TODO: destroy all entities
+            // Clean up entities
+            EntityManager.DestroyAllEntities();
+            EntityManager.ProcessDeferredLists();
 
             // Clean up regions
             RegionManager.DestroyAllRegions();
