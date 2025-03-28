@@ -49,6 +49,17 @@ namespace MHServerEmu.Games.Entities
         Count
     }
 
+    public enum CanSwitchAvatarResult
+    {
+        Success                     = 0,
+        NotAllowedInPrivateInstance = 1 << 0,
+        NotAllowedInRegion          = 1 << 1,
+        NotAllowedInQueue           = 1 << 2,
+        NotAllowedInTransformMode   = 1 << 3,
+        NotAllowedGeneric           = 1 << 4,
+        NotAllowedUnknown           = 1 << 5,
+    }
+
     // NOTE: These badges and their descriptions are taken from an internal build dated June 2015 (most likely version 1.35).
     // They are not fully implemented and they may be outdated for our version 1.52.
     public enum AvailableBadges
@@ -1383,8 +1394,26 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public bool BeginSwitchAvatar(PrototypeId avatarProtoRef)
+        public bool BeginSwitchAvatar(PrototypeId avatarProtoRef, bool ignoreGameplayRestrictions = false)
         {
+            Avatar currentAvatar = CurrentAvatar;
+            if (currentAvatar == null) return Logger.WarnReturn(false, "BeginSwitchAvatar(): currentAvatar == null");
+            if (currentAvatar.IsInWorld == false) return Logger.WarnReturn(false, "BeginSwitchAvatar(): currentAvatar.IsInWorld == false");
+
+            if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "BeginSwitchAvatar(): avatarProtoRef == PrototypeId.Invalid");
+            if (avatarProtoRef == currentAvatar.PrototypeDataRef) return Logger.WarnReturn(false, "BeginSwitchAvatar(): avatarProtoRef == currentAvatar.PrototypeDataRef");
+
+            Avatar avatarToSwitchTo = GetAvatar(avatarProtoRef);
+            CanSwitchAvatarResult result = CanSwitchToAvatar(currentAvatar, avatarToSwitchTo, ignoreGameplayRestrictions);
+            if (result != CanSwitchAvatarResult.Success)
+            {
+                // TODO: notify client
+                return false;
+            }
+
+            // TODO: Prefetch assets to ensure the swap-in animation always plays
+
+            // Activate the swap power
             Power avatarSwapChannel = CurrentAvatar.GetPower(GameDatabase.GlobalsPrototype.AvatarSwapChannelPower);
             if (avatarSwapChannel == null) return Logger.WarnReturn(false, "BeginSwitchAvatar(): avatarSwapChannel == null");
 
@@ -1690,6 +1719,91 @@ namespace MHServerEmu.Games.Entities
         public int GetMaxCharacterLevelAttainedForAvatar(PrototypeId avatarRef, AvatarMode avatarMode = AvatarMode.Normal)
         {
             return Math.Min(Properties[PropertyEnum.AvatarLibraryLevel, (int)avatarMode, avatarRef], Avatar.GetAvatarLevelCap());
+        }
+
+        private CanSwitchAvatarResult CanSwitchToAvatar(Avatar currentAvatar, Avatar avatarToSwitchTo, bool ignoreGameplayRestrictions)
+        {
+            if (ignoreGameplayRestrictions)
+                return CanSwitchAvatarResult.Success;
+
+            // Additional gameplay restrictions
+
+            // Generic check if avatar switch is possible
+            CanSwitchAvatarResult genericCheckResult = CanSwitchAvatars();
+            if (genericCheckResult != CanSwitchAvatarResult.Success)
+                return genericCheckResult;
+
+            // Avatar-specific checks
+            if (currentAvatar.IsDead)
+                return CanSwitchAvatarResult.NotAllowedUnknown;
+
+            // TODO: more checks
+
+            return CanSwitchAvatarResult.Success;
+        }
+
+        private CanSwitchAvatarResult CanSwitchAvatars(PlayerAvatarIndex avatarIndex = PlayerAvatarIndex.Primary)
+        {
+            Region region = GetRegion();
+            if (region == null) return Logger.WarnReturn(CanSwitchAvatarResult.NotAllowedUnknown, "CanSwitchAvatars(): region == null");
+
+            // Region lock
+            if (region.AvatarSwapEnabled == false && CurrentHUDTutorial?.HighlightAvatars.HasValue() == false)
+                return CanSwitchAvatarResult.NotAllowedInRegion;
+
+            RegionPrototype regionProto = region.Prototype;
+            if (regionProto == null) return Logger.WarnReturn(CanSwitchAvatarResult.NotAllowedUnknown, "CanSwitchAvatars(): regionProto == null");
+
+            if (regionProto.Behavior == RegionBehavior.PrivateStory)
+                return CanSwitchAvatarResult.NotAllowedInPrivateInstance;
+
+            // Transform mode
+            Avatar avatar = GetActiveAvatarByIndex((int)avatarIndex);
+            if (avatar == null) return Logger.WarnReturn(CanSwitchAvatarResult.NotAllowedUnknown, "CanSwitchAvatars(): avatar == null");
+
+            PrototypeId transformModeProtoRef = avatar.CurrentTransformMode;
+            if (transformModeProtoRef != PrototypeId.Invalid)
+            {
+                TransformModePrototype transformModeProto = transformModeProtoRef.As<TransformModePrototype>();
+                if (transformModeProto == null) return Logger.WarnReturn(CanSwitchAvatarResult.NotAllowedUnknown, "CanSwitchAvatars(): transformModeProto == null");
+
+                if (transformModeProto.GetDuration(avatar) != TimeSpan.Zero)
+                    return CanSwitchAvatarResult.NotAllowedInTransformMode; 
+            }
+
+            // Property restriction
+            if (avatar.Properties[PropertyEnum.NoAvatarSwap])
+                return CanSwitchAvatarResult.NotAllowedGeneric;
+
+            // Throwable
+            if (avatar.GetThrowablePower() != null)
+                return CanSwitchAvatarResult.NotAllowedGeneric;
+
+            // Check if the region prohibits the use of swap powers
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+
+            if (regionProto.PowerKeywordBlacklist.HasValue())
+            {
+                PowerPrototype swapOutPowerProto = globalsProto.AvatarSwapOutPower.As<PowerPrototype>();
+                if (swapOutPowerProto == null) return Logger.WarnReturn(CanSwitchAvatarResult.NotAllowedUnknown, "CanSwitchAvatars(): swapOutPowerProto == null");
+
+                PowerPrototype swapInPowerProto = globalsProto.AvatarSwapInPower.As<PowerPrototype>();
+                if (swapInPowerProto == null) return Logger.WarnReturn(CanSwitchAvatarResult.NotAllowedUnknown, "CanSwitchAvatars(): swapInPowerProto == null");
+
+                if (swapOutPowerProto.Keywords.ShareElement(regionProto.PowerKeywordBlacklist) || swapInPowerProto.Keywords.ShareElement(regionProto.PowerKeywordBlacklist))
+                    return CanSwitchAvatarResult.NotAllowedInRegion;
+            }
+
+            // Queue status
+            if (MatchQueueStatus.IsOwnerInQueue())
+                return CanSwitchAvatarResult.NotAllowedInQueue;
+
+            // Do not allow switching while using powers
+            PrototypeId activePowerRef = avatar.ActivePowerRef;
+            if (activePowerRef != PrototypeId.Invalid && activePowerRef != globalsProto.AvatarSwapChannelPower && activePowerRef != globalsProto.AvatarSwapOutPower)
+                return CanSwitchAvatarResult.NotAllowedGeneric;
+
+            return CanSwitchAvatarResult.Success;
         }
 
         #endregion
