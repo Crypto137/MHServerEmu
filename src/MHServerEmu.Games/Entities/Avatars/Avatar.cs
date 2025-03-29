@@ -5431,23 +5431,28 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): player == null");
 
-            // Award loot from the prestige loot table (BIF)
-            PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
-            if (prestigeLootTableProtoRef != PrototypeId.Invalid)
+            if (Game.CustomGameOptions.GrantStartingCostumeForPrestige == false)
             {
-                using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                settings.Initialize(LootContext.Initialization, player, null, 1);
-
-                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
+                // Award loot from the prestige loot table (same as BIF boxes), BUE behavior
+                PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
+                if (prestigeLootTableProtoRef != PrototypeId.Invalid)
                 {
+                    using LootInputSettings settings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    settings.Initialize(LootContext.Initialization, player, null, 1);
+
+                    Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
+                    {
                     (prestigeLootTableProtoRef, LootActionType.Give)
                 };
 
-                Game.LootManager.AwardLootFromTables(tables, settings, 1);
+                    Game.LootManager.AwardLootFromTables(tables, settings, 1);
+                }
             }
-
-            // HACK: Also give starting costume, although it was removed in 1.52
-            GiveStartingCostume();
+            else
+            {
+                // Grant a copy of the starting costume, pre-BUE behavior
+                GiveStartingCostume();
+            }
 
             return true;
         }
