@@ -1,6 +1,8 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using Gazillion;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Missions;
@@ -8,10 +10,33 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("unlock", "Provides commands for unlock.", AccountUserLevel.Admin)]
+    [CommandGroup("unlock", "Provides commands for unlock.", AccountUserLevel.User)]
     public class Unlock : CommandGroup
     {
-        [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints")]
+        [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
+        public string Hero(string[] @params, FrontendClient client)
+        {
+            // This command is intentionally exposed to regular users to allow them to unlock F4 heroes.
+            // Also because of this, we call it "hero" and not "avatar" to make it clearer.
+
+            if (client == null) return "You can only invoke this command from the game.";
+            if (@params.Length == 0) return "Invalid arguments. Type 'help unlock hero' to get help.";
+
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            Player player = playerConnection.Player;
+
+            PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client);
+
+            // Run the unlock through the roster code path to validate and pay costs, since this is not a debug command
+            PurchaseUnlockResult result = player.PurchaseUnlock(avatarProtoRef);
+
+            if (result != PurchaseUnlockResult.Success)
+                return $"Failed to unlock {avatarProtoRef.GetNameFormatted()}: {result}.";
+
+            return $"Unlocked {avatarProtoRef.GetNameFormatted()}.";
+        }
+
+        [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints", AccountUserLevel.Admin)]
         public string Waypoints(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -93,7 +118,7 @@ namespace MHServerEmu.Commands.Implementations
             CH10Main6HeroesTriumph = 61027896657714661,
         }
 
-        [Command("missions", "Unlock main story missions.\nUsage: unlock missions")]
+        [Command("missions", "Unlock main story missions.\nUsage: unlock missions", AccountUserLevel.Admin)]
         public string Missions(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -113,7 +138,7 @@ namespace MHServerEmu.Commands.Implementations
             return "Story missions unlocked";
         }
 
-        [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters")]
+        [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters", AccountUserLevel.Admin)]
         public string Chapters(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
