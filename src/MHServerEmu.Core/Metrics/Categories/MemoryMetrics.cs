@@ -91,8 +91,8 @@ namespace MHServerEmu.Core.Metrics.Categories
 
                 sb.AppendLine($"{nameof(GCIndex)}: {GCIndex}");
                 sb.AppendLine($"GCCounts: Gen0={GCCountGen0}, Gen1={GCCountGen1}, Gen2={GCCountGen2}");
-                sb.AppendLine($"{nameof(TotalCommittedBytes)}: {TotalCommittedBytes}");
-                sb.AppendLine($"{nameof(HeapSizeBytes)}: {HeapSizeBytes}");
+                sb.AppendLine($"{nameof(TotalCommittedBytes)}: {TotalCommittedBytes:N0}");
+                sb.AppendLine($"{nameof(HeapSizeBytes)}: {HeapSizeBytes:N0}");
                 sb.AppendLine($"{nameof(PauseTimePercentage)}: {PauseTimePercentage}%");
                 sb.AppendLine($"{nameof(PauseDuration)}: {PauseDuration}");
 
