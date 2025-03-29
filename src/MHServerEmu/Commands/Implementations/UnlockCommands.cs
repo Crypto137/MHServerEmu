@@ -26,6 +26,8 @@ namespace MHServerEmu.Commands.Implementations
             Player player = playerConnection.Player;
 
             PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client);
+            if (avatarProtoRef == PrototypeId.Invalid)
+                return string.Empty;
 
             // Run the unlock through the roster code path to validate and pay costs, since this is not a debug command
             PurchaseUnlockResult result = player.PurchaseUnlock(avatarProtoRef);
