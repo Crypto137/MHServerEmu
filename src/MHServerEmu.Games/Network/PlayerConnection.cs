@@ -1026,7 +1026,7 @@ namespace MHServerEmu.Games.Network
             Logger.Info($"OnSwitchAvatar(): player=[{this}], avatarProtoRef=[{avatarProtoRef.GetName()}]");
 
             // Start the avatar switching process
-            if (Player.BeginSwitchAvatar((PrototypeId)switchAvatar.AvatarPrototypeId) == false)
+            if (Player.BeginAvatarSwitch((PrototypeId)switchAvatar.AvatarPrototypeId) == false)
                 return Logger.WarnReturn(false, "OnSwitchAvatar(): Failed to begin avatar switch");
 
             return true;

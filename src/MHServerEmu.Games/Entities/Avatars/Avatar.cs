@@ -545,6 +545,16 @@ namespace MHServerEmu.Games.Entities.Avatars
             return respawnTarget;
         }
 
+        public void SendSwitchToAvatarFailedMessage(SwitchToAvatarFailedReason reason)
+        {
+            var message = NetMessageSwitchToPendingNewAvatarFailed.CreateBuilder()
+                .SetTargetId(Id)
+                .SetReason(reason)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
+        }
+
         #endregion
 
         #region Powers

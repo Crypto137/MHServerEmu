@@ -1,11 +1,16 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
+using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -504,6 +509,46 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return Logger.WarnReturn(PrototypeId.Invalid, $"GetLootTableOverride(): Region [{this}] has no overrides for source=[{source}], lootEvent=[{lootEvent}] requested by entity [{worldEntity}]");
         }
+
+        public bool RunEvalAccessRestriction(Player player, Avatar avatar, PrototypeId difficultyProtoRef)
+        {
+            // Default to true if no valid avatar
+            if (avatar == null) return Logger.WarnReturn(true, "RunEvalAccessRestriction(): avatar == null");
+
+            bool success = true;
+
+            if (AccessChecks.HasValue())
+            {
+                foreach (RegionAccessCheckPrototype checkProto in AccessChecks)
+                {
+                    if (checkProto == null)
+                    {
+                        Logger.Warn("RunEvalAccessRestriction(): checkProto == null");
+                        continue;
+                    }
+
+                    if (checkProto.NoAccessOnFail == false)
+                        continue;
+
+                    success &= checkProto.Check(player, avatar);
+                }
+            }
+
+            DifficultyTierPrototype difficultyProto = difficultyProtoRef.As<DifficultyTierPrototype>();
+            if (success && difficultyProto != null)
+                success &= avatar.CharacterLevel >= difficultyProto.UnlockLevel;
+
+            if (success && EvalAccessRestriction != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, difficultyProtoRef);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, avatar);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Other, player);
+                success = Eval.RunBool(EvalAccessRestriction, evalContext);
+            }
+
+            return success;
+        }
     }
 
     public class RegionConnectionTargetPrototype : Prototype
@@ -533,6 +578,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool NoAccessOnFail { get; protected set; }
         public bool NoDisplayOnFail { get; protected set; }
+
+        //---
+
+        public virtual bool Check(Player player, Avatar avatar)
+        {
+            return false;
+        }
     }
 
     public class LevelAccessCheckPrototype : RegionAccessCheckPrototype
@@ -543,6 +595,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId UIWaypointNameTag { get; protected set; }
         public int LevelMin { get; protected set; }
         public int LevelMax { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool Check(Player player, Avatar avatar)
+        {
+            if (player == null) return Logger.WarnReturn(false, "Check(): player == null");
+            if (avatar == null) return Logger.WarnReturn(false, "Check(): avatar == null");
+
+            int avatarLevel = avatar.CharacterLevel;
+
+            // Check party
+            if (NoAccessOnFail == false)
+            {
+                Party party = player.Party;
+                if (party != null)
+                {
+                    CommunityMember communityMember = party.GetCommunityMemberForLeader(player);
+                    if (communityMember != null)
+                    {
+                        AvatarSlotInfo avatarSlotInfo = communityMember.GetAvatarSlotInfo();
+                        avatarLevel = avatarSlotInfo != null ? avatarSlotInfo.Level : 0;
+                    }
+                }
+            }
+
+            // Not doing LocaleString things because they are not needed server-side
+            return avatarLevel >= LevelMin && avatarLevel <= LevelMax;
+        }
     }
 
     public class RegionQueueStateEntryPrototype : Prototype
