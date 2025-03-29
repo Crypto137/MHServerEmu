@@ -750,10 +750,13 @@ namespace MHServerEmu.Games.Entities.Avatars
                 }
             }
 
-            // TODO: More handling
+            // Edge case for toggled power activations during fullscreen movies
+            bool toggleAutoActiveDuringFullscreenMovie = result == PowerUseResult.FullscreenMovie &&
+                settings.Flags.HasFlag(PowerActivationSettingsFlags.AutoActivate)
+                && power.IsToggled();
 
             // Failed validation despite everything above, clean up and bail out
-            if (result != PowerUseResult.Success && result != PowerUseResult.TargetIsMissing)
+            if (result != PowerUseResult.Success && result != PowerUseResult.TargetIsMissing && toggleAutoActiveDuringFullscreenMovie == false)
             {
                 // Notify the client
                 SendActivatePowerFailedMessage(powerRef, result);
