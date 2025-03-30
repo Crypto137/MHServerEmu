@@ -1432,7 +1432,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (owningController == null) return;
             var collection = owningController.Blackboard.PropertyCollection;
             collection[PropertyEnum.AIAggroDropRange] = AggroDropRadius;
-            collection[PropertyEnum.AIAggroDropByLOSChance] = AggroDropByLOSChance / 100.0f;
+            collection[PropertyEnum.AIAggroDropByLOSChance] = MathHelper.ClampNoThrow(AggroDropByLOSChance, 0.0f, 1.0f); // Prototype have 100
             collection[PropertyEnum.AIAggroRangeHostile] = AggroRadius;
 
             InitPower(agent, PrimaryPower);

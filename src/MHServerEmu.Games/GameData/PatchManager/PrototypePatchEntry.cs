@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Text.Json;
@@ -86,6 +87,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 ValueType.Float => new SimpleValue<float>(jsonElement.GetSingle(), valueType),
                 ValueType.Integer => new SimpleValue<int>(jsonElement.GetInt32(), valueType),
                 ValueType.Enum => new SimpleValue<string>(jsonElement.GetString(), valueType),
+                ValueType.PrototypeGuid => new SimpleValue<PrototypeGuid>((PrototypeGuid)jsonElement.GetUInt64(), valueType),
                 ValueType.PrototypeId or 
                 ValueType.PrototypeDataRef => new SimpleValue<PrototypeId>((PrototypeId)jsonElement.GetUInt64(), valueType),
                 ValueType.LocaleStringId => new SimpleValue<LocaleStringId>((LocaleStringId)jsonElement.GetUInt64(), valueType),
@@ -93,8 +95,21 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 ValueType.PrototypeDataRefArray => new ArrayValue<PrototypeId>(jsonElement, valueType, x => (PrototypeId)x.GetUInt64()),
                 ValueType.Prototype => new SimpleValue<Prototype>(ParseJsonPrototype(jsonElement), valueType),
                 ValueType.PrototypeArray => new ArrayValue<Prototype>(jsonElement, valueType, ParseJsonPrototype),
+                ValueType.Vector3 => new SimpleValue<Vector3>(ParseJsonVector3(jsonElement), valueType),
                 _ => throw new NotSupportedException($"Type {valueType} not support.")
             };
+        }
+
+        private static Vector3 ParseJsonVector3(JsonElement jsonElement)
+        {
+            if (jsonElement.ValueKind != JsonValueKind.Array)
+                throw new InvalidOperationException("Json element is not array");
+
+            var jsonArray = jsonElement.EnumerateArray().ToArray();
+            if (jsonArray.Length != 3) 
+                throw new InvalidOperationException("Json element is not Vector3");
+
+            return new Vector3(jsonArray[0].GetSingle(), jsonArray[1].GetSingle(), jsonArray[2].GetSingle());
         }
 
         public static Prototype ParseJsonPrototype(JsonElement jsonElement)
@@ -137,6 +152,12 @@ namespace MHServerEmu.Games.GameData.PatchManager
                     return (PrototypeId)ulongValue;
             }
 
+            if (fieldType == typeof(PrototypeGuid))
+            {
+                if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt64(out ulong ulongValue))
+                    return (PrototypeGuid)ulongValue;
+            }
+
             if (fieldType == typeof(LocaleStringId))
             {
                 if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt64(out ulong ulongValue))
@@ -177,13 +198,15 @@ namespace MHServerEmu.Games.GameData.PatchManager
         Float,
         Integer,
         Enum,
+        PrototypeGuid,
         PrototypeId,
         PrototypeIdArray,
         LocaleStringId,
         PrototypeDataRef,
         PrototypeDataRefArray,
         Prototype,
-        PrototypeArray
+        PrototypeArray,
+        Vector3
     }
 
     public abstract class ValueBase

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -42,7 +43,7 @@ namespace MHServerEmu.Games.Behavior
                 SpawnOffset = spec.Transform.Translation;
        
             PropertyCollection[PropertyEnum.AIAggroDropRange] = profile.AggroDropDistance;
-            PropertyCollection[PropertyEnum.AIAggroDropByLOSChance] = profile.AggroDropChanceLOS / 100.0f;
+            PropertyCollection[PropertyEnum.AIAggroDropByLOSChance] = MathHelper.ClampNoThrow(profile.AggroDropChanceLOS, 0.0f, 1.0f); // Prototype have 0.4
             PropertyCollection[PropertyEnum.AIAggroRangeHostile] = profile.AggroRangeHostile;
             PropertyCollection[PropertyEnum.AIAggroRangeAlly] = profile.AggroRangeAlly;
 

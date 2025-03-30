@@ -12,7 +12,6 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Entities.Avatars;
@@ -992,9 +991,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, TeleportToEntityPower);
             InitPowers(agent, SummonProceduralPowers);
-
-            // REMOVEME: Disabled state change until we fix desync issues
-            agent.AIController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.GenericProcedural;
         }
 
         public override void Think(AIController ownerController)
@@ -1075,9 +1071,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     PopulatePowerPicker(ownerController, powerPicker);
                     if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
 
-                    // REMOVEME: Disabled state change until we fix desync issues
-                    //if (currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1])
-                    //    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TeleportToEntity;
+                    if (currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1])
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TeleportToEntity;
                     break;
             }
         }

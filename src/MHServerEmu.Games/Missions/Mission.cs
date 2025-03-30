@@ -8,6 +8,7 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -1308,7 +1309,7 @@ namespace MHServerEmu.Games.Missions
 
                 if (foundActive == false)
                 {
-                    if (sequence == float.MaxValue) // set all objectives as active
+                    if (sequence != float.MaxValue) // set all objectives as active
                     {
                         foreach (var objective in _objectiveDict.Values)
                         {
@@ -1977,13 +1978,38 @@ namespace MHServerEmu.Games.Missions
             return found;
         }
 
+        public void CleanupItemDrops()
+        {
+            var region = Region;
+            if (region == null) return;
+
+            var entityTracker = region.EntityTracker;
+            if (entityTracker == null) return;
+            var missionRef = PrototypeDataRef;
+
+            List<WorldEntity> destroyList = ListPool<WorldEntity>.Instance.Get();
+
+            foreach (var entity in entityTracker.Iterate(missionRef, Dialog.EntityTrackingFlag.SpawnedByMission))
+            {
+                if (entity is not Item) continue;
+                if (entity.MissionPrototype != missionRef) continue;
+                ulong playerGuid = entity.Properties[PropertyEnum.RestrictedToPlayerGuid];
+                if (playerGuid != 0 && _contributors.ContainsKey(playerGuid) == false) continue;
+                destroyList.Add(entity);
+            }
+
+            foreach (var entity in destroyList)
+                entity.Destroy();
+
+            ListPool<WorldEntity>.Instance.Return(destroyList);
+        }
+
         public void OnPlayerEnteredMission(Player player)
         {
             // if (MissionManager.Debug) Logger.Warn($"OnPlayerEnteredMission [{PrototypeName}]");
             CancelScheduledRemovePartipantEvent(player);
             AddParticipant(player);
         }
-
 
         public void OnPlayerLeftMission(Player player)
         {

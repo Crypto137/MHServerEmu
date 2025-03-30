@@ -270,7 +270,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (powerContext.ForceCheckTargetRegionLocation)
             {
-                Bounds targetPositionBounds = agent.Bounds;
+                Bounds targetPositionBounds = new(agent.Bounds);
                 targetPositionBounds.Center = targetPositionForPower;
 
                 PositionCheckFlags positionCheckFlags = PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo;
@@ -419,7 +419,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Region region = agent.Region;
             if (region == null) return false;
 
-            Bounds bounds = agent.Bounds;
+            Bounds bounds = new(agent.Bounds);
             bounds.Center = worldEntity.RegionLocation.Position;
 
             float minTargetDistance = powerContext.TargetOffset;

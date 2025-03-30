@@ -268,7 +268,7 @@ namespace MHServerEmu.Games.Missions
             if (Mission.IsSuspended)
             {
                 _objectiveState = newState;
-                return false;
+                return true;
             }
 
             IsChangingState = true;
@@ -468,7 +468,8 @@ namespace MHServerEmu.Games.Missions
             var objetiveProto = Prototype;
             if (objetiveProto == null) return false;
 
-            // TODO objetiveProto.ItemDropsCleanupRemaining
+            if (objetiveProto.ItemDrops.HasValue() && objetiveProto.ItemDropsCleanupRemaining)
+                Mission.CleanupItemDrops();
 
             if (_onStartActions != null && _onStartActions.Deactivate() == false) return false;
 

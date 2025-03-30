@@ -4997,6 +4997,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             if (controlledInventory.Count > 0) return false;
 
+            // Trigger entity Death event for controlled
+            var player = GetOwnerOfType<Player>();
+            Region?.EntityDeadEvent.Invoke(new(controlled, this, player));
+
             controlled.Properties[PropertyEnum.AIMasterAvatarDbGuid] = DatabaseUniqueId;
 
             controlled.AwardKillLoot(this, KillFlags.None, this);

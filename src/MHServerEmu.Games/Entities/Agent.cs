@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
@@ -17,6 +18,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers;
@@ -2994,15 +2996,15 @@ namespace MHServerEmu.Games.Entities
                 foreach (var powerRef in EntityActionComponent.PerformPowers)
                     UnassignPower(powerRef);
                 EntityActionComponent.PerformPowers.Clear();
-                
-                // clear aggro range ?
-                /*if (AIController != null)
+
+                // clear aggro range override
+                if (AIController != null)
                 {
                     var collection = AIController.Blackboard.PropertyCollection;
-                    collection.RemoveProperty(PropertyEnum.AIAggroRangeAlly);
-                    collection.RemoveProperty(PropertyEnum.AIAggroRangeHostile);
+                    collection.RemoveProperty(PropertyEnum.AIAggroRangeOverrideAlly);
+                    collection.RemoveProperty(PropertyEnum.AIAggroRangeOverrideHostile);
                     collection.RemoveProperty(PropertyEnum.AIProximityRangeOverride);
-                }*/
+                }
             }
 
             if (IsInWorld)
@@ -3047,45 +3049,85 @@ namespace MHServerEmu.Games.Entities
                 // override AI
 
                 var brainRef = aiOverride.Brain;
-                if (brainRef == PrototypeId.Invalid) return false;
-
-                if (AIController == null)
+                if (brainRef != PrototypeId.Invalid)
                 {
-                    var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
-                    if (brain is not ProceduralAIProfilePrototype profile) return false;
-                    using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-                    InitAIOverride(profile, properties);
-                    if (AIController == null) return false;
-                    AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+                    if (AIController == null)
+                    {
+                        var brain = GameDatabase.GetPrototype<BrainPrototype>(brainRef);
+                        if (brain is not ProceduralAIProfilePrototype profile) return false;
+                        using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                        InitAIOverride(profile, properties);
+                        if (AIController == null) return false;
+                        AIController.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
+                    }
+                    else
+                        AIController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = brainRef;
                 }
-                else
-                    AIController.Blackboard.PropertyCollection[PropertyEnum.AIFullOverride] = brainRef;
 
                 var collection = AIController.Blackboard.PropertyCollection;
                 if (collection != null) 
                 {
-                    // set aggro range
+                    // set aggro range override
                     if (aiOverride.AIAggroRangeOverrideAlly > 0)
-                        collection[PropertyEnum.AIAggroRangeAlly] = (float)aiOverride.AIAggroRangeOverrideAlly;
+                        collection[PropertyEnum.AIAggroRangeOverrideAlly] = (float)aiOverride.AIAggroRangeOverrideAlly;
                     if (aiOverride.AIAggroRangeOverrideEnemy > 0)
-                        collection[PropertyEnum.AIAggroRangeHostile] = (float)aiOverride.AIAggroRangeOverrideEnemy;
+                        collection[PropertyEnum.AIAggroRangeOverrideHostile] = (float)aiOverride.AIAggroRangeOverrideEnemy;
                     if (aiOverride.AIProximityRangeOverride > 0)
                         collection[PropertyEnum.AIProximityRangeOverride] = (float)aiOverride.AIProximityRangeOverride;
                 }
+                
+                if (aiOverride.LifespanEndPower != PrototypeId.Invalid) // not used
+                    Properties[PropertyEnum.Proc, (int)ProcTriggerType.OnLifespanExpired, aiOverride.LifespanEndPower] = 1.0f;
 
-                if (aiOverride.LifespanMS > -1)
+                if (aiOverride.LifespanMS > -1) // not used
                 {
                     var lifespan = GetRemainingLifespan();
                     var reset = TimeSpan.FromMilliseconds(aiOverride.LifespanMS);
                     if (lifespan == TimeSpan.Zero || reset < lifespan)
                         ResetLifespan(reset);
                 }  
-                
-                // TODO aiOverride.LifespanEndPower              
             }
 
-            // TODO action.Rewards
-            // TODO action.BroadcastEvent
+            if (action.Rewards.HasValue())
+            {
+                List<Player> playerList = ListPool<Player>.Instance.Get();
+                Power.ComputeNearbyPlayers(Region, RegionLocation.Position, 0, false, playerList);
+
+                Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[action.Rewards.Length];
+
+                int numTables = 0;
+                foreach (var lootTableProtoRef in action.Rewards)
+                {
+                    if (lootTableProtoRef == PrototypeId.Invalid) continue;
+                    tables[numTables++] = (lootTableProtoRef, LootActionType.Spawn);
+                }
+                tables = tables[..numTables];
+
+                int recipientId = 1;
+                foreach (Player player in playerList)
+                {
+                    using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
+                    inputSettings.Initialize(LootContext.Drop, player, this, CharacterLevel);
+                    Game.LootManager.AwardLootFromTables(tables, inputSettings, recipientId++);
+                }
+
+                ListPool<Player>.Instance.Return(playerList);
+            }
+
+            if (action.BroadcastEvent != PrototypeId.Invalid)
+            {
+                var broadcastEventProto = GameDatabase.GetPrototype<EntityActionEventBroadcastPrototype>(action.BroadcastEvent);
+                if (broadcastEventProto != null)
+                {
+                    var region = Region;
+                    if (region == null || broadcastEventProto.BroadcastRange > Vector3.LengthTest(region.Aabb.Extents)) 
+                        return false;
+
+                    var volume = new Sphere(RegionLocation.Position, broadcastEventProto.BroadcastRange);
+                    foreach (var entity in region.IterateEntitiesInVolume(volume, new(EntityRegionSPContextFlags.ActivePartition)))
+                        entity.TriggerEntityActionEvent(broadcastEventProto.EventToBroadcast);
+                }
+            }
 
             return true;
         }
