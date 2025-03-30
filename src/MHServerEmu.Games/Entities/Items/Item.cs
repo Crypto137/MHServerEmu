@@ -540,7 +540,9 @@ namespace MHServerEmu.Games.Entities.Items
                 }
             }
 
-            // NOTE: RNG is reseeded for each affix individually
+            // NOTE: RNG is reseeded for each affix individually.
+            // Save the current state of random to restore it later for rolling action index.
+            int indexSeed = random.GetSeed();
 
             // Apply built-in affixes
             List<BuiltInAffixDetails> detailsList = ListPool<BuiltInAffixDetails>.Instance.Get();
@@ -582,7 +584,8 @@ namespace MHServerEmu.Games.Entities.Items
             {
                 if (triggeredActions.PickMethod == PickMethod.PickWeight)
                 {
-                    // It seems this is reusing the seed of the last rolled affix?
+                    // Restore the previously saved index seed so that affixes don't affect which index gets picked.
+                    random.Seed(indexSeed);
                     Picker<int> picker = new(random);
 
                     for (int i = 0; i < triggeredActions.Choices.Length; i++)

@@ -154,6 +154,12 @@ namespace MHServerEmu.Games.Regions.MatchQueues
                 || status == RegionRequestQueueUpdateVar.eRRQ_MatchInviteExpired;
         }
 
+        public bool IsOwnerInQueue()
+        {
+            // TODO
+            return false;
+        }
+
         /// <summary>
         /// Retrieves or create a new <see cref="MatchQueueRegionStatus"/> instance for the specified arguments.
         /// </summary>

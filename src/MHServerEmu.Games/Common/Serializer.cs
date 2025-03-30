@@ -1,6 +1,7 @@
-﻿using MHServerEmu.Core.Serialization;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -790,7 +791,7 @@ namespace MHServerEmu.Games.Common
 
 
         // Class-specific
-        public static bool Transfer(Archive archive, ref SortedSet<AvailableBadges> ioData)
+        public static bool Transfer(Archive archive, ref SortedVector<AvailableBadges> ioData)
         {
             bool success = true;
 

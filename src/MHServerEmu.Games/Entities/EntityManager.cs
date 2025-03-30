@@ -325,6 +325,42 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void DestroyAllEntities()
+        {
+            IsDestroyingAllEntities = true;
+
+            bool removed;
+            int loopGuard = 100;
+
+            do
+            {
+                removed = false;
+                foreach (Entity entity in _entityDict.Values)
+                {
+                    if (entity.TestStatus(EntityStatus.Destroyed))
+                        continue;
+
+                    if (entity.IsRootOwner == false)
+                        continue;
+
+                    entity.Destroy();
+                    removed = true;
+                }
+            } while (removed && (loopGuard-- > 0));
+
+            if (loopGuard == 0)
+            {
+                Logger.Warn("DestroyAllEntities(): loopGuard == 0");
+                foreach (Entity entity in _entityDict.Values)
+                {
+                    if (entity.TestStatus(EntityStatus.Destroyed) == false)
+                        Logger.Warn($"DestroyAllEntities(): Entity is not 'Destroyed' after DestroyAllEntities() {entity}");
+                }
+            }
+
+            IsDestroyingAllEntities = false;
+        }
+
         public bool AddPlayer(Player player)
         {
             if (player == null) return Logger.WarnReturn(false, "AddPlayer(): player == null");
@@ -483,7 +519,7 @@ namespace MHServerEmu.Games.Entities
 
             if (_entityDestroyListNodeStack.Count == 0)
             {
-                Logger.Debug($"GetDestroyListNode(): Allocating chunk {++_numDestroyListNodeChunks} for {_game}");
+                Logger.Trace($"GetDestroyListNode(): Allocating chunk {++_numDestroyListNodeChunks} for {_game}");
                 for (int i = 0; i < NodeChunkSize; i++)
                     _entityDestroyListNodeStack.Push(new(0));
             }

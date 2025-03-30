@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Social
 {
@@ -24,6 +25,12 @@ namespace MHServerEmu.Games.Social
         internal bool IsMember(ulong databaseUniqueId)
         {
             throw new NotImplementedException();
+        }
+
+        public CommunityMember GetCommunityMemberForLeader(Player player)
+        {
+            // TODO
+            return null;
         }
     }
 }

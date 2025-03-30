@@ -163,14 +163,15 @@ namespace MHServerEmu.Games
 
             Logger.Info($"Game shutdown requested. Game={this}, Reason={reason}");
 
-            // Cancel all events
-            GameEventScheduler.CancelAllEvents();
-
             // Clean up network manager
             NetworkManager.SendAllPendingMessages();
             foreach (PlayerConnection playerConnection in NetworkManager)
                 playerConnection.Disconnect();
             NetworkManager.Update();        // We need this to process player saves (for now)
+
+            // Clean up entities
+            EntityManager.DestroyAllEntities();
+            EntityManager.ProcessDeferredLists();
 
             // Clean up regions
             RegionManager.DestroyAllRegions();

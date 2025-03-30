@@ -1,0 +1,42 @@
+[
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenMrFantastic.prototype",
+    "Path": "TokenType",
+    "Description": "Fix Mr Fantastic's character unlock token",
+    "ValueType": "Enum",
+    "Value": "UnlockCharOrUpgradeUlt"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenInvisibleWoman.prototype",
+    "Path": "TokenType",
+    "Description": "Fix Invisible Woman's character unlock token",
+    "ValueType": "Enum",
+    "Value": "UnlockCharOrUpgradeUlt"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenHumanTorch.prototype",
+    "Path": "TokenType",
+    "Description": "Fix Human Torch's character unlock token",
+    "ValueType": "Enum",
+    "Value": "UnlockCharOrUpgradeUlt"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenThing.prototype",
+    "Path": "TokenType",
+    "Description": "Fix Thing's character unlock token",
+    "ValueType": "Enum",
+    "Value": "UnlockCharOrUpgradeUlt"
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenSilverSurfer.prototype",
+    "Path": "TokenType",
+    "Description": "Fix Silver Surfer's character unlock token",
+    "ValueType": "Enum",
+    "Value": "UnlockCharOrUpgradeUlt"
+  }
+]
