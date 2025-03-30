@@ -95,6 +95,9 @@ namespace MHServerEmu.Games.Entities
         {
             if (cell == null) return null;
 
+            // NOTE: Adding a destination to some waypoints makes them unusable
+            if (transitionProto.Type == RegionTransitionType.Waypoint) return null;
+
             PrototypeId area = cell.Area.PrototypeDataRef;
             Region region = cell.Region;
             PrototypeGuid entityGuid = GameDatabase.GetPrototypeGuid(transitionProto.DataRef);
