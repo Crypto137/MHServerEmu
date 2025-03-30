@@ -367,7 +367,7 @@ namespace MHServerEmu.Games.Dialog
         {
             if (entity is Transition transition && InterestRegions.Count > 0)
             {
-                foreach (Destination destination in transition.Destinations)
+                foreach (TransitionDestination destination in transition.Destinations)
                 {
                     if (destination.RegionRef != PrototypeId.Invalid && InterestRegions.Contains(destination.RegionRef))
                     {
@@ -445,7 +445,7 @@ namespace MHServerEmu.Games.Dialog
                 if (entity is Transition transition)
                 {
                     PrototypeId targetRef = Proto.ConnectionTarget;
-                    foreach (Destination destination in transition.Destinations)
+                    foreach (TransitionDestination destination in transition.Destinations)
                     {
                         if (destination.TargetRef == targetRef)
                         {

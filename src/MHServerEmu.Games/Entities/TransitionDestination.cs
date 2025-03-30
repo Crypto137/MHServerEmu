@@ -9,7 +9,7 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
-    public class Destination : ISerialize
+    public class TransitionDestination : ISerialize
     {
         private RegionTransitionType _type;
         private PrototypeId _regionRef;
@@ -40,7 +40,7 @@ namespace MHServerEmu.Games.Entities
         public ulong EntityId { get => _entityId; set => _entityId = value; }
         public ulong UnkId2 { get => _unkId2; set => _unkId2 = value; }
 
-        public Destination()
+        public TransitionDestination()
         {
             _position = Vector3.Zero;
             _name = string.Empty;
@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public static Destination FindDestination(Cell cell, TransitionPrototype transitionProto)
+        public static TransitionDestination FindDestination(Cell cell, TransitionPrototype transitionProto)
         {
             if (cell == null) return null;
 
@@ -108,7 +108,7 @@ namespace MHServerEmu.Games.Entities
             return DestinationFromTarget(node.TargetId, region, transitionProto);
         }
 
-        public static Destination DestinationFromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
+        public static TransitionDestination DestinationFromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
         {
             var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
 
@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Entities
             if (RegionPrototype.Equivalent(targetRegionProto, region.Prototype))
                 targetRegionRef = region.PrototypeDataRef;
 
-            Destination destination = new()
+            TransitionDestination destination = new()
             {
                 _type = transitionProto.Type,
                 _regionRef = targetRegionRef,
@@ -135,13 +135,13 @@ namespace MHServerEmu.Games.Entities
             return destination;
         }
 
-        public static Destination DestinationFromTargetRef(PrototypeId targetRef)
+        public static TransitionDestination DestinationFromTargetRef(PrototypeId targetRef)
         {
             var proto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
             AssetId cellAssetId = proto.Cell;
             PrototypeId cellPrototypeId = cellAssetId != AssetId.Invalid ? GameDatabase.GetDataRefByAsset(cellAssetId) : PrototypeId.Invalid;
 
-            Destination destination = new()
+            TransitionDestination destination = new()
             {
                 _type = RegionTransitionType.TransitionDirect,
                 _regionRef = proto.Region,

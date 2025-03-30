@@ -18,9 +18,9 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private string _transitionName = string.Empty;          // Seemingly unused
-        private List<Destination> _destinationList = new();
+        private List<TransitionDestination> _destinationList = new();
 
-        public IEnumerable<Destination> Destinations { get => _destinationList; }
+        public IEnumerable<TransitionDestination> Destinations { get => _destinationList; }
 
         public TransitionPrototype TransitionPrototype { get => Prototype as TransitionPrototype; }
 
@@ -34,7 +34,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            var destination = Destination.FindDestination(settings.Cell, TransitionPrototype);
+            var destination = TransitionDestination.FindDestination(settings.Cell, TransitionPrototype);
 
             if (destination != null)
                 _destinationList.Add(destination);
@@ -61,7 +61,7 @@ namespace MHServerEmu.Games.Entities
                 if (hotspot != null) hotspot.Properties[PropertyEnum.WaypointHotspotUnlock] = transProto.Waypoint;
             }
 
-            Destination destination;
+            TransitionDestination destination;
             PrototypeId targetRef;
 
             switch (transProto.Type) 
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Entities
                             var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
                             if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
                             if (instance.OriginEntity != entityRef) continue;
-                            destination = Destination.DestinationFromTarget(instance.Target, region, transProto);
+                            destination = TransitionDestination.DestinationFromTarget(instance.Target, region, transProto);
                             if (destination == null) continue;
                             _destinationList.Add(destination);
                             noDest = false;
@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.Entities
                         var targets = region.Targets;
                         if (targets.Count == 1)
                         {
-                            destination = Destination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
+                            destination = TransitionDestination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
                             if (destination != null)
                             {
                                 _destinationList.Add(destination);
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Entities
                     if (noDest)
                     {
                         targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                        destination = Destination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                        destination = TransitionDestination.DestinationFromTarget(targetRef, region, TransitionPrototype);
                         if (destination != null) _destinationList.Add(destination);
                     }
                     break;
@@ -118,7 +118,7 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
 
                     targetRef = transProto.DirectTarget;
-                    destination = Destination.DestinationFromTargetRef(targetRef);
+                    destination = TransitionDestination.DestinationFromTargetRef(targetRef);
                     if (destination != null) _destinationList.Add(destination);
                     break;
             }
@@ -148,7 +148,7 @@ namespace MHServerEmu.Games.Entities
 
         public void ConfigureTowerGen(Transition transition)
         {
-            Destination destination;
+            TransitionDestination destination;
 
             if (_destinationList.Count == 0)
             {
@@ -179,7 +179,7 @@ namespace MHServerEmu.Games.Entities
                     if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
                     if (_destinationList.Count > 1) Logger.Debug("UseTransition(): _destinationList.Count > 1");
 
-                    Destination destination = _destinationList[0];
+                    TransitionDestination destination = _destinationList[0];
 
                     Logger.Trace($"Transition Destination Entity: {destination.EntityRef.GetName()}");
 
