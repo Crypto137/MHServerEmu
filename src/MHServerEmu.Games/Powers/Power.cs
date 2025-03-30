@@ -4877,7 +4877,7 @@ namespace MHServerEmu.Games.Powers
                 return Logger.WarnReturn(false, $"ExecuteTeleport(): Cannot teleport to the requested target position. REGION={region} POSITION={targetFloorPosition} ENTITY={Owner} POWER={this}");
             
             Vector3 floorOffset = targetFloorPosition - currentFloorPosition;
-            float floorOffsetLength = Vector3.Length(floorOffset);
+            float floorOffsetLength = Vector3.LengthTest(floorOffset);
 
             if (Segment.IsNearZero(floorOffsetLength) == false)
             {
