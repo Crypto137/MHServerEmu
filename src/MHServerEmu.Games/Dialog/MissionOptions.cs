@@ -367,8 +367,10 @@ namespace MHServerEmu.Games.Dialog
         {
             if (entity is Transition transition && InterestRegions.Count > 0)
             {
-                foreach (TransitionDestination destination in transition.Destinations)
+                for (int i = 0; i < transition.Destinations.Count; i++)
                 {
+                    TransitionDestination destination = transition.Destinations[i];
+
                     if (destination.RegionRef != PrototypeId.Invalid && InterestRegions.Contains(destination.RegionRef))
                     {
                         map.Insert(MissionProto.DataRef, EntityTrackingFlags);
@@ -445,8 +447,10 @@ namespace MHServerEmu.Games.Dialog
                 if (entity is Transition transition)
                 {
                     PrototypeId targetRef = Proto.ConnectionTarget;
-                    foreach (TransitionDestination destination in transition.Destinations)
+                    for (int i = 0; i < transition.Destinations.Count; i++)
                     {
+                        TransitionDestination destination = transition.Destinations[i];
+
                         if (destination.TargetRef == targetRef)
                         {
                             map.Insert(targetRef, EntityTrackingFlag.Appearance);

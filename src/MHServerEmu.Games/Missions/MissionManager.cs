@@ -1574,8 +1574,10 @@ namespace MHServerEmu.Games.Missions
                 hasInterest |= outInteractData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.ShowObjs);
 
                 if (worldEntity is Transition transition)
-                    foreach (var dest in transition.Destinations)
+                    for (int i = 0; i < transition.Destinations.Count; i++)
                     {
+                        var dest = transition.Destinations[i];
+
                         var regionRef = dest.RegionRef;
                         if (regionRef != PrototypeId.Invalid)
                         {

@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Entities
         private string _transitionName = string.Empty;          // Seemingly unused
         private List<TransitionDestination> _destinationList = new();
 
-        public IEnumerable<TransitionDestination> Destinations { get => _destinationList; }
+        public IReadOnlyList<TransitionDestination> Destinations { get => _destinationList; }
 
         public TransitionPrototype TransitionPrototype { get => Prototype as TransitionPrototype; }
 
