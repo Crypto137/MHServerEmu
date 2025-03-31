@@ -2891,11 +2891,13 @@ namespace MHServerEmu.Games.Entities
                 .SetCurrencyBalance(GazillioniteBalance)
                 .Build());
 
-            // Set login count
+            // Update veteran (login) rewards
             if (Game.GameOptions.VeteranRewardsEnabled)
             {
-                // TODO: store login count, give rewards
-                Properties[PropertyEnum.LoginCount] = 1;
+                int loginCount = GetLoginCount();
+
+                GiveLoginRewards(loginCount);
+                Properties[PropertyEnum.LoginCount] = loginCount;
             }
 
             // Send gifting restrictions update.
@@ -2905,6 +2907,43 @@ namespace MHServerEmu.Games.Entities
                 .SetEmailVerified(_emailVerified)
                 .SetAccountCreationTimestampUtc((long)_accountCreationTimestamp.TotalSeconds)
                 .Build());
+        }
+
+        private int GetLoginCount()
+        {
+            // TODO: store this, calculate using loot rollover?
+            return 1;
+        }
+
+        private void GiveLoginRewards(int loginCount)
+        {
+            LootManager lootManager = Game.LootManager;
+
+            foreach (PrototypeId loginRewardProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<LoginRewardPrototype>(PrototypeIterateFlags.NoAbstract))
+            {
+                LoginRewardPrototype loginRewardProto = loginRewardProtoRef.As<LoginRewardPrototype>();
+                if (loginRewardProto == null)
+                {
+                    Logger.Warn("GiveLoginRewards(): loginRewardProto == null");
+                    continue;
+                }
+
+                if (loginRewardProto.Day > loginCount)
+                    continue;
+
+                PropertyId rewardId = new(PropertyEnum.LoginRewardReceivedDate, loginRewardProtoRef);
+
+                if (Properties.HasProperty(rewardId))
+                    continue;
+
+                if (lootManager.GiveItem(loginRewardProto.Item, LootContext.CashShop, this) == false)
+                {
+                    Logger.Warn($"GiveLoginRewards(): Failed to give login reward {loginRewardProto} to player [{this}]");
+                    continue;
+                }
+
+                Properties[rewardId] = (long)Clock.UnixTime.TotalSeconds;
+            }
         }
 
         private void SetGiftingRestrictions()
