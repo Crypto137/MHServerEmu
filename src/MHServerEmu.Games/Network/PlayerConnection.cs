@@ -353,6 +353,8 @@ namespace MHServerEmu.Games.Network
                 // Notify the client
                 SendMessage(NetMessageReadyAndLoadedOnGameServer.DefaultInstance);
 
+                Player.CheckDailyLogin();
+
                 _isFirstLoad = false;
             }
 

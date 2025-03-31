@@ -202,23 +202,10 @@ namespace MHServerEmu.Games.Entities
         {
             base.OnPostInit(settings);
 
-            // TODO: Clean this up
-            //---
+            SetGiftingRestrictions();
 
-            // Todo: send this separately in NetMessageGiftingRestrictionsUpdate on login
-            Properties[PropertyEnum.LoginCount] = 1075;
-            _emailVerified = true;
-            _accountCreationTimestamp = Clock.DateTimeToUnixTime(new(2023, 07, 16, 1, 48, 0));   // First GitHub commit date
-
-            // Social tab stub
+            // REMOVEME: Social tab stub
             _community.AddMember(10, "Coming Soon", CircleId.__Friends);
-
-            // Initialize
-            OnEnterGameInitStashTabOptions();
-
-            // TODO: Clean up gameplay options init for new players
-            if (settings.ArchiveData.IsNullOrEmpty())
-                GameplayOptions.ResetToDefaults();
         }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -473,6 +460,8 @@ namespace MHServerEmu.Games.Entities
 
             // Enter game to become added to the AOI
             base.EnterGame(settings);
+
+            OnEnterGameInitStashTabOptions();
 
             InitializeVendors();
             ScheduleCheckHoursPlayedEvent();
@@ -2888,6 +2877,44 @@ namespace MHServerEmu.Games.Entities
         {
             if (vanityTitleProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "IsVanityTitleUnlocked(): vanityTitleProtoRef == PrototypeId.Invalid");
             return Properties.HasProperty(new PropertyId(PropertyEnum.VanityTitleUnlocked, vanityTitleProtoRef));
+        }
+
+        #endregion
+
+        #region Daily Login
+
+        public void CheckDailyLogin()
+        {
+            // Send currency balance so that the client has something to display without opening the store.
+            // TODO: Add coupons here?
+            SendMessage(NetMessageGetCurrencyBalanceResponse.CreateBuilder()
+                .SetCurrencyBalance(GazillioniteBalance)
+                .Build());
+
+            // Set login count
+            if (Game.GameOptions.VeteranRewardsEnabled)
+            {
+                // TODO: store login count, give rewards
+                Properties[PropertyEnum.LoginCount] = 1;
+            }
+
+            // Send gifting restrictions update.
+            // NOTE: Currently we don't actually need this since we don't rely on external services,
+            // but I'm leaving this here for consistency with our packet captures.
+            SendMessage(NetMessageGiftingRestrictionsUpdate.CreateBuilder()
+                .SetEmailVerified(_emailVerified)
+                .SetAccountCreationTimestampUtc((long)_accountCreationTimestamp.TotalSeconds)
+                .Build());
+        }
+
+        private void SetGiftingRestrictions()
+        {
+            // Email is always verified (for now)
+            _emailVerified = true;
+
+            // We are taking advantage of the fact that our database guids include account creation timestamp.
+            // Review this code if this ever changes.
+            _accountCreationTimestamp = TimeSpan.FromSeconds(DatabaseUniqueId >> 16 & 0xFFFFFFFF);
         }
 
         #endregion
