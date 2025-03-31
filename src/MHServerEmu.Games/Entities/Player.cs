@@ -2920,7 +2920,7 @@ namespace MHServerEmu.Games.Entities
 
         private int GetLoginCount()
         {
-            // Check the rollover (daily at 10 AM server time)
+            // Check the rollover (daily at 10 AM UTC+0, same as shared quests)
             using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
             rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, 0, (PropertyParam)Weekday.All] = 10f;
 
@@ -2933,7 +2933,7 @@ namespace MHServerEmu.Games.Entities
             {
                 _loginCount++;
                 _loginRewardCooldownTimeStart = currentTime;
-                Logger.Debug($"GetLoginCount(): Rollover for player [{this}], loginCount = {_loginCount}");
+                Logger.Trace($"GetLoginCount(): Rollover for player [{this}], loginCount = {_loginCount}");
             }
 
             return (int)_loginCount;
