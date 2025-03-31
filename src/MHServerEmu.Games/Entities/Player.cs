@@ -113,6 +113,9 @@ namespace MHServerEmu.Games.Entities
         // TODO: Serialize on migration
         private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
 
+        private uint _loginCount;
+        private TimeSpan _loginRewardCooldownTimeStart;
+
         private TeleportData _teleportData;
         private SpawnGimbal _spawnGimbal;
         private bool _newPlayerUISystemsUnlocked;
@@ -434,6 +437,12 @@ namespace MHServerEmu.Games.Entities
                                 Logger.Warn($"Serialize(): Failed to add deserialized vendor purchase data {purchaseData}");
                         }
                     }
+                }
+
+                if (archive.Version >= ArchiveVersion.ImplementedLoginRewards)
+                {
+                    success &= Serializer.Transfer(archive, ref _loginCount);
+                    success &= Serializer.Transfer(archive, ref _loginRewardCooldownTimeStart);
                 }
             }
 
@@ -2911,8 +2920,23 @@ namespace MHServerEmu.Games.Entities
 
         private int GetLoginCount()
         {
-            // TODO: store this, calculate using loot rollover?
-            return 1;
+            // Check the rollover (daily at 10 AM server time)
+            using PropertyCollection rolloverProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            rolloverProperties[PropertyEnum.LootCooldownRolloverWallTime, 0, (PropertyParam)Weekday.All] = 10f;
+
+            TimeSpan currentTime = Clock.UnixTime;
+
+            if (LootUtilities.GetLastLootCooldownRolloverWallTime(rolloverProperties, currentTime, out TimeSpan lastRolloverTime) == false)
+                return Logger.WarnReturn(0, "GetLoginCount(): Failed to get last loot cooldown rollover wall time");
+
+            if (lastRolloverTime > _loginRewardCooldownTimeStart)
+            {
+                _loginCount++;
+                _loginRewardCooldownTimeStart = currentTime;
+                Logger.Debug($"GetLoginCount(): Rollover for player [{this}], loginCount = {_loginCount}");
+            }
+
+            return (int)_loginCount;
         }
 
         private void GiveLoginRewards(int loginCount)
