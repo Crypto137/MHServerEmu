@@ -250,18 +250,22 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnSkillshotReflected(Missile missile)
         {
-            if (missile.IsMovedIndependentlyOnClient)
-            {
-                var hotspotProto = HotspotPrototype;
-                if (hotspotProto == null) return;
+            var hotspotProto = HotspotPrototype;
+            if (hotspotProto == null) return;
 
-                var missilesData = hotspotProto.DirectApplyToMissilesData;
-                if (missilesData != null && missilesData.AffectsReflectedMissilesOnly)
+            var missilesData = hotspotProto.DirectApplyToMissilesData;
+            if (missilesData != null && missilesData.AffectsReflectedMissilesOnly)
+            {
+                if (missile.IsMovedIndependentlyOnClient)
                 {
                     if (missilesData.IsPermanent)
                         missile.Properties.FlattenCopyFrom(_directApplyToMissileProperties, false);
                     else
                         missile.Properties.AddChildCollection(_directApplyToMissileProperties);
+                }
+                else
+                {
+                    missile.Properties.AddChildCollection(_directApplyToMissileProperties);
                 }
             }
 
