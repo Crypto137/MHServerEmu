@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
@@ -7,6 +8,7 @@ using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties.Evals;
@@ -535,7 +537,13 @@ namespace MHServerEmu.Games.Populations
             }
 
             // HeatPerSecondScalar = 0
-            return Math.Clamp(heatReturn, HeatPerSecondMin, HeatPerSecondMax);
+            heatReturn = MathHelper.ClampNoThrow(heatReturn, HeatPerSecondMin, HeatPerSecondMax);
+
+            // LiveTuning AreaMobSpawnHeatReturn
+            float liveReturn = heatReturn * LiveTuningManager.GetLiveAreaTuningVar(Area.Prototype, AreaTuningVar.eATV_AreaMobSpawnHeatReturn);
+            heatReturn = MathHelper.ClampNoThrow((int)liveReturn, 0, HeatPerSecondMax);
+
+            return heatReturn;
         }
 
         private void OnLevelUpdate()
