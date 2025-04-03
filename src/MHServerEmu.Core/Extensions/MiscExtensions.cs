@@ -20,5 +20,11 @@ namespace MHServerEmu.Core.Extensions
             list.Clear();
             list.AddRange(other);
         }
+
+        public static void Set<T>(this HashSet<T> hashSet, IEnumerable<T> other)
+        {
+            hashSet.Clear();
+            hashSet.UnionWith(other);
+        }
     }
 }
