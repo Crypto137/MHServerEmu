@@ -18,15 +18,15 @@ For a more in-depth list of commands see [Server Commands](./../ServerEmu/Server
 
 To allow remote clients to connect to your server you need to set up your Apache to function as a reverse proxy server.
 
-1. Remove `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1 [P]` from `httpd-ssl.conf`.
+1. Remove `RewriteEngine on` and `RewriteRule ^/AuthServer(.*) http://%{HTTP_HOST}:8080$1 [P]` from `httpd-ssl.conf`, this file is under the folder `Apache24\conf\extra`.
 
 2. Add `ProxyPass /AuthServer http://localhost:8080` and `ProxyPassReverse /AuthServer http://localhost:8080` to the `<VirtualHost _default_:443>` section in `httpd-ssl.conf`.
 
-3. Create a copy of your `SiteConfig.xml` in `Apache24\htdocs` and replace the `AuthServerAddress` value in it with your server's externally accessible IP address or domain name. For LAN this is something like `192.168.x.x`, and for hosting on the Internet it is going to be your server's IP address or a domain name pointing to it.
+3. Create a copy of your `SiteConfig.xml` in `Apache24\htdocs` and replace the `AuthServerAddress` value in it with your server's externally accessible IP address or domain name. For LAN this is something like `192.168.x.x`, and for hosting on the Internet it is going to be your server's IP address or a domain name pointing to it. Next change the line for `LoadScreenTipsURL` from `localhost` to your external IP you used above on the AuthServerAddress line. This file is under the `Apache24\htdocs` folder.
 
-4. Replace `BindIP` in `Config.ini` with your local IP address or `0.0.0.0`. This has to be an IP address and not a domain name.
+4. Replace `BindIP` in `Config.ini` under your `MHServerEmu` folder with your local IP address or `0.0.0.0`. This has to be an IP address and not a domain name.
 
-5. Replace `PublicAddress` in `Config.ini` with your externally accessible address (this can be an IP address or a domain name, like in `SiteConfig.xml`).
+5. Replace `PublicAddress` in `Config.ini` under your `MHServerEmu` folder with your externally accessible address (this can be an IP address or a domain name, like in `SiteConfig.xml`).
 
 After doing the above steps you can connect to the server remotely by either editing `ClientConfig.xml` on the client's machine, or launching the game with the following parameter: `-siteconfigurl=yourserveraddress.com/SiteConfig.xml`. To connect to the server from the same machine it is being hosted on, you need to use the original `SiteConfig.xml` that points to `localhost`.
 
