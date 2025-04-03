@@ -1610,7 +1610,7 @@ namespace MHServerEmu.Games.Entities
             if (showXPAwardedText && owner.InterestedInEntity(this, AOINetworkPolicyValues.AOIChannelOwner))
             {
                 owner.SendMessage(NetMessageShowXPAwardedText.CreateBuilder()
-                    .SetXpAwarded(amount)
+                    .SetXpAwarded(awardedAmount)
                     .SetAgentId(Id)
                     .Build());
             }
