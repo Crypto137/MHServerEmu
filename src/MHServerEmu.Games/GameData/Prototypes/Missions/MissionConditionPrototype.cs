@@ -88,7 +88,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override MissionCondition AllocateCondition(Mission mission, IMissionConditionOwner owner) { return null; }
 
-        public IEnumerable<MissionConditionPrototype> IteratePrototypes(Type conditionType = null)
+        public MissionConditionPrototypeIterator IteratePrototypes(Type conditionType = null)
         {            
             return new MissionConditionPrototypeIterator(this, conditionType);
         }
