@@ -990,62 +990,57 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             foreach (var result in results) result.Clear();
             ListPool<List<int>>.Instance.Return(results);
 
-            List<RoadInfo> listRoads = ListPool<RoadInfo>.Instance.Get();
-            listRoads.AddRange(roadGrid);
+            List<RoadInfo> listRoads = ListPool<RoadInfo>.Instance.Get(roadGrid);
+            List<RoadInfo> buildGrid = ListPool<RoadInfo>.Instance.Get(roadGrid.Length);
 
-            for (int i = 0; i < workingStack.Count - 1; ++i)
+            try
             {
-                int indexA = workingStack[i];
-                int indexB = workingStack[i + 1];
+                for (int i = 0; i < workingStack.Count - 1; ++i)
+                {
+                    int indexA = workingStack[i];
+                    int indexB = workingStack[i + 1];
 
-                List<RoadInfo> buildGrid = ListPool<RoadInfo>.Instance.Get();
-                buildGrid.AddRange(roadGrid);
-                if (BuildRoad(buildGrid, roadPoints[indexA], roadPoints[indexB]))
-                {
-                    for (int n = 0; n < buildGrid.Count; ++n)
-                        listRoads[n].RoadType |= buildGrid[n].RoadType;
-                }
-                else
-                {
-                    ListPool<RoadInfo>.Instance.Return(listRoads);
-                    ListPool<RoadInfo>.Instance.Return(buildGrid);
-                    ListPool<int>.Instance.Return(workingStack);
-                    ListPool<Point2>.Instance.Return(roadPoints);
-                    return false;
+                    buildGrid.Set(roadGrid);
+                    if (BuildRoad(buildGrid, roadPoints[indexA], roadPoints[indexB]))
+                    {
+                        for (int n = 0; n < buildGrid.Count; ++n)
+                            listRoads[n].RoadType |= buildGrid[n].RoadType;
+                    }
+                    else return false;
                 }
 
+                for (int i = 0; i < listRoads.Count; ++i)
+                {
+                    RoadInfo info = listRoads[i];
+                    if (info.RoadType != Cell.Type.None && !info.InCell)
+                    {
+                        Picker<PrototypeId> picker = new(random);
+                        foreach (var cellAsset in roadGeneratorProto.Cells)
+                        {
+                            PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
+                            CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
+                            if (cellProto != null && cellProto.RoadConnections == info.RoadType)
+                                picker.Add(cellRef);
+                        }
+
+                        if (!picker.Empty() && picker.Pick(out PrototypeId pickedCell))
+                        {
+                            int x = i % CellContainer.Width;
+                            int y = i / CellContainer.Width;
+
+                            if (CellContainer.ReservableCell(x, y, pickedCell))
+                                CellContainer.ReserveCell(x, y, pickedCell, GenCell.GenCellType.None);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                ListPool<RoadInfo>.Instance.Return(listRoads);
                 ListPool<RoadInfo>.Instance.Return(buildGrid);
+                ListPool<int>.Instance.Return(workingStack);
+                ListPool<Point2>.Instance.Return(roadPoints);
             }
-
-            ListPool<int>.Instance.Return(workingStack);
-            ListPool<Point2>.Instance.Return(roadPoints);
-
-            for (int i = 0; i < listRoads.Count; ++i)
-            {
-                RoadInfo info = listRoads[i];
-                if (info.RoadType != Cell.Type.None && !info.InCell)
-                {
-                    Picker<PrototypeId> picker = new(random);
-                    foreach (var cellAsset in roadGeneratorProto.Cells)
-                    {
-                        PrototypeId cellRef = GameDatabase.GetDataRefByAsset(cellAsset);
-                        CellPrototype cellProto = GameDatabase.GetPrototype<CellPrototype>(cellRef);
-                        if (cellProto != null && cellProto.RoadConnections == info.RoadType)
-                            picker.Add(cellRef);
-                    }
-
-                    if (!picker.Empty() && picker.Pick(out PrototypeId pickedCell))
-                    {
-                        int x = i % CellContainer.Width;
-                        int y = i / CellContainer.Width;
-
-                        if (CellContainer.ReservableCell(x, y, pickedCell))
-                            CellContainer.ReserveCell(x, y, pickedCell, GenCell.GenCellType.None);
-                    }
-                }
-            }
-
-            ListPool<RoadInfo>.Instance.Return(listRoads);
 
             return true;
         }
@@ -1310,8 +1305,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
             if (workingStack.Count == count)
                 results.Add(new(workingStack));
 
-            List<int> indexes = ListPool<int>.Instance.Get();
-            indexes.AddRange(setIndexes);
+            List<int> indexes = ListPool<int>.Instance.Get(setIndexes);
             foreach (var index in indexes)
             {
                 workingStack.Add(index);
