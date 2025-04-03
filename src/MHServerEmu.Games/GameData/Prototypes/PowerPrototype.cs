@@ -1255,4 +1255,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId[] CyclePowerList { get; protected set; }
     }
+
+    public class StackingBehaviorPrototype : Prototype
+    {
+        public StackingApplicationStyleType ApplicationStyle { get; protected set; }
+        public int MaxNumStacks { get; protected set; }
+        public bool RemoveStackOnMaxNumStacksReached { get; protected set; }
+        public bool StacksFromDifferentCreators { get; protected set; }
+        public int NumStacksToApply { get; protected set; }
+        public PrototypeId[] StacksByKeyword { get; protected set; }
+        public PrototypeId StacksWithOtherPower { get; protected set; }
+    }
 }

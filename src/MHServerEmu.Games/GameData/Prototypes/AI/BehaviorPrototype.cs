@@ -27,17 +27,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         None = 6,
     }
 
-    [AssetEnum((int)DontRefresh)]
-    public enum StackingApplicationStyleType
-    {
-        DontRefresh = 0,
-        Refresh = 1,
-        Recreate = 2,
-        MatchDuration = 3,
-        SingleStackAddDuration = 4,
-        MultiStackAddDuration = 5,
-    }
-
     [AssetEnum((int)None)]
     public enum TeleportType
     {
@@ -551,17 +540,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class StackingBehaviorPrototype : Prototype
-    {
-        public StackingApplicationStyleType ApplicationStyle { get; protected set; }
-        public int MaxNumStacks { get; protected set; }
-        public bool RemoveStackOnMaxNumStacksReached { get; protected set; }
-        public bool StacksFromDifferentCreators { get; protected set; }
-        public int NumStacksToApply { get; protected set; }
-        public PrototypeId[] StacksByKeyword { get; protected set; }
-        public PrototypeId StacksWithOtherPower { get; protected set; }
-    }
-
     public class DelayContextPrototype : Prototype
     {
         public int MaxDelayMS { get; protected set; }
@@ -730,13 +708,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CanLeash { get; protected set; }
         public PrototypePropertyCollection Properties { get; protected set; }
         public bool AlwaysAggroed { get; protected set; }
-    }
-
-    public class KismetSequencePrototype : Prototype
-    {
-        public AssetId KismetSeqName { get; protected set; }
-        public bool KismetSeqBlocking { get; protected set; }
-        public bool AudioListenerAtCamera { get; protected set; }
-        public bool HideAvatarsDuringPlayback { get; protected set; }
     }
 }
