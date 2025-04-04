@@ -439,7 +439,7 @@ namespace MHServerEmu.Games.Entities.Physics
             Aabb bound = entity.EntityCollideBounds.ToAabb();            
             Vector3 position = entity.RegionLocation.Position;
 
-            List<WorldEntity> collisions = new();
+            List<WorldEntity> collisions = ListPool<WorldEntity>.Instance.Get();
             var context = entity.GetEntityRegionSPContext();
             foreach (var otherEntity in region.IterateEntitiesInVolume(bound, context))
                 if (entity != otherEntity)
@@ -450,6 +450,8 @@ namespace MHServerEmu.Games.Entities.Physics
                 EntityCollision entityCollision = new (otherEntity, 0.0f, position, Vector3.ZAxis);
                 HandlePossibleEntityCollision(entity, entityCollision, applyRepulsionForces, true);
             }
+
+            ListPool<WorldEntity>.Instance.Return(collisions);
         }
 
         private void HandlePossibleEntityCollision(WorldEntity entity, in EntityCollision entityCollision, bool applyRepulsionForces, bool boundsCheck)
