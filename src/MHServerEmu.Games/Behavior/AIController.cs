@@ -619,6 +619,25 @@ namespace MHServerEmu.Games.Behavior
             return time;
         }
 
+        public void FindMaxLOSPowerRadius(PrototypeId powerRef)
+        {
+            var powerProto = PowerPrototype.RecursiveGetPowerPrototypeInCombo<MissilePowerPrototype>(powerRef);
+            if (powerProto == null || powerProto.MissileCreationContexts.IsNullOrEmpty()) return;
+
+            float maxRadius = -1.0f;
+
+            foreach (var context in powerProto.MissileCreationContexts)
+            {
+                var boundsProto = context?.Entity.As<MissilePrototype>()?.Bounds;
+                if (boundsProto == null) return;
+
+                maxRadius = MathF.Max(boundsProto.GetSphereRadius(), maxRadius);
+            }
+
+            if (maxRadius > Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius])
+                Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius] = maxRadius;
+        }
+
         public void OnAIAggroNotification(ulong targetId)
         {
             if (Owner == null) return;

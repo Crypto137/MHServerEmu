@@ -15,10 +15,17 @@ namespace MHServerEmu.Core.Extensions
             return $"{address.Substring(0, address.Length / 2)}****:{endpoint.Port}";
         }
 
-        public static void Set<T>(this List<T> list, List<T> other)
+        public static void Set<T>(this List<T> list, IEnumerable<T> other)
         {
             list.Clear();
             list.AddRange(other);
+        }
+
+        public static void Set<T>(this HashSet<T> hashSet, HashSet<T> other)
+        {
+            hashSet.Clear();
+            foreach (T item in other) 
+                hashSet.Add(item);
         }
     }
 }

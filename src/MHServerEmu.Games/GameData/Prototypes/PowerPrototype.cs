@@ -215,9 +215,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (powerProto is T)
                 return powerRef;
 
-            // for loop here
+            if (powerProto.ActionsTriggeredOnPowerEvent.HasValue())
+                foreach (var triggeredPowerEvent in powerProto.ActionsTriggeredOnPowerEvent)
+                    if (triggeredPowerEvent?.EventAction == PowerEventActionType.UsePower)
+                    {
+                        if (triggeredPowerEvent.Power == PrototypeId.Invalid) return PrototypeId.Invalid;
+                        if (triggeredPowerEvent.Power == powerRef) 
+                            return Logger.WarnReturn(PrototypeId.Invalid, 
+                                $"RecursiveGetPowerRefOfPowerTypeInCombo(): Infinite power loop detected in {powerRef.GetNameFormatted()}!");
+
+                        return RecursiveGetPowerRefOfPowerTypeInCombo<T>(triggeredPowerEvent.Power);
+                    }
 
             return PrototypeId.Invalid;
+        }
+
+        public static T RecursiveGetPowerPrototypeInCombo<T>(PrototypeId powerRef) where T : PowerPrototype
+        {
+            PowerPrototype powerProto = GameDatabase.GetPrototype<PowerPrototype>(powerRef);
+            if (powerProto == null) return Logger.WarnReturn((T)default, "RecursiveGetPowerPrototypeInCombo(): power == null");
+
+            if (powerProto is T power)
+                return power;
+
+            if (powerProto.ActionsTriggeredOnPowerEvent.HasValue())
+                foreach (var triggeredPowerEvent in powerProto.ActionsTriggeredOnPowerEvent)
+                    if (triggeredPowerEvent?.EventAction == PowerEventActionType.UsePower)
+                    {
+                        if (triggeredPowerEvent.Power == PrototypeId.Invalid) return default;
+                        if (triggeredPowerEvent.Power == powerRef)
+                            return Logger.WarnReturn((T)default,
+                                $"RecursiveGetPowerPrototypeInCombo(): Infinite power loop detected in {powerRef.GetNameFormatted()}!");
+
+                        return RecursiveGetPowerPrototypeInCombo<T>(triggeredPowerEvent.Power);
+                    }
+
+            return default;
         }
 
         public override bool ApprovedForUse()

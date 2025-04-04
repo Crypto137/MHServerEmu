@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Behavior;
@@ -163,9 +164,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             if (power == PrototypeId.Invalid) return;
             if (agent.HasPowerInPowerCollection(power) == false)
-            {
+            {               
+                var ownerController = agent.AIController;
+                if (ownerController == null) return;
+                ownerController.FindMaxLOSPowerRadius(power);
+
                 PowerIndexProperties indexPowerProps = new(agent.Properties[PropertyEnum.PowerRank], agent.CharacterLevel, agent.CombatLevel);
-                // TODO PropertyEnum.AILOSMaxPowerRadius
                 agent.AssignPower(power, indexPowerProps);
             }
         }
@@ -1230,7 +1234,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             EntityManager entityManager = game.EntityManager;
-            List<int> syncAttackIndices = new();    // TODO: Pool this
+            List<int> syncAttackIndices = ListPool<int>.Instance.Get();
 
             for (int i = 0; i < IDPropertiesLength && i < SyncAttacks.Length; i++)
             {
@@ -1239,10 +1243,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (target != null && target.IsDead == false)
                     syncAttackIndices.Add(i);
             }
-            if (syncAttackIndices.Count == 0) return -1;
 
-            int randomIndex = game.Random.Next(0, syncAttackIndices.Count);
-            return syncAttackIndices[randomIndex];
+            int index = -1;
+            if (syncAttackIndices.Count > 0)
+            {
+                int randomIndex = game.Random.Next(0, syncAttackIndices.Count);
+                index = syncAttackIndices[randomIndex];
+            }
+
+            ListPool<int>.Instance.Return(syncAttackIndices);
+
+            return index;
         }
 
         public override void OnPowerStarted(AIController ownerController, ProceduralUsePowerContextPrototype powerContext)

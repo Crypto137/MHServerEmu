@@ -78,5 +78,13 @@
         "Description": "Fix Raptor in Egg Hunt Legendary Mission",
         "ValueType": "PrototypeId",
         "Value": 16615558941252196555
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Characters/Mobs/Moloids/MoloidCrawlerBase.prototype",
+        "Path": "StealablePower",
+        "Description": "Add Mole Man Power for Moloid Crawler",
+        "ValueType": "PrototypeId",
+        "Value": 10167535038344338060
     }
 ]

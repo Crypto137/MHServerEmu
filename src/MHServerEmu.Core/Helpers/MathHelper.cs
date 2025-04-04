@@ -166,5 +166,19 @@
 
             return value;
         }
+
+        /// <summary>
+        /// Performs clamp without throwing when min > max.
+        /// </summary>
+        public static int ClampNoThrow(int value, int min, int max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
+        }
     }
 }

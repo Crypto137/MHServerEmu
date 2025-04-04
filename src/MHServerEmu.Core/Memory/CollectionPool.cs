@@ -119,6 +119,16 @@ namespace MHServerEmu.Core.Memory
             list.EnsureCapacity(capacity);
             return list;
         }
+
+        /// <summary>
+        /// Retrieves a <see cref="List{T}"/> from the pool or allocates a new one if the pool is empty and copies all elements from collection.
+        /// </summary>
+        public List<T> Get(IEnumerable<T> collection)
+        {
+            List<T> list = Get();
+            list.AddRange(collection);
+            return list;
+        }
     }
 
     /// <summary>

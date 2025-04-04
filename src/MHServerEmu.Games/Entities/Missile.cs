@@ -594,7 +594,7 @@ namespace MHServerEmu.Games.Entities
                     StartMovement();
                 }
 
-                collidedWith.OnSkillshotReflected(this); // TODO check all virtual for this
+                collidedWith.OnSkillshotReflected(this);
                 return true;
             }
 

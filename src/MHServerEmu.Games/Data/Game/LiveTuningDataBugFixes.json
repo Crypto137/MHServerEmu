@@ -3,15 +3,5 @@
         "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
         "Setting": "eMTV_Enabled",
         "Value": 0.0
-    },
-    {
-        "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
-        "Setting": "eMTV_Enabled",
-        "Value": 0.0
-    },
-    {
-        "Prototype": "Missions/Prototypes/Act3/Ch09Asgard/Controllers/SiegeMissionGiverController.prototype",
-        "Setting": "eMTV_Enabled",
-        "Value": 0.0
     }
 ]
