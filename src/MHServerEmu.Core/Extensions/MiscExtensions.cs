@@ -21,7 +21,7 @@ namespace MHServerEmu.Core.Extensions
             list.AddRange(other);
         }
 
-        public static void Set<T>(this HashSet<T> hashSet, IEnumerable<T> other)
+        public static void Set<T>(this HashSet<T> hashSet, HashSet<T> other)
         {
             hashSet.Clear();
             foreach (T item in other) 
