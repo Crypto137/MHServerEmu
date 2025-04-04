@@ -24,7 +24,8 @@ namespace MHServerEmu.Core.Extensions
         public static void Set<T>(this HashSet<T> hashSet, IEnumerable<T> other)
         {
             hashSet.Clear();
-            hashSet.UnionWith(other);
+            foreach (T item in other) 
+                hashSet.Add(item);
         }
     }
 }
