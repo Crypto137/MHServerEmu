@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -10,6 +11,8 @@ namespace MHServerEmu.Games.Entities.Physics
 {
     public class PhysicsManager
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public int CurrentForceReadIndex => _currentForceReadWriteState ? 1 : 0;
         public int CurrentForceWriteIndex => _currentForceReadWriteState ? 0 : 1;
 
@@ -225,7 +228,7 @@ namespace MHServerEmu.Games.Entities.Physics
             if (_game == null || entity == null || entity.IsInWorld == false || entity.TestStatus(EntityStatus.Destroyed))
                 return false;
 
-            List<EntityCollision> entityCollisionList = new();
+            List<EntityCollision> entityCollisionList = ListPool<EntityCollision>.Instance.Get();
             bool moved = false;
 
             if (Vector3.IsNearZero(vector))
@@ -233,7 +236,11 @@ namespace MHServerEmu.Games.Entities.Physics
             else
             {
                 var locomotor = entity.Locomotor;
-                if (locomotor == null)  return false;
+                if (locomotor == null)
+                {
+                    ListPool<EntityCollision>.Instance.Return(entityCollisionList);
+                    return Logger.WarnReturn(false, "MoveEntity(): locomotor == null");
+                }
 
                 bool noMissile = locomotor.IsMissile == false;
                 bool sliding = noMissile && moveFlags.HasFlag(MoveEntityFlags.Sliding);
@@ -273,6 +280,7 @@ namespace MHServerEmu.Games.Entities.Physics
                 }
             }
 
+            ListPool<EntityCollision>.Instance.Return(entityCollisionList);
             return moved;
         }
 
@@ -431,7 +439,7 @@ namespace MHServerEmu.Games.Entities.Physics
             Aabb bound = entity.EntityCollideBounds.ToAabb();            
             Vector3 position = entity.RegionLocation.Position;
 
-            List<WorldEntity> collisions = new();
+            List<WorldEntity> collisions = ListPool<WorldEntity>.Instance.Get();
             var context = entity.GetEntityRegionSPContext();
             foreach (var otherEntity in region.IterateEntitiesInVolume(bound, context))
                 if (entity != otherEntity)
@@ -442,6 +450,8 @@ namespace MHServerEmu.Games.Entities.Physics
                 EntityCollision entityCollision = new (otherEntity, 0.0f, position, Vector3.ZAxis);
                 HandlePossibleEntityCollision(entity, entityCollision, applyRepulsionForces, true);
             }
+
+            ListPool<WorldEntity>.Instance.Return(collisions);
         }
 
         private void HandlePossibleEntityCollision(WorldEntity entity, in EntityCollision entityCollision, bool applyRepulsionForces, bool boundsCheck)

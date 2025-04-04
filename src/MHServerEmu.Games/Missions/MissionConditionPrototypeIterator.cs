@@ -12,8 +12,6 @@ namespace MHServerEmu.Games.Missions
         // To avoid generating too much garbage we pool enumerators per thread using ThreadStatic.
         [ThreadStatic]
         private static Stack<Enumerator> _enumerators;
-        [ThreadStatic]
-        private static int _enumeratorCount;
 
         private readonly MissionConditionPrototype[] _conditions;
         private readonly Type _conditionType;
@@ -28,19 +26,7 @@ namespace MHServerEmu.Games.Missions
         {
             _enumerators ??= new();
 
-            // TODO: Remove logging once when we are sure there are no leaks
-            Enumerator enumerator;
-            if (_enumerators.Count > 0)
-            {
-                enumerator = _enumerators.Pop();
-            }
-            else
-            {
-                enumerator = new();
-                Logger.Debug($"GetEnumerator(): Allocating enumerator {++_enumeratorCount}");
-            }
-
-            //Enumerator enumerator = _enumerators.Count > 0 ? _enumerators.Pop() : new();
+            Enumerator enumerator = _enumerators.Count > 0 ? _enumerators.Pop() : new();
             enumerator.Initialize(_conditions, _conditionType);
             return enumerator;
         }
