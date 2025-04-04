@@ -50,7 +50,7 @@
     <None Update="Data\Game\Patches\Off\PatchDataCarnival.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\Patches\PatchDataEnabledMissions.json">
+    <None Update="Data\Game\Patches\PatchDataMissions.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\Patches\PatchDataBugFixes.json">

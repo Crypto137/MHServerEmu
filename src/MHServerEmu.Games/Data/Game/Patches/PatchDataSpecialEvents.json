@@ -73,6 +73,14 @@
     },
     {
         "Enabled": true,
+        "Prototype": "Missions/Prototypes/PVEEndgame/StaticScenarios/XMasGiftXChange.prototype",
+        "Path": "DesignState",
+        "Description": "Disable XMasGiftXChange",
+        "ValueType": "Enum",
+        "Value": "NotInGame"
+    },
+    {
+        "Enabled": true,
         "Prototype": "Resource/Cells/DistrictCells/Avengers_Tower/AvengersTowerNPE_HUB.cell",
         "Path": "MarkerSet.Markers[27].EntityGuid",
         "Description": "Add Dagger",

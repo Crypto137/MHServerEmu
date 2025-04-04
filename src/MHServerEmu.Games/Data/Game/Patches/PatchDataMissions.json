@@ -46,5 +46,13 @@
         "Description": "Off AsgardFrostGolemRanged for NorwayFrostGolemsSpawner",
         "ValueType": "Integer",
         "Value": 0
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/Act3/Ch09Asgard/Controllers/SiegeMissionGiverController.prototype",
+        "Path": "DesignState",
+        "Description": "Fix Conflict mission SiegeMissionGiverController",
+        "ValueType": "Enum",
+        "Value": "NotInGame"
     }
 ]
