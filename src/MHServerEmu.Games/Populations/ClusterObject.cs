@@ -505,7 +505,7 @@ namespace MHServerEmu.Games.Populations
                 overrides = GetMobAffixesFromProperties();
                 Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
                 ShiftExemptFromOverrides(overrides, exemptOverrides);
-                affixesSet.UnionWith(overrides);
+                affixesSet.Insert(overrides);
 
                 int maxAffixes = (rankEntryProto != null) ? rankEntryProto.GetMaxAffixes() : 0;
                 List<PrototypeId> slots = new(maxAffixes);
@@ -1079,7 +1079,7 @@ namespace MHServerEmu.Games.Populations
                         Modifiers.Add(affixRef);
 
             if (EntityProto.ModifiersGuaranteed.HasValue())
-                Modifiers.UnionWith(EntityProto.ModifiersGuaranteed);
+                Modifiers.Insert(EntityProto.ModifiersGuaranteed);
         }
     }
 }

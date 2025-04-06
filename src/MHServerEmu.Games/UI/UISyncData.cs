@@ -144,12 +144,12 @@ namespace MHServerEmu.Games.UI
             if (contextProto is OpenMissionPrototype openProto)
             {
                 if (openProto.ActiveInAreas.HasValue())
-                    _areaList.UnionWith(openProto.ActiveInAreas);
+                    _areaList.Insert(openProto.ActiveInAreas);
                 UpdateUI();
             }
             else if (contextProto is RegionPrototype)
             {
-                _areaList.UnionWith(RegionPrototype.GetAreasInGenerator(contextRef));
+                _areaList.Insert(RegionPrototype.GetAreasInGenerator(contextRef));
                 UpdateUI();
             }
         }
