@@ -278,9 +278,10 @@ namespace MHServerEmu.Games.Populations
 
                 if (num > 2)
                 {
-                    List<ClusterObject> oldObjects = new(formationObjects);
+                    List<ClusterObject> oldObjects = ListPool<ClusterObject>.Instance.Get(formationObjects);
                     for (int i = 0; i < oldObjects.Count; i++)
                         formationObjects[GetAlternatingIndex(i, oldObjects.Count)] = oldObjects[i];
+                    ListPool<ClusterObject>.Instance.Return(oldObjects);
                 }
 
                 Vector3 pos = Vector3.Forward;
@@ -634,7 +635,7 @@ namespace MHServerEmu.Games.Populations
                             if (newEntity != null)
                             {
                                 newEntity.RankProto = popGlobals.TwinEnemyRank.As<RankPrototype>();
-                                newEntity.Modifiers = new(entity.Modifiers);
+                                newEntity.Modifiers.Set(entity.Modifiers);
                             }
                             break;
                         }
