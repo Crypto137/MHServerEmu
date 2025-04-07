@@ -1140,7 +1140,7 @@ namespace MHServerEmu.Games.Properties.Evals
                     resultVal = evalVar.Value.Props;
                     return true;
                 case EvalReturnType.EntityPtr:
-                    resultVal = evalVar.Value.Entity.Properties;
+                    resultVal = evalVar.Value.Entity?.Properties;
                     return true;
                 case EvalReturnType.EntityGuid:
                     resultVal = null;
