@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Loot.Visitors;
@@ -499,7 +500,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private void PopulateMissionActionReferencedPowers()
         {
             bool hasPowers = false;
-            HashSet<PrototypeId> powers = new();
+            HashSet<PrototypeId> powers = HashSetPool<PrototypeId>.Instance.Get();
 
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnAvailableActions);
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnStartActions);
@@ -518,6 +519,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (hasPowers)
                 MissionActionReferencedPowers = new(powers);
+
+            HashSetPool<PrototypeId>.Instance.Return(powers);
         }
 
         private bool AddMissionActionEntityPerformPowerPrototypePowerFromList(HashSet<PrototypeId> powers, MissionActionPrototype[] actions)
@@ -646,7 +649,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (regions.Count > 0)
                 {
-                    List<PrototypeId> regionList = new (regions);
+                    List<PrototypeId> regionList = ListPool<PrototypeId>.Instance.Get(regions);
                     foreach (PrototypeId regionRef in regionList)
                     {
                         RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
@@ -656,6 +659,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                                 regions.Add(altRegionRef);
                         }
                     }
+                    ListPool<PrototypeId>.Instance.Return(regionList);
                 }
             }
 
@@ -737,9 +741,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (areaRef != PrototypeId.Invalid) _activeAreas.Add(areaRef);
 
             if (_activeAreas.Count == 0)
+            {
+                HashSet<PrototypeId> activeAreas = HashSetPool<PrototypeId>.Instance.Get();
                 foreach (var regionRef in _activeRegions)
-                    foreach (var areaRef in RegionPrototype.GetAreasInGenerator(regionRef))
-                        _activeAreas.Add(areaRef);
+                {
+                    activeAreas.Clear();
+                    RegionPrototype.GetAreasInGenerator(regionRef, activeAreas);
+                    _activeAreas.Insert(activeAreas);
+                }
+                HashSetPool<PrototypeId>.Instance.Return(activeAreas);
+            }
 
             // cache for mission active cells
             if (ParticipationBasedOnAreaCell && ActiveInCells.HasValue())

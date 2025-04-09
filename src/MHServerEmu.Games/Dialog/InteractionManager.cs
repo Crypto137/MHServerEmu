@@ -433,13 +433,14 @@ namespace MHServerEmu.Games.Dialog
             MissionOptionTypeFlags optionType, InteractionOptimizationFlags optimizationFlag)
         {
             if (conditionList == null) return;
+            HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();
             foreach (MissionConditionPrototype prototype in conditionList.IteratePrototypes())
             {
                 if (prototype == null) continue;
                 if (optionType.HasFlag(MissionOptionTypeFlags.SkipComplete) && prototype is MissionConditionMissionCompletePrototype)
                     continue;
 
-                HashSet<PrototypeId> contextRefs = new ();
+                contextRefs.Clear();
                 prototype.GetPrototypeContextRefs(contextRefs);
                 if (contextRefs.Count > 0)
                 {
@@ -467,6 +468,7 @@ namespace MHServerEmu.Games.Dialog
                     BindOptionToMap(option, contextRefs);
                 }
             }
+            HashSetPool<PrototypeId>.Instance.Return(contextRefs);
         }
 
         private void RegisterActionInfoFromList(MissionPrototype missionProto, MissionActionPrototype[] actionList, MissionStateFlags state, 

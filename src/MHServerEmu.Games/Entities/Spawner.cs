@@ -146,7 +146,7 @@ namespace MHServerEmu.Games.Entities
                 region.EvalRegionProperties(spawnerProto.EvalSpawnProperties, evalProperties);
             entry.EvaluateSpawnProperties(evalProperties, region, null);
 
-            List<WorldEntity> spawnedEntities = new();
+            List<WorldEntity> spawnedEntities = ListPool<WorldEntity>.Instance.Get();
             for (int i = 0; i < entry.Count; i++) 
             { 
                 if (DebugLog) Logger.Debug($"SpawnObject[{i}] {popObject.GetType().Name}");
@@ -166,6 +166,7 @@ namespace MHServerEmu.Games.Entities
                         if (text.OverheadTextEntityFilter == null || text.OverheadTextEntityFilter.Evaluate(entity, new()))
                             entity.ShowOverheadText(text.OverheadText, 10.0f);
                     }
+            ListPool<WorldEntity>.Instance.Return(spawnedEntities);
         }
 
         private void SpawnObject(PopulationObjectPrototype popObject, PropertyCollection properties, List<WorldEntity> spawnedEntities)

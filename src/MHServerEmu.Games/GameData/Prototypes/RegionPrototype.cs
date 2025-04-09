@@ -392,7 +392,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (includeChildren)
             {
-                List<PrototypeId> parentRegions = new(regions);
+                List<PrototypeId> parentRegions = ListPool<PrototypeId>.Instance.Get(regions);
                 foreach (var childRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                     foreach (var parentRef in parentRegions)
                         if (GameDatabase.DataDirectory.PrototypeIsAPrototype(childRef, parentRef))
@@ -400,13 +400,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             regions.Add(childRef);
                             break;
                         }
+                ListPool<PrototypeId>.Instance.Return(parentRegions);
             }
 
             if (excludeRegions.HasValue())
                 foreach (var regionRef in excludeRegions)
                     regions.Remove(regionRef);
 
-            List<PrototypeId> altRegions = new(regions);
+            List<PrototypeId> altRegions = ListPool<PrototypeId>.Instance.Get(regions);
             foreach (var regionRef in altRegions)
             {
                 var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
@@ -414,26 +415,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     foreach (var altRegionRef in regionProto.AltRegions)
                         regions.Add(altRegionRef);
             }
+            ListPool<PrototypeId>.Instance.Return(altRegions);
         }
 
-        public static HashSet<PrototypeId> GetAreasInGenerator(PrototypeId regionRef)
+        public static void GetAreasInGenerator(PrototypeId regionRef, HashSet<PrototypeId> areas)
         {
-            HashSet<PrototypeId> areas = new();
-            if (regionRef == PrototypeId.Invalid) return areas;
+            if (regionRef == PrototypeId.Invalid) return;
             var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
-            if (regionProto == null) return areas;
+            if (regionProto == null) return;
 
             if (regionProto.AreasInGenerator == null)
             {
-                regionProto.AreasInGenerator = new();
-                HashSet<PrototypeId> regions = new();
+                regionProto.AreasInGenerator = [];
+                HashSet<PrototypeId> regions = HashSetPool<PrototypeId>.Instance.Get();
                 GetAreasInGenerator(regionProto, regionProto.AreasInGenerator, regions);
+                HashSetPool<PrototypeId>.Instance.Return(regions);
             }
 
             if (regionProto.AreasInGenerator != null)
-                return regionProto.AreasInGenerator;
-
-            return areas;
+                areas.Insert(regionProto.AreasInGenerator);
         }
 
         private static void GetAreasInGenerator(RegionPrototype regionProto, HashSet<PrototypeId> areas, HashSet<PrototypeId> regions)
