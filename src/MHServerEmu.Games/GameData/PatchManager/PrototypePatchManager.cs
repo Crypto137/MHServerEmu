@@ -69,6 +69,22 @@ namespace MHServerEmu.Games.GameData.PatchManager
             patchList.Add(value);
         }
 
+        public bool CheckProperties(PrototypeId protoRef, out Properties.PropertyCollection prop)
+        {
+            prop = null;
+            if (_initialized == false) return false;
+
+            if (protoRef != PrototypeId.Invalid && _patchDict.TryGetValue(protoRef, out var list))
+                foreach (var entry in list)
+                    if (entry.Value.ValueType == ValueType.Properties)
+                    {
+                        prop = entry.Value.GetValue() as Properties.PropertyCollection;
+                        return prop != null;
+                    }
+
+            return false;
+        }
+
         public bool PreCheck(PrototypeId protoRef)
         {
             if (_initialized == false) return false;

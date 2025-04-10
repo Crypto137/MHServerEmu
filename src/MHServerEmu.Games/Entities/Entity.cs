@@ -9,6 +9,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
@@ -254,6 +255,10 @@ namespace MHServerEmu.Games.Entities
 
             if (Prototype.Properties != null)
                 Properties.FlattenCopyFrom(Prototype.Properties, true);
+
+            // Add properties from patch
+            if (PrototypePatchManager.Instance.CheckProperties(PrototypeDataRef, out PropertyCollection prop))
+                Properties.FlattenCopyFrom(prop, false);
 
             if (settings.Properties != null)
                 Properties.FlattenCopyFrom(settings.Properties, false);
