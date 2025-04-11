@@ -25,6 +25,20 @@ namespace MHServerEmu.Commands.Implementations
             return $"Mission Log [{flags}]";
         }
 
+        [Command("resetstory", "Reset all main story missions.\nUsage: mission resetstory.")]
+        public string ResetStory(string[] @params, FrontendClient client)
+        {
+            if (client == null) return "You can only invoke this command from the game.";
+            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+
+            var avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null) return "Current Avatar not found.";
+
+            avatar.ResetMissions();
+
+            return "Story missions reset";
+        }
+
         [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory", AccountUserLevel.Admin)]
         public string CompleteStory(string[] @params, FrontendClient client)
         {
