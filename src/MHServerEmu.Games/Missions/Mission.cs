@@ -445,7 +445,6 @@ namespace MHServerEmu.Games.Missions
 
             if (contributors)
             {
-                players.Clear();
                 if (GetContributors(players))
                 {
                     foreach (var player in players)
@@ -1047,13 +1046,19 @@ namespace MHServerEmu.Games.Missions
 
                     bool isAchievement = isOpenMission == false || OpenMissionPrototype.AchievementTimeLimitSeconds == 0 || Game.CurrentTime <= _achievementTime;
 
-                    foreach (var activity in GetPlayerActivities())
+                    var playerActivities = DictionaryPool<ulong, PlayerActivity>.Instance.Get();
+                    if (GetPlayerActivities(playerActivities))
                     {
-                        region.PlayerCompletedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                        foreach (var activity in playerActivities.Values)
+                        {
+                            region.PlayerCompletedMissionEvent.Invoke(
+                                new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
 
-                        if (isAchievement)
-                            activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, Prototype));
+                            if (isAchievement)
+                                activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, Prototype));
+                        }
                     }
+                    DictionaryPool<ulong, PlayerActivity>.Instance.Return(playerActivities);
                 }
 
                 if (player != null)
@@ -1123,8 +1128,14 @@ namespace MHServerEmu.Games.Missions
                     if (isOpenMission)
                         region.OpenMissionFailedEvent.Invoke(new(missionRef));
 
-                    foreach (var activity in GetPlayerActivities())
-                        region.PlayerFailedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                    var playerActivities = DictionaryPool<ulong, PlayerActivity>.Instance.Get();
+                    if (GetPlayerActivities(playerActivities))
+                    {
+                        foreach (var activity in playerActivities.Values)
+                            region.PlayerFailedMissionEvent.Invoke(
+                                new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                    }
+                    DictionaryPool<ulong, PlayerActivity>.Instance.Return(playerActivities);
                 }
 
                 if (reapeatable)
@@ -1873,6 +1884,7 @@ namespace MHServerEmu.Games.Missions
 
         public bool GetContributors(List<Player> contributors)
         {
+            contributors.Clear();
             var manager = Game.EntityManager;
             foreach (var contributor in _contributors.Keys)
             {
@@ -1886,6 +1898,8 @@ namespace MHServerEmu.Games.Missions
 
         public bool GetRegionPlayers(List<Player> regionPlayers)
         {
+            regionPlayers.Clear();
+
             if (IsOpenMission == false)
                 return false;
 
@@ -1895,9 +1909,10 @@ namespace MHServerEmu.Games.Missions
             return regionPlayers.Count > 0;
         }
 
-        public IEnumerable<PlayerActivity> GetPlayerActivities()
+        public bool GetPlayerActivities(Dictionary<ulong, PlayerActivity> playerActivities)
         {
-            Dictionary<ulong, PlayerActivity> playerActivities = new ();
+            playerActivities.Clear();
+
             var manager = Game.EntityManager;
 
             foreach (var participant in _participants)
@@ -1920,7 +1935,7 @@ namespace MHServerEmu.Games.Missions
                     playerActivities[player.Id] = new(player, false, true);
             }
 
-            return playerActivities.Values;
+            return playerActivities.Count > 0;
         }
 
         public MissionObjective GetObjectiveByPrototypeIndex(byte objectiveIndex)
