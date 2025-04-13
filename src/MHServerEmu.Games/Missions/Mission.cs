@@ -1750,7 +1750,7 @@ namespace MHServerEmu.Games.Missions
                 if (hotspot != null) outHotspots.Add(hotspot);
             }
 
-            return hotspots.Count > 0;
+            return outHotspots.Count > 0;
         }
 
         public Hotspot GetFirstMissionHotspot()
