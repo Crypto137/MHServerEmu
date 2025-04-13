@@ -445,7 +445,6 @@ namespace MHServerEmu.Games.Missions
 
             if (contributors)
             {
-                players.Clear();
                 if (GetContributors(players))
                 {
                     foreach (var player in players)
@@ -1047,13 +1046,19 @@ namespace MHServerEmu.Games.Missions
 
                     bool isAchievement = isOpenMission == false || OpenMissionPrototype.AchievementTimeLimitSeconds == 0 || Game.CurrentTime <= _achievementTime;
 
-                    foreach (var activity in GetPlayerActivities())
+                    var playerActivities = DictionaryPool<ulong, PlayerActivity>.Instance.Get();
+                    if (GetPlayerActivities(playerActivities))
                     {
-                        region.PlayerCompletedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                        foreach (var activity in playerActivities.Values)
+                        {
+                            region.PlayerCompletedMissionEvent.Invoke(
+                                new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
 
-                        if (isAchievement)
-                            activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, Prototype));
+                            if (isAchievement)
+                                activity.Player.OnScoringEvent(new(ScoringEventType.CompleteMission, Prototype));
+                        }
                     }
+                    DictionaryPool<ulong, PlayerActivity>.Instance.Return(playerActivities);
                 }
 
                 if (player != null)
@@ -1123,8 +1128,14 @@ namespace MHServerEmu.Games.Missions
                     if (isOpenMission)
                         region.OpenMissionFailedEvent.Invoke(new(missionRef));
 
-                    foreach (var activity in GetPlayerActivities())
-                        region.PlayerFailedMissionEvent.Invoke(new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                    var playerActivities = DictionaryPool<ulong, PlayerActivity>.Instance.Get();
+                    if (GetPlayerActivities(playerActivities))
+                    {
+                        foreach (var activity in playerActivities.Values)
+                            region.PlayerFailedMissionEvent.Invoke(
+                                new(activity.Player, missionRef, activity.Participant, activity.Contributor || isOpenMission == false));
+                    }
+                    DictionaryPool<ulong, PlayerActivity>.Instance.Return(playerActivities);
                 }
 
                 if (reapeatable)
@@ -1725,35 +1736,53 @@ namespace MHServerEmu.Games.Missions
             return 0.0f;
         }
 
-        public IEnumerable<Hotspot> GetMissionHotspots()
+        public bool GetMissionHotspots(List<Hotspot> outHotspots)
         {
-            // TODO: Optimize this
-            var region = Region;
-            if (region == null) yield break;
+            outHotspots.Clear();
 
-            var hotspots = region.EntityTracker.HotspotsForContext(PrototypeDataRef);
-            if (hotspots == null) yield break;
-
+            var hotspots = Region?.EntityTracker.HotspotsForContext(PrototypeDataRef);
+            if (hotspots == null) return false;
+            
             var manager = Game.EntityManager;
-            List<ulong> hotspotsIds = new(hotspots);
-            foreach (var hotspotId in hotspotsIds)
+            foreach (var hotspotId in hotspots)
             {
                 var hotspot = manager.GetEntity<Hotspot>(hotspotId);
-                if (hotspot != null)
-                    yield return hotspot;
+                if (hotspot != null) outHotspots.Add(hotspot);
             }
+
+            return outHotspots.Count > 0;
+        }
+
+        public Hotspot GetFirstMissionHotspot()
+        {
+            var hotspots = Region?.EntityTracker.HotspotsForContext(PrototypeDataRef);
+            if (hotspots == null) return null;
+
+            var enumerator = hotspots.GetEnumerator();
+            if (enumerator.MoveNext() == false)
+                return null;
+
+            return Game.EntityManager.GetEntity<Hotspot>(enumerator.Current);
         }
 
         public bool FilterHotspots(Avatar avatar, PrototypeId hotspotRef, EntityFilterPrototype entityFilter = null)
         {
-            foreach(var hotspot in GetMissionHotspots())
+            bool found = false;
+            List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+            if (GetMissionHotspots(hotspots))
             {
-                if (hotspot.ContainsAvatar(avatar) == false) continue;
-                if (hotspotRef != PrototypeId.Invalid && hotspot.PrototypeDataRef != hotspotRef) continue;
-                if (entityFilter != null && entityFilter.Evaluate(hotspot, new(PrototypeDataRef)) == false) continue;
-                return true;
+                foreach (var hotspot in hotspots)
+                {
+                    if (hotspot.ContainsAvatar(avatar) == false) continue;
+                    if (hotspotRef != PrototypeId.Invalid && hotspot.PrototypeDataRef != hotspotRef) continue;
+                    if (entityFilter != null && entityFilter.Evaluate(hotspot, new(PrototypeDataRef)) == false) continue;
+
+                    found = true;
+                    break;
+                }
             }
-            return false;
+            ListPool<Hotspot>.Instance.Return(hotspots);
+            return found;
         }
 
         public bool HasEventMissionChapter()
@@ -1855,6 +1884,7 @@ namespace MHServerEmu.Games.Missions
 
         public bool GetContributors(List<Player> contributors)
         {
+            contributors.Clear();
             var manager = Game.EntityManager;
             foreach (var contributor in _contributors.Keys)
             {
@@ -1868,6 +1898,8 @@ namespace MHServerEmu.Games.Missions
 
         public bool GetRegionPlayers(List<Player> regionPlayers)
         {
+            regionPlayers.Clear();
+
             if (IsOpenMission == false)
                 return false;
 
@@ -1877,9 +1909,10 @@ namespace MHServerEmu.Games.Missions
             return regionPlayers.Count > 0;
         }
 
-        public IEnumerable<PlayerActivity> GetPlayerActivities()
+        public bool GetPlayerActivities(Dictionary<ulong, PlayerActivity> playerActivities)
         {
-            Dictionary<ulong, PlayerActivity> playerActivities = new ();
+            playerActivities.Clear();
+
             var manager = Game.EntityManager;
 
             foreach (var participant in _participants)
@@ -1902,7 +1935,7 @@ namespace MHServerEmu.Games.Missions
                     playerActivities[player.Id] = new(player, false, true);
             }
 
-            return playerActivities.Values;
+            return playerActivities.Count > 0;
         }
 
         public MissionObjective GetObjectiveByPrototypeIndex(byte objectiveIndex)

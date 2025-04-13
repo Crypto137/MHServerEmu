@@ -518,9 +518,15 @@ namespace MHServerEmu.Games.Missions
                     var isOpenMission = Mission.IsOpenMission;
                     var missionRef = Mission.PrototypeDataRef;
                     var objectiveId = namedProto.ObjectiveID;
-                    foreach (var activity in Mission.GetPlayerActivities())
-                        region.PlayerCompletedMissionObjectiveEvent
-                            .Invoke(new(activity.Player, missionRef, objectiveId, activity.Participant, activity.Contributor || isOpenMission == false));
+
+                    var playerActivities = DictionaryPool<ulong, PlayerActivity>.Instance.Get();
+                    if (Mission.GetPlayerActivities(playerActivities))
+                    {
+                        foreach (var activity in playerActivities.Values)
+                            region.PlayerCompletedMissionObjectiveEvent.Invoke(
+                                new(activity.Player, missionRef, objectiveId, activity.Participant, activity.Contributor || isOpenMission == false));
+                    }
+                    DictionaryPool<ulong, PlayerActivity>.Instance.Return(playerActivities);
                 }
             }
 

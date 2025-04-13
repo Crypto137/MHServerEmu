@@ -29,7 +29,7 @@ namespace MHServerEmu.Games.Missions.Actions
 
             if (Mission.IsOpenMission)
             {
-                var hotspot = Mission.GetMissionHotspots().First();
+                var hotspot = Mission.GetFirstMissionHotspot();
                 if (hotspot == null) return;
                 position = hotspot.RegionLocation.Position;
             }

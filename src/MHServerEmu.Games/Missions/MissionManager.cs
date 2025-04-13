@@ -580,7 +580,7 @@ namespace MHServerEmu.Games.Missions
             if (Player == null || HasMissions == false) return;
 
             // initialize and clear old missions
-            List<Mission> oldMissions = new();
+            List<Mission> oldMissions = ListPool<Mission>.Instance.Get();
             foreach (var mission in _missionDict.Values)
             {
                 if (mission == null) continue;
@@ -595,6 +595,7 @@ namespace MHServerEmu.Games.Missions
                 else
                     DeleteMission(mission.PrototypeDataRef);
             }
+            ListPool<Mission>.Instance.Return(oldMissions);
 
             ResetMissionsToCheckpoint();
 

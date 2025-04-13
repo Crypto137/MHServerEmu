@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -27,12 +28,23 @@ namespace MHServerEmu.Games.Missions.Conditions
 
         protected override bool Contains()
         {
+            bool result = false;
             if (_proto.TargetFilter != null)
-                foreach(var hotspot in Mission.GetMissionHotspots())
-                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
-                        return true;
+            {
+                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                if (Mission.GetMissionHotspots(hotspots))
+                {
+                    foreach (var hotspot in hotspots)
+                        if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
+                        {
+                            result = true;
+                            break;
+                        }
+                }
+                ListPool<Hotspot>.Instance.Return(hotspots);
+            }
 
-            return false;
+            return result;
         }
 
         public override bool OnReset()
@@ -41,9 +53,15 @@ namespace MHServerEmu.Games.Missions.Conditions
             if (_proto.TargetFilter != null) 
             {
                 var missionRef = Mission.PrototypeDataRef;
-                foreach (var hotspot in Mission.GetMissionHotspots())
-                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
-                        count += hotspot.GetMissionConditionCount(missionRef, _proto);
+
+                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                if (Mission.GetMissionHotspots(hotspots))
+                {
+                    foreach (var hotspot in hotspots)
+                        if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
+                            count += hotspot.GetMissionConditionCount(missionRef, _proto);
+                }
+                ListPool<Hotspot>.Instance.Return(hotspots);
             }
 
             SetCount(count);
@@ -77,13 +95,18 @@ namespace MHServerEmu.Games.Missions.Conditions
             var entity = evt.Defender;
             if (entity == null) return;
 
-            foreach (var hotspot in Mission.GetMissionHotspots())
-                if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
-                {
-                    if (hotspot.Physics.IsOverlappingEntity(entity.Id) && EvaluateEntity(entity, hotspot))
-                        Count--;
-                    return;
-                }
+            List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+            if (Mission.GetMissionHotspots(hotspots))
+            {
+                foreach (var hotspot in hotspots)
+                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot))
+                    {
+                        if (hotspot.Physics.IsOverlappingEntity(entity.Id) && EvaluateEntity(entity, hotspot))
+                            Count--;
+                        break;
+                    }
+            }
+            ListPool<Hotspot>.Instance.Return(hotspots);
         }
 
         public override void RegisterEvents(Region region)

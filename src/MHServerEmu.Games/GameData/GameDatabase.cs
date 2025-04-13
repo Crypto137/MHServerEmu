@@ -92,12 +92,12 @@ namespace MHServerEmu.Games.GameData
             // Initialize LocaleManager
             LocaleManager.Instance.Initialize();
 
-            // Initialize PrototypePatchManager
-            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
-
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
+
+            // Initialize PrototypePatchManager
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 
             // Load globals prototypes
             PrototypeId globalsPrototypeId = GetPrototypeRefByName("Globals/Globals.defaults");

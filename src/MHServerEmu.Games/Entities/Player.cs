@@ -134,6 +134,7 @@ namespace MHServerEmu.Games.Entities
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
         public bool IsOnLoadingScreen { get; private set; }
         public bool IsFullscreenObscured { get => IsFullscreenMoviePlaying || IsOnLoadingScreen; }
+        public uint FullscreenMovieSyncRequestId { get; set; }
 
         public bool IsSwitchingAvatar { get; private set; }
 
@@ -2043,12 +2044,16 @@ namespace MHServerEmu.Games.Entities
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
             if (movieProto == null) return;
             if (movieProto.MovieType == MovieType.Cinematic)
+            {
                 Properties[PropertyEnum.FullScreenMovieSession] = Game.Random.Next();
+                Properties[PropertyEnum.FullScreenMoviePlaying] = true;
+            }
         }
 
         public void OnFullscreenMovieFinished(PrototypeId movieRef, bool userCancelled, uint syncRequestId)
         {
-            // TODO syncRequestId ?
+            if (syncRequestId != 0 && syncRequestId < FullscreenMovieSyncRequestId) return;
+
             Logger.Trace($"OnFullscreenMovieFinished {GameDatabase.GetFormattedPrototypeName(movieRef)} Canceled = {userCancelled} by {_playerName}");
 
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
@@ -2501,8 +2506,10 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        public void OnPlayKismetSeqDone(PrototypeId kismetSeqRef)
+        public void OnPlayKismetSeqDone(PrototypeId kismetSeqRef, uint syncRequestId)
         {
+            if (syncRequestId != 0 && syncRequestId < FullscreenMovieSyncRequestId) return;
+
             if (kismetSeqRef == PrototypeId.Invalid) return;
             var kismetSeqProto = GameDatabase.GetPrototype<KismetSequencePrototype>(kismetSeqRef);
             if (kismetSeqProto == null) return;
@@ -2528,6 +2535,23 @@ namespace MHServerEmu.Games.Entities
             SendMessage(NetMessagePlayKismetSeq.CreateBuilder()
                 .SetKismetSeqPrototypeId((ulong)kismetSeqRef)
                 .Build());
+        }
+
+        public void SendFullscreenMovieSync()
+        {
+            if (Properties.HasProperty(PropertyEnum.FullScreenMovieQueued) == false) return;
+
+            var message = NetMessageFullscreenMovieSync.CreateBuilder();
+            message.SetSyncRequestId(++FullscreenMovieSyncRequestId);
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.FullScreenMovieQueued))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId movieRef);
+                if (movieRef == PrototypeId.Invalid) continue;
+                message.AddMovieProtoId((ulong)movieRef);
+            }
+
+            SendMessage(message.Build());
         }
 
         public void SendAIAggroNotification(PrototypeId bannerMessageRef, Agent aiAgent, Player targetPlayer, bool party = false)

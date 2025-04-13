@@ -2,6 +2,7 @@
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -75,6 +76,9 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 root.GetProperty("Description").GetString(),
                 GetValueBase(root.GetProperty("Value"), valueType)
             );
+
+            if (valueType == ValueType.Properties) entry.Patched = true;
+
             return entry;
         }
 
@@ -96,6 +100,7 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 ValueType.Prototype => new SimpleValue<Prototype>(ParseJsonPrototype(jsonElement), valueType),
                 ValueType.PrototypeArray => new ArrayValue<Prototype>(jsonElement, valueType, ParseJsonPrototype),
                 ValueType.Vector3 => new SimpleValue<Vector3>(ParseJsonVector3(jsonElement), valueType),
+                ValueType.Properties => new SimpleValue<PropertyCollection>(ParseJsonProperties(jsonElement), valueType),
                 _ => throw new NotSupportedException($"Type {valueType} not support.")
             };
         }
@@ -144,12 +149,114 @@ namespace MHServerEmu.Games.GameData.PatchManager
             return prototype;
         }
 
+        public static PropertyCollection ParseJsonProperties(JsonElement jsonElement)
+        {
+            PropertyCollection properties = new ();
+            var infoTable = GameDatabase.PropertyInfoTable;
+
+            foreach (var property in jsonElement.EnumerateObject())
+            {
+                var propEnum = (PropertyEnum)Enum.Parse(typeof(PropertyEnum), property.Name);
+                PropertyInfo propertyInfo = infoTable.LookupPropertyInfo(propEnum);
+                PropertyId propId = ParseJsonPropertyId(property.Value, propEnum, propertyInfo);
+                PropertyValue propValue = ParseJsonPropertyValue(property.Value, propertyInfo);
+                properties.SetProperty(propValue, propId);
+            }
+
+            return properties;
+        }
+
+        public static PropertyId ParseJsonPropertyId(JsonElement jsonElement, PropertyEnum propEnum, PropertyInfo propInfo)
+        {
+            int paramCount = propInfo.ParamCount;
+            if (paramCount == 0) return new(propEnum);
+
+            var jsonArray = jsonElement.EnumerateArray().ToArray();
+            Span<PropertyParam> paramValues = stackalloc PropertyParam[Property.MaxParamCount];
+            propInfo.DefaultParamValues.CopyTo(paramValues);
+
+            for (int i = 0; i < paramCount; i++)
+            {
+                if (i >= 4) break;
+                if (i >= jsonArray.Length) continue;
+
+                var paramValue = jsonArray[i];
+
+                switch (propInfo.GetParamType(i))
+                {
+                    case PropertyParamType.Asset:
+                        var assetParam = (AssetId)ParseJsonElement(paramValue, typeof(AssetId));
+                        paramValues[i] = Property.ToParam(assetParam);
+                        break;
+
+                    case PropertyParamType.Prototype:
+                        var protoRefParam = (PrototypeId)ParseJsonElement(paramValue, typeof(PrototypeId));
+                        paramValues[i] = Property.ToParam(propEnum, i, protoRefParam);
+                        break;
+
+                    case PropertyParamType.Integer:
+                        if (paramValue.TryGetInt64(out long decimalValue))
+                            paramValues[i] = (PropertyParam)(int)decimalValue;
+                        break;
+
+                    default:
+                        throw new InvalidOperationException("Encountered an unknown prop param type in an ParseJsonPropertyId!");
+                }
+            }
+
+            return new(propEnum, paramValues);
+        }
+
+        public static PropertyValue ParseJsonPropertyValue(JsonElement jsonElement, PropertyInfo propInfo)
+        {
+            if (propInfo.ParamCount > 0)
+            {
+                var jsonArray = jsonElement.EnumerateArray().ToArray();
+                jsonElement = jsonArray[^1];
+            }
+
+            switch (propInfo.DataType)
+            {
+                case PropertyDataType.Integer:
+                    if (jsonElement.TryGetInt64(out long decimalValue))
+                        return (PropertyValue)decimalValue;
+                    break;
+
+                case PropertyDataType.Real:
+                    if (jsonElement.TryGetDouble(out double doubleValue))
+                        return (PropertyValue)(float)doubleValue;
+                    break;
+
+                case PropertyDataType.Boolean:
+                    return (PropertyValue)jsonElement.GetBoolean();
+
+                case PropertyDataType.Prototype:
+                    var protoRefValue = (PrototypeId)ParseJsonElement(jsonElement, typeof(PrototypeId));
+                    return (PropertyValue)protoRefValue;
+
+                case PropertyDataType.Asset:
+                    AssetId assetValue = (AssetId)ParseJsonElement(jsonElement, typeof(AssetId));
+                    return (PropertyValue)assetValue;
+
+                default:
+                    throw new InvalidOperationException($"[ParseJsonPropertyValue] Assignment into invalid property (property type is not int/float/bool)! Property: {propInfo.PropertyName}");
+            }
+
+            return propInfo.DefaultValue;
+        }
+
         public static object ParseJsonElement(JsonElement value, Type fieldType)
         {
             if (fieldType == typeof(PrototypeId))
             {
                 if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt64(out ulong ulongValue))
                     return (PrototypeId)ulongValue;
+            }
+
+            if (fieldType == typeof(AssetId))
+            {
+                if (value.ValueKind == JsonValueKind.Number && value.TryGetUInt64(out ulong ulongValue))
+                    return (AssetId)ulongValue;
             }
 
             if (fieldType == typeof(PrototypeGuid))
@@ -206,7 +313,8 @@ namespace MHServerEmu.Games.GameData.PatchManager
         PrototypeDataRefArray,
         Prototype,
         PrototypeArray,
-        Vector3
+        Vector3,
+        Properties
     }
 
     public abstract class ValueBase
