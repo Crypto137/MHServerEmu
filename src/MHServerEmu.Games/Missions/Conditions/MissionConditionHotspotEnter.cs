@@ -27,13 +27,18 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool entered = false;
             if (_proto.TargetFilter != null)
             {
-                foreach (var hotspot in Mission.GetMissionHotspots())
-                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot)
-                        && hotspot.GetMissionConditionCount(missionRef, _proto) > 0)
-                    {
-                        entered = true;
-                        break;
-                    }
+                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                if (Mission.GetMissionHotspots(hotspots))
+                {
+                    foreach (var hotspot in hotspots)
+                        if (EvaluateEntityFilter(_proto.EntityFilter, hotspot)
+                            && hotspot.GetMissionConditionCount(missionRef, _proto) > 0)
+                        {
+                            entered = true;
+                            break;
+                        }
+                }
+                ListPool<Hotspot>.Instance.Return(hotspots);
             }
             else
             {
