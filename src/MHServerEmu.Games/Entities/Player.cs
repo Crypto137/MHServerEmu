@@ -2044,7 +2044,10 @@ namespace MHServerEmu.Games.Entities
             var movieProto = GameDatabase.GetPrototype<FullscreenMoviePrototype>(movieRef);
             if (movieProto == null) return;
             if (movieProto.MovieType == MovieType.Cinematic)
+            {
                 Properties[PropertyEnum.FullScreenMovieSession] = Game.Random.Next();
+                Properties[PropertyEnum.FullScreenMoviePlaying] = true;
+            }
         }
 
         public void OnFullscreenMovieFinished(PrototypeId movieRef, bool userCancelled, uint syncRequestId)
