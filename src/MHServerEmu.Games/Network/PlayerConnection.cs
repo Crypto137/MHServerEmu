@@ -969,14 +969,12 @@ namespace MHServerEmu.Games.Network
         {
             var throwInteraction = message.As<NetMessageThrowInteraction>();
             if (throwInteraction == null) return Logger.WarnReturn(false, $"OnThrowInteraction(): Failed to retrieve message");
+            
+            // Ignoring avatar index here
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "OnThrowInteraction(): avatar == null");
 
-            ulong idTarget = throwInteraction.IdTarget;
-            int avatarIndex = throwInteraction.AvatarIndex;
-            Logger.Trace($"Received ThrowInteraction message Avatar[{avatarIndex}] Target[{idTarget}]");
-
-            Player.CurrentAvatar.StartThrowing(idTarget);
-
-            return true;
+            return avatar.StartThrowing(throwInteraction.IdTarget);
         }
 
         private bool OnPerformPreInteractPower(MailboxMessage message)  // 37
