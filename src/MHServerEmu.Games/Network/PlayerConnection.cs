@@ -5,10 +5,11 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -39,7 +40,7 @@ namespace MHServerEmu.Games.Network
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly FrontendClient _frontendClient;
+        private readonly ITcpClient _tcpClient;
         private readonly DBAccount _dbAccount;
 
         private bool _waitingForRegionIsAvailableResponse = false;
@@ -62,11 +63,13 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
         /// </summary>
-        public PlayerConnection(Game game, FrontendClient frontendClient) : base(MuxChannel, frontendClient)
+        public PlayerConnection(Game game, ITcpClient tcpClient) : base(MuxChannel, tcpClient)
         {
             Game = game;
-            _frontendClient = frontendClient;
-            _dbAccount = _frontendClient.Session.Account;
+
+            // The ITcpClient used by PlayerConnection also needs to implement IDBAccountOwner
+            _tcpClient = tcpClient;
+            _dbAccount = ((IDBAccountOwner)tcpClient).Account;
 
             AOI = new(this);
             WorldView = new(this);
@@ -273,9 +276,10 @@ namespace MHServerEmu.Games.Network
             }
 
             // Remove game id to let the player manager know that it is now safe to write to the database.
-            _frontendClient.GameId = 0;
+            // TODO: Replace this with a player manager message.
+            _tcpClient.GameId = 0;
 
-            Logger.Info($"Removed client [{_frontendClient}] from game [{Game}]");
+            Logger.Info($"Removed ITcpClient [{_tcpClient}] from game [{Game}]");
         }
 
         #endregion
@@ -486,7 +490,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageReportPlayer:                                                                          // 66
                 case ClientToGameServerMessage.NetMessageChatBanVote:                                                                           // 67
                 case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:                                                        // 106, TODO: handle this in game
-                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.GroupingManager);
+                    ServerManager.Instance.RouteMessage(_tcpClient, message, ServerType.GroupingManager);
                     break;
 
                 // Billing
@@ -495,14 +499,14 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                                                                    // 70
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
-                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Billing);
+                    ServerManager.Instance.RouteMessage(_tcpClient, message, ServerType.Billing);
                     break;
 
                 // Leaderboards
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:                                                                    // 157
                 case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:                                                // 158
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:                                                          // 159
-                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Leaderboard);
+                    ServerManager.Instance.RouteMessage(_tcpClient, message, ServerType.Leaderboard);
                     break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;

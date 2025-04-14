@@ -2,13 +2,15 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.DatabaseAccess;
+using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.Frontend
 {
     /// <summary>
     /// Represents an <see cref="ITcpClient"/> connected to the <see cref="FrontendServer"/>.
     /// </summary>
-    public class FrontendClient : ITcpClient
+    public class FrontendClient : ITcpClient, IDBAccountOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -17,6 +19,8 @@ namespace MHServerEmu.Frontend
         public TcpClientConnection Connection { get; }
 
         public IFrontendSession Session { get; private set; } = null;
+        public DBAccount Account { get => Session?.Account; }
+
         public bool FinishedPlayerManagerHandshake { get; set; } = false;
         public bool FinishedGroupingManagerHandshake { get; set; } = false;
 

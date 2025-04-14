@@ -3,7 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Frontend;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
 
@@ -223,27 +223,27 @@ namespace MHServerEmu.Games.Network
 
         protected override bool AcceptAndRegisterNewClient(ITcpClient tcpClient)
         {
-            FrontendClient client = (FrontendClient)tcpClient;  // TODO: Get rid of this frontend dependency
-
             // Make sure this client is still connected (it may not be if we are lagging hard)
-            if (client.IsConnected == false)
-                return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{client}] is no longer connected");
+            if (tcpClient.IsConnected == false)
+                return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{tcpClient}] is no longer connected");
 
             // Make sure this client's account is not being used by another client pending disconnection
-            if (_dbIdConnectionDict.ContainsKey((ulong)client.Session.Account.Id))
+            ulong dbId = (ulong)((IDBAccountOwner)tcpClient).Account.Id;
+
+            if (_dbIdConnectionDict.ContainsKey(dbId))
             {
-                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client [{client}] to game [{_game}], but its account is already in use by another client");
-                client.Disconnect();
+                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client [{tcpClient}] to game [{_game}], but its account is already in use by another client");
+                tcpClient.Disconnect();
                 return false;
             }
 
             // Creating a player sends the achievement database dump and a region availability query
-            PlayerConnection connection = new(_game, client);
-            client.GameId = _game.Id;
+            PlayerConnection connection = new(_game, tcpClient);
+            tcpClient.GameId = _game.Id;
 
             // Any of these two checks failing is bad time
             if (RegisterNetClient(connection) == false)
-                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{client}]");
+                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{tcpClient}]");
 
             if (_dbIdConnectionDict.TryAdd(connection.PlayerDbId, connection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add player id 0x{connection.PlayerDbId}");
@@ -256,7 +256,7 @@ namespace MHServerEmu.Games.Network
 
             //SetPlayerConnectionPending(connection);   // This will be set when we receive region availability query response
 
-            Logger.Info($"Accepted and registered client [{client}] to game [{_game}]");
+            Logger.Info($"Accepted and registered client [{tcpClient}] to game [{_game}]");
             return true;
         }
 

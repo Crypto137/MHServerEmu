@@ -2,7 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Frontend;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Leaderboards
@@ -37,12 +37,10 @@ namespace MHServerEmu.Leaderboards
 
         public void Handle(ITcpClient tcpClient, MailboxMessage message)
         {
-            var client = (FrontendClient)tcpClient;
-
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(client, message); break;
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(client, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(tcpClient, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(tcpClient, message); break;
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -55,7 +53,7 @@ namespace MHServerEmu.Leaderboards
 
         #endregion
 
-        private bool OnInitializeRequest(FrontendClient client, MailboxMessage message)
+        private bool OnInitializeRequest(ITcpClient client, MailboxMessage message)
         {
             var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
             if (initializeRequest == null) return Logger.WarnReturn(false, $"OnInitializeRequest(): Failed to retrieve message");
@@ -72,7 +70,7 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        private bool OnRequest(FrontendClient client, MailboxMessage message)
+        private bool OnRequest(ITcpClient client, MailboxMessage message)
         {
             var request = message.As<NetMessageLeaderboardRequest>();
             if (request == null) return Logger.WarnReturn(false, $"OnRequest(): Failed to retrieve message");
@@ -85,7 +83,7 @@ namespace MHServerEmu.Leaderboards
             Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
             
             client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
-                .SetReport(leaderboard.GetReport(request, client.Session.Account.PlayerName))
+                .SetReport(leaderboard.GetReport(request, ((IDBAccountOwner)client).Account.PlayerName))
                 .Build());
 
             return true;

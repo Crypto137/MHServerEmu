@@ -10,7 +10,7 @@ namespace MHServerEmu.Core.Network.Tcp
         public TcpClientConnection Connection { get; }
         public bool IsConnected { get; }
 
-        public ulong GameId { get; set; }   // REMOVEME
+        public ulong GameId { get; set; }   // REMOVEME: Replace this with a service message
 
         /// <summary>
         /// Disconnects this <see cref="ITcpClient"/>.
