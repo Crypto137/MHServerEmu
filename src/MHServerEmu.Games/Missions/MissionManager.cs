@@ -1433,10 +1433,14 @@ namespace MHServerEmu.Games.Missions
                 }
             }
 
-
+            var legendaryMissions = ListPool<Mission>.Instance.Get();
             foreach (var mission in _missionDict.Values)
                 if (mission.IsLegendaryMission)
-                    mission.RestoreLegendaryMissionState(properties);
+                    legendaryMissions.Add(mission);
+
+            foreach (var mission in legendaryMissions)
+                mission.RestoreLegendaryMissionState(properties);
+            ListPool<Mission>.Instance.Return(legendaryMissions);
 
             InitializeMissions();
 
