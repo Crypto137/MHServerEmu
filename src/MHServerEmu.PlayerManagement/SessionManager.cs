@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
 using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -68,17 +67,6 @@ namespace MHServerEmu.PlayerManagement
             if (statusCode != AuthStatusCode.Success)
                 return statusCode;
 
-            // Check if this login request is coming from a Steam Deck, use the name of its custom GPU to identify it.
-            // NOTE: This also affects Steam Deck users running Windows, but we have no way of distinguishing Windows vs Proton.
-            const string SteamDeckGpuName = "AMD Custom GPU 0405 (RADV VANGOGH)";
-
-            string gpuName = GetGpuNameFromLoginDataPB(loginDataPB);
-            if (gpuName == SteamDeckGpuName && _playerManager.Config.IgnoreSessionToken == false && account.Flags.HasFlag(AccountFlags.LinuxCompatibilityMode) == false)
-            {
-                Logger.Warn($"TryCreateSessionFromLoginDataPB(): {account} attempted to connect from a Steam Deck without enabling compatibility mode");
-                return AuthStatusCode.InternalError500;
-            }
-
             // Validate client downloader
             ClientDownloader downloaderEnum = ClientDownloader.None;
 
@@ -118,8 +106,7 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Verify the token if enabled
-            if (_playerManager.Config.UseJsonDBManager == false && _playerManager.Config.IgnoreSessionToken == false &&
-                session.Account.Flags.HasFlag(AccountFlags.LinuxCompatibilityMode) == false)
+            if (_playerManager.Config.UseJsonDBManager == false)
             {
                 // Try to decrypt the token (we avoid extra allocations and copying by accessing buffers directly with Unsafe.GetBuffer())
                 byte[] encryptedToken = ByteString.Unsafe.GetBuffer(credentials.EncryptedToken);
@@ -181,46 +168,6 @@ namespace MHServerEmu.PlayerManagement
         public bool TryGetClient(ulong sessionId, out FrontendClient client)
         {
             return _clientDict.TryGetValue(sessionId, out client);
-        }
-
-        /// <summary>
-        /// Parses GPU name from the machineIdDebugInfo field of the provided <see cref="LoginDataPB"/>.
-        /// </summary>
-        private static string GetGpuNameFromLoginDataPB(LoginDataPB loginDataPB)
-        {
-            // Constants are multiplied by 2 because each byte is represented by 2 chars
-            const int MachineIdDebugInfoLength = 352 * 2;
-            const int GpuNameOffset = 74 * 2;
-            const int GpuNameLength = 128 * 2;
-
-            if (loginDataPB.HasMachineIdDebugInfo == false)
-                return string.Empty;
-
-            string machineIdDebugInfo = loginDataPB.MachineIdDebugInfo;
-            
-            // Validate length, we may get malformed data from hackers here
-            if (machineIdDebugInfo.Length != MachineIdDebugInfoLength)
-                return Logger.WarnReturn(string.Empty, $"GetGpuNameFromLoginDataPB(): Received machineIdDebugInfo with invalid length {machineIdDebugInfo.Length}");
-
-            // Slice the chars representing UTF-16 encoded name bytes and convert them to bytes
-            ReadOnlySpan<char> gpuNameHexString = loginDataPB.MachineIdDebugInfo.AsSpan(GpuNameOffset, GpuNameLength);
-            byte[] data = Convert.FromHexString(gpuNameHexString);
-
-            // Trim nulls
-            int i = 0;
-
-            while (i < data.Length)
-            {
-                if (data[i] == 0 && data[i + 1] == 0)
-                    break;
-
-                i++;
-            }
-
-            ReadOnlySpan<byte> trimmedData = data.AsSpan(0, i + 1);
-
-            // Convert hex string to a readable string
-            return Encoding.Unicode.GetString(trimmedData);
         }
     }
 }

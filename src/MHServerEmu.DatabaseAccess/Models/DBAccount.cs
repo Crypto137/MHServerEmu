@@ -1,6 +1,4 @@
-﻿using MHServerEmu.Core.Config;
-using MHServerEmu.Core.Helpers;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System;
 
 namespace MHServerEmu.DatabaseAccess.Models
@@ -21,7 +19,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         IsBanned                = 1 << 0,
         IsArchived              = 1 << 1,
         IsPasswordExpired       = 1 << 2,
-        LinuxCompatibilityMode  = 1 << 3,   // Disables session token verification
+        DEPRECATEDLinuxCompatibilityMode    = 1 << 3,   // This flag used to disable session token verification, but it is no longer needed for Linux users
     }
 
     /// <summary>
@@ -29,7 +27,6 @@ namespace MHServerEmu.DatabaseAccess.Models
     /// </summary>
     public class DBAccount
     {
-        private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
         private static readonly IdGenerator IdGenerator = new(IdType.Player, 0);
 
         public long Id { get; set; }
@@ -71,7 +68,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         /// </summary>
         public DBAccount(string playerName)
         {
-            // Default account is used when BypassAuth is enabled
+            // Construct a default account for cases when we don't care about auth (e.g. JsonDBManager)
             Id = 0x2000000000000001;
             Email = "default@mhserveremu";
             PlayerName = playerName;

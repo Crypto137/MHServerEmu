@@ -98,38 +98,6 @@ namespace MHServerEmu.Commands.Implementations
             return message;
         }
 
-        [Command("togglelinuxmode", "Toggles Linux compatibility mode on or off for this account.\nUsage: account togglelinuxmode [confirmation]")]
-        public string ToggleLinuxMode(string[] @params, FrontendClient client)
-        {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            DBAccount account = client.Session.Account;
-            string message = string.Empty;
-
-            if (account.Flags.HasFlag(AccountFlags.LinuxCompatibilityMode) == false)
-            {
-                // Toggle on
-                if (@params.Length == 0)
-                {
-                    return "This is an experimental feature that can potentially reduce your account's security. " +
-                        "If you still would like to enable it, type '!account togglelinuxmode yesiunderstandtherisk'";
-                }
-
-                if (@params[0].ToLower() != "yesiunderstandtherisk")
-                    return "Make sure you have typed the command correctly.";
-
-                (_, message) = AccountManager.SetFlag(account, AccountFlags.LinuxCompatibilityMode);
-
-            }
-            else
-            {
-                // Toggle off
-                (_, message) = AccountManager.ClearFlag(account, AccountFlags.LinuxCompatibilityMode);
-            }
-
-            return message;
-        }
-
         [Command("info", "Shows information for the logged in account.\nUsage: account info", AccountUserLevel.User)]
         public string Info(string[] @params, FrontendClient client)
         {
