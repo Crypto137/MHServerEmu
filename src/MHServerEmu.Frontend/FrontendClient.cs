@@ -119,9 +119,13 @@ namespace MHServerEmu.Frontend
             Connection.Send(new MuxPacket(muxId, MuxCommand.Disconnect));
         }
 
-        /// <summary>
-        /// Sends the provided <see cref="IMessage"/> over the specified mux channel.
-        /// </summary>
+        #region ITcpClient Implementation
+
+        public void Disconnect()
+        {
+            Connection.Disconnect();
+        }
+
         public void SendMessage(ushort muxId, IMessage message)
         {
             MuxPacket packet = new(muxId, MuxCommand.Data);
@@ -129,9 +133,6 @@ namespace MHServerEmu.Frontend
             Connection.Send(packet);
         }
 
-        /// <summary>
-        /// Sends the provided <see cref="IList{T}"/> of <see cref="IMessage"/> instances over the specified mux channel.
-        /// </summary>
         public void SendMessageList(ushort muxId, List<IMessage> messageList)
         {
             MuxPacket packet = new(muxId, MuxCommand.Data);
@@ -139,12 +140,6 @@ namespace MHServerEmu.Frontend
             Connection.Send(packet);
         }
 
-        /// <summary>
-        /// Disconnects this <see cref="FrontendClient"/>.
-        /// </summary>
-        public void Disconnect()
-        {
-            Connection.Disconnect();
-        }
+        #endregion
     }
 }

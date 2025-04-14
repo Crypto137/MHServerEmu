@@ -85,7 +85,7 @@ namespace MHServerEmu.Billing
             // TODO: Move this to Games, use BillingService just as a source for catalog data
             PlayerManagerService playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
             Game game = playerManager.GetGameByPlayer(client);
-            PlayerConnection playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            PlayerConnection playerConnection = game.NetworkManager.GetNetClient(client);
             Player player = playerConnection.Player;
 
             switch ((ClientToGameServerMessage)message.Id)

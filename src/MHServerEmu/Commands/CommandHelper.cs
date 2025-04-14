@@ -39,7 +39,7 @@ namespace MHServerEmu.Commands
             if (TryGetGame(client, out game) == false)
                 return false;
 
-            playerConnection = game.NetworkManager.GetPlayerConnection(client);
+            playerConnection = game.NetworkManager.GetNetClient(client);
             return playerConnection != null;
         }
 

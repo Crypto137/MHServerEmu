@@ -1,8 +1,8 @@
-﻿using System.Collections;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
@@ -10,33 +10,20 @@ using MHServerEmu.Games.Regions;
 namespace MHServerEmu.Games.Network
 {
     // This is the equivalent of the client-side ClientServiceConnectionManager and GameConnectionManager implementations of the NetworkManager abstract class.
-    // We flatten everything into a single class since we don't have to worry about client-side.
 
     /// <summary>
     /// Manages <see cref="PlayerConnection"/> instances.
     /// </summary>
-    public class PlayerConnectionManager : IEnumerable<PlayerConnection>
+    public class PlayerConnectionManager : NetworkManager<PlayerConnection>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<FrontendClient, PlayerConnection> _clientConnectionDict = new();
-        private readonly Dictionary<ulong, PlayerConnection> _dbIdConnectionDict = new();
         private readonly Game _game;
 
-        // Incoming messages are asynchronously posted to a mailbox where they are deserialized and stored for later retrieval.
-        // When it's time to process messages, we copy all messages stored in our mailbox to a list.
-        // Although we call it a "list" to match the client, it functions more like a queue (FIFO, pop/peeks).
-        private readonly CoreNetworkMailbox<FrontendClient> _mailbox = new();
-        private readonly MessageList<FrontendClient> _messagesToProcessList = new();
-
-        // We swap queues with a lock when handling async client connect / disconnect events
-        private Queue<FrontendClient> _asyncAddClientQueue = new();
-        private Queue<FrontendClient> _asyncRemoveClientQueue = new();
-        private Queue<FrontendClient> _addClientQueue = new();
-        private Queue<FrontendClient> _removeClientQueue = new();
+        private readonly Dictionary<ulong, PlayerConnection> _dbIdConnectionDict = new();
 
         // Queue for pending player connections (i.e. players currently loading)
-        private Queue<PlayerConnection> _pendingPlayerConnectionQueue = new();
+        private readonly Queue<PlayerConnection> _pendingPlayerConnectionQueue = new();
 
         /// <summary>
         /// Constructs a new <see cref="PlayerConnectionManager"/> instance for the provided <see cref="Game"/>.
@@ -46,27 +33,7 @@ namespace MHServerEmu.Games.Network
             _game = game;
         }
 
-        /// <summary>
-        /// Returns the <see cref="PlayerConnection"/> bound to the provided <see cref="FrontendClient"/>.
-        /// </summary>
-        public PlayerConnection GetPlayerConnection(FrontendClient frontendClient)
-        {
-            if (_clientConnectionDict.TryGetValue(frontendClient, out PlayerConnection connection) == false)
-                Logger.Warn($"GetPlayerConnection(): Client {frontendClient.Session.Account} is not bound to a player connection");
-
-            return connection;
-        }
-
-        /// <summary>
-        /// Returns the <see cref="PlayerConnection"/> bound to the provided account dbId.
-        /// </summary>
-        public PlayerConnection GetPlayerConnection(ulong playerDbId)
-        {
-            if (_dbIdConnectionDict.TryGetValue(playerDbId, out PlayerConnection connection) == false)
-                Logger.Warn($"GetPlayerConnection(): DbId 0x{playerDbId:X} is not bound to a player connection");
-
-            return connection;
-        }
+        #region Player Connection Getters
 
         /// <summary>
         /// Adds all <see cref="Player"/> instances that are interested in the provided <see cref="Entity"/> to the provided <see cref="List{T}"/>.
@@ -158,14 +125,9 @@ namespace MHServerEmu.Games.Network
             return interestedClientList.Count > 0;
         }
 
-        public void Update()
-        {
-            // NOTE: It is important to remove disconnected client BEFORE registering new clients
-            // to make sure we save data for cases such as duplicate logins.
-            // markAsyncDisconnectedClients() -> we just do everything in RemoveDisconnectedClients()
-            RemoveDisconnectedClients();
-            ProcessAsyncAddedClients();
-        }
+        #endregion
+
+        #region Pending Processing
 
         /// <summary>
         /// Loads pending players.
@@ -190,58 +152,9 @@ namespace MHServerEmu.Games.Network
             _pendingPlayerConnectionQueue.Enqueue(playerConnection);
         }
 
-        /// <summary>
-        /// Enqueues registration of a new <see cref="PlayerConnection"/> for the provided <see cref="FrontendClient"/> during the next update.
-        /// </summary>
-        public void AsyncAddClient(FrontendClient client)
-        {
-            lock (_asyncAddClientQueue)
-                _asyncAddClientQueue.Enqueue(client);
-        }
+        #endregion
 
-        /// <summary>
-        /// Enqueues removal of the <see cref="PlayerConnection"/> for the provided <see cref="FrontendClient"/> during the next update.
-        /// </summary>
-        public void AsyncRemoveClient(FrontendClient client)
-        {
-            lock (_asyncRemoveClientQueue)
-                _asyncRemoveClientQueue.Enqueue(client);
-        }
-
-        /// <summary>
-        /// Handles an incoming <see cref="MessagePackage"/> asynchronously.
-        /// </summary>
-        public void AsyncPostMessage(FrontendClient client, MessagePackage message)
-        {
-            // If the message fails to deserialize it means either data got corrupted somehow or we have a hacker trying to mess things up.
-            // In both cases it's better to bail out.
-            if (_mailbox.Post(client, message) == false)
-            {
-                Logger.Error($"AsyncPostMessage(): Deserialization failed, disconnecting client {client} from {_game}");
-                client.Disconnect();
-            }
-        }
-
-        /// <summary>
-        /// Processes all asynchronously posted messages.
-        /// </summary>
-        public void ReceiveAllPendingMessages()
-        {
-            // We reuse the same message list every time to avoid unnecessary allocations.
-            _mailbox.GetAllMessages(_messagesToProcessList);
-
-            while (_messagesToProcessList.HasMessages)
-            {
-                (FrontendClient client, MailboxMessage message) = _messagesToProcessList.PopNextMessage();
-                PlayerConnection playerConnection = GetPlayerConnection(client);
-
-                if (playerConnection != null && playerConnection.CanSendOrReceiveMessages())
-                    playerConnection.ReceiveMessage(message);
-
-                // If the player connection was removed or it is currently unable to receive messages,
-                // this message will be lost, like tears in rain...
-            }
-        }
+        #region Message Sending
 
         /// <summary>
         /// Sends the provided <see cref="IMessage"/> instance over the specified <see cref="PlayerConnection"/>.
@@ -293,7 +206,7 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void BroadcastMessage(IMessage message)
         {
-            foreach (PlayerConnection connection in _clientConnectionDict.Values)
+            foreach (PlayerConnection connection in this)
                 connection.PostMessage(message);
         }
 
@@ -306,68 +219,12 @@ namespace MHServerEmu.Games.Network
             connection.FlushMessages();
         }
 
-        /// <summary>
-        /// Flushes all active <see cref="PlayerConnection"/> instances.
-        /// </summary>
-        public void SendAllPendingMessages()
-        {
-            foreach (PlayerConnection connection in this)
-                connection.FlushMessages();
-        }
-
-        #region IEnumerable Implementation
-
-        public IEnumerator<PlayerConnection> GetEnumerator() => _clientConnectionDict.Values.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
         #endregion
 
-        private void ProcessAsyncAddedClients()
+        protected override bool AcceptAndRegisterNewClient(ITcpClient tcpClient)
         {
-            // Swap queues so that we can continue queueing clients while we process
-            lock (_asyncAddClientQueue)
-                (_asyncAddClientQueue, _addClientQueue) = (_addClientQueue, _asyncAddClientQueue);
+            FrontendClient client = (FrontendClient)tcpClient;  // TODO: Get rid of this frontend dependency
 
-            while (_addClientQueue.Count > 0)
-            {
-                FrontendClient client = _addClientQueue.Dequeue();
-                AcceptAndRegisterNewClient(client);
-            }
-        }
-
-        private void RemoveDisconnectedClients()
-        {
-            // Swap queues so that we can continue queueing clients while we process
-            lock (_asyncRemoveClientQueue)
-                (_asyncRemoveClientQueue, _removeClientQueue) = (_removeClientQueue, _asyncRemoveClientQueue);
-
-            while (_removeClientQueue.Count > 0)
-            {
-                FrontendClient client = _removeClientQueue.Dequeue();
-
-                if (_clientConnectionDict.Remove(client, out PlayerConnection playerConnection) == false)
-                {
-                    Logger.Warn($"RemoveDisconnectedClients(): Client {client} not found");
-                    continue;
-                }
-
-                ulong dbId = playerConnection.PlayerDbId;
-
-                if (_dbIdConnectionDict.Remove(dbId) == false)
-                    Logger.Warn($"RemoveDisconnectedClients(): Account id  0x{dbId:X} not found");
-
-                // Update db models and clean up
-                playerConnection.OnDisconnect();
-
-                // Remove game id to let the player manager know that it is now safe to write to the database.
-                client.GameId = 0;
-
-                Logger.Info($"Removed client [{client}] from game [{_game}]");
-            }
-        }
-
-        private bool AcceptAndRegisterNewClient(FrontendClient client)
-        {
             // Make sure this client is still connected (it may not be if we are lagging hard)
             if (client.IsConnected == false)
                 return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{client}] is no longer connected");
@@ -385,7 +242,7 @@ namespace MHServerEmu.Games.Network
             client.GameId = _game.Id;
 
             // Any of these two checks failing is bad time
-            if (_clientConnectionDict.TryAdd(client, connection) == false)
+            if (RegisterNetClient(connection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{client}]");
 
             if (_dbIdConnectionDict.TryAdd(connection.PlayerDbId, connection) == false)
@@ -401,6 +258,14 @@ namespace MHServerEmu.Games.Network
 
             Logger.Info($"Accepted and registered client [{client}] to game [{_game}]");
             return true;
+        }
+
+        protected override void OnNetClientDisconnected(PlayerConnection playerConnection)
+        {
+            ulong dbId = playerConnection.PlayerDbId;
+
+            if (_dbIdConnectionDict.Remove(dbId) == false)
+                Logger.Warn($"OnNetClientDisconnected(): Account id 0x{dbId:X} not found");
         }
     }
 }

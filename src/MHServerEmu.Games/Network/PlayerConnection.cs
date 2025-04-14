@@ -29,20 +29,18 @@ using MHServerEmu.Games.Regions;
 namespace MHServerEmu.Games.Network
 {
     // This is the equivalent of the client-side ClientServiceConnection and GameConnection implementations of the NetClient abstract class.
-    // We flatten everything into a single class since we don't have to worry about client-side.
 
     /// <summary>
     /// Represents a remote connection to a player.
     /// </summary>
-    public class PlayerConnection
+    public class PlayerConnection : NetClient
     {
-        private const ushort MuxChannel = 1;    // hardcoded to channel 1 for now
+        private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly FrontendClient _frontendClient;
         private readonly DBAccount _dbAccount;
-        private readonly List<IMessage> _pendingMessageList = new();
 
         private bool _waitingForRegionIsAvailableResponse = false;
         private bool _doNotUpdateDBAccount = false;
@@ -64,7 +62,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
         /// </summary>
-        public PlayerConnection(Game game, FrontendClient frontendClient)
+        public PlayerConnection(Game game, FrontendClient frontendClient) : base(MuxChannel, frontendClient)
         {
             Game = game;
             _frontendClient = frontendClient;
@@ -250,44 +248,7 @@ namespace MHServerEmu.Games.Network
 
         #region NetClient Implementation
 
-        // Do not use these methods directly, these are for the PlayerConnectionManager.
-        // C# has no friends T_T
-
-        /// <summary>
-        /// Adds a new <see cref="IMessage"/> to the pending message list.
-        /// </summary>
-        /// <remarks>
-        /// This should be called only by the <see cref="PlayerConnectionManager"/> this <see cref="PlayerConnection"/>
-        /// belongs to, do not call this directly!
-        /// </remarks>
-        public void PostMessage(IMessage message)
-        {
-            _pendingMessageList.Add(message);
-        }
-
-        /// <summary>
-        /// Sends all pending <see cref="IMessage"/> instances.
-        /// </summary>
-        /// <remarks>
-        /// This should be called only by the <see cref="PlayerConnectionManager"/> this <see cref="PlayerConnection"/>
-        /// belongs to, do not call this directly!
-        /// </remarks>
-        public void FlushMessages()
-        {
-            if (_pendingMessageList.Count == 0)
-                return;
-            
-            _frontendClient.SendMessageList(MuxChannel, _pendingMessageList);
-            _pendingMessageList.Clear();
-        }
-
-        public bool CanSendOrReceiveMessages()
-        {
-            // TODO: Block message processing during certain states (e.g. malicious client sending messages while loading).
-            return true;
-        }
-
-        public void OnDisconnect()
+        public override void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
@@ -310,6 +271,11 @@ namespace MHServerEmu.Games.Network
 
                 region.RequestShutdown();
             }
+
+            // Remove game id to let the player manager know that it is now safe to write to the database.
+            _frontendClient.GameId = 0;
+
+            Logger.Info($"Removed client [{_frontendClient}] from game [{Game}]");
         }
 
         #endregion
@@ -415,11 +381,6 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        public void Disconnect()
-        {
-            _frontendClient.Disconnect();
-        }
-
         #region Message Handling
 
         /// <summary>
@@ -433,7 +394,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Handles a <see cref="MailboxMessage"/>.
         /// </summary>
-        public void ReceiveMessage(MailboxMessage message)
+        public override void ReceiveMessage(in MailboxMessage message)
         {
             // NOTE: Please keep these ordered by message id
 
