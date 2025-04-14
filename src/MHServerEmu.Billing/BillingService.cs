@@ -26,12 +26,10 @@ namespace MHServerEmu.Billing
         private static readonly string BillingDataDirectory = Path.Combine(FileHelper.DataDirectory, "Billing");
 
         private readonly Catalog _catalog;
-        private readonly long _currencyBalance;
 
         public BillingService()
         {
             var config = ConfigManager.Instance.GetConfig<BillingConfig>();
-            _currencyBalance = 0;
 
             _catalog = FileHelper.DeserializeJson<Catalog>(Path.Combine(BillingDataDirectory, "Catalog.json"));
 
