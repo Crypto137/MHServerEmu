@@ -87,7 +87,7 @@ namespace MHServerEmu.Frontend
                         break;
 
                     case MuxCommand.Data:
-                        ServerManager.Instance.RouteMessages(this, packet.Messages, ServerType.FrontendServer);
+                        ServerManager.Instance.RouteMessages(this, packet.MessagePackageList, ServerType.FrontendServer);
                         break;
 
                     default:
@@ -120,9 +120,9 @@ namespace MHServerEmu.Frontend
         }
 
         /// <summary>
-        /// Sends the provided <see cref="MessagePackage"/> over the specified mux channel.
+        /// Sends the provided <see cref="IMessage"/> over the specified mux channel.
         /// </summary>
-        public void SendMessage(ushort muxId, MessagePackage message)
+        public void SendMessage(ushort muxId, IMessage message)
         {
             MuxPacket packet = new(muxId, MuxCommand.Data);
             packet.AddMessage(message);
@@ -130,34 +130,21 @@ namespace MHServerEmu.Frontend
         }
 
         /// <summary>
-        /// Sends the provided <see cref="IMessage"/> over the specified mux channel.
+        /// Sends the provided <see cref="IList{T}"/> of <see cref="IMessage"/> instances over the specified mux channel.
         /// </summary>
-        public void SendMessage(ushort muxId, IMessage message)
-        {
-            SendMessage(muxId, new MessagePackage(message));
-        }
-
-        /// <summary>
-        /// Sends the provided <see cref="MessagePackage"/> instances over the specified mux channel.
-        /// </summary>
-        public void SendMessages(ushort muxId, IEnumerable<MessagePackage> messages)
+        public void SendMessageList(ushort muxId, List<IMessage> messageList)
         {
             MuxPacket packet = new(muxId, MuxCommand.Data);
-            packet.AddMessages(messages);
+            packet.AddMessageList(messageList);
             Connection.Send(packet);
-        }
-
-        /// <summary>
-        /// Sends the provided <see cref="IMessage"/> instances over the specified mux channel.
-        /// </summary>
-        public void SendMessages(ushort muxId, IEnumerable<IMessage> messages)
-        {
-            SendMessages(muxId, messages.Select(message => new MessagePackage(message)));
         }
 
         /// <summary>
         /// Disconnects this <see cref="FrontendClient"/>.
         /// </summary>
-        public void Disconnect() => Connection.Disconnect();
+        public void Disconnect()
+        {
+            Connection.Disconnect();
+        }
     }
 }

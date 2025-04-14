@@ -1,5 +1,4 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Core.Logging;
@@ -150,7 +149,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Sends data over the provided <see cref="TcpClientConnection">.
         /// </summary>
-        public void Send(TcpClientConnection connection, IPacket packet, SocketFlags flags = SocketFlags.None)
+        public void Send<T>(TcpClientConnection connection, T packet, SocketFlags flags = SocketFlags.None) where T: IPacket
         {
             ArgumentNullException.ThrowIfNull(connection);
             ArgumentNullException.ThrowIfNull(packet);
@@ -346,7 +345,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// Sends an <see cref="IPacket"/> over the provided <see cref="TcpClientConnection"/> asynchronously.
         /// Returns the number of bytes sent.
         /// </summary>
-        private async Task<int> SendAsync(TcpClientConnection connection, IPacket packet, SocketFlags flags = SocketFlags.None)
+        private async Task<int> SendAsync<T>(TcpClientConnection connection, T packet, SocketFlags flags = SocketFlags.None) where T: IPacket
         {
             int size = packet.SerializedSize;
             byte[] buffer = _bufferPool.Rent(size);

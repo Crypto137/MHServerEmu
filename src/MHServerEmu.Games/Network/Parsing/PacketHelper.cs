@@ -105,8 +105,8 @@ namespace MHServerEmu.Games.Network.Parsing
             using (MemoryStream ms = new(File.ReadAllBytes(path)))
             {
                 MuxPacket packet = new(ms, false);
-                Logger.Info($"Loaded {packet.Messages.Count} messages from {fileName}");
-                return packet.Messages;
+                Logger.Info($"Loaded {packet.MessagePackageList.Count} messages from {fileName}");
+                return packet.MessagePackageList;
             }
         }
 
@@ -116,7 +116,7 @@ namespace MHServerEmu.Games.Network.Parsing
             {
                 int packetCount = 0;
 
-                foreach (MessagePackage message in packet.Messages)
+                foreach (MessagePackage message in packet.MessagePackageList)
                 {
                     writer.Write($"[{packetCount++}] ");
 

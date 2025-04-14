@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
@@ -73,7 +72,7 @@ namespace MHServerEmu.Core.Network.Tcp
         /// <summary>
         /// Sends an <see cref="IPacket"/> over this connection.
         /// </summary>
-        public void Send(IPacket packet, SocketFlags flags = SocketFlags.None)
+        public void Send<T>(T packet, SocketFlags flags = SocketFlags.None) where T: IPacket
         {
             _server.Send(this, packet, flags);
         }
