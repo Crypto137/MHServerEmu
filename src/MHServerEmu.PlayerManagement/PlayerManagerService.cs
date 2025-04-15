@@ -78,9 +78,31 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            var client = (FrontendClient)tcpClient;
+            switch (message)
+            {
+                case GameServiceProtocol.RouteMessagePackage routeMessagePackage:
+                    OnRouteMessagePackage(routeMessagePackage);
+                    break;
+
+                default:
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    break;
+            }
+        }
+
+        public string GetStatus()
+        {
+            lock (_pendingSaveDict)
+                return $"Games: {_gameManager.GameCount} | Sessions: {_sessionManager.ActiveSessionCount} [{_sessionManager.PendingSessionCount}] | Pending Saves: {_pendingSaveDict.Count}";
+        }
+
+        private void OnRouteMessagePackage(in GameServiceProtocol.RouteMessagePackage routeMessagePackage)
+        {
+            FrontendClient client = (FrontendClient)routeMessagePackage.Client;
+            MessagePackage message = routeMessagePackage.Message;
+
             message.Protocol = typeof(ClientToGameServerMessage);
 
             // Timestamp sync messages
@@ -111,23 +133,6 @@ namespace MHServerEmu.PlayerManagement
                     game.PostMessage(client, message);
                     break;
             }
-        }
-
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
-        {
-            for (int i = 0; i < messages.Count; i++)
-                Handle(client, messages[i]);
-        }
-
-        public void Handle(ITcpClient client, MailboxMessage message)
-        {
-            Logger.Warn($"Handle(): Unhandled MailboxMessage");
-        }
-
-        public string GetStatus()
-        {
-            lock (_pendingSaveDict)
-                return $"Games: {_gameManager.GameCount} | Sessions: {_sessionManager.ActiveSessionCount} [{_sessionManager.PendingSessionCount}] | Pending Saves: {_pendingSaveDict.Count}";
         }
 
         #endregion

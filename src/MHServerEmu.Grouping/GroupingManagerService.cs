@@ -2,7 +2,6 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 
@@ -30,30 +29,32 @@ namespace MHServerEmu.Grouping
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
-            // that includes a single message - GetPlayerInfoByName. If we ever receive it,
-            // it should end up here.
-            message.Protocol = typeof(ClientToGroupingManagerMessage);
-
-            switch ((ClientToGroupingManagerMessage)message.Id)
+            switch (message)
             {
+                // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
+                // that includes a single message - GetPlayerInfoByName. If we ever receive it, it should end up here.
+
+                case GameServiceProtocol.RouteMailboxMessage routeMailboxMessage:
+                    OnRouteMailboxMessage(routeMailboxMessage);
+                    break;
+
                 default:
-                    Logger.Warn($"Handle(): Unhandled {(ClientToGroupingManagerMessage)message.Id} [{message.Id}]");
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
             }
         }
 
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
+        public string GetStatus()
         {
-            for (int i = 0; i < messages.Count; i++)
-                Handle(client, messages[i]);
+            return $"Players: {_playerDict.Count}";
         }
 
-        public void Handle(ITcpClient tcpClient, MailboxMessage message)
+        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMailboxMessage routeMailboxMessage)
         {
-            var client = (FrontendClient)tcpClient;
+            FrontendClient client = (FrontendClient)routeMailboxMessage.Client;
+            MailboxMessage message = routeMailboxMessage.Message;
 
             // Handle messages routed from games
             switch ((ClientToGameServerMessage)message.Id)
@@ -64,11 +65,6 @@ namespace MHServerEmu.Grouping
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        public string GetStatus()
-        {
-            return $"Players: {_playerDict.Count}";
         }
 
         #endregion

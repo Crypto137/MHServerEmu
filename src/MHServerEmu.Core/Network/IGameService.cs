@@ -1,6 +1,4 @@
-﻿using MHServerEmu.Core.Network.Tcp;
-
-namespace MHServerEmu.Core.Network
+﻿namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// An interface for services that handle <see cref="MessagePackage"/> and <see cref="MailboxMessage"/> instances.
@@ -18,19 +16,9 @@ namespace MHServerEmu.Core.Network
         public void Shutdown();
 
         /// <summary>
-        /// Handles the provided <see cref="MessagePackage"/> instance from the specified <see cref="ITcpClient"/>.
+        /// Receives an <see cref="IGameServiceMessage"/> from another <see cref="IGameService"/>.
         /// </summary>
-        public void Handle(ITcpClient client, MessagePackage message);
-
-        /// <summary>
-        /// Handles the provided <see cref="MessagePackage"/> instances from the specified <see cref="ITcpClient"/>.
-        /// </summary>
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages);
-
-        /// <summary>
-        /// Handles the provided <see cref="MailboxMessage"/> instance from the specified <see cref="ITcpClient"/>.
-        /// </summary>
-        public void Handle(ITcpClient client, MailboxMessage message);
+        public void ReceiveServiceMessage<T>(in T message) where T: struct, IGameServiceMessage;
 
         /// <summary>
         /// Returns a <see cref="string"/> representing the status of this <see cref="IGameService"/>.

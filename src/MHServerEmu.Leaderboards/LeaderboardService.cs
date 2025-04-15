@@ -24,19 +24,30 @@ namespace MHServerEmu.Leaderboards
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            Logger.Warn($"Handle(): Unhandled MessagePackage");
+            switch (message)
+            {
+                case GameServiceProtocol.RouteMailboxMessage routeMailboxMessage:
+                    OnRouteMailboxMessage(routeMailboxMessage);
+                    break;
+
+                default:
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    break;
+            }
         }
 
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
+        public string GetStatus()
         {
-            for (int i = 0; i < messages.Count; i++)
-                Handle(client, messages[i]);
+            return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
         }
 
-        public void Handle(ITcpClient tcpClient, MailboxMessage message)
+        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMailboxMessage routeMailboxMessage)
         {
+            ITcpClient tcpClient = routeMailboxMessage.Client;
+            MailboxMessage message = routeMailboxMessage.Message;
+
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(tcpClient, message); break;
@@ -44,11 +55,6 @@ namespace MHServerEmu.Leaderboards
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        public string GetStatus()
-        {
-            return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
         }
 
         #endregion

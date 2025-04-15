@@ -47,25 +47,33 @@ namespace MHServerEmu.Frontend
 
         // Shutdown implemented by TcpServer
 
-        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            _pendingMessageQueue.Enqueue(((FrontendClient)tcpClient, message));
-        }
+            switch (message)
+            {
+                case GameServiceProtocol.RouteMessages routeMessages:
+                    OnRouteMessages(routeMessages);
+                    break;
 
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
-        {
-            for (int i = 0; i < messages.Count; i++)
-                Handle(client, messages[i]);
-        }
-
-        public void Handle(ITcpClient client, MailboxMessage message)
-        {
-            Logger.Warn($"Handle(): Unhandled MailboxMessage");
+                default:
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    break;
+            }
         }
 
         public string GetStatus()
         {
             return $"Connections: {ConnectionCount}";
+        }
+
+        private void OnRouteMessages(in GameServiceProtocol.RouteMessages routeMessages)
+        {
+            ITcpClient tcpClient = routeMessages.Client;
+            IReadOnlyList<MessagePackage> messages = routeMessages.Messages;
+
+            int messageCount = messages.Count;
+            for (int i = 0; i < messageCount; i++)
+                _pendingMessageQueue.Enqueue(((FrontendClient)tcpClient, messages[i]));
         }
 
         #endregion
@@ -111,12 +119,14 @@ namespace MHServerEmu.Frontend
             // Route to the destination service if initial frontend business has already been done
             if (message.MuxId == 1 && client.FinishedPlayerManagerHandshake)
             {
-                ServerManager.Instance.RouteMessage(client, message, ServerType.PlayerManager);
+                GameServiceProtocol.RouteMessagePackage playerManagerMessage = new(client, message);
+                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, playerManagerMessage);
                 return true;
             }
             else if (message.MuxId == 2 && client.FinishedGroupingManagerHandshake)
             {
-                ServerManager.Instance.RouteMessage(client, message, ServerType.GroupingManager);
+                GameServiceProtocol.RouteMessagePackage groupingManagerMessage = new(client, message);
+                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
                 return true;
             }
 

@@ -5,7 +5,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
@@ -66,20 +65,29 @@ namespace MHServerEmu.Billing
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            Logger.Warn($"Handle(): Unhandled MessagePackage");
+            switch (message)
+            {
+                case GameServiceProtocol.RouteMailboxMessage routeMailboxMessage:
+                    OnRouteMailboxMessage(routeMailboxMessage);
+                    break;
+
+                default:
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    break;
+            }
         }
 
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
+        public string GetStatus()
         {
-            for (int i = 0; i < messages.Count; i++)
-                Handle(client, messages[i]);
+            return $"Catalog Entries: {_catalog.Entries.Length}";
         }
 
-        public void Handle(ITcpClient tcpClient, MailboxMessage message)
+        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMailboxMessage routeMailboxMessage)
         {
-            FrontendClient client = (FrontendClient)tcpClient;
+            FrontendClient client = (FrontendClient)routeMailboxMessage.Client;
+            MailboxMessage message = routeMailboxMessage.Message;
 
             // This is pretty rough, we need a better way of handling this
             // TODO: Move this to Games, use BillingService just as a source for catalog data
@@ -96,11 +104,6 @@ namespace MHServerEmu.Billing
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        public string GetStatus()
-        {
-            return $"Catalog Entries: {_catalog.Entries.Length}";
         }
 
         #endregion

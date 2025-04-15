@@ -96,9 +96,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="MessagePackage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <typeparamref name="T"/> instance to the <see cref="IGameService"/> registered for the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessage(ITcpClient client, MessagePackage message, ServerType serverType)
+        public bool SendMessageToService<T>(ServerType serverType, in T message) where T: struct, IGameServiceMessage
         {
             int index = (int)serverType;
 
@@ -108,41 +108,7 @@ namespace MHServerEmu.Core.Network
             if (_services[index] == null)
                 return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
 
-            _services[index].Handle(client, message);
-            return true;
-        }
-
-        /// <summary>
-        /// Routes the provided <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
-        /// </summary>
-        public bool RouteMessages(ITcpClient client, IReadOnlyList<MessagePackage> messages, ServerType serverType)
-        {
-            int index = (int)serverType;
-
-            if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"RouteMessages(): Invalid server type {serverType}");
-
-            if (_services[index] == null)
-                return Logger.WarnReturn(false, $"RouteMessages(): No service is registered for server type {serverType}");
-
-            _services[index].Handle(client, messages);
-            return true;
-        }
-
-        /// <summary>
-        /// Routes the provided <see cref="MailboxMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
-        /// </summary>
-        public bool RouteMessage(ITcpClient client, MailboxMessage message, ServerType serverType)
-        {
-            int index = (int)serverType;
-
-            if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"RouteMessage(): Invalid server type {serverType}");
-
-            if (_services[index] == null)
-                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
-
-            _services[index].Handle(client, message);
+            _services[index].ReceiveServiceMessage(message);
             return true;
         }
 

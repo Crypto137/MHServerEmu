@@ -3,7 +3,6 @@ using MHServerEmu.Auth.Handlers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Auth
 {
@@ -86,19 +85,15 @@ namespace MHServerEmu.Auth
             _listener = null;
         }
 
-        public void Handle(ITcpClient client, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
-        }
-
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
-        {
-            Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
-        }
-
-        public void Handle(ITcpClient client, MailboxMessage message)
-        {
-            Logger.Warn($"Handle(): AuthServer should not be handling messages from TCP clients!");
+            // AuthServer should not be handling messages from TCP clients
+            switch (message)
+            {
+                default:
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
+                    break;
+            }
         }
 
         public string GetStatus()
