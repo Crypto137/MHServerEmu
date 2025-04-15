@@ -78,6 +78,11 @@ namespace MHServerEmu.Games.Network
             RegionContext = new();
         }
 
+        public override string ToString()
+        {
+            return $"dbGuid=0x{PlayerDbId:X}";
+        }
+
         public bool Initialize()
         {
             if (LoadFromDBAccount() == false)
@@ -98,11 +103,6 @@ namespace MHServerEmu.Games.Network
 
             _waitingForRegionIsAvailableResponse = true;
             return true;
-        }
-
-        public override string ToString()
-        {
-            return $"dbGuid=0x{PlayerDbId:X}";
         }
 
         #region Data Management
@@ -392,7 +392,9 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessage(IMessage message)
         {
-            Game.SendMessage(this, message);
+            // NOTE: The client goes Game -> NetworkManager -> SendMessage() -> postOutboundMessageToClient() -> postMessage() here,
+            // but we simplify everything and just post the message directly.
+            PostMessage(message);
         }
 
         /// <summary>

@@ -203,22 +203,6 @@ namespace MHServerEmu.Games
             NetworkManager.AsyncPostMessage(client, message);
         }
 
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> over the specified <see cref="PlayerConnection"/>.
-        /// </summary>
-        public void SendMessage(PlayerConnection connection, IMessage message)
-        {
-            NetworkManager.SendMessage(connection, message);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> to all connected players.
-        /// </summary>
-        public void BroadcastMessage(IMessage message)
-        {
-            NetworkManager.BroadcastMessage(message);
-        }
-
         public Entity AllocateEntity(PrototypeId entityRef)
         {
             var proto = GameDatabase.GetPrototype<EntityPrototype>(entityRef);

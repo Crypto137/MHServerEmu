@@ -3,7 +3,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
 
@@ -20,7 +19,8 @@ namespace MHServerEmu.Games.Network
 
         private readonly Game _game;
 
-        private readonly Dictionary<ulong, PlayerConnection> _dbIdConnectionDict = new();
+        // HashSet for preventing the same account from logging in multiple times
+        private readonly HashSet<ulong> _playerDbIds = new();
 
         // Queue for pending player connections (i.e. players currently loading)
         private readonly Queue<PlayerConnection> _pendingPlayerConnectionQueue = new();
@@ -157,14 +157,6 @@ namespace MHServerEmu.Games.Network
         #region Message Sending
 
         /// <summary>
-        /// Sends the provided <see cref="IMessage"/> instance over the specified <see cref="PlayerConnection"/>.
-        /// </summary>
-        public void SendMessage(PlayerConnection connection, IMessage message)
-        {
-            connection.PostMessage(message);
-        }
-
-        /// <summary>
         /// Sends the provided <see cref="IMessage"/> over all <see cref="PlayerConnection"/> instaces in the provided <see cref="List{T}"/>.
         /// </summary>
         public void SendMessageToMultiple(List<PlayerConnection> clientList, IMessage message)
@@ -206,17 +198,17 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void BroadcastMessage(IMessage message)
         {
-            foreach (PlayerConnection connection in this)
-                connection.PostMessage(message);
+            foreach (PlayerConnection playerConnection in this)
+                playerConnection.PostMessage(message);
         }
 
         /// <summary>
         /// Posts the provided <see cref="IMessage"/> to the specified <see cref="PlayerConnection"/> and immediately flushes it.
         /// </summary>
-        public void SendMessageImmediate(PlayerConnection connection, IMessage message)
+        public void SendMessageImmediate(PlayerConnection playerConnection, IMessage message)
         {
-            connection.PostMessage(message);
-            connection.FlushMessages();
+            playerConnection.PostMessage(message);
+            playerConnection.FlushMessages();
         }
 
         #endregion
@@ -227,34 +219,35 @@ namespace MHServerEmu.Games.Network
             if (tcpClient.IsConnected == false)
                 return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{tcpClient}] is no longer connected");
 
-            // Make sure this client's account is not being used by another client pending disconnection
-            ulong dbId = (ulong)((IDBAccountOwner)tcpClient).Account.Id;
+            // Construct a new PlayerConnection bound to this ITcpClient
+            PlayerConnection playerConnection = new(_game, tcpClient);
 
-            if (_dbIdConnectionDict.ContainsKey(dbId))
+            // Make sure this client's account is not being used by another client pending disconnection.
+            // We do this after constructing the connection to keep the ITcpClient -> PlayerDbId retrieval in one place.
+            ulong dbId = playerConnection.PlayerDbId;
+
+            if (_playerDbIds.Add(dbId) == false)
             {
-                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client [{tcpClient}] to game [{_game}], but its account is already in use by another client");
+                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client [{tcpClient}] to game [{_game}], but its account dbId 0x{dbId:X} is already in use");
                 tcpClient.Disconnect();
                 return false;
             }
 
-            // Creating a player sends the achievement database dump and a region availability query
-            PlayerConnection connection = new(_game, tcpClient);
-            tcpClient.GameId = _game.Id;
-
-            // Any of these two checks failing is bad time
-            if (RegisterNetClient(connection) == false)
+            // Register the client to allow it to receive messages
+            if (RegisterNetClient(playerConnection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{tcpClient}]");
 
-            if (_dbIdConnectionDict.TryAdd(connection.PlayerDbId, connection) == false)
-                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add player id 0x{connection.PlayerDbId}");
-
-            if (connection.Initialize() == false)
+            // Initializing a player connection sends the achievement database dump and a region availability query
+            if (playerConnection.Initialize() == false)
             {
-                connection.Disconnect();
+                playerConnection.Disconnect();
                 return false;
             }
 
-            //SetPlayerConnectionPending(connection);   // This will be set when we receive region availability query response
+            // This connection will be set as pending when we receive region availability query response
+
+            // TODO: Replace this with a message to PlayerManager
+            tcpClient.GameId = _game.Id;
 
             Logger.Info($"Accepted and registered client [{tcpClient}] to game [{_game}]");
             return true;
@@ -264,7 +257,7 @@ namespace MHServerEmu.Games.Network
         {
             ulong dbId = playerConnection.PlayerDbId;
 
-            if (_dbIdConnectionDict.Remove(dbId) == false)
+            if (_playerDbIds.Remove(dbId) == false)
                 Logger.Warn($"OnNetClientDisconnected(): Account id 0x{dbId:X} not found");
         }
     }
