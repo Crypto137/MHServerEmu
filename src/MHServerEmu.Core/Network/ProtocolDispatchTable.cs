@@ -13,13 +13,29 @@ namespace MHServerEmu.Core.Network
     public class ProtocolDispatchTable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly Assembly LibGazillionAssembly = typeof(NetMessageReadyAndLoggedIn).Assembly;
-        private static readonly Type[] ParseMethodArgumentTypes = new Type[] { typeof(byte[]) };
+
+        private static readonly Assembly ProtocolAssembly = typeof(NetMessageReadyAndLoggedIn).Assembly;
+        private static readonly Type[] ParseMethodArgumentTypes = [typeof(byte[])];
+
+        private static readonly Type[] ProtocolEnumTypes =
+        [
+            typeof(AuthMessage),
+            typeof(BillingCommonMessage),
+            typeof(ChatCommonMessage),
+            typeof(ClientToGameServerMessage),
+            typeof(ClientToGroupingManagerMessage),
+            typeof(CommonMessage),
+            typeof(FrontendProtocolMessage),
+            typeof(GameServerToClientMessage),
+            typeof(GroupingManagerMessage),
+            typeof(GuildMessage),
+            typeof(MatchCommonMessage),
+            typeof(PubSubProtocolMessage),
+        ];
 
         // Lookups
-        private readonly Dictionary<MessageDescriptor, (Type, uint)> _messageDescriptorToProtocolIdDict = new();  // MessageDescriptor -> protocol enum type, id
-        private readonly Dictionary<(Type, uint), Type> _protocolIdToMessageTypeDict = new();                     // Protocol enum type, id -> Message type
-        private readonly Dictionary<Type, ParseMessage> _messageTypeToParseDelegateDict = new();                  // Message type -> ParseMessage delegate
+        private readonly Dictionary<MessageDescriptor, (Type, uint)> _protocolIdDict = new();   // MessageDescriptor -> protocol enum type, id
+        private readonly Dictionary<(Type, uint), ParseMessage> _parserDict = new();            // Protocol enum type, id -> ParseMessage delegate
 
         private bool _isInitialized;
 
@@ -38,19 +54,9 @@ namespace MHServerEmu.Core.Network
 
             var stopwatch = Stopwatch.StartNew();
 
-            // Preprocess all messages on startup to speed up serialization
-            ParseMessageEnum(typeof(AuthMessage));
-            ParseMessageEnum(typeof(BillingCommonMessage));
-            ParseMessageEnum(typeof(ChatCommonMessage));
-            ParseMessageEnum(typeof(ClientToGameServerMessage));
-            ParseMessageEnum(typeof(ClientToGroupingManagerMessage));
-            ParseMessageEnum(typeof(CommonMessage));
-            ParseMessageEnum(typeof(FrontendProtocolMessage));
-            ParseMessageEnum(typeof(GameServerToClientMessage));
-            ParseMessageEnum(typeof(GroupingManagerMessage));
-            ParseMessageEnum(typeof(GuildMessage));
-            ParseMessageEnum(typeof(MatchCommonMessage));
-            ParseMessageEnum(typeof(PubSubProtocolMessage));
+            // Preprocess all protocols on startup to speed up serialization
+            foreach (Type type in ProtocolEnumTypes)
+                ParseProtocolEnum(type);
 
             Logger.Info($"Initialized in {stopwatch.ElapsedMilliseconds} ms");
 
@@ -63,7 +69,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public (Type, uint) GetMessageProtocolId(IMessage message)
         {
-            return _messageDescriptorToProtocolIdDict[message.DescriptorForType];
+            return _protocolIdDict[message.DescriptorForType];
         }
 
         /// <summary>
@@ -71,14 +77,13 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public ParseMessage GetParseMessageDelegate(Type protocolEnumType, uint id)
         {
-            Type messageType = _protocolIdToMessageTypeDict[(protocolEnumType, id)];
-            return _messageTypeToParseDelegateDict[messageType];
+            return _parserDict[(protocolEnumType, id)];
         }
 
         /// <summary>
         /// Parses a message enum to generate lookups and cache parse delegates.
         /// </summary>
-        private void ParseMessageEnum(Type protocolEnumType)
+        private void ParseProtocolEnum(Type protocolEnumType)
         {
             string[] names = Enum.GetNames(protocolEnumType);
 
@@ -86,16 +91,17 @@ namespace MHServerEmu.Core.Network
             for (uint i = 0; i < names.Length; i++)
             {
                 // Use reflection to get message type and ParseFrom MethodInfo
-                Type messageType = LibGazillionAssembly.GetType($"Gazillion.{names[i]}") ?? throw new("Message type is null.");
-                var messageDescriptor = (MessageDescriptor)messageType.GetProperty("Descriptor").GetValue(null);
+                Type messageType = ProtocolAssembly.GetType($"Gazillion.{names[i]}") ?? throw new("Message type is null.");
+                MessageDescriptor messageDescriptor = (MessageDescriptor)messageType.GetProperty("Descriptor").GetValue(null);
                 MethodInfo parseMethod = messageType.GetMethod("ParseFrom", ParseMethodArgumentTypes) ?? throw new("Message ParseFrom method is null.");
 
-                // Add lookups
-                _messageDescriptorToProtocolIdDict[messageDescriptor] = (protocolEnumType, i);
-                _protocolIdToMessageTypeDict[(protocolEnumType, i)] = messageType;
+                // NOTE: Using ParseFrom() requires us to allocate buffers that match the lengths of serialized messages,
+                // we should consider using ParseDelimitedFrom() or modifying the Protobuf library to suit our needs better.
 
-                // Create a delegate from MethodInfo to speed up deserialization
-                _messageTypeToParseDelegateDict.Add(messageType, parseMethod.CreateDelegate<ParseMessage>());
+                // Add lookups
+                var protocolId = (protocolEnumType, i);
+                _protocolIdDict[messageDescriptor] = protocolId;                        // IMessage -> Protocol
+                _parserDict[protocolId] = parseMethod.CreateDelegate<ParseMessage>();   // Protocol -> IMessage
             }
         }
     }
