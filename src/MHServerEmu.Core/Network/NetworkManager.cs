@@ -16,8 +16,8 @@ namespace MHServerEmu.Core.Network
         // Incoming messages are asynchronously posted to a mailbox where they are deserialized and stored for later retrieval.
         // When it's time to process messages, we copy all messages stored in our mailbox to a list.
         // Although we call it a "list" to match the client, it functions more like a queue (FIFO, pop/peeks).
-        private readonly CoreNetworkMailbox<ITcpClient> _mailbox = new();
-        private readonly MessageList<ITcpClient> _messagesToProcessList = new();
+        private readonly CoreNetworkMailbox _mailbox = new();
+        private readonly MessageList _messagesToProcessList = new();
 
         // We swap queues with a lock when handling async client connect / disconnect events
         private Queue<ITcpClient> _asyncAddClientQueue = new();

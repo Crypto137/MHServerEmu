@@ -7,15 +7,15 @@ namespace MHServerEmu.Core.Network
     /// A wrapper around <see cref="Queue{T}"/> that imitates the functionality of Gazillion's CoreNetworkMailbox::MessageList.
     /// </summary>
     /// <remarks>
-    /// This class is NOT thread-safe. Asynchronous thread-safe message handling should be done through <see cref="CoreNetworkMailbox{TClient}"/>.
+    /// This class is NOT thread-safe. Asynchronous thread-safe message handling should be done through <see cref="CoreNetworkMailbox"/>.
     /// </remarks>
-    public class MessageList<TClient> where TClient : ITcpClient
+    public class MessageList
     {
         // NOTE: In the client this class is based on a "FastList" data structure, which appears to be a variation of a linked list.
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Queue<(TClient, MailboxMessage)> _messageQueue = new();
+        private readonly Queue<(ITcpClient, MailboxMessage)> _messageQueue = new();
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="MessageList{TClient}"/> instance has any queued messages.
@@ -27,7 +27,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Enqueues the provided <see cref="MailboxMessage"/> from a <typeparamref name="TClient"/>.
         /// </summary>
-        public void Enqueue(TClient client, MailboxMessage message)
+        public void Enqueue(ITcpClient client, MailboxMessage message)
         {
             // NOTE: In the client this is done by calling FastList::InsertTailList()
             _messageQueue.Enqueue((client, message));
@@ -36,10 +36,11 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Transfers all <see cref="MailboxMessage"/> instances from another <see cref="MessageList{TClient}"/>.
         /// </summary>
-        public void TransferFrom(MessageList<TClient> other)
+        public void TransferFrom(MessageList other)
         {
             // NOTE: In the client this is done by calling FastList::Concat().
-            // There is probably a more elegant / faster way of doing this.
+            _messageQueue.EnsureCapacity(_messageQueue.Count + other._messageQueue.Count);
+
             while (other._messageQueue.Count > 0)
                 _messageQueue.Enqueue(other._messageQueue.Dequeue());
         }
@@ -55,11 +56,11 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Retrieves the next queued <see cref="MailboxMessage"/> instance without removing it from the queue.
         /// </summary>
-        public (TClient, MailboxMessage) PeekNextMessage()
+        public (ITcpClient, MailboxMessage) PeekNextMessage()
         {
             // Do we even need peeking considering we have the HasMessages properties?
             if (_messageQueue.TryPeek(out var result) == false)
-                return Logger.WarnReturn<(TClient, MailboxMessage)>(default, $"PeekNextMessage(): No messages to peek");
+                return Logger.WarnReturn<(ITcpClient, MailboxMessage)>(default, $"PeekNextMessage(): No messages to peek");
 
             return result;
         }
@@ -67,10 +68,10 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Retrieves the next queued <see cref="MailboxMessage"/> instance.
         /// </summary>
-        public (TClient, MailboxMessage) PopNextMessage()
+        public (ITcpClient, MailboxMessage) PopNextMessage()
         {
             if (_messageQueue.TryDequeue(out var result) == false)
-                return Logger.WarnReturn<(TClient, MailboxMessage)>(default, $"PopNextMessage(): No messages to pop");
+                return Logger.WarnReturn<(ITcpClient, MailboxMessage)>(default, $"PopNextMessage(): No messages to pop");
 
             return result;
         }

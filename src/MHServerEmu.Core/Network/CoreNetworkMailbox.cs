@@ -10,19 +10,18 @@ namespace MHServerEmu.Core.Network
     /// <remarks>
     /// This class does asynchronous message handling and should be thread-safe.
     /// </remarks>
-    public class CoreNetworkMailbox<TClient> where TClient: ITcpClient
+    public class CoreNetworkMailbox
     {
         // NOTE: This class combines the functionality of both the base IMessageSerializer and its derivative CoreNetworkMailbox class from the client.
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly object _lock = new();
-        private readonly MessageList<TClient> _messageList = new();
+        private readonly MessageList _messageList = new();
 
         /// <summary>
         /// Deserializes the provided <see cref="MessagePackage"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
         /// </summary>
-        public bool Post(TClient client, MessagePackage messagePackage)
+        public bool Post(ITcpClient client, MessagePackage messagePackage)
         {
             IMessage message = messagePackage.Deserialize();
             if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");
@@ -30,10 +29,8 @@ namespace MHServerEmu.Core.Network
             // CoreNetworkMailbox::OnDeserializeMessage()
             MailboxMessage mailboxMessage = new(messagePackage.Id, message);
 
-            lock (_lock)
-            {
+            lock (_messageList)
                 _messageList.Enqueue(client, mailboxMessage);
-            }
 
             return true;
         }
@@ -41,12 +38,10 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Transfers all <see cref="MailboxMessage"/> instances contained in this <see cref="CoreNetworkMailbox{TClient}"/> to the provided <see cref="MessageList{TClient}"/>.
         /// </summary>
-        public void GetAllMessages(MessageList<TClient> outputList)
+        public void GetAllMessages(MessageList outputList)
         {
-            lock (_lock)
-            {
+            lock (_messageList)
                 outputList.TransferFrom(_messageList);
-            }
         }
 
         /// <summary>
@@ -54,10 +49,8 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void Clear()
         {
-            lock (_lock)
-            {
+            lock (_messageList)
                 _messageList.Clear();
-            }
         }
     }
 }
