@@ -7,7 +7,9 @@ namespace MHServerEmu.Core.Network
     /// <summary>
     /// Manages <see cref="NetClient"/> instances.
     /// </summary>
-    public abstract class NetworkManager<TNetClient> where TNetClient: NetClient
+    public abstract class NetworkManager<TNetClient, TProtocol>
+        where TNetClient: NetClient
+        where TProtocol: Enum
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -16,7 +18,7 @@ namespace MHServerEmu.Core.Network
         // Incoming messages are asynchronously posted to a mailbox where they are deserialized and stored for later retrieval.
         // When it's time to process messages, we copy all messages stored in our mailbox to a list.
         // Although we call it a "list" to match the client, it functions more like a queue (FIFO, pop/peeks).
-        private readonly CoreNetworkMailbox _mailbox = new();
+        private readonly CoreNetworkMailbox<TProtocol> _mailbox = new();
         private readonly MessageList _messagesToProcessList = new();
 
         // We swap queues with a lock when handling async client connect / disconnect events
@@ -169,13 +171,13 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public struct Enumerator : IEnumerator<TNetClient>
         {
-            private readonly NetworkManager<TNetClient> _networkManager;
+            private readonly NetworkManager<TNetClient, TProtocol> _networkManager;
             private Dictionary<ITcpClient, TNetClient>.ValueCollection.Enumerator _enumerator;
 
             public TNetClient Current { get => _enumerator.Current; }
             object IEnumerator.Current { get => Current; }
 
-            public Enumerator(NetworkManager<TNetClient> networkManager)
+            public Enumerator(NetworkManager<TNetClient, TProtocol> networkManager)
             {
                 _networkManager = networkManager;
                 _enumerator = _networkManager._netClientDict.Values.GetEnumerator();

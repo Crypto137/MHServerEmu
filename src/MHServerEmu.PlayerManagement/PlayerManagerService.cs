@@ -102,8 +102,6 @@ namespace MHServerEmu.PlayerManagement
             FrontendClient client = (FrontendClient)routeMessagePackage.Client;
             MessagePackage message = routeMessagePackage.Message;
 
-            message.Protocol = typeof(ClientToGameServerMessage);
-
             // Timestamp sync messages
             message.UpdateReceiveTimestamp();
 
@@ -477,7 +475,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private bool OnSyncTimeRequest(FrontendClient client, MessagePackage message)
         {
-            var request = message.Deserialize() as NetMessageSyncTimeRequest;
+            var request = message.Deserialize<ClientToGameServerMessage>() as NetMessageSyncTimeRequest;
             if (request == null) return Logger.WarnReturn(false, $"OnSyncTimeRequest(): Failed to retrieve message");
 
             //Logger.Debug($"NetMessageSyncTimeRequest:\n{request}");
@@ -505,7 +503,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private bool OnPing(FrontendClient client, MessagePackage message)
         {
-            var ping = message.Deserialize() as NetMessagePing;
+            var ping = message.Deserialize<ClientToGameServerMessage>() as NetMessagePing;
             if (ping == null) return Logger.WarnReturn(false, $"OnPing(): Failed to retrieve message");
 
             //Logger.Debug($"NetMessagePing:\n{ping}");

@@ -15,7 +15,6 @@ namespace MHServerEmu.Core.Network
 
         private int _cachedSize = -1;
 
-        public Type Protocol { get; set; }
         public uint Id { get; }
         public byte[] Payload { get; }
         public IMessage Message { get; }
@@ -28,7 +27,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public MessagePackage(IMessage message)
         {
-            (Protocol, Id) = ProtocolDispatchTable.Instance.GetMessageProtocolId(message);
+            Id = ProtocolDispatchTable.Instance.GetMessageProtocolId(message);
             Message = message;
         }
 
@@ -103,14 +102,13 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Deserializes the payload as an <see cref="IMessage"/> using the assigned protocol. Returns <see langword="null"/> if deserialization failed.
         /// </summary>
-        public IMessage Deserialize()
+        public IMessage Deserialize<T>() where T: Enum
         {
-            if (Protocol == null) return Logger.WarnReturn<IMessage>(null, $"Deserialize(): Protocol == null");
             if (Payload == null) return Logger.WarnReturn<IMessage>(null, $"Deserialize(): Payload == null");
 
             try
             {
-                var parse = ProtocolDispatchTable.Instance.GetParseMessageDelegate(Protocol, Id);
+                var parse = ProtocolDispatchTable.Instance.GetParseMessageDelegate(typeof(T), Id);
                 return parse(Payload);
             }
             catch (Exception e)

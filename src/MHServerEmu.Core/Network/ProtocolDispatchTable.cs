@@ -34,8 +34,8 @@ namespace MHServerEmu.Core.Network
         ];
 
         // Lookups
-        private readonly Dictionary<MessageDescriptor, (Type, uint)> _protocolIdDict = new();   // MessageDescriptor -> protocol enum type, id
-        private readonly Dictionary<(Type, uint), ParseMessage> _parserDict = new();            // Protocol enum type, id -> ParseMessage delegate
+        private readonly Dictionary<MessageDescriptor, uint> _protocolIdDict = new();   // MessageDescriptor -> protocol id
+        private readonly Dictionary<(Type, uint), ParseMessage> _parserDict = new();    // Protocol enum type, id -> ParseMessage delegate
 
         private bool _isInitialized;
 
@@ -67,7 +67,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Returns the protocol enum <see cref="Type"/> and <see cref="uint"/> id of the provided <see cref="IMessage"/>.
         /// </summary>
-        public (Type, uint) GetMessageProtocolId(IMessage message)
+        public uint GetMessageProtocolId(IMessage message)
         {
             return _protocolIdDict[message.DescriptorForType];
         }
@@ -99,9 +99,8 @@ namespace MHServerEmu.Core.Network
                 // we should consider using ParseDelimitedFrom() or modifying the Protobuf library to suit our needs better.
 
                 // Add lookups
-                var protocolId = (protocolEnumType, i);
-                _protocolIdDict[messageDescriptor] = protocolId;                        // IMessage -> Protocol
-                _parserDict[protocolId] = parseMethod.CreateDelegate<ParseMessage>();   // Protocol -> IMessage
+                _protocolIdDict[messageDescriptor] = i;                                             // IMessage -> Protocol
+                _parserDict[(protocolEnumType, i)] = parseMethod.CreateDelegate<ParseMessage>();    // Protocol -> IMessage
             }
         }
     }

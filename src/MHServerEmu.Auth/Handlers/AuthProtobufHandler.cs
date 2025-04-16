@@ -23,7 +23,6 @@ namespace MHServerEmu.Auth.Handlers
         public async Task HandleMessageAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
             MessagePackage message = new(CodedInputStream.CreateInstance(request.InputStream));
-            message.Protocol = typeof(FrontendProtocolMessage);
 
             switch ((FrontendProtocolMessage)message.Id)
             {
@@ -39,7 +38,7 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         private async Task<bool> OnLoginDataPB(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse, MessagePackage message)
         {
-            LoginDataPB loginDataPB = message.Deserialize() as LoginDataPB;
+            LoginDataPB loginDataPB = message.Deserialize<FrontendProtocolMessage>() as LoginDataPB;
             if (loginDataPB == null) return Logger.WarnReturn(false, $"OnLoginDataPB(): Failed to retrieve message");
 
             // Mask the end point name to prevent sensitive information from appearing in logs in needed

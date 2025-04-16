@@ -128,11 +128,10 @@ namespace MHServerEmu.Games.Network.Parsing
 
                     try
                     {
-                        message.Protocol = packet.MuxId == 1
-                                ? typeof(GameServerToClientMessage)
-                                : typeof(GroupingManagerMessage);
+                        IMessage protobufMessage = packet.MuxId == 1
+                            ? message.Deserialize<GameServerToClientMessage>()
+                            : message.Deserialize<GroupingManagerMessage>();
 
-                        IMessage protobufMessage = message.Deserialize();
                         writer.WriteLine(MessagePrinter.Print(protobufMessage));
                     }
                     catch (Exception e)

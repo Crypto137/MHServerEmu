@@ -1,4 +1,5 @@
-﻿using Google.ProtocolBuffers;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
@@ -13,7 +14,7 @@ namespace MHServerEmu.Games.Network
     /// <summary>
     /// Manages <see cref="PlayerConnection"/> instances.
     /// </summary>
-    public class PlayerConnectionManager : NetworkManager<PlayerConnection>
+    public class PlayerConnectionManager : NetworkManager<PlayerConnection, ClientToGameServerMessage>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 

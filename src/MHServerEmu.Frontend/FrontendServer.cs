@@ -132,8 +132,6 @@ namespace MHServerEmu.Frontend
             }
 
             // Self-handling for initial connection
-            message.Protocol = typeof(FrontendProtocolMessage);
-
             switch ((FrontendProtocolMessage)message.Id)
             {
                 case FrontendProtocolMessage.ClientCredentials:         OnClientCredentials(client, message); break;
@@ -150,7 +148,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         private bool OnClientCredentials(FrontendClient client, MessagePackage message)
         {
-            var clientCredentials = message.Deserialize() as ClientCredentials;
+            var clientCredentials = message.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
             if (clientCredentials == null) return Logger.WarnReturn(false, $"OnClientCredentials(): Failed to retrieve message");
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
@@ -165,7 +163,7 @@ namespace MHServerEmu.Frontend
         /// </summary>
         private bool OnInitialClientHandshake(FrontendClient client, MessagePackage message)
         {
-            var initialClientHandshake = message.Deserialize() as InitialClientHandshake;
+            var initialClientHandshake = message.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
             if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
 
             var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;

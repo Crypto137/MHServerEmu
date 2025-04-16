@@ -10,7 +10,7 @@ namespace MHServerEmu.Core.Network
     /// <remarks>
     /// This class does asynchronous message handling and should be thread-safe.
     /// </remarks>
-    public class CoreNetworkMailbox
+    public class CoreNetworkMailbox<T> where T: Enum
     {
         // NOTE: This class combines the functionality of both the base IMessageSerializer and its derivative CoreNetworkMailbox class from the client.
 
@@ -23,7 +23,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public bool Post(ITcpClient client, MessagePackage messagePackage)
         {
-            IMessage message = messagePackage.Deserialize();
+            IMessage message = messagePackage.Deserialize<T>();
             if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");
 
             // CoreNetworkMailbox::OnDeserializeMessage()
