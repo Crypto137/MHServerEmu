@@ -102,16 +102,10 @@ namespace MHServerEmu.PlayerManagement
             FrontendClient client = (FrontendClient)routeMessagePackage.Client;
             MessagePackageIn message = routeMessagePackage.Message;
 
-            // Timestamp sync messages
-            message.UpdateReceiveTimestamp();
-
             // Self-handle or route messages
             switch ((ClientToGameServerMessage)message.Id)
             {
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:  OnReadyForGameJoin(client, message); break;
-                case ClientToGameServerMessage.NetMessageSyncTimeRequest:   OnSyncTimeRequest(client, message); break;
-                case ClientToGameServerMessage.NetMessagePing:              OnPing(client, message); break;
-                case ClientToGameServerMessage.NetMessageFPS:               OnFps(client, message); break;
 
                 default:
                     // Route the rest of messages to the game the player is currently in
@@ -461,76 +455,7 @@ namespace MHServerEmu.PlayerManagement
             // Log the player in
             client.SendMessage(MuxChannel, NetMessageReadyAndLoggedIn.DefaultInstance); // add report defect (bug) config here
 
-            // Sync time
-            client.SendMessage(MuxChannel, NetMessageInitialTimeSync.CreateBuilder()
-                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
-                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
-                .Build());
-
             return true;
-        }
-
-        /// <summary>
-        /// Handles <see cref="NetMessageSyncTimeRequest"/>.
-        /// </summary>
-        private bool OnSyncTimeRequest(FrontendClient client, MessagePackageIn message)
-        {
-            var request = message.Deserialize<ClientToGameServerMessage>() as NetMessageSyncTimeRequest;
-            if (request == null) return Logger.WarnReturn(false, $"OnSyncTimeRequest(): Failed to retrieve message");
-
-            //Logger.Debug($"NetMessageSyncTimeRequest:\n{request}");
-
-            var reply = NetMessageSyncTimeReply.CreateBuilder()
-                .SetGameTimeClientSent(request.GameTimeClientSent)
-                .SetGameTimeServerReceived(message.GameTimeReceived.Ticks / 10)
-                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
-                .SetDateTimeClientSent(request.DateTimeClientSent)
-                .SetDateTimeServerReceived(message.DateTimeReceived.Ticks / 10)
-                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
-                .SetDialation(1.0f)
-                .SetGametimeDialationStarted(0)
-                .SetDatetimeDialationStarted(0)
-                .Build();
-
-            //Logger.Debug($"NetMessageSyncTimeReply:\n{reply}");
-
-            client.SendMessage(MuxChannel, reply);
-            return true;
-        }
-
-        /// <summary>
-        /// Handles <see cref="NetMessagePing"/>.
-        /// </summary>
-        private bool OnPing(FrontendClient client, MessagePackageIn message)
-        {
-            var ping = message.Deserialize<ClientToGameServerMessage>() as NetMessagePing;
-            if (ping == null) return Logger.WarnReturn(false, $"OnPing(): Failed to retrieve message");
-
-            //Logger.Debug($"NetMessagePing:\n{ping}");
-
-            var response = NetMessagePingResponse.CreateBuilder()
-                .SetDisplayOutput(ping.DisplayOutput)
-                .SetRequestSentClientTime(ping.SendClientTime)
-                .SetRequestSentGameTime(ping.SendGameTime)
-                .SetRequestNetReceivedGameTime((ulong)message.GameTimeReceived.TotalMilliseconds)
-                .SetResponseSendTime((ulong)Clock.GameTime.TotalMilliseconds)
-                .SetServerTickforecast(0)   // server tick time ms
-                .SetGameservername("BOPR-MHVGIS2")
-                .SetFrontendname("bopr-mhfes2")
-                .Build();
-
-            //Logger.Debug($"NetMessagePingResponse:\n{response}");
-
-            client.SendMessage(MuxChannel, response);
-            return true;
-        }
-
-        /// <summary>
-        /// Handles <see cref="NetMessageFPS"/>.
-        /// </summary>
-        private void OnFps(FrontendClient client, MessagePackageIn message)
-        {
-            //Logger.Debug($"NetMessageFPS:\n{fps}");
         }
 
         #endregion

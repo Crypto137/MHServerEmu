@@ -1,22 +1,17 @@
-﻿using Gazillion;
-using Google.ProtocolBuffers;
+﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// Contains a serialized <see cref="IMessage"/>.
     /// </summary>
-    public class MessagePackageIn
+    public readonly struct MessagePackageIn
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public uint Id { get; }
         public byte[] Payload { get; }
-
-        public TimeSpan GameTimeReceived { get; private set; }
-        public TimeSpan DateTimeReceived { get; private set; }
 
         /// <summary>
         /// Decodes a <see cref="MessagePackageIn"/> from the provided <see cref="CodedInputStream"/>.
@@ -34,16 +29,6 @@ namespace MHServerEmu.Core.Network
                 Payload = null;
                 Logger.ErrorException(e, "MessagePackage construction failed");
             }
-        }
-
-        public void UpdateReceiveTimestamp()
-        {
-            // Only sync messages should be timestamped
-            if (Id != (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest && Id != (uint)ClientToGameServerMessage.NetMessagePing)
-                return;
-
-            GameTimeReceived = Clock.GameTime;
-            DateTimeReceived = Clock.UnixTime;
         }
 
         /// <summary>

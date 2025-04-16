@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
 
@@ -238,6 +239,16 @@ namespace MHServerEmu.Games.Network
             if (RegisterNetClient(playerConnection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{tcpClient}]");
 
+            // TODO: Replace this with a message to PlayerManager
+            tcpClient.GameId = _game.Id;
+
+            // Send time sync straight away for the client to be able to initialize its EventScheduler (needed for loading screens).
+            // This will also make the client start sending pings, so it needs to be done after we assign game id.
+            SendMessageImmediate(playerConnection, NetMessageInitialTimeSync.CreateBuilder()
+                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
+                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
+                .Build());
+
             // Initializing a player connection sends the achievement database dump and a region availability query
             if (playerConnection.Initialize() == false)
             {
@@ -246,9 +257,6 @@ namespace MHServerEmu.Games.Network
             }
 
             // This connection will be set as pending when we receive region availability query response
-
-            // TODO: Replace this with a message to PlayerManager
-            tcpClient.GameId = _game.Id;
 
             Logger.Info($"Accepted and registered client [{tcpClient}] to game [{_game}]");
             return true;

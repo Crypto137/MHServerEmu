@@ -1,6 +1,8 @@
-﻿using Google.ProtocolBuffers;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
 {
@@ -23,11 +25,26 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public bool Post(ITcpClient client, MessagePackageIn messagePackage)
         {
+            // HACK: Timestamp client sync messages
+            TimeSpan gameTimeReceived = default;
+            TimeSpan dateTimeReceived = default;
+
+            if (typeof(T) == typeof(ClientToGameServerMessage))
+            {
+                if (messagePackage.Id == (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest ||
+                    messagePackage.Id == (uint)ClientToGameServerMessage.NetMessagePing)
+                {
+                    gameTimeReceived = Clock.GameTime;
+                    dateTimeReceived = Clock.UnixTime;
+                }
+            }
+
+            // Deserialize
             IMessage message = messagePackage.Deserialize<T>();
             if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");
 
             // CoreNetworkMailbox::OnDeserializeMessage()
-            MailboxMessage mailboxMessage = new(messagePackage.Id, message);
+            MailboxMessage mailboxMessage = new(messagePackage.Id, message, gameTimeReceived, dateTimeReceived);
 
             lock (_messageList)
                 _messageList.Enqueue(client, mailboxMessage);
