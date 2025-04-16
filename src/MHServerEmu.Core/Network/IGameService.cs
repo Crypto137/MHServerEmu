@@ -1,7 +1,7 @@
 ﻿namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// An interface for services that handle <see cref="MessagePackage"/> and <see cref="MailboxMessage"/> instances.
+    /// An interface for services that handle <see cref="IGameServiceMessage"/> instances.
     /// </summary>
     public interface IGameService
     {

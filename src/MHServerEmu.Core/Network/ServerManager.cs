@@ -2,7 +2,6 @@
 using System.Text;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Metrics;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
@@ -20,7 +19,7 @@ namespace MHServerEmu.Core.Network
     }
 
     /// <summary>
-    /// Manages <see cref="IGameService"/> instances and routes <see cref="MessagePackage"/> instances between them.
+    /// Manages <see cref="IGameService"/> instances and routes <see cref="IGameServiceMessage"/> instances between them.
     /// </summary>
     public class ServerManager
     {

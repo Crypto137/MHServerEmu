@@ -198,7 +198,7 @@ namespace MHServerEmu.Games
             NetworkManager.AsyncRemoveClient(client);
         }
 
-        public void PostMessage(ITcpClient client, MessagePackage message)
+        public void PostMessage(ITcpClient client, MessagePackageIn message)
         {
             NetworkManager.AsyncPostMessage(client, message);
         }

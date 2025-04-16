@@ -77,9 +77,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Handles an incoming <see cref="MessagePackage"/> asynchronously.
+        /// Handles an incoming <see cref="MessagePackageIn"/> asynchronously.
         /// </summary>
-        public void AsyncPostMessage(ITcpClient tcpClient, MessagePackage message)
+        public void AsyncPostMessage(ITcpClient tcpClient, MessagePackageIn message)
         {
             // Gazillion's implementation does this in NetworkManager::ConnectionStatus()
 

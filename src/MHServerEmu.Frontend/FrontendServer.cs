@@ -14,7 +14,7 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private readonly ConcurrentQueue<(FrontendClient, ushort, MessagePackage)> _pendingMessageQueue = new();
+        private readonly ConcurrentQueue<(FrontendClient, ushort, MessagePackageIn)> _pendingMessageQueue = new();
 
         #region IGameService Implementation
 
@@ -70,7 +70,7 @@ namespace MHServerEmu.Frontend
         {
             ITcpClient tcpClient = routeMessages.Client;
             ushort muxId = routeMessages.MuxId;
-            IReadOnlyList<MessagePackage> messages = routeMessages.Messages;
+            IReadOnlyList<MessagePackageIn> messages = routeMessages.Messages;
 
             int messageCount = messages.Count;
             for (int i = 0; i < messageCount; i++)
@@ -111,7 +111,7 @@ namespace MHServerEmu.Frontend
 
         #region Message Handling
 
-        private bool HandlePendingMessage(FrontendClient client, ushort muxId, MessagePackage message)
+        private bool HandlePendingMessage(FrontendClient client, ushort muxId, MessagePackageIn message)
         {
             // Skip messages from clients that have already disconnected
             if (client.Connection.Connected == false)
@@ -146,7 +146,7 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Handles <see cref="ClientCredentials"/>.
         /// </summary>
-        private bool OnClientCredentials(FrontendClient client, MessagePackage message)
+        private bool OnClientCredentials(FrontendClient client, MessagePackageIn message)
         {
             var clientCredentials = message.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
             if (clientCredentials == null) return Logger.WarnReturn(false, $"OnClientCredentials(): Failed to retrieve message");
@@ -161,7 +161,7 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Handles <see cref="InitialClientHandshake"/>.
         /// </summary>
-        private bool OnInitialClientHandshake(FrontendClient client, MessagePackage message)
+        private bool OnInitialClientHandshake(FrontendClient client, MessagePackageIn message)
         {
             var initialClientHandshake = message.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
             if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");

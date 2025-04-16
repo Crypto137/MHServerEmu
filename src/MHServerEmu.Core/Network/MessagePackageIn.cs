@@ -1,6 +1,5 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Time;
 
@@ -9,32 +8,20 @@ namespace MHServerEmu.Core.Network
     /// <summary>
     /// Contains a serialized <see cref="IMessage"/>.
     /// </summary>
-    public class MessagePackage
+    public class MessagePackageIn
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private int _cachedSize = -1;
-
         public uint Id { get; }
         public byte[] Payload { get; }
-        public IMessage Message { get; }
 
         public TimeSpan GameTimeReceived { get; private set; }
         public TimeSpan DateTimeReceived { get; private set; }
 
         /// <summary>
-        /// Constructs a new <see cref="MessagePackage"/> from an <see cref="IMessage"/>.
+        /// Decodes a <see cref="MessagePackageIn"/> from the provided <see cref="CodedInputStream"/>.
         /// </summary>
-        public MessagePackage(IMessage message)
-        {
-            Id = ProtocolDispatchTable.Instance.GetMessageProtocolId(message);
-            Message = message;
-        }
-
-        /// <summary>
-        /// Decodes a <see cref="MessagePackage"/> from the provided <see cref="CodedInputStream"/>.
-        /// </summary>
-        public MessagePackage(CodedInputStream stream)
+        public MessagePackageIn(CodedInputStream stream)
         {
             try
             {
@@ -47,46 +34,6 @@ namespace MHServerEmu.Core.Network
                 Payload = null;
                 Logger.ErrorException(e, "MessagePackage construction failed");
             }
-        }
-
-        public int GetSize()
-        {
-            if (Message == null) return Logger.WarnReturn(0, "ComputeMessageSize(): Message == null");
-
-            if (_cachedSize != -1) return _cachedSize;
-
-            int size = CodedOutputStream.ComputeRawVarint32Size(Id);
-            size += CodedOutputStream.ComputeRawVarint32Size((uint)Message.SerializedSize);
-            size += Message.SerializedSize;
-
-            _cachedSize = size;
-
-            return size;
-        }
-
-        /// <summary>
-        /// Encodes the <see cref="MessagePackage"/> to the provided <see cref="CodedOutputStream"/>.
-        /// </summary>
-        public bool WriteTo(CodedOutputStream stream)
-        {
-            if (Message == null)
-            {
-                // Fall back to the payload if we have one (e.g. when slicing packet dumps)
-                if (Payload.IsNullOrEmpty()) return Logger.WarnReturn(false, "WriteTo(): No data to write");
-
-                stream.WriteRawVarint32(Id);
-                stream.WriteRawVarint32((uint)Payload.Length);
-                stream.WriteRawBytes(Payload);
-
-                return true;
-            }
-
-            // Write the IMessage directly to the output stream
-            stream.WriteRawVarint32(Id);
-            stream.WriteRawVarint32((uint)Message.SerializedSize);
-            Message.WriteTo(stream);
-
-            return true;
         }
 
         public void UpdateReceiveTimestamp()

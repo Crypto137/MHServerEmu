@@ -24,25 +24,24 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public readonly struct MuxPacket : IPacket
     {
-        // TODO: The current setup where we allocate List and MessagePackage instances every time we send data is not great to say the least, need to optimize this in the future.
-
         private const int HeaderSize = 6;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
-        private readonly List<MessagePackage> _messagePackageList = null;
+        private readonly List<MessagePackageIn> _inboundMessageList = null;
+        private readonly List<MessagePackageOut> _outboundMessageList = null;
 
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
 
         /// <summary>
-        /// Returns an <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackage"/> instances contained in this <see cref="MuxPacket"/>.
+        /// Returns an <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackageIn"/> instances contained in this <see cref="MuxPacket"/>.
         /// </summary>
-        public IReadOnlyList<MessagePackage> MessagePackageList { get => _messagePackageList; }
+        public IReadOnlyList<MessagePackageIn> InboundMessageList { get => _inboundMessageList; }
 
         /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessagePackage"/> instances.
+        /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessagePackageIn"/> instances.
         /// </summary>
         public bool IsDataPacket { get => Command == MuxCommand.Data || Command == MuxCommand.ConnectWithData; }
 
@@ -56,38 +55,37 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public MuxPacket(Stream stream, bool checkSize = true)
         {
-            using (BinaryReader reader = new(stream, Encoding.UTF8, true))
+            using BinaryReader reader = new(stream, Encoding.UTF8, true);
+
+            try
             {
-                try
+                // 6-byte mux header
+                MuxId = reader.ReadUInt16();
+                int bodyLength = reader.ReadUInt24();
+                Command = (MuxCommand)reader.ReadByte();
+
+                if (checkSize && bodyLength > TcpClientConnection.ReceiveBufferSize)
+                    throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
+
+                if (IsDataPacket)
                 {
-                    // 6-byte mux header
-                    MuxId = reader.ReadUInt16();
-                    int bodyLength = reader.ReadUInt24();
-                    Command = (MuxCommand)reader.ReadByte();
+                    _inboundMessageList = new();
 
-                    if (checkSize && bodyLength > TcpClientConnection.ReceiveBufferSize)
-                        throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
+                    byte[] buffer = BufferPool.Rent(bodyLength);
+                    reader.Read(buffer, 0, bodyLength);
 
-                    if (IsDataPacket)
-                    {
-                        _messagePackageList = new();
+                    CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
+                    while (cis.IsAtEnd == false)
+                        _inboundMessageList.Add(new(cis));
 
-                        byte[] buffer = BufferPool.Rent(bodyLength);
-                        reader.Read(buffer, 0, bodyLength);
-
-                        CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
-                        while (cis.IsAtEnd == false)
-                            _messagePackageList.Add(new(cis));
-
-                        BufferPool.Return(buffer);
-                    }
+                    BufferPool.Return(buffer);
                 }
-                catch (Exception e)
-                {
-                    MuxId = 1;      // Set muxId to 1 to avoid triggering the mux channel check that happens later on
-                    Command = MuxCommand.Invalid;
-                    Logger.Error($"Failed to parse MuxPacket, {e.Message}");
-                }
+            }
+            catch (Exception e)
+            {
+                MuxId = 1;      // Set muxId to 1 to avoid triggering the mux channel check that happens later on
+                Command = MuxCommand.Invalid;
+                Logger.Error($"Failed to parse MuxPacket, {e.Message}");
             }
         }
 
@@ -100,7 +98,7 @@ namespace MHServerEmu.Core.Network
             Command = command;
 
             if (IsDataPacket)
-                _messagePackageList = new();
+                _outboundMessageList = new();
         }
 
         /// <summary>
@@ -111,25 +109,25 @@ namespace MHServerEmu.Core.Network
             if (IsDataPacket == false)
                 return Logger.WarnReturn(false, "AddMessage(): Attempted to add a message to a non-data packet");
 
-            MessagePackage package = new(message);
-            _messagePackageList.Add(package);
+            MessagePackageOut messagePackage = new(message);
+            _outboundMessageList.Add(messagePackage);
             return true;
         }
 
         /// <summary>
-        /// Adds an <see cref="IEnumerable"/> collection of <see cref="MessagePackage"/> instances to this <see cref="MuxPacket"/>.
+        /// Adds an <see cref="IEnumerable"/> collection of <see cref="MessagePackageIn"/> instances to this <see cref="MuxPacket"/>.
         /// </summary>
         public bool AddMessageList(List<IMessage> messageList)
         {
             if (IsDataPacket == false)
                 return Logger.WarnReturn(false, "AddMessages(): Attempted to add messages to a non-data packet");
 
-            _messagePackageList.EnsureCapacity(_messagePackageList.Count + messageList.Count);
+            _outboundMessageList.EnsureCapacity(_outboundMessageList.Count + messageList.Count);
 
             foreach (IMessage message in messageList)
             {
-                MessagePackage messagePackage = new(message);
-                _messagePackageList.Add(messagePackage);
+                MessagePackageOut messagePackage = new(message);
+                _outboundMessageList.Add(messagePackage);
             }
 
             return true;
@@ -184,8 +182,8 @@ namespace MHServerEmu.Core.Network
 
             if (IsDataPacket)
             {
-                foreach (MessagePackage messagePackage in _messagePackageList)
-                    bodySize += messagePackage.GetSize();
+                foreach (MessagePackageOut messagePackage in _outboundMessageList)
+                    bodySize += messagePackage.GetSerializedSize();
             }
 
             return bodySize;
@@ -200,14 +198,14 @@ namespace MHServerEmu.Core.Network
             if (IsDataPacket == false)
                 return false;
 
-            if (_messagePackageList.Count == 0)
+            if (_outboundMessageList.Count == 0)
                 return Logger.WarnReturn(false, "SerializeBody(): Data packet contains no messages");
 
             // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
             byte[] buffer = BufferPool.Rent(4096);
 
             CodedOutputStream cos = ProtobufHelper.CodedOutputStreamEx.CreateInstance(stream, buffer);
-            foreach (MessagePackage messagePackage in _messagePackageList)
+            foreach (MessagePackageOut messagePackage in _outboundMessageList)
                 messagePackage.WriteTo(cos);
             cos.Flush();
 

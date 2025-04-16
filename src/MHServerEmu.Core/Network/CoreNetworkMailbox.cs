@@ -5,7 +5,7 @@ using MHServerEmu.Core.Network.Tcp;
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// Deserializes <see cref="MessagePackage"/> instances and stores them as <see cref="MailboxMessage"/> until retrieval.
+    /// Deserializes <see cref="MessagePackageIn"/> instances and stores them as <see cref="MailboxMessage"/> until retrieval.
     /// </summary>
     /// <remarks>
     /// This class does asynchronous message handling and should be thread-safe.
@@ -19,9 +19,9 @@ namespace MHServerEmu.Core.Network
         private readonly MessageList _messageList = new();
 
         /// <summary>
-        /// Deserializes the provided <see cref="MessagePackage"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
+        /// Deserializes the provided <see cref="MessagePackageIn"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
         /// </summary>
-        public bool Post(ITcpClient client, MessagePackage messagePackage)
+        public bool Post(ITcpClient client, MessagePackageIn messagePackage)
         {
             IMessage message = messagePackage.Deserialize<T>();
             if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");

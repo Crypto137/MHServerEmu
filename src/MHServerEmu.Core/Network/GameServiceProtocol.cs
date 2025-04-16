@@ -26,17 +26,17 @@ namespace MHServerEmu.Core.Network
             public readonly ITcpClient Client = client;
         }
 
-        public readonly struct RouteMessages(ITcpClient client, ushort muxId, IReadOnlyList<MessagePackage> messagePackages) : IGameServiceMessage
+        public readonly struct RouteMessages(ITcpClient client, ushort muxId, IReadOnlyList<MessagePackageIn> messagePackages) : IGameServiceMessage
         {
             public readonly ITcpClient Client = client;
             public readonly ushort MuxId = muxId;
-            public readonly IReadOnlyList<MessagePackage> Messages = messagePackages;
+            public readonly IReadOnlyList<MessagePackageIn> Messages = messagePackages;
         }
 
-        public readonly struct RouteMessagePackage(ITcpClient client, MessagePackage message) : IGameServiceMessage
+        public readonly struct RouteMessagePackage(ITcpClient client, MessagePackageIn message) : IGameServiceMessage
         {
             public readonly ITcpClient Client = client;
-            public readonly MessagePackage Message = message;
+            public readonly MessagePackageIn Message = message;
         }
 
         public readonly struct RouteMailboxMessage(ITcpClient client, MailboxMessage message) : IGameServiceMessage

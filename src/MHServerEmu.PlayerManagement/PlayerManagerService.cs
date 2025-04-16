@@ -100,7 +100,7 @@ namespace MHServerEmu.PlayerManagement
         private void OnRouteMessagePackage(in GameServiceProtocol.RouteMessagePackage routeMessagePackage)
         {
             FrontendClient client = (FrontendClient)routeMessagePackage.Client;
-            MessagePackage message = routeMessagePackage.Message;
+            MessagePackageIn message = routeMessagePackage.Message;
 
             // Timestamp sync messages
             message.UpdateReceiveTimestamp();
@@ -441,7 +441,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.
         /// </summary>
-        private bool OnReadyForGameJoin(FrontendClient client, MessagePackage message)
+        private bool OnReadyForGameJoin(FrontendClient client, MessagePackageIn message)
         {
             // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
             // doesn't include it. To avoid an exception we build a partial message from the data we receive.
@@ -473,7 +473,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageSyncTimeRequest"/>.
         /// </summary>
-        private bool OnSyncTimeRequest(FrontendClient client, MessagePackage message)
+        private bool OnSyncTimeRequest(FrontendClient client, MessagePackageIn message)
         {
             var request = message.Deserialize<ClientToGameServerMessage>() as NetMessageSyncTimeRequest;
             if (request == null) return Logger.WarnReturn(false, $"OnSyncTimeRequest(): Failed to retrieve message");
@@ -501,7 +501,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessagePing"/>.
         /// </summary>
-        private bool OnPing(FrontendClient client, MessagePackage message)
+        private bool OnPing(FrontendClient client, MessagePackageIn message)
         {
             var ping = message.Deserialize<ClientToGameServerMessage>() as NetMessagePing;
             if (ping == null) return Logger.WarnReturn(false, $"OnPing(): Failed to retrieve message");
@@ -528,7 +528,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageFPS"/>.
         /// </summary>
-        private void OnFps(FrontendClient client, MessagePackage message)
+        private void OnFps(FrontendClient client, MessagePackageIn message)
         {
             //Logger.Debug($"NetMessageFPS:\n{fps}");
         }

@@ -22,7 +22,7 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         public async Task HandleMessageAsync(HttpListenerRequest request, HttpListenerResponse response)
         {
-            MessagePackage message = new(CodedInputStream.CreateInstance(request.InputStream));
+            MessagePackageIn message = new(CodedInputStream.CreateInstance(request.InputStream));
 
             switch ((FrontendProtocolMessage)message.Id)
             {
@@ -36,7 +36,7 @@ namespace MHServerEmu.Auth.Handlers
         /// <summary>
         /// Handles a <see cref="LoginDataPB"/> message.
         /// </summary>
-        private async Task<bool> OnLoginDataPB(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse, MessagePackage message)
+        private async Task<bool> OnLoginDataPB(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse, MessagePackageIn message)
         {
             LoginDataPB loginDataPB = message.Deserialize<FrontendProtocolMessage>() as LoginDataPB;
             if (loginDataPB == null) return Logger.WarnReturn(false, $"OnLoginDataPB(): Failed to retrieve message");
@@ -82,7 +82,7 @@ namespace MHServerEmu.Auth.Handlers
         /// <summary>
         /// Handles a <see cref="PrecacheHeaders"/> message.
         /// </summary>
-        private async Task<bool> OnPrecacheHeaders(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse, MessagePackage message)
+        private async Task<bool> OnPrecacheHeaders(HttpListenerRequest httpRequest, HttpListenerResponse httpResponse, MessagePackageIn message)
         {
             // The client sends this message on startup
             Logger.Trace($"Received PrecacheHeaders message");
