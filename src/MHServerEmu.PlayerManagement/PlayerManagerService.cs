@@ -3,7 +3,7 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System.Time;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -13,7 +13,7 @@ namespace MHServerEmu.PlayerManagement
     /// <summary>
     /// An <see cref="IGameService"/> that manages connected players and routes messages to relevant <see cref="Game"/> instances.
     /// </summary>
-    public class PlayerManagerService : IGameService, IFrontendService, IMessageBroadcaster
+    public class PlayerManagerService : IGameService, IMessageBroadcaster
     {
         // TODO: Implement a way to request saves from the game without disconnecting.
 
@@ -81,8 +81,20 @@ namespace MHServerEmu.PlayerManagement
         {
             switch (message)
             {
+                case GameServiceProtocol.AddClient addClient:
+                    OnAddClient(addClient);
+                    break;
+
+                case GameServiceProtocol.RemoveClient removeClient:
+                    OnRemoveClient(removeClient);
+                    break;
+
                 case GameServiceProtocol.RouteMessagePackage routeMessagePackage:
                     OnRouteMessagePackage(routeMessagePackage);
+                    break;
+
+                case GameServiceProtocol.RouteMessage routeMessage:
+                    OnRouteMessage(routeMessage);
                     break;
 
                 default:
@@ -97,10 +109,20 @@ namespace MHServerEmu.PlayerManagement
                 return $"Games: {_gameManager.GameCount} | Sessions: {_sessionManager.ActiveSessionCount} [{_sessionManager.PendingSessionCount}] | Pending Saves: {_pendingSaveDict.Count}";
         }
 
+        private void OnAddClient(in GameServiceProtocol.AddClient addClient)
+        {
+            AddClient((FrontendClient)addClient.Client);
+        }
+
+        private void OnRemoveClient(in GameServiceProtocol.RemoveClient removeClient)
+        {
+            RemoveClient((FrontendClient)removeClient.Client);
+        }
+
         private void OnRouteMessagePackage(in GameServiceProtocol.RouteMessagePackage routeMessagePackage)
         {
             FrontendClient client = (FrontendClient)routeMessagePackage.Client;
-            MessagePackageIn message = routeMessagePackage.Message;
+            MessagePackageIn message = routeMessagePackage.MessagePackage;
 
             // Self-handle or route messages
             switch ((ClientToGameServerMessage)message.Id)
@@ -122,21 +144,24 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        #endregion
-
-        #region IFrontendService Implementation
-
-        public void ReceiveFrontendMessage(FrontendClient client, IMessage message)
+        private void OnRouteMessage(in GameServiceProtocol.RouteMessage routeMessage)
         {
-            switch (message)
+            ITcpClient tcpClient = routeMessage.Client;
+            MailboxMessage message = routeMessage.Message;
+
+            switch ((FrontendProtocolMessage)message.Id)
             {
-                case InitialClientHandshake handshake: OnInitialClientHandshake(client, handshake); break;
-                case ClientCredentials credentials: OnClientCredentials(client, credentials); break;
-                default: Logger.Warn($"ReceiveFrontendMessage(): Unhandled message {message.DescriptorForType.Name}"); break;
+                case FrontendProtocolMessage.ClientCredentials: OnClientCredentials(tcpClient, message); break;
+
+                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
-        public bool AddFrontendClient(FrontendClient client)
+        #endregion
+
+        #region Client Management
+
+        public bool AddClient(FrontendClient client)
         {
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"AddFrontendClient(): Client [{client}] has no valid session assigned");
@@ -163,7 +188,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool RemoveFrontendClient(FrontendClient client)
+        public bool RemoveClient(FrontendClient client)
         {
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] has no valid session assigned");
@@ -394,18 +419,13 @@ namespace MHServerEmu.PlayerManagement
         }
 
         /// <summary>
-        /// Handles <see cref="InitialClientHandshake"/>.
-        /// </summary>
-        private void OnInitialClientHandshake(FrontendClient client, InitialClientHandshake handshake)
-        {
-            client.FinishedPlayerManagerHandshake = true;
-        }
-
-        /// <summary>
         /// Handles <see cref="ClientCredentials"/>.
         /// </summary>
-        private void OnClientCredentials(FrontendClient client, ClientCredentials credentials)
+        private bool OnClientCredentials(ITcpClient client, MailboxMessage message)
         {
+            var clientCredentials = message.As<ClientCredentials>();
+            if (clientCredentials == null) return Logger.WarnReturn(false, "OnClientCredentials(): clientCredentials == null");
+
             if (Config.SimulateQueue)
             {
                 Logger.Debug("Responding with LoginQueueStatus message");
@@ -414,14 +434,14 @@ namespace MHServerEmu.PlayerManagement
                     .SetNumberOfPlayersInLine(Config.QueueNumberOfPlayersInLine)
                     .Build());
 
-                return;
+                return false;
             }
 
-            if (_sessionManager.VerifyClientCredentials(client, credentials) == false)
+            if (_sessionManager.VerifyClientCredentials((FrontendClient)client, clientCredentials) == false)
             {
                 Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client on {client.Connection}");
                 client.Disconnect();
-                return;
+                return false;
             }
 
             // Success!
@@ -430,12 +450,14 @@ namespace MHServerEmu.PlayerManagement
                 .SetRandomNumberIndex(0)
                 .SetEncryptedRandomNumber(ByteString.Empty)
                 .Build());
+
+            return true;
         }
 
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.
         /// </summary>
-        private bool OnReadyForGameJoin(FrontendClient client, MessagePackageIn message)
+        private bool OnReadyForGameJoin(ITcpClient client, MessagePackageIn message)
         {
             // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
             // doesn't include it. To avoid an exception we build a partial message from the data we receive.

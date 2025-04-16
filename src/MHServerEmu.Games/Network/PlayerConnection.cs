@@ -496,7 +496,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageReportPlayer:                                                                          // 66
                 case ClientToGameServerMessage.NetMessageChatBanVote:                                                                           // 67
                 case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:                                                        // 106, TODO: handle this in game
-                    GameServiceProtocol.RouteMailboxMessage groupingManagerMessage = new(_tcpClient, message);
+                    GameServiceProtocol.RouteMessage groupingManagerMessage = new(_tcpClient, typeof(ClientToGameServerMessage), message);
                     ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
                     break;
 
@@ -506,7 +506,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                                                                    // 70
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
-                    GameServiceProtocol.RouteMailboxMessage billingMessage = new(_tcpClient, message);
+                    GameServiceProtocol.RouteMessage billingMessage = new(_tcpClient, typeof(ClientToGameServerMessage), message);
                     ServerManager.Instance.SendMessageToService(ServerType.Billing, billingMessage);
                     break;
 
@@ -514,7 +514,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:                                                                    // 157
                 case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:                                                // 158
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:                                                          // 159
-                    GameServiceProtocol.RouteMailboxMessage leaderboardMessage = new(_tcpClient, message);
+                    GameServiceProtocol.RouteMessage leaderboardMessage = new(_tcpClient, typeof(ClientToGameServerMessage), message);
                     ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, leaderboardMessage);
                     break;
 

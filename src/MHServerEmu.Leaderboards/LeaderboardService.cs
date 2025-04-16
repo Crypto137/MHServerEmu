@@ -28,7 +28,7 @@ namespace MHServerEmu.Leaderboards
         {
             switch (message)
             {
-                case GameServiceProtocol.RouteMailboxMessage routeMailboxMessage:
+                case GameServiceProtocol.RouteMessage routeMailboxMessage:
                     OnRouteMailboxMessage(routeMailboxMessage);
                     break;
 
@@ -43,7 +43,7 @@ namespace MHServerEmu.Leaderboards
             return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
         }
 
-        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMailboxMessage routeMailboxMessage)
+        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
         {
             ITcpClient tcpClient = routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;

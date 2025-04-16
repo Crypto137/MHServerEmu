@@ -69,7 +69,7 @@ namespace MHServerEmu.Billing
         {
             switch (message)
             {
-                case GameServiceProtocol.RouteMailboxMessage routeMailboxMessage:
+                case GameServiceProtocol.RouteMessage routeMailboxMessage:
                     OnRouteMailboxMessage(routeMailboxMessage);
                     break;
 
@@ -84,7 +84,7 @@ namespace MHServerEmu.Billing
             return $"Catalog Entries: {_catalog.Entries.Length}";
         }
 
-        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMailboxMessage routeMailboxMessage)
+        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
         {
             FrontendClient client = (FrontendClient)routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;

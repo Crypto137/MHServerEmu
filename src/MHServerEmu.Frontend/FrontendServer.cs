@@ -94,11 +94,9 @@ namespace MHServerEmu.Frontend
 
             if (client.Session != null)
             {
-                var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
-                playerManager?.RemoveFrontendClient(client);
-
-                var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
-                groupingManager?.RemoveFrontendClient(client);
+                GameServiceProtocol.RemoveClient removeClient = new(client);
+                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, removeClient);
+                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, removeClient);
             }
         }
 
@@ -151,10 +149,10 @@ namespace MHServerEmu.Frontend
             var clientCredentials = message.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
             if (clientCredentials == null) return Logger.WarnReturn(false, $"OnClientCredentials(): Failed to retrieve message");
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
-            if (playerManager == null) Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the player manager");
+            MailboxMessage mailboxMessage = new(message.Id, clientCredentials, default, default);
+            GameServiceProtocol.RouteMessage routeMessage = new(client, typeof(FrontendProtocolMessage), mailboxMessage);
+            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, routeMessage);
 
-            playerManager.ReceiveFrontendMessage(client, clientCredentials);
             return true;
         }
 
@@ -166,26 +164,20 @@ namespace MHServerEmu.Frontend
             var initialClientHandshake = message.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
             if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as IFrontendService;
-            if (playerManager == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the player manager");
-
-            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IFrontendService;
-            if (groupingManager == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to connect to the grouping manager");
-
             Logger.Trace($"Received InitialClientHandshake for {initialClientHandshake.ServerType}");
 
             if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && client.FinishedPlayerManagerHandshake == false)
-                playerManager.ReceiveFrontendMessage(client, initialClientHandshake);
+                client.FinishedPlayerManagerHandshake = true;
             else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && client.FinishedGroupingManagerHandshake == false)
-                groupingManager.ReceiveFrontendMessage(client, initialClientHandshake);
+                client.FinishedGroupingManagerHandshake = true;
 
             // Add the player to a game when both handshakes are finished
             // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
             if (client.FinishedPlayerManagerHandshake && client.FinishedGroupingManagerHandshake)
             {
-                // Add to the player manager first to handle duplicate login if there is one
-                playerManager.AddFrontendClient(client);
-                groupingManager.AddFrontendClient(client);
+                GameServiceProtocol.AddClient addClient = new(client);
+                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, addClient);
+                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, addClient);
             }
 
             return true;
