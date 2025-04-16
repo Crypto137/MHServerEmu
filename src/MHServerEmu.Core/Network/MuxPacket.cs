@@ -77,7 +77,7 @@ namespace MHServerEmu.Core.Network
 
                         CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
                         while (cis.IsAtEnd == false)
-                            _messagePackageList.Add(new(cis, MuxId));
+                            _messagePackageList.Add(new(cis));
 
                         BufferPool.Return(buffer);
                     }

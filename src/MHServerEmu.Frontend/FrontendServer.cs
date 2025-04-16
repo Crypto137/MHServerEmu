@@ -14,7 +14,7 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private readonly ConcurrentQueue<(FrontendClient, MessagePackage)> _pendingMessageQueue = new();
+        private readonly ConcurrentQueue<(FrontendClient, ushort, MessagePackage)> _pendingMessageQueue = new();
 
         #region IGameService Implementation
 
@@ -35,7 +35,7 @@ namespace MHServerEmu.Frontend
                 {
                     while (_pendingMessageQueue.TryDequeue(out var pendingMessage))
                     {
-                        HandlePendingMessage(pendingMessage.Item1, pendingMessage.Item2);
+                        HandlePendingMessage(pendingMessage.Item1, pendingMessage.Item2, pendingMessage.Item3);
                     }
                 }
                 else
@@ -69,11 +69,12 @@ namespace MHServerEmu.Frontend
         private void OnRouteMessages(in GameServiceProtocol.RouteMessages routeMessages)
         {
             ITcpClient tcpClient = routeMessages.Client;
+            ushort muxId = routeMessages.MuxId;
             IReadOnlyList<MessagePackage> messages = routeMessages.Messages;
 
             int messageCount = messages.Count;
             for (int i = 0; i < messageCount; i++)
-                _pendingMessageQueue.Enqueue(((FrontendClient)tcpClient, messages[i]));
+                _pendingMessageQueue.Enqueue(((FrontendClient)tcpClient, muxId, messages[i]));
         }
 
         #endregion
@@ -110,20 +111,20 @@ namespace MHServerEmu.Frontend
 
         #region Message Handling
 
-        private bool HandlePendingMessage(FrontendClient client, MessagePackage message)
+        private bool HandlePendingMessage(FrontendClient client, ushort muxId, MessagePackage message)
         {
             // Skip messages from clients that have already disconnected
             if (client.Connection.Connected == false)
                 return Logger.WarnReturn(false, $"HandlePendingMessage(): Client [{client}] has already disconnected");
 
             // Route to the destination service if initial frontend business has already been done
-            if (message.MuxId == 1 && client.FinishedPlayerManagerHandshake)
+            if (muxId == 1 && client.FinishedPlayerManagerHandshake)
             {
                 GameServiceProtocol.RouteMessagePackage playerManagerMessage = new(client, message);
                 ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, playerManagerMessage);
                 return true;
             }
-            else if (message.MuxId == 2 && client.FinishedGroupingManagerHandshake)
+            else if (muxId == 2 && client.FinishedGroupingManagerHandshake)
             {
                 GameServiceProtocol.RouteMessagePackage groupingManagerMessage = new(client, message);
                 ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);

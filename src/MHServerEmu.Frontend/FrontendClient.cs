@@ -91,7 +91,7 @@ namespace MHServerEmu.Frontend
                         break;
 
                     case MuxCommand.Data:
-                        GameServiceProtocol.RouteMessages frontendMessage = new(this, packet.MessagePackageList);
+                        GameServiceProtocol.RouteMessages frontendMessage = new(this, packet.MuxId, packet.MessagePackageList);
                         ServerManager.Instance.SendMessageToService(ServerType.FrontendServer, frontendMessage);
                         break;
 

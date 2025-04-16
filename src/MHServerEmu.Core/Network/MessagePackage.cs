@@ -13,7 +13,6 @@ namespace MHServerEmu.Core.Network
 
         private int _cachedSize = -1;
 
-        public ushort MuxId { get; private set; }   // needed for routing, todo: make this more elegant
         public Type Protocol { get; set; }
         public uint Id { get; }
         public byte[] Payload { get; }
@@ -33,17 +32,15 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Decodes a <see cref="MessagePackage"/> from the provided <see cref="CodedInputStream"/>.
         /// </summary>
-        public MessagePackage(CodedInputStream stream, ushort muxId = 0)
+        public MessagePackage(CodedInputStream stream)
         {
             try
             {
-                MuxId = muxId;
                 Id = stream.ReadRawVarint32();
                 Payload = stream.ReadRawBytes((int)stream.ReadRawVarint32());
             }
             catch (Exception e)
             {
-                MuxId = 0;
                 Id = 0;
                 Payload = null;
                 Logger.ErrorException(e, "MessagePackage construction failed");
