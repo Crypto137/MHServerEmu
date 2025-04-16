@@ -1,6 +1,8 @@
-﻿using Google.ProtocolBuffers;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
 {
@@ -17,8 +19,9 @@ namespace MHServerEmu.Core.Network
         public uint Id { get; }
         public byte[] Payload { get; }
         public IMessage Message { get; }
-        public TimeSpan GameTimeReceived { get; set; }
-        public TimeSpan DateTimeReceived { get; set; }
+
+        public TimeSpan GameTimeReceived { get; private set; }
+        public TimeSpan DateTimeReceived { get; private set; }
 
         /// <summary>
         /// Constructs a new <see cref="MessagePackage"/> from an <see cref="IMessage"/>.
@@ -85,6 +88,16 @@ namespace MHServerEmu.Core.Network
             Message.WriteTo(stream);
 
             return true;
+        }
+
+        public void UpdateReceiveTimestamp()
+        {
+            // Only sync messages should be timestamped
+            if (Id != (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest && Id != (uint)ClientToGameServerMessage.NetMessagePing)
+                return;
+
+            GameTimeReceived = Clock.GameTime;
+            DateTimeReceived = Clock.UnixTime;
         }
 
         /// <summary>

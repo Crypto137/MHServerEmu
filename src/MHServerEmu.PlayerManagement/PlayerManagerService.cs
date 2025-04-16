@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -106,11 +105,7 @@ namespace MHServerEmu.PlayerManagement
             message.Protocol = typeof(ClientToGameServerMessage);
 
             // Timestamp sync messages
-            if (message.Id == (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest || message.Id == (uint)ClientToGameServerMessage.NetMessagePing)
-            {
-                message.GameTimeReceived = Clock.GameTime;
-                message.DateTimeReceived = Clock.UnixTime;
-            }
+            message.UpdateReceiveTimestamp();
 
             // Self-handle or route messages
             switch ((ClientToGameServerMessage)message.Id)
