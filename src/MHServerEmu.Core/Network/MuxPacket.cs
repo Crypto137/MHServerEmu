@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Collections;
-using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
@@ -20,7 +19,7 @@ namespace MHServerEmu.Core.Network
     }
 
     /// <summary>
-    /// Represents a packet sent over a mux connection.
+    /// Represents a packet to be sent over a mux connection.
     /// </summary>
     public readonly struct MuxPacket : IPacket
     {
@@ -29,16 +28,10 @@ namespace MHServerEmu.Core.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
-        private readonly List<MessageBuffer> _inboundMessageList = null;
         private readonly List<MessagePackageOut> _outboundMessageList = null;
 
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
-
-        /// <summary>
-        /// Returns an <see cref="IReadOnlyList{T}"/> of <see cref="MessageBuffer"/> instances contained in this <see cref="MuxPacket"/>.
-        /// </summary>
-        public IReadOnlyList<MessageBuffer> InboundMessageList { get => _inboundMessageList; }
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessageBuffer"/> instances.
@@ -49,40 +42,6 @@ namespace MHServerEmu.Core.Network
         /// Returns the full serialized size of this <see cref="MuxPacket"/>.
         /// </summary>
         public int SerializedSize { get => HeaderSize + CalculateSerializedBodySize(); }
-
-        /// <summary>
-        /// Constructs a <see cref="MuxPacket"/> from an incoming data <see cref="Stream"/>.
-        /// </summary>
-        public MuxPacket(Stream stream)
-        {
-            using BinaryReader reader = new(stream, Encoding.UTF8, true);
-
-            try
-            {
-                // 6-byte mux header
-                MuxId = reader.ReadUInt16();
-                int bodyLength = reader.ReadUInt24();
-                Command = (MuxCommand)reader.ReadByte();
-
-                if (bodyLength > TcpClientConnection.ReceiveBufferSize)
-                    throw new InternalBufferOverflowException($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
-
-                if (IsDataPacket)
-                {
-                    _inboundMessageList = new();
-
-                    long bodyEnd = stream.Position + bodyLength;
-                    while (stream.Position < bodyEnd)
-                        _inboundMessageList.Add(new(stream));
-                }
-            }
-            catch (Exception e)
-            {
-                MuxId = 1;      // Set muxId to 1 to avoid triggering the mux channel check that happens later on
-                Command = MuxCommand.Invalid;
-                Logger.Error($"Failed to parse MuxPacket, {e.Message}");
-            }
-        }
 
         /// <summary>
         /// Constructs a <see cref="MuxPacket"/> to be serialized and sent out.

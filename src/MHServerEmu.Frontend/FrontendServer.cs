@@ -102,7 +102,7 @@ namespace MHServerEmu.Frontend
 
         protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)
         {
-            ((FrontendClient)connection.Client).Parse(buffer, length);
+            ((FrontendClient)connection.Client).OnDataReceived(buffer, length);
         }
 
         #endregion

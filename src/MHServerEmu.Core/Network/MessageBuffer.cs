@@ -11,6 +11,7 @@ namespace MHServerEmu.Core.Network
     public readonly struct MessageBuffer
     {
         private const int MaxLength = 4096;     // Client messages should be small
+        public const uint InvalidMessageId = unchecked((uint)-1);
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
@@ -38,7 +39,7 @@ namespace MHServerEmu.Core.Network
             }
             catch (Exception e)
             {
-                MessageId = unchecked((uint)-1);
+                MessageId = InvalidMessageId;
 
                 _length = 0;
                 _buffer = null;
