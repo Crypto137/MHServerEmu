@@ -95,12 +95,12 @@ namespace MHServerEmu.Games.Network.Parsing
             return true;
         }
 
-        public static IEnumerable<MessagePackageIn> LoadMessagesFromPacketFile(string fileName)
+        public static IEnumerable<MessageBuffer> LoadMessagesFromPacketFile(string fileName)
         {
             string path = Path.Combine(PacketDirectory, fileName);
 
             if (File.Exists(path) == false)
-                return Logger.WarnReturn(Array.Empty<MessagePackageIn>(), $"LoadMessagesFromPacketFile(): {fileName} not found");
+                return Logger.WarnReturn(Array.Empty<MessageBuffer>(), $"LoadMessagesFromPacketFile(): {fileName} not found");
 
             using (MemoryStream ms = new(File.ReadAllBytes(path)))
             {
@@ -116,13 +116,13 @@ namespace MHServerEmu.Games.Network.Parsing
             {
                 int packetCount = 0;
 
-                foreach (MessagePackageIn message in packet.InboundMessageList)
+                foreach (MessageBuffer message in packet.InboundMessageList)
                 {
                     writer.Write($"[{packetCount++}] ");
 
                     string messageName = packet.MuxId == 1
-                        ? ((GameServerToClientMessage)message.Id).ToString()
-                        : ((GroupingManagerMessage)message.Id).ToString();
+                        ? ((GameServerToClientMessage)message.MessageId).ToString()
+                        : ((GroupingManagerMessage)message.MessageId).ToString();
                     //Logger.Trace($"Deserializing {messageName}...");
                     writer.WriteLine(messageName);
 

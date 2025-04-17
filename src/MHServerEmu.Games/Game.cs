@@ -198,9 +198,9 @@ namespace MHServerEmu.Games
             NetworkManager.AsyncRemoveClient(client);
         }
 
-        public void PostMessage(ITcpClient client, MessagePackageIn message)
+        public void ReceiveMessageBuffer(ITcpClient client, MessageBuffer messageBuffer)
         {
-            NetworkManager.AsyncPostMessage(client, message);
+            NetworkManager.AsyncReceiveMessageBuffer(client, messageBuffer);
         }
 
         public Entity AllocateEntity(PrototypeId entityRef)

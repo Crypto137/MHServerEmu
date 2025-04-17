@@ -1,5 +1,4 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Network.Tcp;
+﻿using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
@@ -27,17 +26,17 @@ namespace MHServerEmu.Core.Network
             public readonly ITcpClient Client = client;
         }
 
-        public readonly struct RouteMessages(ITcpClient client, ushort muxId, IReadOnlyList<MessagePackageIn> messagePackages) : IGameServiceMessage
+        public readonly struct RouteMessageBufferList(ITcpClient client, ushort muxId, IReadOnlyList<MessageBuffer> messageBufferList) : IGameServiceMessage
         {
             public readonly ITcpClient Client = client;
             public readonly ushort MuxId = muxId;
-            public readonly IReadOnlyList<MessagePackageIn> Messages = messagePackages;
+            public readonly IReadOnlyList<MessageBuffer> MessageBufferList = messageBufferList;
         }
 
-        public readonly struct RouteMessagePackage(ITcpClient client, MessagePackageIn messagePackage) : IGameServiceMessage
+        public readonly struct RouteMessageBuffer(ITcpClient client, MessageBuffer messageBuffer) : IGameServiceMessage
         {
             public readonly ITcpClient Client = client;
-            public readonly MessagePackageIn MessagePackage = messagePackage;
+            public readonly MessageBuffer MessageBuffer = messageBuffer;
         }
 
         public readonly struct RouteMessage(ITcpClient client, Type protocol, MailboxMessage message) : IGameServiceMessage

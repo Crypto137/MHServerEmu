@@ -77,15 +77,15 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Handles an incoming <see cref="MessagePackageIn"/> asynchronously.
+        /// Handles an incoming <see cref="MessageBuffer"/> asynchronously.
         /// </summary>
-        public void AsyncPostMessage(ITcpClient tcpClient, MessagePackageIn message)
+        public void AsyncReceiveMessageBuffer(ITcpClient tcpClient, MessageBuffer messageBuffer)
         {
             // Gazillion's implementation does this in NetworkManager::ConnectionStatus()
 
             // If the message fails to deserialize it means either data got corrupted somehow or we have a hacker trying to mess things up.
             // In both cases it's better to bail out.
-            if (_mailbox.Post(tcpClient, message) == false)
+            if (_mailbox.Post(tcpClient, messageBuffer) == false)
             {
                 Logger.Error($"AsyncPostMessage(): Message deserialization error for data from client, disconnecting. Client: {tcpClient}");
                 tcpClient.Disconnect();

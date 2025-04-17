@@ -17,7 +17,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Constructs a new <see cref="MailboxMessage{TClient}"/>.
         /// </summary>
-        public MailboxMessage(uint id, IMessage message, TimeSpan gameTimeReceived, TimeSpan dateTimeReceived)
+        public MailboxMessage(uint id, IMessage message, TimeSpan gameTimeReceived = default, TimeSpan dateTimeReceived = default)
         {
             Id = id;
             _message = message;

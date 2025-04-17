@@ -7,7 +7,7 @@ using MHServerEmu.Core.System.Time;
 namespace MHServerEmu.Core.Network
 {
     /// <summary>
-    /// Deserializes <see cref="MessagePackageIn"/> instances and stores them as <see cref="MailboxMessage"/> until retrieval.
+    /// Deserializes <see cref="MessageBuffer"/> instances and stores them as <see cref="MailboxMessage"/> until retrieval.
     /// </summary>
     /// <remarks>
     /// This class does asynchronous message handling and should be thread-safe.
@@ -21,18 +21,20 @@ namespace MHServerEmu.Core.Network
         private readonly MessageList _messageList = new();
 
         /// <summary>
-        /// Deserializes the provided <see cref="MessagePackageIn"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
+        /// Deserializes the provided <see cref="MessageBuffer"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
         /// </summary>
-        public bool Post(ITcpClient client, MessagePackageIn messagePackage)
+        public bool Post(ITcpClient client, MessageBuffer messageBuffer)
         {
+            uint messageId = messageBuffer.MessageId;
+
             // HACK: Timestamp client sync messages
             TimeSpan gameTimeReceived = default;
             TimeSpan dateTimeReceived = default;
 
             if (typeof(T) == typeof(ClientToGameServerMessage))
             {
-                if (messagePackage.Id == (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest ||
-                    messagePackage.Id == (uint)ClientToGameServerMessage.NetMessagePing)
+                if (messageId == (uint)ClientToGameServerMessage.NetMessageSyncTimeRequest ||
+                    messageId == (uint)ClientToGameServerMessage.NetMessagePing)
                 {
                     gameTimeReceived = Clock.GameTime;
                     dateTimeReceived = Clock.UnixTime;
@@ -40,11 +42,11 @@ namespace MHServerEmu.Core.Network
             }
 
             // Deserialize
-            IMessage message = messagePackage.Deserialize<T>();
+            IMessage message = messageBuffer.Deserialize<T>();
             if (message == null) return Logger.ErrorReturn(false, "Post(): Message deserialization failed");
 
             // CoreNetworkMailbox::OnDeserializeMessage()
-            MailboxMessage mailboxMessage = new(messagePackage.Id, message, gameTimeReceived, dateTimeReceived);
+            MailboxMessage mailboxMessage = new(messageId, message, gameTimeReceived, dateTimeReceived);
 
             lock (_messageList)
                 _messageList.Enqueue(client, mailboxMessage);

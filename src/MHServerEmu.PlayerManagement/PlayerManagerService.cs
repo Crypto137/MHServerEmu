@@ -89,8 +89,8 @@ namespace MHServerEmu.PlayerManagement
                     OnRemoveClient(removeClient);
                     break;
 
-                case GameServiceProtocol.RouteMessagePackage routeMessagePackage:
-                    OnRouteMessagePackage(routeMessagePackage);
+                case GameServiceProtocol.RouteMessageBuffer routeMessagePackage:
+                    OnRouteMessageBuffer(routeMessagePackage);
                     break;
 
                 case GameServiceProtocol.RouteMessage routeMessage:
@@ -119,15 +119,15 @@ namespace MHServerEmu.PlayerManagement
             RemoveClient((FrontendClient)removeClient.Client);
         }
 
-        private void OnRouteMessagePackage(in GameServiceProtocol.RouteMessagePackage routeMessagePackage)
+        private void OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
         {
-            FrontendClient client = (FrontendClient)routeMessagePackage.Client;
-            MessagePackageIn message = routeMessagePackage.MessagePackage;
+            FrontendClient client = (FrontendClient)routeMessageBuffer.Client;
+            MessageBuffer messageBuffer = routeMessageBuffer.MessageBuffer;
 
             // Self-handle or route messages
-            switch ((ClientToGameServerMessage)message.Id)
+            switch ((ClientToGameServerMessage)messageBuffer.MessageId)
             {
-                case ClientToGameServerMessage.NetMessageReadyForGameJoin:  OnReadyForGameJoin(client, message); break;
+                case ClientToGameServerMessage.NetMessageReadyForGameJoin:  OnReadyForGameJoin(client, messageBuffer); break;
 
                 default:
                     // Route the rest of messages to the game the player is currently in
@@ -135,11 +135,11 @@ namespace MHServerEmu.PlayerManagement
 
                     if (game == null)
                     {
-                        Logger.Warn($"Handle(): Cannot route {(ClientToGameServerMessage)message.Id}, the player {client.Session.Account} is not in a game");
+                        Logger.Warn($"Handle(): Cannot route {(ClientToGameServerMessage)messageBuffer.MessageId}, the player {client.Session.Account} is not in a game");
                         return;
                     }
 
-                    game.PostMessage(client, message);
+                    game.ReceiveMessageBuffer(client, messageBuffer);
                     break;
             }
         }
@@ -457,19 +457,11 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.
         /// </summary>
-        private bool OnReadyForGameJoin(ITcpClient client, MessagePackageIn message)
+        private bool OnReadyForGameJoin(ITcpClient client, MessageBuffer messageBuffer)
         {
-            // NetMessageReadyForGameJoin contains a bug where wipesDataIfMismatchedInDb is marked as required but the client
-            // doesn't include it. To avoid an exception we build a partial message from the data we receive.
-            NetMessageReadyForGameJoin readyForGameJoin;
-            try
-            {
-                readyForGameJoin = NetMessageReadyForGameJoin.CreateBuilder().MergeFrom(message.Payload).BuildPartial();
-            }
-            catch
-            {
-                return Logger.ErrorReturn(false, "OnReadyForGameJoin(): Failed to deserialize");
-            }
+            // There is a client-side bug with NetMessageReadyForGameJoin that requires special handling, see DeserializeReadyForGameJoin() for more info.
+            var readyForGameJoin = messageBuffer.DeserializeReadyForGameJoin();
+            if (readyForGameJoin == null) return Logger.WarnReturn(false, "OnReadyForGameJoin(): readyForGameJoin == null");
 
             Logger.Info($"Received NetMessageReadyForGameJoin from client [{client}], logging in");
             //Logger.Trace(readyForGameJoin.ToString());

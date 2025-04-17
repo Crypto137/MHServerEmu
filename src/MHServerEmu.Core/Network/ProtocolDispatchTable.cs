@@ -15,7 +15,10 @@ namespace MHServerEmu.Core.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private static readonly Assembly ProtocolAssembly = typeof(NetMessageReadyAndLoggedIn).Assembly;
-        private static readonly Type[] ParseMethodArgumentTypes = [typeof(byte[])];
+
+        // All ParseFrom() implementations in protobuf-csharp-port are wrappers that still use CodedInputStream,
+        // so it's better to just use the CodedInputStream based one to avoid unnecessary indirection.
+        private static readonly Type[] ParseMethodArgumentTypes = [typeof(ICodedInputStream)];
 
         private static readonly Type[] ProtocolEnumTypes =
         [
@@ -39,7 +42,7 @@ namespace MHServerEmu.Core.Network
 
         private bool _isInitialized;
 
-        public delegate IMessage ParseMessage(byte[] data);
+        public delegate IMessage ParseMessage(ICodedInputStream cis);
 
         public static ProtocolDispatchTable Instance { get; } = new();
 

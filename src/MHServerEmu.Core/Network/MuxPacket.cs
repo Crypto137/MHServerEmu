@@ -29,19 +29,19 @@ namespace MHServerEmu.Core.Network
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
-        private readonly List<MessagePackageIn> _inboundMessageList = null;
+        private readonly List<MessageBuffer> _inboundMessageList = null;
         private readonly List<MessagePackageOut> _outboundMessageList = null;
 
         public ushort MuxId { get; }
         public MuxCommand Command { get; }
 
         /// <summary>
-        /// Returns an <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackageIn"/> instances contained in this <see cref="MuxPacket"/>.
+        /// Returns an <see cref="IReadOnlyList{T}"/> of <see cref="MessageBuffer"/> instances contained in this <see cref="MuxPacket"/>.
         /// </summary>
-        public IReadOnlyList<MessagePackageIn> InboundMessageList { get => _inboundMessageList; }
+        public IReadOnlyList<MessageBuffer> InboundMessageList { get => _inboundMessageList; }
 
         /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessagePackageIn"/> instances.
+        /// Returns <see langword="true"/> if this <see cref="MuxPacket"/> contains <see cref="MessageBuffer"/> instances.
         /// </summary>
         public bool IsDataPacket { get => Command == MuxCommand.Data || Command == MuxCommand.ConnectWithData; }
 
@@ -71,14 +71,9 @@ namespace MHServerEmu.Core.Network
                 {
                     _inboundMessageList = new();
 
-                    byte[] buffer = BufferPool.Rent(bodyLength);
-                    reader.Read(buffer, 0, bodyLength);
-
-                    CodedInputStream cis = CodedInputStream.CreateInstance(buffer, 0, bodyLength);
-                    while (cis.IsAtEnd == false)
-                        _inboundMessageList.Add(new(cis));
-
-                    BufferPool.Return(buffer);
+                    long bodyEnd = stream.Position + bodyLength;
+                    while (stream.Position < bodyEnd)
+                        _inboundMessageList.Add(new(stream));
                 }
             }
             catch (Exception e)
@@ -115,7 +110,7 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Adds an <see cref="IEnumerable"/> collection of <see cref="MessagePackageIn"/> instances to this <see cref="MuxPacket"/>.
+        /// Adds an <see cref="IEnumerable"/> collection of <see cref="MessageBuffer"/> instances to this <see cref="MuxPacket"/>.
         /// </summary>
         public bool AddMessageList(List<IMessage> messageList)
         {

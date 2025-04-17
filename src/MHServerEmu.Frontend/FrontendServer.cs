@@ -14,7 +14,7 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
-        private readonly ConcurrentQueue<(FrontendClient, ushort, MessagePackageIn)> _pendingMessageQueue = new();
+        private readonly ConcurrentQueue<(FrontendClient, ushort, MessageBuffer)> _pendingMessageQueue = new();
 
         #region IGameService Implementation
 
@@ -51,7 +51,7 @@ namespace MHServerEmu.Frontend
         {
             switch (message)
             {
-                case GameServiceProtocol.RouteMessages routeMessages:
+                case GameServiceProtocol.RouteMessageBufferList routeMessages:
                     OnRouteMessages(routeMessages);
                     break;
 
@@ -66,11 +66,11 @@ namespace MHServerEmu.Frontend
             return $"Connections: {ConnectionCount}";
         }
 
-        private void OnRouteMessages(in GameServiceProtocol.RouteMessages routeMessages)
+        private void OnRouteMessages(in GameServiceProtocol.RouteMessageBufferList routeMessages)
         {
             ITcpClient tcpClient = routeMessages.Client;
             ushort muxId = routeMessages.MuxId;
-            IReadOnlyList<MessagePackageIn> messages = routeMessages.Messages;
+            IReadOnlyList<MessageBuffer> messages = routeMessages.MessageBufferList;
 
             int messageCount = messages.Count;
             for (int i = 0; i < messageCount; i++)
@@ -109,7 +109,7 @@ namespace MHServerEmu.Frontend
 
         #region Message Handling
 
-        private bool HandlePendingMessage(FrontendClient client, ushort muxId, MessagePackageIn message)
+        private bool HandlePendingMessage(FrontendClient client, ushort muxId, MessageBuffer message)
         {
             // Skip messages from clients that have already disconnected
             if (client.Connection.Connected == false)
@@ -118,24 +118,24 @@ namespace MHServerEmu.Frontend
             // Route to the destination service if initial frontend business has already been done
             if (muxId == 1 && client.FinishedPlayerManagerHandshake)
             {
-                GameServiceProtocol.RouteMessagePackage playerManagerMessage = new(client, message);
+                GameServiceProtocol.RouteMessageBuffer playerManagerMessage = new(client, message);
                 ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, playerManagerMessage);
                 return true;
             }
             else if (muxId == 2 && client.FinishedGroupingManagerHandshake)
             {
-                GameServiceProtocol.RouteMessagePackage groupingManagerMessage = new(client, message);
+                GameServiceProtocol.RouteMessageBuffer groupingManagerMessage = new(client, message);
                 ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
                 return true;
             }
 
             // Self-handling for initial connection
-            switch ((FrontendProtocolMessage)message.Id)
+            switch ((FrontendProtocolMessage)message.MessageId)
             {
                 case FrontendProtocolMessage.ClientCredentials:         OnClientCredentials(client, message); break;
                 case FrontendProtocolMessage.InitialClientHandshake:    OnInitialClientHandshake(client, message); break;
 
-                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)message.Id} [{message.Id}]"); break;
+                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)message.MessageId} [{message.MessageId}]"); break;
             }
 
             return true;
@@ -144,12 +144,12 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Handles <see cref="ClientCredentials"/>.
         /// </summary>
-        private bool OnClientCredentials(FrontendClient client, MessagePackageIn message)
+        private bool OnClientCredentials(FrontendClient client, MessageBuffer messageBuffer)
         {
-            var clientCredentials = message.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
+            var clientCredentials = messageBuffer.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
             if (clientCredentials == null) return Logger.WarnReturn(false, $"OnClientCredentials(): Failed to retrieve message");
 
-            MailboxMessage mailboxMessage = new(message.Id, clientCredentials, default, default);
+            MailboxMessage mailboxMessage = new(messageBuffer.MessageId, clientCredentials);
             GameServiceProtocol.RouteMessage routeMessage = new(client, typeof(FrontendProtocolMessage), mailboxMessage);
             ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, routeMessage);
 
@@ -159,9 +159,9 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Handles <see cref="InitialClientHandshake"/>.
         /// </summary>
-        private bool OnInitialClientHandshake(FrontendClient client, MessagePackageIn message)
+        private bool OnInitialClientHandshake(FrontendClient client, MessageBuffer messageBuffer)
         {
-            var initialClientHandshake = message.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
+            var initialClientHandshake = messageBuffer.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
             if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
 
             Logger.Trace($"Received InitialClientHandshake for {initialClientHandshake.ServerType}");
