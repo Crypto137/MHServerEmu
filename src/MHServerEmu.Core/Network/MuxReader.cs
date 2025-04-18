@@ -61,7 +61,7 @@ namespace MHServerEmu.Core.Network
 
             while (offset < length)
             {
-                int bytesToRead = Math.Min(_stateBytes, length - offset);
+                int bytesToRead = Math.Min(_stateBytes - (int)_readBufferStream.Position, length - offset);
 
                 _readBufferStream.Write(buffer, offset, bytesToRead);
 
