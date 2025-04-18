@@ -1,6 +1,4 @@
-﻿using System.Text;
-using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
+﻿using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Network.Tcp;
@@ -15,6 +13,8 @@ namespace MHServerEmu.Frontend
     public class FrontendClient : ITcpClient, IDBAccountOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly MuxReader _muxReader;
 
         private ulong _gameId;
 
@@ -37,6 +37,8 @@ namespace MHServerEmu.Frontend
         /// </summary>
         public FrontendClient(TcpClientConnection connection)
         {
+            _muxReader = new(this);
+
             Connection = connection;
         }
 
@@ -52,24 +54,8 @@ namespace MHServerEmu.Frontend
         /// Parses received data.
         /// </summary>
         public void OnDataReceived(byte[] buffer, int length)
-        {            
-            using MemoryStream ms = new(buffer);
-
-            // NOTE: We may receive multiple mux packets at once, so we need to parse data in a loop.
-            while (ms.Position < length)
-            {
-                try
-                {
-                    ParseData(ms);
-                }
-                catch (Exception e)
-                {
-                    // If at any point something goes wrong, we disconnect.
-                    Logger.ErrorException(e, $"OnDataReceived(): Failed to parse data from {Connection}, disconnecting...");
-                    Disconnect();
-                    return;
-                }
-            }
+        {
+            _muxReader.HandleIncomingData(buffer, length);
         }
 
         /// <summary>
@@ -106,72 +92,5 @@ namespace MHServerEmu.Frontend
         }
 
         #endregion
-
-        private void ParseData(Stream stream)
-        {
-            // NOTE: This is intended to be used in a try/catch block, so we throw exceptions instead of returning false.
-            // TODO: Move this from Frontend back to Core.
-
-            using BinaryReader reader = new(stream, Encoding.UTF8, true);
-
-            ushort muxId = reader.ReadUInt16();
-            int bodyLength = reader.ReadUInt24();
-            MuxCommand command = (MuxCommand)reader.ReadByte();
-
-            // Validate input - be extra careful here because this is the most obvious attack vector for malicious users
-
-            if (muxId != 1 && muxId != 2)
-                throw new($"Received a MuxPacket with unexpected mux channel {muxId}.");
-
-            // ConnectWithData can theoretically also include a body, but in practice the client should never send ConnectWithData messages.
-            if (bodyLength > 0 && command != MuxCommand.Data)
-                throw new($"Received a non-data MuxPacket with a body.");
-
-            if (bodyLength > TcpClientConnection.ReceiveBufferSize)
-                throw new($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
-
-            switch (command)
-            {
-                case MuxCommand.Connect:
-                    Logger.Trace($"Connected on mux channel {muxId}");
-                    Connection.Send(new MuxPacket(muxId, MuxCommand.ConnectAck));
-                    break;
-
-                case MuxCommand.ConnectAck:
-                    throw new("Received a ConnectAck MuxPacket from a client, which is not supposed to happen.");
-
-                case MuxCommand.Disconnect:
-                    Logger.Trace($"Disconnected from mux channel {muxId}");
-                    Disconnect();
-                    break;
-
-                case MuxCommand.ConnectWithData:
-                    throw new("Received a ConnectWithData MuxPacket from a client, which is not supposed to happen.");
-
-                case MuxCommand.Data:
-                    long bodyEnd = stream.Position + bodyLength;
-
-                    // TODO: Combine fragmented packets.
-                    if (bodyEnd > stream.Length)
-                        throw new Exception("Received an incomplete data packet.");
-
-                    List<MessageBuffer> messageBufferList = new();
-                    while (stream.Position < bodyEnd)
-                    {
-                        MessageBuffer messageBuffer = new(stream);
-                        if (messageBuffer.MessageId == MessageBuffer.InvalidMessageId)
-                            throw new("Failed to read a MessageBuffer from a data packet.");
-
-                        messageBufferList.Add(messageBuffer);
-                    }
-
-                    GameServiceProtocol.RouteMessageBufferList frontendMessage = new(this, muxId, messageBufferList);
-                    ServerManager.Instance.SendMessageToService(ServerType.FrontendServer, frontendMessage);
-                    break;
-
-                default:
-                    throw new($"Received a malformed MuxPacket with command {command}.");
-            }
-        }
     }
 }

@@ -8,22 +8,12 @@ using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
-    public enum MuxCommand
-    {
-        Invalid = 0x00,
-        Connect = 0x01,
-        ConnectAck = 0x02,
-        Disconnect = 0x03,
-        ConnectWithData = 0x04,
-        Data = 0x05
-    }
-
     /// <summary>
     /// Represents a packet to be sent over a mux connection.
     /// </summary>
     public readonly struct MuxPacket : IPacket
     {
-        private const int HeaderSize = 6;
+        public const int HeaderSize = 6;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
