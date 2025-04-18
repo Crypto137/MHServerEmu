@@ -27,6 +27,9 @@ namespace MHServerEmu.Core.Network
         private Queue<ITcpClient> _addClientQueue = new();
         private Queue<ITcpClient> _removeClientQueue = new();
 
+        private SpinLock _addClientLock = new(false);
+        private SpinLock _removeClientLock = new(false);
+
         public NetworkManager()
         {
         }
@@ -63,8 +66,17 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void AsyncAddClient(ITcpClient client)
         {
-            lock (_asyncAddClientQueue)
+            bool lockTaken = false;
+            try
+            {
+                _addClientLock.Enter(ref lockTaken);
                 _asyncAddClientQueue.Enqueue(client);
+            }
+            finally
+            {
+                if (lockTaken)
+                    _addClientLock.Exit(false);
+            }
         }
 
         /// <summary>
@@ -72,8 +84,17 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void AsyncRemoveClient(ITcpClient client)
         {
-            lock (_asyncRemoveClientQueue)
+            bool lockTaken = false;
+            try
+            {
+                _removeClientLock.Enter(ref lockTaken);
                 _asyncRemoveClientQueue.Enqueue(client);
+            }
+            finally
+            {
+                if (lockTaken)
+                    _removeClientLock.Exit(false);
+            }
         }
 
         /// <summary>
@@ -134,8 +155,17 @@ namespace MHServerEmu.Core.Network
         private void ProcessAsyncAddedClients()
         {
             // Swap queues so that we can continue queueing clients while we process
-            lock (_asyncAddClientQueue)
+            bool lockTaken = false;
+            try
+            {
+                _addClientLock.Enter(ref lockTaken);
                 (_asyncAddClientQueue, _addClientQueue) = (_addClientQueue, _asyncAddClientQueue);
+            }
+            finally
+            {
+                if (lockTaken)
+                    _addClientLock.Exit(false);
+            }                
 
             while (_addClientQueue.Count > 0)
             {
@@ -147,8 +177,17 @@ namespace MHServerEmu.Core.Network
         private void RemoveDisconnectedClients()
         {
             // Swap queues so that we can continue queueing clients while we process
-            lock (_asyncRemoveClientQueue)
+            bool lockTaken = false;
+            try
+            {
+                _removeClientLock.Enter(ref lockTaken);
                 (_asyncRemoveClientQueue, _removeClientQueue) = (_removeClientQueue, _asyncRemoveClientQueue);
+            }
+            finally
+            {
+                if (lockTaken)
+                    _removeClientLock.Exit(false);
+            }
 
             while (_removeClientQueue.Count > 0)
             {

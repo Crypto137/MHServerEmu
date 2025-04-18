@@ -20,6 +20,8 @@ namespace MHServerEmu.Core.Network
 
         private readonly MessageList _messageList = new();
 
+        private SpinLock _lock = new(false);
+
         /// <summary>
         /// Deserializes the provided <see cref="MessageBuffer"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
         /// </summary>
@@ -48,8 +50,17 @@ namespace MHServerEmu.Core.Network
             // CoreNetworkMailbox::OnDeserializeMessage()
             MailboxMessage mailboxMessage = new(messageId, message, gameTimeReceived, dateTimeReceived);
 
-            lock (_messageList)
+            bool lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
                 _messageList.Enqueue(client, mailboxMessage);
+            }
+            finally
+            {
+                if (lockTaken)
+                    _lock.Exit(false);
+            } 
 
             return true;
         }
@@ -59,8 +70,17 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void GetAllMessages(MessageList outputList)
         {
-            lock (_messageList)
+            bool lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
                 outputList.TransferFrom(_messageList);
+            }
+            finally
+            {
+                if (lockTaken)
+                    _lock.Exit(false);
+            }
         }
 
         /// <summary>
@@ -68,8 +88,17 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void Clear()
         {
-            lock (_messageList)
+            bool lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
                 _messageList.Clear();
+            }
+            finally
+            {
+                if (lockTaken)
+                    _lock.Exit(false);
+            }
         }
     }
 }
