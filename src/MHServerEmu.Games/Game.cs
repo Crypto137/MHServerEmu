@@ -150,7 +150,7 @@ namespace MHServerEmu.Games
             IsRunning = true;
 
             // Initialize and start game thread
-            _gameThread = new(GameLoop) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            _gameThread = new(GameLoop) { Name = $"Game [{this}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             _gameThread.Start();
 
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");

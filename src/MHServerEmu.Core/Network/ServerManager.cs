@@ -123,7 +123,7 @@ namespace MHServerEmu.Core.Network
                 if (_serviceThreads[i] != null)
                     Logger.Warn($"RunServices(): {(ServerType)i} service is already running");
 
-                _serviceThreads[i] = new(_services[i].Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+                _serviceThreads[i] = new(_services[i].Run) { Name = $"Service [{(ServerType)i}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
                 _serviceThreads[i].Start();
             }
         }
