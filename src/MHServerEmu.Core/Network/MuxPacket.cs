@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections;
 using Google.ProtocolBuffers;
-using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Tcp;
@@ -13,8 +12,6 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public readonly struct MuxPacket : IPacket
     {
-        public const int HeaderSize = 6;
-
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly ArrayPool<byte> BufferPool = ArrayPool<byte>.Create();
 
@@ -31,7 +28,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Returns the full serialized size of this <see cref="MuxPacket"/>.
         /// </summary>
-        public int SerializedSize { get => HeaderSize + CalculateSerializedBodySize(); }
+        public int SerializedSize { get => MuxHeader.Size + CalculateSerializedDataSize(); }
 
         /// <summary>
         /// Constructs a <see cref="MuxPacket"/> to be serialized and sent out.
@@ -91,24 +88,20 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public int Serialize(Stream stream)
         {
-            int bodySize = CalculateSerializedBodySize();
+            int dataSize = CalculateSerializedDataSize();
 
-            using (BinaryWriter writer = new(stream))
-            {
-                writer.Write(MuxId);
-                writer.WriteUInt24(bodySize);
-                writer.Write((byte)Command);
+            MuxHeader header = MuxHeader.FromData(MuxId, dataSize, Command);
+            header.WriteTo(stream);
 
-                SerializeBody(stream);
-            }
+            SerializeData(stream);
 
-            return HeaderSize + bodySize;
+            return MuxHeader.Size + dataSize;
         }
 
         /// <summary>
         /// Returns the combined serialized size of all messages in this <see cref="MuxPacket"/>.
         /// </summary>
-        private int CalculateSerializedBodySize()
+        private int CalculateSerializedDataSize()
         {
             int bodySize = 0;
 
@@ -124,14 +117,14 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Serializes all messages contained in this <see cref="MuxPacket"/> to a <see cref="Stream"/>.
         /// </summary>
-        private bool SerializeBody(Stream stream)
+        private bool SerializeData(Stream stream)
         {
             // If this is not a data packet we don't need to write a body
             if (IsDataPacket == false)
                 return false;
 
             if (_outboundMessageList.Count == 0)
-                return Logger.WarnReturn(false, "SerializeBody(): Data packet contains no messages");
+                return Logger.WarnReturn(false, "SerializeData(): Data packet contains no messages");
 
             // Use pooled buffers for coded output streams with reflection hackery, see ProtobufHelper for more info.
             byte[] buffer = BufferPool.Rent(4096);

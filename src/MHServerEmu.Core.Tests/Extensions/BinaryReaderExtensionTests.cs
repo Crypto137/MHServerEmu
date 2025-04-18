@@ -5,20 +5,6 @@ namespace MHServerEmu.Core.Tests.Extensions
     public class BinaryReaderExtensionTests
     {
         [Theory]
-        [InlineData("010000", 1)]
-        [InlineData("4E61BC", 12345678)]
-        [InlineData("FFFFFF", 16777215)]
-        public void ReadUInt24_HexString_ReturnsExpectedValue(string hexString, int expectedValue)
-        {
-            using (MemoryStream ms = new(Convert.FromHexString(hexString)))
-            using (BinaryReader reader = new(ms))
-            {
-                int value = reader.ReadUInt24();
-                Assert.Equal(expectedValue, value);
-            }
-        }
-
-        [Theory]
         [InlineData("0000", "")]
         [InlineData("060042414E414E41", "BANANA")]
         [InlineData("1E00616C6C20796F75722062617365206172652062656C6F6E6720746F207573", "all your base are belong to us")]

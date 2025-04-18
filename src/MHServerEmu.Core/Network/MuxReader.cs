@@ -1,20 +1,8 @@
-﻿using System.Text;
-using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
-    public enum MuxCommand : byte
-    {
-        Invalid,
-        Connect,
-        ConnectAck,
-        Disconnect,
-        ConnectWithData,
-        Data
-    }
-
     public enum MuxReaderState
     { 
         ReadingHeader,
@@ -80,7 +68,7 @@ namespace MHServerEmu.Core.Network
             _messageBufferList.Clear();
 
             _state = MuxReaderState.ReadingHeader;
-            _stateBytes = MuxPacket.HeaderSize;
+            _stateBytes = MuxHeader.Size;
 
             _muxId = 0;
         }
@@ -125,29 +113,25 @@ namespace MHServerEmu.Core.Network
         {
             // NOTE: This is intended to be used in a try/catch block, so we throw exceptions instead of returning false.
 
-            using BinaryReader reader = new(_readBufferStream, Encoding.UTF8, true);
-
-            ushort muxId = reader.ReadUInt16();
-            int bodyLength = reader.ReadUInt24();
-            MuxCommand command = (MuxCommand)reader.ReadByte();
+            MuxHeader header = MuxHeader.FromStream(_readBufferStream);
 
             // Validate input - be extra careful here because this is the most obvious attack vector for malicious users
 
-            if (muxId != 1 && muxId != 2)
-                throw new($"Received a MuxPacket with unexpected mux channel {muxId}.");
+            if (header.MuxId != 1 && header.MuxId != 2)
+                throw new($"Received a MuxPacket with unexpected mux channel {header.MuxId}.");
 
-            // ConnectWithData can theoretically also include a body, but in practice the client should never send ConnectWithData messages.
-            if (bodyLength > 0 && command != MuxCommand.Data)
-                throw new($"Received a non-data MuxPacket with a body.");
+            // ConnectWithData can theoretically also include data, but in practice the client should never send ConnectWithData messages.
+            if (header.DataSize > 0 && header.Command != MuxCommand.Data)
+                throw new($"Received a non-data MuxPacket with data.");
 
-            if (bodyLength > TcpClientConnection.ReceiveBufferSize)
-                throw new($"MuxPacket body length {bodyLength} exceeds receive buffer size {TcpClientConnection.ReceiveBufferSize}.");
+            if (header.DataSize > ReadBufferSize)
+                throw new($"MuxPacket data size {header.DataSize} exceeds read buffer size {ReadBufferSize}.");
 
-            switch (command)
+            switch (header.Command)
             {
                 case MuxCommand.Connect:
-                    Logger.Trace($"Client [{_client}] connected on mux channel {muxId}");
-                    _client.Connection.Send(new MuxPacket(muxId, MuxCommand.ConnectAck));
+                    Logger.Trace($"Client [{_client}] connected on mux channel {header.MuxId}");
+                    _client.Connection.Send(new MuxPacket(header.MuxId, MuxCommand.ConnectAck));
                     Reset();
                     break;
 
@@ -155,7 +139,7 @@ namespace MHServerEmu.Core.Network
                     throw new($"Received a ConnectAck command from client [{_client}], which is not supposed to happen.");
 
                 case MuxCommand.Disconnect:
-                    Logger.Trace($"Client [{_client}] disconnected from mux channel {muxId}");
+                    Logger.Trace($"Client [{_client}] disconnected from mux channel {header.MuxId}");
                     Reset();
                     break;
 
@@ -166,13 +150,13 @@ namespace MHServerEmu.Core.Network
                     _readBufferStream.SetLength(0);
 
                     _state = MuxReaderState.ReadingData;
-                    _stateBytes = bodyLength;
+                    _stateBytes = header.DataSize;
 
-                    _muxId = muxId;
+                    _muxId = header.MuxId;
                     break;
 
                 default:
-                    throw new($"Received unknown mux command {command} from client [{_client}].");
+                    throw new($"Received unknown mux command {header.Command} from client [{_client}].");
             }
         }
 
