@@ -565,6 +565,7 @@ namespace MHServerEmu.Games.Network
                 .Build();
 
             SendMessage(reply);
+            FlushMessages();    // Send the reply ASAP for more accurate timing
             return true;
         }
 
