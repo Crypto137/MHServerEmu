@@ -9,9 +9,9 @@ using MHServerEmu.DatabaseAccess.Models;
 namespace MHServerEmu.Frontend
 {
     /// <summary>
-    /// Represents an <see cref="ITcpClient"/> connected to the <see cref="FrontendServer"/>.
+    /// An implementation of <see cref="IFrontendClient"/> backed by a <see cref="TcpServer"/>.
     /// </summary>
-    public class FrontendClient : ITcpClient, IDBAccountOwner
+    public class FrontendClient : IFrontendClient, ITcpClient, IDBAccountOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -51,11 +51,17 @@ namespace MHServerEmu.Frontend
             return $"Account={Session.Account}, SessionId=0x{Session.Id:X}";
         }
 
-        #region ITcpClient Implementation
+        #region IFrontendClient Implementation
 
         public void Disconnect()
         {
             Connection.Disconnect();
+        }
+
+        public void SendMuxCommand(ushort muxId, MuxCommand command)
+        {
+            MuxPacket packet = new(muxId, command);
+            Connection.Send(packet);
         }
 
         public void SendMessage(ushort muxId, IMessage message)

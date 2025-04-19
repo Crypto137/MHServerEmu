@@ -5,7 +5,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -41,7 +40,7 @@ namespace MHServerEmu.Games.Network
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly ITcpClient _tcpClient;
+        private readonly IFrontendClient _frontendClient;
         private readonly DBAccount _dbAccount;
 
         private bool _waitingForRegionIsAvailableResponse = false;
@@ -64,13 +63,13 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
         /// </summary>
-        public PlayerConnection(Game game, ITcpClient tcpClient) : base(MuxChannel, tcpClient)
+        public PlayerConnection(Game game, IFrontendClient frontendClient) : base(MuxChannel, frontendClient)
         {
             Game = game;
 
-            // The ITcpClient used by PlayerConnection also needs to implement IDBAccountOwner
-            _tcpClient = tcpClient;
-            _dbAccount = ((IDBAccountOwner)tcpClient).Account;
+            // IFrontendClient used by PlayerConnection also needs to implement IDBAccountOwner
+            _frontendClient = frontendClient;
+            _dbAccount = ((IDBAccountOwner)frontendClient).Account;
 
             AOI = new(this);
             WorldView = new(this);
@@ -278,9 +277,9 @@ namespace MHServerEmu.Games.Network
 
             // Remove game id to let the player manager know that it is now safe to write to the database.
             // TODO: Replace this with a player manager message.
-            _tcpClient.GameId = 0;
+            _frontendClient.GameId = 0;
 
-            Logger.Info($"Removed ITcpClient [{_tcpClient}] from game [{Game}]");
+            Logger.Info($"Removed frontend client [{_frontendClient}] from game [{Game}]");
         }
 
         #endregion
@@ -496,8 +495,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageReportPlayer:                                                                          // 66
                 case ClientToGameServerMessage.NetMessageChatBanVote:                                                                           // 67
                 case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:                                                        // 106, TODO: handle this in game
-                    GameServiceProtocol.RouteMessage groupingManagerMessage = new(_tcpClient, typeof(ClientToGameServerMessage), message);
-                    ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
+                    RouteMessageToService(ServerType.GroupingManager, message);
                     break;
 
                 // Billing
@@ -506,20 +504,24 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                                                                    // 70
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
-                    GameServiceProtocol.RouteMessage billingMessage = new(_tcpClient, typeof(ClientToGameServerMessage), message);
-                    ServerManager.Instance.SendMessageToService(ServerType.Billing, billingMessage);
+                    RouteMessageToService(ServerType.Billing, message);
                     break;
 
                 // Leaderboards
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:                                                                    // 157
                 case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:                                                // 158
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:                                                          // 159
-                    GameServiceProtocol.RouteMessage leaderboardMessage = new(_tcpClient, typeof(ClientToGameServerMessage), message);
-                    ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, leaderboardMessage);
+                    RouteMessageToService(ServerType.Leaderboard, message);
                     break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private void RouteMessageToService(ServerType serverType, in MailboxMessage mailboxMessage)
+        {
+            GameServiceProtocol.RouteMessage routeMessage = new(_frontendClient, typeof(ClientToGameServerMessage), mailboxMessage);
+            ServerManager.Instance.SendMessageToService(serverType, routeMessage);
         }
 
         private bool OnPlayerSystemMetrics(MailboxMessage message)  // 1

@@ -1,5 +1,4 @@
 ﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
@@ -11,23 +10,23 @@ namespace MHServerEmu.Core.Network
         private readonly ushort _muxChannel;
         private readonly List<IMessage> _pendingMessageList = new();
 
-        public ITcpClient TcpClient { get; }
+        public IFrontendClient FrontendClient { get; }
         public virtual bool CanSendOrReceiveMessages { get => true; }
 
         /// <summary>
-        /// Constructs a new <see cref="NetClient"/> bound to the provided <see cref="ITcpClient"/>.
+        /// Constructs a new <see cref="NetClient"/> bound to the provided <see cref="IFrontendClient"/>.
         /// </summary>
-        public NetClient(ushort muxChannel, ITcpClient tcpClient)
+        public NetClient(ushort muxChannel, IFrontendClient frontendClient)
         {
-            ArgumentNullException.ThrowIfNull(tcpClient);
+            ArgumentNullException.ThrowIfNull(frontendClient);
 
             _muxChannel = muxChannel;
-            TcpClient = tcpClient;
+            FrontendClient = frontendClient;
         }
 
         public void Disconnect()
         {
-            TcpClient.Disconnect();
+            FrontendClient.Disconnect();
         }
 
         /// <summary>
@@ -46,7 +45,7 @@ namespace MHServerEmu.Core.Network
             if (_pendingMessageList.Count == 0)
                 return;
 
-            TcpClient.SendMessageList(_muxChannel, _pendingMessageList);
+            FrontendClient.SendMessageList(_muxChannel, _pendingMessageList);
             _pendingMessageList.Clear();
         }
 

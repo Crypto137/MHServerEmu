@@ -1,6 +1,4 @@
-﻿using MHServerEmu.Core.Network.Tcp;
-
-namespace MHServerEmu.Core.Network
+﻿namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// Marker interface for <see cref="IGameService"/> messages.
@@ -16,32 +14,32 @@ namespace MHServerEmu.Core.Network
         // out a more performant way to send messages without overcomplicating everything
         // (e.g. using the visitor pattern here would probably work, but it may be too cumbersome).
 
-        public readonly struct AddClient(ITcpClient client) : IGameServiceMessage
+        public readonly struct AddClient(IFrontendClient client) : IGameServiceMessage
         {
-            public readonly ITcpClient Client = client;
+            public readonly IFrontendClient Client = client;
         }
 
-        public readonly struct RemoveClient(ITcpClient client) : IGameServiceMessage
+        public readonly struct RemoveClient(IFrontendClient client) : IGameServiceMessage
         {
-            public readonly ITcpClient Client = client;
+            public readonly IFrontendClient Client = client;
         }
 
-        public readonly struct RouteMessageBufferList(ITcpClient client, ushort muxId, IReadOnlyList<MessageBuffer> messageBufferList) : IGameServiceMessage
+        public readonly struct RouteMessageBufferList(IFrontendClient client, ushort muxId, IReadOnlyList<MessageBuffer> messageBufferList) : IGameServiceMessage
         {
-            public readonly ITcpClient Client = client;
+            public readonly IFrontendClient Client = client;
             public readonly ushort MuxId = muxId;
             public readonly IReadOnlyList<MessageBuffer> MessageBufferList = messageBufferList;
         }
 
-        public readonly struct RouteMessageBuffer(ITcpClient client, MessageBuffer messageBuffer) : IGameServiceMessage
+        public readonly struct RouteMessageBuffer(IFrontendClient client, MessageBuffer messageBuffer) : IGameServiceMessage
         {
-            public readonly ITcpClient Client = client;
+            public readonly IFrontendClient Client = client;
             public readonly MessageBuffer MessageBuffer = messageBuffer;
         }
 
-        public readonly struct RouteMessage(ITcpClient client, Type protocol, MailboxMessage message) : IGameServiceMessage
+        public readonly struct RouteMessage(IFrontendClient client, Type protocol, MailboxMessage message) : IGameServiceMessage
         {
-            public readonly ITcpClient Client = client;
+            public readonly IFrontendClient Client = client;
             public readonly Type Protocol = protocol;
             public readonly MailboxMessage Message = message;
         }

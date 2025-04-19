@@ -1,19 +1,18 @@
-﻿using MHServerEmu.Core.Network.Tcp;
-using MHServerEmu.Frontend;
+﻿using MHServerEmu.Core.Network;
 using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands
 {
     /// <summary>
-    /// Provides output to a chat window of a <see cref="FrontendClient"/>.
+    /// Provides output to a chat window of a <see cref="IFrontendClient"/>.
     /// </summary>
     public class FrontendClientChatOutput : IClientOutput
     {
         // TODO: Potentially move this to MHServerEmu.Grouping.
 
-        public void Output(string output, ITcpClient client)
+        public void Output(string output, IFrontendClient client)
         {
-            ChatHelper.SendMetagameMessage((FrontendClient)client, output);
+            ChatHelper.SendMetagameMessage(client, output);
         }
     }
 }

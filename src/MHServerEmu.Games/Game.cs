@@ -188,17 +188,17 @@ namespace MHServerEmu.Games
             IsRunning = false;
         }
 
-        public void AddClient(ITcpClient client)
+        public void AddClient(IFrontendClient client)
         {
             NetworkManager.AsyncAddClient(client);
         }
 
-        public void RemoveClient(ITcpClient client)
+        public void RemoveClient(IFrontendClient client)
         {
             NetworkManager.AsyncRemoveClient(client);
         }
 
-        public void ReceiveMessageBuffer(ITcpClient client, MessageBuffer messageBuffer)
+        public void ReceiveMessageBuffer(IFrontendClient client, in MessageBuffer messageBuffer)
         {
             NetworkManager.AsyncReceiveMessageBuffer(client, messageBuffer);
         }

@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games;
@@ -146,12 +145,12 @@ namespace MHServerEmu.PlayerManagement
 
         private void OnRouteMessage(in GameServiceProtocol.RouteMessage routeMessage)
         {
-            ITcpClient tcpClient = routeMessage.Client;
+            IFrontendClient client = routeMessage.Client;
             MailboxMessage message = routeMessage.Message;
 
             switch ((FrontendProtocolMessage)message.Id)
             {
-                case FrontendProtocolMessage.ClientCredentials: OnClientCredentials(tcpClient, message); break;
+                case FrontendProtocolMessage.ClientCredentials: OnClientCredentials(client, message); break;
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -421,10 +420,12 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="ClientCredentials"/>.
         /// </summary>
-        private bool OnClientCredentials(ITcpClient client, MailboxMessage message)
+        private bool OnClientCredentials(IFrontendClient client, MailboxMessage message)
         {
             var clientCredentials = message.As<ClientCredentials>();
             if (clientCredentials == null) return Logger.WarnReturn(false, "OnClientCredentials(): clientCredentials == null");
+
+            FrontendClient frontendClient = (FrontendClient)client;
 
             if (Config.SimulateQueue)
             {
@@ -437,9 +438,9 @@ namespace MHServerEmu.PlayerManagement
                 return false;
             }
 
-            if (_sessionManager.VerifyClientCredentials((FrontendClient)client, clientCredentials) == false)
+            if (_sessionManager.VerifyClientCredentials(frontendClient, clientCredentials) == false)
             {
-                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client on {client.Connection}");
+                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client on {frontendClient.Connection}");
                 client.Disconnect();
                 return false;
             }
@@ -457,7 +458,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Handles <see cref="NetMessageReadyForGameJoin"/>.
         /// </summary>
-        private bool OnReadyForGameJoin(ITcpClient client, MessageBuffer messageBuffer)
+        private bool OnReadyForGameJoin(IFrontendClient client, MessageBuffer messageBuffer)
         {
             // There is a client-side bug with NetMessageReadyForGameJoin that requires special handling, see DeserializeReadyForGameJoin() for more info.
             var readyForGameJoin = messageBuffer.DeserializeReadyForGameJoin();

@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
@@ -10,7 +9,7 @@ namespace MHServerEmu.Core.Network
     }
 
     /// <summary>
-    /// Buffered reader for data received from <see cref="ITcpClient"/>.
+    /// Buffered reader for data received by an <see cref="IFrontendClient"/>.
     /// </summary>
     public class MuxReader
     {
@@ -24,7 +23,7 @@ namespace MHServerEmu.Core.Network
         private readonly MemoryStream _readBufferStream = new(new byte[ReadBufferSize]);
         private readonly List<MessageBuffer> _messageBufferList = new();
 
-        private readonly ITcpClient _client;
+        private readonly IFrontendClient _client;
 
         private MuxReaderState _state;
         private int _stateBytes;
@@ -34,7 +33,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Constructs and initializes a new <see cref="MuxReader"/> for the provided <see cref="ITcpClient"/>.
         /// </summary>
-        public MuxReader(ITcpClient client)
+        public MuxReader(IFrontendClient client)
         {
             _client = client;
             Reset();
@@ -131,7 +130,7 @@ namespace MHServerEmu.Core.Network
             {
                 case MuxCommand.Connect:
                     Logger.Trace($"Client [{_client}] connected on mux channel {header.MuxId}");
-                    _client.Connection.Send(new MuxPacket(header.MuxId, MuxCommand.ConnectAck));
+                    _client.SendMuxCommand(header.MuxId, MuxCommand.ConnectAck);
                     Reset();
                     break;
 

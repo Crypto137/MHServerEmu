@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
@@ -25,7 +24,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Deserializes the provided <see cref="MessageBuffer"/> instance and adds its contents to this <see cref="CoreNetworkMailbox{TClient}"/> as a <see cref="MailboxMessage"/>.
         /// </summary>
-        public bool Post(ITcpClient client, MessageBuffer messageBuffer)
+        public bool Post(IFrontendClient client, in MessageBuffer messageBuffer)
         {
             uint messageId = messageBuffer.MessageId;
 

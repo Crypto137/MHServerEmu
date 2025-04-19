@@ -2,7 +2,6 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 
@@ -15,7 +14,7 @@ namespace MHServerEmu.Grouping
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly object _playerLock = new();
-        private readonly Dictionary<string, ITcpClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
+        private readonly Dictionary<string, IFrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
         private ICommandParser _commandParser;
 
@@ -72,7 +71,7 @@ namespace MHServerEmu.Grouping
 
         private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
         {
-            ITcpClient client = routeMailboxMessage.Client;
+            IFrontendClient client = routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;
 
             // Handle messages routed from games
@@ -90,7 +89,7 @@ namespace MHServerEmu.Grouping
 
         #region Client Management
 
-        private bool AddClient(ITcpClient client)
+        private bool AddClient(IFrontendClient client)
         {
             lock (_playerLock)
             {
@@ -108,7 +107,7 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        private bool RemoveClient(ITcpClient client)
+        private bool RemoveClient(IFrontendClient client)
         {
             lock (_playerLock)
             {
@@ -132,7 +131,7 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public bool TryGetPlayerByName(string playerName, out ITcpClient client)
+        public bool TryGetPlayerByName(string playerName, out IFrontendClient client)
         {
             return _playerDict.TryGetValue(playerName.ToLower(), out client);
         }
@@ -141,7 +140,7 @@ namespace MHServerEmu.Grouping
 
         #region Message Handling
 
-        private bool OnChat(ITcpClient client, MailboxMessage message)
+        private bool OnChat(IFrontendClient client, MailboxMessage message)
         {
             var chat = message.As<NetMessageChat>();
             if (chat == null) return Logger.WarnReturn(false, $"OnChat(): Failed to retrieve message");
@@ -182,7 +181,7 @@ namespace MHServerEmu.Grouping
             return true;
         }
 
-        private bool OnTell(ITcpClient client, MailboxMessage message)
+        private bool OnTell(IFrontendClient client, MailboxMessage message)
         {
             var tell = message.As<NetMessageTell>();
             if (tell == null) return Logger.WarnReturn(false, $"OnTell(): Failed to retrieve message");
@@ -197,7 +196,7 @@ namespace MHServerEmu.Grouping
             return true;
         }
 
-        private bool OnTryModifyCommunityMemberCircle(ITcpClient client, MailboxMessage message)
+        private bool OnTryModifyCommunityMemberCircle(IFrontendClient client, MailboxMessage message)
         {
             // We are handling this in the grouping manager to avoid exposing the ChatHelper class
             // TODO: Remove this and handle it in game after we implemented social functionality there.

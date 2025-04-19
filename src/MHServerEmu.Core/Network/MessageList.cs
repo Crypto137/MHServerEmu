@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
@@ -16,7 +15,7 @@ namespace MHServerEmu.Core.Network
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private Queue<(ITcpClient, MailboxMessage)> _messageQueue = new();
+        private Queue<(IFrontendClient, MailboxMessage)> _messageQueue = new();
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="MessageList{TClient}"/> instance has any queued messages.
@@ -26,9 +25,9 @@ namespace MHServerEmu.Core.Network
         // NOTE: Rather than exposing the underlying data structure like the client, we encapsulate it with Enqueue() / TransferFrom() / Clear() methods.
 
         /// <summary>
-        /// Enqueues the provided <see cref="MailboxMessage"/> from an <see cref="ITcpClient"/>.
+        /// Enqueues the provided <see cref="MailboxMessage"/> from an <see cref="IFrontendClient"/>.
         /// </summary>
-        public void Enqueue(ITcpClient client, MailboxMessage message)
+        public void Enqueue(IFrontendClient client, MailboxMessage message)
         {
             // NOTE: In the client this is done by calling FastList::InsertTailList()
             _messageQueue.Enqueue((client, message));
@@ -68,11 +67,11 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Retrieves the next queued <see cref="MailboxMessage"/> instance without removing it from the queue.
         /// </summary>
-        public (ITcpClient, MailboxMessage) PeekNextMessage()
+        public (IFrontendClient, MailboxMessage) PeekNextMessage()
         {
             // Do we even need peeking considering we have the HasMessages properties?
             if (_messageQueue.TryPeek(out var result) == false)
-                return Logger.WarnReturn<(ITcpClient, MailboxMessage)>(default, $"PeekNextMessage(): No messages to peek");
+                return Logger.WarnReturn<(IFrontendClient, MailboxMessage)>(default, $"PeekNextMessage(): No messages to peek");
 
             return result;
         }
@@ -80,10 +79,10 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Retrieves the next queued <see cref="MailboxMessage"/> instance.
         /// </summary>
-        public (ITcpClient, MailboxMessage) PopNextMessage()
+        public (IFrontendClient, MailboxMessage) PopNextMessage()
         {
             if (_messageQueue.TryDequeue(out var result) == false)
-                return Logger.WarnReturn<(ITcpClient, MailboxMessage)>(default, $"PopNextMessage(): No messages to pop");
+                return Logger.WarnReturn<(IFrontendClient, MailboxMessage)>(default, $"PopNextMessage(): No messages to pop");
 
             return result;
         }

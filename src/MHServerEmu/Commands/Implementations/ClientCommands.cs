@@ -3,7 +3,6 @@ using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
@@ -43,7 +42,7 @@ namespace MHServerEmu.Commands.Implementations
             if (groupingManager == null)
                 return "Failed to connect to the grouping manager.";
 
-            if (groupingManager.TryGetPlayerByName(@params[0], out ITcpClient target) == false)
+            if (groupingManager.TryGetPlayerByName(@params[0], out IFrontendClient target) == false)
                 return $"Player {@params[0]} not found.";
 
             target.Disconnect();

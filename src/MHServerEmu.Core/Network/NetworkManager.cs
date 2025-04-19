@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network.Tcp;
 
 namespace MHServerEmu.Core.Network
 {
@@ -13,7 +12,7 @@ namespace MHServerEmu.Core.Network
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<ITcpClient, TNetClient> _netClientDict = new();
+        private readonly Dictionary<IFrontendClient, TNetClient> _netClientDict = new();
 
         // Incoming messages are asynchronously posted to a mailbox where they are deserialized and stored for later retrieval.
         // When it's time to process messages, we copy all messages stored in our mailbox to a list.
@@ -22,10 +21,10 @@ namespace MHServerEmu.Core.Network
         private readonly MessageList _messagesToProcessList = new();
 
         // We swap queues with a lock when handling async client connect / disconnect events
-        private Queue<ITcpClient> _asyncAddClientQueue = new();
-        private Queue<ITcpClient> _asyncRemoveClientQueue = new();
-        private Queue<ITcpClient> _addClientQueue = new();
-        private Queue<ITcpClient> _removeClientQueue = new();
+        private Queue<IFrontendClient> _asyncAddClientQueue = new();
+        private Queue<IFrontendClient> _asyncRemoveClientQueue = new();
+        private Queue<IFrontendClient> _addClientQueue = new();
+        private Queue<IFrontendClient> _removeClientQueue = new();
 
         private SpinLock _addClientLock = new(false);
         private SpinLock _removeClientLock = new(false);
@@ -42,10 +41,10 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Returns the <see cref="NetClient"/> bound to the provided <see cref="ITcpClient"/>.
         /// </summary>
-        public TNetClient GetNetClient(ITcpClient tcpClient)
+        public TNetClient GetNetClient(IFrontendClient frontendClient)
         {
-            if (_netClientDict.TryGetValue(tcpClient, out TNetClient netClient) == false)
-                Logger.Warn($"GetNetClient(): ITcpClient {tcpClient} is not bound to a NetClient");
+            if (_netClientDict.TryGetValue(frontendClient, out TNetClient netClient) == false)
+                Logger.Warn($"GetNetClient(): IFrontendClient {frontendClient} is not bound to a NetClient");
 
             return netClient;
         }
@@ -62,9 +61,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Enqueues registration of a new <see cref="NetClient"/> for the provided <see cref="ITcpClient"/> during the next update.
+        /// Enqueues registration of a new <see cref="NetClient"/> for the provided <see cref="IFrontendClient"/> during the next update.
         /// </summary>
-        public void AsyncAddClient(ITcpClient client)
+        public void AsyncAddClient(IFrontendClient client)
         {
             bool lockTaken = false;
             try
@@ -80,9 +79,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Enqueues removal of the <see cref="NetClient"/> bound to the provided <see cref="ITcpClient"/> during the next update.
+        /// Enqueues removal of the <see cref="NetClient"/> bound to the provided <see cref="IFrontendClient"/> during the next update.
         /// </summary>
-        public void AsyncRemoveClient(ITcpClient client)
+        public void AsyncRemoveClient(IFrontendClient client)
         {
             bool lockTaken = false;
             try
@@ -100,16 +99,16 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// Handles an incoming <see cref="MessageBuffer"/> asynchronously.
         /// </summary>
-        public void AsyncReceiveMessageBuffer(ITcpClient tcpClient, MessageBuffer messageBuffer)
+        public void AsyncReceiveMessageBuffer(IFrontendClient frontendClient, in MessageBuffer messageBuffer)
         {
             // Gazillion's implementation does this in NetworkManager::ConnectionStatus()
 
             // If the message fails to deserialize it means either data got corrupted somehow or we have a hacker trying to mess things up.
             // In both cases it's better to bail out.
-            if (_mailbox.Post(tcpClient, messageBuffer) == false)
+            if (_mailbox.Post(frontendClient, messageBuffer) == false)
             {
-                Logger.Error($"AsyncPostMessage(): Message deserialization error for data from client, disconnecting. Client: {tcpClient}");
-                tcpClient.Disconnect();
+                Logger.Error($"AsyncPostMessage(): Message deserialization error for data from client, disconnecting. Client: {frontendClient}");
+                frontendClient.Disconnect();
             }
         }
 
@@ -123,8 +122,8 @@ namespace MHServerEmu.Core.Network
 
             while (_messagesToProcessList.HasMessages)
             {
-                (ITcpClient tcpClient, MailboxMessage message) = _messagesToProcessList.PopNextMessage();
-                TNetClient netClient = GetNetClient(tcpClient);
+                (IFrontendClient frontendClient, MailboxMessage message) = _messagesToProcessList.PopNextMessage();
+                TNetClient netClient = GetNetClient(frontendClient);
 
                 if (netClient != null && netClient.CanSendOrReceiveMessages)
                     netClient.ReceiveMessage(message);
@@ -145,10 +144,10 @@ namespace MHServerEmu.Core.Network
 
         protected bool RegisterNetClient(TNetClient netClient)
         {
-            return _netClientDict.TryAdd(netClient.TcpClient, netClient);
+            return _netClientDict.TryAdd(netClient.FrontendClient, netClient);
         }
 
-        protected abstract bool AcceptAndRegisterNewClient(ITcpClient tcpClient);
+        protected abstract bool AcceptAndRegisterNewClient(IFrontendClient tcpClient);
 
         protected abstract void OnNetClientDisconnected(TNetClient netClient);
 
@@ -169,8 +168,8 @@ namespace MHServerEmu.Core.Network
 
             while (_addClientQueue.Count > 0)
             {
-                ITcpClient tcpClient = _addClientQueue.Dequeue();
-                AcceptAndRegisterNewClient(tcpClient);
+                IFrontendClient frontendClient = _addClientQueue.Dequeue();
+                AcceptAndRegisterNewClient(frontendClient);
             }
         }
 
@@ -191,11 +190,11 @@ namespace MHServerEmu.Core.Network
 
             while (_removeClientQueue.Count > 0)
             {
-                ITcpClient tcpClient = _removeClientQueue.Dequeue();
+                IFrontendClient frontendClient = _removeClientQueue.Dequeue();
 
-                if (_netClientDict.Remove(tcpClient, out TNetClient netClient) == false)
+                if (_netClientDict.Remove(frontendClient, out TNetClient netClient) == false)
                 {
-                    Logger.Warn($"RemoveDisconnectedClients(): ITcpClient {tcpClient} not found");
+                    Logger.Warn($"RemoveDisconnectedClients(): IFrontendClient {frontendClient} not found");
                     continue;
                 }
 
@@ -206,12 +205,12 @@ namespace MHServerEmu.Core.Network
 
         /// <summary>
         /// A simple wrapper around <see cref="Dictionary{TKey, TValue}.ValueCollection.Enumerator"/>
-        /// to iterate <typeparamref name="TNetClient"/> instances managed by this <see cref="NetworkManager{TNetClient}"/>.
+        /// to iterate <typeparamref name="TNetClient"/> instances managed by this <see cref="NetworkManager{TNetClient, TProtocol}"/>.
         /// </summary>
         public struct Enumerator : IEnumerator<TNetClient>
         {
             private readonly NetworkManager<TNetClient, TProtocol> _networkManager;
-            private Dictionary<ITcpClient, TNetClient>.ValueCollection.Enumerator _enumerator;
+            private Dictionary<IFrontendClient, TNetClient>.ValueCollection.Enumerator _enumerator;
 
             public TNetClient Current { get => _enumerator.Current; }
             object IEnumerator.Current { get => Current; }

@@ -1,7 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.Games.GameData;
 
@@ -45,13 +44,13 @@ namespace MHServerEmu.Leaderboards
 
         private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
         {
-            ITcpClient tcpClient = routeMailboxMessage.Client;
+            IFrontendClient client = routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;
 
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(tcpClient, message); break;
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(tcpClient, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(client, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(client, message); break;
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
@@ -59,7 +58,7 @@ namespace MHServerEmu.Leaderboards
 
         #endregion
 
-        private bool OnInitializeRequest(ITcpClient client, MailboxMessage message)
+        private bool OnInitializeRequest(IFrontendClient client, MailboxMessage message)
         {
             var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
             if (initializeRequest == null) return Logger.WarnReturn(false, $"OnInitializeRequest(): Failed to retrieve message");
@@ -76,7 +75,7 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        private bool OnRequest(ITcpClient client, MailboxMessage message)
+        private bool OnRequest(IFrontendClient client, MailboxMessage message)
         {
             var request = message.As<NetMessageLeaderboardRequest>();
             if (request == null) return Logger.WarnReturn(false, $"OnRequest(): Failed to retrieve message");

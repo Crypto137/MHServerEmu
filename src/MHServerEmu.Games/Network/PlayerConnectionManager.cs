@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Regions;
@@ -215,32 +214,32 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        protected override bool AcceptAndRegisterNewClient(ITcpClient tcpClient)
+        protected override bool AcceptAndRegisterNewClient(IFrontendClient frontendClient)
         {
             // Make sure this client is still connected (it may not be if we are lagging hard)
-            if (tcpClient.IsConnected == false)
-                return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{tcpClient}] is no longer connected");
+            if (frontendClient.IsConnected == false)
+                return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{frontendClient}] is no longer connected");
 
-            // Construct a new PlayerConnection bound to this ITcpClient
-            PlayerConnection playerConnection = new(_game, tcpClient);
+            // Construct a new PlayerConnection bound to this IFrontendClient
+            PlayerConnection playerConnection = new(_game, frontendClient);
 
             // Make sure this client's account is not being used by another client pending disconnection.
-            // We do this after constructing the connection to keep the ITcpClient -> PlayerDbId retrieval in one place.
+            // We do this after constructing the connection to keep the IFrontendClient -> PlayerDbId retrieval in one place.
             ulong dbId = playerConnection.PlayerDbId;
 
             if (_playerDbIds.Add(dbId) == false)
             {
-                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client [{tcpClient}] to game [{_game}], but its account dbId 0x{dbId:X} is already in use");
-                tcpClient.Disconnect();
+                Logger.Warn($"AcceptAndRegisterNewClient(): Attempting to add client [{frontendClient}] to game [{_game}], but its account dbId 0x{dbId:X} is already in use");
+                frontendClient.Disconnect();
                 return false;
             }
 
             // Register the client to allow it to receive messages
             if (RegisterNetClient(playerConnection) == false)
-                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{tcpClient}]");
+                Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{frontendClient}]");
 
             // TODO: Replace this with a message to PlayerManager
-            tcpClient.GameId = _game.Id;
+            frontendClient.GameId = _game.Id;
 
             // Send time sync straight away for the client to be able to initialize its EventScheduler (needed for loading screens).
             // This will also make the client start sending pings, so it needs to be done after we assign game id.
@@ -258,7 +257,7 @@ namespace MHServerEmu.Games.Network
 
             // This connection will be set as pending when we receive region availability query response
 
-            Logger.Info($"Accepted and registered client [{tcpClient}] to game [{_game}]");
+            Logger.Info($"Accepted and registered client [{frontendClient}] to game [{_game}]");
             return true;
         }
 
