@@ -279,9 +279,7 @@ namespace MHServerEmu.Core.Network.Tcp
                         return;
                     }
 
-                    // Parse received data straight from the connection's buffer.
-                    // NOTE: We do it in a somewhat awkward way because we used to copy
-                    // data to a new array and pass it around, maybe we should refactor this more.
+                    // Do the OnDataReceived() callback to parse received data from the connection's buffer.
                     OnDataReceived(connection, connection.ReceiveBuffer, bytesReceived);
 
                     if (connection.Connected == false)  // Stop receiving if no longer connected

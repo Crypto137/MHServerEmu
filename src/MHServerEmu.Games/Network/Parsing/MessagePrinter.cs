@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using Google.ProtocolBuffers;
 
+// This was previously used for our packet parsing functionality, which we no longer need. I am leaving this here just for reference.
+
+#if false
 namespace MHServerEmu.Games.Network.Parsing
 {
     /// <summary>
@@ -48,3 +51,4 @@ namespace MHServerEmu.Games.Network.Parsing
         }
     }
 }
+#endif

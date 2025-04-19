@@ -13,6 +13,9 @@ using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
 
+// This was previously used for our packet parsing functionality, which we no longer need. I am leaving this here just for reference.
+
+#if false
 namespace MHServerEmu.Games.Network.Parsing
 {
     public static class ArchiveParser
@@ -879,3 +882,4 @@ namespace MHServerEmu.Games.Network.Parsing
         }
     }
 }
+#endif

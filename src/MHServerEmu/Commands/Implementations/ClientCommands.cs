@@ -42,11 +42,11 @@ namespace MHServerEmu.Commands.Implementations
             if (groupingManager == null)
                 return "Failed to connect to the grouping manager.";
 
-            if (groupingManager.TryGetPlayerByName(@params[0], out FrontendClient target) == false)
+            if (groupingManager.TryGetPlayerByName(@params[0], out IFrontendClient target) == false)
                 return $"Player {@params[0]} not found.";
 
             target.Disconnect();
-            return $"Kicked {target.Session.Account}.";
+            return $"Kicked {target}.";
         }
 
         [Command("send", "Usage: client send [sessionId] [messageName] [messageContent]", AccountUserLevel.Admin)]

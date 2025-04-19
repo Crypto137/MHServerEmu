@@ -28,15 +28,15 @@ namespace MHServerEmu.Auth
         /// </summary>
         public static async Task SendProtobufAsync(HttpListenerResponse httpResponse, IMessage message, int statusCode = 200)
         {
-            MessagePackage messagedPackage = new(message);
+            MessagePackageOut messagePackage = new(message);
 
             httpResponse.StatusCode = statusCode;
             httpResponse.KeepAlive = false;
             httpResponse.ContentType = "application/octet-stream";
-            httpResponse.ContentLength64 = messagedPackage.GetSize();
+            httpResponse.ContentLength64 = messagePackage.GetSerializedSize();
 
             CodedOutputStream cos = CodedOutputStream.CreateInstance(httpResponse.OutputStream);
-            await Task.Run(() => { messagedPackage.WriteTo(cos); cos.Flush(); });
+            await Task.Run(() => { messagePackage.WriteTo(cos); cos.Flush(); });
         }
 
         /// <summary>

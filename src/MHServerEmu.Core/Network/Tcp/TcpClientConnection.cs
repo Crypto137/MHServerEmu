@@ -13,7 +13,6 @@ namespace MHServerEmu.Core.Network.Tcp
     {
         public const int ReceiveBufferSize = 1024 * 8;
 
-        private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly bool HideSensitiveInformation = ConfigManager.Instance.GetConfig<LoggingConfig>().HideSensitiveInformation;
 
         private readonly TcpServer _server;
@@ -24,7 +23,7 @@ namespace MHServerEmu.Core.Network.Tcp
         public bool Connected { get => Socket.Connected; }
         public IPEndPoint RemoteEndPoint { get => (IPEndPoint)Socket.RemoteEndPoint; }
 
-        public ITcpClient Client { get; set; }
+        public TcpClient Client { get; set; }
 
         /// <summary>
         /// Constructs a new client connection instance.

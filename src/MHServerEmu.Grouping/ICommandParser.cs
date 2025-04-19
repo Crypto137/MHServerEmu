@@ -1,4 +1,4 @@
-﻿using MHServerEmu.Frontend;
+﻿using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Grouping
 {
@@ -10,6 +10,6 @@ namespace MHServerEmu.Grouping
         /// <summary>
         /// Attempts to parse a command from the provided <see cref="string"/> message. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool TryParse(string message, FrontendClient client);
+        public bool TryParse(string message, IFrontendClient client);
     }
 }

@@ -9,9 +9,9 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games
             IsRunning = true;
 
             // Initialize and start game thread
-            _gameThread = new(GameLoop) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            _gameThread = new(GameLoop) { Name = $"Game [{this}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             _gameThread.Start();
 
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
@@ -188,35 +188,19 @@ namespace MHServerEmu.Games
             IsRunning = false;
         }
 
-        public void AddClient(FrontendClient client)
+        public void AddClient(IFrontendClient client)
         {
             NetworkManager.AsyncAddClient(client);
         }
 
-        public void RemoveClient(FrontendClient client)
+        public void RemoveClient(IFrontendClient client)
         {
             NetworkManager.AsyncRemoveClient(client);
         }
 
-        public void PostMessage(FrontendClient client, MessagePackage message)
+        public void ReceiveMessageBuffer(IFrontendClient client, in MessageBuffer messageBuffer)
         {
-            NetworkManager.AsyncPostMessage(client, message);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> over the specified <see cref="PlayerConnection"/>.
-        /// </summary>
-        public void SendMessage(PlayerConnection connection, IMessage message)
-        {
-            NetworkManager.SendMessage(connection, message);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> to all connected players.
-        /// </summary>
-        public void BroadcastMessage(IMessage message)
-        {
-            NetworkManager.BroadcastMessage(message);
+            NetworkManager.AsyncReceiveMessageBuffer(client, messageBuffer);
         }
 
         public Entity AllocateEntity(PrototypeId entityRef)

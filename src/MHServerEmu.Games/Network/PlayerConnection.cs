@@ -6,9 +6,10 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -29,20 +30,18 @@ using MHServerEmu.Games.Regions;
 namespace MHServerEmu.Games.Network
 {
     // This is the equivalent of the client-side ClientServiceConnection and GameConnection implementations of the NetClient abstract class.
-    // We flatten everything into a single class since we don't have to worry about client-side.
 
     /// <summary>
     /// Represents a remote connection to a player.
     /// </summary>
-    public class PlayerConnection
+    public class PlayerConnection : NetClient
     {
-        private const ushort MuxChannel = 1;    // hardcoded to channel 1 for now
+        private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly FrontendClient _frontendClient;
+        private readonly IFrontendClient _frontendClient;
         private readonly DBAccount _dbAccount;
-        private readonly List<IMessage> _pendingMessageList = new();
 
         private bool _waitingForRegionIsAvailableResponse = false;
         private bool _doNotUpdateDBAccount = false;
@@ -64,17 +63,24 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Constructs a new <see cref="PlayerConnection"/>.
         /// </summary>
-        public PlayerConnection(Game game, FrontendClient frontendClient)
+        public PlayerConnection(Game game, IFrontendClient frontendClient) : base(MuxChannel, frontendClient)
         {
             Game = game;
+
+            // IFrontendClient used by PlayerConnection also needs to implement IDBAccountOwner
             _frontendClient = frontendClient;
-            _dbAccount = _frontendClient.Session.Account;
+            _dbAccount = ((IDBAccountOwner)frontendClient).Account;
 
             AOI = new(this);
             WorldView = new(this);
             TransferParams = new(this);
             MigrationData = new();
             RegionContext = new();
+        }
+
+        public override string ToString()
+        {
+            return $"dbGuid=0x{PlayerDbId:X}";
         }
 
         public bool Initialize()
@@ -97,11 +103,6 @@ namespace MHServerEmu.Games.Network
 
             _waitingForRegionIsAvailableResponse = true;
             return true;
-        }
-
-        public override string ToString()
-        {
-            return $"dbGuid=0x{PlayerDbId:X}";
         }
 
         #region Data Management
@@ -250,44 +251,7 @@ namespace MHServerEmu.Games.Network
 
         #region NetClient Implementation
 
-        // Do not use these methods directly, these are for the PlayerConnectionManager.
-        // C# has no friends T_T
-
-        /// <summary>
-        /// Adds a new <see cref="IMessage"/> to the pending message list.
-        /// </summary>
-        /// <remarks>
-        /// This should be called only by the <see cref="PlayerConnectionManager"/> this <see cref="PlayerConnection"/>
-        /// belongs to, do not call this directly!
-        /// </remarks>
-        public void PostMessage(IMessage message)
-        {
-            _pendingMessageList.Add(message);
-        }
-
-        /// <summary>
-        /// Sends all pending <see cref="IMessage"/> instances.
-        /// </summary>
-        /// <remarks>
-        /// This should be called only by the <see cref="PlayerConnectionManager"/> this <see cref="PlayerConnection"/>
-        /// belongs to, do not call this directly!
-        /// </remarks>
-        public void FlushMessages()
-        {
-            if (_pendingMessageList.Count == 0)
-                return;
-            
-            _frontendClient.SendMessageList(MuxChannel, _pendingMessageList);
-            _pendingMessageList.Clear();
-        }
-
-        public bool CanSendOrReceiveMessages()
-        {
-            // TODO: Block message processing during certain states (e.g. malicious client sending messages while loading).
-            return true;
-        }
-
-        public void OnDisconnect()
+        public override void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
             UpdateDBAccount();
@@ -310,6 +274,12 @@ namespace MHServerEmu.Games.Network
 
                 region.RequestShutdown();
             }
+
+            // Remove game id to let the player manager know that it is now safe to write to the database.
+            // TODO: Replace this with a player manager message.
+            _frontendClient.GameId = 0;
+
+            Logger.Info($"Removed frontend client [{_frontendClient}] from game [{Game}]");
         }
 
         #endregion
@@ -415,11 +385,6 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        public void Disconnect()
-        {
-            _frontendClient.Disconnect();
-        }
-
         #region Message Handling
 
         /// <summary>
@@ -427,13 +392,15 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void SendMessage(IMessage message)
         {
-            Game.SendMessage(this, message);
+            // NOTE: The client goes Game -> NetworkManager -> SendMessage() -> postOutboundMessageToClient() -> postMessage() here,
+            // but we simplify everything and just post the message directly.
+            PostMessage(message);
         }
 
         /// <summary>
         /// Handles a <see cref="MailboxMessage"/>.
         /// </summary>
-        public void ReceiveMessage(MailboxMessage message)
+        public override void ReceiveMessage(in MailboxMessage message)
         {
             // NOTE: Please keep these ordered by message id
 
@@ -441,6 +408,7 @@ namespace MHServerEmu.Games.Network
             {
                 case ClientToGameServerMessage.NetMessagePlayerSystemMetrics:               OnPlayerSystemMetrics(message); break;              // 1
                 case ClientToGameServerMessage.NetMessagePlayerSteamInfo:                   OnPlayerSteamInfo(message); break;                  // 2
+                case ClientToGameServerMessage.NetMessageSyncTimeRequest:                   OnSyncTimeRequest(message); break;                  // 3
                 case ClientToGameServerMessage.NetMessageIsRegionAvailable:                 OnIsRegionAvailable(message); break;                // 5
                 case ClientToGameServerMessage.NetMessageUpdateAvatarState:                 OnUpdateAvatarState(message); break;                // 6
                 case ClientToGameServerMessage.NetMessageCellLoaded:                        OnCellLoaded(message); break;                       // 7
@@ -451,6 +419,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTryCancelActivePower:              OnTryCancelActivePower(message); break;             // 13
                 case ClientToGameServerMessage.NetMessageContinuousPowerUpdateToServer:     OnContinuousPowerUpdate(message); break;            // 14
                 case ClientToGameServerMessage.NetMessageCancelPendingAction:               OnCancelPendingAction(message); break;              // 15
+                case ClientToGameServerMessage.NetMessagePing:                              OnPing(message); break;                             // 29
+                case ClientToGameServerMessage.NetMessageFPS:                               OnFps(message); break;                              // 30
                 case ClientToGameServerMessage.NetMessageGamepadMetric:                     OnGamepadMetric(message); break;                    // 31
                 case ClientToGameServerMessage.NetMessagePickupInteraction:                 OnPickupInteraction(message); break;                // 32
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;                 // 33
@@ -525,7 +495,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageReportPlayer:                                                                          // 66
                 case ClientToGameServerMessage.NetMessageChatBanVote:                                                                           // 67
                 case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle:                                                        // 106, TODO: handle this in game
-                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.GroupingManager);
+                    RouteMessageToService(ServerType.GroupingManager, message);
                     break;
 
                 // Billing
@@ -534,18 +504,24 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                                                                    // 70
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
-                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Billing);
+                    RouteMessageToService(ServerType.Billing, message);
                     break;
 
                 // Leaderboards
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:                                                                    // 157
                 case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:                                                // 158
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:                                                          // 159
-                    ServerManager.Instance.RouteMessage(_frontendClient, message, ServerType.Leaderboard);
+                    RouteMessageToService(ServerType.Leaderboard, message);
                     break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private void RouteMessageToService(ServerType serverType, in MailboxMessage mailboxMessage)
+        {
+            GameServiceProtocol.RouteMessage routeMessage = new(_frontendClient, typeof(ClientToGameServerMessage), mailboxMessage);
+            ServerManager.Instance.SendMessageToService(serverType, routeMessage);
         }
 
         private bool OnPlayerSystemMetrics(MailboxMessage message)  // 1
@@ -570,6 +546,28 @@ namespace MHServerEmu.Games.Network
             // NOTE: It's impossible to use this to grant Steam achievements without a publisher API key.
             // See SetUserStatsForGame in Steamworks docs for more info: https://partner.steamgames.com/doc/webapi/isteamuserstats
 
+            return true;
+        }
+
+        private bool OnSyncTimeRequest(MailboxMessage message)  // 3
+        {
+            var syncTimeRequest = message.As<NetMessageSyncTimeRequest>();
+            if (syncTimeRequest == null) return Logger.WarnReturn(false, $"OnSyncTimeRequest(): Failed to retrieve message");
+
+            var reply = NetMessageSyncTimeReply.CreateBuilder()
+                .SetGameTimeClientSent(syncTimeRequest.GameTimeClientSent)
+                .SetGameTimeServerReceived(message.GameTimeReceived.Ticks / 10)
+                .SetGameTimeServerSent(Clock.GameTime.Ticks / 10)
+                .SetDateTimeClientSent(syncTimeRequest.DateTimeClientSent)
+                .SetDateTimeServerReceived(message.DateTimeReceived.Ticks / 10)
+                .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
+                .SetDialation(1.0f)
+                .SetGametimeDialationStarted(0)
+                .SetDatetimeDialationStarted(0)
+                .Build();
+
+            SendMessage(reply);
+            FlushMessages();    // Send the reply ASAP for more accurate timing
             return true;
         }
 
@@ -836,6 +834,42 @@ namespace MHServerEmu.Games.Network
 
             avatar.CancelPendingAction();
 
+            return true;
+        }
+
+        private bool OnPing(MailboxMessage message)    // 29
+        {
+            var ping = message.As<NetMessagePing>();
+            if (ping == null) return Logger.WarnReturn(false, $"OnPing(): Failed to retrieve message");
+
+            // Copy request info
+            var response = NetMessagePingResponse.CreateBuilder()
+                .SetDisplayOutput(ping.DisplayOutput)
+                .SetRequestSentClientTime(ping.SendClientTime);
+
+            if (ping.HasSendGameTime)
+                response.SetRequestSentGameTime(ping.SendGameTime);
+
+            // We ignore other ping metrics (client latency, fps, etc.)
+
+            // Add response data
+            response.SetRequestNetReceivedGameTime((ulong)message.GameTimeReceived.TotalMilliseconds)
+                .SetResponseSendTime((ulong)Clock.GameTime.TotalMilliseconds)
+                .SetServerTickforecast(0)    // server tick time ms
+                .SetGameservername("BOPR-MHVGIS2")
+                .SetFrontendname("bopr-mhfes2");
+
+            SendMessage(response.Build());
+            return true;
+        }
+
+        private bool OnFps(MailboxMessage message)    // 30
+        {
+            var fps = message.As<NetMessageFPS>();
+            if (fps == null) return Logger.WarnReturn(false, $"OnFps(): Failed to retrieve message");
+
+            // Dummy handler, we are not interested in FPS metrics
+            //Logger.Trace($"OnFps():\n{fps}");
             return true;
         }
 
