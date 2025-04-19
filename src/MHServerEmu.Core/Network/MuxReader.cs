@@ -167,6 +167,8 @@ namespace MHServerEmu.Core.Network
         {
             // NOTE: This is intended to be used in a try/catch block, so we throw exceptions instead of returning false.
 
+            // We cannot deserialize the messages straight away, because their protocol depends on the state of the frontend connection.
+            // So instead we just effectively slice data into smaller buffers and pass them to the frontend service implementation to handle.
             while (_readBufferStream.Position < _stateBytes)
             {
                 MessageBuffer messageBuffer = new(_readBufferStream);
