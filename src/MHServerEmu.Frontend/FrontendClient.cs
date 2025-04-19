@@ -17,8 +17,9 @@ namespace MHServerEmu.Frontend
 
         private readonly MuxReader _muxReader;
 
-        private bool _finishedPlayerManagerHandshake = false;
-        private bool _finishedGroupingManagerHandshake = false;
+        // We intentionally don't use an array here so that channel state is inlined in FrontendClient
+        private MuxChannel _muxChannel1;
+        private MuxChannel _muxChannel2;
 
         private ulong _gameId;
 
@@ -37,6 +38,9 @@ namespace MHServerEmu.Frontend
         public FrontendClient(TcpClientConnection connection) : base(connection)
         {
             _muxReader = new(this);
+
+            _muxChannel1 = new(this, 1);
+            _muxChannel2 = new(this, 2);
         }
 
         public override string ToString()
@@ -60,32 +64,28 @@ namespace MHServerEmu.Frontend
             if (Connection.Connected == false)
                 return Logger.WarnReturn(false, $"HandleIncomingMessageBuffer(): Client [{this}] has already disconnected");
 
-            // TODO: Block anything but ClientCredentials until we have a session
+            bool success;
 
-            // Route to the destination service if initial frontend business has already been done
-            if (muxId == 1 && _finishedPlayerManagerHandshake)
+            switch (muxId)
             {
-                GameServiceProtocol.RouteMessageBuffer playerManagerMessage = new(this, messageBuffer);
-                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, playerManagerMessage);
-                return true;
-            }
-            else if (muxId == 2 && _finishedGroupingManagerHandshake)
-            {
-                GameServiceProtocol.RouteMessageBuffer groupingManagerMessage = new(this, messageBuffer);
-                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
-                return true;
-            }
+                case 1:
+                    success = _muxChannel1.HandleIncomingMessageBuffer(messageBuffer);
+                    break;
 
-            // Self-handling for initial connection
-            switch ((FrontendProtocolMessage)messageBuffer.MessageId)
-            {
-                case FrontendProtocolMessage.ClientCredentials:         OnClientCredentials(messageBuffer); break;
-                case FrontendProtocolMessage.InitialClientHandshake:    OnInitialClientHandshake(messageBuffer); break;
+                case 2:
+                    success = _muxChannel2.HandleIncomingMessageBuffer(messageBuffer);
+                    break;
 
-                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)messageBuffer.MessageId} [{messageBuffer.MessageId}]"); break;
+                default:
+                    Logger.Error($"HandleIncomingMessageBuffer(): Unexpected channel {muxId} when handling a MessageBuffer from client [{this}]");
+                    success = false;
+                    break;
             }
 
-            return true;
+            if (success == false)
+                Disconnect();
+
+            return success;
         }
 
         public void SendMuxCommand(ushort muxId, MuxCommand command)
@@ -127,51 +127,141 @@ namespace MHServerEmu.Frontend
                 return Logger.WarnReturn(false, $"AssignSession(): Failed to assign {session} to a client: already assigned {Session}");
 
             Session = session;
-            return true;
-        }
 
-        #region Message Handling
-
-        /// <summary>
-        /// Handles <see cref="ClientCredentials"/>.
-        /// </summary>
-        private bool OnClientCredentials(in MessageBuffer messageBuffer)
-        {
-            var clientCredentials = messageBuffer.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
-            if (clientCredentials == null) return Logger.WarnReturn(false, $"OnClientCredentials(): Failed to retrieve message");
-
-            MailboxMessage mailboxMessage = new(messageBuffer.MessageId, clientCredentials);
-            GameServiceProtocol.RouteMessage routeMessage = new(this, typeof(FrontendProtocolMessage), mailboxMessage);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, routeMessage);
+            _muxChannel1.FinishAuth();
+            _muxChannel2.FinishAuth();
 
             return true;
         }
 
-        /// <summary>
-        /// Handles <see cref="InitialClientHandshake"/>.
-        /// </summary>
-        private bool OnInitialClientHandshake(in MessageBuffer messageBuffer)
+        #region MuxChannel
+
+        // NOTE: If we end up having multiple frontend implementations, this should probably go to Core.
+
+        private enum MuxChannelState
         {
-            var initialClientHandshake = messageBuffer.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
-            if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
+            Invalid,
+            Auth,
+            Handshake,
+            Connected
+        }
 
-            Logger.Trace($"Received InitialClientHandshake for {initialClientHandshake.ServerType}");
+        /// <summary>
+        /// Helper struct for routing incoming <see cref="MessageBuffer"/> instances.
+        /// </summary>
+        private struct MuxChannel
+        {
+            private readonly FrontendClient _client;
+            private readonly ushort _muxId;
 
-            if (initialClientHandshake.ServerType == PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND && _finishedPlayerManagerHandshake == false)
-                _finishedPlayerManagerHandshake = true;
-            else if (initialClientHandshake.ServerType == PubSubServerTypes.GROUPING_MANAGER_FRONTEND && _finishedGroupingManagerHandshake == false)
-                _finishedGroupingManagerHandshake = true;
+            private MuxChannelState _state;
+            private ServerType _service;
 
-            // Add the player to a game when both handshakes are finished
-            // Adding the player early can cause GroupingManager handshake to not finish properly, which leads to the chat not working
-            if (_finishedPlayerManagerHandshake && _finishedGroupingManagerHandshake)
+            public MuxChannel(FrontendClient client, ushort muxId)
             {
-                GameServiceProtocol.AddClient addClient = new(this);
-                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, addClient);
-                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, addClient);
+                _client = client;
+                _muxId = muxId;
+
+                _state = MuxChannelState.Auth;
+                _service = ServerType.FrontendServer;
             }
 
-            return true;
+            public override string ToString()
+            {
+                return $"[{_muxId}] {_service} - {_state}";
+            }
+
+            public bool FinishAuth()
+            {
+                if (_state != MuxChannelState.Auth)
+                    return Logger.ErrorReturn(false, $"FinishAuth(): Channel {_muxId} is in unexpected state {_state} for client [{_client}]");
+
+                _state = MuxChannelState.Handshake;
+                return true;
+            }
+
+            public bool HandleIncomingMessageBuffer(in MessageBuffer messageBuffer)
+            {
+                switch (_state)
+                {
+                    case MuxChannelState.Auth:
+                        // The only message we accept in the unauthenticated state is ClientCredentials on mux channel 1
+                        return HandleClientCredentials(messageBuffer);
+
+                    case MuxChannelState.Handshake:
+                        // Once the client is authenticated, we can allow it to connect to a backend service (but no message routing yet)
+                        return HandleInitialClientHandshake(messageBuffer);
+
+                    case MuxChannelState.Connected:
+                        // When this client is authenticated and connected to a backend service, we can begin routing messages
+                        return RouteMessageBuffer(messageBuffer);
+
+                    default:
+                        return Logger.ErrorReturn(false, $"HandleIncomingMessageBuffer(): Unexpected state {_state} for channel {_muxId} when handling a MessageBuffer from client [{_client}]");
+                }
+            }
+
+            private bool HandleClientCredentials(in MessageBuffer messageBuffer)
+            {
+                if (_muxId != 1) return Logger.WarnReturn(false, $"OnClientCredentials(): Received client credentials from client [{_client}] on unexpected channel {_muxId}");
+
+                var clientCredentials = messageBuffer.Deserialize<FrontendProtocolMessage>() as ClientCredentials;
+                if (clientCredentials == null) return Logger.ErrorReturn(false, $"OnClientCredentials(): Failed to retrieve message");
+
+                // Routing this message should authenticate the client if the credentials are successfully verified
+                MailboxMessage mailboxMessage = new(messageBuffer.MessageId, clientCredentials);
+                GameServiceProtocol.RouteMessage routeMessage = new(_client, typeof(FrontendProtocolMessage), mailboxMessage);
+                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, routeMessage);
+
+                return true;
+            }
+
+            private bool HandleInitialClientHandshake(in MessageBuffer messageBuffer)
+            {
+                var initialClientHandshake = messageBuffer.Deserialize<FrontendProtocolMessage>() as InitialClientHandshake;
+                if (initialClientHandshake == null) return Logger.WarnReturn(false, $"OnInitialClientHandshake(): Failed to retrieve message");
+
+                PubSubServerTypes serverType = initialClientHandshake.ServerType;
+
+                // We enforce strict mux channel binding (1 for player manager, 2 for grouping manager) because we use mux only
+                // to communicate with the client, and it is never going the change without potentially malicious modifications.
+                switch (serverType)
+                {
+                    case PubSubServerTypes.PLAYERMGR_SERVER_FRONTEND:
+                        if (_muxId != 1)
+                            goto default;
+
+                        _service = ServerType.PlayerManager;
+                        break;
+
+                    case PubSubServerTypes.GROUPING_MANAGER_FRONTEND:
+                        if (_muxId != 2)
+                            goto default;
+
+                        _service = ServerType.GroupingManager;
+                        break;
+
+                    default:
+                        return Logger.ErrorReturn(false, $"HandleInitialClientHandshake(): Unexpected PubSubServerType {serverType} on channel {_muxId} from client [{_client}]");
+                }
+
+                _state = MuxChannelState.Connected;
+
+                // Previously we had issues when the client received loading messages before it had the chance to connect
+                // to the grouping manager, resulting in having no access to chat. In theory it shouldn't happen anymore,
+                // but if it does, this code needs to change.
+                GameServiceProtocol.AddClient addClient = new(_client);
+                ServerManager.Instance.SendMessageToService(_service, addClient);
+
+                return true;
+            }
+
+            private readonly bool RouteMessageBuffer(in MessageBuffer messageBuffer)
+            {
+                GameServiceProtocol.RouteMessageBuffer routeMessageBuffer = new(_client, messageBuffer);
+                ServerManager.Instance.SendMessageToService(_service, routeMessageBuffer);
+                return true;
+            }
         }
 
         #endregion
