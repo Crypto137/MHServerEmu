@@ -14,10 +14,10 @@ namespace MHServerEmu.Frontend
     /// </summary>
     public class FrontendClient : TcpClient, IFrontendClient, IDBAccountOwner
     {
-        // We are currently allowing 30 packets per seconds with up to 6 seconds of burst.
-        // Given our current receive buffer size of 8 KB, this limits client input at about 240 KB/s.
-        private const int RateLimitPacketsPerSecond = 30;
-        private const int RateLimitBurst = RateLimitPacketsPerSecond * 6;
+        // We are currently allowing 50 packets per seconds with up to 10 seconds of burst.
+        // Given our current receive buffer size of 8 KB, this limits client input at about 400 KB/s.
+        private const int RateLimitPacketsPerSecond = 50;
+        private const int RateLimitBurst = RateLimitPacketsPerSecond * 10;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 

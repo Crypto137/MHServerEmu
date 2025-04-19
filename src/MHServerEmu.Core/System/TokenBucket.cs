@@ -17,7 +17,7 @@ namespace MHServerEmu.Core.System
         /// <summary>
         /// Constructs a <see cref="TokenBucket"/> with the specified settings.
         /// </summary>
-        public TokenBucket(int tokensPerSecond, int maxTokens)
+        public TokenBucket(float tokensPerSecond, int maxTokens)
         {
             Debug.Assert(tokensPerSecond > 0);
             Debug.Assert(maxTokens > 0);
