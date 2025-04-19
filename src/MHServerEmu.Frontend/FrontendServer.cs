@@ -34,10 +34,6 @@ namespace MHServerEmu.Frontend
         {
             switch (message)
             {
-                case GameServiceProtocol.RouteMessageBufferList routeMessageBufferList:
-                    OnRouteMessageBufferList(routeMessageBufferList);
-                    break;
-
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
@@ -47,17 +43,6 @@ namespace MHServerEmu.Frontend
         public string GetStatus()
         {
             return $"Connections: {ConnectionCount}";
-        }
-
-        private void OnRouteMessageBufferList(in GameServiceProtocol.RouteMessageBufferList routeMessageBufferList)
-        {
-            FrontendClient client = (FrontendClient)routeMessageBufferList.Client;
-            ushort muxId = routeMessageBufferList.MuxId;
-            IReadOnlyList<MessageBuffer> messageBufferList = routeMessageBufferList.MessageBufferList;
-
-            int messageBufferCount = messageBufferList.Count;
-            for (int i = 0; i < messageBufferCount; i++)
-                client.HandleMessageBuffer(muxId, messageBufferList[i]);
         }
 
         #endregion

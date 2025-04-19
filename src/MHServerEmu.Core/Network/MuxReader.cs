@@ -14,9 +14,7 @@ namespace MHServerEmu.Core.Network
     public class MuxReader
     {
         // A simplified version of CoreNetworkChannel / MuxReadContext from the client.
-
-        private const int ReadBufferSize = 8192;
-        private const ServerType HandlerService = ServerType.FrontendServer;
+        private const int ReadBufferSize = MessageBuffer.MaxSize;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -177,8 +175,9 @@ namespace MHServerEmu.Core.Network
                 _messageBufferList.Add(messageBuffer);
             }
 
-            GameServiceProtocol.RouteMessageBufferList serviceMessage = new(_client, _muxId, _messageBufferList);
-            ServerManager.Instance.SendMessageToService(HandlerService, serviceMessage);
+            // Handle only after we finish reading so that we don't partially handle malformed data.
+            foreach (MessageBuffer messageBuffer in _messageBufferList)
+                _client.HandleIncomingMessageBuffer(_muxId, messageBuffer);
 
             Reset();
         }

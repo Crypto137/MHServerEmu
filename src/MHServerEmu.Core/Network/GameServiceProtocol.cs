@@ -24,13 +24,6 @@
             public readonly IFrontendClient Client = client;
         }
 
-        public readonly struct RouteMessageBufferList(IFrontendClient client, ushort muxId, IReadOnlyList<MessageBuffer> messageBufferList) : IGameServiceMessage
-        {
-            public readonly IFrontendClient Client = client;
-            public readonly ushort MuxId = muxId;
-            public readonly IReadOnlyList<MessageBuffer> MessageBufferList = messageBufferList;
-        }
-
         public readonly struct RouteMessageBuffer(IFrontendClient client, MessageBuffer messageBuffer) : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;

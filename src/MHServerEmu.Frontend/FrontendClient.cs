@@ -11,7 +11,7 @@ namespace MHServerEmu.Frontend
     /// <summary>
     /// An implementation of <see cref="IFrontendClient"/> backed by a <see cref="TcpServer"/>.
     /// </summary>
-    public class FrontendClient : IFrontendClient, ITcpClient, IDBAccountOwner
+    public class FrontendClient : TcpClient, IFrontendClient, IDBAccountOwner
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -21,8 +21,6 @@ namespace MHServerEmu.Frontend
         private bool _finishedGroupingManagerHandshake = false;
 
         private ulong _gameId;
-
-        public TcpClientConnection Connection { get; }
 
         public IFrontendSession Session { get; private set; } = null;
         public DBAccount Account { get => Session?.Account; }
@@ -36,17 +34,15 @@ namespace MHServerEmu.Frontend
         /// <summary>
         /// Constructs a new <see cref="FrontendClient"/> instance for the provided <see cref="TcpClientConnection"/>.
         /// </summary>
-        public FrontendClient(TcpClientConnection connection)
+        public FrontendClient(TcpClientConnection connection) : base(connection)
         {
             _muxReader = new(this);
-
-            Connection = connection;
         }
 
         public override string ToString()
         {
             if (Session == null)
-                return "Account=NONE, SessionId=NONE";
+                return $"Unauthenticated ({Connection})";
 
             return $"Account={Session.Account}, SessionId=0x{Session.Id:X}";
         }
@@ -56,6 +52,40 @@ namespace MHServerEmu.Frontend
         public void Disconnect()
         {
             Connection.Disconnect();
+        }
+
+        public bool HandleIncomingMessageBuffer(ushort muxId, in MessageBuffer messageBuffer)
+        {
+            // Skip messages from clients that have already disconnected
+            if (Connection.Connected == false)
+                return Logger.WarnReturn(false, $"HandleIncomingMessageBuffer(): Client [{this}] has already disconnected");
+
+            // TODO: Block anything but ClientCredentials until we have a session
+
+            // Route to the destination service if initial frontend business has already been done
+            if (muxId == 1 && _finishedPlayerManagerHandshake)
+            {
+                GameServiceProtocol.RouteMessageBuffer playerManagerMessage = new(this, messageBuffer);
+                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, playerManagerMessage);
+                return true;
+            }
+            else if (muxId == 2 && _finishedGroupingManagerHandshake)
+            {
+                GameServiceProtocol.RouteMessageBuffer groupingManagerMessage = new(this, messageBuffer);
+                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
+                return true;
+            }
+
+            // Self-handling for initial connection
+            switch ((FrontendProtocolMessage)messageBuffer.MessageId)
+            {
+                case FrontendProtocolMessage.ClientCredentials:         OnClientCredentials(messageBuffer); break;
+                case FrontendProtocolMessage.InitialClientHandshake:    OnInitialClientHandshake(messageBuffer); break;
+
+                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)messageBuffer.MessageId} [{messageBuffer.MessageId}]"); break;
+            }
+
+            return true;
         }
 
         public void SendMuxCommand(ushort muxId, MuxCommand command)
@@ -86,40 +116,6 @@ namespace MHServerEmu.Frontend
         public void HandleIncomingData(byte[] buffer, int length)
         {
             _muxReader.HandleIncomingData(buffer, length);
-        }
-
-        public bool HandleMessageBuffer(ushort muxId, in MessageBuffer messageBuffer)
-        {
-            // Skip messages from clients that have already disconnected
-            if (Connection.Connected == false)
-                return Logger.WarnReturn(false, $"HandleMessageBuffer(): Client [{this}] has already disconnected");
-
-            // TODO: Block anything but ClientCredentials until we have a session
-
-            // Route to the destination service if initial frontend business has already been done
-            if (muxId == 1 && _finishedPlayerManagerHandshake)
-            {
-                GameServiceProtocol.RouteMessageBuffer playerManagerMessage = new(this, messageBuffer);
-                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, playerManagerMessage);
-                return true;
-            }
-            else if (muxId == 2 && _finishedGroupingManagerHandshake)
-            {
-                GameServiceProtocol.RouteMessageBuffer groupingManagerMessage = new(this, messageBuffer);
-                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, groupingManagerMessage);
-                return true;
-            }
-
-            // Self-handling for initial connection
-            switch ((FrontendProtocolMessage)messageBuffer.MessageId)
-            {
-                case FrontendProtocolMessage.ClientCredentials:         OnClientCredentials(messageBuffer); break;
-                case FrontendProtocolMessage.InitialClientHandshake:    OnInitialClientHandshake(messageBuffer); break;
-
-                default: Logger.Warn($"Handle(): Unhandled {(FrontendProtocolMessage)messageBuffer.MessageId} [{messageBuffer.MessageId}]"); break;
-            }
-
-            return true;
         }
 
         /// <summary>

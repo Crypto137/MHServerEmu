@@ -440,7 +440,7 @@ namespace MHServerEmu.PlayerManagement
 
             if (_sessionManager.VerifyClientCredentials(frontendClient, clientCredentials) == false)
             {
-                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client on {frontendClient.Connection}");
+                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{frontendClient}]");
                 client.Disconnect();
                 return false;
             }

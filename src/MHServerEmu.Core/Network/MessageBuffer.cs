@@ -10,7 +10,7 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public readonly struct MessageBuffer
     {
-        private const int MaxLength = 4096;     // Client messages should be small
+        public const int MaxSize = 2048;     // Client messages should be small
         public const uint InvalidMessageId = unchecked((uint)-1);
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -31,8 +31,8 @@ namespace MHServerEmu.Core.Network
                 MessageId = CodedInputStream.ReadRawVarint32(stream);
 
                 _length = (int)CodedInputStream.ReadRawVarint32(stream);
-                if (_length > MaxLength)
-                    throw new Exception($"Message length {_length} exceeded the max allowed length of {MaxLength}.");
+                if (_length > MaxSize)
+                    throw new Exception($"Message length {_length} exceeded the max allowed length of {MaxSize}.");
 
                 _buffer = BufferPool.Rent(_length);
                 stream.Read(_buffer, 0, _length);
