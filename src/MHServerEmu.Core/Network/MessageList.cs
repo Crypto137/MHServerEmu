@@ -7,15 +7,16 @@ namespace MHServerEmu.Core.Network
     /// A wrapper around <see cref="Queue{T}"/> that imitates the functionality of Gazillion's CoreNetworkMailbox::MessageList.
     /// </summary>
     /// <remarks>
-    /// This class is NOT thread-safe. Asynchronous thread-safe message handling should be done through <see cref="CoreNetworkMailbox"/>.
+    /// This class is NOT thread-safe. Asynchronous thread-safe message handling should be done through <see cref="CoreNetworkMailbox{T}"/>.
     /// </remarks>
     public class MessageList
     {
-        // NOTE: In the client this class is based on a "FastList" data structure, which appears to be a variation of a linked list.
+        // NOTE: In the client this class is based on a "FastList" data structure, which appears to be a variation of an intrusive linked list.
+        // Using a linked list in our case would cause node allocations, so our implemenetation is Queue<T> based instead.
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Queue<(ITcpClient, MailboxMessage)> _messageQueue = new();
+        private Queue<(ITcpClient, MailboxMessage)> _messageQueue = new();
 
         /// <summary>
         /// Returns <see langword="true"/> if this <see cref="MessageList{TClient}"/> instance has any queued messages.
@@ -25,7 +26,7 @@ namespace MHServerEmu.Core.Network
         // NOTE: Rather than exposing the underlying data structure like the client, we encapsulate it with Enqueue() / TransferFrom() / Clear() methods.
 
         /// <summary>
-        /// Enqueues the provided <see cref="MailboxMessage"/> from a <typeparamref name="TClient"/>.
+        /// Enqueues the provided <see cref="MailboxMessage"/> from an <see cref="ITcpClient"/>.
         /// </summary>
         public void Enqueue(ITcpClient client, MailboxMessage message)
         {
@@ -34,15 +35,26 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Transfers all <see cref="MailboxMessage"/> instances from another <see cref="MessageList{TClient}"/>.
+        /// Transfers all <see cref="MailboxMessage"/> instances from another <see cref="MessageList"/>.
         /// </summary>
+        /// <remarks>
+        /// This method works faster when this <see cref="MessageList"/> is empty (which is the intended use case).
+        /// </remarks>
         public void TransferFrom(MessageList other)
         {
             // NOTE: In the client this is done by calling FastList::Concat().
-            _messageQueue.EnsureCapacity(_messageQueue.Count + other._messageQueue.Count);
-
-            while (other._messageQueue.Count > 0)
-                _messageQueue.Enqueue(other._messageQueue.Dequeue());
+            if (_messageQueue.Count == 0)
+            {
+                // When this list is empty, we can swap the underlying queues instead of transferring messages one by one
+                (_messageQueue, other._messageQueue) = (other._messageQueue, _messageQueue);
+            }
+            else
+            {
+                // Fall back to the slow one by one transfer (shouldn't be happening)
+                Logger.Warn("TransferFrom(): This MessageList is not empty");
+                while (other._messageQueue.Count > 0)
+                    _messageQueue.Enqueue(other._messageQueue.Dequeue());
+            }
         }
 
         /// <summary>
