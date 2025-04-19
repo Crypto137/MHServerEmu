@@ -60,12 +60,7 @@ namespace MHServerEmu.Frontend
             var client = (FrontendClient)connection.Client;
             Logger.Info($"Client [{client}] disconnected");
 
-            if (client.Session != null)
-            {
-                GameServiceProtocol.RemoveClient removeClient = new(client);
-                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, removeClient);
-                ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, removeClient);
-            }
+            client.OnDisconnected();
         }
 
         protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)

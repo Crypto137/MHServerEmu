@@ -134,6 +134,12 @@ namespace MHServerEmu.Frontend
             return true;
         }
 
+        public void OnDisconnected()
+        {
+            _muxChannel1.Disconnect();
+            _muxChannel2.Disconnect();
+        }
+
         #region MuxChannel
 
         // NOTE: If we end up having multiple frontend implementations, this should probably go to Core.
@@ -143,7 +149,8 @@ namespace MHServerEmu.Frontend
             Invalid,
             Auth,
             Handshake,
-            Connected
+            Connected,
+            Disconnected
         }
 
         /// <summary>
@@ -178,6 +185,18 @@ namespace MHServerEmu.Frontend
 
                 _state = MuxChannelState.Handshake;
                 return true;
+            }
+
+            public void Disconnect()
+            {
+                // Notify the service we are connected to that this channel has been disconnected
+                if (_state == MuxChannelState.Connected)
+                {
+                    GameServiceProtocol.RemoveClient removeClient = new(_client);
+                    ServerManager.Instance.SendMessageToService(_service, removeClient);
+                }
+
+                _state = MuxChannelState.Disconnected;
             }
 
             public bool HandleIncomingMessageBuffer(in MessageBuffer messageBuffer)
