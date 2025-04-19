@@ -44,6 +44,11 @@ namespace MHServerEmu.Core.System.Time
         public static TimeSpan GameTime { get => UtcNowPrecise - GameTimeEpoch; }
 
         /// <summary>
+        /// Returns a <see cref="TimeSpan"/> representing the amount of time since <see cref="Clock"/> was initialized.
+        /// </summary>
+        public static TimeSpan ElapsedTime { get => _utcStopwatch.Elapsed; }
+
+        /// <summary>
         /// Returns the number of steps in a <see cref="TimeSpan"/> given the provided step size.
         /// </summary>
         public static long CalcNumTimeQuantums(TimeSpan time, TimeSpan quantumSize)
