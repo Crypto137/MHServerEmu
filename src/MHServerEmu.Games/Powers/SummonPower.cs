@@ -616,7 +616,7 @@ namespace MHServerEmu.Games.Powers
 
                 if (omni != null)
                 {
-                    settings.Lifespan *= 1.0f + (float)context.Properties[PropertyEnum.OmniDurationBonusPct];
+                    settings.Lifespan *= 1.0f + (float)omni.Properties[PropertyEnum.OmniDurationBonusPct];
                     settings.Lifespan = Clock.Max(settings.Lifespan, TimeSpan.FromMilliseconds(1));
                 }
 
