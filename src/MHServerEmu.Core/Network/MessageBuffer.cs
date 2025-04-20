@@ -10,7 +10,7 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public readonly struct MessageBuffer
     {
-        public const int MaxSize = 2048;     // Client messages should be small
+        public const int MaxSize = 4096;     // Client messages should be small, this number was chosen based on the largest size we've seen (LoginDataPB messages)
         public const uint InvalidMessageId = unchecked((uint)-1);
 
         private static readonly Logger Logger = LogManager.CreateLogger();
