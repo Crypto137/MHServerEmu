@@ -46,6 +46,10 @@ namespace MHServerEmu.Core.Network
 
             while (offset < length)
             {
+                // Malformed data will disconnect the client, in which case we stop reading
+                if (_client.IsConnected == false)
+                    break;
+
                 int bytesToRead = Math.Min(_stateBytes - (int)_readBufferStream.Position, length - offset);
 
                 _readBufferStream.Write(buffer, offset, bytesToRead);
