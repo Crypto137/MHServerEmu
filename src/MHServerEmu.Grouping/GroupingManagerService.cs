@@ -2,20 +2,19 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.Network.Tcp;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Grouping
 {
-    public class GroupingManagerService : IGameService, IFrontendService, IMessageBroadcaster
+    public class GroupingManagerService : IGameService, IMessageBroadcaster
     {
         private const ushort MuxChannel = 2;    // All messages come from GroupingManager over mux channel 2
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly object _playerLock = new();
-        private readonly Dictionary<string, FrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
+        private readonly Dictionary<string, IFrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
         private ICommandParser _commandParser;
 
@@ -30,30 +29,50 @@ namespace MHServerEmu.Grouping
 
         public void Shutdown() { }
 
-        public void Handle(ITcpClient tcpClient, MessagePackage message)
+        public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
-            // that includes a single message - GetPlayerInfoByName. If we ever receive it,
-            // it should end up here.
-            message.Protocol = typeof(ClientToGroupingManagerMessage);
-
-            switch ((ClientToGroupingManagerMessage)message.Id)
+            switch (message)
             {
+                // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
+                // that includes a single message - GetPlayerInfoByName. If we ever receive it, it should end up here.
+
+                case GameServiceProtocol.AddClient addClient:
+                    OnAddClient(addClient);
+                    break;
+
+                case GameServiceProtocol.RemoveClient removeClient:
+                    OnRemoveClient(removeClient);
+                    break;
+
+                case GameServiceProtocol.RouteMessage routeMailboxMessage:
+                    OnRouteMailboxMessage(routeMailboxMessage);
+                    break;
+
                 default:
-                    Logger.Warn($"Handle(): Unhandled {(ClientToGroupingManagerMessage)message.Id} [{message.Id}]");
+                    Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
             }
         }
 
-        public void Handle(ITcpClient client, IReadOnlyList<MessagePackage> messages)
+        public string GetStatus()
         {
-            for (int i = 0; i < messages.Count; i++)
-                Handle(client, messages[i]);
+            return $"Players: {_playerDict.Count}";
         }
 
-        public void Handle(ITcpClient tcpClient, MailboxMessage message)
+        private void OnAddClient(in GameServiceProtocol.AddClient addClient)
         {
-            var client = (FrontendClient)tcpClient;
+            AddClient(addClient.Client);
+        }
+
+        private void OnRemoveClient(in GameServiceProtocol.RemoveClient removeClient)
+        {
+            RemoveClient(removeClient.Client);
+        }
+
+        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
+        {
+            IFrontendClient client = routeMailboxMessage.Client;
+            MailboxMessage message = routeMailboxMessage.Message;
 
             // Handle messages routed from games
             switch ((ClientToGameServerMessage)message.Id)
@@ -66,31 +85,16 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public string GetStatus()
-        {
-            return $"Players: {_playerDict.Count}";
-        }
-
         #endregion
 
-        #region Player Management
+        #region Client Management
 
-        public void ReceiveFrontendMessage(FrontendClient client, IMessage message)
-        {
-            if (message is InitialClientHandshake)
-            {
-                client.FinishedGroupingManagerHandshake = true;
-                return;
-            }
-
-            Logger.Warn($"ReceiveFrontendMessage(): Unhandled message {message.DescriptorForType.Name}");
-        }
-
-        public bool AddFrontendClient(FrontendClient client)
+        private bool AddClient(IFrontendClient client)
         {
             lock (_playerLock)
             {
-                string playerName = client.Session.Account.PlayerName.ToLower();
+                DBAccount account = ((IDBAccountOwner)client).Account;
+                string playerName = account.PlayerName.ToLower();
 
                 if (_playerDict.ContainsKey(playerName))
                     return Logger.WarnReturn(false, "AddFrontendClient(): Already added");
@@ -103,14 +107,15 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public bool RemoveFrontendClient(FrontendClient client)
+        private bool RemoveClient(IFrontendClient client)
         {
             lock (_playerLock)
             {
-                string playerName = client.Session.Account.PlayerName.ToLower();
+                DBAccount account = ((IDBAccountOwner)client).Account;
+                string playerName = account.PlayerName.ToLower();
 
                 if (_playerDict.Remove(playerName) == false)
-                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {client.Session.Account.PlayerName} not found");
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {account.PlayerName} not found");
 
                 Logger.Info($"Removed client [{client}]");
                 return true;
@@ -126,13 +131,16 @@ namespace MHServerEmu.Grouping
             }
         }
 
-        public bool TryGetPlayerByName(string playerName, out FrontendClient client) => _playerDict.TryGetValue(playerName.ToLower(), out client);
+        public bool TryGetPlayerByName(string playerName, out IFrontendClient client)
+        {
+            return _playerDict.TryGetValue(playerName.ToLower(), out client);
+        }
 
         #endregion
 
         #region Message Handling
 
-        private bool OnChat(FrontendClient client, MailboxMessage message)
+        private bool OnChat(IFrontendClient client, MailboxMessage message)
         {
             var chat = message.As<NetMessageChat>();
             if (chat == null) return Logger.WarnReturn(false, $"OnChat(): Failed to retrieve message");
@@ -141,9 +149,11 @@ namespace MHServerEmu.Grouping
             if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
                 return true;
 
+            DBAccount account = ((IDBAccountOwner)client).Account;
+
             // Limit broadcast and metagame channels to users with moderator privileges and higher
             if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                && client.Session.Account.UserLevel < AccountUserLevel.Moderator)
+                && account.UserLevel < AccountUserLevel.Moderator)
             {
                 // There are two chat error sources: NetMessageChatError from GameServerToClient.proto and ChatErrorMessage from GroupingManager.proto.
                 // The client expects the former from mux channel 1, and the latter from mux channel 2. Local region chat might be handled by the game
@@ -159,19 +169,19 @@ namespace MHServerEmu.Grouping
 
             // Broadcast the message if everything's okay
             if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
-                Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{client.Session.Account})]: {chat.TheMessage.Body}", LogCategory.Chat);
+                Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
 
             // Right now all messages are broadcasted to all connected players
             BroadcastMessage(ChatNormalMessage.CreateBuilder()
                 .SetRoomType(chat.RoomType)
-                .SetFromPlayerName(client.Session.Account.PlayerName)
+                .SetFromPlayerName(account.PlayerName)
                 .SetTheMessage(chat.TheMessage)
                 .Build());
 
             return true;
         }
 
-        private bool OnTell(FrontendClient client, MailboxMessage message)
+        private bool OnTell(IFrontendClient client, MailboxMessage message)
         {
             var tell = message.As<NetMessageTell>();
             if (tell == null) return Logger.WarnReturn(false, $"OnTell(): Failed to retrieve message");
@@ -186,7 +196,7 @@ namespace MHServerEmu.Grouping
             return true;
         }
 
-        private bool OnTryModifyCommunityMemberCircle(FrontendClient client, MailboxMessage message)
+        private bool OnTryModifyCommunityMemberCircle(IFrontendClient client, MailboxMessage message)
         {
             // We are handling this in the grouping manager to avoid exposing the ChatHelper class
             // TODO: Remove this and handle it in game after we implemented social functionality there.

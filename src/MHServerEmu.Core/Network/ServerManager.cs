@@ -2,7 +2,6 @@
 using System.Text;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Metrics;
-using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
@@ -20,7 +19,7 @@ namespace MHServerEmu.Core.Network
     }
 
     /// <summary>
-    /// Manages <see cref="IGameService"/> instances and routes <see cref="MessagePackage"/> instances between them.
+    /// Manages <see cref="IGameService"/> instances and routes <see cref="IGameServiceMessage"/> instances between them.
     /// </summary>
     public class ServerManager
     {
@@ -96,9 +95,9 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Routes the provided <see cref="MessagePackage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
+        /// Routes the provided <typeparamref name="T"/> instance to the <see cref="IGameService"/> registered for the specified <see cref="ServerType"/>.
         /// </summary>
-        public bool RouteMessage(ITcpClient client, MessagePackage message, ServerType serverType)
+        public bool SendMessageToService<T>(ServerType serverType, in T message) where T: struct, IGameServiceMessage
         {
             int index = (int)serverType;
 
@@ -108,41 +107,7 @@ namespace MHServerEmu.Core.Network
             if (_services[index] == null)
                 return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
 
-            _services[index].Handle(client, message);
-            return true;
-        }
-
-        /// <summary>
-        /// Routes the provided <see cref="IReadOnlyList{T}"/> of <see cref="MessagePackage"/> instances to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
-        /// </summary>
-        public bool RouteMessages(ITcpClient client, IReadOnlyList<MessagePackage> messages, ServerType serverType)
-        {
-            int index = (int)serverType;
-
-            if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"RouteMessages(): Invalid server type {serverType}");
-
-            if (_services[index] == null)
-                return Logger.WarnReturn(false, $"RouteMessages(): No service is registered for server type {serverType}");
-
-            _services[index].Handle(client, messages);
-            return true;
-        }
-
-        /// <summary>
-        /// Routes the provided <see cref="MailboxMessage"/> instance to the <see cref="IGameService"/> registered as the specified <see cref="ServerType"/>.
-        /// </summary>
-        public bool RouteMessage(ITcpClient client, MailboxMessage message, ServerType serverType)
-        {
-            int index = (int)serverType;
-
-            if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"RouteMessage(): Invalid server type {serverType}");
-
-            if (_services[index] == null)
-                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
-
-            _services[index].Handle(client, message);
+            _services[index].ReceiveServiceMessage(message);
             return true;
         }
 
@@ -158,7 +123,7 @@ namespace MHServerEmu.Core.Network
                 if (_serviceThreads[i] != null)
                     Logger.Warn($"RunServices(): {(ServerType)i} service is already running");
 
-                _serviceThreads[i] = new(_services[i].Run) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+                _serviceThreads[i] = new(_services[i].Run) { Name = $"Service [{(ServerType)i}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
                 _serviceThreads[i].Start();
             }
         }
