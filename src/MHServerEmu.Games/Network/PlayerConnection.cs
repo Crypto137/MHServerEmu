@@ -860,6 +860,7 @@ namespace MHServerEmu.Games.Network
                 .SetFrontendname("bopr-mhfes2");
 
             SendMessage(response.Build());
+            FlushMessages();    // Send the reply ASAP for more accurate timing (NOTE: this is not accurate to our packet dumps, but gives better ping values)
             return true;
         }
 
