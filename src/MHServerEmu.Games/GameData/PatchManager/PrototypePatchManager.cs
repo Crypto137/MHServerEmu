@@ -113,13 +113,13 @@ namespace MHServerEmu.Games.GameData.PatchManager
             if (prototype.DataRef == PrototypeId.Invalid 
                 && _pathDict.TryGetValue(prototype, out currentPath) == false) return;
 
-            PrototypeId patchProtoRef;
-            if (prototype.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(prototype.DataRef))
-                patchProtoRef = _protoStack.Pop();
-            else
-                patchProtoRef = _protoStack.Peek();
-
-            if (prototype.DataRef != PrototypeId.Invalid && prototype.DataRef != patchProtoRef) return;
+            PrototypeId patchProtoRef = _protoStack.Peek();
+            if (prototype.DataRef != PrototypeId.Invalid)
+            {
+                if (prototype.DataRef != patchProtoRef) return;
+                if (_patchDict.ContainsKey(prototype.DataRef))
+                    patchProtoRef = _protoStack.Pop();
+            }
 
             if (_patchDict.TryGetValue(patchProtoRef, out var list) == false) return;
 
