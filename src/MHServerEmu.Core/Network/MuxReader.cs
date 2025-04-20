@@ -141,6 +141,7 @@ namespace MHServerEmu.Core.Network
 
                 case MuxCommand.Disconnect:
                     Logger.Trace($"Client [{_client}] disconnected from mux channel {header.MuxId}");
+                    _client.Disconnect();   // Some clients appear to get stuck with an open socket connection if we don't do this
                     Reset();
                     break;
 
