@@ -46,17 +46,16 @@ namespace MHServerEmu.Core.Network
 
             while (offset < length)
             {
-                // Malformed data will disconnect the client, in which case we stop reading
-                if (_client.IsConnected == false)
-                    break;
-
+                // We need to handle this data even if the client is no longer connected to process graceful disconnects correctly.
                 int bytesToRead = Math.Min(_stateBytes - (int)_readBufferStream.Position, length - offset);
 
                 _readBufferStream.Write(buffer, offset, bytesToRead);
 
                 offset += bytesToRead;
 
-                CheckStateTransition();
+                // Stop reading if we encounter an error at any point
+                if (CheckStateTransition() == false)
+                    break;
             }
         }
 
@@ -75,13 +74,13 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Handles data if enough has been read.
+        /// Handles data if enough has been read. Returns <see langword="false"/> if encountered an error.
         /// </summary>
-        private void CheckStateTransition()
+        private bool CheckStateTransition()
         {
             // Do not change state until we read enough bytes
             if (_readBufferStream.Position < _stateBytes)
-                return;
+                return true;
 
             _readBufferStream.Position = 0;
 
@@ -97,13 +96,15 @@ namespace MHServerEmu.Core.Network
                         ParseData();
                         break;
                 }
+
+                return true;
             }
             catch (Exception e)
             {
                 // If at any point something goes wrong, we disconnect.
                 Logger.ErrorException(e, $"CheckStateTransition(): Failed to parse data from {_client}, disconnecting...");
                 _client.Disconnect();
-                return;
+                return false;
             }
         }
 
