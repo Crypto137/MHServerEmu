@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.Extensions
+﻿using System.Runtime.InteropServices;
+
+namespace MHServerEmu.Core.Extensions
 {
     public static class StreamExtensions
     {
@@ -48,7 +50,10 @@
             {
                 long previousPosition = stream.Position;
                 stream.Position = position;
-                stream.Write(BitConverter.GetBytes(value));
+
+                Span<byte> bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
+                stream.Write(bytes);
+                
                 stream.Position = previousPosition;
                 return true;
             }

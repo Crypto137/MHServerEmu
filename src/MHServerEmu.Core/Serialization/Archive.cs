@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
@@ -791,8 +792,7 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool WriteUnencodedStream(uint value)
         {
-            Span<byte> bytes = stackalloc byte[sizeof(uint)];
-            value.UnsafeWriteBytesTo(bytes);
+            Span<byte> bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
             return WriteBytes(bytes);
         }
 
@@ -812,8 +812,7 @@ namespace MHServerEmu.Core.Serialization
         /// </summary>
         public bool WriteUnencodedStream(ulong value)
         {
-            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
-            value.UnsafeWriteBytesTo(bytes);
+            Span<byte> bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
             return WriteBytes(bytes);
         }
 
@@ -826,7 +825,7 @@ namespace MHServerEmu.Core.Serialization
             {
                 Span<byte> bytes = stackalloc byte[sizeof(uint)];
                 ReadBytes(bytes);
-                value = bytes.UnsafeToUInt32();
+                value = MemoryMarshal.Read<uint>(bytes);
                 return true;
             }
             catch (Exception e)
@@ -845,7 +844,7 @@ namespace MHServerEmu.Core.Serialization
             {
                 Span<byte> bytes = stackalloc byte[sizeof(ulong)];
                 ReadBytes(bytes);
-                value = bytes.UnsafeToUInt64();
+                value = MemoryMarshal.Read<ulong>(bytes);
                 return true;
             }
             catch (Exception e)

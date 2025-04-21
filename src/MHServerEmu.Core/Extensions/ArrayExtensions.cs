@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using Google.ProtocolBuffers;
 
 namespace MHServerEmu.Core.Extensions
 {
@@ -36,14 +35,6 @@ namespace MHServerEmu.Core.Extensions
         {
             return Convert.ToHexString(byteArray);
         }
-
-        /// <summary>
-        /// Converts a byte array to a protobuf-compatible ByteString.
-        /// </summary>
-        public static ByteString ToByteString(this byte[] byteArray)
-        {
-            return ByteString.CopyFrom(byteArray);
-        }
         
         /// <summary>
         /// Converts a hex string to a byte array.
@@ -51,58 +42,6 @@ namespace MHServerEmu.Core.Extensions
         public static byte[] ToByteArray(this string hexString)
         {
             return Convert.FromHexString(hexString);
-        }
-
-        /// <summary>
-        /// Converts a hex string to a protobuf-compatible ByteString.
-        /// </summary>
-        public static ByteString ToByteString(this string hexString)
-        {
-            return ByteString.CopyFrom(Convert.FromHexString(hexString));
-        }
-
-        #endregion
-
-        #region Conversion
-
-        /// <summary>
-        /// Converts this <see cref="Span{T}"/> to <see cref="uint"/> without checking its length.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint UnsafeToUInt32(this Span<byte> bytes)
-        {
-            // We do the same thing as BitConverter.ToUInt32(), but without the length check.
-            return Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetReference(bytes));
-        }
-
-        /// <summary>
-        /// Converts this <see cref="Span{T}"/> to <see cref="ulong"/> without checking its length.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong UnsafeToUInt64(this Span<byte> bytes)
-        {
-            // We do the same thing as BitConverter.ToUInt64(), but without the length check.
-            return Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(bytes));
-        }
-
-        /// <summary>
-        /// Writes byte representation of this <see cref="uint"/> to the provided <see cref="Span{T}"/> without checking its length.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UnsafeWriteBytesTo(this uint value, Span<byte> bytes)
-        {
-            // We do the same thing as BitConverter.TryWriteBytes(), but without the length check.
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(bytes), value);
-        }
-
-        /// <summary>
-        /// Writes byte representation of this <see cref="ulong"/> to the provided <see cref="Span{T}"/> without checking its length.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UnsafeWriteBytesTo(this ulong value, Span<byte> bytes)
-        {
-            // We do the same thing as BitConverter.TryWriteBytes(), but without the length check.
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetReference(bytes), value);
         }
 
         #endregion
@@ -114,10 +53,9 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static ulong ReverseBytes(this ulong value)
         {
-            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
-            value.UnsafeWriteBytesTo(bytes);
+            Span<byte> bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
             bytes.Reverse();
-            return bytes.UnsafeToUInt64();
+            return MemoryMarshal.Read<ulong>(bytes);
         }
 
         /// <summary>
@@ -125,15 +63,14 @@ namespace MHServerEmu.Core.Extensions
         /// </summary>
         public static ulong ReverseBits(this ulong value)
         {
-            Span<byte> bytes = stackalloc byte[sizeof(ulong)];
-            value.UnsafeWriteBytesTo(bytes);
+            Span<byte> bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref value, 1));
             bytes.Reverse();
 
             // Use a lookup table to speed up bit reversal for each byte
             for (int i = 0; i < sizeof(ulong); i++)
                 bytes[i] = BitReversalLookupTable[bytes[i]];
 
-            return bytes.UnsafeToUInt64();
+            return MemoryMarshal.Read<ulong>(bytes);
         }
 
         #endregion

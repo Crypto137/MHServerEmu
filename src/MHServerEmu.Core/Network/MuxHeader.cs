@@ -69,7 +69,7 @@ namespace MHServerEmu.Core.Network
             bits |= (ulong)Command << 40;
 
             // Reinterpret cast packed data as a byte span
-            Span<byte> bytes = MemoryMarshal.Cast<ulong, byte>(MemoryMarshal.CreateSpan(ref bits, 1));
+            Span<byte> bytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref bits, 1));
             
             // Write the bytes we need to the stream
             stream.Write(bytes[..Size]);
