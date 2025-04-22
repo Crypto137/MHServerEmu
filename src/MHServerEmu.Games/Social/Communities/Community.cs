@@ -146,6 +146,8 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
+            //Logger.Debug($"AddMember(): playerDbId=0x{playerDbId:X}, playerName={playerName}, circleId={circleId}");
+
             // Get an existing member to add to the circle
             CommunityMember member = GetMember(playerDbId);
 
@@ -170,9 +172,12 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool RemoveMember(ulong playerDbId, CircleId circleId)
         {
+            //Logger.Debug($"RemoveMember(): playerDbId=0x{playerDbId:X}, circleId={circleId}");
+
+            // It's valid to not have this member, so don't log
             CommunityMember member = GetMember(playerDbId);
             if (member == null)
-                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get member for dbId {playerDbId}");
+                return false;
 
             CommunityCircle circle = GetCircle(circleId);
             if (circle == null)

@@ -7,16 +7,15 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
 {
@@ -754,6 +753,13 @@ namespace MHServerEmu.Games.Network
 
             entity.OnPostAOIAddOrRemove(_playerConnection.Player, InterestTrackOperation.Modify, newInterestPolicies, previousInterestPolicies);
 
+            // Update nearby players in the community panel
+            if (addedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity) ||
+                removedInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+            {
+                UpdateNearbyCommunity(entity, newInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity));
+            }
+
             // Notify client of the added policies (entityDataId unused)
             SendMessage(NetMessageInterestPolicies.CreateBuilder()
                 .SetIdEntity(entity.Id)
@@ -867,6 +873,11 @@ namespace MHServerEmu.Games.Network
             Player player = _playerConnection.Player;
             entity.OnChangePlayerAOI(player, operation, newInterestPolicies, previousInterestPolicies, archiveInterestPolicies);
             entity.OnPostAOIAddOrRemove(player, operation, newInterestPolicies, previousInterestPolicies);
+
+            // Update nearby players in the community panel
+            bool isNearby = operation == InterestTrackOperation.Add && newInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity);
+            UpdateNearbyCommunity(entity, isNearby);
+
             return true;
         }
 
@@ -952,6 +963,9 @@ namespace MHServerEmu.Games.Network
             return newInterestPolicies;
         }
 
+        /// <summary>
+        /// Returns <see cref="AOINetworkPolicyValues"/> for the provided <see cref="Inventory"/>.
+        /// </summary>
         private AOINetworkPolicyValues GetInventoryInterestPolicies(Inventory inventory)
         {
             // Inventory is going to be null in recursive checks when we reach the top of the hierarchy
@@ -992,6 +1006,38 @@ namespace MHServerEmu.Games.Network
             }
 
             return interestPolicies;
+        }
+
+        /// <summary>
+        /// Adds or removes the <see cref="Player"/> who owns the provided <see cref="Entity"/>
+        /// to this <see cref="AreaOfInterest"/>'s owner's <see cref="Community"/>.
+        /// </summary>
+        private bool UpdateNearbyCommunity(Entity entity, bool isNearby)
+        {
+            if (entity is not Avatar avatar)
+                return true;
+
+            Community community = _playerConnection.Player?.Community;
+            if (community == null) return Logger.WarnReturn(false, "UpdateNearbyCommunity(): community == null");
+
+            Player entityOwner = entity.GetOwnerOfType<Player>();
+            if (entityOwner == null)
+                return true;
+
+            if (isNearby)
+            {
+                community.AddMember(entityOwner.DatabaseUniqueId, entityOwner.GetName(), CircleId.__Nearby);
+            }
+            else
+            {
+                bool interestedInCurrentAvatar = entityOwner.CurrentAvatar != null &&
+                    InterestedInEntity(entityOwner.CurrentAvatar.Id, AOINetworkPolicyValues.AOIChannelProximity);
+
+                if (interestedInCurrentAvatar == false)
+                    community.RemoveMember(entityOwner.DatabaseUniqueId, CircleId.__Nearby);
+            }
+
+            return true;
         }
 
         private void CalcVolumes(Vector3 playerPosition)
