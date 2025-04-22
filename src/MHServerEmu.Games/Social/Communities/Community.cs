@@ -146,25 +146,30 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
-            //Logger.Debug($"AddMember(): playerDbId=0x{playerDbId:X}, playerName={playerName}, circleId={circleId}");
-
             // Get an existing member to add to the circle
+            bool isNewMember = false;
             CommunityMember member = GetMember(playerDbId);
 
-            // If not found create a new member
+            // Create a new member if there isn't one already
             if (member == null)
             {
                 member = CreateMember(playerDbId, playerName);
-                if (member == null)     // Bail out if member creation failed
-                    return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId {playerDbId}");
+                isNewMember = true;
             }
 
-            // Get the circle
+            if (member == null)
+                return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId 0x{playerDbId:X}");
+
+            // Add to the circle
             CommunityCircle circle = GetCircle(circleId);
             if (circle == null)
                 return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
 
-            return circle.AddMember(member);
+            bool wasAdded = circle.AddMember(member);
+            if (wasAdded == false && isNewMember)
+                DestroyMember(member);
+
+            return wasAdded;
         }
 
         /// <summary>
@@ -172,16 +177,14 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool RemoveMember(ulong playerDbId, CircleId circleId)
         {
-            //Logger.Debug($"RemoveMember(): playerDbId=0x{playerDbId:X}, circleId={circleId}");
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null)
+                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get circle for cicleId {circleId}");
 
             // It's valid to not have this member, so don't log
             CommunityMember member = GetMember(playerDbId);
             if (member == null)
                 return false;
-
-            CommunityCircle circle = GetCircle(circleId);
-            if (circle == null)
-                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get circle for cicleId {circleId}");
 
             bool wasRemoved = circle.RemoveMember(member);
             
@@ -247,7 +250,10 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Returns the <see cref="CommunityCircle"/> of this <see cref="Community"/> with the specified id.
         /// </summary>
-        public CommunityCircle GetCircle(CircleId circleId) => CircleManager.GetCircle(circleId);
+        public CommunityCircle GetCircle(CircleId circleId)
+        {
+            return CircleManager.GetCircle(circleId);
+        }
 
         /// <summary>
         /// Returns the name of the specified <see cref="CircleId"/>.

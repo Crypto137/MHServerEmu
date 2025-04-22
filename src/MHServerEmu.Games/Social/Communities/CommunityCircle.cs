@@ -66,10 +66,24 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool AddMember(CommunityMember member)
         {
-            if (member.IsInCircle(this) == false)
-                return member.AddRemoveFromCircle(true, this);
+            // TODO: Implement support for non-local circles
 
-            return false;
+            // Get initial update flags - this needs to be done before we add to the circle to detect if this is a newly created member
+            CommunityMemberUpdateOptionBits updateOptions = CommunityMemberUpdateOptionBits.Circle;
+            if (member.NumCircles() == 0)
+                updateOptions |= CommunityMemberUpdateOptionBits.NewlyCreated;
+
+            // Add to the circle
+            if (member.IsInCircle(this))
+                return false;
+
+            if (member.AddRemoveFromCircle(true, this) == false)
+                return false;
+
+            // Send update to the client
+            member.SendUpdateToOwner(updateOptions);
+
+            return true;
         }
 
         /// <summary>
@@ -77,10 +91,17 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool RemoveMember(CommunityMember member)
         {
-            if (member.IsInCircle(this))
-                return member.AddRemoveFromCircle(false, this);
+            // Remove from the circle
+            if (member.IsInCircle(this) == false)
+                return false;
 
-            return false;
+            if (member.AddRemoveFromCircle(false, this) == false)
+                return false;
+
+            // Send update to the client
+            member.SendUpdateToOwner(CommunityMemberUpdateOptionBits.Circle);
+
+            return true;
         }
 
         /// <summary>
