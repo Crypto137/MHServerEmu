@@ -361,6 +361,8 @@ namespace MHServerEmu.Games.Network
             Player.GetMapDiscoveryData(region.Id)?.LoadPlayerDiscovered(Player);
 
             Player.SendFullscreenMovieSync();
+
+            Player.ScheduleCommunityBroadcast();
         }
 
         public void ExitGame()

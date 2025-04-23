@@ -3696,6 +3696,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             else if (levelDelta != 0)
             {
                 CombatLevel = Math.Clamp(CombatLevel + levelDelta, 1, GetAvatarLevelCap());
+
+                owner.ScheduleCommunityBroadcast();
             }
 
             return levelDelta;
@@ -3826,6 +3828,8 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             var player = GetOwnerOfType<Player>();
             if (player == null) return false;
+
+            player.ScheduleCommunityBroadcast();
             Region?.AvatarLeveledUpEvent.Invoke(new(player, PrototypeDataRef, newLevel));
 
             return true;
@@ -5331,6 +5335,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             AwardPrestigeLoot(prestigeLevel);
 
             ResetMissions();
+
+            player.ScheduleCommunityBroadcast();
 
             // Invoke achievement events
             PrestigeLevelPrototype prestigeLevelProto = GameDatabase.AdvancementGlobalsPrototype.GetPrestigeLevelPrototype(prestigeLevel);

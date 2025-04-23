@@ -83,6 +83,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<SwitchAvatarEvent> _switchAvatarEvent = new();
         private readonly EventPointer<CheckHoursPlayedEvent> _checkHoursPlayedEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
+        private readonly EventPointer<CommunityBroadcastEvent> _communityBroadcastEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
         private ReplicatedPropertyCollection _avatarProperties = new();
@@ -207,9 +208,6 @@ namespace MHServerEmu.Games.Entities
             base.OnPostInit(settings);
 
             SetGiftingRestrictions();
-
-            // REMOVEME: Social tab stub
-            _community.AddMember(10, "Coming Soon", CircleId.__Friends);
         }
 
         public override void OnPropertyChange(PropertyId id, PropertyValue newValue, PropertyValue oldValue, SetPropertyFlags flags)
@@ -1492,6 +1490,8 @@ namespace MHServerEmu.Games.Entities
             EnableCurrentAvatar(true, lastCurrentAvatarId, prevRegionId, prevPosition, prevOrientation);
 
             IsSwitchingAvatar = false;
+
+            ScheduleCommunityBroadcast();
 
             GetRegion()?.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
 
@@ -3006,6 +3006,26 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Communities
+
+        // Community update broadcasts are done via scheduled events to avoid multiple broadcasts at once.
+
+        public void ScheduleCommunityBroadcast()
+        {
+            if (_communityBroadcastEvent.IsValid)
+                return;
+
+            Game.GameEventScheduler.ScheduleEvent(_communityBroadcastEvent, TimeSpan.Zero, _pendingEvents);
+            _communityBroadcastEvent.Get().Initialize(this);
+        }
+
+        private void DoCommunityBroadcast()
+        {
+            Logger.Debug($"DoCommunityBroadcast(): [{this}]");
+        }
+
+        #endregion
+
         #region Scheduled Events
 
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
@@ -3026,6 +3046,11 @@ namespace MHServerEmu.Games.Entities
         private class MoveToTargetEvent : CallMethodEventParam1<Entity, PrototypeId>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).PlayerConnection.MoveToTarget(p1);
+        }
+
+        private class CommunityBroadcastEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Player)t).DoCommunityBroadcast();
         }
 
         #endregion
