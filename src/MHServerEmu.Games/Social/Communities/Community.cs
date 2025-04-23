@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -285,43 +286,15 @@ namespace MHServerEmu.Games.Social.Communities
         // These methods are replacements for CommunityCircleIterator and CommunityMemberIterator classes
 
         /// <summary>
-        /// Iterates all <see cref="CommunityCircle"/> instances in this <see cref="Community"/>.
-        /// </summary>
-        public IEnumerable<CommunityCircle> IterateCircles()
-        {
-            _numCircleIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityCircle circle in CircleManager)
-                    yield return circle;
-            }
-            finally
-            {
-                _numCircleIteratorsInScope--;
-            }
-        }
-
-        /// <summary>
         /// Iterates all <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
+        /// Iterates all circles in this <see cref="Community"/> if no member is provided.
         /// </summary>
-        public IEnumerable<CommunityCircle> IterateCircles(CommunityMember member)
+        public CircleIterator IterateCircles(CommunityMember member = null)
         {
-            _numCircleIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityCircle circle in CircleManager)
-                {
-                    if (member.IsInCircle(circle))
-                        yield return circle;
-                }
-            }
-            finally
-            {
-                _numCircleIteratorsInScope--;
-            }
+            return new(this, member);
         }
+
+        // TODO: Custom struct iterator for members
 
         /// <summary>
         /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>.
@@ -393,6 +366,71 @@ namespace MHServerEmu.Games.Social.Communities
                 return Logger.WarnReturn(false, $"DestroyMember(): Trying to destroy a member while iterating the community");
 
             return _communityMemberDict.Remove(member.DbId);
+        }
+
+        public readonly struct CircleIterator
+        {
+            private readonly Community _community;
+            private readonly CommunityMember _member;
+
+            public CircleIterator(Community community, CommunityMember member)
+            {
+                _community = community;
+                _member = member;
+            }
+
+            public Enumerator GetEnumerator()
+            {
+                return new(_community, _member);
+            }
+
+            public struct Enumerator : IEnumerator<CommunityCircle>
+            {
+                private readonly Community _community;
+                private readonly CommunityMember _member;
+
+                private CommunityCircleManager.Enumerator _enumerator;
+
+                public CommunityCircle Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(Community community, CommunityMember member)
+                {
+                    _community = community;
+                    _member = member;
+
+                    _enumerator = community.CircleManager.GetEnumerator();
+                    _community._numCircleIteratorsInScope++;
+                }
+
+                public bool MoveNext()
+                {
+                    while (_enumerator.MoveNext())
+                    {
+                        CommunityCircle circle = _enumerator.Current;
+                        if (_member != null && _member.IsInCircle(circle) == false)
+                            continue;
+
+                        Current = circle;
+                        return true;
+                    }
+
+                    Current = null;
+                    return false;
+                }
+
+                public void Reset()
+                {
+                    _enumerator.Dispose();
+                    _enumerator = _community.CircleManager.GetEnumerator();
+                }
+
+                public void Dispose()
+                {
+                    _enumerator.Dispose();
+                    _community._numCircleIteratorsInScope--;
+                }
+            }
         }
     }
 }
