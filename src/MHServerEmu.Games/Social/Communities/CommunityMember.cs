@@ -393,6 +393,10 @@ namespace MHServerEmu.Games.Social.Communities
                     circle.OnMemberReceivedBroadcast(this, updateOptionBits);
             }
 
+            // Relay this broadcast to the client
+            if (updateOptionBits != 0)
+                SendUpdateToOwner(updateOptionBits);
+
             return updateOptionBits;
         }
 

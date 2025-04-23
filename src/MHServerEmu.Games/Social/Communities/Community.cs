@@ -230,9 +230,23 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
+        public bool RequestLocalBroadcast(CommunityMember member)
+        {
+            Player player = Owner.Game.EntityManager.GetEntityByDbGuid<Player>(member.DbId);
+            if (player == null)
+                return false;
+
+            CommunityMemberBroadcast broadcast = player.BuildCommunityBroadcast();
+            ReceiveMemberBroadcast(broadcast);
+            return true;
+        }
+
         public void PullCommunityStatus()
         {
-            // TODO
+            // TODO: Request remote broadcast from the player manager
+
+            foreach (CommunityMember member in IterateMembers())
+                RequestLocalBroadcast(member);
         }
 
         public override string ToString()

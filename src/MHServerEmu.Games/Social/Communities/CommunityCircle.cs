@@ -32,12 +32,12 @@ namespace MHServerEmu.Games.Social.Communities
 
         private static readonly CommunityCirclePrototype[] Prototypes = new CommunityCirclePrototype[]
         {
-            new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.None),
-            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityCirclePrototypeFlags.Flag1),
-            new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityCirclePrototypeFlags.None),
-            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.Flag0),
-            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag1),
-            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag2),
+            new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityBroadcastFlags.None),
+            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityBroadcastFlags.Flag1),
+            new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityBroadcastFlags.None),
+            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityBroadcastFlags.Local),
+            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Flag1),
+            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Flag2),
         };
 
         public Community Community { get; }

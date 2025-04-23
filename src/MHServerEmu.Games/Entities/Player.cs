@@ -3019,9 +3019,41 @@ namespace MHServerEmu.Games.Entities
             _communityBroadcastEvent.Get().Initialize(this);
         }
 
+        public CommunityMemberBroadcast BuildCommunityBroadcast()
+        {
+            Region region = GetRegion();
+            Avatar avatar = CurrentAvatar;
+
+            return CommunityMemberBroadcast.CreateBuilder()
+                .SetMemberPlayerDbId(DatabaseUniqueId)
+                .SetCurrentRegionRefId(region != null ? (ulong)region.PrototypeDataRef : 0)
+                .SetCurrentDifficultyRefId(region != null ? (ulong)region.DifficultyTierRef : 0)
+                .AddSlots(CommunityMemberAvatarSlot.CreateBuilder()
+                    .SetAvatarRefId(avatar != null ? (ulong)avatar.PrototypeDataRef : 0)
+                    .SetCostumeRefId(avatar != null ? (ulong)avatar.EquippedCostumeRef : 0)
+                    .SetLevel(avatar != null ? (uint)avatar.CharacterLevel : 0)
+                    .SetPrestigeLevel(avatar != null ? (uint)avatar.PrestigeLevel : 0))
+                .SetCurrentPlayerName(GetName())
+                .SetIsOnline(1)
+                .Build();
+        }
+
         private void DoCommunityBroadcast()
         {
-            Logger.Debug($"DoCommunityBroadcast(): [{this}]");
+            // TODO: Send a broadcast message to the player manager to update other game instances
+
+            // Update players in this game instance
+            foreach (Player otherPlayer in new PlayerIterator(Game))
+            {
+                Community community = otherPlayer.Community;
+                CommunityMember member = community.GetMember(DatabaseUniqueId);
+
+                // Skip communities that don't have this player as a member
+                if (member == null)
+                    continue;
+
+                community.RequestLocalBroadcast(member);
+            }
         }
 
         #endregion
