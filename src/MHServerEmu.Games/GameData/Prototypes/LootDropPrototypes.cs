@@ -10,6 +10,8 @@ using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -606,13 +608,37 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void OnResultsEvaluation(Player player, WorldEntity dropper)
         {
-            // TODO: Use MessageScope
-            NetMessageChatFromGameSystem chatFromGameSystem = NetMessageChatFromGameSystem.CreateBuilder()
-                .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
-                .SetMessageStringId((ulong)ChatMessage)
-                .Build();
+            ChatManager chatManager = player.Game.ChatManager;
+            CircleId circleId = CircleId.__None;
 
-            player.SendMessage(chatFromGameSystem);
+            switch (MessageScope)
+            {
+                case PlayerScope.CurrentRecipientOnly:
+                    chatManager.SendChatFromGameSystem(ChatMessage, player);
+                    return;
+
+                case PlayerScope.Party:
+                    circleId = CircleId.__Party;
+                    break;
+
+                case PlayerScope.Nearby:
+                    circleId = CircleId.__Nearby;
+                    break;
+
+                case PlayerScope.Friends:
+                    circleId = CircleId.__Friends;
+                    break;
+
+                case PlayerScope.Guild:
+                    circleId = CircleId.__Guild;
+                    break;
+
+                default:
+                    Logger.Warn($"OnResultsEvaluation(): Unknown message scope {MessageScope}");
+                    return;
+            }
+
+            chatManager.SendChatFromGameSystem(ChatMessage, player, circleId);
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
