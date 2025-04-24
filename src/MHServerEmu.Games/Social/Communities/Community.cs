@@ -286,7 +286,7 @@ namespace MHServerEmu.Games.Social.Communities
         // These methods are replacements for CommunityCircleIterator and CommunityMemberIterator classes
 
         /// <summary>
-        /// Iterates all <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
+        /// Iterates <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
         /// Iterates all circles in this <see cref="Community"/> if no member is provided.
         /// </summary>
         public CircleIterator IterateCircles(CommunityMember member = null)
@@ -294,45 +294,13 @@ namespace MHServerEmu.Games.Social.Communities
             return new(this, member);
         }
 
-        // TODO: Custom struct iterator for members
-
         /// <summary>
-        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>.
+        /// Iterates <see cref="CommunityMember"/> instances that belong to the provided <see cref="CommunityCircle"/>.
+        /// Iterates all members in this <see cref="Community"/> if no circle is provided.
         /// </summary>
-        public IEnumerable<CommunityMember> IterateMembers()
+        public MemberIterator IterateMembers(CommunityCircle circle = null)
         {
-            _numMemberIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityMember member in _communityMemberDict.Values)
-                    yield return member;
-            }
-            finally
-            {
-                _numMemberIteratorsInScope--;
-            }
-        }
-
-        /// <summary>
-        /// Iterates all <see cref="CommunityMember"/> instances belonging to the provided <see cref="CommunityCircle"/>.
-        /// </summary>
-        public IEnumerable<CommunityMember> IterateMembers(CommunityCircle circle)
-        {
-            _numMemberIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityMember member in _communityMemberDict.Values)
-                {
-                    if (member.IsInCircle(circle))
-                        yield return member;
-                }
-            }
-            finally
-            {
-                _numMemberIteratorsInScope--;
-            }
+            return new(this, circle);
         }
 
         #endregion
@@ -429,6 +397,71 @@ namespace MHServerEmu.Games.Social.Communities
                 {
                     _enumerator.Dispose();
                     _community._numCircleIteratorsInScope--;
+                }
+            }
+        }
+
+        public readonly struct MemberIterator
+        {
+            private readonly Community _community;
+            private readonly CommunityCircle _circle;
+
+            public MemberIterator(Community community, CommunityCircle circle)
+            {
+                _community = community;
+                _circle = circle;
+            }
+
+            public Enumerator GetEnumerator()
+            {
+                return new(_community, _circle);
+            }
+
+            public struct Enumerator : IEnumerator<CommunityMember>
+            {
+                private readonly Community _community;
+                private readonly CommunityCircle _circle;
+
+                private Dictionary<ulong, CommunityMember>.ValueCollection.Enumerator _enumerator;
+
+                public CommunityMember Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(Community community, CommunityCircle circle)
+                {
+                    _community = community;
+                    _circle = circle;
+
+                    _enumerator = community._communityMemberDict.Values.GetEnumerator();
+                    _community._numMemberIteratorsInScope++;
+                }
+
+                public bool MoveNext()
+                {
+                    while (_enumerator.MoveNext())
+                    {
+                        CommunityMember member = _enumerator.Current;
+                        if (_circle != null && member.IsInCircle(_circle) == false)
+                            continue;
+
+                        Current = member;
+                        return true;
+                    }
+
+                    Current = null;
+                    return false;
+                }
+
+                public void Reset()
+                {
+                    _enumerator.Dispose();
+                    _enumerator = _community._communityMemberDict.Values.GetEnumerator();
+                }
+
+                public void Dispose()
+                {
+                    _enumerator.Dispose();
+                    _community._numMemberIteratorsInScope--;
                 }
             }
         }
