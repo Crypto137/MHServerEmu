@@ -2153,7 +2153,7 @@ namespace MHServerEmu.Games.Entities
                         playerUid = tag.PlayerUID;
                     }
 
-                    if (isCombatActive &&  tag.PowerPrototype != null && tag.Time >= powerTime)
+                    if (isCombatActive && tag.PowerPrototype != null && tag.Time >= powerTime)
                         player.OnScoringEvent(new(ScoringEventType.EntityDeathViaPower, Prototype, tag.PowerPrototype, GetRankPrototype()), Id);
                 }
             }

@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
             else if (_proto.MustBeTaggedByPlayer && killer == null)
             {
-                if (tagPlayers.GetPlayers().Any() == false) return false;
+                if (tagPlayers.HasTags == false) return false;
             }
 
             if (EvaluateEntityFilter(_proto.EntityFilter, entity) == false) return false;
