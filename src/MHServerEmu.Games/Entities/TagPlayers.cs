@@ -52,23 +52,24 @@ namespace MHServerEmu.Games.Entities
 
         public struct Enumerator
         {
-            private readonly SortedSet<TagInfo>.Enumerator _enumerator;
             private readonly EntityManager _manager;
             private readonly TimeSpan _curTime;
             private readonly TimeSpan _maxAge;
+
             private ulong _lastUid;
             private Player _current;
+            private SortedSet<TagInfo>.Enumerator _enumerator;
 
             public Enumerator(TagPlayers tagPlayers, TimeSpan maxAge)
             {
-                _enumerator = tagPlayers.Tags.GetEnumerator();
-
                 var game = tagPlayers.Owner.Game;
                 _manager = game.EntityManager;
                 _curTime = game.CurrentTime;
                 _maxAge = maxAge;
+
                 _lastUid = 0;
                 _current = null;
+                _enumerator = tagPlayers.Tags.GetEnumerator();
             }
 
             public Player Current => _current;
