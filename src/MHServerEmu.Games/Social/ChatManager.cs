@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
@@ -22,26 +23,77 @@ namespace MHServerEmu.Games.Social
 
         #region Message Handling
 
-        // TODO
-
         public void HandleChat(Player player, NetMessageChat chat)
         {
+            switch (chat.RoomType)
+            {
+                case ChatRoomTypes.CHAT_ROOM_TYPE_LOCAL:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SAY:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_PARTY:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_EN:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_FR:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_DE:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_EL:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_KO:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_PT:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_RU:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_ES:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_SOCIAL_ZH:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_TRADE:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_LFG:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_FACTION:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_EMOTE:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_ENDGAME:
+                case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
+                    {
+                        // Route to the grouping manager
+                        GameServiceProtocol.GroupingManagerChat serviceMessage = new(player.PlayerConnection.FrontendClient, chat);
+                        ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, serviceMessage);
+                    }
+                    break;
 
+                case ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS:
+                    // Broadcasting requires a badge, which we currently grant based on the account's user level
+                    if (player.HasBadge(AvailableBadges.CanBroadcastChat))
+                    {
+                        // Route to the grouping manager
+                        GameServiceProtocol.GroupingManagerChat serviceMessage = new(player.PlayerConnection.FrontendClient, chat);
+                        ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, serviceMessage);
+                    }
+                    else
+                    {
+                        // NOTE: CHAT_ERROR_COMMAND_NOT_RECOGNIZED works only when sent from the game server (mux channel 1)
+                        player.SendMessage(NetMessageChatError.CreateBuilder()
+                            .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED)
+                            .Build());
+                    }
+
+                    break;
+
+                default:
+                    Logger.Warn($"HandleChat(): Received a chat for unexpected room type {chat.RoomType} from player [{player}]");
+                    break;
+            }
         }
 
         public void HandleTell(Player player, NetMessageTell tell)
         {
-
+            // Route to the grouping manager
+            GameServiceProtocol.GroupingManagerTell serviceMessage = new(player.PlayerConnection.FrontendClient, tell);
+            ServerManager.Instance.SendMessageToService(ServerType.GroupingManager, serviceMessage);
         }
 
         public void HandleReportPlayer(Player player, NetMessageReportPlayer reportPlayer)
         {
-
+            // Just log this for now
+            Logger.Info($"ReportPlayer: reporter=[{player}], target=[{reportPlayer.TargetPlayerName}], reason=[{reportPlayer.Reason}]", LogCategory.Chat);
         }
 
         public void HandleChatBanVote(Player player, NetMessageChatBanVote chatBanVote)
         {
-
+            // Just log this for now
+            Logger.Info($"ChatBanVote: reporter=[{player}], target=[{chatBanVote.TargetPlayerName}], reason=[{chatBanVote.Reason}]", LogCategory.Chat);
         }
 
         #endregion

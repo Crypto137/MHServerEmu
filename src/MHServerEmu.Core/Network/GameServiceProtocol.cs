@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.Network
+﻿using Gazillion;
+
+namespace MHServerEmu.Core.Network
 {
     /// <summary>
     /// Marker interface for <see cref="IGameService"/> messages.
@@ -36,5 +38,21 @@
             public readonly Type Protocol = protocol;
             public readonly MailboxMessage Message = message;
         }
+
+        #region Grouping Manager
+
+        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat) : IGameServiceMessage
+        {
+            public readonly IFrontendClient Client = client;
+            public readonly NetMessageChat Chat = chat;
+        }
+
+        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell) : IGameServiceMessage
+        {
+            public readonly IFrontendClient Client = client;
+            public readonly NetMessageTell Tell = tell;
+        }
+
+        #endregion
     }
 }

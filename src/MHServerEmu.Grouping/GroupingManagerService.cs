@@ -44,8 +44,12 @@ namespace MHServerEmu.Grouping
                     OnRemoveClient(removeClient);
                     break;
 
-                case GameServiceProtocol.RouteMessage routeMailboxMessage:
-                    OnRouteMailboxMessage(routeMailboxMessage);
+                case GameServiceProtocol.GroupingManagerChat chat:
+                    OnChat(chat.Client, chat.Chat);
+                    break;
+
+                case GameServiceProtocol.GroupingManagerTell tell:
+                    OnTell(tell.Client, tell.Tell);
                     break;
 
                 default:
@@ -69,20 +73,38 @@ namespace MHServerEmu.Grouping
             RemoveClient(removeClient.Client);
         }
 
-        private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
+        private bool OnChat(IFrontendClient client, NetMessageChat chat)
         {
-            IFrontendClient client = routeMailboxMessage.Client;
-            MailboxMessage message = routeMailboxMessage.Message;
+            // Try to parse the message as a command first
+            if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
+                return true;
 
-            // Handle messages routed from games
-            switch ((ClientToGameServerMessage)message.Id)
-            {
-                case ClientToGameServerMessage.NetMessageChat: OnChat(client, message); break;
-                case ClientToGameServerMessage.NetMessageTell: OnTell(client, message); break;
-                case ClientToGameServerMessage.NetMessageTryModifyCommunityMemberCircle: OnTryModifyCommunityMemberCircle(client, message); break;
+            DBAccount account = ((IDBAccountOwner)client).Account;
 
-                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
-            }
+            // Broadcast the message if everything's okay
+            if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
+                Logger.Info($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
+
+            // Right now all messages are broadcasted to all connected players
+            BroadcastMessage(ChatNormalMessage.CreateBuilder()
+                .SetRoomType(chat.RoomType)
+                .SetFromPlayerName(account.PlayerName)
+                .SetTheMessage(chat.TheMessage)
+                .Build());
+
+            return true;
+        }
+
+        private bool OnTell(IFrontendClient client, NetMessageTell tell)
+        {
+            Logger.Trace($"Received tell for {tell.TargetPlayerName}");
+
+            // Respond with an error for now
+            client.SendMessage(MuxChannel, ChatErrorMessage.CreateBuilder()
+                .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
+                .Build());
+
+            return true;
         }
 
         #endregion
@@ -134,74 +156,6 @@ namespace MHServerEmu.Grouping
         public bool TryGetPlayerByName(string playerName, out IFrontendClient client)
         {
             return _playerDict.TryGetValue(playerName.ToLower(), out client);
-        }
-
-        #endregion
-
-        #region Message Handling
-
-        private bool OnChat(IFrontendClient client, MailboxMessage message)
-        {
-            var chat = message.As<NetMessageChat>();
-            if (chat == null) return Logger.WarnReturn(false, $"OnChat(): Failed to retrieve message");
-
-            // Try to parse the message as a command first
-            if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
-                return true;
-
-            DBAccount account = ((IDBAccountOwner)client).Account;
-
-            // Limit broadcast and metagame channels to users with moderator privileges and higher
-            if ((chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS || chat.RoomType == ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                && account.UserLevel < AccountUserLevel.Moderator)
-            {
-                // There are two chat error sources: NetMessageChatError from GameServerToClient.proto and ChatErrorMessage from GroupingManager.proto.
-                // The client expects the former from mux channel 1, and the latter from mux channel 2. Local region chat might be handled by the game
-                // instance instead. CHAT_ERROR_COMMAND_NOT_RECOGNIZED works only with NetMessageChatError, so this might have to be handled by the
-                // game instance as well.
-
-                client.SendMessage(1, NetMessageChatError.CreateBuilder()
-                    .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_COMMAND_NOT_RECOGNIZED)
-                    .Build());
-
-                return true;
-            }
-
-            // Broadcast the message if everything's okay
-            if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
-                Logger.Trace($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
-
-            // Right now all messages are broadcasted to all connected players
-            BroadcastMessage(ChatNormalMessage.CreateBuilder()
-                .SetRoomType(chat.RoomType)
-                .SetFromPlayerName(account.PlayerName)
-                .SetTheMessage(chat.TheMessage)
-                .Build());
-
-            return true;
-        }
-
-        private bool OnTell(IFrontendClient client, MailboxMessage message)
-        {
-            var tell = message.As<NetMessageTell>();
-            if (tell == null) return Logger.WarnReturn(false, $"OnTell(): Failed to retrieve message");
-
-            Logger.Trace($"Received tell for {tell.TargetPlayerName}");
-
-            // Respond with an error for now
-            client.SendMessage(MuxChannel, ChatErrorMessage.CreateBuilder()
-                .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
-                .Build());
-
-            return true;
-        }
-
-        private bool OnTryModifyCommunityMemberCircle(IFrontendClient client, MailboxMessage message)
-        {
-            // We are handling this in the grouping manager to avoid exposing the ChatHelper class
-            // TODO: Remove this and handle it in game after we implemented social functionality there.
-            ChatHelper.SendMetagameMessage(client, "Social features are not yet implemented.", false);
-            return true;
         }
 
         #endregion
