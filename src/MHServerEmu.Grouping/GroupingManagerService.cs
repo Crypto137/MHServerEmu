@@ -9,12 +9,13 @@ namespace MHServerEmu.Grouping
 {
     public class GroupingManagerService : IGameService, IMessageBroadcaster
     {
-        private const ushort MuxChannel = 2;    // All messages come from GroupingManager over mux channel 2
+        private const ushort MuxChannel = 2;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly object _playerLock = new();
-        private readonly Dictionary<string, IFrontendClient> _playerDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
+        private readonly Dictionary<ulong, IFrontendClient> _playerDbIdDict = new();
+        private readonly Dictionary<string, IFrontendClient> _playerNameDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
         private ICommandParser _commandParser;
 
@@ -45,7 +46,7 @@ namespace MHServerEmu.Grouping
                     break;
 
                 case GameServiceProtocol.GroupingManagerChat chat:
-                    OnChat(chat.Client, chat.Chat);
+                    OnChat(chat.Client, chat.Chat, chat.PrestigeLevel, chat.PlayerFilter);
                     break;
 
                 case GameServiceProtocol.GroupingManagerTell tell:
@@ -60,7 +61,7 @@ namespace MHServerEmu.Grouping
 
         public string GetStatus()
         {
-            return $"Players: {_playerDict.Count}";
+            return $"Players: {_playerNameDict.Count}";
         }
 
         private void OnAddClient(in GameServiceProtocol.AddClient addClient)
@@ -73,7 +74,7 @@ namespace MHServerEmu.Grouping
             RemoveClient(removeClient.Client);
         }
 
-        private bool OnChat(IFrontendClient client, NetMessageChat chat)
+        private bool OnChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
         {
             // Try to parse the message as a command first
             if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
@@ -81,16 +82,20 @@ namespace MHServerEmu.Grouping
 
             DBAccount account = ((IDBAccountOwner)client).Account;
 
-            // Broadcast the message if everything's okay
             if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
                 Logger.Info($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
 
-            // Right now all messages are broadcasted to all connected players
-            BroadcastMessage(ChatNormalMessage.CreateBuilder()
+            ChatNormalMessage message = ChatNormalMessage.CreateBuilder()
                 .SetRoomType(chat.RoomType)
                 .SetFromPlayerName(account.PlayerName)
                 .SetTheMessage(chat.TheMessage)
-                .Build());
+                .SetPrestigeLevel(prestigeLevel)
+                .Build();
+
+            if (playerFilter != null)
+                SendMessageFiltered(playerFilter, message);
+            else
+                BroadcastMessage(message);
 
             return true;
         }
@@ -116,12 +121,15 @@ namespace MHServerEmu.Grouping
             lock (_playerLock)
             {
                 DBAccount account = ((IDBAccountOwner)client).Account;
+                ulong playerDbId = (ulong)account.Id;
                 string playerName = account.PlayerName.ToLower();
 
-                if (_playerDict.ContainsKey(playerName))
-                    return Logger.WarnReturn(false, "AddFrontendClient(): Already added");
+                if (_playerDbIdDict.ContainsKey(playerDbId))
+                    return Logger.WarnReturn(false, $"AddFrontendClient(): Account {account} is already added");
 
-                _playerDict.Add(playerName, client);
+                _playerDbIdDict.Add(playerDbId, client);
+                _playerNameDict.Add(playerName, client);
+
                 client.SendMessage(MuxChannel, ChatHelper.Motd);
 
                 Logger.Info($"Added client [{client}]");
@@ -134,13 +142,31 @@ namespace MHServerEmu.Grouping
             lock (_playerLock)
             {
                 DBAccount account = ((IDBAccountOwner)client).Account;
+                ulong playerDbId = (ulong)account.Id;
                 string playerName = account.PlayerName.ToLower();
 
-                if (_playerDict.Remove(playerName) == false)
-                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Player {account.PlayerName} not found");
+                if (_playerDbIdDict.Remove(playerDbId) == false)
+                    return Logger.WarnReturn(false, $"RemoveFrontendClient(): Account {account} not found");
 
                 Logger.Info($"Removed client [{client}]");
                 return true;
+            }
+        }
+
+        public void SendMessageFiltered(List<ulong> playerFilter, IMessage message)
+        {
+            lock (_playerLock)
+            {
+                foreach (ulong playerDbId in playerFilter)
+                {
+                    if (TryGetClient(playerDbId, out IFrontendClient client) == false)
+                    {
+                        Logger.Warn($"SendMessageToMultiple(): Player 0x{playerDbId:X} not found");
+                        continue;
+                    }
+
+                    client.SendMessage(MuxChannel, message);
+                }
             }
         }
 
@@ -148,14 +174,19 @@ namespace MHServerEmu.Grouping
         {
             lock (_playerLock)
             {
-                foreach (var kvp in _playerDict)
+                foreach (var kvp in _playerDbIdDict)
                     kvp.Value.SendMessage(MuxChannel, message);
             }
         }
 
-        public bool TryGetPlayerByName(string playerName, out IFrontendClient client)
+        public bool TryGetClient(ulong playerDbId, out IFrontendClient client)
         {
-            return _playerDict.TryGetValue(playerName.ToLower(), out client);
+            return _playerDbIdDict.TryGetValue(playerDbId, out client);
+        }
+
+        public bool TryGetClient(string playerName, out IFrontendClient client)
+        {
+            return _playerNameDict.TryGetValue(playerName, out client);
         }
 
         #endregion

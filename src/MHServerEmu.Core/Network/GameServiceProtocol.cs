@@ -41,10 +41,12 @@ namespace MHServerEmu.Core.Network
 
         #region Grouping Manager
 
-        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat) : IGameServiceMessage
+        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter) : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly NetMessageChat Chat = chat;
+            public readonly int PrestigeLevel = prestigeLevel;
+            public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
         public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell) : IGameServiceMessage
