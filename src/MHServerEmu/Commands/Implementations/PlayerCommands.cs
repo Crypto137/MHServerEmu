@@ -14,10 +14,10 @@ using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
+    [CommandGroup("player", "Changes player data for this account.")]
     public class PlayerCommands : CommandGroup
     {
-        [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]", AccountUserLevel.User)]
+        [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]")]
         public string Costume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -82,7 +82,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]", AccountUserLevel.Admin)]
+        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string GiveCurrency(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

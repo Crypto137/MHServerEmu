@@ -18,18 +18,20 @@ using MHServerEmu.Games.Powers.Conditions;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("debug", "Debug commands for development.", AccountUserLevel.User)]
+    [CommandGroup("debug", "Debug commands for development.")]
     public class DebugCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("test", "Runs test code.", AccountUserLevel.Admin)]
+        [Command("test", "Runs test code.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Test(string[] @params, FrontendClient client)
         {
             return string.Empty;
         }
 
-        [Command("forcegc", "Requests the garbage collector to reclaim unused server memory.", AccountUserLevel.Admin)]
+        [Command("forcegc", "Requests the garbage collector to reclaim unused server memory.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string ForceGC(string[] @params, FrontendClient client)
         {
             GC.Collect();
@@ -38,7 +40,7 @@ namespace MHServerEmu.Commands.Implementations
             return "Manual garbage collection successfully requested.";
         }
 
-        [Command("cell", "Shows current cell.", AccountUserLevel.User)]
+        [Command("cell", "Shows current cell.")]
         public string Cell(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -49,7 +51,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Current cell: {playerConnection.AOI.Region.GetCellAtPosition(avatar.RegionLocation.Position).PrototypeName}";
         }
 
-        [Command("seed", "Shows current seed.", AccountUserLevel.User)]
+        [Command("seed", "Shows current seed.")]
         public string Seed(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -59,7 +61,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Current seed: {playerConnection.AOI.Region.RandomSeed}";
         }
 
-        [Command("area", "Shows current area.", AccountUserLevel.User)]
+        [Command("area", "Shows current area.")]
         public string Area(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -70,7 +72,7 @@ namespace MHServerEmu.Commands.Implementations
             return $"Current area: {playerConnection.AOI.Region.GetCellAtPosition(avatar.RegionLocation.Position).Area.PrototypeName}";
         }
 
-        [Command("region", "Shows current region.", AccountUserLevel.User)]
+        [Command("region", "Shows current region.")]
         public string Region(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -86,7 +88,8 @@ namespace MHServerEmu.Commands.Implementations
             On
         }
 
-        [Command("setmarker", "Usage: debug setmarker [MarkerRef].", AccountUserLevel.Admin)]
+        [Command("setmarker", "Usage: debug setmarker [MarkerRef].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string SetMarker(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help debug setmarker' to get help.";
@@ -99,7 +102,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"SetMarker [{markerRef.GetNameFormatted()}]";
         }
 
-        [Command("spawn", "Usage: debug spawn [on|off].", AccountUserLevel.Admin)]
+        [Command("spawn", "Usage: debug spawn [on|off].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Spawn(string[] @params, FrontendClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
@@ -110,7 +114,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Spawn Log [{flags}]";
         }
 
-        [Command("ai", "Usage: debug ai.", AccountUserLevel.Admin)]
+        [Command("ai", "Usage: debug ai.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string AI(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -123,7 +128,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"AI [{(enableAI ? "On" : "Off")}]";
         }
 
-        [Command("metagame", "Usage: debug metagame [on|off].", AccountUserLevel.Admin)]
+        [Command("metagame", "Usage: debug metagame [on|off].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Metagame(string[] @params, FrontendClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
@@ -134,7 +140,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Metagame Log [{flags}]";
         }
 
-        [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].", AccountUserLevel.Admin)]
+        [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Navi2Obj(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -152,14 +159,16 @@ namespace MHServerEmu.Commands.Implementations
             return $"NaviMesh saved as {filename}";
         }
 
-        [Command("crashgame", "Crashes the current game instance.", AccountUserLevel.Admin)]
+        [Command("crashgame", "Crashes the current game instance.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string CrashGame(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
             throw new("Game instance crash invoked by a debug command.");
         }
 
-        [Command("crashserver", "Crashes the current game instance.", AccountUserLevel.Admin)]
+        [Command("crashserver", "Crashes the current game instance.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string CrashServer(string[] @params, FrontendClient client)
         {
             if (client != null) return "You can only invoke this command from the server console.";

@@ -21,7 +21,8 @@ namespace MHServerEmu.Commands.Implementations
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]", AccountUserLevel.Admin)]
+        [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Drop(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -48,7 +49,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern] [count]", AccountUserLevel.Admin)]
+        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern] [count]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Give(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -97,7 +99,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Destroyed {indestructibleItemList.Count} indestructible items.";
         }
 
-        [Command("roll", "Rolls a loot table.\nUsage: item roll [pattern]", AccountUserLevel.Admin)]
+        [Command("roll", "Rolls a loot table.\nUsage: item roll [pattern]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string RollLootTable(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -114,7 +117,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Finished rolling {lootTableProtoRef.GetName()}, see the server console for results.";
         }
 
-        [Command("rollall", "Rolls all loot tables.\nUsage: item rollall", AccountUserLevel.Admin)]
+        [Command("rollall", "Rolls all loot tables.\nUsage: item rollall")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string RollAllLootTables(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

@@ -1,5 +1,4 @@
 ﻿using MHServerEmu.Commands.Attributes;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -7,10 +6,10 @@ using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype|asset] [pattern]", AccountUserLevel.User)]
+    [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype|asset] [pattern]")]
     public class LookupCommands : CommandGroup
     {
-        [Command("power", "Searches prototypes that use the power blueprint.\nUsage: lookup power [pattern]", AccountUserLevel.User)]
+        [Command("power", "Searches prototypes that use the power blueprint.\nUsage: lookup power [pattern]")]
         public string Power(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
@@ -19,7 +18,7 @@ namespace MHServerEmu.Commands.Implementations
             return LookupPrototypes(@params[0], HardcodedBlueprints.Power, client);
         }
 
-        [Command("item", "Searches prototypes that use the item blueprint.\nUsage: lookup item [pattern]", AccountUserLevel.User)]
+        [Command("item", "Searches prototypes that use the item blueprint.\nUsage: lookup item [pattern]")]
         public string Item(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
@@ -28,7 +27,7 @@ namespace MHServerEmu.Commands.Implementations
             return LookupPrototypes(@params[0], HardcodedBlueprints.Item, client);
         }
 
-        [Command("costume", "Searches prototypes that use the costume blueprint.\nUsage: lookup costume [pattern]", AccountUserLevel.User)]
+        [Command("costume", "Searches prototypes that use the costume blueprint.\nUsage: lookup costume [pattern]")]
         public string Costume(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup costume' to get help.";
@@ -37,7 +36,7 @@ namespace MHServerEmu.Commands.Implementations
             return LookupPrototypes(@params[0], HardcodedBlueprints.Costume, client);
         }
 
-        [Command("region", "Searches prototypes that use the region blueprint.\nUsage: lookup region [pattern]", AccountUserLevel.User)]
+        [Command("region", "Searches prototypes that use the region blueprint.\nUsage: lookup region [pattern]")]
         public string Region(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup region' to get help.";
@@ -46,7 +45,7 @@ namespace MHServerEmu.Commands.Implementations
             return LookupPrototypes(@params[0], HardcodedBlueprints.Region, client);      // Regions/Region.blueprint
         }
 
-        [Command("blueprint", "Searches blueprints.\nUsage: lookup blueprint [pattern]", AccountUserLevel.User)]
+        [Command("blueprint", "Searches blueprints.\nUsage: lookup blueprint [pattern]")]
         public string Blueprint(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup blueprint' to get help.";
@@ -56,7 +55,7 @@ namespace MHServerEmu.Commands.Implementations
             return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetBlueprintName(match))), client);
         }
 
-        [Command("assettype", "Searches asset types.\nUsage: lookup assettype [pattern]", AccountUserLevel.User)]
+        [Command("assettype", "Searches asset types.\nUsage: lookup assettype [pattern]")]
         public string AssetType(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup assettype' to get help.";
@@ -65,7 +64,7 @@ namespace MHServerEmu.Commands.Implementations
             return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetAssetTypeName(match))), client);
         }
 
-        [Command("asset", "Searches assets.\nUsage: lookup asset [pattern]", AccountUserLevel.User)]
+        [Command("asset", "Searches assets.\nUsage: lookup asset [pattern]")]
         public string Asset(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help lookup asset' to get help.";

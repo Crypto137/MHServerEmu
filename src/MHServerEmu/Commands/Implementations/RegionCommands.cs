@@ -15,7 +15,8 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("region", "Manages region instances.")]
     public class RegionCommands : CommandGroup
     {
-        [Command("warp", "Warps the player to another region.\nUsage: region warp [name]", AccountUserLevel.Admin)]
+        [Command("warp", "Warps the player to another region.\nUsage: region warp [name]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Warp(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -39,7 +40,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Warping to {regionName}.";
         }
 
-        [Command("reload", "Reloads the current region.\nUsage: region reload", AccountUserLevel.Admin)]
+        [Command("reload", "Reloads the current region.\nUsage: region reload")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Reload(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -51,7 +53,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Reloading region {playerConnection.TransferParams.DestTargetRegionProtoRef.GetName()}.";
         }
 
-        [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe", AccountUserLevel.Admin)]
+        [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string GenerateAllSafe(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -74,7 +77,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Generated {numRegions} regions in {stopwatch.Elapsed.TotalSeconds} sec.";
         }
 
-        [Command("properties", "Prints properties for the current region.\nUsage: region properties", AccountUserLevel.Admin)]
+        [Command("properties", "Prints properties for the current region.\nUsage: region properties")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Properties(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

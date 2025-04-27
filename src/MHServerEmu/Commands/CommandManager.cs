@@ -15,7 +15,7 @@ namespace MHServerEmu.Commands
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<CommandGroupAttribute, CommandGroup> _commandGroupDict = new();
+        private readonly Dictionary<CommandGroupDefinition, CommandGroup> _commandGroupDict = new();
         private IClientOutput _clientOutput;
 
         public static CommandManager Instance { get; } = new();
@@ -30,18 +30,19 @@ namespace MHServerEmu.Commands
             {
                 // TODO: If we ever move the command system to Core, move command group registration to a separate method.
 
-                if (type.IsSubclassOf(typeof(CommandGroup)) == false) continue;
+                if (type.IsSubclassOf(typeof(CommandGroup)) == false)
+                    continue;
 
-                CommandGroupAttribute[] attributes = (CommandGroupAttribute[])type.GetCustomAttributes(typeof(CommandGroupAttribute), true);
-                if (attributes.Length == 0) continue;
+                if (type.IsDefined(typeof(CommandGroupAttribute), true) == false)
+                    continue;
 
-                CommandGroupAttribute groupAttribute = attributes[0];
-                if (_commandGroupDict.ContainsKey(groupAttribute))
-                    Logger.Warn($"Command group {groupAttribute} is already registered");
+                CommandGroupDefinition groupDefinition = new(type);
+                if (_commandGroupDict.ContainsKey(groupDefinition))
+                    Logger.Warn($"Command group {groupDefinition} is already registered");
 
-                var commandGroup = (CommandGroup)Activator.CreateInstance(type);
-                commandGroup.Register(groupAttribute);
-                _commandGroupDict.Add(groupAttribute, commandGroup);
+                CommandGroup commandGroup = (CommandGroup)Activator.CreateInstance(type);
+                commandGroup.Register(groupDefinition);
+                _commandGroupDict.Add(groupDefinition, commandGroup);
             }
         }
 
@@ -63,7 +64,8 @@ namespace MHServerEmu.Commands
             string parameters;
             bool found = false;
 
-            if (input == null || input.Trim() == string.Empty) return;
+            if (input == null || input.Trim() == string.Empty)
+                return;
 
             if (ExtractCommandAndParameters(input, out command, out parameters) == false)
             {
@@ -74,14 +76,19 @@ namespace MHServerEmu.Commands
 
             foreach (var kvp in _commandGroupDict)
             {
-                if (kvp.Key.Name != command) continue;
+                if (kvp.Key.Name != command)
+                    continue;
+
                 output = kvp.Value.Handle(parameters);
                 found = true;
                 break;
             }
 
-            if (found == false) output = $"Unknown command: {command} {parameters}";
-            if (output != string.Empty) Logger.Info(output);
+            if (found == false)
+                output = $"Unknown command: {command} {parameters}";
+
+            if (output != string.Empty)
+                Logger.Info(output);
         }
 
         /// <summary>
@@ -94,20 +101,27 @@ namespace MHServerEmu.Commands
             string parameters;
             bool found = false;
 
-            if (ExtractCommandAndParameters(input, out command, out parameters) == false) return false;
+            if (ExtractCommandAndParameters(input, out command, out parameters) == false)
+                return false;
 
             foreach (var kvp in _commandGroupDict)
             {
-                if (kvp.Key.Name != command) continue;
+                if (kvp.Key.Name != command)
+                    continue;
+
                 output = kvp.Value.Handle(parameters, client);
                 found = true;
                 break;
             }
 
-            if (found == false) output = $"Unknown command: {command} {parameters}";
-            if (output == string.Empty) return true;
+            if (found == false)
+                output = $"Unknown command: {command} {parameters}";
 
-            if (client != null) SendClientResponse(output, client);
+            if (output == string.Empty)
+                return true;
+
+            if (client != null)
+                SendClientResponse(output, client);
 
             return true;
         }
@@ -123,7 +137,8 @@ namespace MHServerEmu.Commands
             parameters = string.Empty;
 
             // Only input that starts with our command prefix char followed by something else can be a command
-            if (input.Length < 2 || input[0] != CommandPrefix) return false;
+            if (input.Length < 2 || input[0] != CommandPrefix)
+                return false;
 
             // Remove the prefix
             input = input.Substring(1);
@@ -157,12 +172,12 @@ namespace MHServerEmu.Commands
             {
                 StringBuilder sb = new("Available commands: ");
 
-                foreach (var kvp in Instance._commandGroupDict)
+                foreach (CommandGroupDefinition groupDefinition in Instance._commandGroupDict.Keys)
                 {
-                    // Skip commands that are not available for this account's user level
-                    if (client != null && kvp.Key.MinUserLevel > client.Session.Account.UserLevel) continue;
+                    if (groupDefinition.CanInvoke(client) != CommandCanInvokeResult.Success)
+                        continue;
 
-                    sb.Append($"{kvp.Key.Name}, ");
+                    sb.Append($"{groupDefinition.Name}, ");
                 }
 
                 // Replace the last comma / space with a period
@@ -184,7 +199,8 @@ namespace MHServerEmu.Commands
 
             public override string Handle(string parameters, FrontendClient client = null)
             {
-                if (parameters == string.Empty) return Fallback();
+                if (parameters == string.Empty)
+                    return Fallback();
 
                 string output = string.Empty;
                 bool found = false;
@@ -194,14 +210,18 @@ namespace MHServerEmu.Commands
 
                 foreach (var kvp in Instance._commandGroupDict)
                 {
-                    if (group != kvp.Key.Name) continue;
-                    if (command == string.Empty) return kvp.Key.Help;
+                    if (group != kvp.Key.Name)
+                        continue;
+                    
+                    if (command == string.Empty)
+                        return kvp.Key.Help;
 
                     output = kvp.Value.GetHelp(command);
                     found = true;
                 }
 
-                if (found == false) output = $"Unknown command: {group} {command}";
+                if (found == false)
+                    output = $"Unknown command: {group} {command}";
 
                 return output;
             }

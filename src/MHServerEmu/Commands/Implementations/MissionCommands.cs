@@ -11,10 +11,11 @@ using static MHServerEmu.Commands.Implementations.DebugCommands;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("mission", "commands about missions", AccountUserLevel.User)]
+    [CommandGroup("mission", "commands about missions")]
     public class MissionCommands : CommandGroup
     {
-        [Command("debug", "Usage: mission debug [on|off].", AccountUserLevel.Admin)]
+        [Command("debug", "Usage: mission debug [on|off].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Debug(string[] @params, FrontendClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
@@ -39,7 +40,8 @@ namespace MHServerEmu.Commands.Implementations
             return "Story missions reset";
         }
 
-        [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory", AccountUserLevel.Admin)]
+        [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string CompleteStory(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -99,7 +101,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("complete", "Complete the given mission.\nUsage: mission complete [pattern].", AccountUserLevel.Admin)]
+        [Command("complete", "Complete the given mission.\nUsage: mission complete [pattern].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Complete(string[] @params, FrontendClient client)
         {
             if (client == null)
@@ -131,7 +134,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("reset", "Restart the given mission.\nUsage: mission reset [pattern].", AccountUserLevel.Admin)]
+        [Command("reset", "Restart the given mission.\nUsage: mission reset [pattern].")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Reset(string[] @params, FrontendClient client)
         {
             if (client == null)

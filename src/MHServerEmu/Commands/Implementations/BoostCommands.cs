@@ -7,7 +7,8 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("boost", "Provides commands for boost.", AccountUserLevel.Admin)]
+    [CommandGroup("boost", "Provides commands for boost.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class BoostCommands : CommandGroup
     {
         [Command("damage", "Increase Damage of current avatar.\nUsage: boost damage [1-10000]")]

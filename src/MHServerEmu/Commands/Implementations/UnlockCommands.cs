@@ -1,16 +1,14 @@
-﻿using Gazillion;
-using MHServerEmu.Commands.Attributes;
+﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("unlock", "Provides commands for unlock.", AccountUserLevel.User)]
+    [CommandGroup("unlock", "Provides commands for unlock.")]
     public class Unlock : CommandGroup
     {
         [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
@@ -38,7 +36,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Unlocked {avatarProtoRef.GetNameFormatted()}.";
         }
 
-        [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints", AccountUserLevel.Admin)]
+        [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Waypoints(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -53,6 +52,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Chapters(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

@@ -8,7 +8,8 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("metagame", "Provides commands for metagame.", AccountUserLevel.Admin)]
+    [CommandGroup("metagame", "Provides commands for metagame.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class MetaGame : CommandGroup
     {
         public enum ChangeEventType

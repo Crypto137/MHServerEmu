@@ -14,7 +14,8 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("power", "Provides commands for interacting with the power collection.", AccountUserLevel.Admin)]
+    [CommandGroup("power", "Provides commands for interacting with the power collection.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class PowerCommands : CommandGroup
     {
         [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print")]

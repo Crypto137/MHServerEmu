@@ -10,10 +10,10 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("store", "Commands for interacting with the in-game store.", AccountUserLevel.User)]
+    [CommandGroup("store", "Commands for interacting with the in-game store.")]
     public class StoreCommands : CommandGroup
     {
-        [Command("convertes", "Converts 100 Eternity Splinters to the equivalent amount of Gs.\nUsage: store convertes", AccountUserLevel.User)]
+        [Command("convertes", "Converts 100 Eternity Splinters to the equivalent amount of Gs.\nUsage: store convertes")]
         public string ConvertES(string[] @params, FrontendClient client)
         {
             const int NumConverted = 100;
@@ -42,7 +42,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Converted {NumConverted} Eternity Splinters to {gAmount} Gs.";
         }
 
-        [Command("addg", "Adds the specified number of Gs to this account.\nUsage: store addg [amount]", AccountUserLevel.Admin)]
+        [Command("addg", "Adds the specified number of Gs to this account.\nUsage: store addg [amount]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string AddG(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

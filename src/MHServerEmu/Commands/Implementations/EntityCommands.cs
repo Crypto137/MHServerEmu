@@ -18,7 +18,8 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("Entity", "Provides commands for Entity.")]
     public class EntityCommands : CommandGroup
     {
-        [Command("dummy", "Spawn Agent instead of dummy.\nUsage: entity dummy [pattern]", AccountUserLevel.Admin)]
+        [Command("dummy", "Spawn Agent instead of dummy.\nUsage: entity dummy [pattern]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Dummy(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -53,7 +54,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 
 
-        [Command("marker", "Displays information about the specified marker.\nUsage: entity marker [MarkerId]", AccountUserLevel.User)]
+        [Command("marker", "Displays information about the specified marker.\nUsage: entity marker [MarkerId]")]
         public string Marker(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -73,7 +74,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 
 
-        [Command("info", "Displays information about the specified entity.\nUsage: entity info [EntityId]", AccountUserLevel.User)]
+        [Command("info", "Displays information about the specified entity.\nUsage: entity info [EntityId]")]
         public string Info(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -98,7 +99,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("near", "Usage: entity near [radius]. Default radius 100.", AccountUserLevel.User)]
+        [Command("near", "Usage: entity near [radius]. Default radius 100.")]
         public string Near(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -139,7 +140,7 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("isblocked", "Usage: entity isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
+        [Command("isblocked", "Usage: entity isblocked [EntityId1] [EntityId2]")]
         public string IsBlocked(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -165,7 +166,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
         }
 
-        [Command("tp", "Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).\nUsage:\nentity tp modok", AccountUserLevel.Admin)]
+        [Command("tp", "Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).\nUsage:\nentity tp modok")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Tp(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -191,7 +193,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
 
-        [Command("create", "create entity near the avatar based on pattern (ignore the case) and count (default 1).\nUsage:\nentity create bosses/venom 2", AccountUserLevel.Admin)]
+        [Command("create", "create entity near the avatar based on pattern (ignore the case) and count (default 1).\nUsage:\nentity create bosses/venom 2")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Create(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

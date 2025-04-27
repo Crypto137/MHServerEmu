@@ -12,7 +12,7 @@ namespace MHServerEmu.Commands.Implementations
     [CommandGroup("aoi", "Provides commands for interacting with this player's area of interest (AOI).")]
     public class AOICommands : CommandGroup
     {
-        [Command("volume", "Changes player AOI volume size.\nUsage: aoi volume [value]", AccountUserLevel.User)]
+        [Command("volume", "Changes player AOI volume size.\nUsage: aoi volume [value]")]
         public string Volume(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -34,7 +34,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Changed player AOI volume size to {volume}.";
         }
 
-        [Command("print", "Prints player AOI information to the server console.\nUsage: aoi print", AccountUserLevel.Admin)]
+        [Command("print", "Prints player AOI information to the server console.\nUsage: aoi print")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Print(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -45,7 +46,8 @@ namespace MHServerEmu.Commands.Implementations
             return "AOI information printed to the console.";
         }
 
-        [Command("update", "Forces AOI proximity update.\nUsage: aoi update", AccountUserLevel.Admin)]
+        [Command("update", "Forces AOI proximity update.\nUsage: aoi update")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Update(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -57,7 +59,8 @@ namespace MHServerEmu.Commands.Implementations
             return "AOI updated.";
         }
 
-        [Command("refs", "Prints interest references for the current player.\nUsage: aoi refs", AccountUserLevel.Admin)]
+        [Command("refs", "Prints interest references for the current player.\nUsage: aoi refs")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Refs(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

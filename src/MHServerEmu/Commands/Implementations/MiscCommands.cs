@@ -11,10 +11,10 @@ using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("tower", "Changes region to Avengers Tower (original).", AccountUserLevel.User)]
+    [CommandGroup("tower", "Changes region to Avengers Tower (original).")]
     public class TowerCommand : CommandGroup
     {
-        [DefaultCommand(AccountUserLevel.User)]
+        [DefaultCommand]
         public string Tower(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -28,10 +28,11 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("jail", "Travel to East Side: Detention Facility (old).", AccountUserLevel.Admin)]
+    [CommandGroup("jail", "Travel to East Side: Detention Facility (old).")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class JailCommand : CommandGroup
     {
-        [DefaultCommand(AccountUserLevel.User)]
+        [DefaultCommand]
         public string Jail(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -45,10 +46,10 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("position", "Shows current position.", AccountUserLevel.User)]
+    [CommandGroup("position", "Shows current position.")]
     public class PositionCommand : CommandGroup
     {
-        [DefaultCommand(AccountUserLevel.User)]
+        [DefaultCommand]
         public string Position(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -60,10 +61,10 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("dance", "Performs the Dance emote", AccountUserLevel.User)]
+    [CommandGroup("dance", "Performs the Dance emote")]
     public class DanceCommand : CommandGroup
     {
-        [DefaultCommand(AccountUserLevel.User)]
+        [DefaultCommand]
         public string Dance(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";
@@ -104,10 +105,11 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)", AccountUserLevel.Admin)]
+    [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class TeleportCommand : CommandGroup
     {
-        [DefaultCommand(AccountUserLevel.User)]
+        [DefaultCommand]
         public string Teleport(string[] @params, FrontendClient client)
         {
             if (client == null) return "You can only invoke this command from the game.";

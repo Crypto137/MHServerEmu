@@ -10,12 +10,12 @@ using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("server", "Allows you to interact with the server.", AccountUserLevel.User)]
+    [CommandGroup("server", "Allows you to interact with the server.")]
     public class ServerCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("status", "Usage: server status", AccountUserLevel.User)]
+        [Command("status", "Usage: server status")]
         public string Status(string[] @params, FrontendClient client)
         {
             StringBuilder sb = new();
@@ -33,7 +33,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast", AccountUserLevel.Admin)]
+        [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Broadcast(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help server broadcast' to get help.";
@@ -49,7 +50,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning", AccountUserLevel.Admin)]
+        [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string ReloadLiveTuning(string[] @params, FrontendClient client)
         {
             if (client != null) return "You can only invoke this command from the server console.";
@@ -57,7 +59,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]
+        [Command("shutdown", "Usage: server shutdown")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Shutdown(string[] @params, FrontendClient client)
         {
             string shutdownRequester = client == null ? "the server console" : client.ToString();

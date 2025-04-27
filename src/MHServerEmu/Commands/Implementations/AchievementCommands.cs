@@ -6,7 +6,8 @@ using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("achievement", "Manages achievements.", AccountUserLevel.Admin)]
+    [CommandGroup("achievement", "Manages achievements.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class AchievementCommands : CommandGroup
     {
         [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]")]
