@@ -19,10 +19,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Costume(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
-
             PrototypeId costumeProtoRef;
 
             switch (@params[0].ToLower())
@@ -84,10 +83,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string GiveCurrency(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player givecurrency' to get help.";
-
             if (int.TryParse(@params[0], out int amount) == false)
                 return $"Failed to parse amount from {@params[0]}.";
 

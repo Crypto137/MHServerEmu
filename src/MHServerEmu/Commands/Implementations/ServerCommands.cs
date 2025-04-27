@@ -35,10 +35,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(1)]
         public string Broadcast(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help server broadcast' to get help.";
-
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IMessageBroadcaster;
             if (groupingManager == null) return "Failed to connect to the grouping manager.";
 

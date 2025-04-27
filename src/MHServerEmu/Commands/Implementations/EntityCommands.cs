@@ -21,10 +21,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("dummy", "Spawn Agent instead of dummy.\nUsage: entity dummy [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Dummy(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity dummy' to get help.";
-
             PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
             var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
@@ -56,10 +55,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("marker", "Displays information about the specified marker.\nUsage: entity marker [MarkerId]")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Marker(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity marker' to get help.";
-
             if (int.TryParse(@params[0], out int markerId) == false)
                 return $"Failed to parse MarkerId {@params[0]}";
 
@@ -76,10 +74,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("info", "Displays information about the specified entity.\nUsage: entity info [EntityId]")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity info' to get help.";
-
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";
 
@@ -141,10 +138,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("isblocked", "Usage: entity isblocked [EntityId1] [EntityId2]")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(2)]
         public string IsBlocked(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity isblocked' to get help.";
-
             if (ulong.TryParse(@params[0], out ulong entityId1) == false)
                 return $"Failed to parse EntityId1 {@params[0]}";
 
@@ -168,10 +164,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("tp", "Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).\nUsage:\nentity tp modok")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Tp(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity tp' to get help.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             if (avatar == null || avatar.IsInWorld == false)
@@ -195,10 +190,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("create", "create entity near the avatar based on pattern (ignore the case) and count (default 1).\nUsage:\nentity create bosses/venom 2")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Create(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity create' to get help.";
-            
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             if(game == null)
                 return "Game not found.";

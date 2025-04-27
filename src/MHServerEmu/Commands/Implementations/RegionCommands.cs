@@ -18,10 +18,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("warp", "Warps the player to another region.\nUsage: region warp [name]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Warp(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help region warp' to get help.";
-
             PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client);
             if (regionProtoRef == PrototypeId.Invalid) return string.Empty;
 

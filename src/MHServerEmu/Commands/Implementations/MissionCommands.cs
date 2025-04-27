@@ -77,11 +77,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0)
-                return "Invalid arguments. Type 'help mission info' to get help.";
-
             string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
             if (errorMessage != null) return errorMessage;
 
@@ -102,11 +100,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("complete", "Complete the given mission.\nUsage: mission complete [pattern].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Complete(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0)
-                return "Invalid arguments. Type 'help mission complete' to get help.";
-
             string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
             if (errorMessage != null) return errorMessage;
 
@@ -133,11 +129,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("reset", "Restart the given mission.\nUsage: mission reset [pattern].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Reset(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0)
-                return "Invalid arguments. Type 'help mission reset' to get help.";
-
             string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
             if (errorMessage != null) return errorMessage;
 

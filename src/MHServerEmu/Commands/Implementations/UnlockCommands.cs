@@ -13,12 +13,11 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Hero(string[] @params, FrontendClient client)
         {
             // This command is intentionally exposed to regular users to allow them to unlock F4 heroes.
             // Also because of this, we call it "hero" and not "avatar" to make it clearer.
-
-            if (@params.Length == 0) return "Invalid arguments. Type 'help unlock hero' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;

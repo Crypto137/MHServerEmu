@@ -24,10 +24,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Drop(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help item drop' to get help.";
-
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
@@ -52,10 +51,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Give(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help item give' to get help.";
-
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
@@ -101,10 +99,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("roll", "Rolls a loot table.\nUsage: item roll [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string RollLootTable(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help item roll' to get help.";
-
             PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client);
             if (lootTableProtoRef == PrototypeId.Invalid) return string.Empty;
 

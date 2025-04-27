@@ -11,10 +11,9 @@ namespace MHServerEmu.Commands.Implementations
     public class AchievementCommands : CommandGroup
     {
         [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]")]
+        [CommandParamCount(1)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help achievement unlock' to get help.";
-
             if (uint.TryParse(@params[0], out uint id) == false)
                 return "Failed to parse achievement id.";
 

@@ -107,10 +107,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [DefaultCommand]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string Teleport(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             if (avatar == null || avatar.IsInWorld == false)

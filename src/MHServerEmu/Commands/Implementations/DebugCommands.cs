@@ -86,10 +86,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("setmarker", "Usage: debug setmarker [MarkerRef].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(1)]
         public string SetMarker(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help debug setmarker' to get help.";
-
             if (PrototypeId.TryParse(@params[0], out PrototypeId markerRef) == false)
                 return $"Failed to parse MarkerRef {@params[0]}";
 

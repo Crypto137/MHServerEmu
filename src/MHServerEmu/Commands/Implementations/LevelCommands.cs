@@ -89,10 +89,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("awardxp", "Awards the specified amount of experience.\nUsage: level awardxp [amount]")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string AwardXP(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help level awardxp' to get help.";
-
             if (long.TryParse(@params[0], out long amount) == false)
                 return $"Failed to parse argument {@params[0]}.";
 

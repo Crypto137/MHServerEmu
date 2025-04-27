@@ -16,10 +16,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("info", "Usage: client info [sessionId]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(1)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help client info' to get help.";
-
             if (ulong.TryParse(@params[0].TrimStart(HexPrefix), NumberStyles.HexNumber, null, out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
 
@@ -35,10 +34,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("kick", "Usage: client kick [playerName]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandParamCount(1)]
         public string Kick(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help client kick' to get help.";
-
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
             if (groupingManager == null)
                 return "Failed to connect to the grouping manager.";

@@ -15,19 +15,17 @@ namespace MHServerEmu.Commands.Implementations
     public class AccountCommands : CommandGroup
     {
         [Command("create", "Creates a new account.\nUsage: account create [email] [playerName] [password]")]
+        [CommandParamCount(3)]
         public string Create(string[] @params, FrontendClient client)
         {
-            if (@params.Length < 3) return "Invalid arguments. Type 'help account create' to get help.";
-
             (bool, string) result = AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
             return result.Item2;
         }
 
         [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]")]
+        [CommandParamCount(2)]
         public string PlayerName(string[] @params, FrontendClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account playername' to get help.";
-
             string email = @params[0].ToLower();
 
             if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
@@ -38,10 +36,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]")]
+        [CommandParamCount(2)]
         public string Password(string[] @params, FrontendClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account password' to get help.";
-
             string email = @params[0].ToLower();
 
             if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
@@ -53,10 +50,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("userlevel", "Changes user level for the specified account.\nUsage: account userlevel [email] [0|1|2]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(2)]
         public string UserLevel(string[] @params, FrontendClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account userlevel' to get help.";
-
             if (byte.TryParse(@params[1], out byte userLevel) == false)
                 return "Failed to parse user level";
 
@@ -69,10 +65,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("verify", "Checks if an email/password combination is valid.\nUsage: account verify [email] [password]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(2)]
         public string Verify(string[] @params, FrontendClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account verify' to get help.";
-
             var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0].ToLower()).SetPassword(@params[1]).Build();
             AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out _);
 
@@ -84,20 +79,18 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("ban", "Bans the specified account.\nUsage: account ban [email]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandParamCount(1)]
         public string Ban(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
-
             (_, string message) = AccountManager.SetFlag(@params[0].ToLower(), AccountFlags.IsBanned);
             return message;
         }
 
         [Command("unban", "Unbans the specified account.\nUsage: account unban [email]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandParamCount(1)]
         public string Unban(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
-
             (_, string message) = AccountManager.ClearFlag(@params[0].ToLower(), AccountFlags.IsBanned);
             return message;
         }

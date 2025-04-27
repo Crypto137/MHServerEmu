@@ -44,10 +44,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("addg", "Adds the specified number of Gs to this account.\nUsage: store addg [amount]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
         public string AddG(string[] @params, FrontendClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help store addg' to get help.";
-
             if (long.TryParse(@params[0], out long amount) == false)
                 return $"Failed to parse argument {@params[0]}.";
 

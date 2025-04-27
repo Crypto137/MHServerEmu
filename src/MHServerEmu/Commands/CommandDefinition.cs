@@ -13,6 +13,7 @@ namespace MHServerEmu.Commands
         UserLevelNotHighEnough,
         ClientRequired,
         ServerConsoleRequired,
+        InvalidParamCount,
     }
 
     public class CommandDefinition
@@ -21,6 +22,7 @@ namespace MHServerEmu.Commands
         private readonly CommandAttribute _commandAttribute;
         private readonly CommandUserLevelAttribute _userLevelAttribute;
         private readonly CommandInvokerTypeAttribute _invokerTypeAttribute;
+        private readonly CommandParamCountAttribute _paramCountAttribute;
 
         public string Name { get => _commandAttribute.Name; }
         public string Help { get => _commandAttribute.Help; }
@@ -50,6 +52,13 @@ namespace MHServerEmu.Commands
                 invokerTypeAttribute = new();
 
             _invokerTypeAttribute = invokerTypeAttribute;
+
+            // CommandParamCountAttribute (optional)
+            CommandParamCountAttribute paramCountAttribute = methodInfo.GetCustomAttribute<CommandParamCountAttribute>();
+            if (paramCountAttribute == null)
+                paramCountAttribute = new();
+
+            _paramCountAttribute = paramCountAttribute;
         }
 
         public override string ToString()
@@ -91,7 +100,8 @@ namespace MHServerEmu.Commands
             // Check params if needed
             if (@params != null)
             {
-                // TODO
+                if (@params.Length < _paramCountAttribute.ParamCount)
+                    return CommandCanInvokeResult.InvalidParamCount;
             }
 
             return CommandCanInvokeResult.Success;
@@ -117,6 +127,9 @@ namespace MHServerEmu.Commands
 
                 case CommandCanInvokeResult.ServerConsoleRequired:
                     return "This command can be invoked only from the server console.";
+
+                case CommandCanInvokeResult.InvalidParamCount:
+                    return "Invalid arguments. Type '!help command' to get help.";
 
                 default:
                     return "Unknown Failure";
