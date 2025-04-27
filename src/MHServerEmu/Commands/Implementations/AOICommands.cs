@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -14,9 +14,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("volume", "Changes player AOI volume size.\nUsage: aoi volume [value]")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Volume(string[] @params, FrontendClient client)
+        public string Volume(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}.";
 
@@ -36,9 +36,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("print", "Prints player AOI information to the server console.\nUsage: aoi print")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Print(string[] @params, FrontendClient client)
+        public string Print(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             AdminCommandManager.SendAdminCommandResponseSplit(playerConnection, playerConnection.AOI.DebugPrint());
 
             return "AOI information printed to the console.";
@@ -47,9 +47,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("update", "Forces AOI proximity update.\nUsage: aoi update")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Update(string[] @params, FrontendClient client)
+        public string Update(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             playerConnection.AOI.Update(avatar.RegionLocation.Position, true);
 
@@ -59,9 +59,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("refs", "Prints interest references for the current player.\nUsage: aoi refs")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Refs(string[] @params, FrontendClient client)
+        public string Refs(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
             Avatar avatar = player.CurrentAvatar;
 

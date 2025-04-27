@@ -17,11 +17,8 @@ namespace MHServerEmu.Grouping
         private readonly Dictionary<ulong, IFrontendClient> _playerDbIdDict = new();
         private readonly Dictionary<string, IFrontendClient> _playerNameDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
-        private ICommandParser _commandParser;
-
-        public GroupingManagerService(ICommandParser commandParser = null)
+        public GroupingManagerService()
         {
-            _commandParser = commandParser;
         }
 
         #region IGameService Implementation
@@ -76,10 +73,6 @@ namespace MHServerEmu.Grouping
 
         private bool OnChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
         {
-            // Try to parse the message as a command first
-            if (_commandParser != null && _commandParser.TryParse(chat.TheMessage.Body, client))
-                return true;
-
             DBAccount account = ((IDBAccountOwner)client).Account;
 
             if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)

@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.MetaGames.GameModes;
 using MHServerEmu.Games.MetaGames.MetaStates;
@@ -20,9 +20,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("event", "Change current event.\nUsage: metagame event [next|stop]")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Event(string[] @params, FrontendClient client)
+        public string Event(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             var player = playerConnection.Player;
             var region = player.GetRegion();
             if (region == null) return "Player.GetRegion() failed.";

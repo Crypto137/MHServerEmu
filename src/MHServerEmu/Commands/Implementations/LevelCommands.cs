@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -16,9 +16,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("up", "Levels up the current avatar.\nUsage: level up")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Up(string[] @params, FrontendClient client)
+        public string Up(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             long xp = avatar.Properties[PropertyEnum.ExperiencePoints];
@@ -32,9 +32,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("max", "Maxes out the current avatar's experience.\nUsage: level max")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Max(string[] @params, FrontendClient client)
+        public string Max(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             PropertyInfo propertyInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(PropertyEnum.ExperiencePoints);
@@ -47,9 +47,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("reset", "Resets the current avatar to level 1.\nUsage: level reset")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Reset(string[] @params, FrontendClient client)
+        public string Reset(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             avatar.InitializeLevel(1);
@@ -59,9 +59,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("maxinfinity", "Maxes out Infinity experience.\nUsage: level max")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string MaxInfinity(string[] @params, FrontendClient client)
+        public string MaxInfinity(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             player.Properties[PropertyEnum.InfinityXP] = GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap;
@@ -72,9 +72,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("resetinfinity", "Removes all Infinity progression.\nUsage: level resetinfinity")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string ResetInfinity(string[] @params, FrontendClient client)
+        public string ResetInfinity(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             // Force respec for all avatars
@@ -90,12 +90,12 @@ namespace MHServerEmu.Commands.Implementations
         [Command("awardxp", "Awards the specified amount of experience.\nUsage: level awardxp [amount]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string AwardXP(string[] @params, FrontendClient client)
+        public string AwardXP(string[] @params, NetClient client)
         {
             if (long.TryParse(@params[0], out long amount) == false)
                 return $"Failed to parse argument {@params[0]}.";
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             avatar.AwardXP(amount, amount, true);
 

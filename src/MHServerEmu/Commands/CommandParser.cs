@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Network;
-using MHServerEmu.Frontend;
-using MHServerEmu.Grouping;
+using MHServerEmu.Games.Common;
 
 namespace MHServerEmu.Commands
 {
@@ -9,9 +8,9 @@ namespace MHServerEmu.Commands
     /// </summary>
     public class CommandParser : ICommandParser
     {
-        public bool TryParse(string message, IFrontendClient client)
+        public bool TryParse(string message, NetClient client)
         {
-            return CommandManager.Instance.TryParse(message, (FrontendClient)client);
+            return CommandManager.Instance.TryParse(message, client);
         }
     }
 }

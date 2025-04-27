@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -25,15 +25,15 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Drop(string[] @params, FrontendClient client)
+        public string Drop(string[] @params, NetClient client)
         {
-            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
+            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client.FrontendClient);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
             if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
                 count = 1;
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
             Avatar avatar = player.CurrentAvatar;
 
@@ -52,15 +52,15 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Give(string[] @params, FrontendClient client)
+        public string Give(string[] @params, NetClient client)
         {
-            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
+            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client.FrontendClient);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
             if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
                 count = 1;
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             LootManager lootGenerator = playerConnection.Game.LootManager;
@@ -74,9 +74,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("destroyindestructible", "Destroys indestructible items contained in the player's general inventory.\nUsage: item destroyindestructible")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string DestroyIndestructible(string[] @params, FrontendClient client)
+        public string DestroyIndestructible(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
             Inventory general = player.GetInventory(InventoryConvenienceLabel.General);
 
@@ -100,12 +100,12 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string RollLootTable(string[] @params, FrontendClient client)
+        public string RollLootTable(string[] @params, NetClient client)
         {
-            PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client);
+            PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client.FrontendClient);
             if (lootTableProtoRef == PrototypeId.Invalid) return string.Empty;
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             player.Game.LootManager.TestLootTable(lootTableProtoRef, player);
@@ -116,9 +116,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("rollall", "Rolls all loot tables.\nUsage: item rollall")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string RollAllLootTables(string[] @params, FrontendClient client)
+        public string RollAllLootTables(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             int numLootTables = 0;
@@ -137,12 +137,12 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("creditchest", "Converts 500k credits to a sellable chest item.\nUsage: item creditchest")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string CreditChest(string[] @params, FrontendClient client)
+        public string CreditChest(string[] @params, NetClient client)
         {
             const PrototypeId CreditItemProtoRef = (PrototypeId)13983056721138685632;
             const int CreditItemPrice = 500000;
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             PropertyId creditsProperty = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.Credits);

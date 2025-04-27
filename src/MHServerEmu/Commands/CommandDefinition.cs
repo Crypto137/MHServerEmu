@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.DatabaseAccess;
+using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.Commands
 {
@@ -76,12 +76,12 @@ namespace MHServerEmu.Commands
             return _methodInfo.GetHashCode();
         }
 
-        public CommandCanInvokeResult CanInvoke(IFrontendClient client, string[] @params)
+        public CommandCanInvokeResult CanInvoke(NetClient client, string[] @params)
         {
             // Check user level for client invocations (server console invocations are assumed to be coming from an admin)
             if (client != null)
             {
-                if (client is not IDBAccountOwner accountOwner)
+                if (client.FrontendClient is not IDBAccountOwner accountOwner)
                     return CommandCanInvokeResult.UnknownFailure;
 
                 DBAccount account = accountOwner.Account;
@@ -107,7 +107,7 @@ namespace MHServerEmu.Commands
             return CommandCanInvokeResult.Success;
         }
 
-        public string Invoke(CommandGroup commandGroup, string[] @params, IFrontendClient client)
+        public string Invoke(CommandGroup commandGroup, string[] @params, NetClient client)
         {
             return (string)_methodInfo.Invoke(commandGroup, [@params, client]);
         }

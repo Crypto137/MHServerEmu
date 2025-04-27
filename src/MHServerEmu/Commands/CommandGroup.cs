@@ -2,7 +2,7 @@
 using System.Text;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Frontend;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Commands
 {
@@ -30,7 +30,7 @@ namespace MHServerEmu.Commands
         /// <summary>
         /// Handles a command.
         /// </summary>
-        public virtual string Handle(string parameters, FrontendClient client = null)
+        public virtual string Handle(string parameters, NetClient client = null)
         {
             // Check if the user can access this command group
             CommandCanInvokeResult canInvoke = GroupDefinition.CanInvoke(client);
@@ -82,7 +82,7 @@ namespace MHServerEmu.Commands
         /// The fallback default command for command groups.
         /// </summary>
         [DefaultCommand]
-        public virtual string Fallback(string[] @params = null, FrontendClient client = null)
+        public virtual string Fallback(string[] @params = null, NetClient client = null)
         {
             StringBuilder sb = new("Available subcommands: ");
 

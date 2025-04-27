@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Missions;
@@ -16,7 +16,7 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("debug", "Usage: mission debug [on|off].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Debug(string[] @params, FrontendClient client)
+        public string Debug(string[] @params, NetClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
                 flags = Switch.Off;   // Default Off
@@ -28,9 +28,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("resetstory", "Reset all main story missions.\nUsage: mission resetstory.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string ResetStory(string[] @params, FrontendClient client)
+        public string ResetStory(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             var avatar = playerConnection.Player.CurrentAvatar;
             if (avatar == null) return "Current Avatar not found.";
@@ -43,9 +43,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string CompleteStory(string[] @params, FrontendClient client)
+        public string CompleteStory(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             var manager = playerConnection.Player?.MissionManager;
             if (manager == null) return "Mission manager is null.";
@@ -62,23 +62,23 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("region", "List all the mission prototypes in the current region.\nUsage: mission region")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Region(string[] @params, FrontendClient client)
+        public string Region(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             if (playerConnection == null) return "PlayerConnection not found";
 
             Region region = playerConnection.Player.GetRegion();
             if (region == null) return "No region found.";
 
-            ChatHelper.SendMetagameMessage(client, $"Missions in {region.PrototypeName} :", true);
-            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(GameDatabase.GetFormattedPrototypeName)), false);
+            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Missions in {region.PrototypeName} :", true);
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(GameDatabase.GetFormattedPrototypeName)), false);
             return string.Empty;
         }
 
         [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Info(string[] @params, FrontendClient client)
+        public string Info(string[] @params, NetClient client)
         {
             string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
             if (errorMessage != null) return errorMessage;
@@ -86,13 +86,13 @@ namespace MHServerEmu.Commands.Implementations
             if (missionsFound.Count == 1)
             {
                 var text = missionsFound[0].ToString();
-                ChatHelper.SendMetagameMessage(client, $"Mission info:", true);
-                ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", text), false);
+                ChatHelper.SendMetagameMessage(client.FrontendClient, $"Mission info:", true);
+                ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", text), false);
                 return string.Empty;
             }
 
-            ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
-            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Multiple matches found :", true);
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
 
             return string.Empty;
         }
@@ -101,7 +101,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Complete(string[] @params, FrontendClient client)
+        public string Complete(string[] @params, NetClient client)
         {
             string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
             if (errorMessage != null) return errorMessage;
@@ -120,8 +120,8 @@ namespace MHServerEmu.Commands.Implementations
                 }
             }
 
-            ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
-            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Multiple matches found :", true);
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
 
             return string.Empty;
         }
@@ -130,7 +130,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Reset(string[] @params, FrontendClient client)
+        public string Reset(string[] @params, NetClient client)
         {
             string errorMessage = GetMissionFromPattern(client, @params[0], out List<Mission> missionsFound);
             if (errorMessage != null) return errorMessage;
@@ -141,19 +141,19 @@ namespace MHServerEmu.Commands.Implementations
                 return $"{missionsFound[0].PrototypeName} restarted";
             }
 
-            ChatHelper.SendMetagameMessage(client, $"Multiple matches found :", true);
-            ChatHelper.SendMetagameMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Multiple matches found :", true);
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
 
             return string.Empty;
         }
 
-        private string GetMissionFromPattern(FrontendClient client, string pattern, out List<Mission> missionsFound)
+        private string GetMissionFromPattern(NetClient client, string pattern, out List<Mission> missionsFound)
         {
             missionsFound = new();
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Game game = playerConnection?.Game;
             if (game == null) return "Game not found";
-            if (playerConnection == null) return "PlayerConnection not found";
 
             missionsFound.AddRange(playerConnection.Player?.MissionManager?.FindMissionsByPattern(pattern));
 

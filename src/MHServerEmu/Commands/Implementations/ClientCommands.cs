@@ -2,7 +2,6 @@
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 
@@ -17,7 +16,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("info", "Usage: client info [sessionId]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(1)]
-        public string Info(string[] @params, FrontendClient client)
+        public string Info(string[] @params, NetClient client)
         {
             if (ulong.TryParse(@params[0].TrimStart(HexPrefix), NumberStyles.HexNumber, null, out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
@@ -35,7 +34,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("kick", "Usage: client kick [playerName]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandParamCount(1)]
-        public string Kick(string[] @params, FrontendClient client)
+        public string Kick(string[] @params, NetClient client)
         {
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
             if (groupingManager == null)

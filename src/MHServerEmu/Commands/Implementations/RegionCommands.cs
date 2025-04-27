@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
@@ -19,9 +19,9 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Warp(string[] @params, FrontendClient client)
+        public string Warp(string[] @params, NetClient client)
         {
-            PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client);
+            PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client.FrontendClient);
             if (regionProtoRef == PrototypeId.Invalid) return string.Empty;
 
             RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
@@ -30,11 +30,12 @@ namespace MHServerEmu.Commands.Implementations
             string regionName = GameDatabase.GetPrototypeName(regionProtoRef);
 
             // Check for unsafe warps (regions that are potentially missing assets and can make the client get stuck)
-            bool allowUnsafe = client.Session.Account.UserLevel == AccountUserLevel.Admin && @params.Length > 1 && @params[1].ToLower() == "unsafe";
+            DBAccount account = CommandHelper.GetClientAccount(client);
+            bool allowUnsafe = account.UserLevel == AccountUserLevel.Admin && @params.Length > 1 && @params[1].ToLower() == "unsafe";
             if (allowUnsafe == false && Enum.GetValues<RegionPrototypeId>().Contains((RegionPrototypeId)regionProtoRef) == false)
                 return $"Unsafe warp destination: {regionName}.";
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             playerConnection.MoveToTarget(regionProto.StartTarget);
             return $"Warping to {regionName}.";
         }
@@ -42,9 +43,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("reload", "Reloads the current region.\nUsage: region reload")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Reload(string[] @params, FrontendClient client)
+        public string Reload(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             playerConnection.MoveToTarget(playerConnection.TransferParams.DestTargetProtoRef);
 
@@ -54,9 +55,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string GenerateAllSafe(string[] @params, FrontendClient client)
+        public string GenerateAllSafe(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Game game = playerConnection.Game;
             RegionContext regionContext = new();
 
@@ -77,21 +78,21 @@ namespace MHServerEmu.Commands.Implementations
         [Command("properties", "Prints properties for the current region.\nUsage: region properties")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Properties(string[] @params, FrontendClient client)
+        public string Properties(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Region region = playerConnection.Player.GetRegion();
 
-            ChatHelper.SendMetagameMessageSplit(client, region.Properties.ToString());
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, region.Properties.ToString());
 
             return string.Empty;
         }
 
         [Command("info", "Prints info for the current region.\nUsage: region info")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Info(string[] @params, FrontendClient client)
+        public string Info(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Region region = playerConnection.Player.GetRegion();
 
             return region?.ToString();

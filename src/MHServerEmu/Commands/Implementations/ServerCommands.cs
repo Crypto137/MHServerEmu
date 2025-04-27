@@ -4,7 +4,6 @@ using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Grouping;
 
@@ -16,7 +15,7 @@ namespace MHServerEmu.Commands.Implementations
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [Command("status", "Usage: server status")]
-        public string Status(string[] @params, FrontendClient client)
+        public string Status(string[] @params, NetClient client)
         {
             StringBuilder sb = new();
             sb.AppendLine("Server Status");
@@ -29,14 +28,14 @@ namespace MHServerEmu.Commands.Implementations
                 return status;
 
             // Split for the client chat window
-            ChatHelper.SendMetagameMessageSplit(client, status, false);
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, status, false);
             return string.Empty;
         }
 
         [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(1)]
-        public string Broadcast(string[] @params, FrontendClient client)
+        public string Broadcast(string[] @params, NetClient client)
         {
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IMessageBroadcaster;
             if (groupingManager == null) return "Failed to connect to the grouping manager.";
@@ -52,7 +51,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
-        public string ReloadLiveTuning(string[] @params, FrontendClient client)
+        public string ReloadLiveTuning(string[] @params, NetClient client)
         {
             LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
             return string.Empty;
@@ -60,7 +59,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("shutdown", "Usage: server shutdown")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Shutdown(string[] @params, FrontendClient client)
+        public string Shutdown(string[] @params, NetClient client)
         {
             string shutdownRequester = client == null ? "the server console" : client.ToString();
             Logger.Info($"Server shutdown request received from {shutdownRequester}");

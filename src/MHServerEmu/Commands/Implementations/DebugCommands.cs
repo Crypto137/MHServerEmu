@@ -2,9 +2,9 @@
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -25,14 +25,14 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("test", "Runs test code.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Test(string[] @params, FrontendClient client)
+        public string Test(string[] @params, NetClient client)
         {
             return string.Empty;
         }
 
         [Command("forcegc", "Requests the garbage collector to reclaim unused server memory.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string ForceGC(string[] @params, FrontendClient client)
+        public string ForceGC(string[] @params, NetClient client)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -42,9 +42,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("cell", "Shows current cell.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Cell(string[] @params, FrontendClient client)
+        public string Cell(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             return $"Current cell: {playerConnection.AOI.Region.GetCellAtPosition(avatar.RegionLocation.Position).PrototypeName}";
@@ -52,18 +52,18 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("seed", "Shows current seed.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Seed(string[] @params, FrontendClient client)
+        public string Seed(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             return $"Current seed: {playerConnection.AOI.Region.RandomSeed}";
         }
 
         [Command("area", "Shows current area.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Area(string[] @params, FrontendClient client)
+        public string Area(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             return $"Current area: {playerConnection.AOI.Region.GetCellAtPosition(avatar.RegionLocation.Position).Area.PrototypeName}";
@@ -71,9 +71,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("region", "Shows current region.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Region(string[] @params, FrontendClient client)
+        public string Region(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             return $"Current region: {playerConnection.AOI.Region.PrototypeName}";
         }
@@ -87,7 +87,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("setmarker", "Usage: debug setmarker [MarkerRef].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(1)]
-        public string SetMarker(string[] @params, FrontendClient client)
+        public string SetMarker(string[] @params, NetClient client)
         {
             if (PrototypeId.TryParse(@params[0], out PrototypeId markerRef) == false)
                 return $"Failed to parse MarkerRef {@params[0]}";
@@ -99,7 +99,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("spawn", "Usage: debug spawn [on|off].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Spawn(string[] @params, FrontendClient client)
+        public string Spawn(string[] @params, NetClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
                 flags = Switch.Off;   // Default Off
@@ -112,9 +112,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("ai", "Usage: debug ai.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string AI(string[] @params, FrontendClient client)
+        public string AI(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             EntityManager entityManager = playerConnection.Game.EntityManager;
 
             bool enableAI = entityManager.IsAIEnabled == false;
@@ -124,7 +124,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("metagame", "Usage: debug metagame [on|off].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Metagame(string[] @params, FrontendClient client)
+        public string Metagame(string[] @params, NetClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
                 flags = Switch.Off;   // Default Off
@@ -137,9 +137,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Navi2Obj(string[] @params, FrontendClient client)
+        public string Navi2Obj(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             var region = playerConnection.AOI.Region;
 
@@ -155,7 +155,7 @@ namespace MHServerEmu.Commands.Implementations
         [Command("crashgame", "Crashes the current game instance.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string CrashGame(string[] @params, FrontendClient client)
+        public string CrashGame(string[] @params, NetClient client)
         {
             throw new("Game instance crash invoked by a debug command.");
         }
@@ -163,18 +163,19 @@ namespace MHServerEmu.Commands.Implementations
         [Command("crashserver", "Crashes the current game instance.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
-        public string CrashServer(string[] @params, FrontendClient client)
+        public string CrashServer(string[] @params, NetClient client)
         {
             throw new("Server crash invoked by a debug command.");
         }
 
         [Command("getconditionlist", "Gets a list of all conditions tracked by the ConditionPool.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string GetConditionList(string[] @params, FrontendClient client)
+        public string GetConditionList(string[] @params, NetClient client)
         {
+            PlayerConnection playerConnection = (PlayerConnection)client;
             string filePath = $"Download/Conditions_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
 
-            client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
                 .SetResponse($"Saved condition list for the current game to {filePath}")
                 .SetFilerelativepath(filePath)
                 .SetFilecontents(ConditionPool.Instance.GetConditionList())
@@ -185,9 +186,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("difficulty", "Shows information about the current difficulty level.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Difficulty(string[] @params, FrontendClient client)
+        public string Difficulty(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             Avatar avatar = playerConnection.Player?.CurrentAvatar;
             if (avatar == null || avatar.IsInWorld == false)
@@ -205,14 +206,15 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("geteventpoolreport", "Returns a report representing the state of the ScheduledEventPool in the current game.")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string GetEventPoolStatus(string[] @params, FrontendClient client)
+        public string GetEventPoolStatus(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetGame(client, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Game game = playerConnection.Game;
             string reportString = game.GameEventScheduler.GetPoolReportString();
 
             string filePath = $"Download/ScheduledEventPoolReport_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
 
-            client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
                 .SetResponse($"Saved scheduled event pool report for the current game to {filePath}")
                 .SetFilerelativepath(filePath)
                 .SetFilecontents(reportString)

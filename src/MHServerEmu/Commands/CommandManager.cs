@@ -2,6 +2,7 @@
 using System.Text;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Commands
@@ -94,7 +95,7 @@ namespace MHServerEmu.Commands
         /// <summary>
         /// Tries to parse the provided <see cref="FrontendClient"/> input as a command.
         /// </summary>
-        public bool TryParse(string input, FrontendClient client)
+        public bool TryParse(string input, NetClient client)
         {
             string output = string.Empty;
             string command;
@@ -154,9 +155,9 @@ namespace MHServerEmu.Commands
         }
 
         /// <summary>
-        /// Sends a response to the specified <see cref="FrontendClient"/> using the registered <see cref="IClientOutput"/>.
+        /// Sends a response to the specified <see cref="NetClient"/> using the registered <see cref="IClientOutput"/>.
         /// </summary>
-        private void SendClientResponse(string output, FrontendClient client)
+        private void SendClientResponse(string output, NetClient client)
         {
             _clientOutput?.Output(output, client);
         }
@@ -168,7 +169,7 @@ namespace MHServerEmu.Commands
         [CommandGroup("commands", "Lists available commands.")]
         public class CommandsCommandGroup : CommandGroup
         {
-            public override string Fallback(string[] @params = null, FrontendClient client = null)
+            public override string Fallback(string[] @params = null, NetClient client = null)
             {
                 StringBuilder sb = new("Available commands: ");
 
@@ -192,12 +193,12 @@ namespace MHServerEmu.Commands
         [CommandGroup("help", "Help needs no help.")]
         public class HelpCommandGroup : CommandGroup
         {
-            public override string Fallback(string[] @params = null, FrontendClient client = null)
+            public override string Fallback(string[] @params = null, NetClient client = null)
             {
                 return "usage: help [command]"; ;
             }
 
-            public override string Handle(string parameters, FrontendClient client = null)
+            public override string Handle(string parameters, NetClient client = null)
             {
                 if (parameters == string.Empty)
                     return Fallback();

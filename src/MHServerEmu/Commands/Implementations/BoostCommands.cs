@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
@@ -13,9 +13,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("damage", "Increase Damage of current avatar.\nUsage: boost damage [1-10000]")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Damage(string[] @params, FrontendClient client)
+        public string Damage(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             if ((@params.Length > 0 && int.TryParse(@params[0], out int damage)) == false)
@@ -29,9 +29,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("vsboss", "Increase Damage vs Bosses of current avatar.\nUsage: boost vsboss [1-10000]")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string VsBoss(string[] @params, FrontendClient client)
+        public string VsBoss(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             if ((@params.Length > 0 && int.TryParse(@params[0], out int vsboss)) == false)

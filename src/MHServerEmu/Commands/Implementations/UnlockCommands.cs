@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -14,15 +14,15 @@ namespace MHServerEmu.Commands.Implementations
         [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Hero(string[] @params, FrontendClient client)
+        public string Hero(string[] @params, NetClient client)
         {
             // This command is intentionally exposed to regular users to allow them to unlock F4 heroes.
             // Also because of this, we call it "hero" and not "avatar" to make it clearer.
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
-            PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client);
+            PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client.FrontendClient);
             if (avatarProtoRef == PrototypeId.Invalid)
                 return string.Empty;
 
@@ -38,9 +38,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Waypoints(string[] @params, FrontendClient client)
+        public string Waypoints(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             var player = playerConnection.Player;
 
             foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstract))
@@ -52,9 +52,9 @@ namespace MHServerEmu.Commands.Implementations
         [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Chapters(string[] @params, FrontendClient client)
+        public string Chapters(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             var player = playerConnection.Player;
 
             foreach (PrototypeId chapterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<ChapterPrototype>(PrototypeIterateFlags.NoAbstract))

@@ -1,8 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
-using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -16,9 +15,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [DefaultCommand]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Tower(string[] @params, FrontendClient client)
+        public string Tower(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
             playerConnection.MoveToTarget((PrototypeId)16780605467179883619);
@@ -33,9 +32,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [DefaultCommand]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Jail(string[] @params, FrontendClient client)
+        public string Jail(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             // Regions/Story/CH04EastSide/UpperEastSide/PoliceDepartment/Portals/JailTarget.prototype
             playerConnection.MoveToTarget((PrototypeId)13284513933487907420);
@@ -49,9 +48,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [DefaultCommand]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Position(string[] @params, FrontendClient client)
+        public string Position(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             return $"Current position: {avatar.RegionLocation.Position.ToStringNames()}";
@@ -63,9 +62,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [DefaultCommand]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Dance(string[] @params, FrontendClient client)
+        public string Dance(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             var avatarPrototypeId = (AvatarPrototypeId)avatar.PrototypeDataRef;
@@ -108,9 +107,9 @@ namespace MHServerEmu.Commands.Implementations
         [DefaultCommand]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string Teleport(string[] @params, FrontendClient client)
+        public string Teleport(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             if (avatar == null || avatar.IsInWorld == false)
                 return "Avatar not found.";

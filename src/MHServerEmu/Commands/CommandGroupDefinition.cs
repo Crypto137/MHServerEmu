@@ -49,13 +49,13 @@ namespace MHServerEmu.Commands
             return _type.GetHashCode();
         }
 
-        public CommandCanInvokeResult CanInvoke(IFrontendClient client)
+        public CommandCanInvokeResult CanInvoke(NetClient client)
         {
             // Console invocations do not have clients
             if (client == null)
                 return CommandCanInvokeResult.Success;
 
-            if (client is not IDBAccountOwner accountOwner)
+            if (client.FrontendClient is not IDBAccountOwner accountOwner)
                 return CommandCanInvokeResult.UnknownFailure;
 
             DBAccount account = accountOwner.Account;

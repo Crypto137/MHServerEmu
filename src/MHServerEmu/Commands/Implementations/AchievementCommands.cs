@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Grouping;
 
@@ -12,7 +12,7 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]")]
         [CommandParamCount(1)]
-        public string Info(string[] @params, FrontendClient client)
+        public string Info(string[] @params, NetClient client)
         {
             if (uint.TryParse(@params[0], out uint id) == false)
                 return "Failed to parse achievement id.";
@@ -27,8 +27,8 @@ namespace MHServerEmu.Commands.Implementations
                 return info.ToString();
 
             // Output as a list of chat messages if the command was invoked from the in-game chat.
-            ChatHelper.SendMetagameMessage(client, "Achievement Info:");
-            ChatHelper.SendMetagameMessageSplit(client, info.ToString(), false);
+            ChatHelper.SendMetagameMessage(client.FrontendClient, "Achievement Info:");
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, info.ToString(), false);
             return string.Empty;
         }
     }

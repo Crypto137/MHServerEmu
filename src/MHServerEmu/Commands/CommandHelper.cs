@@ -1,10 +1,8 @@
 ﻿using MHServerEmu.Core.Network;
-using MHServerEmu.Frontend;
-using MHServerEmu.Games;
+using MHServerEmu.DatabaseAccess;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands
 {
@@ -14,49 +12,24 @@ namespace MHServerEmu.Commands
     public static class CommandHelper
     {
         /// <summary>
-        /// Retrieves the current <see cref="Game"/> instance for the provided <see cref="FrontendClient."/>
-        /// Return <see langword="true"/> if successful.
+        /// Returns the <see cref="DBAccount"/> bound to the provided <see cref="NetClient"/>.
         /// </summary>
-        public static bool TryGetGame(FrontendClient client, out Game game)
+        public static DBAccount GetClientAccount(NetClient client)
         {
-            game = null;
+            if (client == null)
+                return null;
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            if (playerManager == null) return false;
+            if (client.FrontendClient is not IDBAccountOwner accountOwner)
+                return null;
 
-            game = playerManager.GetGameByPlayer(client);
-            return game != null;
-        }
-
-        /// <summary>
-        /// Retrieves the current <see cref="PlayerConnection"/> and <see cref="Game"/> instances for the provided <see cref="FrontendClient."/>
-        /// Return <see langword="true"/> if successful.
-        /// </summary>
-        public static bool TryGetPlayerConnection(FrontendClient client, out PlayerConnection playerConnection, out Game game)
-        {
-            playerConnection = null;
-
-            if (TryGetGame(client, out game) == false)
-                return false;
-
-            playerConnection = game.NetworkManager.GetNetClient(client);
-            return playerConnection != null;
-        }
-
-        /// <summary>
-        /// Retrieves the current <see cref="PlayerConnection"/> instance for the provided <see cref="FrontendClient."/>
-        /// Return <see langword="true"/> if successful.
-        /// </summary>
-        public static bool TryGetPlayerConnection(FrontendClient client, out PlayerConnection playerConnection)
-        {
-            return TryGetPlayerConnection(client, out playerConnection, out _);
+            return accountOwner.Account;
         }
 
         /// <summary>
         /// Searches for a <see cref="PrototypeId"/> that matches the specified <see cref="BlueprintId"/> and <see cref="string"/> pattern.
         /// Returns <see cref="PrototypeId.Invalid"/> if no or more than one match is found.
         /// </summary>
-        public static PrototypeId FindPrototype(BlueprintId blueprintRef, string pattern, FrontendClient client)
+        public static PrototypeId FindPrototype(BlueprintId blueprintRef, string pattern, IFrontendClient client)
         {
             const int MaxMatches = 10;
 

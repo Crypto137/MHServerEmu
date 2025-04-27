@@ -10,9 +10,9 @@ namespace MHServerEmu.Commands
     {
         // TODO: Potentially move this to MHServerEmu.Grouping.
 
-        public void Output(string output, IFrontendClient client)
+        public void Output(string output, NetClient client)
         {
-            ChatHelper.SendMetagameMessage(client, output);
+            ChatHelper.SendMetagameMessage(client.FrontendClient, output);
         }
     }
 }

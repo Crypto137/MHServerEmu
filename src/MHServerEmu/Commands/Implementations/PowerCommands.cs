@@ -2,8 +2,8 @@
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -20,9 +20,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string Print(string[] @params, FrontendClient client)
+        public string Print(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             StringBuilder sb = new();
@@ -37,9 +37,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("cooldownreset", "Resets all cooldowns and charges.\nUsage: power cooldownreset")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string CooldownReset(string[] @params, FrontendClient client)
+        public string CooldownReset(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             // Player cooldowns
             Player player = playerConnection.Player;
@@ -72,9 +72,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("stealpowers", "Unlocks all stolen powers.\nUsage: power stealpowers")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string StealPowers(string[] @params, FrontendClient client)
+        public string StealPowers(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             AvatarPrototype avatarProto = avatar.AvatarPrototype;
@@ -102,9 +102,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("stealavatarpowers", "Unlocks avatar stolen powers.\nUsage: power stealavatarpowers")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string StealAvatarPowers(string[] @params, FrontendClient client)
+        public string StealAvatarPowers(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             AvatarPrototype currentAvatarProto = avatar.AvatarPrototype;
@@ -139,9 +139,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("forgetstolenpowers", "Forgets all stolen powers.\nUsage: power forgetstolenpowers")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string ForgetStolenPowers(string[] @params, FrontendClient client)
+        public string ForgetStolenPowers(string[] @params, NetClient client)
         {
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             AvatarPrototype avatarProto = avatar.AvatarPrototype;

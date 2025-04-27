@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.MTXStore;
@@ -15,11 +15,11 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("convertes", "Converts 100 Eternity Splinters to the equivalent amount of Gs.\nUsage: store convertes")]
         [CommandInvokerType(CommandInvokerType.Client)]
-        public string ConvertES(string[] @params, FrontendClient client)
+        public string ConvertES(string[] @params, NetClient client)
         {
             const int NumConverted = 100;
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             PropertyId esPropId = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters);
@@ -45,12 +45,12 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
-        public string AddG(string[] @params, FrontendClient client)
+        public string AddG(string[] @params, NetClient client)
         {
             if (long.TryParse(@params[0], out long amount) == false)
                 return $"Failed to parse argument {@params[0]}.";
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             if (player.AcquireGazillionite(amount) == false)
