@@ -4,50 +4,97 @@ namespace MHServerEmu.Games.Entities
 {
     public class TagPlayers
     {
-        private EntityManager _manager;
-        private WorldEntity _owner;
-        private SortedSet<TagInfo> _tags;
-
+        private readonly SortedSet<TagInfo> _tags = [];
         public SortedSet<TagInfo> Tags { get => _tags; }
         public bool HasTags { get => _tags.Count > 0; }
+        public WorldEntity Owner { get; }
 
         public TagPlayers(WorldEntity worldEntity)
         {
-            _owner = worldEntity;
-            _manager = worldEntity.Game.EntityManager;
-            _tags = new();
+            Owner = worldEntity;
         }
 
-        public IEnumerable<Player> GetPlayers()
+        public PlayerTagIterator GetPlayers(TimeSpan time = default)
         {
-            ulong playerUid = 0;           
-            foreach(var tag in _tags)
-            {
-                if (playerUid == tag.PlayerUID) continue;
-                else playerUid = tag.PlayerUID;
-
-                var player = _manager.GetEntityByDbGuid<Player>(playerUid);
-                if (player != null)
-                    yield return player;
-            }
+            return new PlayerTagIterator(this, time);
         }
 
         public void Add(Player player, PowerPrototype powerProto)
         {
             var tag = new TagInfo(player.DatabaseUniqueId, powerProto, player.Game.CurrentTime);
 
-            if (_tags.Add(tag) == false)
-            {
-                _tags.Remove(tag);
-                _tags.Add(tag);
-            }
+            if (_tags.TryGetValue(tag, out var existing))
+                _tags.Remove(existing);
 
-            player.AddTag(_owner);
+            _tags.Add(tag);
+
+            player.AddTag(Owner);
         }
 
         public void Clear()
         {
             _tags.Clear();
+        }
+    }
+
+    public readonly struct PlayerTagIterator
+    {
+        private readonly TagPlayers _tags;
+        private readonly TimeSpan _time;
+
+        public PlayerTagIterator(TagPlayers tags, TimeSpan time)
+        {
+            _tags = tags;
+            _time = time;
+        }
+
+        public Enumerator GetEnumerator() => new (_tags, _time);
+
+        public struct Enumerator
+        {
+            private readonly EntityManager _manager;
+            private readonly TimeSpan _curTime;
+            private readonly TimeSpan _maxAge;
+
+            private ulong _lastUid;
+            private Player _current;
+            private SortedSet<TagInfo>.Enumerator _enumerator;
+
+            public Enumerator(TagPlayers tagPlayers, TimeSpan maxAge)
+            {
+                var game = tagPlayers.Owner.Game;
+                _manager = game.EntityManager;
+                _curTime = game.CurrentTime;
+                _maxAge = maxAge;
+
+                _lastUid = 0;
+                _current = null;
+                _enumerator = tagPlayers.Tags.GetEnumerator();
+            }
+
+            public Player Current => _current;
+
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    var tag = _enumerator.Current;
+
+                    if (_maxAge != default && _curTime - tag.Time > _maxAge)
+                        continue;
+
+                    if (_lastUid == tag.PlayerUID)
+                        continue;
+
+                    _lastUid = tag.PlayerUID;
+
+                    _current = _manager.GetEntityByDbGuid<Player>(_lastUid);
+                    if (_current != null)
+                        return true;
+                }
+
+                return false;
+            }
         }
     }
 
@@ -66,8 +113,15 @@ namespace MHServerEmu.Games.Entities
 
         public int CompareTo(TagInfo other)
         {
-            if (PlayerUID == other.PlayerUID && PowerPrototype == other.PowerPrototype) return 0;
-            return PlayerUID.CompareTo(other.PlayerUID);
+            int uidCompare = PlayerUID.CompareTo(other.PlayerUID);
+            if (uidCompare != 0) return uidCompare;
+
+            if (PowerPrototype == null && other.PowerPrototype == null) return 0;
+            if (PowerPrototype == null) return -1;
+            if (other.PowerPrototype == null) return 1;
+
+            return PowerPrototype.DataRef.CompareTo(other.PowerPrototype.DataRef);
         }
     }
+
 }
