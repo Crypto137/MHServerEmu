@@ -220,7 +220,8 @@ namespace MHServerEmu.Games.Regions
                     }
 
                     region = GenerateAndInitRegion(regionContext);
-                    playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
+                    if (region != null)
+                        playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
                 }
             }
 
