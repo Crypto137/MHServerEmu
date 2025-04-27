@@ -103,10 +103,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("info", "Shows information for the logged in account.\nUsage: account info")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             StringBuilder sb = new();
             sb.AppendLine($"Account Info:");
             sb.AppendLine($"Id: 0x{client.Session.Account.Id:X}");
@@ -120,10 +119,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("download", "Downloads a JSON copy of the current account.\nUsage: account download")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Download(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             DBAccount account = client.Session.Account;
 
             JsonSerializerOptions options = new();

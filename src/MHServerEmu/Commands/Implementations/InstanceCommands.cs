@@ -15,10 +15,9 @@ namespace MHServerEmu.Commands.Implementations
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [Command("list", "Lists private instances.\nUsage: instance list")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string List(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
                 return string.Empty;
 
@@ -41,10 +40,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("listall", "Lists all region instances in the current game.\nUsage: instance listall")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string ListAll(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
                 return string.Empty;
 
@@ -62,10 +60,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("reset", "Resets private instances.\nUsage: instance reset")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Reset(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
                 return string.Empty;
 

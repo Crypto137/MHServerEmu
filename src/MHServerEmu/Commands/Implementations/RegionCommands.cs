@@ -17,9 +17,9 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("warp", "Warps the player to another region.\nUsage: region warp [name]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Warp(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help region warp' to get help.";
 
             PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client);
@@ -42,10 +42,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("reload", "Reloads the current region.\nUsage: region reload")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Reload(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             playerConnection.MoveToTarget(playerConnection.TransferParams.DestTargetProtoRef);
@@ -55,10 +54,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string GenerateAllSafe(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Game game = playerConnection.Game;
             RegionContext regionContext = new();
@@ -79,10 +77,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("properties", "Prints properties for the current region.\nUsage: region properties")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Properties(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Region region = playerConnection.Player.GetRegion();
 
@@ -92,10 +89,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("info", "Prints info for the current region.\nUsage: region info")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Region region = playerConnection.Player.GetRegion();
 

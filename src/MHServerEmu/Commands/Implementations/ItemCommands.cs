@@ -23,9 +23,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Drop(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help item drop' to get help.";
 
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
@@ -51,9 +51,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Give(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help item give' to get help.";
 
             PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
@@ -75,10 +75,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("destroyindestructible", "Destroys indestructible items contained in the player's general inventory.\nUsage: item destroyindestructible")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string DestroyIndestructible(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
             Inventory general = player.GetInventory(InventoryConvenienceLabel.General);
@@ -101,9 +100,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("roll", "Rolls a loot table.\nUsage: item roll [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string RollLootTable(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help item roll' to get help.";
 
             PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client);
@@ -119,10 +118,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("rollall", "Rolls all loot tables.\nUsage: item rollall")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string RollAllLootTables(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
@@ -141,12 +139,11 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("creditchest", "Converts 500k credits to a sellable chest item.\nUsage: item creditchest")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string CreditChest(string[] @params, FrontendClient client)
         {
             const PrototypeId CreditItemProtoRef = (PrototypeId)13983056721138685632;
             const int CreditItemPrice = 500000;
-
-            if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;

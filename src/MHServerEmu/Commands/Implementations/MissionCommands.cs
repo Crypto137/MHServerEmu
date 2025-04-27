@@ -27,9 +27,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("resetstory", "Reset all main story missions.\nUsage: mission resetstory.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string ResetStory(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             var avatar = playerConnection.Player.CurrentAvatar;
@@ -42,9 +42,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string CompleteStory(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             var manager = playerConnection.Player?.MissionManager;
@@ -61,9 +61,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("region", "List all the mission prototypes in the current region.\nUsage: mission region")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Region(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             if (playerConnection == null) return "PlayerConnection not found";
 
@@ -76,11 +76,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Info(string[] @params, FrontendClient client)
         {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
             if (@params.Length == 0)
                 return "Invalid arguments. Type 'help mission info' to get help.";
 
@@ -103,11 +101,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("complete", "Complete the given mission.\nUsage: mission complete [pattern].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Complete(string[] @params, FrontendClient client)
         {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
             if (@params.Length == 0)
                 return "Invalid arguments. Type 'help mission complete' to get help.";
 
@@ -136,11 +132,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("reset", "Restart the given mission.\nUsage: mission reset [pattern].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Reset(string[] @params, FrontendClient client)
         {
-            if (client == null)
-                return "You can only invoke this command from the game.";
-
             if (@params.Length == 0)
                 return "Invalid arguments. Type 'help mission reset' to get help.";
 

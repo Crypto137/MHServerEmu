@@ -15,10 +15,9 @@ namespace MHServerEmu.Commands.Implementations
     public class LevelCommands : CommandGroup
     {
         [Command("up", "Levels up the current avatar.\nUsage: level up")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Up(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -32,10 +31,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("max", "Maxes out the current avatar's experience.\nUsage: level max")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Max(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -48,10 +46,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("reset", "Resets the current avatar to level 1.\nUsage: level reset")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Reset(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -61,10 +58,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("maxinfinity", "Maxes out Infinity experience.\nUsage: level max")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string MaxInfinity(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
@@ -75,10 +71,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("resetinfinity", "Removes all Infinity progression.\nUsage: level resetinfinity")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string ResetInfinity(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
 
@@ -93,9 +88,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("awardxp", "Awards the specified amount of experience.\nUsage: level awardxp [amount]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string AwardXP(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help level awardxp' to get help.";
 
             if (long.TryParse(@params[0], out long amount) == false)

@@ -12,12 +12,12 @@ namespace MHServerEmu.Commands.Implementations
     public class Unlock : CommandGroup
     {
         [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Hero(string[] @params, FrontendClient client)
         {
             // This command is intentionally exposed to regular users to allow them to unlock F4 heroes.
             // Also because of this, we call it "hero" and not "avatar" to make it clearer.
 
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help unlock hero' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
@@ -38,10 +38,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Waypoints(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             var player = playerConnection.Player;
 
@@ -53,10 +52,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Chapters(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             var player = playerConnection.Player;
 

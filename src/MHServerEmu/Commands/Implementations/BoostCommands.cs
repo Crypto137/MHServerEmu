@@ -12,10 +12,9 @@ namespace MHServerEmu.Commands.Implementations
     public class BoostCommands : CommandGroup
     {
         [Command("damage", "Increase Damage of current avatar.\nUsage: boost damage [1-10000]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Damage(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -29,10 +28,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("vsboss", "Increase Damage vs Bosses of current avatar.\nUsage: boost vsboss [1-10000]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string VsBoss(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 

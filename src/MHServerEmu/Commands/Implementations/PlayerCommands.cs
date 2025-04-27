@@ -18,9 +18,9 @@ namespace MHServerEmu.Commands.Implementations
     public class PlayerCommands : CommandGroup
     {
         [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Costume(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
 
             PrototypeId costumeProtoRef;
@@ -65,10 +65,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("wipe", "Wipes all progress associated with the current account.\nUsage: player wipe [playerName]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Wipe(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             string playerName = playerConnection.Player.GetName();
 
@@ -84,9 +83,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string GiveCurrency(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help player givecurrency' to get help.";
 
             if (int.TryParse(@params[0], out int amount) == false)
@@ -102,10 +101,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("clearconditions", "Clears persistent conditions.\nUsage: player clearconditions")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string ClearConditions(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
             Avatar avatar = player.CurrentAvatar;

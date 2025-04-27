@@ -11,6 +11,8 @@ namespace MHServerEmu.Commands
         Success,
         UnknownFailure,
         UserLevelNotHighEnough,
+        ClientRequired,
+        ServerConsoleRequired,
     }
 
     public class CommandDefinition
@@ -18,6 +20,7 @@ namespace MHServerEmu.Commands
         private readonly MethodInfo _methodInfo;
         private readonly CommandAttribute _commandAttribute;
         private readonly CommandUserLevelAttribute _userLevelAttribute;
+        private readonly CommandInvokerTypeAttribute _invokerTypeAttribute;
 
         public string Name { get => _commandAttribute.Name; }
         public string Help { get => _commandAttribute.Help; }
@@ -40,6 +43,13 @@ namespace MHServerEmu.Commands
                 userLevelAttribute = new();
 
             _userLevelAttribute = userLevelAttribute;
+
+            // CommandInvokerTypeAttribute (optional)
+            CommandInvokerTypeAttribute invokerTypeAttribute = methodInfo.GetCustomAttribute<CommandInvokerTypeAttribute>();
+            if (invokerTypeAttribute == null)
+                invokerTypeAttribute = new();
+
+            _invokerTypeAttribute = invokerTypeAttribute;
         }
 
         public override string ToString()
@@ -59,20 +69,29 @@ namespace MHServerEmu.Commands
 
         public CommandCanInvokeResult CanInvoke(IFrontendClient client, string[] @params)
         {
-            // Console invocations do not have clients
-            if (client == null)
-                return CommandCanInvokeResult.Success;
+            // Check user level for client invocations (server console invocations are assumed to be coming from an admin)
+            if (client != null)
+            {
+                if (client is not IDBAccountOwner accountOwner)
+                    return CommandCanInvokeResult.UnknownFailure;
 
-            if (client is not IDBAccountOwner accountOwner)
-                return CommandCanInvokeResult.UnknownFailure;
+                DBAccount account = accountOwner.Account;
+                if (account.UserLevel < _userLevelAttribute.UserLevel)
+                    return CommandCanInvokeResult.UserLevelNotHighEnough;
+            }
+            
+            // Check invoker type
+            CommandInvokerType invokerType = _invokerTypeAttribute.InvokerType;
 
-            DBAccount account = accountOwner.Account;
-            if (account.UserLevel < _userLevelAttribute.UserLevel)
-                return CommandCanInvokeResult.UserLevelNotHighEnough;
+            if (invokerType == CommandInvokerType.Client && client == null)
+                return CommandCanInvokeResult.ClientRequired;
+            else if (invokerType == CommandInvokerType.ServerConsole && client != null)
+                return CommandCanInvokeResult.ServerConsoleRequired;
 
+            // Check params if needed
             if (@params != null)
             {
-                // todo: check params
+                // TODO
             }
 
             return CommandCanInvokeResult.Success;
@@ -92,6 +111,12 @@ namespace MHServerEmu.Commands
 
                 case CommandCanInvokeResult.UserLevelNotHighEnough:
                     return "You do not have enough privileges to invoke this command.";
+
+                case CommandCanInvokeResult.ClientRequired:
+                    return "This command can be invoked only from the game.";
+
+                case CommandCanInvokeResult.ServerConsoleRequired:
+                    return "This command can be invoked only from the server console.";
 
                 default:
                     return "Unknown Failure";

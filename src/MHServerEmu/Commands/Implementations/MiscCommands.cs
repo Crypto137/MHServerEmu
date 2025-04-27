@@ -15,10 +15,9 @@ namespace MHServerEmu.Commands.Implementations
     public class TowerCommand : CommandGroup
     {
         [DefaultCommand]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Tower(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
@@ -33,10 +32,9 @@ namespace MHServerEmu.Commands.Implementations
     public class JailCommand : CommandGroup
     {
         [DefaultCommand]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Jail(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             // Regions/Story/CH04EastSide/UpperEastSide/PoliceDepartment/Portals/JailTarget.prototype
@@ -50,10 +48,9 @@ namespace MHServerEmu.Commands.Implementations
     public class PositionCommand : CommandGroup
     {
         [DefaultCommand]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Position(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -65,10 +62,9 @@ namespace MHServerEmu.Commands.Implementations
     public class DanceCommand : CommandGroup
     {
         [DefaultCommand]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Dance(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
 
             Avatar avatar = playerConnection.Player.CurrentAvatar;
@@ -110,9 +106,9 @@ namespace MHServerEmu.Commands.Implementations
     public class TeleportCommand : CommandGroup
     {
         [DefaultCommand]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Teleport(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help teleport' to get help.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);

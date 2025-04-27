@@ -41,10 +41,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("cell", "Shows current cell.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Cell(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -52,20 +51,18 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("seed", "Shows current seed.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Seed(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             return $"Current seed: {playerConnection.AOI.Region.RandomSeed}";
         }
 
         [Command("area", "Shows current area.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Area(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -73,10 +70,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("region", "Shows current region.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Region(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             return $"Current region: {playerConnection.AOI.Region.PrototypeName}";
@@ -116,10 +112,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("ai", "Usage: debug ai.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string AI(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             EntityManager entityManager = playerConnection.Game.EntityManager;
 
@@ -142,10 +137,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Navi2Obj(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             var region = playerConnection.AOI.Region;
@@ -161,25 +155,24 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("crashgame", "Crashes the current game instance.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string CrashGame(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             throw new("Game instance crash invoked by a debug command.");
         }
 
         [Command("crashserver", "Crashes the current game instance.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string CrashServer(string[] @params, FrontendClient client)
         {
-            if (client != null) return "You can only invoke this command from the server console.";
             throw new("Server crash invoked by a debug command.");
         }
 
         [Command("getconditionlist", "Gets a list of all conditions tracked by the ConditionPool.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string GetConditionList(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             string filePath = $"Download/Conditions_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
 
             client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
@@ -192,9 +185,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("difficulty", "Shows information about the current difficulty level.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Difficulty(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             Avatar avatar = playerConnection.Player?.CurrentAvatar;
@@ -212,10 +205,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("geteventpoolreport", "Returns a report representing the state of the ScheduledEventPool in the current game.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string GetEventPoolStatus(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetGame(client, out Game game);
             string reportString = game.GameEventScheduler.GetPoolReportString();
 

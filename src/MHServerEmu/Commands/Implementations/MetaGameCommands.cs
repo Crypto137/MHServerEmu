@@ -19,10 +19,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("event", "Change current event.\nUsage: metagame event [next|stop]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Event(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             var player = playerConnection.Player;
             var region = player.GetRegion();

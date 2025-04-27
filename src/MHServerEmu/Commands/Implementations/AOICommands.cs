@@ -13,10 +13,9 @@ namespace MHServerEmu.Commands.Implementations
     public class AOICommands : CommandGroup
     {
         [Command("volume", "Changes player AOI volume size.\nUsage: aoi volume [value]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Volume(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             if (@params.Length == 0) return $"Current AOI volume = {playerConnection.AOI.AOIVolume}.";
@@ -36,10 +35,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("print", "Prints player AOI information to the server console.\nUsage: aoi print")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Print(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             AdminCommandManager.SendAdminCommandResponseSplit(playerConnection, playerConnection.AOI.DebugPrint());
 
@@ -48,10 +46,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("update", "Forces AOI proximity update.\nUsage: aoi update")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Update(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             playerConnection.AOI.Update(avatar.RegionLocation.Position, true);
@@ -61,10 +58,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("refs", "Prints interest references for the current player.\nUsage: aoi refs")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Refs(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
             Avatar avatar = player.CurrentAvatar;

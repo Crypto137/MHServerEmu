@@ -52,9 +52,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string ReloadLiveTuning(string[] @params, FrontendClient client)
         {
-            if (client != null) return "You can only invoke this command from the server console.";
             LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
             return string.Empty;
         }

@@ -14,11 +14,10 @@ namespace MHServerEmu.Commands.Implementations
     public class StoreCommands : CommandGroup
     {
         [Command("convertes", "Converts 100 Eternity Splinters to the equivalent amount of Gs.\nUsage: store convertes")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string ConvertES(string[] @params, FrontendClient client)
         {
             const int NumConverted = 100;
-
-            if (client == null) return "You can only invoke this command from the game.";
 
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Player player = playerConnection.Player;
@@ -44,9 +43,9 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("addg", "Adds the specified number of Gs to this account.\nUsage: store addg [amount]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string AddG(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
             if (@params.Length == 0) return "Invalid arguments. Type 'help store addg' to get help.";
 
             if (long.TryParse(@params[0], out long amount) == false)

@@ -19,10 +19,9 @@ namespace MHServerEmu.Commands.Implementations
     public class PowerCommands : CommandGroup
     {
         [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string Print(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -37,10 +36,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("cooldownreset", "Resets all cooldowns and charges.\nUsage: power cooldownreset")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string CooldownReset(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
 
             // Player cooldowns
@@ -73,10 +71,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("stealpowers", "Unlocks all stolen powers.\nUsage: power stealpowers")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string StealPowers(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -104,10 +101,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("stealavatarpowers", "Unlocks avatar stolen powers.\nUsage: power stealavatarpowers")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string StealAvatarPowers(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
@@ -142,10 +138,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("forgetstolenpowers", "Forgets all stolen powers.\nUsage: power forgetstolenpowers")]
+        [CommandInvokerType(CommandInvokerType.Client)]
         public string ForgetStolenPowers(string[] @params, FrontendClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
             CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
