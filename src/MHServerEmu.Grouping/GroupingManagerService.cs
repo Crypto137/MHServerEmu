@@ -148,6 +148,8 @@ namespace MHServerEmu.Grouping
                 if (_playerDbIdDict.Remove(playerDbId) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Account {account} not found");
 
+                _playerNameDict.Remove(playerName);
+
                 Logger.Info($"Removed client [{client}]");
                 return true;
             }
