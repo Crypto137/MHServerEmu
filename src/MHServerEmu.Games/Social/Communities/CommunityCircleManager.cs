@@ -9,7 +9,7 @@ namespace MHServerEmu.Games.Social.Communities
     /// <summary>
     /// Manages <see cref="CommunityCircle"/> instances.
     /// </summary>
-    public class CommunityCircleManager : IEnumerable<CommunityCircle>, ISerialize
+    public class CommunityCircleManager : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -189,8 +189,43 @@ namespace MHServerEmu.Games.Social.Communities
             _archiveCircles.Sort();
         }
 
-        // IEnumerable implementation - use the Community iterate methods instead of this!
-        public IEnumerator<CommunityCircle> GetEnumerator() => _circleDict.Values.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        // Use Community.Iterate() methods instead of this
+        public Enumerator GetEnumerator()
+        {
+            return new(this);
+        }
+
+        public struct Enumerator : IEnumerator<CommunityCircle>
+        {
+            // Simple wrapper around Dictionary<CircleId, CommunityCircle>.ValueCollection.Enumerator for readability
+            private readonly CommunityCircleManager _circleManager;
+
+            private Dictionary<CircleId, CommunityCircle>.ValueCollection.Enumerator _enumerator;
+
+            public CommunityCircle Current { get => _enumerator.Current; }
+            object IEnumerator.Current { get => Current; }
+
+            public Enumerator(CommunityCircleManager circleManager)
+            {
+                _circleManager = circleManager;
+                _enumerator = _circleManager._circleDict.Values.GetEnumerator();
+            }
+
+            public bool MoveNext()
+            {
+                return _enumerator.MoveNext();
+            }
+
+            public void Reset()
+            {
+                _enumerator.Dispose();
+                _enumerator = _circleManager._circleDict.Values.GetEnumerator();
+            }
+
+            public void Dispose()
+            {
+                _enumerator.Dispose();
+            }
+        }
     }
 }

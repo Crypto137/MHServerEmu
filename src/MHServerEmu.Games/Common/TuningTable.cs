@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Common
 {
@@ -262,29 +263,18 @@ namespace MHServerEmu.Games.Common
         {
             if (oldDifficultyIndex == newDifficultyIndex) return Logger.WarnReturn(false, "BroadcastChange(): oldDifficultyIndex == newDifficultyIndex");
 
-            // TODO: Review this when we have a proper chat system
+            // Send a grow stronger / weaker message
             LocaleStringId messageStringId = LocaleStringId.Invalid;
             if (newDifficultyIndex > oldDifficultyIndex)
                 messageStringId = GameDatabase.PopulationGlobalsPrototype.MessageEnemiesGrowStronger;
             else if (newDifficultyIndex < oldDifficultyIndex)
                 messageStringId = GameDatabase.PopulationGlobalsPrototype.MessageEnemiesGrowWeaker;
 
-            NetMessageChatFromGameSystem chatMessage = null;
-            if (messageStringId != LocaleStringId.Invalid)
-            {
-                chatMessage = NetMessageChatFromGameSystem.CreateBuilder()
-                    .SetSourceStringId((ulong)GameDatabase.GlobalsPrototype.SystemLocalized)
-                    .SetMessageStringId((ulong)messageStringId)
-                    .Build();
-            }
+            _region.Game.ChatManager.SendChatFromGameSystem(messageStringId, _region);
 
+            // Send difficulty change
             foreach (Player player in new PlayerIterator(_region))
-            {
-                if (chatMessage != null)
-                    player.SendMessage(chatMessage);
-
                 player.SendRegionDifficultyChange(newDifficultyIndex);
-            }
 
             return true;
         }

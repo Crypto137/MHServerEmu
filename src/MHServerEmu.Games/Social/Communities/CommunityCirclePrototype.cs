@@ -2,10 +2,10 @@
 {
     // This is not an actual prototype for some reason
 
-    public enum CommunityCirclePrototypeFlags
+    public enum CommunityBroadcastFlags
     {
         None    = 0,
-        Flag0   = 1 << 0,
+        Local   = 1 << 0,
         Flag1   = 1 << 1,
         Flag2   = 1 << 2
     }
@@ -26,10 +26,10 @@
         public readonly bool RestrictsIgnore;
         public readonly int MaxMembers;
         public readonly bool NotifyOnline;
-        public readonly CommunityCirclePrototypeFlags Flags;
+        public readonly CommunityBroadcastFlags BroadcastFlags;
 
         public CommunityCirclePrototype(CircleId id, bool isPersistent, bool isMigrated, bool field3, bool field4,
-            bool field5, bool field6, bool field7, bool restrictsIgnore, int maxMembers, bool notifyOnline, CommunityCirclePrototypeFlags flags)
+            bool field5, bool field6, bool field7, bool restrictsIgnore, int maxMembers, bool notifyOnline, CommunityBroadcastFlags broadcastFlags)
         {
             Id = id;
             IsPersistent = isPersistent;
@@ -42,7 +42,7 @@
             RestrictsIgnore = restrictsIgnore;
             MaxMembers = maxMembers;
             NotifyOnline = notifyOnline;
-            Flags = flags;
+            BroadcastFlags = broadcastFlags;
         }
     }
 }

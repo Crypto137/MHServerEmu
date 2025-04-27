@@ -32,12 +32,12 @@ namespace MHServerEmu.Games.Social.Communities
 
         private static readonly CommunityCirclePrototype[] Prototypes = new CommunityCirclePrototype[]
         {
-            new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.None),
-            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityCirclePrototypeFlags.Flag1),
-            new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityCirclePrototypeFlags.None),
-            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityCirclePrototypeFlags.Flag0),
-            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag1),
-            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityCirclePrototypeFlags.Flag2),
+            new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityBroadcastFlags.None),
+            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityBroadcastFlags.Flag1),
+            new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityBroadcastFlags.None),
+            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityBroadcastFlags.Local),
+            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Flag1),
+            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Flag2),
         };
 
         public Community Community { get; }
@@ -66,10 +66,24 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool AddMember(CommunityMember member)
         {
-            if (member.IsInCircle(this) == false)
-                return member.AddRemoveFromCircle(true, this);
+            // TODO: Implement support for non-local circles
 
-            return false;
+            // Get initial update flags - this needs to be done before we add to the circle to detect if this is a newly created member
+            CommunityMemberUpdateOptionBits updateOptions = CommunityMemberUpdateOptionBits.Circle;
+            if (member.NumCircles() == 0)
+                updateOptions |= CommunityMemberUpdateOptionBits.NewlyCreated;
+
+            // Add to the circle
+            if (member.IsInCircle(this))
+                return false;
+
+            if (member.AddRemoveFromCircle(true, this) == false)
+                return false;
+
+            // Send update to the client
+            member.SendUpdateToOwner(updateOptions);
+
+            return true;
         }
 
         /// <summary>
@@ -77,10 +91,17 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool RemoveMember(CommunityMember member)
         {
-            if (member.IsInCircle(this))
-                return member.AddRemoveFromCircle(false, this);
+            // Remove from the circle
+            if (member.IsInCircle(this) == false)
+                return false;
 
-            return false;
+            if (member.AddRemoveFromCircle(false, this) == false)
+                return false;
+
+            // Send update to the client
+            member.SendUpdateToOwner(CommunityMemberUpdateOptionBits.Circle);
+
+            return true;
         }
 
         /// <summary>

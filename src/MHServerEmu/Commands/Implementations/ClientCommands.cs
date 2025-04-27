@@ -42,7 +42,7 @@ namespace MHServerEmu.Commands.Implementations
             if (groupingManager == null)
                 return "Failed to connect to the grouping manager.";
 
-            if (groupingManager.TryGetPlayerByName(@params[0], out IFrontendClient target) == false)
+            if (groupingManager.TryGetClient(@params[0], out IFrontendClient target) == false)
                 return $"Player {@params[0]} not found.";
 
             target.Disconnect();

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
@@ -147,22 +148,29 @@ namespace MHServerEmu.Games.Social.Communities
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
             // Get an existing member to add to the circle
+            bool isNewMember = false;
             CommunityMember member = GetMember(playerDbId);
 
-            // If not found create a new member
+            // Create a new member if there isn't one already
             if (member == null)
             {
                 member = CreateMember(playerDbId, playerName);
-                if (member == null)     // Bail out if member creation failed
-                    return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId {playerDbId}");
+                isNewMember = true;
             }
 
-            // Get the circle
+            if (member == null)
+                return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId 0x{playerDbId:X}");
+
+            // Add to the circle
             CommunityCircle circle = GetCircle(circleId);
             if (circle == null)
                 return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
 
-            return circle.AddMember(member);
+            bool wasAdded = circle.AddMember(member);
+            if (wasAdded == false && isNewMember)
+                DestroyMember(member);
+
+            return wasAdded;
         }
 
         /// <summary>
@@ -170,13 +178,14 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool RemoveMember(ulong playerDbId, CircleId circleId)
         {
-            CommunityMember member = GetMember(playerDbId);
-            if (member == null)
-                return Logger.WarnReturn(false, $"RemoveMember(): Failed to get member for dbId {playerDbId}");
-
             CommunityCircle circle = GetCircle(circleId);
             if (circle == null)
                 return Logger.WarnReturn(false, $"RemoveMember(): Failed to get circle for cicleId {circleId}");
+
+            // It's valid to not have this member, so don't log
+            CommunityMember member = GetMember(playerDbId);
+            if (member == null)
+                return false;
 
             bool wasRemoved = circle.RemoveMember(member);
             
@@ -222,9 +231,23 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
+        public bool RequestLocalBroadcast(CommunityMember member)
+        {
+            Player player = Owner.Game.EntityManager.GetEntityByDbGuid<Player>(member.DbId);
+            if (player == null)
+                return false;
+
+            CommunityMemberBroadcast broadcast = player.BuildCommunityBroadcast();
+            ReceiveMemberBroadcast(broadcast);
+            return true;
+        }
+
         public void PullCommunityStatus()
         {
-            // TODO
+            // TODO: Request remote broadcast from the player manager
+
+            foreach (CommunityMember member in IterateMembers())
+                RequestLocalBroadcast(member);
         }
 
         public override string ToString()
@@ -242,7 +265,10 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Returns the <see cref="CommunityCircle"/> of this <see cref="Community"/> with the specified id.
         /// </summary>
-        public CommunityCircle GetCircle(CircleId circleId) => CircleManager.GetCircle(circleId);
+        public CommunityCircle GetCircle(CircleId circleId)
+        {
+            return CircleManager.GetCircle(circleId);
+        }
 
         /// <summary>
         /// Returns the name of the specified <see cref="CircleId"/>.
@@ -260,81 +286,21 @@ namespace MHServerEmu.Games.Social.Communities
         // These methods are replacements for CommunityCircleIterator and CommunityMemberIterator classes
 
         /// <summary>
-        /// Iterates all <see cref="CommunityCircle"/> instances in this <see cref="Community"/>.
+        /// Iterates <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
+        /// Iterates all circles in this <see cref="Community"/> if no member is provided.
         /// </summary>
-        public IEnumerable<CommunityCircle> IterateCircles()
+        public CircleIterator IterateCircles(CommunityMember member = null)
         {
-            _numCircleIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityCircle circle in CircleManager)
-                    yield return circle;
-            }
-            finally
-            {
-                _numCircleIteratorsInScope--;
-            }
+            return new(this, member);
         }
 
         /// <summary>
-        /// Iterates all <see cref="CommunityCircle"/> instances that the provided <see cref="CommunityMember"/> belongs to.
+        /// Iterates <see cref="CommunityMember"/> instances that belong to the provided <see cref="CommunityCircle"/>.
+        /// Iterates all members in this <see cref="Community"/> if no circle is provided.
         /// </summary>
-        public IEnumerable<CommunityCircle> IterateCircles(CommunityMember member)
+        public MemberIterator IterateMembers(CommunityCircle circle = null)
         {
-            _numCircleIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityCircle circle in CircleManager)
-                {
-                    if (member.IsInCircle(circle))
-                        yield return circle;
-                }
-            }
-            finally
-            {
-                _numCircleIteratorsInScope--;
-            }
-        }
-
-        /// <summary>
-        /// Iterates all <see cref="CommunityMember"/> instances in this <see cref="Community"/>.
-        /// </summary>
-        public IEnumerable<CommunityMember> IterateMembers()
-        {
-            _numMemberIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityMember member in _communityMemberDict.Values)
-                    yield return member;
-            }
-            finally
-            {
-                _numMemberIteratorsInScope--;
-            }
-        }
-
-        /// <summary>
-        /// Iterates all <see cref="CommunityMember"/> instances belonging to the provided <see cref="CommunityCircle"/>.
-        /// </summary>
-        public IEnumerable<CommunityMember> IterateMembers(CommunityCircle circle)
-        {
-            _numMemberIteratorsInScope++;
-
-            try
-            {
-                foreach (CommunityMember member in _communityMemberDict.Values)
-                {
-                    if (member.IsInCircle(circle))
-                        yield return member;
-                }
-            }
-            finally
-            {
-                _numMemberIteratorsInScope--;
-            }
+            return new(this, circle);
         }
 
         #endregion
@@ -368,6 +334,136 @@ namespace MHServerEmu.Games.Social.Communities
                 return Logger.WarnReturn(false, $"DestroyMember(): Trying to destroy a member while iterating the community");
 
             return _communityMemberDict.Remove(member.DbId);
+        }
+
+        public readonly struct CircleIterator
+        {
+            private readonly Community _community;
+            private readonly CommunityMember _member;
+
+            public CircleIterator(Community community, CommunityMember member)
+            {
+                _community = community;
+                _member = member;
+            }
+
+            public Enumerator GetEnumerator()
+            {
+                return new(_community, _member);
+            }
+
+            public struct Enumerator : IEnumerator<CommunityCircle>
+            {
+                private readonly Community _community;
+                private readonly CommunityMember _member;
+
+                private CommunityCircleManager.Enumerator _enumerator;
+
+                public CommunityCircle Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(Community community, CommunityMember member)
+                {
+                    _community = community;
+                    _member = member;
+
+                    _enumerator = community.CircleManager.GetEnumerator();
+                    _community._numCircleIteratorsInScope++;
+                }
+
+                public bool MoveNext()
+                {
+                    while (_enumerator.MoveNext())
+                    {
+                        CommunityCircle circle = _enumerator.Current;
+                        if (_member != null && _member.IsInCircle(circle) == false)
+                            continue;
+
+                        Current = circle;
+                        return true;
+                    }
+
+                    Current = null;
+                    return false;
+                }
+
+                public void Reset()
+                {
+                    _enumerator.Dispose();
+                    _enumerator = _community.CircleManager.GetEnumerator();
+                }
+
+                public void Dispose()
+                {
+                    _enumerator.Dispose();
+                    _community._numCircleIteratorsInScope--;
+                }
+            }
+        }
+
+        public readonly struct MemberIterator
+        {
+            private readonly Community _community;
+            private readonly CommunityCircle _circle;
+
+            public MemberIterator(Community community, CommunityCircle circle)
+            {
+                _community = community;
+                _circle = circle;
+            }
+
+            public Enumerator GetEnumerator()
+            {
+                return new(_community, _circle);
+            }
+
+            public struct Enumerator : IEnumerator<CommunityMember>
+            {
+                private readonly Community _community;
+                private readonly CommunityCircle _circle;
+
+                private Dictionary<ulong, CommunityMember>.ValueCollection.Enumerator _enumerator;
+
+                public CommunityMember Current { get; private set; }
+                object IEnumerator.Current { get => Current; }
+
+                public Enumerator(Community community, CommunityCircle circle)
+                {
+                    _community = community;
+                    _circle = circle;
+
+                    _enumerator = community._communityMemberDict.Values.GetEnumerator();
+                    _community._numMemberIteratorsInScope++;
+                }
+
+                public bool MoveNext()
+                {
+                    while (_enumerator.MoveNext())
+                    {
+                        CommunityMember member = _enumerator.Current;
+                        if (_circle != null && member.IsInCircle(_circle) == false)
+                            continue;
+
+                        Current = member;
+                        return true;
+                    }
+
+                    Current = null;
+                    return false;
+                }
+
+                public void Reset()
+                {
+                    _enumerator.Dispose();
+                    _enumerator = _community._communityMemberDict.Values.GetEnumerator();
+                }
+
+                public void Dispose()
+                {
+                    _enumerator.Dispose();
+                    _community._numMemberIteratorsInScope--;
+                }
+            }
         }
     }
 }
