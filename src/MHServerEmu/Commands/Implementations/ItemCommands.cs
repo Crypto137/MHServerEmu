@@ -27,7 +27,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Drop(string[] @params, NetClient client)
         {
-            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client.FrontendClient);
+            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
             if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
@@ -54,7 +54,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Give(string[] @params, NetClient client)
         {
-            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client.FrontendClient);
+            PrototypeId itemProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Item, @params[0], client);
             if (itemProtoRef == PrototypeId.Invalid) return string.Empty;
 
             if (@params.Length == 1 || int.TryParse(@params[1], out int count) == false)
@@ -102,7 +102,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string RollLootTable(string[] @params, NetClient client)
         {
-            PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client.FrontendClient);
+            PrototypeId lootTableProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.LootTable, @params[0], client);
             if (lootTableProtoRef == PrototypeId.Invalid) return string.Empty;
 
             PlayerConnection playerConnection = (PlayerConnection)client;

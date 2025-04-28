@@ -5,7 +5,6 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -22,7 +21,7 @@ namespace MHServerEmu.Commands.Implementations
 
             RegionManager regionManager = playerConnection.Game.RegionManager;
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, "Active Private Instances:");
+            CommandHelper.SendMessage(client, "Active Private Instances:");
 
             foreach (var kvp in playerConnection.WorldView)
             {
@@ -32,7 +31,7 @@ namespace MHServerEmu.Commands.Implementations
 
                 TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
 
-                ChatHelper.SendMetagameMessage(client.FrontendClient, $"{kvp.Key.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
+                CommandHelper.SendMessage(client, $"{kvp.Key.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
             }
 
             return string.Empty;
@@ -46,12 +45,12 @@ namespace MHServerEmu.Commands.Implementations
 
             RegionManager regionManager = playerConnection.Game.RegionManager;
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, "Active Instances:");
+            CommandHelper.SendMessage(client, "Active Instances:");
 
             foreach (Region region in regionManager)
             {
                 TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
-                ChatHelper.SendMetagameMessage(client.FrontendClient, $"{region.PrototypeDataRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
+                CommandHelper.SendMessage(client, $"{region.PrototypeDataRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
             }
 
             return string.Empty;

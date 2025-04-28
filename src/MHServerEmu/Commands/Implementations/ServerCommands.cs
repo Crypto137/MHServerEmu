@@ -5,7 +5,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData.LiveTuning;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -28,7 +27,7 @@ namespace MHServerEmu.Commands.Implementations
                 return status;
 
             // Split for the client chat window
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, status, false);
+            CommandHelper.SendMessageSplit(client, status, false);
             return string.Empty;
         }
 

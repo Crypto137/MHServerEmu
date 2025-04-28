@@ -2,7 +2,6 @@
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -14,7 +13,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Power(string[] @params, NetClient client)
         {
             // Find matches for the given pattern
-            return LookupPrototypes(@params[0], HardcodedBlueprints.Power, client.FrontendClient);
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Power, client);
         }
 
         [Command("item", "Searches prototypes that use the item blueprint.\nUsage: lookup item [pattern]")]
@@ -22,7 +21,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Item(string[] @params, NetClient client)
         {
             // Find matches for the given pattern
-            return LookupPrototypes(@params[0], HardcodedBlueprints.Item, client.FrontendClient);
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Item, client);
         }
 
         [Command("costume", "Searches prototypes that use the costume blueprint.\nUsage: lookup costume [pattern]")]
@@ -30,7 +29,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Costume(string[] @params, NetClient client)
         {
             // Find matches for the given pattern
-            return LookupPrototypes(@params[0], HardcodedBlueprints.Costume, client.FrontendClient);
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Costume, client);
         }
 
         [Command("region", "Searches prototypes that use the region blueprint.\nUsage: lookup region [pattern]")]
@@ -38,7 +37,7 @@ namespace MHServerEmu.Commands.Implementations
         public string Region(string[] @params, NetClient client)
         {
             // Find matches for the given pattern
-            return LookupPrototypes(@params[0], HardcodedBlueprints.Region, client.FrontendClient);      // Regions/Region.blueprint
+            return LookupPrototypes(@params[0], HardcodedBlueprints.Region, client);      // Regions/Region.blueprint
         }
 
         [Command("blueprint", "Searches blueprints.\nUsage: lookup blueprint [pattern]")]
@@ -47,7 +46,7 @@ namespace MHServerEmu.Commands.Implementations
         {
             // Find matches for the given pattern
             var matches = GameDatabase.SearchBlueprints(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
-            return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetBlueprintName(match))), client.FrontendClient);
+            return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetBlueprintName(match))), client);
         }
 
         [Command("assettype", "Searches asset types.\nUsage: lookup assettype [pattern]")]
@@ -55,7 +54,7 @@ namespace MHServerEmu.Commands.Implementations
         public string AssetType(string[] @params, NetClient client)
         {
             var matches = GameDatabase.SearchAssetTypes(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
-            return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetAssetTypeName(match))), client.FrontendClient);
+            return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetAssetTypeName(match))), client);
         }
 
         [Command("asset", "Searches assets.\nUsage: lookup asset [pattern]")]
@@ -65,16 +64,16 @@ namespace MHServerEmu.Commands.Implementations
             var matches = GameDatabase.SearchAssets(@params[0], DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive);
             return OutputLookupMatches(matches.Select(match => ((ulong)match,
                 $"{GameDatabase.GetAssetName(match)} ({GameDatabase.GetAssetTypeName(GameDatabase.DataDirectory.AssetDirectory.GetAssetTypeRef(match))})")),
-                client.FrontendClient);
+                client);
         }
 
-        private static string LookupPrototypes(string pattern, BlueprintId blueprint, IFrontendClient client)
+        private static string LookupPrototypes(string pattern, BlueprintId blueprint, NetClient client)
         {
             var matches = GameDatabase.SearchPrototypes(pattern, DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive, blueprint);
             return OutputLookupMatches(matches.Select(match => ((ulong)match, GameDatabase.GetPrototypeName(match))), client);
         }
 
-        private static string OutputLookupMatches(IEnumerable<(ulong, string)> matches, IFrontendClient client)
+        private static string OutputLookupMatches(IEnumerable<(ulong, string)> matches, NetClient client)
         {
             if (matches.Any() == false)
                 return "No matches found.";
@@ -91,7 +90,7 @@ namespace MHServerEmu.Commands.Implementations
             // Also we do not add a space between prototype id and name to prevent the client from adding a line break there.
             List<string> outputList = new() { "Lookup Matches:" };
             outputList.AddRange(matches.Select(match => $"[{match.Item1}]{match.Item2}"));
-            ChatHelper.SendMetagameMessages(client, outputList);
+            CommandHelper.SendMessages(client, outputList);
 
             return string.Empty;
         }

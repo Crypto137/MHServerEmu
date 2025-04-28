@@ -7,7 +7,6 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
@@ -114,7 +113,7 @@ namespace MHServerEmu.Commands.Implementations
             sb.AppendLine($"UserLevel: {account.UserLevel}");
             sb.AppendLine($"Flags: {account.Flags}");
 
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, sb.ToString());
+            CommandHelper.SendMessageSplit(client, sb.ToString());
             return string.Empty;
         }
 

@@ -11,7 +11,6 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -24,7 +23,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Dummy(string[] @params, NetClient client)
         {
-            PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client.FrontendClient);
+            PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
             var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
 
@@ -66,8 +65,8 @@ namespace MHServerEmu.Commands.Implementations
             var reservation = playerConnection.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
             if (reservation == null) return "No marker found.";
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, reservation.ToString(), false);
+            CommandHelper.SendMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
+            CommandHelper.SendMessageSplit(client, reservation.ToString(), false);
             return string.Empty;
         }
 
@@ -85,13 +84,13 @@ namespace MHServerEmu.Commands.Implementations
             var entity = game.EntityManager.GetEntity<Entity>(entityId);
             if (entity == null) return "No entity found.";
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, entity.Properties.ToString(), false);
+            CommandHelper.SendMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
+            CommandHelper.SendMessageSplit(client, entity.Properties.ToString(), false);
             if (entity is WorldEntity worldEntity)
             {
-                ChatHelper.SendMetagameMessageSplit(client.FrontendClient, worldEntity.Bounds.ToString(), false);
-                ChatHelper.SendMetagameMessageSplit(client.FrontendClient, worldEntity.PowerCollectionToString(), false);
-                ChatHelper.SendMetagameMessageSplit(client.FrontendClient, worldEntity.ConditionCollectionToString(), false);
+                CommandHelper.SendMessageSplit(client, worldEntity.Bounds.ToString(), false);
+                CommandHelper.SendMessageSplit(client, worldEntity.PowerCollectionToString(), false);
+                CommandHelper.SendMessageSplit(client, worldEntity.ConditionCollectionToString(), false);
             }
             return string.Empty;
         }
@@ -131,8 +130,8 @@ namespace MHServerEmu.Commands.Implementations
             if (entities.Count == 0)
                 return "No objects found.";
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Found for R={radius}:");
-            ChatHelper.SendMetagameMessages(client.FrontendClient, entities, false);
+            CommandHelper.SendMessage(client, $"Found for R={radius}:");
+            CommandHelper.SendMessages(client, entities, false);
             return string.Empty;
         }
 
@@ -206,7 +205,7 @@ namespace MHServerEmu.Commands.Implementations
             Region region = avatar.Region;
             if (region == null) return "No region found.";
 
-            PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client.FrontendClient);
+            PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
 
             var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);

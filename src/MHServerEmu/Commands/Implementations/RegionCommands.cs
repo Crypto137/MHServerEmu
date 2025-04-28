@@ -8,7 +8,6 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -21,7 +20,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Warp(string[] @params, NetClient client)
         {
-            PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client.FrontendClient);
+            PrototypeId regionProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Region, @params[0], client);
             if (regionProtoRef == PrototypeId.Invalid) return string.Empty;
 
             RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
@@ -83,7 +82,7 @@ namespace MHServerEmu.Commands.Implementations
             PlayerConnection playerConnection = (PlayerConnection)client;
             Region region = playerConnection.Player.GetRegion();
 
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, region.Properties.ToString());
+            CommandHelper.SendMessageSplit(client, region.Properties.ToString());
 
             return string.Empty;
         }

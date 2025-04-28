@@ -22,7 +22,7 @@ namespace MHServerEmu.Commands.Implementations
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
-            PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client.FrontendClient);
+            PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client);
             if (avatarProtoRef == PrototypeId.Invalid)
                 return string.Empty;
 

@@ -2,7 +2,6 @@
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -27,8 +26,8 @@ namespace MHServerEmu.Commands.Implementations
                 return info.ToString();
 
             // Output as a list of chat messages if the command was invoked from the in-game chat.
-            ChatHelper.SendMetagameMessage(client.FrontendClient, "Achievement Info:");
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, info.ToString(), false);
+            CommandHelper.SendMessage(client, "Achievement Info:");
+            CommandHelper.SendMessageSplit(client, info.ToString(), false);
             return string.Empty;
         }
     }

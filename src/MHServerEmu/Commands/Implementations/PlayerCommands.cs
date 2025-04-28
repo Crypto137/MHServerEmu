@@ -9,7 +9,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -41,8 +40,8 @@ namespace MHServerEmu.Commands.Implementations
 
                     if (matches.Count() > 1)
                     {
-                        ChatHelper.SendMetagameMessage(client.FrontendClient, $"Found multiple matches for {@params[0]}:");
-                        ChatHelper.SendMetagameMessages(client.FrontendClient, matches.Select(match => GameDatabase.GetPrototypeName(match)), false);
+                        CommandHelper.SendMessage(client, $"Found multiple matches for {@params[0]}:");
+                        CommandHelper.SendMessages(client, matches.Select(match => GameDatabase.GetPrototypeName(match)), false);
                         return string.Empty;
                     }
 

@@ -6,7 +6,6 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Grouping;
 using static MHServerEmu.Commands.Implementations.DebugCommands;
 
 namespace MHServerEmu.Commands.Implementations
@@ -70,8 +69,8 @@ namespace MHServerEmu.Commands.Implementations
             Region region = playerConnection.Player.GetRegion();
             if (region == null) return "No region found.";
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Missions in {region.PrototypeName} :", true);
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(GameDatabase.GetFormattedPrototypeName)), false);
+            CommandHelper.SendMessage(client, $"Missions in {region.PrototypeName} :", true);
+            CommandHelper.SendMessageSplit(client, string.Join("\r\n", region.MissionManager.ActiveMissions.Select(GameDatabase.GetFormattedPrototypeName)), false);
             return string.Empty;
         }
 
@@ -86,13 +85,13 @@ namespace MHServerEmu.Commands.Implementations
             if (missionsFound.Count == 1)
             {
                 var text = missionsFound[0].ToString();
-                ChatHelper.SendMetagameMessage(client.FrontendClient, $"Mission info:", true);
-                ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", text), false);
+                CommandHelper.SendMessage(client, $"Mission info:", true);
+                CommandHelper.SendMessageSplit(client, string.Join("\r\n", text), false);
                 return string.Empty;
             }
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Multiple matches found :", true);
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+            CommandHelper.SendMessage(client, $"Multiple matches found :", true);
+            CommandHelper.SendMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
 
             return string.Empty;
         }
@@ -120,8 +119,8 @@ namespace MHServerEmu.Commands.Implementations
                 }
             }
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Multiple matches found :", true);
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+            CommandHelper.SendMessage(client, $"Multiple matches found :", true);
+            CommandHelper.SendMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
 
             return string.Empty;
         }
@@ -141,8 +140,8 @@ namespace MHServerEmu.Commands.Implementations
                 return $"{missionsFound[0].PrototypeName} restarted";
             }
 
-            ChatHelper.SendMetagameMessage(client.FrontendClient, $"Multiple matches found :", true);
-            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
+            CommandHelper.SendMessage(client, $"Multiple matches found :", true);
+            CommandHelper.SendMessageSplit(client, string.Join("\r\n", missionsFound.Select(k => k.PrototypeName)), false);
 
             return string.Empty;
         }
