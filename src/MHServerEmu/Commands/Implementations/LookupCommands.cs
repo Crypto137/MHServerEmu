@@ -1,11 +1,13 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 
 namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("lookup", "Searches for data id by name.\nUsage: lookup [costume|region|blueprint|assettype|asset] [pattern]")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class LookupCommands : CommandGroup
     {
         [Command("power", "Searches prototypes that use the power blueprint.\nUsage: lookup power [pattern]")]
