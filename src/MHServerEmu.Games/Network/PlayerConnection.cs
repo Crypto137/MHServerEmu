@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network
 
         public override string ToString()
         {
-            return $"dbGuid=0x{PlayerDbId:X}";
+            return _dbAccount.ToString();
         }
 
         public bool Initialize()

@@ -11,9 +11,11 @@ namespace MHServerEmu.Commands
         private readonly Type _type;
         private readonly CommandGroupAttribute _commandGroupAttribute;
         private readonly CommandGroupUserLevelAttribute _userLevelAttribute;
+        private readonly CommandGroupFlagsAttribute _flagsAttribute;
 
         public string Name { get => _commandGroupAttribute.Name; }
         public string Help { get => _commandGroupAttribute.Help; }
+        public CommandGroupFlags Flags { get => _flagsAttribute.Flags; }
 
         public CommandGroupDefinition(Type type)
         {
@@ -32,6 +34,13 @@ namespace MHServerEmu.Commands
                 userLevelAttribute = new();
 
             _userLevelAttribute = userLevelAttribute;
+
+            // CommandGroupFlagsAttribute (optional)
+            CommandGroupFlagsAttribute flagsAttribute = type.GetCustomAttribute<CommandGroupFlagsAttribute>();
+            if (flagsAttribute == null)
+                flagsAttribute = new();
+
+            _flagsAttribute = flagsAttribute;
         }
 
         public override string ToString()

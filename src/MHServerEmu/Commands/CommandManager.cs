@@ -3,7 +3,6 @@ using System.Text;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Frontend;
 
 namespace MHServerEmu.Commands
 {
@@ -16,7 +15,7 @@ namespace MHServerEmu.Commands
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<CommandGroupDefinition, CommandGroup> _commandGroupDict = new();
+        private readonly Dictionary<string, CommandGroup> _commandGroupDict = new();
         private IClientOutput _clientOutput;
 
         public static CommandManager Instance { get; } = new();
@@ -26,11 +25,17 @@ namespace MHServerEmu.Commands
         /// </summary>
         private CommandManager()
         {
-            // Find and register command group classes using reflection
-            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
-            {
-                // TODO: If we ever move the command system to Core, move command group registration to a separate method.
+            RegisterCommandGroupsFromAssembly(Assembly.GetExecutingAssembly());
+        }
 
+        /// <summary>
+        /// Registers all <see cref="CommandGroup"/> classes in the provided <see cref="Assembly"/>.
+        /// </summary>
+        public void RegisterCommandGroupsFromAssembly(Assembly assembly)
+        {
+            // Find and register command group classes using reflection
+            foreach (Type type in assembly.GetTypes())
+            {
                 if (type.IsSubclassOf(typeof(CommandGroup)) == false)
                     continue;
 
@@ -38,12 +43,12 @@ namespace MHServerEmu.Commands
                     continue;
 
                 CommandGroupDefinition groupDefinition = new(type);
-                if (_commandGroupDict.ContainsKey(groupDefinition))
-                    Logger.Warn($"Command group {groupDefinition} is already registered");
+                if (_commandGroupDict.ContainsKey(groupDefinition.Name))
+                    Logger.Warn($"RegisterCommandGroupsFromAssembly(): Command group {groupDefinition} is already registered");
 
                 CommandGroup commandGroup = (CommandGroup)Activator.CreateInstance(type);
                 commandGroup.Register(groupDefinition);
-                _commandGroupDict.Add(groupDefinition, commandGroup);
+                _commandGroupDict.Add(groupDefinition.Name, commandGroup);
             }
         }
 
@@ -56,73 +61,24 @@ namespace MHServerEmu.Commands
         }
 
         /// <summary>
-        /// Parses a command from the provided input.
+        /// Tries to parse the provided <see cref="string"/> input as a command.
         /// </summary>
-        public void Parse(string input)
+        public bool TryParse(string input, NetClient client = null)
         {
-            string output = string.Empty;
-            string command;
-            string parameters;
-            bool found = false;
-
-            if (input == null || input.Trim() == string.Empty)
-                return;
-
-            if (ExtractCommandAndParameters(input, out command, out parameters) == false)
+            // Extract the command and its parameters from our input string
+            if (ExtractCommandAndParameters(input, out string command, out string parameters) == false)
             {
-                output = $"Unknown command {input}";
-                Logger.Info(output);
-                return;
-            }
+                if (client == null)
+                    Logger.Info($"Unknown command {input}");
 
-            foreach (var kvp in _commandGroupDict)
-            {
-                if (kvp.Key.Name != command)
-                    continue;
-
-                output = kvp.Value.Handle(parameters);
-                found = true;
-                break;
-            }
-
-            if (found == false)
-                output = $"Unknown command: {command} {parameters}";
-
-            if (output != string.Empty)
-                Logger.Info(output);
-        }
-
-        /// <summary>
-        /// Tries to parse the provided <see cref="FrontendClient"/> input as a command.
-        /// </summary>
-        public bool TryParse(string input, NetClient client)
-        {
-            string output = string.Empty;
-            string command;
-            string parameters;
-            bool found = false;
-
-            if (ExtractCommandAndParameters(input, out command, out parameters) == false)
                 return false;
-
-            foreach (var kvp in _commandGroupDict)
-            {
-                if (kvp.Key.Name != command)
-                    continue;
-
-                output = kvp.Value.Handle(parameters, client);
-                found = true;
-                break;
             }
 
-            if (found == false)
-                output = $"Unknown command: {command} {parameters}";
+            // Try to invoke the specified command
+            string output = InvokeCommand(command, parameters, client);
 
-            if (output == string.Empty)
-                return true;
-
-            if (client != null)
-                SendClientResponse(output, client);
+            // Output the result of this command invocation
+            OutputCommandResult(output, client);
 
             return true;
         }
@@ -155,11 +111,31 @@ namespace MHServerEmu.Commands
         }
 
         /// <summary>
-        /// Sends a response to the specified <see cref="NetClient"/> using the registered <see cref="IClientOutput"/>.
+        /// Invokes the specified command.
         /// </summary>
-        private void SendClientResponse(string output, NetClient client)
+        private string InvokeCommand(string command, string parameters, NetClient client)
         {
-            _clientOutput?.Output(output, client);
+            if (_commandGroupDict.TryGetValue(command, out CommandGroup commandGroup) == false)
+                return $"Unknown command: {command} {parameters}";
+
+            if (commandGroup.IsSilent == false)
+                Logger.Info($"Command invoked: invoker=[{(client != null ? client : "ServerConsole")}], command=[{command}], parameters=[{parameters}]");
+            
+            return commandGroup.Handle(parameters, client);
+        }
+
+        /// <summary>
+        /// Outputs the result of a command invocation to the server console or the provided invoker <see cref="NetClient"/>.
+        /// </summary>
+        private void OutputCommandResult(string output, NetClient client)
+        {
+            if (string.IsNullOrWhiteSpace(output))
+                return;
+
+            if (client != null)
+                _clientOutput?.Output(output, client);
+            else
+                Logger.Info(output);
         }
 
         #region Help Command Groups
@@ -167,14 +143,17 @@ namespace MHServerEmu.Commands
         // Help command groups are inside CommandManager so that they can access _commandGroupDict
 
         [CommandGroup("commands", "Lists available commands.")]
+        [CommandGroupFlags(CommandGroupFlags.IsSilent)]
         public class CommandsCommandGroup : CommandGroup
         {
             public override string Fallback(string[] @params = null, NetClient client = null)
             {
                 StringBuilder sb = new("Available commands: ");
 
-                foreach (CommandGroupDefinition groupDefinition in Instance._commandGroupDict.Keys)
+                foreach (CommandGroup commandGroup in Instance._commandGroupDict.Values)
                 {
+                    CommandGroupDefinition groupDefinition = commandGroup.GroupDefinition;
+
                     if (groupDefinition.CanInvoke(client) != CommandCanInvokeResult.Success)
                         continue;
 
@@ -191,11 +170,12 @@ namespace MHServerEmu.Commands
         }
 
         [CommandGroup("help", "Help needs no help.")]
+        [CommandGroupFlags(CommandGroupFlags.IsSilent)]
         public class HelpCommandGroup : CommandGroup
         {
             public override string Fallback(string[] @params = null, NetClient client = null)
             {
-                return "usage: help [command]"; ;
+                return "Usage: help [command]"; ;
             }
 
             public override string Handle(string parameters, NetClient client = null)
@@ -203,28 +183,17 @@ namespace MHServerEmu.Commands
                 if (parameters == string.Empty)
                     return Fallback();
 
-                string output = string.Empty;
-                bool found = false;
                 string[] @params = parameters.Split(' ');
                 string group = @params[0];
                 string command = @params.Length > 1 ? @params[1] : string.Empty;
 
-                foreach (var kvp in Instance._commandGroupDict)
-                {
-                    if (group != kvp.Key.Name)
-                        continue;
-                    
-                    if (command == string.Empty)
-                        return kvp.Key.Help;
+                if (Instance._commandGroupDict.TryGetValue(group, out CommandGroup commandGroup) == false)
+                    return $"Unknown command: {group} {command}";
 
-                    output = kvp.Value.GetHelp(command);
-                    found = true;
-                }
-
-                if (found == false)
-                    output = $"Unknown command: {group} {command}";
-
-                return output;
+                if (command == string.Empty)
+                    return commandGroup.GroupDefinition.Help;
+                else
+                    return commandGroup.GetHelp(command);
             }
         }
 

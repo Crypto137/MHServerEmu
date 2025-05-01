@@ -95,7 +95,7 @@ namespace MHServerEmu
             while (true)
             {
                 string input = Console.ReadLine();
-                CommandManager.Instance.Parse(input);
+                CommandManager.Instance.TryParse(input);
             }
         }
 

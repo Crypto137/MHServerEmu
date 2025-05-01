@@ -6,6 +6,12 @@ using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Commands
 {
+    public enum CommandGroupFlags
+    {
+        None        = 0,
+        IsSilent    = 1 << 0,   // Skips logging command group invocation
+    }
+
     /// <summary>
     /// Contains command implementations.
     /// </summary>
@@ -16,6 +22,7 @@ namespace MHServerEmu.Commands
         private readonly HashSet<CommandDefinition> _commands = new();
 
         public CommandGroupDefinition GroupDefinition { get; private set; }
+        public bool IsSilent { get => GroupDefinition.Flags.HasFlag(CommandGroupFlags.IsSilent); }
 
         /// <summary>
         /// Registers the <see cref="CommandGroupAttribute"/> and all commands for this <see cref="CommandGroup"/>.
