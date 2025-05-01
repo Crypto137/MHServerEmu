@@ -87,25 +87,27 @@ namespace MHServerEmu.Commands
         /// Extracts the command and its parameters (if any) from the provided input <see cref="string"/>.
         /// Returns <see langword="true"/> if successful.
         /// </summary>
-        private bool ExtractCommandAndParameters(string input, out string command, out string parameters)
+        private static bool ExtractCommandAndParameters(string input, out string command, out string parameters)
         {
-            input = input.Trim();
             command = string.Empty;
             parameters = string.Empty;
+
+            input = input.Trim();
 
             // Only input that starts with our command prefix char followed by something else can be a command
             if (input.Length < 2 || input[0] != CommandPrefix)
                 return false;
 
-            // Remove the prefix
-            input = input.Substring(1);
+            int whiteSpaceIndex = input.IndexOf(' ');
 
-            // Get the command
-            command = input.Split(' ')[0].ToLower();
+            // Get the command.
+            // The command ends at the first occurrence of white space or the end of the input string.
+            int commandLength = whiteSpaceIndex >= 0 ? whiteSpaceIndex - 1 : input.Length - 1;
+            command = input.Substring(1, commandLength).ToLower();
 
             // Get parameters after the first space (if there are any)
-            if (input.Contains(' '))
-                parameters = input.Substring(input.IndexOf(' ') + 1).Trim();
+            if (whiteSpaceIndex >= 0)
+                parameters = input.Substring(whiteSpaceIndex + 1);
 
             return true;
         }
