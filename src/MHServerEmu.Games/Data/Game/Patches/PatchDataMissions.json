@@ -54,5 +54,13 @@
         "Description": "Fix Conflict mission SiegeMissionGiverController",
         "ValueType": "Enum",
         "Value": "NotInGame"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Loot/Tables/MissionRewards/DiscoverySurvival.prototype",
+        "Path": "Choices[0].Choices[0].NumMin",
+        "Description": "Nerf DiscoverySurvival rewards",
+        "ValueType": "Integer",
+        "Value": 1
     }
 ]
