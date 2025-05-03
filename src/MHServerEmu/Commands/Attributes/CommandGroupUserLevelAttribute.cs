@@ -6,8 +6,17 @@ namespace MHServerEmu.Commands.Attributes
     /// Specifies the minimum <see cref="AccountUserLevel"/> required to invoke commands contained in this <see cref="CommandGroup"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class CommandGroupUserLevelAttribute(AccountUserLevel userLevel = AccountUserLevel.User) : Attribute
+    public class CommandGroupUserLevelAttribute : Attribute
     {
-        public AccountUserLevel UserLevel { get; } = userLevel;
+        public AccountUserLevel UserLevel { get; }
+
+        public CommandGroupUserLevelAttribute() : this(AccountUserLevel.User)
+        {
+        }
+
+        public CommandGroupUserLevelAttribute(AccountUserLevel userLevel)
+        {
+            UserLevel = userLevel;
+        }
     }
 }

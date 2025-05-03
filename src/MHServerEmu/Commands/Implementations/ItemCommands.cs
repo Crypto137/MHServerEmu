@@ -16,12 +16,15 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("item", "Provides commands for creating items.")]
+    [CommandGroup("item")]
+    [CommandGroupDescription("Commands for managing items.")]
     public class ItemCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("drop", "Creates and drops the specified item from the current avatar. Optionally specify count.\nUsage: item drop [pattern] [count]")]
+        [Command("drop")]
+        [CommandDescription("Creates and drops the specified item from the current avatar.")]
+        [CommandUsage("item drop [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -48,7 +51,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("give", "Creates and drops the specified item to the current player.\nUsage: item give [pattern] [count]")]
+        [Command("give")]
+        [CommandDescription("Creates and gives the specified item to the current player.")]
+        [CommandUsage("item give [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -72,7 +77,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("destroyindestructible", "Destroys indestructible items contained in the player's general inventory.\nUsage: item destroyindestructible")]
+        [Command("destroyindestructible")]
+        [CommandDescription("Destroys indestructible items contained in the player's general inventory.")]
+        [CommandUsage("item destroyindestructible")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string DestroyIndestructible(string[] @params, NetClient client)
         {
@@ -96,7 +103,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Destroyed {indestructibleItemList.Count} indestructible items.";
         }
 
-        [Command("roll", "Rolls a loot table.\nUsage: item roll [pattern]")]
+        [Command("roll")]
+        [CommandDescription("Rolls the specified loot table.")]
+        [CommandUsage("item roll [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -113,7 +122,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Finished rolling {lootTableProtoRef.GetName()}, see the server console for results.";
         }
 
-        [Command("rollall", "Rolls all loot tables.\nUsage: item rollall")]
+        [Command("rollall")]
+        [CommandDescription("Rolls all loot tables.")]
+        [CommandUsage("item rollall")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string RollAllLootTables(string[] @params, NetClient client)
@@ -135,7 +146,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Finished rolling {numLootTables} loot tables in {stopwatch.Elapsed.TotalMilliseconds} ms, see the server console for results.";
         }
 
-        [Command("creditchest", "Converts 500k credits to a sellable chest item.\nUsage: item creditchest")]
+        [Command("creditchest")]
+        [CommandDescription("Converts 500k credits to a sellable chest item.")]
+        [CommandUsage("item creditchest")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string CreditChest(string[] @params, NetClient client)
         {

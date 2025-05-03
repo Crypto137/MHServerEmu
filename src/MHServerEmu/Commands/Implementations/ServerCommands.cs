@@ -8,12 +8,15 @@ using MHServerEmu.Games.GameData.LiveTuning;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("server", "Allows you to interact with the server.")]
+    [CommandGroup("server")]
+    [CommandGroupDescription("Server management commands.")]
     public class ServerCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("status", "Usage: server status")]
+        [Command("status")]
+        [CommandDescription("Prints server status.")]
+        [CommandUsage("server status")]
         public string Status(string[] @params, NetClient client)
         {
             StringBuilder sb = new();
@@ -31,7 +34,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast")]
+        [Command("broadcast")]
+        [CommandDescription("Broadcasts a notification to all players.")]
+        [CommandUsage("server broadcast")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(1)]
         public string Broadcast(string[] @params, NetClient client)
@@ -47,7 +52,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning")]
+        [Command("reloadlivetuning")]
+        [CommandDescription("Reloads live tuning settings.")]
+        [CommandUsage("server reloadlivetuning")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string ReloadLiveTuning(string[] @params, NetClient client)
@@ -56,7 +63,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("shutdown", "Usage: server shutdown")]
+        [Command("shutdown")]
+        [CommandDescription("Shuts the server down.")]
+        [CommandUsage("server shutdown")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string Shutdown(string[] @params, NetClient client)
         {

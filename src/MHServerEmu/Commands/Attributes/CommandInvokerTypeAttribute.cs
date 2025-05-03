@@ -11,8 +11,17 @@
     /// Specifies the <see cref="CommandInvokerType"/> required to invoke a command.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
-    public class CommandInvokerTypeAttribute(CommandInvokerType invokerType = CommandInvokerType.Any) : Attribute
+    public class CommandInvokerTypeAttribute : Attribute
     {
-        public CommandInvokerType InvokerType { get; } = invokerType;
+        public CommandInvokerType InvokerType { get; }
+
+        public CommandInvokerTypeAttribute() : this(CommandInvokerType.Any)
+        {
+        }
+
+        public CommandInvokerTypeAttribute(CommandInvokerType invokerType)
+        {
+            InvokerType = invokerType;
+        }
     }
 }

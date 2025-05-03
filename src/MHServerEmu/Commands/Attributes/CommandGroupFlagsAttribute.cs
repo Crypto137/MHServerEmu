@@ -4,8 +4,17 @@
     /// Specifies the <see cref="CommandGroupFlags"/> for this <see cref="CommandGroup"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class CommandGroupFlagsAttribute(CommandGroupFlags flags = CommandGroupFlags.None) : Attribute
+    public class CommandGroupFlagsAttribute : Attribute
     {
-        public CommandGroupFlags Flags { get; } = flags;
+        public CommandGroupFlags Flags { get; }
+
+        public CommandGroupFlagsAttribute() : this(CommandGroupFlags.None)
+        {
+        }
+
+        public CommandGroupFlagsAttribute(CommandGroupFlags flags)
+        {
+            Flags = flags;
+        }
     }
 }

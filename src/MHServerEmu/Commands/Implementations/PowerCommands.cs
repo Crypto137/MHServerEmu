@@ -14,11 +14,14 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("power", "Provides commands for interacting with the power collection.")]
+    [CommandGroup("power")]
+    [CommandGroupDescription("Commands related to the power system.")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class PowerCommands : CommandGroup
     {
-        [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print")]
+        [Command("print")]
+        [CommandDescription("Prints the power collection for the current avatar to the console.")]
+        [CommandUsage("power print")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Print(string[] @params, NetClient client)
         {
@@ -35,7 +38,9 @@ namespace MHServerEmu.Commands.Implementations
             return "Power collection information printed to the console.";
         }
 
-        [Command("cooldownreset", "Resets all cooldowns and charges.\nUsage: power cooldownreset")]
+        [Command("cooldownreset")]
+        [CommandDescription("Resets all cooldowns and charges.")]
+        [CommandUsage("power cooldownreset")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string CooldownReset(string[] @params, NetClient client)
         {
@@ -70,7 +75,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"All cooldowns and charges have been reset.";
         }
 
-        [Command("stealpowers", "Unlocks all stolen powers.\nUsage: power stealpowers")]
+        [Command("stealpowers")]
+        [CommandDescription("Unlocks all stolen powers.")]
+        [CommandUsage("power stealpowers")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string StealPowers(string[] @params, NetClient client)
         {
@@ -100,7 +107,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Unlocked {count} stolen powers.";
         }
 
-        [Command("stealavatarpowers", "Unlocks avatar stolen powers.\nUsage: power stealavatarpowers")]
+        [Command("stealavatarpowers")]
+        [CommandDescription("Unlocks avatar stolen powers.")]
+        [CommandUsage("power stealavatarpowers")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string StealAvatarPowers(string[] @params, NetClient client)
         {
@@ -137,7 +146,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Unlocked {count} stolen powers.";
         }
 
-        [Command("forgetstolenpowers", "Forgets all stolen powers.\nUsage: power forgetstolenpowers")]
+        [Command("forgetstolenpowers")]
+        [CommandDescription("Locks all unlocked stolen powers.")]
+        [CommandUsage("power forgetstolenpowers")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string ForgetStolenPowers(string[] @params, NetClient client)
         {

@@ -5,11 +5,14 @@ using MHServerEmu.Games.Achievements;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("achievement", "Manages achievements.")]
+    [CommandGroup("achievement")]
+    [CommandGroupDescription("Commands related to the achievement system.")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class AchievementCommands : CommandGroup
     {
-        [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]")]
+        [Command("info")]
+        [CommandDescription("Outputs info for the specified achievement.")]
+        [CommandUsage("achievement info [id]")]
         [CommandParamCount(1)]
         public string Info(string[] @params, NetClient client)
         {

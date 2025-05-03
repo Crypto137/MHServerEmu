@@ -10,10 +10,12 @@ using static MHServerEmu.Commands.Implementations.DebugCommands;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("mission", "commands about missions")]
+    [CommandGroup("mission")]
+    [CommandGroupDescription("Commands related to the mission system.")]
     public class MissionCommands : CommandGroup
     {
-        [Command("debug", "Usage: mission debug [on|off].")]
+        [Command("debug")]
+        [CommandUsage("mission debug [on|off]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string Debug(string[] @params, NetClient client)
         {
@@ -25,7 +27,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Mission Log [{flags}]";
         }
 
-        [Command("resetstory", "Reset all main story missions.\nUsage: mission resetstory.")]
+        [Command("resetstory")]
+        [CommandDescription("Reset all main story missions.")]
+        [CommandUsage("mission resetstory")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string ResetStory(string[] @params, NetClient client)
         {
@@ -39,7 +43,9 @@ namespace MHServerEmu.Commands.Implementations
             return "Story missions reset";
         }
 
-        [Command("completestory", "Set all main story missions to completed.\nUsage: mission completestory")]
+        [Command("completestory")]
+        [CommandDescription("Set all main story missions to completed.")]
+        [CommandUsage("mission completestory")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string CompleteStory(string[] @params, NetClient client)
@@ -59,7 +65,9 @@ namespace MHServerEmu.Commands.Implementations
             return "Story missions set to completed";
         }
 
-        [Command("region", "List all the mission prototypes in the current region.\nUsage: mission region")]
+        [Command("region")]
+        [CommandDescription("List all the mission prototypes in the current region.")]
+        [CommandUsage("mission region")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Region(string[] @params, NetClient client)
         {
@@ -74,7 +82,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("info", "Display information about the given mission.\nUsage: mission info [pattern].")]
+        [Command("info")]
+        [CommandDescription("Display information about the given mission.")]
+        [CommandUsage("mission info [pattern]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string Info(string[] @params, NetClient client)
@@ -96,7 +106,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("complete", "Complete the given mission.\nUsage: mission complete [pattern].")]
+        [Command("complete")]
+        [CommandDescription("Complete the given mission.")]
+        [CommandUsage("mission complete [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -125,7 +137,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("reset", "Restart the given mission.\nUsage: mission reset [pattern].")]
+        [Command("reset")]
+        [CommandDescription("Restart the given mission.")]
+        [CommandUsage("mission reset [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]

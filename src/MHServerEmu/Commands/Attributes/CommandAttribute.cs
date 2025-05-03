@@ -4,9 +4,13 @@
     /// Indicates that a method is a command.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
-    public class CommandAttribute(string name, string help) : Attribute
+    public class CommandAttribute : Attribute
     {
-        public string Name { get; } = name.ToLower();
-        public string Help { get; } = help;
+        public string Name { get; }
+
+        public CommandAttribute(string name)
+        {
+            Name = name.ToLower();
+        }
     }
 }

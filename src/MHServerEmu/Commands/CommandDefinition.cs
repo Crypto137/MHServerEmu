@@ -20,12 +20,16 @@ namespace MHServerEmu.Commands
     {
         private readonly MethodInfo _methodInfo;
         private readonly CommandAttribute _commandAttribute;
+        private readonly CommandDescriptionAttribute _descriptionAttribute;
+        private readonly CommandUsageAttribute _usageAttribute;
         private readonly CommandUserLevelAttribute _userLevelAttribute;
         private readonly CommandInvokerTypeAttribute _invokerTypeAttribute;
         private readonly CommandParamCountAttribute _paramCountAttribute;
 
+        private string _help;
+
         public string Name { get => _commandAttribute.Name; }
-        public string Help { get => _commandAttribute.Help; }
+        public string Help { get => GetHelpString(); }
         public bool IsDefaultCommand { get => _commandAttribute is DefaultCommandAttribute; }
         public AccountUserLevel UserLevel { get => _userLevelAttribute.UserLevel; }
 
@@ -40,26 +44,12 @@ namespace MHServerEmu.Commands
 
             _commandAttribute = commandAttribute;
 
-            // CommandUserLevelAttribute (optional)
-            CommandUserLevelAttribute userLevelAttribute = methodInfo.GetCustomAttribute<CommandUserLevelAttribute>();
-            if (userLevelAttribute == null)
-                userLevelAttribute = new();
-
-            _userLevelAttribute = userLevelAttribute;
-
-            // CommandInvokerTypeAttribute (optional)
-            CommandInvokerTypeAttribute invokerTypeAttribute = methodInfo.GetCustomAttribute<CommandInvokerTypeAttribute>();
-            if (invokerTypeAttribute == null)
-                invokerTypeAttribute = new();
-
-            _invokerTypeAttribute = invokerTypeAttribute;
-
-            // CommandParamCountAttribute (optional)
-            CommandParamCountAttribute paramCountAttribute = methodInfo.GetCustomAttribute<CommandParamCountAttribute>();
-            if (paramCountAttribute == null)
-                paramCountAttribute = new();
-
-            _paramCountAttribute = paramCountAttribute;
+            // Optional attributes
+            GetOrCreateAttribute(ref _descriptionAttribute);
+            GetOrCreateAttribute(ref _usageAttribute);
+            GetOrCreateAttribute(ref _userLevelAttribute);
+            GetOrCreateAttribute(ref _invokerTypeAttribute);
+            GetOrCreateAttribute(ref _paramCountAttribute);
         }
 
         public override string ToString()
@@ -135,6 +125,21 @@ namespace MHServerEmu.Commands
                 default:
                     return "Unknown Failure";
             }
+        }
+
+        private void GetOrCreateAttribute<T>(ref T field) where T: Attribute, new()
+        {
+            T attribute = _methodInfo.GetCustomAttribute<T>();
+            if (attribute == null)
+                attribute = new();
+
+            field = attribute;
+        }
+
+        private string GetHelpString()
+        {
+            // TODO: Usage
+            return _descriptionAttribute.Description;
         }
     }
 }

@@ -12,10 +12,13 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("player", "Changes player data for this account.")]
+    [CommandGroup("player")]
+    [CommandGroupDescription("Commands for managing player data for the invoker's account.")]
     public class PlayerCommands : CommandGroup
     {
-        [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]")]
+        [Command("costume")]
+        [CommandDescription("Changes costume for the current avatar.")]
+        [CommandUsage("player costume [name|reset|default]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string Costume(string[] @params, NetClient client)
@@ -61,7 +64,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeProtoRef)}.";
         }
 
-        [Command("wipe", "Wipes all progress associated with the current account.\nUsage: player wipe [playerName]")]
+        [Command("wipe")]
+        [CommandDescription("Wipes all progress associated with the current account.")]
+        [CommandUsage("player wipe [playerName]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Wipe(string[] @params, NetClient client)
         {
@@ -78,7 +83,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]")]
+        [Command("givecurrency")]
+        [CommandDescription("Gives all currencies.")]
+        [CommandUsage("player givecurrency [amount]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -96,7 +103,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Successfully given {amount} of all currencies.";
         }
 
-        [Command("clearconditions", "Clears persistent conditions.\nUsage: player clearconditions")]
+        [Command("clearconditions")]
+        [CommandDescription("Clears persistent conditions.")]
+        [CommandUsage("player clearconditions")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string ClearConditions(string[] @params, NetClient client)
         {

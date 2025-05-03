@@ -8,12 +8,15 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("instance", "Provides commands for managing private region instances.")]
+    [CommandGroup("instance")]
+    [CommandGroupDescription("Commands for managing  region instances.")]
     public class InstanceCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("list", "Lists private instances.\nUsage: instance list")]
+        [Command("list")]
+        [CommandDescription("Lists private instances.")]
+        [CommandUsage("instance list")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string List(string[] @params, NetClient client)
         {
@@ -37,7 +40,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("listall", "Lists all region instances in the current game.\nUsage: instance listall")]
+        [Command("listall")]
+        [CommandDescription("Lists all region instances in the current game.")]
+        [CommandUsage("instance listall")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string ListAll(string[] @params, NetClient client)
         {
@@ -56,7 +61,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("reset", "Resets private instances.\nUsage: instance reset")]
+        [Command("reset")]
+        [CommandDescription("Resets private instances.")]
+        [CommandUsage("instance reset")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Reset(string[] @params, NetClient client)
         {

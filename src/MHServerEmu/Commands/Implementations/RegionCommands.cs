@@ -11,10 +11,13 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("region", "Manages region instances.")]
+    [CommandGroup("region")]
+    [CommandGroupDescription("Region management commands.")]
     public class RegionCommands : CommandGroup
     {
-        [Command("warp", "Warps the player to another region.\nUsage: region warp [name]")]
+        [Command("warp")]
+        [CommandDescription("Warps the player to another region.")]
+        [CommandUsage("region warp [name]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -39,7 +42,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Warping to {regionName}.";
         }
 
-        [Command("reload", "Reloads the current region.\nUsage: region reload")]
+        [Command("reload")]
+        [CommandDescription("Reloads the current region.")]
+        [CommandUsage("region reload")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Reload(string[] @params, NetClient client)
@@ -51,7 +56,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Reloading region {playerConnection.TransferParams.DestTargetRegionProtoRef.GetName()}.";
         }
 
-        [Command("generateallsafe", "Generates all safe regions.\nUsage: region generateallsafe")]
+        [Command("generateallsafe")]
+        [CommandDescription("Generates all safe regions.")]
+        [CommandUsage("region generateallsafe")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string GenerateAllSafe(string[] @params, NetClient client)
@@ -74,7 +81,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Generated {numRegions} regions in {stopwatch.Elapsed.TotalSeconds} sec.";
         }
 
-        [Command("properties", "Prints properties for the current region.\nUsage: region properties")]
+        [Command("properties")]
+        [CommandDescription("Prints properties for the current region.")]
+        [CommandUsage("region properties")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Properties(string[] @params, NetClient client)
@@ -87,7 +96,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("info", "Prints info for the current region.\nUsage: region info")]
+        [Command("info")]
+        [CommandDescription("Prints info for the current region.")]
+        [CommandUsage("region info")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Info(string[] @params, NetClient client)
         {

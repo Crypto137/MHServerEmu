@@ -14,10 +14,13 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("Entity", "Provides commands for Entity.")]
+    [CommandGroup("Entity")]
+    [CommandGroupDescription("Entity management commands.")]
     public class EntityCommands : CommandGroup
     {
-        [Command("dummy", "Spawn Agent instead of dummy.\nUsage: entity dummy [pattern]")]
+        [Command("dummy")]
+        [CommandDescription("Replace the training room target dummy with the specified entity.")]
+        [CommandUsage("entity dummy [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -52,7 +55,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
 
-        [Command("marker", "Displays information about the specified marker.\nUsage: entity marker [MarkerId]")]
+        [Command("marker")]
+        [CommandDescription("Displays information about the specified marker.")]
+        [CommandUsage("entity marker [MarkerId]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string Marker(string[] @params, NetClient client)
@@ -71,7 +76,9 @@ namespace MHServerEmu.Commands.Implementations
         }
 
 
-        [Command("info", "Displays information about the specified entity.\nUsage: entity info [EntityId]")]
+        [Command("info")]
+        [CommandDescription("Displays information about the specified entity.")]
+        [CommandUsage("entity info [EntityId]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string Info(string[] @params, NetClient client)
@@ -95,7 +102,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("near", "Usage: entity near [radius]. Default radius 100.")]
+        [Command("near")]
+        [CommandDescription("Displays all entities in a radius (default is 100).")]
+        [CommandUsage("entity near [radius]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Near(string[] @params, NetClient client)
         {
@@ -135,7 +144,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("isblocked", "Usage: entity isblocked [EntityId1] [EntityId2]")]
+        [Command("isblocked")]
+        [CommandUsage("entity isblocked [EntityId1] [EntityId2]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(2)]
         public string IsBlocked(string[] @params, NetClient client)
@@ -160,7 +170,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
         }
 
-        [Command("tp", "Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).\nUsage:\nentity tp modok")]
+        [Command("tp")]
+        [CommandDescription("Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).")]
+        [CommandUsage("entity tp [pattern]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
@@ -186,7 +198,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
 
-        [Command("create", "create entity near the avatar based on pattern (ignore the case) and count (default 1).\nUsage:\nentity create bosses/venom 2")]
+        [Command("create")]
+        [CommandDescription("Create entity near the avatar based on pattern (ignore the case) and count (default 1).")]
+        [CommandUsage("entity create [pattern] [count]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]

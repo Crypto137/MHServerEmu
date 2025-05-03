@@ -6,6 +6,6 @@
     [AttributeUsage(AttributeTargets.Method)]
     public class DefaultCommandAttribute : CommandAttribute
     {
-        public DefaultCommandAttribute() : base(string.Empty, string.Empty) { }
+        public DefaultCommandAttribute() : base(string.Empty) { }
     }
 }

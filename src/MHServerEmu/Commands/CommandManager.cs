@@ -144,7 +144,8 @@ namespace MHServerEmu.Commands
 
         // Help command groups are inside CommandManager so that they can access _commandGroupDict
 
-        [CommandGroup("commands", "Lists available commands.")]
+        [CommandGroup("commands")]
+        [CommandGroupDescription("Lists available commands.")]
         [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class CommandsCommandGroup : CommandGroup
         {
@@ -171,7 +172,8 @@ namespace MHServerEmu.Commands
             }
         }
 
-        [CommandGroup("help", "Help needs no help.")]
+        [CommandGroup("help")]
+        [CommandGroupDescription("Help needs no help.")]
         [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class HelpCommandGroup : CommandGroup
         {
@@ -199,7 +201,8 @@ namespace MHServerEmu.Commands
             }
         }
 
-        [CommandGroup("generatecommanddocs", "Generates markdown documentation for all registered command groups.")]
+        [CommandGroup("generatecommanddocs")]
+        [CommandGroupDescription("Generates markdown documentation for all registered command groups.")]
         [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class GenerateCommandDocsCommandGroup : CommandGroup
         {

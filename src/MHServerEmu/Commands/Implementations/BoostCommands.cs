@@ -7,11 +7,14 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("boost", "Provides commands for boost.")]
+    [CommandGroup("boost")]
+    [CommandGroupDescription("Commands for boosting the stats of the invoker player's current avatar.")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class BoostCommands : CommandGroup
     {
-        [Command("damage", "Increase Damage of current avatar.\nUsage: boost damage [1-10000]")]
+        [Command("damage")]
+        [CommandDescription("Sets DamagePctBonus for the current avatar.")]
+        [CommandUsage("boost damage [1-10000]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Damage(string[] @params, NetClient client)
         {
@@ -27,7 +30,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Damage x{damage}";
         }
 
-        [Command("vsboss", "Increase Damage vs Bosses of current avatar.\nUsage: boost vsboss [1-10000]")]
+        [Command("vsboss")]
+        [CommandDescription("Sets DamagePctBonusVsBosses for the current avatar.")]
+        [CommandUsage("boost vsboss [1-10000]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string VsBoss(string[] @params, NetClient client)
         {

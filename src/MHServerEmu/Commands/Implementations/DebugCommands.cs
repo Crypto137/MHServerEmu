@@ -18,19 +18,22 @@ using MHServerEmu.Games.Powers.Conditions;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("debug", "Debug commands for development.")]
+    [CommandGroup("debug")]
+    [CommandGroupDescription("Debug commands for development.")]
     public class DebugCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("test", "Runs test code.")]
+        [Command("test")]
+        [CommandDescription("Runs test code.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string Test(string[] @params, NetClient client)
         {
             return string.Empty;
         }
 
-        [Command("forcegc", "Requests the garbage collector to reclaim unused server memory.")]
+        [Command("forcegc")]
+        [CommandDescription("Requests the garbage collector to perform a collection.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string ForceGC(string[] @params, NetClient client)
         {
@@ -40,7 +43,8 @@ namespace MHServerEmu.Commands.Implementations
             return "Manual garbage collection successfully requested.";
         }
 
-        [Command("cell", "Shows current cell.")]
+        [Command("cell")]
+        [CommandDescription("Shows current cell.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Cell(string[] @params, NetClient client)
         {
@@ -50,7 +54,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Current cell: {playerConnection.AOI.Region.GetCellAtPosition(avatar.RegionLocation.Position).PrototypeName}";
         }
 
-        [Command("seed", "Shows current seed.")]
+        [Command("seed")]
+        [CommandDescription("Shows current seed.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Seed(string[] @params, NetClient client)
         {
@@ -59,7 +64,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Current seed: {playerConnection.AOI.Region.RandomSeed}";
         }
 
-        [Command("area", "Shows current area.")]
+        [Command("area")]
+        [CommandDescription("Shows current area.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Area(string[] @params, NetClient client)
         {
@@ -69,7 +75,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Current area: {playerConnection.AOI.Region.GetCellAtPosition(avatar.RegionLocation.Position).Area.PrototypeName}";
         }
 
-        [Command("region", "Shows current region.")]
+        [Command("region")]
+        [CommandDescription("Shows current region.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Region(string[] @params, NetClient client)
         {
@@ -84,7 +91,8 @@ namespace MHServerEmu.Commands.Implementations
             On
         }
 
-        [Command("setmarker", "Usage: debug setmarker [MarkerRef].")]
+        [Command("setmarker")]
+        [CommandUsage("debug setmarker [MarkerRef]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(1)]
         public string SetMarker(string[] @params, NetClient client)
@@ -97,7 +105,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"SetMarker [{markerRef.GetNameFormatted()}]";
         }
 
-        [Command("spawn", "Usage: debug spawn [on|off].")]
+        [Command("spawn")]
+        [CommandUsage("debug spawn [on|off]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string Spawn(string[] @params, NetClient client)
         {
@@ -109,7 +118,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Spawn Log [{flags}]";
         }
 
-        [Command("ai", "Usage: debug ai.")]
+        [Command("ai")]
+        [CommandUsage("debug ai")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string AI(string[] @params, NetClient client)
@@ -122,7 +132,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"AI [{(enableAI ? "On" : "Off")}]";
         }
 
-        [Command("metagame", "Usage: debug metagame [on|off].")]
+        [Command("metagame")]
+        [CommandUsage("debug metagame [on|off]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         public string Metagame(string[] @params, NetClient client)
         {
@@ -134,7 +145,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Metagame Log [{flags}]";
         }
 
-        [Command("navi2obj", "Usage: debug navi2obj [PathFlags].\n Default PathFlags is Walk, can be [None|Fly|Power|Sight].")]
+        [Command("navi2obj")]
+        [CommandDescription("Default PathFlags is Walk, can be [None|Fly|Power|Sight].")]
+        [CommandUsage("debug navi2obj [PathFlags]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Navi2Obj(string[] @params, NetClient client)
@@ -152,7 +165,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"NaviMesh saved as {filename}";
         }
 
-        [Command("crashgame", "Crashes the current game instance.")]
+        [Command("crashgame")]
+        [CommandDescription("Crashes the current game instance.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string CrashGame(string[] @params, NetClient client)
@@ -160,7 +174,8 @@ namespace MHServerEmu.Commands.Implementations
             throw new("Game instance crash invoked by a debug command.");
         }
 
-        [Command("crashserver", "Crashes the current game instance.")]
+        [Command("crashserver")]
+        [CommandDescription("Crashes the entire server.")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.ServerConsole)]
         public string CrashServer(string[] @params, NetClient client)
@@ -168,7 +183,8 @@ namespace MHServerEmu.Commands.Implementations
             throw new("Server crash invoked by a debug command.");
         }
 
-        [Command("getconditionlist", "Gets a list of all conditions tracked by the ConditionPool.")]
+        [Command("getconditionlist")]
+        [CommandDescription("Gets a list of all conditions tracked by the ConditionPool in the current game.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string GetConditionList(string[] @params, NetClient client)
         {
@@ -184,7 +200,8 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("difficulty", "Shows information about the current difficulty level.")]
+        [Command("difficulty")]
+        [CommandDescription("Shows information about the current difficulty level.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Difficulty(string[] @params, NetClient client)
         {
@@ -204,7 +221,8 @@ namespace MHServerEmu.Commands.Implementations
             return $"Region={region.Prototype}, TuningTable={tuningTable.Prototype}, playerToMob={playerToMob}, mobToPlayer={mobToPlayer}";
         }
 
-        [Command("geteventpoolreport", "Returns a report representing the state of the ScheduledEventPool in the current game.")]
+        [Command("geteventpoolreport")]
+        [CommandDescription("Returns a report representing the state of the ScheduledEventPool in the current game.")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string GetEventPoolStatus(string[] @params, NetClient client)
         {

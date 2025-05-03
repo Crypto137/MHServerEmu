@@ -10,7 +10,8 @@ using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("tower", "Changes region to Avengers Tower (original).")]
+    [CommandGroup("tower")]
+    [CommandGroupDescription("Teleports to Avengers Tower (original).")]
     [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class TowerCommand : CommandGroup
     {
@@ -23,11 +24,12 @@ namespace MHServerEmu.Commands.Implementations
             // Regions/HUBS/AvengersTowerHUB/Portals/AvengersTowerHUBEntry.prototype
             playerConnection.MoveToTarget((PrototypeId)16780605467179883619);
 
-            return "Changing region to Avengers Tower (original)";
+            return "Teleporting to Avengers Tower (original)";
         }
     }
 
-    [CommandGroup("jail", "Travel to East Side: Detention Facility (old).")]
+    [CommandGroup("jail")]
+    [CommandGroupDescription("Teleports to East Side: Detention Facility (old).")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class JailCommand : CommandGroup
@@ -41,11 +43,12 @@ namespace MHServerEmu.Commands.Implementations
             // Regions/Story/CH04EastSide/UpperEastSide/PoliceDepartment/Portals/JailTarget.prototype
             playerConnection.MoveToTarget((PrototypeId)13284513933487907420);
 
-            return "Travel to East Side: Detention Facility (old)";
+            return "Teleporting to East Side: Detention Facility (old)";
         }
     }
 
-    [CommandGroup("position", "Shows current position.")]
+    [CommandGroup("position")]
+    [CommandGroupDescription("Shows current position.")]
     [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class PositionCommand : CommandGroup
     {
@@ -60,7 +63,8 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("dance", "Performs the Dance emote")]
+    [CommandGroup("dance")]
+    [CommandGroupDescription("Performs the Dance emote (if available).")]
     [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class DanceCommand : CommandGroup
     {
@@ -104,7 +108,8 @@ namespace MHServerEmu.Commands.Implementations
         }
     }
 
-    [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)")]
+    [CommandGroup("tp")]
+    [CommandGroupDescription("Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class TeleportCommand : CommandGroup

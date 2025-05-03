@@ -11,10 +11,13 @@ using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("account", "Allows you to manage accounts.")]
+    [CommandGroup("account")]
+    [CommandGroupDescription("Account management commands.")]
     public class AccountCommands : CommandGroup
     {
-        [Command("create", "Creates a new account.\nUsage: account create [email] [playerName] [password]")]
+        [Command("create")]
+        [CommandDescription("Creates a new account.")]
+        [CommandUsage("account create [email] [playerName] [password]")]
         [CommandParamCount(3)]
         public string Create(string[] @params, NetClient client)
         {
@@ -22,7 +25,9 @@ namespace MHServerEmu.Commands.Implementations
             return result.Item2;
         }
 
-        [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]")]
+        [Command("playername")]
+        [CommandDescription("Changes player name for the specified account.")]
+        [CommandUsage("account playername [email] [playername]")]
         [CommandParamCount(2)]
         public string PlayerName(string[] @params, NetClient client)
         {
@@ -36,7 +41,9 @@ namespace MHServerEmu.Commands.Implementations
             return result.Item2;
         }
 
-        [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]")]
+        [Command("password")]
+        [CommandDescription("Changes password for the specified account.")]
+        [CommandUsage("account password [email] [password]")]
         [CommandParamCount(2)]
         public string Password(string[] @params, NetClient client)
         {
@@ -50,7 +57,9 @@ namespace MHServerEmu.Commands.Implementations
             return result.Item2;
         }
 
-        [Command("userlevel", "Changes user level for the specified account.\nUsage: account userlevel [email] [0|1|2]")]
+        [Command("userlevel")]
+        [CommandDescription("Changes user level for the specified account.")]
+        [CommandUsage("account userlevel [email] [0|1|2]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(2)]
         public string UserLevel(string[] @params, NetClient client)
@@ -67,7 +76,9 @@ namespace MHServerEmu.Commands.Implementations
             return result.Item2;
         }
 
-        [Command("verify", "Checks if an email/password combination is valid.\nUsage: account verify [email] [password]")]
+        [Command("verify")]
+        [CommandDescription("Checks if an email/password combination is valid.")]
+        [CommandUsage("account verify [email] [password]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(2)]
         public string Verify(string[] @params, NetClient client)
@@ -81,7 +92,9 @@ namespace MHServerEmu.Commands.Implementations
                 return $"Account credentials are NOT valid: {statusCode}!";
         }
 
-        [Command("ban", "Bans the specified account.\nUsage: account ban [email]")]
+        [Command("ban")]
+        [CommandDescription("Bans the specified account.")]
+        [CommandUsage("account ban [email]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandParamCount(1)]
         public string Ban(string[] @params, NetClient client)
@@ -90,7 +103,9 @@ namespace MHServerEmu.Commands.Implementations
             return message;
         }
 
-        [Command("unban", "Unbans the specified account.\nUsage: account unban [email]")]
+        [Command("unban")]
+        [CommandDescription("Unbans the specified account.")]
+        [CommandUsage("account unban [email]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandParamCount(1)]
         public string Unban(string[] @params, NetClient client)
@@ -99,7 +114,9 @@ namespace MHServerEmu.Commands.Implementations
             return message;
         }
 
-        [Command("info", "Shows information for the logged in account.\nUsage: account info")]
+        [Command("info")]
+        [CommandDescription("Shows information for the logged in account.")]
+        [CommandUsage("account info")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Info(string[] @params, NetClient client)
         {
@@ -117,7 +134,9 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("download", "Downloads a JSON copy of the current account.\nUsage: account download")]
+        [Command("download")]
+        [CommandDescription("Downloads a JSON copy of the current account.")]
+        [CommandUsage("account download")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Download(string[] @params, NetClient client)
         {

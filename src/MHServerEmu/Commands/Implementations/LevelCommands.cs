@@ -10,11 +10,14 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("level", "Provides commands for creating items.")]
+    [CommandGroup("level")]
+    [CommandGroupDescription("Level management commands.")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class LevelCommands : CommandGroup
     {
-        [Command("up", "Levels up the current avatar.\nUsage: level up")]
+        [Command("up")]
+        [CommandDescription("Levels up the current avatar.")]
+        [CommandUsage("level up")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Up(string[] @params, NetClient client)
         {
@@ -30,7 +33,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Awarded {xpAmount} experience.";
         }
 
-        [Command("max", "Maxes out the current avatar's experience.\nUsage: level max")]
+        [Command("max")]
+        [CommandDescription("Maxes out the current avatar's experience.")]
+        [CommandUsage("level max")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Max(string[] @params, NetClient client)
         {
@@ -45,7 +50,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Awarded {expToAdd} experience.";
         }
 
-        [Command("reset", "Resets the current avatar to level 1.\nUsage: level reset")]
+        [Command("reset")]
+        [CommandDescription("Resets the current avatar to level 1.")]
+        [CommandUsage("level reset")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Reset(string[] @params, NetClient client)
         {
@@ -57,7 +64,9 @@ namespace MHServerEmu.Commands.Implementations
             return "Reset to level 1.";
         }
 
-        [Command("maxinfinity", "Maxes out Infinity experience.\nUsage: level max")]
+        [Command("maxinfinity")]
+        [CommandDescription("Maxes out Infinity experience.")]
+        [CommandUsage("level maxinfinity")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string MaxInfinity(string[] @params, NetClient client)
         {
@@ -70,7 +79,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Infinity experience maxed out.";
         }
 
-        [Command("resetinfinity", "Removes all Infinity progression.\nUsage: level resetinfinity")]
+        [Command("resetinfinity")]
+        [CommandDescription("Removes all Infinity progression.")]
+        [CommandUsage("level resetinfinity")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string ResetInfinity(string[] @params, NetClient client)
         {
@@ -87,7 +98,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Infinity reset.";
         }
 
-        [Command("awardxp", "Awards the specified amount of experience.\nUsage: level awardxp [amount]")]
+        [Command("awardxp")]
+        [CommandDescription("Awards the specified amount of experience.")]
+        [CommandUsage("level awardxp [amount]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string AwardXP(string[] @params, NetClient client)

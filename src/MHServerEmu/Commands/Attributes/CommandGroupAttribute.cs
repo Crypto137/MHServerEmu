@@ -4,9 +4,13 @@
     /// Indicates that a class contains commands.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class CommandGroupAttribute(string name, string help) : Attribute
+    public class CommandGroupAttribute : Attribute
     {
-        public string Name { get; } = name.ToLower();
-        public string Help { get; } = help;
+        public string Name { get; }
+
+        public CommandGroupAttribute(string name)
+        {
+            Name = name.ToLower();
+        }
     }
 }

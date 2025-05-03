@@ -8,10 +8,13 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("unlock", "Provides commands for unlock.")]
+    [CommandGroup("unlock")]
+    [CommandGroupDescription("Commands for unlocking various things.")]
     public class UnlockCommands : CommandGroup
     {
-        [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
+        [Command("hero")]
+        [CommandDescription("Unlocks the specified hero using Eternity Splinters.")]
+        [CommandUsage("unlock hero [pattern]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string Hero(string[] @params, NetClient client)
@@ -35,7 +38,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"Unlocked {avatarProtoRef.GetNameFormatted()}.";
         }
 
-        [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints")]
+        [Command("waypoints")]
+        [CommandDescription("Unlocks all waypoints.")]
+        [CommandUsage("unlock waypoints")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Waypoints(string[] @params, NetClient client)
@@ -49,7 +54,9 @@ namespace MHServerEmu.Commands.Implementations
             return "Waypoints unlocked";
         }
 
-        [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters")]
+        [Command("chapters")]
+        [CommandDescription("Unlocks all chapters.")]
+        [CommandUsage("unlock chapters")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Chapters(string[] @params, NetClient client)

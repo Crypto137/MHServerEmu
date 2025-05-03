@@ -8,7 +8,8 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("metagame", "Provides commands for metagame.")]
+    [CommandGroup("metagame")]
+    [CommandGroupDescription("Commands related to the MetaGame system.")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class MetaGameCommands : CommandGroup
     {
@@ -18,7 +19,9 @@ namespace MHServerEmu.Commands.Implementations
             Stop
         }
 
-        [Command("event", "Change current event.\nUsage: metagame event [next|stop]")]
+        [Command("event")]
+        [CommandDescription("Changes current event. Defaults to stop.")]
+        [CommandUsage("metagame event [next|stop]")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Event(string[] @params, NetClient client)
         {

@@ -7,13 +7,16 @@ using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("client", "Allows you to interact with clients.")]
+    [CommandGroup("client")]
+    [CommandGroupDescription("Commands for interacting with connected clients.")]
     [CommandGroupUserLevel(AccountUserLevel.Moderator)]
     public class ClientCommands : CommandGroup
     {
         private static readonly char[] HexPrefix = ['0', 'x'];
 
-        [Command("info", "Usage: client info [sessionId]")]
+        [Command("info")]
+        [CommandDescription("Prints information about the client with the specified session id.")]
+        [CommandUsage("client info [sessionId]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandParamCount(1)]
         public string Info(string[] @params, NetClient client)
@@ -31,7 +34,9 @@ namespace MHServerEmu.Commands.Implementations
             return session.GetClientInfo();
         }
 
-        [Command("kick", "Usage: client kick [playerName]")]
+        [Command("kick")]
+        [CommandDescription("Disconnects the client with the specified player name.")]
+        [CommandUsage("client kick [playerName]")]
         [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandParamCount(1)]
         public string Kick(string[] @params, NetClient client)
