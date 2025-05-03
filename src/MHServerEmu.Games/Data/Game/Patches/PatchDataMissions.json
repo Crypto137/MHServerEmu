@@ -57,10 +57,10 @@
     },
     {
         "Enabled": true,
-        "Prototype": "Loot/Tables/MissionRewards/DiscoverySurvival.prototype",
-        "Path": "Choices[0].Choices[0].NumMin",
-        "Description": "Nerf DiscoverySurvival rewards",
+        "Prototype": "Metagame/Story/CH06FortStryker/States/CH06TrainingCamp.prototype",
+        "Path": "RespawnDelayMS",
+        "Description": "Increase RespawnDelayMS for TrainingCamp Population",
         "ValueType": "Integer",
-        "Value": 1
+        "Value": 180000
     }
 ]
