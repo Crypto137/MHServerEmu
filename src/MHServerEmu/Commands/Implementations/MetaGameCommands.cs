@@ -10,7 +10,7 @@ namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("metagame", "Provides commands for metagame.")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
-    public class MetaGame : CommandGroup
+    public class MetaGameCommands : CommandGroup
     {
         public enum ChangeEventType
         {

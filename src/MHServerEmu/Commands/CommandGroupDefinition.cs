@@ -15,6 +15,7 @@ namespace MHServerEmu.Commands
 
         public string Name { get => _commandGroupAttribute.Name; }
         public string Help { get => _commandGroupAttribute.Help; }
+        public AccountUserLevel UserLevel { get => _userLevelAttribute.UserLevel; }
         public CommandGroupFlags Flags { get => _flagsAttribute.Flags; }
 
         public CommandGroupDefinition(Type type)

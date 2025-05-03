@@ -9,7 +9,7 @@ using MHServerEmu.Games.Network;
 namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("unlock", "Provides commands for unlock.")]
-    public class Unlock : CommandGroup
+    public class UnlockCommands : CommandGroup
     {
         [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
         [CommandInvokerType(CommandInvokerType.Client)]

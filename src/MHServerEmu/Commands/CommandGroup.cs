@@ -6,10 +6,12 @@ using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Commands
 {
+    [Flags]
     public enum CommandGroupFlags
     {
-        None        = 0,
-        IsSilent    = 1 << 0,   // Skips logging command group invocation
+        None                = 0,
+        SilentInvocation    = 1 << 0,   // Skips logging command group invocation
+        SingleCommand       = 1 << 1,   // Indicates that this command group contains only a single default command (for docs generation)
     }
 
     /// <summary>
@@ -22,7 +24,9 @@ namespace MHServerEmu.Commands
         private readonly HashSet<CommandDefinition> _commands = new();
 
         public CommandGroupDefinition GroupDefinition { get; private set; }
-        public bool IsSilent { get => GroupDefinition.Flags.HasFlag(CommandGroupFlags.IsSilent); }
+        public bool IsSilent { get => GroupDefinition.Flags.HasFlag(CommandGroupFlags.SilentInvocation); }
+
+        public IEnumerable<CommandDefinition> CommandDefinitions { get => _commands; }    // This is used only to generate docs, so it's fine to have it as IEnumerable
 
         /// <summary>
         /// Registers the <see cref="CommandGroupAttribute"/> and all commands for this <see cref="CommandGroup"/>.

@@ -11,6 +11,7 @@ using MHServerEmu.Games.Powers;
 namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("tower", "Changes region to Avengers Tower (original).")]
+    [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class TowerCommand : CommandGroup
     {
         [DefaultCommand]
@@ -28,6 +29,7 @@ namespace MHServerEmu.Commands.Implementations
 
     [CommandGroup("jail", "Travel to East Side: Detention Facility (old).")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
+    [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class JailCommand : CommandGroup
     {
         [DefaultCommand]
@@ -44,6 +46,7 @@ namespace MHServerEmu.Commands.Implementations
     }
 
     [CommandGroup("position", "Shows current position.")]
+    [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class PositionCommand : CommandGroup
     {
         [DefaultCommand]
@@ -58,6 +61,7 @@ namespace MHServerEmu.Commands.Implementations
     }
 
     [CommandGroup("dance", "Performs the Dance emote")]
+    [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class DanceCommand : CommandGroup
     {
         [DefaultCommand]
@@ -102,6 +106,7 @@ namespace MHServerEmu.Commands.Implementations
 
     [CommandGroup("tp", "Teleports to position.\nUsage:\ntp x:+1000 (relative to current position)\ntp x100 y500 z10 (absolute position)")]
     [CommandGroupUserLevel(AccountUserLevel.Admin)]
+    [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
     public class TeleportCommand : CommandGroup
     {
         [DefaultCommand]

@@ -145,7 +145,7 @@ namespace MHServerEmu.Commands
         // Help command groups are inside CommandManager so that they can access _commandGroupDict
 
         [CommandGroup("commands", "Lists available commands.")]
-        [CommandGroupFlags(CommandGroupFlags.IsSilent)]
+        [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class CommandsCommandGroup : CommandGroup
         {
             public override string Fallback(string[] @params = null, NetClient client = null)
@@ -172,7 +172,7 @@ namespace MHServerEmu.Commands
         }
 
         [CommandGroup("help", "Help needs no help.")]
-        [CommandGroupFlags(CommandGroupFlags.IsSilent)]
+        [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class HelpCommandGroup : CommandGroup
         {
             public override string Fallback(string[] @params = null, NetClient client = null)
@@ -196,6 +196,19 @@ namespace MHServerEmu.Commands
                     return commandGroup.GroupDefinition.Help;
                 else
                     return commandGroup.GetHelp(command);
+            }
+        }
+
+        [CommandGroup("generatecommanddocs", "Generates markdown documentation for all registered command groups.")]
+        [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
+        public class GenerateCommandDocsCommandGroup : CommandGroup
+        {
+            [DefaultCommand]
+            [CommandInvokerType(CommandInvokerType.ServerConsole)]
+            public string GenerateCommandDocs(string[] @params, NetClient client)
+            {
+                CommandDocsGenerator.GenerateDocs(Instance._commandGroupDict.Values, "ServerCommands.md");
+                return string.Empty;
             }
         }
 

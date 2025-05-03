@@ -27,6 +27,7 @@ namespace MHServerEmu.Commands
         public string Name { get => _commandAttribute.Name; }
         public string Help { get => _commandAttribute.Help; }
         public bool IsDefaultCommand { get => _commandAttribute is DefaultCommandAttribute; }
+        public AccountUserLevel UserLevel { get => _userLevelAttribute.UserLevel; }
 
         public CommandDefinition(MethodInfo methodInfo)
         {
