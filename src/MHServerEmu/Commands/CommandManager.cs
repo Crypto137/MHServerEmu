@@ -11,7 +11,7 @@ namespace MHServerEmu.Commands
     /// </summary>
     public class CommandManager
     {
-        private const char CommandPrefix = '!';
+        internal const char CommandPrefix = '!';
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 

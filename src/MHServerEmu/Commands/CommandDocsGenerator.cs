@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Commands
@@ -14,6 +15,8 @@ namespace MHServerEmu.Commands
             using StreamWriter writer = new(outputPath);
 
             writer.WriteLine("# Server Commands");
+            writer.WriteLine();
+            writer.WriteLine($"This list was automatically generated on `{DateTime.UtcNow:yyyy.MM.dd HH:mm:ss} UTC` using server version `{AssemblyHelper.GetAssemblyInformationalVersion()}`.");
             writer.WriteLine();
             writer.WriteLine("To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.");
             writer.WriteLine();
@@ -34,20 +37,31 @@ namespace MHServerEmu.Commands
 
                 Logger.Info($"Adding {groupDefinition}...");
 
-                writer.WriteLine($"## {groupDefinition}");
+                const string CommandGroupSuffix = "Commands";
+
+                string sectionName = groupDefinition.ToString();
+                if (sectionName.EndsWith(CommandGroupSuffix))
+                    sectionName = sectionName[..^CommandGroupSuffix.Length];
+
+                writer.WriteLine($"## {sectionName}");
+                writer.WriteLine(groupDefinition.Help);
                 writer.WriteLine();
 
-                TableBuilder tableBuilder = new("Command", "Description", "User Level");
+                TableBuilder tableBuilder = new("Command", "Description", "User Level", "Invoker Type");
                 foreach (CommandDefinition commandDefinition in commandGroup.CommandDefinitions.OrderBy(commandDefinition => commandDefinition.Name))
                 {
                     if (commandDefinition.IsDefaultCommand)
                         continue;
 
-                    string name = $"!{groupDefinition.Name} {commandDefinition.Name}";
-                    string description = commandDefinition.Help;
+                    // Include usage string if the command has one
+                    string name = string.IsNullOrWhiteSpace(commandDefinition.Usage) == false
+                        ? $"{CommandManager.CommandPrefix}{commandDefinition.Usage}"
+                        : $"{CommandManager.CommandPrefix}{groupDefinition.Name} {commandDefinition.Name}";
+                    string description = commandDefinition.Description;
                     string userLevel = commandDefinition.UserLevel > 0 ? commandDefinition.UserLevel.ToString() : "Any";
+                    string invokerType = commandDefinition.InvokerType.ToString();
 
-                    tableBuilder.AddRow(name, description, userLevel);
+                    tableBuilder.AddRow(name, description, userLevel, invokerType);
                 }
 
                 writer.WriteLine(tableBuilder.ToMarkdown());
@@ -60,17 +74,18 @@ namespace MHServerEmu.Commands
                 writer.WriteLine($"## Misc");
                 writer.WriteLine();
 
-                TableBuilder tableBuilder = new("Command", "Description", "User Level");
+                TableBuilder tableBuilder = new("Command", "Description", "User Level", "Invoker Type");
                 foreach (CommandGroup commandGroup in singleCommandGroups)
                 {
                     CommandGroupDefinition groupDefinition = commandGroup.GroupDefinition;
                     CommandDefinition commandDefinition = commandGroup.CommandDefinitions.First();
 
-                    string name = $"!{groupDefinition.Name}";
+                    string name = $"{CommandManager.CommandPrefix}{groupDefinition.Name}";
                     string description = groupDefinition.Help;
                     string userLevel = commandDefinition.UserLevel > 0 ? commandDefinition.UserLevel.ToString() : "Any";
+                    string invokerType = commandDefinition.InvokerType.ToString();
 
-                    tableBuilder.AddRow(name, description, userLevel);
+                    tableBuilder.AddRow(name, description, userLevel, invokerType);
                 }
 
                 writer.WriteLine(tableBuilder.ToMarkdown());

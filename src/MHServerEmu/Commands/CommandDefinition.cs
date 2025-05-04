@@ -29,9 +29,12 @@ namespace MHServerEmu.Commands
         private string _help;
 
         public string Name { get => _commandAttribute.Name; }
+        public string Description { get => _descriptionAttribute.Description; }
+        public string Usage { get => _usageAttribute.Usage; }
         public string Help { get => GetHelpString(); }
         public bool IsDefaultCommand { get => _commandAttribute is DefaultCommandAttribute; }
         public AccountUserLevel UserLevel { get => _userLevelAttribute.UserLevel; }
+        public CommandInvokerType InvokerType { get => _invokerTypeAttribute.InvokerType; }
 
         public CommandDefinition(MethodInfo methodInfo)
         {
