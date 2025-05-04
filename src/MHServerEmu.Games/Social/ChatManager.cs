@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
@@ -25,6 +26,11 @@ namespace MHServerEmu.Games.Social
 
         public void HandleChat(Player player, NetMessageChat chat)
         {
+            // If we have a command parser, see if this is actually a command
+            if (ICommandParser.Instance?.TryParse(chat.TheMessage.Body, player.PlayerConnection) == true)
+                return;
+
+            // Handle as a normal chat message
             switch (chat.RoomType)
             {
                 case ChatRoomTypes.CHAT_ROOM_TYPE_SAY:

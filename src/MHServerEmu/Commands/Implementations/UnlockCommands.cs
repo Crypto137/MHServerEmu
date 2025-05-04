@@ -1,28 +1,28 @@
-﻿using Gazillion;
-using MHServerEmu.Commands.Attributes;
+﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("unlock", "Provides commands for unlock.", AccountUserLevel.User)]
-    public class Unlock : CommandGroup
+    [CommandGroup("unlock")]
+    [CommandGroupDescription("Commands for unlocking various things.")]
+    public class UnlockCommands : CommandGroup
     {
-        [Command("hero", "Unlocks the specified hero using Eternity Splinters.\nUsage: unlock hero [pattern]")]
-        public string Hero(string[] @params, FrontendClient client)
+        [Command("hero")]
+        [CommandDescription("Unlocks the specified hero using Eternity Splinters.")]
+        [CommandUsage("unlock hero [pattern]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Hero(string[] @params, NetClient client)
         {
             // This command is intentionally exposed to regular users to allow them to unlock F4 heroes.
             // Also because of this, we call it "hero" and not "avatar" to make it clearer.
 
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help unlock hero' to get help.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             PrototypeId avatarProtoRef = CommandHelper.FindPrototype((BlueprintId)GameDatabase.GlobalsPrototype.AvatarPrototype, @params[0], client);
@@ -38,12 +38,14 @@ namespace MHServerEmu.Commands.Implementations
             return $"Unlocked {avatarProtoRef.GetNameFormatted()}.";
         }
 
-        [Command("waypoints", "Unlock all waypoints.\nUsage: unlock waypoints", AccountUserLevel.Admin)]
-        public string Waypoints(string[] @params, FrontendClient client)
+        [Command("waypoints")]
+        [CommandDescription("Unlocks all waypoints.")]
+        [CommandUsage("unlock waypoints")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Waypoints(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             var player = playerConnection.Player;
 
             foreach (PrototypeId waypointRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<WaypointPrototype>(PrototypeIterateFlags.NoAbstract))
@@ -52,12 +54,14 @@ namespace MHServerEmu.Commands.Implementations
             return "Waypoints unlocked";
         }
 
-        [Command("chapters", "Unlock all chapters.\nUsage: unlock chapters")]
-        public string Chapters(string[] @params, FrontendClient client)
+        [Command("chapters")]
+        [CommandDescription("Unlocks all chapters.")]
+        [CommandUsage("unlock chapters")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Chapters(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             var player = playerConnection.Player;
 
             foreach (PrototypeId chapterRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<ChapterPrototype>(PrototypeIterateFlags.NoAbstract))

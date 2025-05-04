@@ -1,34 +1,36 @@
 ﻿using MHServerEmu.Commands.Attributes;
-using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
-using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData.Calligraphy;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Core.Collisions;
-using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Grouping;
-using MHServerEmu.Games;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("Entity", "Provides commands for Entity.")]
+    [CommandGroup("Entity")]
+    [CommandGroupDescription("Entity management commands.")]
     public class EntityCommands : CommandGroup
     {
-        [Command("dummy", "Spawn Agent instead of dummy.\nUsage: entity dummy [pattern]", AccountUserLevel.Admin)]
-        public string Dummy(string[] @params, FrontendClient client)
+        [Command("dummy")]
+        [CommandDescription("Replace the training room target dummy with the specified entity.")]
+        [CommandUsage("entity dummy [pattern]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Dummy(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity dummy' to get help.";
-
             PrototypeId agentRef = CommandHelper.FindPrototype(HardcodedBlueprints.Agent, @params[0], client);
             if (agentRef == PrototypeId.Invalid) return string.Empty;
             var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             var region = player.GetRegion();
@@ -53,57 +55,60 @@ namespace MHServerEmu.Commands.Implementations
         }
 
 
-        [Command("marker", "Displays information about the specified marker.\nUsage: entity marker [MarkerId]", AccountUserLevel.User)]
-        public string Marker(string[] @params, FrontendClient client)
+        [Command("marker")]
+        [CommandDescription("Displays information about the specified marker.")]
+        [CommandUsage("entity marker [MarkerId]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Marker(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity marker' to get help.";
-
             if (int.TryParse(@params[0], out int markerId) == false)
                 return $"Failed to parse MarkerId {@params[0]}";
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             var reservation = playerConnection.AOI.Region.SpawnMarkerRegistry.GetReservationByPid(markerId);
             if (reservation == null) return "No marker found.";
 
-            ChatHelper.SendMetagameMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
-            ChatHelper.SendMetagameMessageSplit(client, reservation.ToString(), false);
+            CommandHelper.SendMessage(client, $"Marker[{markerId}]: {GameDatabase.GetFormattedPrototypeName(reservation.MarkerRef)}");
+            CommandHelper.SendMessageSplit(client, reservation.ToString(), false);
             return string.Empty;
         }
 
 
-        [Command("info", "Displays information about the specified entity.\nUsage: entity info [EntityId]", AccountUserLevel.User)]
-        public string Info(string[] @params, FrontendClient client)
+        [Command("info")]
+        [CommandDescription("Displays information about the specified entity.")]
+        [CommandUsage("entity info [EntityId]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Info(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity info' to get help.";
-
             if (ulong.TryParse(@params[0], out ulong entityId) == false)
                 return $"Failed to parse EntityId {@params[0]}";
 
-            CommandHelper.TryGetGame(client, out Game game);
+            Game game = ((PlayerConnection)client).Game;
 
             var entity = game.EntityManager.GetEntity<Entity>(entityId);
             if (entity == null) return "No entity found.";
 
-            ChatHelper.SendMetagameMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
-            ChatHelper.SendMetagameMessageSplit(client, entity.Properties.ToString(), false);
+            CommandHelper.SendMessage(client, $"Entity[{entityId}]: {GameDatabase.GetFormattedPrototypeName(entity.PrototypeDataRef)}");
+            CommandHelper.SendMessageSplit(client, entity.Properties.ToString(), false);
             if (entity is WorldEntity worldEntity)
             {
-                ChatHelper.SendMetagameMessageSplit(client, worldEntity.Bounds.ToString(), false);
-                ChatHelper.SendMetagameMessageSplit(client, worldEntity.PowerCollectionToString(), false);
-                ChatHelper.SendMetagameMessageSplit(client, worldEntity.ConditionCollectionToString(), false);
+                CommandHelper.SendMessageSplit(client, worldEntity.Bounds.ToString(), false);
+                CommandHelper.SendMessageSplit(client, worldEntity.PowerCollectionToString(), false);
+                CommandHelper.SendMessageSplit(client, worldEntity.ConditionCollectionToString(), false);
             }
             return string.Empty;
         }
 
-        [Command("near", "Usage: entity near [radius]. Default radius 100.", AccountUserLevel.User)]
-        public string Near(string[] @params, FrontendClient client)
+        [Command("near")]
+        [CommandDescription("Displays all entities in a radius (default is 100).")]
+        [CommandUsage("entity near [radius]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Near(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             if ((@params.Length > 0 && int.TryParse(@params[0], out int radius)) == false)
@@ -134,24 +139,24 @@ namespace MHServerEmu.Commands.Implementations
             if (entities.Count == 0)
                 return "No objects found.";
 
-            ChatHelper.SendMetagameMessage(client, $"Found for R={radius}:");
-            ChatHelper.SendMetagameMessages(client, entities, false);
+            CommandHelper.SendMessage(client, $"Found for R={radius}:");
+            CommandHelper.SendMessages(client, entities, false);
             return string.Empty;
         }
 
-        [Command("isblocked", "Usage: entity isblocked [EntityId1] [EntityId2]", AccountUserLevel.User)]
-        public string IsBlocked(string[] @params, FrontendClient client)
+        [Command("isblocked")]
+        [CommandUsage("entity isblocked [EntityId1] [EntityId2]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(2)]
+        public string IsBlocked(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity isblocked' to get help.";
-
             if (ulong.TryParse(@params[0], out ulong entityId1) == false)
                 return $"Failed to parse EntityId1 {@params[0]}";
 
             if (ulong.TryParse(@params[1], out ulong entityId2) == false)
                 return $"Failed to parse EntityId2 {@params[1]}";
 
-            CommandHelper.TryGetGame(client, out Game game);
+            Game game = ((PlayerConnection)client).Game;
             var manager = game.EntityManager;
 
             var entity1 = manager.GetEntity<WorldEntity>(entityId1);
@@ -165,13 +170,15 @@ namespace MHServerEmu.Commands.Implementations
             return $"Entities\n [{entity1.PrototypeName}]\n [{entity2.PrototypeName}]\nIsBlocked: {isBlocked}";
         }
 
-        [Command("tp", "Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).\nUsage:\nentity tp modok", AccountUserLevel.Admin)]
-        public string Tp(string[] @params, FrontendClient client)
+        [Command("tp")]
+        [CommandDescription("Teleports to the first entity present in the region which prototype name contains the string given (ignore the case).")]
+        [CommandUsage("entity tp [pattern]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Tp(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity tp' to get help.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
             if (avatar == null || avatar.IsInWorld == false)
                 return "Avatar not found.";
@@ -191,14 +198,18 @@ namespace MHServerEmu.Commands.Implementations
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
 
-        [Command("create", "create entity near the avatar based on pattern (ignore the case) and count (default 1).\nUsage:\nentity create bosses/venom 2", AccountUserLevel.Admin)]
-        public string Create(string[] @params, FrontendClient client)
+        [Command("create")]
+        [CommandDescription("Create entity near the avatar based on pattern (ignore the case) and count (default 1).")]
+        [CommandUsage("entity create [pattern] [count]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Create(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help entity create' to get help.";
-            
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
-            if(game == null)
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Game game = playerConnection.Game;
+
+            if (game == null)
                 return "Game not found.";
 
             Avatar avatar = playerConnection.Player.CurrentAvatar;

@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.MTXStore;
@@ -10,17 +10,19 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("store", "Commands for interacting with the in-game store.", AccountUserLevel.User)]
+    [CommandGroup("store")]
+    [CommandGroupDescription("Commands for interacting with the in-game store.")]
     public class StoreCommands : CommandGroup
     {
-        [Command("convertes", "Converts 100 Eternity Splinters to the equivalent amount of Gs.\nUsage: store convertes", AccountUserLevel.User)]
-        public string ConvertES(string[] @params, FrontendClient client)
+        [Command("convertes")]
+        [CommandDescription("Converts 100 Eternity Splinters to the equivalent amount of Gs.")]
+        [CommandUsage("store convertes")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string ConvertES(string[] @params, NetClient client)
         {
             const int NumConverted = 100;
 
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             PropertyId esPropId = new(PropertyEnum.Currency, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters);
@@ -42,16 +44,18 @@ namespace MHServerEmu.Commands.Implementations
             return $"Converted {NumConverted} Eternity Splinters to {gAmount} Gs.";
         }
 
-        [Command("addg", "Adds the specified number of Gs to this account.\nUsage: store addg [amount]", AccountUserLevel.Admin)]
-        public string AddG(string[] @params, FrontendClient client)
+        [Command("addg")]
+        [CommandDescription("Adds the specified number of Gs to this account.")]
+        [CommandUsage("store addg [amount]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string AddG(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help store addg' to get help.";
-
             if (long.TryParse(@params[0], out long amount) == false)
                 return $"Failed to parse argument {@params[0]}.";
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             if (player.AcquireGazillionite(amount) == false)

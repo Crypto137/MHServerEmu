@@ -1,19 +1,21 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Achievements;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("achievement", "Manages achievements.", AccountUserLevel.Admin)]
+    [CommandGroup("achievement")]
+    [CommandGroupDescription("Commands related to the achievement system.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class AchievementCommands : CommandGroup
     {
-        [Command("info", "Outputs info for the specified achievement.\nUsage: achievement info [id]")]
-        public string Info(string[] @params, FrontendClient client)
+        [Command("info")]
+        [CommandDescription("Outputs info for the specified achievement.")]
+        [CommandUsage("achievement info [id]")]
+        [CommandParamCount(1)]
+        public string Info(string[] @params, NetClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help achievement unlock' to get help.";
-
             if (uint.TryParse(@params[0], out uint id) == false)
                 return "Failed to parse achievement id.";
 
@@ -27,8 +29,8 @@ namespace MHServerEmu.Commands.Implementations
                 return info.ToString();
 
             // Output as a list of chat messages if the command was invoked from the in-game chat.
-            ChatHelper.SendMetagameMessage(client, "Achievement Info:");
-            ChatHelper.SendMetagameMessageSplit(client, info.ToString(), false);
+            CommandHelper.SendMessage(client, "Achievement Info:");
+            CommandHelper.SendMessageSplit(client, info.ToString(), false);
             return string.Empty;
         }
     }

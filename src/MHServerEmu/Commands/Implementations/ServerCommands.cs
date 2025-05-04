@@ -4,19 +4,20 @@ using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData.LiveTuning;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("server", "Allows you to interact with the server.", AccountUserLevel.User)]
+    [CommandGroup("server")]
+    [CommandGroupDescription("Server management commands.")]
     public class ServerCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("status", "Usage: server status", AccountUserLevel.User)]
-        public string Status(string[] @params, FrontendClient client)
+        [Command("status")]
+        [CommandDescription("Prints server status.")]
+        [CommandUsage("server status")]
+        public string Status(string[] @params, NetClient client)
         {
             StringBuilder sb = new();
             sb.AppendLine("Server Status");
@@ -29,15 +30,17 @@ namespace MHServerEmu.Commands.Implementations
                 return status;
 
             // Split for the client chat window
-            ChatHelper.SendMetagameMessageSplit(client, status, false);
+            CommandHelper.SendMessageSplit(client, status, false);
             return string.Empty;
         }
 
-        [Command("broadcast", "Broadcasts a notification to all players.\nUsage: server broadcast", AccountUserLevel.Admin)]
-        public string Broadcast(string[] @params, FrontendClient client)
+        [Command("broadcast")]
+        [CommandDescription("Broadcasts a notification to all players.")]
+        [CommandUsage("server broadcast")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(1)]
+        public string Broadcast(string[] @params, NetClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help server broadcast' to get help.";
-
             var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IMessageBroadcaster;
             if (groupingManager == null) return "Failed to connect to the grouping manager.";
 
@@ -49,16 +52,22 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("reloadlivetuning", "Reloads live tuning settings.\nUsage: server reloadlivetuning", AccountUserLevel.Admin)]
-        public string ReloadLiveTuning(string[] @params, FrontendClient client)
+        [Command("reloadlivetuning")]
+        [CommandDescription("Reloads live tuning settings.")]
+        [CommandUsage("server reloadlivetuning")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.ServerConsole)]
+        public string ReloadLiveTuning(string[] @params, NetClient client)
         {
-            if (client != null) return "You can only invoke this command from the server console.";
             LiveTuningManager.Instance.LoadLiveTuningDataFromDisk();
             return string.Empty;
         }
 
-        [Command("shutdown", "Usage: server shutdown", AccountUserLevel.Admin)]
-        public string Shutdown(string[] @params, FrontendClient client)
+        [Command("shutdown")]
+        [CommandDescription("Shuts the server down.")]
+        [CommandUsage("server shutdown")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        public string Shutdown(string[] @params, NetClient client)
         {
             string shutdownRequester = client == null ? "the server console" : client.ToString();
             Logger.Info($"Server shutdown request received from {shutdownRequester}");

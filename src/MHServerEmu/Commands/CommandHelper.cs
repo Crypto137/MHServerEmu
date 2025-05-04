@@ -1,10 +1,8 @@
 ﻿using MHServerEmu.Core.Network;
-using MHServerEmu.Frontend;
-using MHServerEmu.Games;
+using MHServerEmu.DatabaseAccess;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Grouping;
-using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands
 {
@@ -14,51 +12,58 @@ namespace MHServerEmu.Commands
     public static class CommandHelper
     {
         /// <summary>
-        /// Retrieves the current <see cref="Game"/> instance for the provided <see cref="FrontendClient."/>
-        /// Return <see langword="true"/> if successful.
+        /// Returns the <see cref="DBAccount"/> bound to the provided <see cref="NetClient"/>.
         /// </summary>
-        public static bool TryGetGame(FrontendClient client, out Game game)
+        public static DBAccount GetClientAccount(NetClient client)
         {
-            game = null;
+            if (client == null)
+                return null;
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
-            if (playerManager == null) return false;
+            if (client.FrontendClient is not IDBAccountOwner accountOwner)
+                return null;
 
-            game = playerManager.GetGameByPlayer(client);
-            return game != null;
+            return accountOwner.Account;
+        }
+
+        // Wrap ChatHelper calls here to replace them with ChatManager later
+
+        /// <summary>
+        /// Sends the specified text as a metagame chat message to the provided <see cref="NetClient"/>.
+        /// </summary>
+        /// <remarks>
+        /// The in-game chat window does not handle well messages longer than 25-30 lines (~40 characters per line).
+        /// If you need to send a long message, use SendMetagameMessages() or SendMetagameMessageSplit().
+        /// </remarks>
+        public static void SendMessage(NetClient client, string text, bool showSender = true)
+        {
+            ChatHelper.SendMetagameMessage(client.FrontendClient, text, showSender);
         }
 
         /// <summary>
-        /// Retrieves the current <see cref="PlayerConnection"/> and <see cref="Game"/> instances for the provided <see cref="FrontendClient."/>
-        /// Return <see langword="true"/> if successful.
+        /// Sends the specified collection of texts as metagame chat messages to the provided <see cref="NetClient"/>.
         /// </summary>
-        public static bool TryGetPlayerConnection(FrontendClient client, out PlayerConnection playerConnection, out Game game)
+        public static void SendMessages(NetClient client, IEnumerable<string> texts, bool showSender = true)
         {
-            playerConnection = null;
-
-            if (TryGetGame(client, out game) == false)
-                return false;
-
-            playerConnection = game.NetworkManager.GetNetClient(client);
-            return playerConnection != null;
+            ChatHelper.SendMetagameMessages(client.FrontendClient, texts, showSender);
         }
 
         /// <summary>
-        /// Retrieves the current <see cref="PlayerConnection"/> instance for the provided <see cref="FrontendClient."/>
-        /// Return <see langword="true"/> if successful.
+        /// Splits the specified text at line breaks and sends it as a collection of metagame chat messages to the provided <see cref="NetClient"/>.
         /// </summary>
-        public static bool TryGetPlayerConnection(FrontendClient client, out PlayerConnection playerConnection)
+        public static void SendMessageSplit(NetClient client, string text, bool showSender = true)
         {
-            return TryGetPlayerConnection(client, out playerConnection, out _);
+            ChatHelper.SendMetagameMessageSplit(client.FrontendClient, text, showSender);
         }
 
         /// <summary>
         /// Searches for a <see cref="PrototypeId"/> that matches the specified <see cref="BlueprintId"/> and <see cref="string"/> pattern.
         /// Returns <see cref="PrototypeId.Invalid"/> if no or more than one match is found.
         /// </summary>
-        public static PrototypeId FindPrototype(BlueprintId blueprintRef, string pattern, FrontendClient client)
+        public static PrototypeId FindPrototype(BlueprintId blueprintRef, string pattern, NetClient client)
         {
             const int MaxMatches = 10;
+
+            IFrontendClient frontendClient = client.FrontendClient;
 
             IEnumerable<PrototypeId> matches = GameDatabase.SearchPrototypes(pattern,
                 DataFileSearchFlags.SortMatchesByName | DataFileSearchFlags.CaseInsensitive, blueprintRef);
@@ -66,7 +71,7 @@ namespace MHServerEmu.Commands
             // Not enough
             if (matches.Any() == false)
             {
-                ChatHelper.SendMetagameMessage(client, $"Failed to find any {((PrototypeId)blueprintRef).GetNameFormatted()} prototypes containing {pattern}.");
+                ChatHelper.SendMetagameMessage(frontendClient, $"Failed to find any {((PrototypeId)blueprintRef).GetNameFormatted()} prototypes containing {pattern}.");
                 return PrototypeId.Invalid;
             }
 
@@ -78,13 +83,13 @@ namespace MHServerEmu.Commands
 
                 if (numMatches <= MaxMatches)
                 {
-                    ChatHelper.SendMetagameMessage(client, $"Found multiple matches for {pattern}:");
-                    ChatHelper.SendMetagameMessages(client, matchNames, false);
+                    ChatHelper.SendMetagameMessage(frontendClient, $"Found multiple matches for {pattern}:");
+                    ChatHelper.SendMetagameMessages(frontendClient, matchNames, false);
                 }
                 else
                 {
-                    ChatHelper.SendMetagameMessage(client, $"Found over {MaxMatches} matches for {pattern}, here are the first {MaxMatches}:");
-                    ChatHelper.SendMetagameMessages(client, matchNames.Take(MaxMatches), false);
+                    ChatHelper.SendMetagameMessage(frontendClient, $"Found over {MaxMatches} matches for {pattern}, here are the first {MaxMatches}:");
+                    ChatHelper.SendMetagameMessages(frontendClient, matchNames.Take(MaxMatches), false);
                 }
 
                 return PrototypeId.Invalid;

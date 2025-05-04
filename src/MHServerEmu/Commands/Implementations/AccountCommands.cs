@@ -3,74 +3,86 @@ using System.Text.Json;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
-using MHServerEmu.Grouping;
+using MHServerEmu.Games.Network;
 using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("account", "Allows you to manage accounts.", AccountUserLevel.User)]
+    [CommandGroup("account")]
+    [CommandGroupDescription("Account management commands.")]
     public class AccountCommands : CommandGroup
     {
-        [Command("create", "Creates a new account.\nUsage: account create [email] [playerName] [password]", AccountUserLevel.User)]
-        public string Create(string[] @params, FrontendClient client)
+        [Command("create")]
+        [CommandDescription("Creates a new account.")]
+        [CommandUsage("account create [email] [playerName] [password]")]
+        [CommandParamCount(3)]
+        public string Create(string[] @params, NetClient client)
         {
-            if (@params.Length < 3) return "Invalid arguments. Type 'help account create' to get help.";
-
             (bool, string) result = AccountManager.CreateAccount(@params[0].ToLower(), @params[1], @params[2]);
             return result.Item2;
         }
 
-        [Command("playername", "Changes player name for the specified account.\nUsage: account playername [email] [playername]", AccountUserLevel.User)]
-        public string PlayerName(string[] @params, FrontendClient client)
+        [Command("playername")]
+        [CommandDescription("Changes player name for the specified account.")]
+        [CommandUsage("account playername [email] [playername]")]
+        [CommandParamCount(2)]
+        public string PlayerName(string[] @params, NetClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account playername' to get help.";
-
             string email = @params[0].ToLower();
+            DBAccount account = CommandHelper.GetClientAccount(client);
 
-            if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
+            if (client != null && account.UserLevel < AccountUserLevel.Moderator && email != account.Email)
                 return "You are allowed to change player name only for your own account.";
 
             (bool, string) result = AccountManager.ChangeAccountPlayerName(email, @params[1]);
             return result.Item2;
         }
 
-        [Command("password", "Changes password for the specified account.\nUsage: account password [email] [password]", AccountUserLevel.User)]
-        public string Password(string[] @params, FrontendClient client)
+        [Command("password")]
+        [CommandDescription("Changes password for the specified account.")]
+        [CommandUsage("account password [email] [password]")]
+        [CommandParamCount(2)]
+        public string Password(string[] @params, NetClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account password' to get help.";
-
             string email = @params[0].ToLower();
+            DBAccount account = CommandHelper.GetClientAccount(client);
 
-            if (client != null && client.Session.Account.UserLevel < AccountUserLevel.Moderator && email != client.Session.Account.Email)
+            if (client != null && account.UserLevel < AccountUserLevel.Moderator && email != account.Email)
                 return "You are allowed to change password only for your own account.";
 
             (bool, string) result = AccountManager.ChangeAccountPassword(email, @params[1]);
             return result.Item2;
         }
 
-        [Command("userlevel", "Changes user level for the specified account.\nUsage: account userlevel [email] [0|1|2]", AccountUserLevel.Admin)]
-        public string UserLevel(string[] @params, FrontendClient client)
+        [Command("userlevel")]
+        [CommandDescription("Changes user level for the specified account.")]
+        [CommandUsage("account userlevel [email] [0|1|2]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(2)]
+        public string UserLevel(string[] @params, NetClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account userlevel' to get help.";
+            if (uint.TryParse(@params[1], out uint userLevelValue) == false)
+                return "Failed to parse user level.";
 
-            if (byte.TryParse(@params[1], out byte userLevel) == false)
-                return "Failed to parse user level";
+            AccountUserLevel userLevel = (AccountUserLevel)userLevelValue;
 
-            if (userLevel > 2)
+            if (userLevel > AccountUserLevel.Admin)
                 return "Invalid arguments. Type 'help account userlevel' to get help.";
 
-            (bool, string) result = AccountManager.SetAccountUserLevel(@params[0].ToLower(), (AccountUserLevel)userLevel);
+            (bool, string) result = AccountManager.SetAccountUserLevel(@params[0].ToLower(), userLevel);
             return result.Item2;
         }
 
-        [Command("verify", "Checks if an email/password combination is valid.\nUsage: account verify [email] [password]", AccountUserLevel.Admin)]
-        public string Verify(string[] @params, FrontendClient client)
+        [Command("verify")]
+        [CommandDescription("Checks if an email/password combination is valid.")]
+        [CommandUsage("account verify [email] [password]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(2)]
+        public string Verify(string[] @params, NetClient client)
         {
-            if (@params.Length < 2) return "Invalid arguments. Type 'help account verify' to get help.";
-
             var loginDataPB = LoginDataPB.CreateBuilder().SetEmailAddress(@params[0].ToLower()).SetPassword(@params[1]).Build();
             AuthStatusCode statusCode = AccountManager.TryGetAccountByLoginDataPB(loginDataPB, out _);
 
@@ -80,53 +92,62 @@ namespace MHServerEmu.Commands.Implementations
                 return $"Account credentials are NOT valid: {statusCode}!";
         }
 
-        [Command("ban", "Bans the specified account.\nUsage: account ban [email]", AccountUserLevel.Moderator)]
-        public string Ban(string[] @params, FrontendClient client)
+        [Command("ban")]
+        [CommandDescription("Bans the specified account.")]
+        [CommandUsage("account ban [email]")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandParamCount(1)]
+        public string Ban(string[] @params, NetClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help account ban' to get help.";
-
             (_, string message) = AccountManager.SetFlag(@params[0].ToLower(), AccountFlags.IsBanned);
             return message;
         }
 
-        [Command("unban", "Unbans the specified account.\nUsage: account unban [email]", AccountUserLevel.Moderator)]
-        public string Unban(string[] @params, FrontendClient client)
+        [Command("unban")]
+        [CommandDescription("Unbans the specified account.")]
+        [CommandUsage("account unban [email]")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandParamCount(1)]
+        public string Unban(string[] @params, NetClient client)
         {
-            if (@params.Length == 0) return "Invalid arguments. Type 'help account unban' to get help.";
-
             (_, string message) = AccountManager.ClearFlag(@params[0].ToLower(), AccountFlags.IsBanned);
             return message;
         }
 
-        [Command("info", "Shows information for the logged in account.\nUsage: account info", AccountUserLevel.User)]
-        public string Info(string[] @params, FrontendClient client)
+        [Command("info")]
+        [CommandDescription("Shows information for the logged in account.")]
+        [CommandUsage("account info")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Info(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
+            DBAccount account = CommandHelper.GetClientAccount(client);
 
             StringBuilder sb = new();
             sb.AppendLine($"Account Info:");
-            sb.AppendLine($"Id: 0x{client.Session.Account.Id:X}");
-            sb.AppendLine($"Email: {client.Session.Account.Email}");
-            sb.AppendLine($"PlayerName: {client.Session.Account.PlayerName}");
-            sb.AppendLine($"UserLevel: {client.Session.Account.UserLevel}");
-            sb.AppendLine($"Flags: {client.Session.Account.Flags}");
+            sb.AppendLine($"Id: 0x{account.Id:X}");
+            sb.AppendLine($"Email: {account.Email}");
+            sb.AppendLine($"PlayerName: {account.PlayerName}");
+            sb.AppendLine($"UserLevel: {account.UserLevel}");
+            sb.AppendLine($"Flags: {account.Flags}");
 
-            ChatHelper.SendMetagameMessageSplit(client, sb.ToString());
+            CommandHelper.SendMessageSplit(client, sb.ToString());
             return string.Empty;
         }
 
-        [Command("download", "Downloads a JSON copy of the current account.\nUsage: account download", AccountUserLevel.User)]
-        public string Download(string[] @params, FrontendClient client)
+        [Command("download")]
+        [CommandDescription("Downloads a JSON copy of the current account.")]
+        [CommandUsage("account download")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Download(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            DBAccount account = client.Session.Account;
+            DBAccount account = CommandHelper.GetClientAccount(client);
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             JsonSerializerOptions options = new();
             options.Converters.Add(new DBEntityCollectionJsonConverter());
             string json = JsonSerializer.Serialize(account, options);
 
-            client.SendMessage(1, NetMessageAdminCommandResponse.CreateBuilder()
+            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
                 .SetResponse($"Downloaded account data for {account}")
                 .SetFilerelativepath($"Download/0x{account.Id:X}_{account.PlayerName}_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.json")
                 .SetFilecontents(json)

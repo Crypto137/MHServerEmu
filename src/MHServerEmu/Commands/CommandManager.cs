@@ -2,7 +2,7 @@
 using System.Text;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Frontend;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Commands
 {
@@ -11,11 +11,11 @@ namespace MHServerEmu.Commands
     /// </summary>
     public class CommandManager
     {
-        private const char CommandPrefix = '!';
+        internal const char CommandPrefix = '!';
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<CommandGroupAttribute, CommandGroup> _commandGroupDict = new();
+        private readonly Dictionary<string, CommandGroup> _commandGroupDict = new();
         private IClientOutput _clientOutput;
 
         public static CommandManager Instance { get; } = new();
@@ -25,23 +25,30 @@ namespace MHServerEmu.Commands
         /// </summary>
         private CommandManager()
         {
+            RegisterCommandGroupsFromAssembly(Assembly.GetExecutingAssembly());
+        }
+
+        /// <summary>
+        /// Registers all <see cref="CommandGroup"/> classes in the provided <see cref="Assembly"/>.
+        /// </summary>
+        public void RegisterCommandGroupsFromAssembly(Assembly assembly)
+        {
             // Find and register command group classes using reflection
-            foreach (Type type in Assembly.GetExecutingAssembly().GetTypes())
+            foreach (Type type in assembly.GetTypes())
             {
-                // TODO: If we ever move the command system to Core, move command group registration to a separate method.
+                if (type.IsSubclassOf(typeof(CommandGroup)) == false)
+                    continue;
 
-                if (type.IsSubclassOf(typeof(CommandGroup)) == false) continue;
+                if (type.IsDefined(typeof(CommandGroupAttribute), true) == false)
+                    continue;
 
-                CommandGroupAttribute[] attributes = (CommandGroupAttribute[])type.GetCustomAttributes(typeof(CommandGroupAttribute), true);
-                if (attributes.Length == 0) continue;
+                CommandGroupDefinition groupDefinition = new(type);
+                if (_commandGroupDict.ContainsKey(groupDefinition.Name))
+                    Logger.Warn($"RegisterCommandGroupsFromAssembly(): Command group {groupDefinition} is already registered");
 
-                CommandGroupAttribute groupAttribute = attributes[0];
-                if (_commandGroupDict.ContainsKey(groupAttribute))
-                    Logger.Warn($"Command group {groupAttribute} is already registered");
-
-                var commandGroup = (CommandGroup)Activator.CreateInstance(type);
-                commandGroup.Register(groupAttribute);
-                _commandGroupDict.Add(groupAttribute, commandGroup);
+                CommandGroup commandGroup = (CommandGroup)Activator.CreateInstance(type);
+                commandGroup.Register(groupDefinition);
+                _commandGroupDict.Add(groupDefinition.Name, commandGroup);
             }
         }
 
@@ -54,60 +61,24 @@ namespace MHServerEmu.Commands
         }
 
         /// <summary>
-        /// Parses a command from the provided input.
+        /// Tries to parse the provided <see cref="string"/> input as a command.
         /// </summary>
-        public void Parse(string input)
+        public bool TryParse(string input, NetClient client = null)
         {
-            string output = string.Empty;
-            string command;
-            string parameters;
-            bool found = false;
-
-            if (input == null || input.Trim() == string.Empty) return;
-
-            if (ExtractCommandAndParameters(input, out command, out parameters) == false)
+            // Extract the command and its parameters from our input string
+            if (ExtractCommandAndParameters(input, out string command, out string parameters) == false)
             {
-                output = $"Unknown command {input}";
-                Logger.Info(output);
-                return;
+                if (client == null)
+                    Logger.Info($"Unknown command {input}");
+
+                return false;
             }
 
-            foreach (var kvp in _commandGroupDict)
-            {
-                if (kvp.Key.Name != command) continue;
-                output = kvp.Value.Handle(parameters);
-                found = true;
-                break;
-            }
+            // Try to invoke the specified command
+            string output = InvokeCommand(command, parameters, client);
 
-            if (found == false) output = $"Unknown command: {command} {parameters}";
-            if (output != string.Empty) Logger.Info(output);
-        }
-
-        /// <summary>
-        /// Tries to parse the provided <see cref="FrontendClient"/> input as a command.
-        /// </summary>
-        public bool TryParse(string input, FrontendClient client)
-        {
-            string output = string.Empty;
-            string command;
-            string parameters;
-            bool found = false;
-
-            if (ExtractCommandAndParameters(input, out command, out parameters) == false) return false;
-
-            foreach (var kvp in _commandGroupDict)
-            {
-                if (kvp.Key.Name != command) continue;
-                output = kvp.Value.Handle(parameters, client);
-                found = true;
-                break;
-            }
-
-            if (found == false) output = $"Unknown command: {command} {parameters}";
-            if (output == string.Empty) return true;
-
-            if (client != null) SendClientResponse(output, client);
+            // Output the result of this command invocation
+            OutputCommandResult(output, client);
 
             return true;
         }
@@ -116,53 +87,80 @@ namespace MHServerEmu.Commands
         /// Extracts the command and its parameters (if any) from the provided input <see cref="string"/>.
         /// Returns <see langword="true"/> if successful.
         /// </summary>
-        private bool ExtractCommandAndParameters(string input, out string command, out string parameters)
+        private static bool ExtractCommandAndParameters(string input, out string command, out string parameters)
         {
-            input = input.Trim();
             command = string.Empty;
             parameters = string.Empty;
 
+            input = input.Trim();
+
             // Only input that starts with our command prefix char followed by something else can be a command
-            if (input.Length < 2 || input[0] != CommandPrefix) return false;
+            if (input.Length < 2 || input[0] != CommandPrefix)
+                return false;
 
-            // Remove the prefix
-            input = input.Substring(1);
+            int whiteSpaceIndex = input.IndexOf(' ');
 
-            // Get the command
-            command = input.Split(' ')[0].ToLower();
+            // Get the command.
+            // The command ends at the first occurrence of white space or the end of the input string.
+            int commandLength = whiteSpaceIndex >= 0 ? whiteSpaceIndex - 1 : input.Length - 1;
+            command = input.Substring(1, commandLength).ToLower();
 
             // Get parameters after the first space (if there are any)
-            if (input.Contains(' '))
-                parameters = input.Substring(input.IndexOf(' ') + 1).Trim();
+            if (whiteSpaceIndex >= 0)
+                parameters = input.Substring(whiteSpaceIndex + 1);
 
             return true;
         }
 
         /// <summary>
-        /// Sends a response to the specified <see cref="FrontendClient"/> using the registered <see cref="IClientOutput"/>.
+        /// Invokes the specified command.
         /// </summary>
-        private void SendClientResponse(string output, FrontendClient client)
+        private string InvokeCommand(string command, string parameters, NetClient client)
         {
-            _clientOutput?.Output(output, client);
+            if (_commandGroupDict.TryGetValue(command, out CommandGroup commandGroup) == false)
+                return $"Unknown command: {command} {parameters}";
+
+            if (commandGroup.IsSilent == false)
+                Logger.Info($"Command invoked: invoker=[{(client != null ? client : "ServerConsole")}], command=[{command}], parameters=[{parameters}]");
+            
+            return commandGroup.Handle(parameters, client);
+        }
+
+        /// <summary>
+        /// Outputs the result of a command invocation to the server console or the provided invoker <see cref="NetClient"/>.
+        /// </summary>
+        private void OutputCommandResult(string output, NetClient client)
+        {
+            if (string.IsNullOrWhiteSpace(output))
+                return;
+
+            if (client != null)
+                _clientOutput?.Output(output, client);
+            else
+                Logger.Info(output);
         }
 
         #region Help Command Groups
 
         // Help command groups are inside CommandManager so that they can access _commandGroupDict
 
-        [CommandGroup("commands", "Lists available commands.")]
+        [CommandGroup("commands")]
+        [CommandGroupDescription("Lists available commands.")]
+        [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class CommandsCommandGroup : CommandGroup
         {
-            public override string Fallback(string[] @params = null, FrontendClient client = null)
+            public override string Fallback(string[] @params = null, NetClient client = null)
             {
                 StringBuilder sb = new("Available commands: ");
 
-                foreach (var kvp in Instance._commandGroupDict)
+                foreach (CommandGroup commandGroup in Instance._commandGroupDict.Values)
                 {
-                    // Skip commands that are not available for this account's user level
-                    if (client != null && kvp.Key.MinUserLevel > client.Session.Account.UserLevel) continue;
+                    CommandGroupDefinition groupDefinition = commandGroup.GroupDefinition;
 
-                    sb.Append($"{kvp.Key.Name}, ");
+                    if (groupDefinition.CanInvoke(client) != CommandCanInvokeResult.Success)
+                        continue;
+
+                    sb.Append($"{groupDefinition.Name}, ");
                 }
 
                 // Replace the last comma / space with a period
@@ -174,36 +172,46 @@ namespace MHServerEmu.Commands
             }
         }
 
-        [CommandGroup("help", "Help needs no help.")]
+        [CommandGroup("help")]
+        [CommandGroupDescription("Help needs no help.")]
+        [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
         public class HelpCommandGroup : CommandGroup
         {
-            public override string Fallback(string[] @params = null, FrontendClient client = null)
+            public override string Fallback(string[] @params = null, NetClient client = null)
             {
-                return "usage: help [command]"; ;
+                return "Usage: help [command]"; ;
             }
 
-            public override string Handle(string parameters, FrontendClient client = null)
+            public override string Handle(string parameters, NetClient client = null)
             {
-                if (parameters == string.Empty) return Fallback();
+                if (parameters == string.Empty)
+                    return Fallback();
 
-                string output = string.Empty;
-                bool found = false;
                 string[] @params = parameters.Split(' ');
                 string group = @params[0];
                 string command = @params.Length > 1 ? @params[1] : string.Empty;
 
-                foreach (var kvp in Instance._commandGroupDict)
-                {
-                    if (group != kvp.Key.Name) continue;
-                    if (command == string.Empty) return kvp.Key.Help;
+                if (Instance._commandGroupDict.TryGetValue(group, out CommandGroup commandGroup) == false)
+                    return $"Unknown command: {group} {command}";
 
-                    output = kvp.Value.GetHelp(command);
-                    found = true;
-                }
+                if (command == string.Empty)
+                    return commandGroup.GroupDefinition.Help;
+                else
+                    return commandGroup.GetHelp(command);
+            }
+        }
 
-                if (found == false) output = $"Unknown command: {group} {command}";
-
-                return output;
+        [CommandGroup("generatecommanddocs")]
+        [CommandGroupDescription("Generates markdown documentation for all registered command groups.")]
+        [CommandGroupFlags(CommandGroupFlags.SilentInvocation | CommandGroupFlags.SingleCommand)]
+        public class GenerateCommandDocsCommandGroup : CommandGroup
+        {
+            [DefaultCommand]
+            [CommandInvokerType(CommandInvokerType.ServerConsole)]
+            public string GenerateCommandDocs(string[] @params, NetClient client)
+            {
+                CommandDocsGenerator.GenerateDocs(Instance._commandGroupDict.Values, "ServerCommands.md");
+                return string.Empty;
             }
         }
 

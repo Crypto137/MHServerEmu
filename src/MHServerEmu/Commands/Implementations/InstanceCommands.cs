@@ -1,31 +1,30 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
-using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("instance", "Provides commands for managing private region instances.")]
+    [CommandGroup("instance")]
+    [CommandGroupDescription("Commands for managing  region instances.")]
     public class InstanceCommands : CommandGroup
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        [Command("list", "Lists private instances.\nUsage: instance list", AccountUserLevel.User)]
-        public string List(string[] @params, FrontendClient client)
+        [Command("list")]
+        [CommandDescription("Lists private instances.")]
+        [CommandUsage("instance list")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string List(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
-                return string.Empty;
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             RegionManager regionManager = playerConnection.Game.RegionManager;
 
-            ChatHelper.SendMetagameMessage(client, "Active Private Instances:");
+            CommandHelper.SendMessage(client, "Active Private Instances:");
 
             foreach (var kvp in playerConnection.WorldView)
             {
@@ -35,40 +34,40 @@ namespace MHServerEmu.Commands.Implementations
 
                 TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
 
-                ChatHelper.SendMetagameMessage(client, $"{kvp.Key.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
+                CommandHelper.SendMessage(client, $"{kvp.Key.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
             }
 
             return string.Empty;
         }
 
-        [Command("listall", "Lists all region instances in the current game.\nUsage: instance listall", AccountUserLevel.User)]
-        public string ListAll(string[] @params, FrontendClient client)
+        [Command("listall")]
+        [CommandDescription("Lists all region instances in the current game.")]
+        [CommandUsage("instance listall")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string ListAll(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
-                return string.Empty;
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             RegionManager regionManager = playerConnection.Game.RegionManager;
 
-            ChatHelper.SendMetagameMessage(client, "Active Instances:");
+            CommandHelper.SendMessage(client, "Active Instances:");
 
             foreach (Region region in regionManager)
             {
                 TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
-                ChatHelper.SendMetagameMessage(client, $"{region.PrototypeDataRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
+                CommandHelper.SendMessage(client, $"{region.PrototypeDataRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
             }
 
             return string.Empty;
         }
 
-        [Command("reset", "Resets private instances.\nUsage: instance reset", AccountUserLevel.User)]
-        public string Reset(string[] @params, FrontendClient client)
+        [Command("reset")]
+        [CommandDescription("Resets private instances.")]
+        [CommandUsage("instance reset")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Reset(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            if (CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection) == false)
-                return string.Empty;
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
             RegionManager regionManager = playerConnection.Game.RegionManager;
 

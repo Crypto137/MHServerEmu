@@ -1,7 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
-using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -10,19 +9,20 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
-using MHServerEmu.Grouping;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("player", "Changes player data for this account.", AccountUserLevel.User)]
+    [CommandGroup("player")]
+    [CommandGroupDescription("Commands for managing player data for the invoker's account.")]
     public class PlayerCommands : CommandGroup
     {
-        [Command("costume", "Changes costume for the current avatar.\nUsage: player costume [name|reset|default]", AccountUserLevel.User)]
-        public string Costume(string[] @params, FrontendClient client)
+        [Command("costume")]
+        [CommandDescription("Changes costume for the current avatar.")]
+        [CommandUsage("player costume [name|reset|default]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Costume(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player costume' to get help.";
-
             PrototypeId costumeProtoRef;
 
             switch (@params[0].ToLower())
@@ -43,8 +43,8 @@ namespace MHServerEmu.Commands.Implementations
 
                     if (matches.Count() > 1)
                     {
-                        ChatHelper.SendMetagameMessage(client, $"Found multiple matches for {@params[0]}:");
-                        ChatHelper.SendMetagameMessages(client, matches.Select(match => GameDatabase.GetPrototypeName(match)), false);
+                        CommandHelper.SendMessage(client, $"Found multiple matches for {@params[0]}:");
+                        CommandHelper.SendMessages(client, matches.Select(match => GameDatabase.GetPrototypeName(match)), false);
                         return string.Empty;
                     }
 
@@ -52,7 +52,7 @@ namespace MHServerEmu.Commands.Implementations
                     break;
             }
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection, out Game game);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             var player = playerConnection.Player;
             var avatar = player.CurrentAvatar;
 
@@ -64,12 +64,13 @@ namespace MHServerEmu.Commands.Implementations
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeProtoRef)}.";
         }
 
-        [Command("wipe", "Wipes all progress associated with the current account.\nUsage: player wipe [playerName]")]
-        public string Wipe(string[] @params, FrontendClient client)
+        [Command("wipe")]
+        [CommandDescription("Wipes all progress associated with the current account.")]
+        [CommandUsage("player wipe [playerName]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Wipe(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             string playerName = playerConnection.Player.GetName();
 
             if (@params.Length == 0)
@@ -82,16 +83,18 @@ namespace MHServerEmu.Commands.Implementations
             return string.Empty;
         }
 
-        [Command("givecurrency", "Gives all currencies.\nUsage: player givecurrency [amount]", AccountUserLevel.Admin)]
-        public string GiveCurrency(string[] @params, FrontendClient client)
+        [Command("givecurrency")]
+        [CommandDescription("Gives all currencies.")]
+        [CommandUsage("player givecurrency [amount]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string GiveCurrency(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help player givecurrency' to get help.";
-
             if (int.TryParse(@params[0], out int amount) == false)
                 return $"Failed to parse amount from {@params[0]}.";
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
             foreach (PrototypeId currencyProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<CurrencyPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
@@ -100,12 +103,13 @@ namespace MHServerEmu.Commands.Implementations
             return $"Successfully given {amount} of all currencies.";
         }
 
-        [Command("clearconditions", "Clears persistent conditions.\nUsage: player clearconditions")]
-        public string ClearConditions(string[] @params, FrontendClient client)
+        [Command("clearconditions")]
+        [CommandDescription("Clears persistent conditions.")]
+        [CommandUsage("player clearconditions")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string ClearConditions(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
             Avatar avatar = player.CurrentAvatar;
 

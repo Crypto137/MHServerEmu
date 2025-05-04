@@ -1,21 +1,24 @@
 ﻿using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("boost", "Provides commands for boost.", AccountUserLevel.Admin)]
+    [CommandGroup("boost")]
+    [CommandGroupDescription("Commands for boosting the stats of the invoker player's current avatar.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class BoostCommands : CommandGroup
     {
-        [Command("damage", "Increase Damage of current avatar.\nUsage: boost damage [1-10000]")]
-        public string Damage(string[] @params, FrontendClient client)
+        [Command("damage")]
+        [CommandDescription("Sets DamagePctBonus for the current avatar.")]
+        [CommandUsage("boost damage [1-10000]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Damage(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             if ((@params.Length > 0 && int.TryParse(@params[0], out int damage)) == false)
@@ -27,12 +30,13 @@ namespace MHServerEmu.Commands.Implementations
             return $"Damage x{damage}";
         }
 
-        [Command("vsboss", "Increase Damage vs Bosses of current avatar.\nUsage: boost vsboss [1-10000]")]
-        public string VsBoss(string[] @params, FrontendClient client)
+        [Command("vsboss")]
+        [CommandDescription("Sets DamagePctBonusVsBosses for the current avatar.")]
+        [CommandUsage("boost vsboss [1-10000]")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string VsBoss(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             if ((@params.Length > 0 && int.TryParse(@params[0], out int vsboss)) == false)

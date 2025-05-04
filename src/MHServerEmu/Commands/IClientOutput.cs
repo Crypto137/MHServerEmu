@@ -3,13 +3,13 @@
 namespace MHServerEmu.Commands
 {
     /// <summary>
-    /// Exposes <see cref="string"/> output for an <see cref="IFrontendClient"/>.
+    /// Exposes <see cref="string"/> output for an <see cref="NetClient"/>.
     /// </summary>
     public interface IClientOutput
     {
         /// <summary>
-        /// Outputs the provided <see cref="string"/> to the specified <see cref="IFrontendClient"/>.
+        /// Outputs the provided <see cref="string"/> to the specified <see cref="NetClient"/>.
         /// </summary>
-        public void Output(string output, IFrontendClient client);
+        public void Output(string output, NetClient client);
     }
 }
