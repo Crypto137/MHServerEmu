@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.05.04 08:53:07 UTC` using server version `0.6.0`.
+This list was automatically generated on `2025.05.04 09:08:02 UTC` using server version `0.6.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -116,8 +116,10 @@ Level management commands.
 | !level awardxp [amount] | Awards the specified amount of experience. | Admin      | Client        |
 | !level max              | Maxes out the current avatar's experience. | Admin      | Client        |
 | !level maxinfinity      | Maxes out Infinity experience.             | Admin      | Client        |
+| !level maxomega         | Maxes out Omega experience.                | Admin      | Client        |
 | !level reset            | Resets the current avatar to level 1.      | Admin      | Client        |
 | !level resetinfinity    | Removes all Infinity progression.          | Admin      | Client        |
+| !level resetomega       | Removes all Omega progression.             | Admin      | Client        |
 | !level up               | Levels up the current avatar.              | Admin      | Client        |
 
 ## Lookup

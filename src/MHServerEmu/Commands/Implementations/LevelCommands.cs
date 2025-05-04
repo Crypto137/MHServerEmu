@@ -73,6 +73,9 @@ namespace MHServerEmu.Commands.Implementations
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
+            if (player.Game.InfinitySystemEnabled == false)
+                return "Infinity system is disabled by server settings.";
+
             player.Properties[PropertyEnum.InfinityXP] = GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap;
             player.TryInfinityLevelUp(true);
 
@@ -88,6 +91,9 @@ namespace MHServerEmu.Commands.Implementations
             PlayerConnection playerConnection = (PlayerConnection)client;
             Player player = playerConnection.Player;
 
+            if (player.Game.InfinitySystemEnabled == false)
+                return "Infinity system is disabled by server settings.";
+
             // Force respec for all avatars
             foreach (Avatar avatar in new AvatarIterator(player))
                 avatar.RespecInfinity(InfinityGem.None);
@@ -96,6 +102,46 @@ namespace MHServerEmu.Commands.Implementations
             player.Properties[PropertyEnum.InfinityXP] = 0;
 
             return $"Infinity reset.";
+        }
+
+        [Command("maxomega")]
+        [CommandDescription("Maxes out Omega experience.")]
+        [CommandUsage("level maxomega")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string MaxOmega(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Player player = playerConnection.Player;
+
+            if (player.Game.InfinitySystemEnabled)
+                return "Omega system is disabled by server settings.";
+
+            player.Properties[PropertyEnum.OmegaXP] = GameDatabase.AdvancementGlobalsPrototype.InfinityXPCap;
+            player.TryOmegaLevelUp(true);
+
+            return $"Omega experience maxed out.";
+        }
+
+        [Command("resetomega")]
+        [CommandDescription("Removes all Omega progression.")]
+        [CommandUsage("level resetomega")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string ResetOmega(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Player player = playerConnection.Player;
+
+            if (player.Game.InfinitySystemEnabled)
+                return "Omega system is disabled by server settings.";
+
+            // Force respec for all avatars
+            foreach (Avatar avatar in new AvatarIterator(player))
+                avatar.RespecOmegaBonus();
+
+            player.Properties.RemovePropertyRange(PropertyEnum.OmegaPoints);
+            player.Properties[PropertyEnum.OmegaXP] = 0;
+
+            return $"Omega reset.";
         }
 
         [Command("awardxp")]
