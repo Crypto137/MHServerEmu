@@ -57,8 +57,14 @@ namespace MHServerEmu.Commands
                     string name = string.IsNullOrWhiteSpace(commandDefinition.Usage) == false
                         ? $"{CommandManager.CommandPrefix}{commandDefinition.Usage}"
                         : $"{CommandManager.CommandPrefix}{groupDefinition.Name} {commandDefinition.Name}";
+
                     string description = commandDefinition.Description;
-                    string userLevel = commandDefinition.UserLevel > 0 ? commandDefinition.UserLevel.ToString() : "Any";
+
+                    var userLevelValue = groupDefinition.UserLevel;
+                    if (commandDefinition.UserLevel > userLevelValue)
+                        userLevelValue = commandDefinition.UserLevel;
+                    string userLevel = userLevelValue > 0 ? userLevelValue.ToString() : "Any";
+
                     string invokerType = commandDefinition.InvokerType.ToString();
 
                     tableBuilder.AddRow(name, description, userLevel, invokerType);
@@ -81,8 +87,14 @@ namespace MHServerEmu.Commands
                     CommandDefinition commandDefinition = commandGroup.CommandDefinitions.First();
 
                     string name = $"{CommandManager.CommandPrefix}{groupDefinition.Name}";
+
                     string description = groupDefinition.Help;
-                    string userLevel = commandDefinition.UserLevel > 0 ? commandDefinition.UserLevel.ToString() : "Any";
+
+                    var userLevelValue = groupDefinition.UserLevel;
+                    if (commandDefinition.UserLevel > userLevelValue)
+                        userLevelValue = commandDefinition.UserLevel;
+                    string userLevel = userLevelValue > 0 ? userLevelValue.ToString() : "Any";
+
                     string invokerType = commandDefinition.InvokerType.ToString();
 
                     tableBuilder.AddRow(name, description, userLevel, invokerType);

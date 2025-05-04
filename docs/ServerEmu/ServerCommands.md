@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.05.04 08:46:49 UTC` using server version `0.6.0`.
+This list was automatically generated on `2025.05.04 08:53:07 UTC` using server version `0.6.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -24,7 +24,7 @@ Commands related to the achievement system.
 
 | Command                | Description                                 | User Level | Invoker Type  |
 | ---------------------- | ------------------------------------------- | ---------- | ------------  |
-| !achievement info [id] | Outputs info for the specified achievement. | Any        | Any           |
+| !achievement info [id] | Outputs info for the specified achievement. | Admin      | Any           |
 
 ## AOI
 Commands for interacting with the invoker player's area of interest (AOI).
@@ -41,8 +41,8 @@ Commands for boosting the stats of the invoker player's current avatar.
 
 | Command                 | Description                                         | User Level | Invoker Type  |
 | ----------------------- | --------------------------------------------------- | ---------- | ------------  |
-| !boost damage [1-10000] | Sets DamagePctBonus for the current avatar.         | Any        | Client        |
-| !boost vsboss [1-10000] | Sets DamagePctBonusVsBosses for the current avatar. | Any        | Client        |
+| !boost damage [1-10000] | Sets DamagePctBonus for the current avatar.         | Admin      | Client        |
+| !boost vsboss [1-10000] | Sets DamagePctBonusVsBosses for the current avatar. | Admin      | Client        |
 
 ## Client
 Commands for interacting with connected clients.
@@ -113,32 +113,32 @@ Level management commands.
 
 | Command                 | Description                                | User Level | Invoker Type  |
 | ----------------------- | ------------------------------------------ | ---------- | ------------  |
-| !level awardxp [amount] | Awards the specified amount of experience. | Any        | Client        |
-| !level max              | Maxes out the current avatar's experience. | Any        | Client        |
-| !level maxinfinity      | Maxes out Infinity experience.             | Any        | Client        |
-| !level reset            | Resets the current avatar to level 1.      | Any        | Client        |
-| !level resetinfinity    | Removes all Infinity progression.          | Any        | Client        |
-| !level up               | Levels up the current avatar.              | Any        | Client        |
+| !level awardxp [amount] | Awards the specified amount of experience. | Admin      | Client        |
+| !level max              | Maxes out the current avatar's experience. | Admin      | Client        |
+| !level maxinfinity      | Maxes out Infinity experience.             | Admin      | Client        |
+| !level reset            | Resets the current avatar to level 1.      | Admin      | Client        |
+| !level resetinfinity    | Removes all Infinity progression.          | Admin      | Client        |
+| !level up               | Levels up the current avatar.              | Admin      | Client        |
 
 ## Lookup
 Commands for searching data refs.
 
 | Command                     | Description                                         | User Level | Invoker Type  |
 | --------------------------- | --------------------------------------------------- | ---------- | ------------  |
-| !lookup asset [pattern]     | Searches assets.                                    | Any        | Any           |
-| !lookup assettype [pattern] | Searches asset types.                               | Any        | Any           |
-| !lookup blueprint [pattern] | Searches blueprints.                                | Any        | Any           |
-| !lookup costume [pattern]   | Searches prototypes that use the costume blueprint. | Any        | Any           |
-| !lookup item [pattern]      | Searches prototypes that use the item blueprint.    | Any        | Any           |
-| !lookup power [pattern]     | Searches prototypes that use the power blueprint.   | Any        | Any           |
-| !lookup region [pattern]    | Searches prototypes that use the region blueprint.  | Any        | Any           |
+| !lookup asset [pattern]     | Searches assets.                                    | Admin      | Any           |
+| !lookup assettype [pattern] | Searches asset types.                               | Admin      | Any           |
+| !lookup blueprint [pattern] | Searches blueprints.                                | Admin      | Any           |
+| !lookup costume [pattern]   | Searches prototypes that use the costume blueprint. | Admin      | Any           |
+| !lookup item [pattern]      | Searches prototypes that use the item blueprint.    | Admin      | Any           |
+| !lookup power [pattern]     | Searches prototypes that use the power blueprint.   | Admin      | Any           |
+| !lookup region [pattern]    | Searches prototypes that use the region blueprint.  | Admin      | Any           |
 
 ## MetaGame
 Commands related to the MetaGame system.
 
 | Command                     | Description                              | User Level | Invoker Type  |
 | --------------------------- | ---------------------------------------- | ---------- | ------------  |
-| !metagame event [next/stop] | Changes current event. Defaults to stop. | Any        | Client        |
+| !metagame event [next/stop] | Changes current event. Defaults to stop. | Admin      | Client        |
 
 ## Mission
 Commands related to the mission system.
@@ -168,11 +168,11 @@ Commands related to the power system.
 
 | Command                   | Description                                                        | User Level | Invoker Type  |
 | ------------------------- | ------------------------------------------------------------------ | ---------- | ------------  |
-| !power cooldownreset      | Resets all cooldowns and charges.                                  | Any        | Client        |
-| !power forgetstolenpowers | Locks all unlocked stolen powers.                                  | Any        | Client        |
-| !power print              | Prints the power collection for the current avatar to the console. | Any        | Client        |
-| !power stealavatarpowers  | Unlocks avatar stolen powers.                                      | Any        | Client        |
-| !power stealpowers        | Unlocks all stolen powers.                                         | Any        | Client        |
+| !power cooldownreset      | Resets all cooldowns and charges.                                  | Admin      | Client        |
+| !power forgetstolenpowers | Locks all unlocked stolen powers.                                  | Admin      | Client        |
+| !power print              | Prints the power collection for the current avatar to the console. | Admin      | Client        |
+| !power stealavatarpowers  | Unlocks avatar stolen powers.                                      | Admin      | Client        |
+| !power stealpowers        | Unlocks all stolen powers.                                         | Admin      | Client        |
 
 ## Region
 Region management commands.
@@ -220,8 +220,8 @@ Commands for unlocking various things.
 | !dance               | Performs the Dance emote (if available).                                                                     | Any        | Client         |
 | !generatecommanddocs | Generates markdown documentation for all registered command groups.                                          | Any        | ServerConsole  |
 | !help                | Help needs no help.                                                                                          | Any        | Any            |
-| !jail                | Teleports to East Side: Detention Facility (old).                                                            | Any        | Client         |
+| !jail                | Teleports to East Side: Detention Facility (old).                                                            | Admin      | Client         |
 | !position            | Shows current position.                                                                                      | Any        | Client         |
 | !tower               | Teleports to Avengers Tower (original).                                                                      | Any        | Client         |
-| !tp                  | Teleports to position. Usage: tp x:+1000 (relative to current position) tp x100 y500 z10 (absolute position) | Any        | Client         |
+| !tp                  | Teleports to position. Usage: tp x:+1000 (relative to current position) tp x100 y500 z10 (absolute position) | Admin      | Client         |
 
