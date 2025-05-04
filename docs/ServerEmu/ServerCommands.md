@@ -1,109 +1,227 @@
 # Server Commands
 
+This list was automatically generated on `2025.05.04 08:46:49 UTC` using server version `0.6.0`.
+
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
-**NOTE: This list of commands is very outdated. Use `!commands` to see an up to date list for your version of the server.**
+## Account
+Account management commands.
 
-## General Commands
+| Command                                         | Description                                       | User Level | Invoker Type  |
+| ----------------------------------------------- | ------------------------------------------------- | ---------- | ------------  |
+| !account ban [email]                            | Bans the specified account.                       | Moderator  | Any           |
+| !account create [email] [playerName] [password] | Creates a new account.                            | Any        | Any           |
+| !account download                               | Downloads a JSON copy of the current account.     | Any        | Client        |
+| !account info                                   | Shows information for the logged in account.      | Any        | Client        |
+| !account password [email] [password]            | Changes password for the specified account.       | Any        | Any           |
+| !account playername [email] [playername]        | Changes player name for the specified account.    | Any        | Any           |
+| !account unban [email]                          | Unbans the specified account.                     | Moderator  | Any           |
+| !account userlevel [email] [0/1/2]              | Changes user level for the specified account.     | Admin      | Any           |
+| !account verify [email] [password]              | Checks if an email/password combination is valid. | Admin      | Any           |
 
-| Command         | Description                                   | User Level |
-| --------------- | --------------------------------------------- | ---------- |
-| !commands       | Shows a list of all available commands.       | All        |
-| !help [command] | Shows a description of the specified command. | All        |
+## Achievement
+Commands related to the achievement system.
 
-## Account Commands
+| Command                | Description                                 | User Level | Invoker Type  |
+| ---------------------- | ------------------------------------------- | ---------- | ------------  |
+| !achievement info [id] | Outputs info for the specified achievement. | Any        | Any           |
 
-| Command                                         | Description                                                                                                   | User Level |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------- |
-| !account create [email] [playerName] [password] | Creates a new account using the specified information. Email and player name must be unique for each account. | All        |
-| !account playername [email] [playername]        | Changes player name for the specified account. Regular users can change name only for their own account.      | All        |
-| !account password [email] [newPassword]         | Changes password for the specified account. Regular users can change password only for their own account.     | All        |
-| !account userlevel [0\|1\|2]                    | Sets user level for the specified account to user (0), moderator (1), or admin (2).                           | Admin      |
-| !account verify [email] [password]              | Checks if the provided email-password combination is valid.                                                   | Admin      |
-| !account ban [email]                            | Bans the specified account.                                                                                   | Moderator  |
-| !account unban [email]                          | Unbans the specified account.                                                                                 | Moderator  |
-| !account info                                   | Shows account information for the logged in client (in-game only).                                            | All        |
+## AOI
+Commands for interacting with the invoker player's area of interest (AOI).
 
-## Achievement Commands
+| Command             | Description                                          | User Level | Invoker Type  |
+| ------------------- | ---------------------------------------------------- | ---------- | ------------  |
+| !aoi print          | Prints player AOI information to the server console. | Admin      | Client        |
+| !aoi refs           | Prints interest references for the current player.   | Admin      | Client        |
+| !aoi update         | Forces AOI proximity update.                         | Admin      | Client        |
+| !aoi volume [value] | Changes player AOI volume size.                      | Any        | Client        |
 
-| Command                  | Description                                    | User Level |
-| ------------------------ | ---------------------------------------------- | ---------- |
-| !achievement unlock [id] | Unlocks the specified achievement.             | All        |
-| !achievement info [id]   | Shows details about the specified achievement. | All        |
+## Boost
+Commands for boosting the stats of the invoker player's current avatar.
 
-## Client Commands
+| Command                 | Description                                         | User Level | Invoker Type  |
+| ----------------------- | --------------------------------------------------- | ---------- | ------------  |
+| !boost damage [1-10000] | Sets DamagePctBonus for the current avatar.         | Any        | Client        |
+| !boost vsboss [1-10000] | Sets DamagePctBonusVsBosses for the current avatar. | Any        | Client        |
 
-| Command                                                 | Description                                      | User Level |
-| ------------------------------------------------------- | ------------------------------------------------ | ---------- |
-| !client info [sessionId]                                | Shows information about the specified client.    | Admin      |
-| !client kick [playerName]                               | Kicks the specified player from the game.        | Moderator  |
-| !client send [sessionId] [messageName] [messageContent] | Sends a network message to the specified client. | Admin      |
+## Client
+Commands for interacting with connected clients.
 
-## Debug Commands
+| Command                   | Description                                                        | User Level | Invoker Type  |
+| ------------------------- | ------------------------------------------------------------------ | ---------- | ------------  |
+| !client info [sessionId]  | Prints information about the client with the specified session id. | Admin      | Any           |
+| !client kick [playerName] | Disconnects the client with the specified player name.             | Moderator  | Any           |
 
-| Command                                  | Description                                                               | User Level |
-| ---------------------------------------- | ------------------------------------------------------------------------- | ---------- |
-| !debug test                              | Working as intended.                                                      | Admin      |
-| !debug cell                              | Shows current cell.                                                       | All        |
-| !debug seed                              | Shows current seed.                                                       | All        |
-| !debug area                              | Shows current area.                                                       | All        |
-| !debug region                            | Shows current region.                                                     | All        |
-| !debug isblocked [entityId1] [entityId2] | Checks if an entity is blocked by bounds of another entity.               | All        |
-| !debug near [radius]                     | Shows entities and markers within specified radius. Default value is 100. | All        |
-| !debug marker [markerId]                 | Displays information about the specified marker.                          | All        |
-| !debug entity [entityId]                 | Displays information about the specified entity.                          | All        |
+## Debug
+Debug commands for development.
 
-## Lookup Commands
+| Command                      | Description                                                                            | User Level | Invoker Type   |
+| ---------------------------- | -------------------------------------------------------------------------------------- | ---------- | -------------  |
+| !debug ai                    | No description available.                                                              | Admin      | Client         |
+| !debug area                  | Shows current area.                                                                    | Any        | Client         |
+| !debug cell                  | Shows current cell.                                                                    | Any        | Client         |
+| !debug crashgame             | Crashes the current game instance.                                                     | Admin      | Client         |
+| !debug crashserver           | Crashes the entire server.                                                             | Admin      | ServerConsole  |
+| !debug difficulty            | Shows information about the current difficulty level.                                  | Any        | Client         |
+| !debug forcegc               | Requests the garbage collector to perform a collection.                                | Admin      | Any            |
+| !debug getconditionlist      | Gets a list of all conditions tracked by the ConditionPool in the current game.        | Any        | Client         |
+| !debug geteventpoolreport    | Returns a report representing the state of the ScheduledEventPool in the current game. | Any        | Client         |
+| !debug metagame [on/off]     | No description available.                                                              | Admin      | Any            |
+| !debug navi2obj [PathFlags]  | Default PathFlags is Walk, can be [None/Fly/Power/Sight].                              | Admin      | Client         |
+| !debug region                | Shows current region.                                                                  | Any        | Client         |
+| !debug seed                  | Shows current seed.                                                                    | Any        | Client         |
+| !debug setmarker [MarkerRef] | No description available.                                                              | Admin      | Any            |
+| !debug spawn [on/off]        | No description available.                                                              | Admin      | Any            |
+| !debug test                  | Runs test code.                                                                        | Admin      | Any            |
 
-| Command                     | Description                              | User Level |
-| --------------------------- | ---------------------------------------- | ---------- |
-| !lookup costume [pattern]   | Searches for costume prototypes by name. | All        |
-| !lookup region [pattern]    | Searches for region prototypes by name.  | All        |
-| !lookup blueprint [pattern] | Searches for blueprints by name.         | All        |
-| !lookup assettype [pattern] | Searches for asset types by name.        | All        |
-| !lookup asset [pattern]     | Searches for assets by name.             | All        |
+## Entity
+Entity management commands.
 
-## Misc Commands
+| Command                                   | Description                                                                                                           | User Level | Invoker Type  |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------- | ------------  |
+| !entity create [pattern] [count]          | Create entity near the avatar based on pattern (ignore the case) and count (default 1).                               | Admin      | Client        |
+| !entity dummy [pattern]                   | Replace the training room target dummy with the specified entity.                                                     | Admin      | Client        |
+| !entity info [EntityId]                   | Displays information about the specified entity.                                                                      | Any        | Client        |
+| !entity isblocked [EntityId1] [EntityId2] | No description available.                                                                                             | Any        | Client        |
+| !entity marker [MarkerId]                 | Displays information about the specified marker.                                                                      | Any        | Client        |
+| !entity near [radius]                     | Displays all entities in a radius (default is 100).                                                                   | Any        | Client        |
+| !entity tp [pattern]                      | Teleports to the first entity present in the region which prototype name contains the string given (ignore the case). | Admin      | Client        |
 
-| Command   | Description                                            | User Level |
-| --------- | ------------------------------------------------------ | ---------- |
-| !tower    | Changes region to Avengers Tower (original).           | All        |
-| !jail     | Changes region to East Side: Detention Facility (old). | All        |
-| !position | Shows current position.                                | All        |
-| !dance    | Performs the dance emote.                              | All        |
-| !tp       | Teleports the player within the current region.        | All        |
+## Instance
+Commands for managing  region instances.
 
-## Packet Commands
+| Command           | Description                                     | User Level | Invoker Type  |
+| ----------------- | ----------------------------------------------- | ---------- | ------------  |
+| !instance list    | Lists private instances.                        | Any        | Client        |
+| !instance listall | Lists all region instances in the current game. | Any        | Client        |
+| !instance reset   | Resets private instances.                       | Any        | Client        |
 
-| Command       | Description                            | User Level |
-| ------------- | -------------------------------------- | ---------- |
-| !packet parse | Parses messages from all packet files. | Admin      |
+## Item
+Commands for managing items.
 
-## Player Commands
+| Command                      | Description                                                                | User Level | Invoker Type  |
+| ---------------------------- | -------------------------------------------------------------------------- | ---------- | ------------  |
+| !item creditchest            | Converts 500k credits to a sellable chest item.                            | Any        | Client        |
+| !item destroyindestructible  | Destroys indestructible items contained in the player's general inventory. | Any        | Client        |
+| !item drop [pattern] [count] | Creates and drops the specified item from the current avatar.              | Admin      | Client        |
+| !item give [pattern] [count] | Creates and gives the specified item to the current player.                | Admin      | Client        |
+| !item roll [pattern]         | Rolls the specified loot table.                                            | Admin      | Client        |
+| !item rollall                | Rolls all loot tables.                                                     | Admin      | Client        |
 
-| Command                 | Description                                                                                       | User Level |
-| ----------------------- | ------------------------------------------------------------------------------------------------- | ---------- |
-| !player avatar [avatar] | Changes player avatar                                                                             | All        |
-| !player aoi [value]     | Changes player AOI volume size. Range: [1600..5000].                                              | All        |
-| !player aoi reset       | Resets player AOI volume size to 3200.                                                            | All        |
-| !player costume [name]  | Changes costume for the current avatar.                                                           | All        |
-| !player costume reset   | Resets the applied costume for the current avatar.                                                | All        |
-| !player costume default | Applies the default costume to the current avatar. In most cases this reverts any visual updates. | All        |
-| !player omegapoints     | Maxes out Omega points. This requires Infinity to be disabled.                                    | All        |
-| !player infinitypoints  | Maxes out Infinity points. This requires Infinity to be enabled.                                  | All        |
-| !player fixmana         | Fixes missing primary resource visuals in the UI.                                                 | All        |
+## Level
+Level management commands.
 
-## Region Commands
+| Command                 | Description                                | User Level | Invoker Type  |
+| ----------------------- | ------------------------------------------ | ---------- | ------------  |
+| !level awardxp [amount] | Awards the specified amount of experience. | Any        | Client        |
+| !level max              | Maxes out the current avatar's experience. | Any        | Client        |
+| !level maxinfinity      | Maxes out Infinity experience.             | Any        | Client        |
+| !level reset            | Resets the current avatar to level 1.      | Any        | Client        |
+| !level resetinfinity    | Removes all Infinity progression.          | Any        | Client        |
+| !level up               | Levels up the current avatar.              | Any        | Client        |
 
-| Command                    | Description                                                                                                                                                                          | User Level |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| !region warp [name]        | Moves the player to the specified region.                                                                                                                                            | All        |
-| !region warp [name] unsafe | Moves the player to the specified region, ignoring warnings. NOTE: This will cause the client to get stuck in an infinite loading screen if it is missing the assets for the region! | Admin      |
-| !region reload             | Reloads the current region.                                                                                                                                                          | All        |
+## Lookup
+Commands for searching data refs.
 
-## Server Commands
+| Command                     | Description                                         | User Level | Invoker Type  |
+| --------------------------- | --------------------------------------------------- | ---------- | ------------  |
+| !lookup asset [pattern]     | Searches assets.                                    | Any        | Any           |
+| !lookup assettype [pattern] | Searches asset types.                               | Any        | Any           |
+| !lookup blueprint [pattern] | Searches blueprints.                                | Any        | Any           |
+| !lookup costume [pattern]   | Searches prototypes that use the costume blueprint. | Any        | Any           |
+| !lookup item [pattern]      | Searches prototypes that use the item blueprint.    | Any        | Any           |
+| !lookup power [pattern]     | Searches prototypes that use the power blueprint.   | Any        | Any           |
+| !lookup region [pattern]    | Searches prototypes that use the region blueprint.  | Any        | Any           |
 
-| Command          | Description                      | User Level |
-| ---------------- | -------------------------------- | ---------- |
-| !server status   | Shows server status information. | All        |
-| !server shutdown | Shuts down the server.           | Admin      |
+## MetaGame
+Commands related to the MetaGame system.
+
+| Command                     | Description                              | User Level | Invoker Type  |
+| --------------------------- | ---------------------------------------- | ---------- | ------------  |
+| !metagame event [next/stop] | Changes current event. Defaults to stop. | Any        | Client        |
+
+## Mission
+Commands related to the mission system.
+
+| Command                     | Description                                            | User Level | Invoker Type  |
+| --------------------------- | ------------------------------------------------------ | ---------- | ------------  |
+| !mission complete [pattern] | Complete the given mission.                            | Admin      | Client        |
+| !mission completestory      | Set all main story missions to completed.              | Admin      | Client        |
+| !mission debug [on/off]     | No description available.                              | Admin      | Any           |
+| !mission info [pattern]     | Display information about the given mission.           | Any        | Client        |
+| !mission region             | List all the mission prototypes in the current region. | Any        | Client        |
+| !mission reset [pattern]    | Restart the given mission.                             | Admin      | Client        |
+| !mission resetstory         | Reset all main story missions.                         | Any        | Client        |
+
+## Player
+Commands for managing player data for the invoker's account.
+
+| Command                              | Description                                             | User Level | Invoker Type  |
+| ------------------------------------ | ------------------------------------------------------- | ---------- | ------------  |
+| !player clearconditions              | Clears persistent conditions.                           | Any        | Client        |
+| !player costume [name/reset/default] | Changes costume for the current avatar.                 | Any        | Client        |
+| !player givecurrency [amount]        | Gives all currencies.                                   | Admin      | Client        |
+| !player wipe [playerName]            | Wipes all progress associated with the current account. | Any        | Client        |
+
+## Power
+Commands related to the power system.
+
+| Command                   | Description                                                        | User Level | Invoker Type  |
+| ------------------------- | ------------------------------------------------------------------ | ---------- | ------------  |
+| !power cooldownreset      | Resets all cooldowns and charges.                                  | Any        | Client        |
+| !power forgetstolenpowers | Locks all unlocked stolen powers.                                  | Any        | Client        |
+| !power print              | Prints the power collection for the current avatar to the console. | Any        | Client        |
+| !power stealavatarpowers  | Unlocks avatar stolen powers.                                      | Any        | Client        |
+| !power stealpowers        | Unlocks all stolen powers.                                         | Any        | Client        |
+
+## Region
+Region management commands.
+
+| Command                 | Description                               | User Level | Invoker Type  |
+| ----------------------- | ----------------------------------------- | ---------- | ------------  |
+| !region generateallsafe | Generates all safe regions.               | Admin      | Client        |
+| !region info            | Prints info for the current region.       | Any        | Client        |
+| !region properties      | Prints properties for the current region. | Admin      | Client        |
+| !region reload          | Reloads the current region.               | Admin      | Client        |
+| !region warp [name]     | Warps the player to another region.       | Admin      | Client        |
+
+## Server
+Server management commands.
+
+| Command                  | Description                               | User Level | Invoker Type   |
+| ------------------------ | ----------------------------------------- | ---------- | -------------  |
+| !server broadcast        | Broadcasts a notification to all players. | Admin      | Any            |
+| !server reloadlivetuning | Reloads live tuning settings.             | Admin      | ServerConsole  |
+| !server shutdown         | Shuts the server down.                    | Admin      | Any            |
+| !server status           | Prints server status.                     | Any        | Any            |
+
+## Store
+Commands for interacting with the in-game store.
+
+| Command              | Description                                                     | User Level | Invoker Type  |
+| -------------------- | --------------------------------------------------------------- | ---------- | ------------  |
+| !store addg [amount] | Adds the specified number of Gs to this account.                | Admin      | Client        |
+| !store convertes     | Converts 100 Eternity Splinters to the equivalent amount of Gs. | Any        | Client        |
+
+## Unlock
+Commands for unlocking various things.
+
+| Command                | Description                                          | User Level | Invoker Type  |
+| ---------------------- | ---------------------------------------------------- | ---------- | ------------  |
+| !unlock chapters       | Unlocks all chapters.                                | Admin      | Client        |
+| !unlock hero [pattern] | Unlocks the specified hero using Eternity Splinters. | Any        | Client        |
+| !unlock waypoints      | Unlocks all waypoints.                               | Admin      | Client        |
+
+## Misc
+
+| Command              | Description                                                                                                  | User Level | Invoker Type   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------ | ---------- | -------------  |
+| !commands            | Lists available commands.                                                                                    | Any        | Any            |
+| !dance               | Performs the Dance emote (if available).                                                                     | Any        | Client         |
+| !generatecommanddocs | Generates markdown documentation for all registered command groups.                                          | Any        | ServerConsole  |
+| !help                | Help needs no help.                                                                                          | Any        | Any            |
+| !jail                | Teleports to East Side: Detention Facility (old).                                                            | Any        | Client         |
+| !position            | Shows current position.                                                                                      | Any        | Client         |
+| !tower               | Teleports to Avengers Tower (original).                                                                      | Any        | Client         |
+| !tp                  | Teleports to position. Usage: tp x:+1000 (relative to current position) tp x100 y500 z10 (absolute position) | Any        | Client         |
+
