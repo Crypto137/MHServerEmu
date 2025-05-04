@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Text;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
@@ -141,8 +142,17 @@ namespace MHServerEmu.Commands
 
         private string GetHelpString()
         {
-            // TODO: Usage
-            return _descriptionAttribute.Description;
+            if (_help == null)
+            {
+                StringBuilder sb = new(_descriptionAttribute.Description);
+
+                if (string.IsNullOrWhiteSpace(_usageAttribute.Usage) == false)
+                    sb.Append($"\nUsage: {_usageAttribute.Usage}");
+
+                _help = sb.ToString();
+            }
+
+            return _help;
         }
     }
 }
