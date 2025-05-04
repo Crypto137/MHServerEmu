@@ -157,6 +157,9 @@ namespace MHServerEmu.Games.Loot
             if (cooldownChannelProto == null)
                 return false;
 
+            // Reset drop count if needed
+            cooldownChannelProto.UpdateCooldown(Player, dropProtoRef);
+
             bool isOnCooldown = cooldownChannelProto.IsOnCooldown(Player.Game, Player.Properties);
 
             // Set cooldown if this drop wasn't on cooldown

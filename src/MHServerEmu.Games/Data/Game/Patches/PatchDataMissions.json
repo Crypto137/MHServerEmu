@@ -54,5 +54,13 @@
         "Description": "Fix Conflict mission SiegeMissionGiverController",
         "ValueType": "Enum",
         "Value": "NotInGame"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Metagame/Story/CH06FortStryker/States/CH06TrainingCamp.prototype",
+        "Path": "RespawnDelayMS",
+        "Description": "Increase RespawnDelayMS for TrainingCamp Population",
+        "ValueType": "Integer",
+        "Value": 180000
     }
 ]
