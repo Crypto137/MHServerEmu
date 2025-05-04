@@ -16,38 +16,38 @@ The default value for all tuning variables is `1.0`. All tuning variables types 
 
 ### Global
 
-| Tuning Variable                     | Description |
-| ----------------------------------- | ----------- |
-| eGTV_VendorBuyPrice                 |             |
-| eGTV_VendorSellPrice                |             |
-| eGTV_VendorXPGain                   |             |
-| eGTV_PVPEnabled                     |             |
-| eGTV_XPGain                         |             |
-| eGTV_LootDropRate                   |             |
-| eGTV_LootSpecialDropRate            |             |
-| eGTV_LootRarity                     |             |
-| eGTV_PartyXPBonusPct                |             |
-| eGTV_PlayerTradeEnabled             |             |
-| eGTV_CosmicPrestigeXPPct            |             |
-| eGTV_LootVaporizationEnabled        |             |
-| eGTV_XPBuffDisplay                  |             |
-| eGTV_SIFBuffDisplay                 |             |
-| eGTV_RIFBuffDisplay                 |             |
-| eGTV_OmegaXPPct                     |             |
-| eGTV_RespectLevelForGlobalXP        |             |
-| eGTV_RespectLevelForGlobalRIF       |             |
-| eGTV_RespectLevelForGlobalSIF       |             |
-| eGTV_RespectLevelForOmegaXP         |             |
-| eGTV_RespectLevelForAvatarXP        |             |
-| eGTV_RespectLevelForRegionXP        |             |
-| eGTV_ServerBonusUnlockLevelOverride |             |
-| eGTV_BoostTimersRunning             |             |
-| eGTV_InfinityXPPct                  |             |
-| eGTV_RespectLevelForInfinityXP      |             |
-| eGTV_SuperVerboseMetricsEnabled     |             |
-| eGTV_HighVolumeMetricsEnabled       |             |
-| eGTV_MediumVolumeMetricsEnabled     |             |
-| eGTV_LowVolumeMetricsEnabled        |             |
+| Tuning Variable                     | Description                                                                                                                                                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| eGTV_VendorBuyPrice                 | Multiplier for prices when buying items from vendors.                                                                                                                                                                    |
+| eGTV_VendorSellPrice                | Multiplier for prices when selling items to vendors.                                                                                                                                                                     |
+| eGTV_VendorXPGain                   | Multiplier for vendor experience when donating items.                                                                                                                                                                    |
+| eGTV_PVPEnabled                     | Disables PvP game modes when set to 0.                                                                                                                                                                                   |
+| eGTV_XPGain                         | Multiplier for experience.                                                                                                                                                                                               |
+| eGTV_LootDropRate                   | Multiplier for the chance of loot rolling.                                                                                                                                                                               |
+| eGTV_LootSpecialDropRate            | Multiplier for special item find (SIF).                                                                                                                                                                                  |
+| eGTV_LootRarity                     | Multiplier for rare item find (RIF).                                                                                                                                                                                     |
+| eGTV_PartyXPBonusPct                |                                                                                                                                                                                                                          |
+| eGTV_PlayerTradeEnabled             | Disables player trade window when set to 0.                                                                                                                                                                              |
+| eGTV_CosmicPrestigeXPPct            | Override for the cosmic prestige experience multiplier. Uses the game data multiplier when set to 1 (0.04 by default).                                                                                                   |
+| eGTV_LootVaporizationEnabled        | Disables loot vaporization when set to 0.                                                                                                                                                                                |
+| eGTV_XPBuffDisplay                  |                                                                                                                                                                                                                          |
+| eGTV_SIFBuffDisplay                 |                                                                                                                                                                                                                          |
+| eGTV_RIFBuffDisplay                 |                                                                                                                                                                                                                          |
+| eGTV_OmegaXPPct                     | Multiplier for Omega experience.                                                                                                                                                                                         |
+| eGTV_RespectLevelForGlobalXP        | Disables minimum level requirement for global experience multipliers when set to 0.                                                                                                                                      |
+| eGTV_RespectLevelForGlobalRIF       | Disables minimum level requirement for global rare item find multipliers when set to 0.                                                                                                                                  |
+| eGTV_RespectLevelForGlobalSIF       | Disables minimum level requirement for global special item find multipliers when set to 0.                                                                                                                               |
+| eGTV_RespectLevelForOmegaXP         | Disables minimum level requirement for global Omega experience multipliers when set to 0.                                                                                                                                |
+| eGTV_RespectLevelForAvatarXP        | Disables minimum level requirement for avatar experience multipliers when set to 0.                                                                                                                                      |
+| eGTV_RespectLevelForRegionXP        | Disables minimum level requirement for region experience multipliers when set to 0.                                                                                                                                      |
+| eGTV_ServerBonusUnlockLevelOverride | Override for the minimum level required for live tuning multipliers to apply. Uses the game data value when set to 1 (60 by default). This level needs to be reached on any avatar on an account for the bonus to apply. |
+| eGTV_BoostTimersRunning             | Pauses boost timers even outside of hubs when set to 0.                                                                                                                                                                  |
+| eGTV_InfinityXPPct                  | Multiplier for Infinity experience.                                                                                                                                                                                      |
+| eGTV_RespectLevelForInfinityXP      | Disables minimum level requirement for global Infinity experience multipliers when set to 0.                                                                                                                             |
+| eGTV_SuperVerboseMetricsEnabled     |                                                                                                                                                                                                                          |
+| eGTV_HighVolumeMetricsEnabled       |                                                                                                                                                                                                                          |
+| eGTV_MediumVolumeMetricsEnabled     |                                                                                                                                                                                                                          |
+| eGTV_LowVolumeMetricsEnabled        |                                                                                                                                                                                                                          |
 
 ### Area
 
