@@ -375,14 +375,16 @@ namespace MHServerEmu.Games.Powers
                     }
                 }
 
-                // Calculate variance / tuning score multipliers
+                // Calculate variance / tuning score / magnitude multipliers
                 float damageVariance = powerProperties[PropertyEnum.DamageVariance];
                 float damageVarianceMult = (1f - damageVariance) + (damageVariance * 2f * Game.Random.NextFloat());
 
                 float damageTuningScore = powerProto.DamageTuningScore;
 
+                float damageMagnitude = powerProperties[PropertyEnum.DamageMagnitude];
+
                 // Calculate damage
-                float damage = damageBase * damageTuningScore * damageVarianceMult;
+                float damage = damageBase * damageTuningScore * damageVarianceMult * damageMagnitude;
                 if (damage > 0f)
                     Properties[PropertyEnum.Damage, damageType] = damage;
 
