@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
@@ -288,6 +289,9 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
+            // REMOVEME: ZombieDebugEvent
+            Game.GameEventScheduler.CancelEvent(_zombieDebugEvent);
+
             var worldEntityProto = WorldEntityPrototype;
             CancelScheduledLifespanExpireEvent();
             SummonedInventory?.DestroyContained();
@@ -3375,6 +3379,16 @@ namespace MHServerEmu.Games.Entities
                     if (IsInWorld && TestStatus(EntityStatus.EnteringWorld) == false)
                         TryActivateOnHealthProcs();
 
+                    // REMOVEME: ZombieDebugEvent
+                    if (newValue == 0L)
+                    {
+                        EventScheduler scheduler = Game.GameEventScheduler;
+
+                        scheduler.CancelEvent(_zombieDebugEvent);
+                        scheduler.ScheduleEvent(_zombieDebugEvent, TimeSpan.FromMilliseconds(1));
+                        _zombieDebugEvent.Get().Initialize(new StackTrace(false));
+                    }
+
                     break;
 
                 case PropertyEnum.HealthMax:
@@ -4520,6 +4534,13 @@ namespace MHServerEmu.Games.Entities
             protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).AwardInteractionLoot(p1);
         }
 
+        // REMOVEME: ZombieDebugEvent
+        private readonly EventPointer<ZombieDebugEvent> _zombieDebugEvent = new();
+
+        private class ZombieDebugEvent : CallMethodEvent<StackTrace>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => Logger.Debug($"ZombieDebugEvent\n{t}");
+        }
 
         #endregion
     }
