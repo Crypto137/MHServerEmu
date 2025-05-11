@@ -3381,10 +3381,11 @@ namespace MHServerEmu.Games.Entities
                         // REMOVEME: ZombieDebugEvent
                         EventScheduler scheduler = Game.GameEventScheduler;
                         scheduler.CancelEvent(_zombieDebugEvent);
-                        if (newValue <= 0L)
+                        if (oldValue > 0L && newValue <= 0L)
                         {
+                            _deathStackTrace = new(false);
                             scheduler.ScheduleEvent(_zombieDebugEvent, TimeSpan.FromMilliseconds(1));
-                            _zombieDebugEvent.Get().Initialize(new StackTrace(false));
+                            _zombieDebugEvent.Get().Initialize(this);
                         }
 
                         TryActivateOnHealthProcs();
@@ -4537,10 +4538,11 @@ namespace MHServerEmu.Games.Entities
 
         // REMOVEME: ZombieDebugEvent
         private readonly EventPointer<ZombieDebugEvent> _zombieDebugEvent = new();
+        private StackTrace _deathStackTrace;
 
-        private class ZombieDebugEvent : CallMethodEvent<StackTrace>
+        private class ZombieDebugEvent : CallMethodEvent<WorldEntity>
         {
-            protected override CallbackDelegate GetCallback() => (t) => Logger.Debug($"ZombieDebugEvent\n{t}");
+            protected override CallbackDelegate GetCallback() => (t) => Logger.Debug($"ZombieDebugEvent: Entity=[{t}]\n\nRegionLocation=[{t.RegionLocation}]\n\n{t._deathStackTrace}");
         }
 
         #endregion
