@@ -3377,16 +3377,17 @@ namespace MHServerEmu.Games.Entities
 
                 case PropertyEnum.Health:
                     if (IsInWorld && TestStatus(EntityStatus.EnteringWorld) == false)
-                        TryActivateOnHealthProcs();
-
-                    // REMOVEME: ZombieDebugEvent
-                    if (newValue == 0L)
                     {
+                        // REMOVEME: ZombieDebugEvent
                         EventScheduler scheduler = Game.GameEventScheduler;
-
                         scheduler.CancelEvent(_zombieDebugEvent);
-                        scheduler.ScheduleEvent(_zombieDebugEvent, TimeSpan.FromMilliseconds(1));
-                        _zombieDebugEvent.Get().Initialize(new StackTrace(false));
+                        if (newValue <= 0L)
+                        {
+                            scheduler.ScheduleEvent(_zombieDebugEvent, TimeSpan.FromMilliseconds(1));
+                            _zombieDebugEvent.Get().Initialize(new StackTrace(false));
+                        }
+
+                        TryActivateOnHealthProcs();
                     }
 
                     break;
