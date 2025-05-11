@@ -289,9 +289,6 @@ namespace MHServerEmu.Games.Entities
 
         public virtual void OnKilled(WorldEntity killer, KillFlags killFlags, WorldEntity directKiller)
         {
-            // REMOVEME: ZombieDebugEvent
-            Game.GameEventScheduler.CancelEvent(_zombieDebugEvent);
-
             var worldEntityProto = WorldEntityPrototype;
             CancelScheduledLifespanExpireEvent();
             SummonedInventory?.DestroyContained();
@@ -3377,19 +3374,7 @@ namespace MHServerEmu.Games.Entities
 
                 case PropertyEnum.Health:
                     if (IsInWorld && TestStatus(EntityStatus.EnteringWorld) == false)
-                    {
-                        // REMOVEME: ZombieDebugEvent
-                        EventScheduler scheduler = Game.GameEventScheduler;
-                        scheduler.CancelEvent(_zombieDebugEvent);
-                        if (oldValue > 0L && newValue <= 0L)
-                        {
-                            _deathStackTrace = new(false);
-                            scheduler.ScheduleEvent(_zombieDebugEvent, TimeSpan.FromMilliseconds(1));
-                            _zombieDebugEvent.Get().Initialize(this);
-                        }
-
                         TryActivateOnHealthProcs();
-                    }
 
                     break;
 
@@ -3402,7 +3387,7 @@ namespace MHServerEmu.Games.Entities
                     {
                         long oldHealthMax = oldValue;
                         float ratio = Math.Min(MathHelper.Ratio(health, oldHealthMax), 1f);
-                        long newHealth = MathHelper.RoundToInt64((long)newValue * ratio);
+                        long newHealth = Math.Max(MathHelper.RoundToInt64((long)newValue * ratio), 1);  // Do not allow health to go to 0 here
 
                         Properties[PropertyEnum.Health] = newHealth;
                     }
@@ -4534,15 +4519,6 @@ namespace MHServerEmu.Games.Entities
         private class AwardInteractionLootEvent : CallMethodEventParam1<Entity, ulong>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((WorldEntity)t).AwardInteractionLoot(p1);
-        }
-
-        // REMOVEME: ZombieDebugEvent
-        private readonly EventPointer<ZombieDebugEvent> _zombieDebugEvent = new();
-        private StackTrace _deathStackTrace;
-
-        private class ZombieDebugEvent : CallMethodEvent<WorldEntity>
-        {
-            protected override CallbackDelegate GetCallback() => (t) => Logger.Debug($"ZombieDebugEvent: Entity=[{t}]\n\nRegionLocation=[{t.RegionLocation}]\n\n{t._deathStackTrace}");
         }
 
         #endregion

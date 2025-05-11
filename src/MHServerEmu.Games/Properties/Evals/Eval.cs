@@ -2359,7 +2359,8 @@ namespace MHServerEmu.Games.Properties.Evals
                     if (FromValue(assignVar, out long intValue))
                     {
                         // HACK: Fix for Health = Health * 0.999f evals
-                        if (propId.Enum == PropertyEnum.Health && intValue == 0)
+                        // (not sure if this is actually happening, but leaving it here for now just in case)
+                        if (intValue == 0 && propId.Enum == PropertyEnum.Health)
                         {
                             Logger.Warn("RunAssignProp(): Eval is trying to set Health to 0");
                             intValue = 1;
