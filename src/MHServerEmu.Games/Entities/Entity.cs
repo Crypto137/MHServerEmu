@@ -870,7 +870,13 @@ namespace MHServerEmu.Games.Entities
 
                 StopPropertyTickingMod(entry);
 
+                // REMOVEME: Debugging zombie entities
+                long healthBefore = Properties[PropertyEnum.Health];
                 entry.Properties.RemoveFromParent(Properties);
+                long healthAfter = Properties[PropertyEnum.Health];
+
+                if (healthBefore > 0 && healthAfter <= 0)
+                    Logger.Debug($"ClearAttachedPropertiesOfType(): {healthBefore} => {healthAfter} for [{this}] after removing {modTypeRef.GetName()}");
 
                 _attachedProperties.RemoveAt(i);
                 i--;
