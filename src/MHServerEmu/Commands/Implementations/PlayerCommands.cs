@@ -111,7 +111,8 @@ namespace MHServerEmu.Commands.Implementations
         }
         [Command("killplayer")]
         [CommandDescription("Instantly kills the specified player's avatar.")]
-        [CommandUsage("admin killplayer [playerName]")]
+        [CommandUsage("player killplayer [playerName]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string KillPlayer(string[] @params, NetClient client)
@@ -182,7 +183,8 @@ namespace MHServerEmu.Commands.Implementations
         }
         [Command("boostdamage")]
         [CommandDescription("Sets DamagePctBonus for the specified player's current avatar.")]
-        [CommandUsage("admin boostdamage [playerName] [value]")]
+        [CommandUsage("player boostdamage [playerName] [value]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string BoostPlayerDamage(string[] @params, NetClient client)
@@ -247,7 +249,8 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("boostvsboss")]
         [CommandDescription("Sets DamagePctBonusVsBosses for the specified player's current avatar.")]
-        [CommandUsage("admin boostvsboss [playerName] [value]")]
+        [CommandUsage("player boostvsboss [playerName] [value]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string BoostPlayerVsBossDamage(string[] @params, NetClient client)
@@ -313,7 +316,8 @@ namespace MHServerEmu.Commands.Implementations
         // --- NEW Kill Entity Command ---
         [Command("killentity")]
         [CommandDescription("Instantly kills the specified entity by its ID.")]
-        [CommandUsage("admin killentity [entityId]")]
+        [CommandUsage("player killentity [entityId]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)] // Admin invokes this
         [CommandParamCount(1)] // Requires entityId
         public string KillEntity(string[] @params, NetClient client)
