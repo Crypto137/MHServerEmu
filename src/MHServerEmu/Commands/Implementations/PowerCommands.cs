@@ -1,24 +1,31 @@
 ﻿using System.Text;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("power", "Provides commands for interacting with the power collection.", AccountUserLevel.Admin)]
+    [CommandGroup("power")]
+    [CommandGroupDescription("Commands related to the power system.")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class PowerCommands : CommandGroup
     {
-        [Command("print", "Prints the power collection for the current avatar to the console.\nUsage: power print")]
-        public string Print(string[] @params, FrontendClient client)
+        [Command("print")]
+        [CommandDescription("Prints the power collection for the current avatar to the console.")]
+        [CommandUsage("power print")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Print(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
             StringBuilder sb = new();
@@ -31,60 +38,147 @@ namespace MHServerEmu.Commands.Implementations
             return "Power collection information printed to the console.";
         }
 
-        [Command("assign", "Assigns the specified power to the current avatar.\nUsage: power assign [pattern]")]
-        public string Assign(string[] @params, FrontendClient client)
+        [Command("cooldownreset")]
+        [CommandDescription("Resets all cooldowns and charges.")]
+        [CommandUsage("power cooldownreset")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string CooldownReset(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help power assign' to get help.";
+            PlayerConnection playerConnection = (PlayerConnection)client;
 
-            PrototypeId powerProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Power, @params[0], client);
-            if (powerProtoRef == PrototypeId.Invalid) return string.Empty;
+            // Player cooldowns
+            Player player = playerConnection.Player;
+            foreach (PropertyEnum cooldownProperty in Property.CooldownProperties)
+                player.Properties.RemovePropertyRange(cooldownProperty);
 
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
-            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            // Avatar cooldowns
+            Avatar avatar = player.CurrentAvatar;
+            foreach (PropertyEnum cooldownProperty in Property.CooldownProperties)
+                avatar.Properties.RemovePropertyRange(cooldownProperty);
 
-            if (avatar.GetPower(powerProtoRef) != null)
-                return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} is already assigned to the current avatar";
+            // Avatar charges
+            Dictionary<PropertyId, PropertyValue> setDict = DictionaryPool<PropertyId, PropertyValue>.Instance.Get();
+            foreach (var kvp in avatar.Properties.IteratePropertyRange(PropertyEnum.PowerChargesMax))
+            {
+                Property.FromParam(kvp.Key, 0, out PrototypeId powerProtoRef);
+                if (powerProtoRef == PrototypeId.Invalid)
+                    continue;
 
-            if (avatar.AssignPower(powerProtoRef, new()) == null)
-                return $"Failed to assign power {GameDatabase.GetPrototypeName(powerProtoRef)} to the current avatar";
+                setDict[new(PropertyEnum.PowerChargesAvailable, powerProtoRef)] = kvp.Value;
+            }
 
-            return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} assigned to the current avatar";
+            foreach (var kvp in setDict)
+                avatar.Properties[kvp.Key] = kvp.Value;
+
+            DictionaryPool<PropertyId, PropertyValue>.Instance.Return(setDict);
+
+            return $"All cooldowns and charges have been reset.";
         }
 
-        [Command("unassign", "Unassigns the specified power from the current avatar.\nUsage: power unassign [pattern]")]
-        public string Unassign(string[] @params, FrontendClient client)
+        [Command("stealpowers")]
+        [CommandDescription("Unlocks all stolen powers.")]
+        [CommandUsage("power stealpowers")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string StealPowers(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-            if (@params.Length == 0) return "Invalid arguments. Type 'help power unassign' to get help.";
-
-            PrototypeId powerProtoRef = CommandHelper.FindPrototype(HardcodedBlueprints.Power, @params[0], client);
-            if (powerProtoRef == PrototypeId.Invalid) return string.Empty;
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            if (avatar.GetPower(powerProtoRef) == null)
-                return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} is not assigned to the current avatar";
+            AvatarPrototype avatarProto = avatar.AvatarPrototype;
+            if (avatarProto.StealablePowersAllowed.IsNullOrEmpty())
+                return "No stealable powers available for the current avatar.";
 
-            if (avatar.UnassignPower(powerProtoRef, new()) == false)
-                return $"Failed to unassign power {GameDatabase.GetPrototypeName(powerProtoRef)} from the current avatar";
+            int count = 0;
+            foreach (PrototypeId stealablePowerInfoRef in avatarProto.StealablePowersAllowed)
+            {
+                StealablePowerInfoPrototype stealablePowerInfoProto = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
+                PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
 
-            return $"Power {GameDatabase.GetPrototypeName(powerProtoRef)} unassigned from the current avatar";
+                if (avatar.IsStolenPowerAvailable(stolenPowerRef))
+                    continue;
+
+                avatar.Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef] = true;
+                count++;
+            }
+
+            if (count == 0)
+                return "All stolen powers are already unlocked for the current avatar.";
+
+            return $"Unlocked {count} stolen powers.";
         }
 
-        [Command("status", "Returns power status for the current avatar.\nUsage: power status")]
-        public string Status(string[] @params, FrontendClient client)
+        [Command("stealavatarpowers")]
+        [CommandDescription("Unlocks avatar stolen powers.")]
+        [CommandUsage("power stealavatarpowers")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string StealAvatarPowers(string[] @params, NetClient client)
         {
-            if (client == null) return "You can only invoke this command from the game.";
-
-            CommandHelper.TryGetPlayerConnection(client, out PlayerConnection playerConnection);
+            PlayerConnection playerConnection = (PlayerConnection)client;
             Avatar avatar = playerConnection.Player.CurrentAvatar;
 
-            PrototypeId activePowerRef = avatar.ActivePowerRef;
-            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+            AvatarPrototype currentAvatarProto = avatar.AvatarPrototype;
 
-            return $"activePowerRef={GameDatabase.GetPrototypeName(activePowerRef)}, continuousPowerRef={GameDatabase.GetPrototypeName(continuousPowerRef)}";
+            int count = 0;
+            foreach (PrototypeId avatarProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            {
+                AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+
+                // e.g. Vision/Ultron don't have valid stealable powers
+                if (currentAvatarProto.StealablePowersAllowed.Contains(avatarProto.StealablePower) == false)
+                    continue;
+
+                StealablePowerInfoPrototype stealablePowerInfoProto = avatarProto.StealablePower.As<StealablePowerInfoPrototype>();
+                if (stealablePowerInfoProto == null)
+                    continue;
+
+                PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
+
+                if (avatar.IsStolenPowerAvailable(stolenPowerRef))
+                    continue;
+
+                avatar.Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef] = true;
+                count++;
+            }
+
+            if (count == 0)
+                return "All avatar stolen powers are already unlocked for the current avatar.";
+
+            return $"Unlocked {count} stolen powers.";
+        }
+
+        [Command("forgetstolenpowers")]
+        [CommandDescription("Locks all unlocked stolen powers.")]
+        [CommandUsage("power forgetstolenpowers")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string ForgetStolenPowers(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+
+            AvatarPrototype avatarProto = avatar.AvatarPrototype;
+            if (avatarProto.StealablePowersAllowed.IsNullOrEmpty())
+                return "No stealable powers available for the current avatar.";
+
+            int count = 0;
+            foreach (PrototypeId stealablePowerInfoRef in avatarProto.StealablePowersAllowed)
+            {
+                StealablePowerInfoPrototype stealablePowerInfoProto = stealablePowerInfoRef.As<StealablePowerInfoPrototype>();
+                PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
+
+                if (avatar.IsStolenPowerAvailable(stolenPowerRef) == false)
+                    continue;
+
+                avatar.Properties.RemoveProperty(new(PropertyEnum.StolenPowerAvailable, stolenPowerRef));
+                if (avatar.HasMappedPower(stolenPowerRef))
+                    avatar.UnassignMappedPower(stolenPowerRef);
+
+                count++;
+            }
+
+            if (count == 0)
+                return "No stolen powers are currently unlocked for the current avatar.";
+
+            return $"Forgotten {count} stolen powers.";
         }
     }
 }

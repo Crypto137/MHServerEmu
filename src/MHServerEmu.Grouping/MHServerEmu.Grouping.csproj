@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyVersion>0.5.0.0</AssemblyVersion>
+    <AssemblyVersion>0.6.0.0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
@@ -17,7 +17,6 @@
     <ProjectReference Include="..\Gazillion\Gazillion.csproj" />
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
     <ProjectReference Include="..\MHServerEmu.DatabaseAccess\MHServerEmu.DatabaseAccess.csproj" />
-    <ProjectReference Include="..\MHServerEmu.Frontend\MHServerEmu.Frontend.csproj" />
   </ItemGroup>
 
   <ItemGroup>

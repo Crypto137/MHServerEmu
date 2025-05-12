@@ -74,6 +74,7 @@
         public const BlueprintId Costume                    = (BlueprintId)10774581141289766864;    // Entity/Items/Costumes/Costume.blueprint 
         public const BlueprintId LootTable                  = (BlueprintId)5508985158461163528;     // Loot/Table.blueprint
         public const BlueprintId Region                     = (BlueprintId)1677652504589371837;     // Regions/Region.blueprint
+        public const BlueprintId Agent                      = (BlueprintId)13439488624722906428;    // Entity/Characters/Agent.blueprint
     }
 
     #endregion

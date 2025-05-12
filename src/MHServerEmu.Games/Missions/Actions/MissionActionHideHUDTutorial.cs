@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -14,8 +15,13 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            foreach (Player player in GetDistributors(_proto.SendTo))
-                player.ShowHUDTutorial(null);
+            List<Player> players = ListPool<Player>.Instance.Get();
+            if (GetDistributors(_proto.SendTo, players))
+            {
+                foreach (Player player in players)
+                    player.ShowHUDTutorial(null);
+            }
+            ListPool<Player>.Instance.Return(players);
         }
     }
 }

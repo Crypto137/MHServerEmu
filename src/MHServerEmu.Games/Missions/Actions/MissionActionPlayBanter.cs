@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,8 +18,14 @@ namespace MHServerEmu.Games.Missions.Actions
         {
             var banterRef = _proto.BanterAsset;
             if (banterRef == AssetId.Invalid) return;
-            foreach (Player player in GetDistributors(_proto.SendTo))
-                player.SendPlayStoryBanter(banterRef);
+
+            List<Player> players = ListPool<Player>.Instance.Get();
+            if (GetDistributors(_proto.SendTo, players))
+            {
+                foreach (Player player in players)
+                    player.SendPlayStoryBanter(banterRef);
+            }
+            ListPool<Player>.Instance.Return(players);
         }
     }
 }

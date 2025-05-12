@@ -17,6 +17,12 @@ namespace MHServerEmu.Games.Powers.Conditions
         public static Func<PropertyEnum> IsConditionWithPropertyOfTypeFunc { get; } = IsConditionWithPropertyOfType;
         public static Func<ConditionType> IsConditionOfTypeFunc { get; } = IsConditionOfType;
 
+        public static Func IsConditionCancelOnHitFunc { get; } = IsConditionCancelOnHit;
+        public static Func IsConditionCancelOnKilledFunc { get; } = IsConditionCancelOnKilled;
+        public static Func<PrototypeId> IsConditionWithPrototypeFunc { get; } = IsConditionWithPrototype;
+        public static Func<PowerPrototype> IsConditionCancelOnPowerUseFunc { get; } = IsConditionCancelOnPowerUse;
+        public static Func<PowerPrototype> IsConditionCancelOnPowerUsePostFunc { get; } = IsConditionCancelOnPowerUsePost;
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="Condition"/> was created by the specified <see cref="Power"/>.
         /// </summary>
@@ -47,6 +53,41 @@ namespace MHServerEmu.Games.Powers.Conditions
         private static bool IsConditionOfType(Condition condition, ConditionType conditionType)
         {
             return condition.ConditionPrototype.ConditionType == conditionType;
+        }
+
+        private static bool IsConditionCancelOnHit(Condition condition)
+        {
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnHit);
+        }
+
+        private static bool IsConditionCancelOnKilled(Condition condition)
+        {
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnKilled);
+        }
+
+        private static bool IsConditionCancelOnPowerUse(Condition condition, PowerPrototype powerProto)
+        {
+            ConditionPrototype conditionProto = condition.ConditionPrototype;
+            if (conditionProto == null)
+                return false;
+
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUse) &&
+                (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+        }
+
+        private static bool IsConditionCancelOnPowerUsePost(Condition condition, PowerPrototype powerProto)
+        {
+            ConditionPrototype conditionProto = condition.ConditionPrototype;
+            if (conditionProto == null)
+                return false;
+
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUsePost) &&
+                (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+        }
+
+        private static bool IsConditionWithPrototype(Condition condition, PrototypeId protoRef)
+        {
+            return condition.ConditionPrototypeRef == protoRef;
         }
     }
 }

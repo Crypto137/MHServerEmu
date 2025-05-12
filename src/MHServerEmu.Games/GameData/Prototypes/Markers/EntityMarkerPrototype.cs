@@ -7,19 +7,19 @@ namespace MHServerEmu.Games.GameData.Prototypes.Markers
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public PrototypeGuid EntityGuid { get; }
-        public string LastKnownEntityName { get; }
-        public PrototypeGuid Modifier1Guid { get; }
-        //    public string Modifier1Text { get; } // has eFlagDontCook set
-        public PrototypeGuid Modifier2Guid { get; }
-        //    public string Modifier2Text { get; } // has eFlagDontCook set
-        public PrototypeGuid Modifier3Guid { get; }
-        //    public string Modifier3Text { get; } // has eFlagDontCook set
-        public int EncounterSpawnPhase { get; }
-        public bool OverrideSnapToFloor { get; }
-        public bool OverrideSnapToFloorValue { get; }
-        public PrototypeGuid FilterGuid { get; }
-        public string LastKnownFilterName { get; }
+        public PrototypeGuid EntityGuid { get; protected set; }
+        public string LastKnownEntityName { get; protected set; }
+        public PrototypeGuid Modifier1Guid { get; protected set; }
+        //    public string Modifier1Text { get; protected set; } // has eFlagDontCook set
+        public PrototypeGuid Modifier2Guid { get; protected set; }
+        //    public string Modifier2Text { get; protected set; } // has eFlagDontCook set
+        public PrototypeGuid Modifier3Guid { get; protected set; }
+        //    public string Modifier3Text { get; protected set; } // has eFlagDontCook set
+        public int EncounterSpawnPhase { get; protected set;}
+        public bool OverrideSnapToFloor { get; protected set; }
+        public bool OverrideSnapToFloorValue { get; protected set; }
+        public PrototypeGuid FilterGuid { get; protected set; }
+        public string LastKnownFilterName { get; protected set; }
 
         public EntityMarkerPrototype(BinaryReader reader)
         {

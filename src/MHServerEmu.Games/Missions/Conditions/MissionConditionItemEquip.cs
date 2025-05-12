@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionItemEquip : MissionPlayerCondition
     {
         private MissionConditionItemEquipPrototype _proto;
-        private Action<PlayerEquippedItemGameEvent> _playerEquippedItemAction;
+        private Event<PlayerEquippedItemGameEvent>.Action _playerEquippedItemAction;
 
         public MissionConditionItemEquip(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -16,7 +17,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _playerEquippedItemAction = OnPlayerEquippedItem;
         }
 
-        private void OnPlayerEquippedItem(PlayerEquippedItemGameEvent evt)
+        private void OnPlayerEquippedItem(in PlayerEquippedItemGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;

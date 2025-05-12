@@ -1,5 +1,7 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -9,9 +11,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionRegionEnter : MissionPlayerCondition
     {
         private MissionConditionRegionEnterPrototype _proto;
-        private Action<AvatarEnteredRegionGameEvent> _avatarEnteredRegionAction;
-        private Action<CinematicFinishedGameEvent> _cinematicFinishedAction;
-        private Action<LoadingScreenFinishedGameEvent> _loadingScreenFinishedAction;
+        private Event<AvatarEnteredRegionGameEvent>.Action _avatarEnteredRegionAction;
+        private Event<CinematicFinishedGameEvent>.Action _cinematicFinishedAction;
+        private Event<LoadingScreenFinishedGameEvent>.Action _loadingScreenFinishedAction;
 
         public MissionConditionRegionEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -26,16 +28,22 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool entered = false;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                if (_proto.WaitForCinematicFinished && player.IsFullscreenObscured) continue;
-                var region = player.CurrentAvatar?.Region;
-                if (region != null && FilterRegion(region.Prototype))
+                foreach (var player in participants)
                 {
-                    entered = true;
-                    break;
-                }                
+                    if (_proto.WaitForCinematicFinished && player.IsFullscreenObscured) continue;
+                    var region = player.CurrentAvatar?.Region;
+                    if (region != null && FilterRegion(region.Prototype))
+                    {
+                        entered = true;
+                        break;
+                    }
+                }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(entered);
             return true;
@@ -60,7 +68,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return FilterRegion(regionProto);
         }
 
-        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
+        private void OnAvatarEnteredRegion(in AvatarEnteredRegionGameEvent evt)
         {
             var player = evt.Player;
             var regionRef = evt.RegionRef;
@@ -70,7 +78,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             SetCompleted();
         }
 
-        private void OnLoadingScreenFinished(LoadingScreenFinishedGameEvent evt)
+        private void OnLoadingScreenFinished(in LoadingScreenFinishedGameEvent evt)
         {
             var player = evt.Player;
             var regionRef = evt.RegionRef;
@@ -80,7 +88,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             SetCompleted();
         }
 
-        private void OnCinematicFinished(CinematicFinishedGameEvent evt)
+        private void OnCinematicFinished(in CinematicFinishedGameEvent evt)
         {
             var player = evt.Player;
             var region = player?.GetRegion();

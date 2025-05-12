@@ -15,16 +15,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     #region Enums
 
-    [AssetEnum((int)Force)]
-    public enum ResourceType
-    {
-        Force = 0,
-        Focus = 1,
-        Fury = 2,
-        Secondary_Pips = 3,
-        Secondary_Gauge = 4,
-    }
-
     [AssetEnum((int)None)]
     public enum ComparisonOperatorType
     {
@@ -35,17 +25,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         LessThanEqualTo = 4,
         NotEqualTo = 5,
         None = 6,
-    }
-
-    [AssetEnum((int)DontRefresh)]
-    public enum StackingApplicationStyleType
-    {
-        DontRefresh = 0,
-        Refresh = 1,
-        Recreate = 2,
-        MatchDuration = 3,
-        SingleStackAddDuration = 4,
-        MultiStackAddDuration = 5,
     }
 
     [AssetEnum((int)None)]
@@ -144,39 +123,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class BrainPrototype : Prototype
     {
-    }
-
-    public class ManaBehaviorPrototype : Prototype
-    {
-        public LocaleStringId DisplayName { get; protected set; }
-        public ResourceType MeterType { get; protected set; }
-        public PrototypeId[] Powers { get; protected set; }
-        public bool StartsEmpty { get; protected set; }
-        public LocaleStringId Description { get; protected set; }
-        public AssetId MeterColor { get; protected set; }
-        public AssetId ResourceBarStyle { get; protected set; }
-        public AssetId ResourcePipStyle { get; protected set; }
-        public bool DepleteOnDeath { get; protected set; }
-    }
-
-    public class PrimaryResourceManaBehaviorPrototype : ManaBehaviorPrototype
-    {
-        public bool StartsWithRegenEnabled { get; protected set; }
-        public int RegenUpdateTimeMS { get; protected set; }
-        public EvalPrototype EvalOnEnduranceUpdate { get; protected set; }
-        public ManaType ManaType { get; protected set; }
-        public CurveId BaseEndurancePerLevel { get; protected set; }
-        public bool RestoreToMaxOnLevelUp { get; protected set; }
-    }
-
-    public class SecondaryResourceManaBehaviorPrototype : ManaBehaviorPrototype
-    {
-        public EvalPrototype EvalGetCurrentForDisplay { get; protected set; }
-        public EvalPrototype EvalGetCurrentPipsForDisplay { get; protected set; }
-        public EvalPrototype EvalGetMaxForDisplay { get; protected set; }
-        public EvalPrototype EvalGetMaxPipsForDisplay { get; protected set; }
-        public bool DepleteOnExitWorld { get; protected set; }
-        public bool ResetOnAvatarSwap { get; protected set; }
     }
 
     public class AlliancePrototype : Prototype
@@ -594,17 +540,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         }
     }
 
-    public class StackingBehaviorPrototype : Prototype
-    {
-        public StackingApplicationStyleType ApplicationStyle { get; protected set; }
-        public int MaxNumStacks { get; protected set; }
-        public bool RemoveStackOnMaxNumStacksReached { get; protected set; }
-        public bool StacksFromDifferentCreators { get; protected set; }
-        public int NumStacksToApply { get; protected set; }
-        public PrototypeId[] StacksByKeyword { get; protected set; }
-        public PrototypeId StacksWithOtherPower { get; protected set; }
-    }
-
     public class DelayContextPrototype : Prototype
     {
         public int MaxDelayMS { get; protected set; }
@@ -773,13 +708,5 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool CanLeash { get; protected set; }
         public PrototypePropertyCollection Properties { get; protected set; }
         public bool AlwaysAggroed { get; protected set; }
-    }
-
-    public class KismetSequencePrototype : Prototype
-    {
-        public AssetId KismetSeqName { get; protected set; }
-        public bool KismetSeqBlocking { get; protected set; }
-        public bool AudioListenerAtCamera { get; protected set; }
-        public bool HideAvatarsDuringPlayback { get; protected set; }
     }
 }

@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -14,8 +15,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateTrackRegionScore : MetaState, IPropertyChangeWatcher
     {
         private MetaStateTrackRegionScorePrototype _proto;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
-        private Action<OrbPickUpEvent> _orbPickUpAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
+        private Event<OrbPickUpEvent>.Action _orbPickUpAction;
         private PropertyCollection _properties;
         private Curve _scoreLevelCurve;
         private Curve _scoreRankCurve;
@@ -108,7 +109,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
-        private void OnOrbPickUp(OrbPickUpEvent evt)
+        private void OnOrbPickUp(in OrbPickUpEvent evt)
         {
             var player = evt.Player;
             var orb = evt.Orb;
@@ -148,7 +149,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             }
         }
 
-        private void OnEntityDead(EntityDeadGameEvent evt)
+        private void OnEntityDead(in EntityDeadGameEvent evt)
         {
             var entity = evt.Defender;
             if (entity == null) return;

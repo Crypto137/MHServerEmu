@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Regions
                 }
             }
 
-            if (nextConnections.Any())
+            if (nextConnections.Count > 0)
             {
                 prevConnections.Clear();
                 prevConnections.AddRange(nextConnections);

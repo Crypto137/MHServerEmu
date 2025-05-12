@@ -7,6 +7,7 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
@@ -385,7 +386,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             var center = regionBounds.Center;
             Bounds checkBounds = new(agent.Bounds);
 
-            List<Vector3> sideList = new ();
+            List<Vector3> sideList = ListPool<Vector3>.Instance.Get();
             Vector3 position;
 
             if (cellType.HasFlag(Cell.Type.N) || !wallsType.HasFlag(Cell.Walls.N) || wallsType == Cell.Walls.All)
@@ -432,6 +433,8 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     despawnPosition = sidePoint;
                 }
             }
+
+            ListPool<Vector3>.Instance.Return(sideList);
 
             return maxDistance != float.MinValue;
         }

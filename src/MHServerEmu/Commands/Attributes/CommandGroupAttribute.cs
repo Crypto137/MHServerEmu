@@ -1,6 +1,4 @@
-﻿using MHServerEmu.DatabaseAccess.Models;
-
-namespace MHServerEmu.Commands.Attributes
+﻿namespace MHServerEmu.Commands.Attributes
 {
     /// <summary>
     /// Indicates that a class contains commands.
@@ -9,14 +7,10 @@ namespace MHServerEmu.Commands.Attributes
     public class CommandGroupAttribute : Attribute
     {
         public string Name { get; }
-        public string Help { get; }
-        public AccountUserLevel MinUserLevel { get; }
 
-        public CommandGroupAttribute(string name, string help, AccountUserLevel minUserLevel = AccountUserLevel.User)
+        public CommandGroupAttribute(string name)
         {
             Name = name.ToLower();
-            Help = help;
-            MinUserLevel = minUserLevel;
         }
     }
 }

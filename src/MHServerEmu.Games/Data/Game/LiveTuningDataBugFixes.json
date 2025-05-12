@@ -1,7 +1,7 @@
 ﻿[
-  {
-    "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
-    "Setting": "eMTV_Enabled",
-    "Value": 0.0
-  }
+    {
+        "Prototype": "Missions/Prototypes/PVEEndgame/Controllers/DoomFightDailyKismetControl.prototype",
+        "Setting": "eMTV_Enabled",
+        "Value": 0.0
+    }
 ]

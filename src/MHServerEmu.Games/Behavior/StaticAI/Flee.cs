@@ -7,6 +7,7 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Memory;
 
 namespace MHServerEmu.Games.Behavior.StaticAI
 {
@@ -137,28 +138,36 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             if (game == null) return false;
             var position = owner.RegionLocation.Position;
 
-            List<FleePath> pathResults = new ();
-            Vector3? resultNorm = null;
-            Vector3 resultPosition = Vector3.Zero;
-            var sweepResult = locomotor.SweepFromTo(position, targetPosition, ref resultPosition, ref resultNorm); // debug for sweep On here
-            var fleeDistance = Vector3.Distance2D(position, resultPosition);
+            List<FleePath> pathResults = ListPool<FleePath>.Instance.Get();
 
-            if (sweepResult != SweepResult.Failed && fleeDistance > fleeContext.FleeDistanceMin)
-                pathResults.Add(new FleePath(targetPosition, fleeDistance));
+            try
+            {
+                Vector3? resultNorm = null;
+                Vector3 resultPosition = Vector3.Zero;
+                var sweepResult = locomotor.SweepFromTo(position, targetPosition, ref resultPosition, ref resultNorm); // debug for sweep On here
+                var fleeDistance = Vector3.Distance2D(position, resultPosition);
 
-            GenerateValidFleeAnglePaths(pathResults, owner, direction, distance, fleeContext);
-            if (pathResults.Count == 0)
-                GenerateValidFleeAnglePaths(pathResults, owner, -direction, distance, fleeContext);
-            if (pathResults.Count == 0)
-                return false;
+                if (sweepResult != SweepResult.Failed && fleeDistance > fleeContext.FleeDistanceMin)
+                    pathResults.Add(new FleePath(targetPosition, fleeDistance));
 
-            pathResults.Sort();
-            var locomotionOptions = new LocomotionOptions
-            { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
+                GenerateValidFleeAnglePaths(pathResults, owner, direction, distance, fleeContext);
+                if (pathResults.Count == 0)
+                    GenerateValidFleeAnglePaths(pathResults, owner, -direction, distance, fleeContext);
+                if (pathResults.Count == 0)
+                    return false;
 
-            foreach (var pathResult in pathResults)
-                if (locomotor.PathTo(pathResult.Position, locomotionOptions))
-                    return true;
+                pathResults.Sort();
+                var locomotionOptions = new LocomotionOptions
+                { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
+
+                foreach (var pathResult in pathResults)
+                    if (locomotor.PathTo(pathResult.Position, locomotionOptions))
+                        return true;
+            }
+            finally
+            {
+                ListPool<FleePath>.Instance.Return(pathResults);
+            }
 
             return false;
         }
@@ -217,38 +226,45 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                     if (entity is WorldEntity worldEntity && worldEntity.Id != owner.Id && owner.IsFriendlyTo(worldEntity))
                         potentialAllies.Add(worldEntity.Id);
             }
+            
+            var allies = ListPool<FleeEntityRank>.Instance.Get();
 
-            var allies = new List<FleeEntityRank>();
-
-            var entityManager = game.EntityManager;
-
-            foreach (var allyId in potentialAllies)
+            try
             {
-                var ally = entityManager.GetEntity<WorldEntity>(allyId);
-                if (ally != null && ally.IsInWorld && !ally.IsDead)
+                var entityManager = game.EntityManager;
+                foreach (var allyId in potentialAllies)
                 {
-                    var rankProto = ally.GetRankPrototype();
-                    if (rankProto != null)
-                        allies.Add(new FleeEntityRank(ally, rankProto.Rank));
+                    var ally = entityManager.GetEntity<WorldEntity>(allyId);
+                    if (ally != null && ally.IsInWorld && !ally.IsDead)
+                    {
+                        var rankProto = ally.GetRankPrototype();
+                        if (rankProto != null)
+                            allies.Add(new FleeEntityRank(ally, rankProto.Rank));
+                    }
+                }
+
+                allies.Sort();
+
+                var locomotionOptions = new LocomotionOptions
+                { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
+
+                Vector3? resultNorm = null;
+                Vector3 resultPosition = Vector3.Zero;
+
+                foreach (var ally in allies)
+                {
+                    var entity = ally.Entity;
+                    if (entity == null) continue;
+
+                    if (locomotor.SweepFromTo(curPosition, entity.RegionLocation.Position, ref resultPosition, ref resultNorm) != SweepResult.Failed
+                        && Vector3.Distance2D(curPosition, resultPosition) > fleeContext.FleeDistanceMin
+                        && locomotor.PathTo(resultPosition, locomotionOptions))
+                        return true;
                 }
             }
-
-            allies.Sort();
-
-            var locomotionOptions = new LocomotionOptions
-            { PathGenerationFlags = PathGenerationFlags.IncompletedPath };
-
-            Vector3? resultNorm = null;
-            Vector3 resultPosition = Vector3.Zero;
-            foreach (var ally in allies)
+            finally
             {
-                var entity = ally.Entity;
-                if (entity == null) continue;
-
-                if (locomotor.SweepFromTo(curPosition, entity.RegionLocation.Position, ref resultPosition, ref resultNorm) != SweepResult.Failed
-                    && Vector3.Distance2D(curPosition, resultPosition) > fleeContext.FleeDistanceMin
-                    && locomotor.PathTo(resultPosition, locomotionOptions))
-                    return true;
+                ListPool<FleeEntityRank>.Instance.Return(allies);
             }
 
             return false;

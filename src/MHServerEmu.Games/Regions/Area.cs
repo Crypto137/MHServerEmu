@@ -357,7 +357,7 @@ namespace MHServerEmu.Games.Regions
                 success &= cell.PostInitialize();
             }
 
-            if (_towerFixupList != null && _towerFixupList.Any())
+            if (_towerFixupList != null && _towerFixupList.Count > 0)
             {
                 foreach (var towerData in _towerFixupList)
                 {
@@ -429,7 +429,7 @@ namespace MHServerEmu.Games.Regions
 
             Generator = null;
 
-            if (success && SubAreas.Any())
+            if (success && SubAreas.Count > 0)
             {
                 foreach (var areaId in SubAreas)
                     if (areaId != 0 && Region.Areas.TryGetValue(areaId, out Area area))
@@ -509,7 +509,7 @@ namespace MHServerEmu.Games.Regions
 
         private void RemoveAllCells()
         {
-            while (Cells.Any())
+            while (Cells.Count > 0)
             {
                 uint cellId = Cells.First().Value.Id;
                 RemoveCell(cellId);

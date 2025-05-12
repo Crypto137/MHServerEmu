@@ -1,6 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Config;
-using MHServerEmu.Frontend;
+using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Grouping
 {
@@ -32,13 +32,13 @@ namespace MHServerEmu.Grouping
         public static ChatBroadcastMessage Motd { get; }
 
         /// <summary>
-        /// Sends the specified text as a metagame chat message to the provided <see cref="FrontendClient"/>.
+        /// Sends the specified text as a metagame chat message to the provided <see cref="IFrontendClient"/>.
         /// </summary>
         /// <remarks>
         /// The in-game chat window does not handle well messages longer than 25-30 lines (~40 characters per line).
         /// If you need to send a long message, use SendMetagameMessages() or SendMetagameMessageSplit().
         /// </remarks>
-        public static void SendMetagameMessage(FrontendClient client, string text, bool showSender = true)
+        public static void SendMetagameMessage(IFrontendClient client, string text, bool showSender = true)
         {
             client.SendMessage(MuxChannel, ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
@@ -49,9 +49,9 @@ namespace MHServerEmu.Grouping
         }
 
         /// <summary>
-        /// Sends the specified collection of texts as metagame chat messages to the provided <see cref="FrontendClient"/>.
+        /// Sends the specified collection of texts as metagame chat messages to the provided <see cref="IFrontendClient"/>.
         /// </summary>
-        public static void SendMetagameMessages(FrontendClient client, IEnumerable<string> texts, bool showSender = true)
+        public static void SendMetagameMessages(IFrontendClient client, IEnumerable<string> texts, bool showSender = true)
         {
             foreach (string text in texts)
             {
@@ -61,9 +61,9 @@ namespace MHServerEmu.Grouping
         }
 
         /// <summary>
-        /// Splits the specified text at line breaks and sends it as a collection of metagame chat messages to the provided <see cref="FrontendClient"/>.
+        /// Splits the specified text at line breaks and sends it as a collection of metagame chat messages to the provided <see cref="IFrontendClient"/>.
         /// </summary>
-        public static void SendMetagameMessageSplit(FrontendClient client, string text, bool showSender = true)
+        public static void SendMetagameMessageSplit(IFrontendClient client, string text, bool showSender = true)
         {
             SendMetagameMessages(client, text.Split("\r\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), showSender);
         }

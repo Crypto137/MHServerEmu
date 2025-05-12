@@ -72,13 +72,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool CanApplyState()
         {
-            if (base.CanApplyState())
+            bool canApply = base.CanApplyState();
+            if (canApply)
             {
                 var missionProto = GameDatabase.GetPrototype<MissionPrototype>(Mission);
                 if (missionProto != null)
-                    return missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
+                    canApply &= missionProto.ApprovedForUse() && missionProto.IsLiveTuningEnabled();
             }
-            return false;
+            return canApply;
         }
 
         public override MetaState AllocateState(MetaGame metaGame)

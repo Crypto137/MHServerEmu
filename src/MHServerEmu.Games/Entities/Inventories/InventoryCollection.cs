@@ -5,14 +5,14 @@ using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Entities.Inventories
 {
-    // TODO: InventoryIterator
-
-    public class InventoryCollection : IEnumerable<Inventory>
+    public class InventoryCollection
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<PrototypeId, Inventory> _inventoryDict = new();
         private Entity _owner;
+
+        public int Count { get => _inventoryDict.Count; }
 
         public void Initialize(Entity owner)
         {
@@ -44,11 +44,29 @@ namespace MHServerEmu.Games.Entities.Inventories
             return inventory;
         }
 
-        public bool GetInventoryForItem(Item item, InventoryCategory category, out Inventory inventory)
+        public bool GetInventoryForItem(Item item, InventoryCategory category, out Inventory outInventory)
         {
-            // TODO
-            inventory = null;
-            return false;
+            outInventory = null;
+
+            if (_owner == null) return Logger.WarnReturn(false, "GetInventoryForItem(): _owner == null");
+
+            // NOTE: The client uses the sort flag here, but it's bad for performance, so I will leave it out for now
+            foreach (Inventory inventory in new InventoryIterator(_owner/*, InventoryIterationFlags.SortByPrototypeRef*/))
+            {
+                if (inventory.Category != category)
+                    continue;
+
+                if (inventory.IsSlotAvailableForEntity(item, true) == false)
+                    continue;
+
+                if (item.CanChangeInventoryLocation(inventory) != InventoryResult.Success)
+                    continue;
+
+                outInventory = inventory;
+                return true;
+            }
+
+            return true;
         }
 
         public void Clear()
@@ -56,7 +74,43 @@ namespace MHServerEmu.Games.Entities.Inventories
             _inventoryDict.Clear();
         }
 
-        public IEnumerator<Inventory> GetEnumerator() => _inventoryDict.Values.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public Enumerator GetEnumerator()
+        {
+            return new(this);
+        }
+
+        public struct Enumerator : IEnumerator<Inventory>
+        {
+            // A simple wrapper around Dictionary<PrototypeId, Inventory>.ValueCollection.Enumerator
+            // to avoid exposing the internal implementation (and be less wordy in general).
+
+            private readonly InventoryCollection _inventoryCollection;
+            private Dictionary<PrototypeId, Inventory>.ValueCollection.Enumerator _enumerator;
+
+            public Inventory Current { get => _enumerator.Current; }
+            object IEnumerator.Current { get => Current; }
+
+            public Enumerator(InventoryCollection inventoryCollection)
+            {
+                _inventoryCollection = inventoryCollection;
+                _enumerator = _inventoryCollection._inventoryDict.Values.GetEnumerator();
+            }
+
+            public bool MoveNext()
+            {
+                return _enumerator.MoveNext();
+            }
+
+            public void Reset()
+            {
+                _enumerator.Dispose();
+                _enumerator = _inventoryCollection._inventoryDict.Values.GetEnumerator();
+            }
+
+            public void Dispose()
+            {
+                _enumerator.Dispose();
+            }
+        }
     }
 }

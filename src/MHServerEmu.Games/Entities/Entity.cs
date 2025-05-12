@@ -9,11 +9,14 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
 
 namespace MHServerEmu.Games.Entities
@@ -56,7 +59,7 @@ namespace MHServerEmu.Games.Entities
         HasMissionPrototype             = 1ul << 30,
         Flag31                          = 1ul << 31,
         IsPopulation                    = 1ul << 32,
-        Flag33                          = 1ul << 33,
+        SummonDecremented               = 1ul << 33,
         AttachedToEntityId              = 1ul << 34,
         IsHotspot                       = 1ul << 35,
         IsCollidableHotspot             = 1ul << 36,
@@ -112,6 +115,7 @@ namespace MHServerEmu.Games.Entities
         private EntityFlags _flags;
 
         private List<AttachedPropertiesEntry> _attachedProperties;
+        private PropertyTickerManager _propertyTickerManager;
 
         public ulong Id { get; private set; }
         public ulong DatabaseUniqueId { get; private set; }
@@ -142,6 +146,8 @@ namespace MHServerEmu.Games.Entities
         public bool IsRootOwner { get => OwnerId == 0; }
         public virtual bool IsWakingUp { get => false; }
         public TimeSpan TotalLifespan { get; private set; }
+
+        public Event<EntityInventoryChangedEvent> EntityInventoryChangedEvent = new();
 
         #region Flag Properties
 
@@ -184,6 +190,7 @@ namespace MHServerEmu.Games.Entities
         public bool HasEncounterResourcePrototype { get => _flags.HasFlag(EntityFlags.EncounterResource); }
         public bool IgnoreNavi { get => _flags.HasFlag(EntityFlags.IgnoreNavi); }
         public bool IsInTutorialPowerLock { get => _flags.HasFlag(EntityFlags.TutorialPowerLock); }
+        public bool SummonDecremented { get => _flags.HasFlag(EntityFlags.SummonDecremented); }
 
         #endregion
 
@@ -248,6 +255,10 @@ namespace MHServerEmu.Games.Entities
 
             if (Prototype.Properties != null)
                 Properties.FlattenCopyFrom(Prototype.Properties, true);
+
+            // Add properties from patch
+            if (PrototypePatchManager.Instance.CheckProperties(PrototypeDataRef, out PropertyCollection prop))
+                Properties.FlattenCopyFrom(prop, false);
 
             if (settings.Properties != null)
                 Properties.FlattenCopyFrom(settings.Properties, false);
@@ -773,7 +784,7 @@ namespace MHServerEmu.Games.Entities
                 entry.ModRef = modRef;
                 entry.Index = index;
                 entry.Properties = newCollection;
-                entry.Field4 = 0;
+                entry.PropertyTickerId = 0;
 
                 if (IsSimulated == false)
                 {
@@ -817,7 +828,7 @@ namespace MHServerEmu.Games.Entities
 
         public void DetachProperties(PrototypeId modTypeRef, PrototypeId modRef, ulong index)
         {
-            Logger.Debug($"DetachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
+            //Logger.Debug($"DetachProperties(): modTypeRef={modTypeRef.GetName()}, modRef={modRef.GetName()}");
 
             if (_attachedProperties == null) { Logger.Warn("DetachProperties(): _attachedProperties == null"); return; }
 
@@ -895,8 +906,6 @@ namespace MHServerEmu.Games.Entities
             {
                 Property.FromParam(kvp.Key, 1, out PrototypeId procPowerRef);
                 procPowerRefList.Add(procPowerRef);
-
-                Logger.Debug($"CreateAndCloneAttachedModCollection(): {procPowerRef.GetName()}");
             }
 
             foreach (PrototypeId procPowerRef in procPowerRefList)
@@ -910,16 +919,6 @@ namespace MHServerEmu.Games.Entities
             return modProperties;
         }
 
-        private void StartPropertyTickingMod(AttachedPropertiesEntry entry)
-        {
-
-        }
-
-        private void StopPropertyTickingMod(AttachedPropertiesEntry entry)
-        {
-
-        }
-
         private class AttachedPropertiesEntry
         {
             // NOTE: This has to be a class instead of struct so that it can be modified inside a list
@@ -927,9 +926,70 @@ namespace MHServerEmu.Games.Entities
             public PrototypeId ModRef { get; set; }
             public ulong Index { get; set; }
             public PropertyCollection Properties { get; set; }
-            public ulong Field4 { get; set; }
+            public ulong PropertyTickerId { get; set; }
         }
-        
+
+        #endregion
+
+        #region Tickers
+
+        public ulong StartPropertyTicker(PropertyCollection properties, ulong creatorId, ulong ultimateCreatorId, TimeSpan updateInterval)
+        {
+            if (IsSimulated == false || IsDestroyed)
+                return PropertyTicker.InvalidId;
+
+            // Create ticker manager on demand
+            _propertyTickerManager ??= new(this);
+
+            return _propertyTickerManager.StartTicker(properties, creatorId, ultimateCreatorId, updateInterval);
+        }
+
+        public ulong StartPropertyTickingCondition(Condition condition)
+        {
+            // NOTE: Although this is used only for world entities, we keep it here with the rest of the ticker functionality
+
+            if (IsSimulated == false || IsDestroyed)
+                return PropertyTicker.InvalidId;
+
+            // Create ticker manager on demand
+            _propertyTickerManager ??= new(this);
+
+            return _propertyTickerManager.StartTicker(condition);
+        }
+
+        public void StopPropertyTicker(ulong tickerId)
+        {
+            if (tickerId != PropertyTicker.InvalidId)
+                _propertyTickerManager?.StopTicker(tickerId);
+        }
+
+        public void StopAllPropertyTickers()
+        {
+            _propertyTickerManager?.StopAllTickers();
+        }
+
+        public void UpdatePropertyTicker(ulong tickerId, TimeSpan duration, bool isPaused)
+        {
+            _propertyTickerManager?.UpdateTicker(tickerId, duration, isPaused);
+        }
+
+        private void StartPropertyTickingMod(AttachedPropertiesEntry entry)
+        {
+            if (IsSimulated == false || IsDestroyed)
+                return;
+
+            entry.PropertyTickerId = StartPropertyTicker(entry.Properties, Id, Id, TimeSpan.FromMilliseconds(1000));
+        }
+
+        private void StopPropertyTickingMod(AttachedPropertiesEntry entry)
+        {
+            if (entry.PropertyTickerId == PropertyTicker.InvalidId)
+                return;
+
+            _propertyTickerManager?.StopTicker(entry.PropertyTickerId);
+            entry.PropertyTickerId = PropertyTicker.InvalidId;
+        }
+
         #endregion
 
         #region Inventory Management
@@ -1074,16 +1134,18 @@ namespace MHServerEmu.Games.Entities
 
         public InventoryResult CanChangeInventoryLocation(Inventory destInventory)
         {
-            PropertyEnum propertyEnum = PropertyEnum.Invalid;
-            return CanChangeInventoryLocation(destInventory, ref propertyEnum);
+            return CanChangeInventoryLocation(destInventory, out _);
         }
 
-        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, ref PropertyEnum propertyRestriction)
+        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, out PropertyEnum propertyRestriction)
         {
-            InventoryResult result = destInventory.PassesContainmentFilter(PrototypeDataRef);
-            if (result != InventoryResult.Success) return result;
+            propertyRestriction = PropertyEnum.Invalid;
 
-            return destInventory.PassesEquipmentRestrictions(this, ref propertyRestriction);
+            InventoryResult result = destInventory.PassesContainmentFilter(PrototypeDataRef);
+            if (result != InventoryResult.Success)
+                return result;
+
+            return destInventory.PassesEquipmentRestrictions(this, out propertyRestriction);
         }
 
         public InventoryResult ChangeInventoryLocation(Inventory destination, uint destSlot = Inventory.InvalidSlot)
@@ -1398,6 +1460,11 @@ namespace MHServerEmu.Games.Entities
         protected virtual void SetCombatLevel(int combatLevel)
         {
             Properties[PropertyEnum.CombatLevel] = combatLevel;
+        }
+
+        public void SetVisible(bool visible)
+        {
+            Properties[PropertyEnum.Visible] = visible;
         }
     }
 }

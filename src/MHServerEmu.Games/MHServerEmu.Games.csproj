@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <InformationalVersion>0.5.0</InformationalVersion>
+    <InformationalVersion>0.6.0</InformationalVersion>
     <SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</SourceRevisionId>
     <AssemblyVersion>$(InformationalVersion).0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
@@ -19,7 +19,6 @@
     <ProjectReference Include="..\Gazillion\Gazillion.csproj" />
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
     <ProjectReference Include="..\MHServerEmu.DatabaseAccess\MHServerEmu.DatabaseAccess.csproj" />
-    <ProjectReference Include="..\MHServerEmu.Frontend\MHServerEmu.Frontend.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,7 +46,16 @@
     <None Update="Data\Game\Achievements\eng.achievements.string">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Data\Game\IMPORTANT.txt">
+    <None Update="Data\Game\Patches\Off\PatchDataCarnival.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\Off\PatchDataTestOverrideLoot.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\PatchDataMissions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\PatchDataBugFixes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Data\Game\LiveTuningData.json">
@@ -55,6 +63,15 @@
     </None>
     <None Update="Data\Game\LiveTuningDataBugFixes.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\LootDropWeightMultiplierOverrides.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\PatchDataRestoredContent.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\Game\Patches\PatchDataSpecialEvents.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

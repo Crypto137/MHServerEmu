@@ -1,3 +1,6 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -7,7 +10,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionRegionLeave : MissionPlayerCondition
     {
         private MissionConditionRegionLeavePrototype _proto;
-        private Action<PlayerLeftRegionGameEvent> _playerLeftRegionAction;
+        private Event<PlayerLeftRegionGameEvent>.Action _playerLeftRegionAction;
 
         public MissionConditionRegionLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -20,21 +23,27 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool leave = true;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                var region = player.CurrentAvatar?.Region;
-                if (region != null && region.FilterRegion(_proto.RegionPrototype, _proto.RegionIncludeChildren, null))
+                foreach (var player in participants)
                 {
-                    leave = false;
-                    break;
+                    var region = player.CurrentAvatar?.Region;
+                    if (region != null && region.FilterRegion(_proto.RegionPrototype, _proto.RegionIncludeChildren, null))
+                    {
+                        leave = false;
+                        break;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(leave);
             return true;
         }
 
-        private void OnPlayerLeftRegion(PlayerLeftRegionGameEvent evt)
+        private void OnPlayerLeftRegion(in PlayerLeftRegionGameEvent evt)
         {
             var player = evt.Player;
             var regionRef = evt.RegionRef;

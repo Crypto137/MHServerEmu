@@ -12,7 +12,6 @@ using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Core.Collisions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Entities.Avatars;
@@ -561,21 +560,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] == (int)State.ToadSummoned)
             {
                 bool toadSummoned = false;
-                Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
-                if (summonedInventory != null)
-                {
-                    EntityManager entityManager = game.EntityManager;
 
-                    foreach (var entry in summonedInventory)
+                foreach (var summoned in new SummonedEntityIterator(agent))
+                    if (summoned.PrototypeDataRef == ToadPrototype)
                     {
-                        WorldEntity summoned = entityManager.GetEntity<WorldEntity>(entry.Id);
-                        if (summoned != null && summoned.PrototypeDataRef == ToadPrototype)
-                        {
-                            toadSummoned = true;
-                            break;
-                        }
+                        toadSummoned = true;
+                        break;
                     }
-                }
 
                 if (toadSummoned == false)
                 {
@@ -972,7 +963,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Ally) == false) return;
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Ally) == false) return;
 
             GRandom random = game.Random;
             Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -1000,9 +991,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             base.Init(agent);
             InitPower(agent, TeleportToEntityPower);
             InitPowers(agent, SummonProceduralPowers);
-
-            // REMOVEME: Disabled state change until we fix desync issues
-            agent.AIController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.GenericProcedural;
         }
 
         public override void Think(AIController ownerController)
@@ -1083,9 +1071,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     PopulatePowerPicker(ownerController, powerPicker);
                     if (HandleProceduralPower(ownerController, proceduralAI, random, currentTime, powerPicker, true) == StaticBehaviorReturnType.Running) return;
 
-                    // REMOVEME: Disabled state change until we fix desync issues
-                    //if (currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1])
-                    //    blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TeleportToEntity;
+                    if (currentTime > blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1])
+                        blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.TeleportToEntity;
                     break;
             }
         }
@@ -2027,18 +2014,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (agent == null) return;
                 Game game = agent.Game;
                 if (game == null) return;
-                var manager = game.EntityManager;
-                Inventory summonedInventory = agent.GetInventory(InventoryConvenienceLabel.Summoned);
-                if (summonedInventory != null)                
-                    foreach (var entry in summonedInventory)
+                
+                foreach (var summoned in new SummonedEntityIterator(agent))
+                    if (summoned is Agent summonedAgent)
                     {
-                        Agent summonedAgent = manager.GetEntity<Agent>(entry.Id);
-                        if (summonedAgent != null)
-                        {
-                            WorldEntity target = ownerController.TargetEntity;
-                            if (target == null) return;
-                            summonedAgent.Properties[PropertyEnum.TauntersID] = target.Id;
-                        }
+                        WorldEntity target = ownerController.TargetEntity;
+                        if (target == null) return;
+                        summonedAgent.Properties[PropertyEnum.TauntersID] = target.Id;
                     }
             }
         }
@@ -2293,7 +2275,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (powerContext == null || powerContext.Power == PrototypeId.Invalid) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             var powerQueue = blackboard.CustomPowerQueue;
-            if (powerQueue != null)
+            if (powerQueue != null && powerQueue.Count > 0)
             {
                 PrototypeId customPowerDataRef = powerQueue.Peek().PowerRef;
                 if (powerContext.Power != customPowerDataRef) return;
@@ -2324,7 +2306,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+            CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
             if (target == null)
             {
                 HandleContext(proceduralAI, ownerController,IdleRotation);
@@ -2485,7 +2467,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (state != EnrageState.Enraging)
             {
                 WorldEntity target = ownerController.TargetEntity;
-                if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+                if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
 
                 GRandom random = game.Random;
                 Picker<ProceduralUsePowerContextPrototype> powerPicker = new(random);
@@ -4582,7 +4564,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null || blackboard == null) return;
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long summonCooldown = currentTime + game.Random.Next(SummonHydraMinCooldownMS, SummonHydraMaxCooldownMS);
-            summonCooldown = long.MaxValue; // REMOVEME: Disabled summon/invul phases until we have summons working
             blackboard.PropertyCollection[PropertyEnum.AICustomTimeVal1] = summonCooldown;
         }
 
@@ -4639,7 +4620,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 case State.SummonHydra:
 
-                    int numPlayers = Power.ComputeNearbyPlayers(agent.Region, agent.RegionLocation.Position, 0, false);
+                    int numPlayers = Power.ComputeNearbyPlayers(agent.Region, agent.RegionLocation.Position);
                     int numSummons = 0;
                     for (int i = 0; i < numPlayers; i++)
                         if (ownerController.AttemptActivatePower(SummonHydraPower, agent.Id, agent.RegionLocation.Position))
@@ -4847,6 +4828,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] < 1)
                     {
                         var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SummonElektra.PowerContext, SummonElektra);
+                        if (powerResult == StaticBehaviorReturnType.Running) return;
                         if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
                             ProceduralAI.Logger.Warn($"Kingpin failed to play his SummonElektra power! Reason: {powerResult}  Kingpin: {agent}");
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 1;
@@ -4855,6 +4837,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         if (blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] < 2)
                         {
                             var powerResult = HandleUsePowerContext(ownerController, proceduralAI, game.Random, currentTime, SummonBullseye.PowerContext, SummonBullseye);
+                            if (powerResult == StaticBehaviorReturnType.Running) return;
                             if (powerResult == StaticBehaviorReturnType.Failed || powerResult == StaticBehaviorReturnType.Interrupted)
                                 ProceduralAI.Logger.Warn($"Kingpin failed to play his SummonBullseye power! Reason: {powerResult}  Kingpin: {agent}");
                             blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = 2;
@@ -4890,7 +4873,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (region == null) return;
             ownerController.RegisterForPlayerInteractEvents(region, true);
             agent.Properties[PropertyEnum.Interactable] = true;
-            agent.Properties[PropertyEnum.Health] = 0; // REMOVEME when EMPHealing will work!!!
             var transitionGlobalsProto = GameDatabase.TransitionGlobalsPrototype;
             if (transitionGlobalsProto != null && transitionGlobalsProto.EnabledState != PrototypeId.Invalid)
                 agent.Properties[PropertyEnum.EntityState] = transitionGlobalsProto.EnabledState;
@@ -4928,22 +4910,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                     blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Activated;
                 }
-            }
-            else if (stateVal == (int)State.Activated)
-            {
-                // REMOVEME when EMPHealing will work!!!
-                int maxHealth = agent.Properties[PropertyEnum.HealthMax];
-                int health = agent.Properties[PropertyEnum.Health] + 80; // update 1% of base
-                if (health < maxHealth)
-                {
-                    agent.Properties[PropertyEnum.Health] = health;
-                    // update widget
-                }
-                else
-                {
-                    agent.Properties[PropertyEnum.Health] = maxHealth;
-                    agent.Region.AdjustHealthEvent.Invoke(new(agent, null, null, 0, false));
-                } 
             }
         }
 
@@ -5218,6 +5184,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (broadcaster is not Agent broadcasterAgent) return;
                 var broadcasterController = broadcasterAgent.AIController;
                 if (broadcasterController == null) return;
+
+                // Fix to prevent bad state in situations when RNG picks lower cooldown values and things overlap poorly
+                if (ownerController.Brain?.GetState(0) == UsePower.Instance)
+                {
+                    ProceduralAI.Logger.Warn("[ProceduralProfileNickFuryTurretPrototype] OnAIBroadcastBlackboardEvent(): ownerController.Brain.GetState(0) == UsePower.Instance");
+                    return;
+                }
 
                 ownerController.Blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = (int)State.Ready;
                 ownerController.SetTargetEntity(broadcasterController.TargetEntity);
@@ -5618,6 +5591,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                         blackboard.PropertyCollection[PropertyEnum.AICustomStateVal1] = false;
                         ownerController.ResetCurrentTargetState();
                     }
+                    if (movetoResult == StaticBehaviorReturnType.Running) return;
                 }
 
                 float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
@@ -5633,7 +5607,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
             {
                 int distToMasterSq = 0;
                 if (master != null && master.IsInWorld)

@@ -13,9 +13,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateMissionProgression : MetaState
     {
 	    private MetaStateMissionProgressionPrototype _proto;
-        private Action<OpenMissionCompleteGameEvent> _openMissionCompleteAction;
-        private Action<OpenMissionFailedGameEvent> _openMissionFailedAction;
-        private Action<PlayerDeathLimitHitGameEvent> _playerDeathLimitHitAction;
+        private Event<OpenMissionCompleteGameEvent>.Action _openMissionCompleteAction;
+        private Event<OpenMissionFailedGameEvent>.Action _openMissionFailedAction;
+        private Event<PlayerDeathLimitHitGameEvent>.Action _playerDeathLimitHitAction;
         private EventPointer<StatePickIntervalEvent> _stateIntervalEvent = new();
         private EventPointer<PlayerDeathLimitEvent> _playerDeathLimitEvent = new();
         private PrototypeId _stateRef;
@@ -59,7 +59,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        private void OnOpenMissionComplete(in OpenMissionCompleteGameEvent evt)
         {
             var missionRef = evt.MissionRef;
             if (missionRef == PrototypeId.Invalid || _proto.StatesProgression.IsNullOrEmpty()) return;
@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             }
         }
 
-        private void OnOpenMissionFailed(OpenMissionFailedGameEvent evt)
+        private void OnOpenMissionFailed(in OpenMissionFailedGameEvent evt)
         {
             var missionRef = evt.MissionRef; 
             if (missionRef == PrototypeId.Invalid || _proto.StatesProgression.IsNullOrEmpty()) return;
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             }
         }
 
-        private void OnPlayerDeathLimitHit(PlayerDeathLimitHitGameEvent evt)
+        private void OnPlayerDeathLimitHit(in PlayerDeathLimitHitGameEvent evt)
         {
             var scheduler = GameEventScheduler;
             if (scheduler == null) return;
@@ -160,16 +160,10 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 // reset avatar status
                 if (avatar.IsDead) avatar.Resurrect();
 
-                var avatarPrototype = avatar.AvatarPrototype;
-                if (avatarPrototype.PrimaryResourceBehaviors.IsNullOrEmpty()) continue;
-
-                foreach (PrototypeId primaryManaBehaviorProtoRef in avatarPrototype.PrimaryResourceBehaviors)
+                foreach (var primaryManaBehaviorProto in avatar.GetPrimaryResourceManaBehaviors())
                 {
-                    var primaryManaBehaviorProto = primaryManaBehaviorProtoRef.As<PrimaryResourceManaBehaviorPrototype>();
-                    if (primaryManaBehaviorProto == null) continue;
-
-                    float endurance = avatar.Properties[PropertyEnum.EnduranceMax, (int)primaryManaBehaviorProto.ManaType];
-                    avatar.Properties[PropertyEnum.Endurance, (int)primaryManaBehaviorProto.ManaType] = endurance;
+                    float endurance = avatar.Properties[PropertyEnum.EnduranceMax, primaryManaBehaviorProto.ManaType];
+                    avatar.Properties[PropertyEnum.Endurance, primaryManaBehaviorProto.ManaType] = endurance;
                 }
 
                 avatar.Properties[PropertyEnum.Health] = avatar.Properties[PropertyEnum.HealthMax];

@@ -4,7 +4,6 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
@@ -22,7 +21,7 @@ namespace MHServerEmu.Games.Entities
 {
     public class ConditionCollection : ISerialize
     {
-        public const int MaxConditions = 256;
+        public const int MaxConditions = 255;
         public const ulong InvalidConditionId = 0;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -31,6 +30,8 @@ namespace MHServerEmu.Games.Entities
 
         private readonly SortedDictionary<ulong, Condition> _currentConditions = new();
         private readonly Dictionary<StackId, int> _stackCountCache = new();
+
+        private readonly Dictionary<ProcTriggerType, HashSet<ulong>> _cancelOnProcTriggerCache = new();
 
         private readonly EventGroup _pendingEvents = new();
 
@@ -54,25 +55,46 @@ namespace MHServerEmu.Games.Entities
             {
                 if (archive.IsPacking)
                 {
-                    if (_currentConditions.Count >= MaxConditions)
-                        return Logger.ErrorReturn(false, $"Serialize(): _currentConditionDict.Count >= MaxConditions");
+                    // When the number of serialized conditions is >= 256, the client aborts deserialization without
+                    // skipping, which can make it crash when trying to read the data ahead. This number is hardcoded,
+                    // and it affects only archive serialization, protobuf messages can exceed this cap without issues.
+
+                    // Our options are as follows:
+                    // 1. Do nothing and allow clients to crash - crashing is bad.
+                    // 2. Cap the number of conditions server-side to 255 - may lead to unexpected behavior.
+                    // 3. Patch the client check - will require everyone to modify their clients.
+                    // 4. Do not send any conditions when the cap is exceeded - severe desync.
+                    // 5. Cap the number of serialized conditions to 255 - less desync than option 3.
+                    // All of these options are not ideal, but 5 seems to be the least intrusive.
 
                     uint numConditions = (uint)_currentConditions.Count;
+                    if (numConditions > MaxConditions)
+                    {
+                        Logger.Warn($"Serialize(): Attempting to serialize a ConditionCollection that contains > {MaxConditions} conditions, some conditions will not be included!\nNumConditions={numConditions}\nOwner=[{_owner}]");
+                        numConditions = MaxConditions;
+                    }
+
                     success &= Serializer.Transfer(archive, ref numConditions);
 
                     foreach (Condition condition in _currentConditions.Values)
+                    {
                         success &= condition.Serialize(archive, _owner);
+
+                        if (--numConditions == 0)
+                            break;
+                    }
                 }
                 else
                 {
+                    // Deserialization implementation mimics the client for reference.
                     if (_currentConditions.Count != 0)
                         return Logger.ErrorReturn(false, $"Serialize(): _currrentConditionDict is not empty");
 
                     uint numConditions = 0;
                     success &= Serializer.Transfer(archive, ref numConditions);
 
-                    if (numConditions >= MaxConditions)
-                        return Logger.ErrorReturn(false, $"Serialize(): numConditions >= MaxConditions");
+                    if (numConditions > MaxConditions)
+                        return Logger.ErrorReturn(false, $"Serialize(): numConditions > MaxConditions");
 
                     for (uint i = 0; i < numConditions; i++)
                     {
@@ -213,6 +235,38 @@ namespace MHServerEmu.Games.Entities
             return condition.Id;
         }
 
+        /// <summary>
+        /// Adds ids of all <see cref="Condition"/> instances contained in this <see cref="ConditionCollection"/> that apply
+        /// the specified negative status effect to the provided list. Returns <see langword="true"/> if any conditions were added.
+        /// </summary>
+        public bool GetNegativeStatusConditions(PrototypeId negativeStatusProtoRef, List<ulong> negativeStatusConditionList)
+        {
+            bool hasNegativeStatus = false;
+
+            List<PrototypeId> negativeStatusList = ListPool<PrototypeId>.Instance.Get();
+
+            foreach (Condition condition in this)
+            {
+                if (condition.IsANegativeStatusEffect(negativeStatusList) == false)
+                    continue;
+
+                foreach (PrototypeId foundNegativeStatusRef in negativeStatusList)
+                {
+                    if (foundNegativeStatusRef == negativeStatusProtoRef)
+                    {
+                        negativeStatusConditionList.Add(condition.Id);
+                        hasNegativeStatus = true;
+                        break;
+                    }
+                }
+
+                negativeStatusList.Clear();
+            }
+
+            ListPool<PrototypeId>.Instance.Return(negativeStatusList);
+            return hasNegativeStatus;
+        }
+
         public Iterator IterateConditions(bool skipDisabled)
         {
             return new(this, skipDisabled);
@@ -272,7 +326,7 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 // Count the current number of stacks
-                if (creatorId != Entity.InvalidId && condition.Id == creatorId)
+                if (creatorId != Entity.InvalidId && condition.CreatorId == creatorId)
                     existingStackCount++;
 
                 // Determine the longest remaining duration
@@ -474,8 +528,6 @@ namespace MHServerEmu.Games.Entities
                 success = true;
                 //Logger.Trace($"AddCondition(): {condition} - {condition.Duration.TotalMilliseconds} ms");
 
-                condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
-
                 // Trigger additional effects
                 WorldEntity creator = _owner.Game.EntityManager.GetEntity<WorldEntity>(condition.CreatorId);
                 PowerPrototype powerProto = condition.CreatorPowerPrototype;
@@ -637,10 +689,44 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
+        public void RemoveConditionsWithConditionPrototypeRef(PrototypeId protoRef)
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionWithPrototypeFunc, protoRef);
+        }
+
         public void RemoveConditionsWithKeyword(PrototypeId keywordProtoRef)
         {
             KeywordPrototype keywordProto = keywordProtoRef.As<KeywordPrototype>();
             RemoveConditionsFiltered(ConditionFilter.IsConditionWithKeywordFunc, keywordProto);
+        }
+
+        public void RemoveCancelOnHitConditions()
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnHitFunc);
+        }
+
+        public void RemoveCancelOnKilledConditions()
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnKilledFunc);
+        }
+
+        public void RemoveCancelOnPowerUseConditions(PowerPrototype powerProto)
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnPowerUseFunc, powerProto);
+        }
+
+        public void RemoveCancelOnPowerUsePostConditions(PowerPrototype powerProto)
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnPowerUsePostFunc, powerProto);
+        }
+
+        public void RemoveCancelOnProcTriggerConditions(ProcTriggerType triggerType)
+        {
+            if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
+                return;
+
+            foreach (ulong conditionId in conditionIds)
+                RemoveCondition(conditionId);
         }
 
         public bool PauseCondition(Condition condition, bool notifyClient)
@@ -705,27 +791,27 @@ namespace MHServerEmu.Games.Entities
         /// Attempts to readd a condition to the <see cref="Power"/> that created it.
         /// Returns <see langword="false"/> if condition is no longer valid.
         /// </summary>
-        public bool TryRestorePowerCondition(Condition condition, WorldEntity owner)
+        public bool TryRestorePowerCondition(Condition condition, WorldEntity powerOwner)
         {
-            if (owner == null)
+            if (powerOwner == null)
                 return false;
 
             if (condition.CreatorPowerPrototypeRef == PrototypeId.Invalid)
                 return false;
 
             // Restore tracking if the power is still assigned and can be used
-            Power power = owner.PowerCollection?.GetPower(condition.CreatorPowerPrototypeRef);
+            Power power = powerOwner.PowerCollection?.GetPower(condition.CreatorPowerPrototypeRef);
             if (power != null)
             {
-                if (power.CanBeUsedInRegion(owner.Region) == false)
+                if (power.CanBeUsedInRegion(powerOwner.Region) == false)
                     return false;
 
                 // Trying to figure out if this orphan condition bug is a data issue with a specific power (DiamondFormCondition) or a more broad issue
                 if (power.IsToggled() && power.IsToggledOn() == false && power.PrototypeDataRef != (PrototypeId)17994345800984565974)
                     Logger.Warn($"TryRestorePowerCondition(): Toggled power is off, but has an active condition! power=[{power}]");
 
-                if (power.IsTrackingCondition(owner.Id, condition) == false)
-                    power.TrackCondition(owner.Id, condition);
+                if (power.IsTrackingCondition(_owner.Id, condition) == false)
+                    power.TrackCondition(_owner.Id, condition);
 
                 return true;
             }
@@ -866,6 +952,7 @@ namespace MHServerEmu.Games.Entities
                 return Logger.WarnReturn(false, $"InsertCondition(): Failed to insert condition id {condition.Id} for [{_owner}]");
 
             condition.Collection = this;
+            condition.Properties.Bind(_owner, AOINetworkPolicyValues.AllChannels);
             return true;
         }
 
@@ -988,12 +1075,39 @@ namespace MHServerEmu.Games.Entities
 
         private void OnPreAccrueCondition(Condition condition)
         {
+            StatusEffectEvent(condition, false);
+        }
 
+        private void StatusEffectEvent(Condition condition, bool ownerStatus)
+        {
+            var region = _owner?.Region;
+            if (region == null) return;
+
+            var manager = _owner.Game?.EntityManager;
+            if (manager == null) return;
+
+            foreach (var prop in condition.Properties)
+            {
+                bool conditionValue = prop.Value != 0;
+                bool ownerValue = _owner.Properties[prop.Key];
+                if (conditionValue == ownerValue) continue;
+
+                var creator = manager.GetEntity<WorldEntity>(condition.CreatorId);
+                var avatar = creator?.GetMostResponsiblePowerUser<Avatar>();
+                var player = avatar?.GetOwnerOfType<Player>();
+
+                var statusProp = prop.Key.Enum;
+                bool status = ownerStatus ? ownerValue : conditionValue;
+                var propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(statusProp);
+                bool negativeStatus = Condition.IsANegativeStatusEffectProperty(propInfo.PrototypeDataRef);
+                region.EntityStatusEffectEvent.Invoke(new(_owner, player, statusProp, status, negativeStatus));
+            }
         }
 
         private void OnPostAccrueCondition(Condition condition)
         {
             IncrementStackCountCache(condition);
+            CacheCancelOnProcTriggers(condition);
 
             if (condition.ShouldStartPaused(_owner.Region))
             {
@@ -1043,11 +1157,20 @@ namespace MHServerEmu.Games.Entities
         {
             RebuildConditionKeywordsMask(condition.Id);
             DecrementStackCountCache(condition);
+            RemoveCachedCancelOnProcTriggers(condition);
+
+            // Remove proc powers
+            Handle handle = new(this, condition);
+            _owner.UpdateProcEffectPowers(condition.Properties, false);
+            if (handle.Valid() == false)
+                return;
+
+            StatusEffectEvent(condition, true);
         }
 
         private bool EnableCondition(Condition condition, bool enable)
         {
-            Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
+            //Logger.Debug($"EnableCondition(): {condition} = {enable} (owner={_owner})");
 
             PlayerConnectionManager networkManager = _owner.Game.NetworkManager;
 
@@ -1090,22 +1213,35 @@ namespace MHServerEmu.Games.Entities
             return true;
         }
 
-        private void StartTicker(Condition condition)
+        private bool StartTicker(Condition condition)
         {
-            // TODO
-            //Logger.Debug($"StartTicker(): {condition}");
+            ulong tickerId = condition.PropertyTickerId;
+            if (tickerId != PropertyTicker.InvalidId)
+                return Logger.WarnReturn(false, $"StartTicker(): Attempted to start a ticker for condition [{condition}] that already has ticker id {tickerId}");
+
+            condition.PropertyTickerId = _owner.StartPropertyTickingCondition(condition);
+            return true;
         }
 
         private void StopTicker(Condition condition)
         {
-            // TODO
-            //Logger.Debug($"StopTicker(): {condition}");
+            ulong tickerId = condition.PropertyTickerId;
+            if (tickerId == PropertyTicker.InvalidId)
+                return;
+
+            // Ticker id needs to be cleared before actually stopping the ticker because
+            // stopping the ticker can kill the target, which may call StopTicker() again.
+            condition.PropertyTickerId = PropertyTicker.InvalidId;
+            _owner.StopPropertyTicker(tickerId);
         }
 
         private void UpdateTicker(Condition condition)
         {
-            // TODO
-            //Logger.Debug($"UpdateTicker(): {condition}");
+            ulong tickerId = condition.PropertyTickerId;
+            if (tickerId == PropertyTicker.InvalidId)
+                return;
+
+            _owner.UpdatePropertyTicker(tickerId, condition.TimeRemaining, condition.IsPaused);
         }
 
         private void SendConditionPauseTimeMessage(Condition condition)
@@ -1244,6 +1380,47 @@ namespace MHServerEmu.Games.Entities
             }
 
             return count;
+        }
+
+        private bool CacheCancelOnProcTriggers(Condition condition)
+        {
+            ConditionPrototype conditionProto = condition?.ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn(false, "CacheCancelOnProcTriggers(): conditionProto == null");
+
+            if (conditionProto.CancelOnProcTriggers.IsNullOrEmpty())
+                return true;
+
+            foreach (ProcTriggerType triggerType in conditionProto.CancelOnProcTriggers)
+            {
+                if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
+                {
+                    conditionIds = new();
+                    _cancelOnProcTriggerCache.Add(triggerType, conditionIds);
+                }
+
+                conditionIds.Add(condition.Id);
+            }
+
+            return true;
+        }
+
+        private bool RemoveCachedCancelOnProcTriggers(Condition condition)
+        {
+            ConditionPrototype conditionProto = condition?.ConditionPrototype;
+            if (conditionProto == null) return Logger.WarnReturn(false, "RemoveCachedCancelOnProcTriggers(): conditionProto == null");
+
+            if (conditionProto.CancelOnProcTriggers.IsNullOrEmpty())
+                return true;
+
+            foreach (ProcTriggerType triggerType in conditionProto.CancelOnProcTriggers)
+            {
+                if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)
+                    continue;
+
+                conditionIds.Remove(condition.Id);
+            }
+
+            return true;
         }
 
         public readonly struct StackId : IEquatable<StackId>

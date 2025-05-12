@@ -23,6 +23,7 @@ MHServerEmu-specific topics.
 Topics concerning the game in general.
 
 - [Glossary](./Game/Glossary.md) - a list of terms used by the game internally.
+- [Live Tuning](./Game/LiveTuning.md) - an overview of the live tuning system.
 - [Properties](./Game/Properties.md) - information about game properties (entity stats).
 
 ## Networking

@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -18,8 +19,15 @@ namespace MHServerEmu.Games.Missions.Actions
             if (hudTutorial == null) return;
 
             if (hudTutorial.SkipIfOnPC == false) // only PC check
-                foreach (Player player in GetDistributors(_proto.SendTo))
-                    player.ShowHUDTutorial(hudTutorial);
+            {
+                List<Player> players = ListPool<Player>.Instance.Get();
+                if (GetDistributors(_proto.SendTo, players))
+                {
+                    foreach (Player player in players)
+                        player.ShowHUDTutorial(hudTutorial);
+                }
+                ListPool<Player>.Instance.Return(players);
+            }
         }
     }
 }

@@ -1,15 +1,17 @@
-using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionHotspotEnter : MissionPlayerCondition
     {
         private MissionConditionHotspotEnterPrototype _proto;
-        private Action<EntityEnteredMissionHotspotGameEvent> _entityEnteredMissionHotspotAction;
+        private Event<EntityEnteredMissionHotspotGameEvent>.Action _entityEnteredMissionHotspotAction;
 
         public MissionConditionHotspotEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -25,26 +27,38 @@ namespace MHServerEmu.Games.Missions.Conditions
             bool entered = false;
             if (_proto.TargetFilter != null)
             {
-                foreach (var hotspot in Mission.GetMissionHotspots())
-                    if (EvaluateEntityFilter(_proto.EntityFilter, hotspot)
-                        && hotspot.GetMissionConditionCount(missionRef, _proto) > 0)
-                    {
-                        entered = true;
-                        break;
-                    }
-            }
-            else
-            {
-                foreach (var player in Mission.GetParticipants())
+                List<Hotspot> hotspots = ListPool<Hotspot>.Instance.Get();
+                if (Mission.GetMissionHotspots(hotspots))
                 {
-                    var avatar = player.CurrentAvatar;
-                    if (avatar != null)
-                        if (Mission.FilterHotspots(avatar, PrototypeId.Invalid, _proto.EntityFilter))
+                    foreach (var hotspot in hotspots)
+                        if (EvaluateEntityFilter(_proto.EntityFilter, hotspot)
+                            && hotspot.GetMissionConditionCount(missionRef, _proto) > 0)
                         {
                             entered = true;
                             break;
                         }
                 }
+                ListPool<Hotspot>.Instance.Return(hotspots);
+            }
+            else
+            {
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
+                {
+                    foreach (var player in participants)
+                    {
+                        var avatar = player.CurrentAvatar;
+                        if (avatar != null)
+                        {
+                            if (Mission.FilterHotspots(avatar, PrototypeId.Invalid, _proto.EntityFilter))
+                            {
+                                entered = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                ListPool<Player>.Instance.Return(participants);
             }
 
             SetCompletion(entered);
@@ -71,7 +85,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
+        private void OnEntityEnteredMissionHotspot(in EntityEnteredMissionHotspotGameEvent evt)
         {
             var entity = evt.Target;
             var hotspot = evt.Hotspot;

@@ -358,4 +358,15 @@ namespace MHServerEmu.Games.Powers
         HasProperty = 12,
         DoesNotHaveProperty = 13,
     }
+
+    [AssetEnum((int)DontRefresh)]
+    public enum StackingApplicationStyleType
+    {
+        DontRefresh = 0,
+        Refresh = 1,
+        Recreate = 2,
+        MatchDuration = 3,
+        SingleStackAddDuration = 4,
+        MultiStackAddDuration = 5,
+    }
 }

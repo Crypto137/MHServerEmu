@@ -11,7 +11,8 @@
             value = default;
             LinkedListNode<T> first = list.First;
             
-            if (first == null) return false;
+            if (first == null)
+                return false;
             
             list.RemoveFirst();
             value = first.Value;
@@ -24,8 +25,11 @@
         /// </summary>
         public static bool Remove<T>(this LinkedListNode<T> node)
         {
-            if (node.List == null) return false;
-            node.List.Remove(node);
+            LinkedList<T> list = node.List;
+            if (list == null)
+                return false;
+
+            list.Remove(node);
             return true;
         }
     }

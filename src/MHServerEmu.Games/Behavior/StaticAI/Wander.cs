@@ -96,7 +96,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
                         break;
 
                     default:
-                        Logger.Warn($"The following agent is trying to execute an ActionMoveTo with no valid BasePointType!\n[{agent}]");
+                        // Logger.Warn($"The following agent is trying to execute an ActionMoveTo with no valid BasePointType!\n[{agent}]");
                         return failResult;
                 }
 

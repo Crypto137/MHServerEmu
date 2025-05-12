@@ -33,10 +33,10 @@ namespace MHServerEmu.Games.Behavior
         public WorldEntity AssistedEntity => GetAssistedEntityHelper();
         public Action MissileReturnAction { get; private set; }
 
-        private Action<EntityDeadGameEvent> _entityDeadAction;
-        private Action<EntityAggroedGameEvent> _entityAggroedAction;
-        private Action<AIBroadcastBlackboardGameEvent> _aiBroadcastBlackboardAction;
-        private Action<PlayerInteractGameEvent> _playerInteractAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
+        private Event<EntityAggroedGameEvent>.Action _entityAggroedAction;
+        private Event<AIBroadcastBlackboardGameEvent>.Action _aiBroadcastBlackboardAction;
+        private Event<PlayerInteractGameEvent>.Action _playerInteractAction;
 
         private EventGroup _pendingEvents = new();
         private EventPointer<AIThinkEvent> _thinkEvent = new();
@@ -405,22 +405,22 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnMissileReturnEvent();
         }
 
-        private void OnAIEntityDead(EntityDeadGameEvent deadEvent)
+        private void OnAIEntityDead(in EntityDeadGameEvent deadEvent)
         {
             Brain?.OnEntityDeadEvent(deadEvent);
         }
 
-        private void OnAIBroadcastBlackboard(AIBroadcastBlackboardGameEvent broadcastEvent)
+        private void OnAIBroadcastBlackboard(in AIBroadcastBlackboardGameEvent broadcastEvent)
         {
             Brain?.OnAIBroadcastBlackboardEvent(broadcastEvent);
         }
 
-        private void OnAIOnPlayerInteract(PlayerInteractGameEvent broadcastEvent)
+        private void OnAIOnPlayerInteract(in PlayerInteractGameEvent broadcastEvent)
         {
             Brain?.OnPlayerInteractEvent(broadcastEvent);
         }
 
-        private void OnAIEntityAggroedGame(EntityAggroedGameEvent broadcastEvent)
+        private void OnAIEntityAggroedGame(in EntityAggroedGameEvent broadcastEvent)
         {
             Brain?.OnEntityAggroedEvent(broadcastEvent);
         }
@@ -573,6 +573,10 @@ namespace MHServerEmu.Games.Behavior
             Brain?.OnOwnerCollide(whom);
         }
 
+        public void OnAIResurrect()
+        {
+            SetIsEnabled(true);
+        }
 
         public void OnAIStartThrowing(WorldEntity throwableEntity, PrototypeId throwablePowerRef, PrototypeId throwableCancelPowerRef)
         {
@@ -613,6 +617,25 @@ namespace MHServerEmu.Games.Behavior
             }
             
             return time;
+        }
+
+        public void FindMaxLOSPowerRadius(PrototypeId powerRef)
+        {
+            var powerProto = PowerPrototype.RecursiveGetPowerPrototypeInCombo<MissilePowerPrototype>(powerRef);
+            if (powerProto == null || powerProto.MissileCreationContexts.IsNullOrEmpty()) return;
+
+            float maxRadius = -1.0f;
+
+            foreach (var context in powerProto.MissileCreationContexts)
+            {
+                var boundsProto = context?.Entity.As<MissilePrototype>()?.Bounds;
+                if (boundsProto == null) return;
+
+                maxRadius = MathF.Max(boundsProto.GetSphereRadius(), maxRadius);
+            }
+
+            if (maxRadius > Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius])
+                Blackboard.PropertyCollection[PropertyEnum.AILOSMaxPowerRadius] = maxRadius;
         }
 
         public void OnAIAggroNotification(ulong targetId)

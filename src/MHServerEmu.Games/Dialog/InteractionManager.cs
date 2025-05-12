@@ -35,13 +35,14 @@ namespace MHServerEmu.Games.Dialog
                 GetInteractionDataFromMissionPrototype(missionProto);
             }
 
+            HashSet<PrototypeId> contexts = HashSetPool<PrototypeId>.Instance.Get();
             foreach (var kvp in _missionMap)
             {
                 var missionData = kvp.Value;
                 if (missionData == null) continue;
                 if (missionData.CompleteOptions.Count > 0)
                 {
-                    HashSet<PrototypeId> contexts = new (missionData.Contexts);
+                    contexts.Set(missionData.Contexts);
                     if (contexts.Count > 0)
                     {
                         foreach (var completeOption in missionData.CompleteOptions)
@@ -57,6 +58,7 @@ namespace MHServerEmu.Games.Dialog
                     }
                 }
             }
+            HashSetPool<PrototypeId>.Instance.Return(contexts);
 
             foreach (var uiWidgetRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<MetaGameDataPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -112,8 +114,7 @@ namespace MHServerEmu.Games.Dialog
 
                 if (missionOption is MissionConditionMissionCompleteOption completeOption)
                 {
-                    SortedSet<PrototypeId> completeMissions = completeOption.GetCompleteMissionRefs();
-                    foreach (PrototypeId completeMissionRef in completeMissions)
+                    foreach (PrototypeId completeMissionRef in completeOption.CompleteMissionRefs)
                     {
                         if (completeMissionRef == PrototypeId.Invalid) continue;
                         ExtraMissionData completeMissionData = GetMissionData(completeMissionRef);
@@ -172,10 +173,10 @@ namespace MHServerEmu.Games.Dialog
         {
             MetaGameDataPrototype metaGameDataProto = GameDatabase.GetPrototype<MetaGameDataPrototype>(uiWidgetRef);
             if (metaGameDataProto == null) return;
-
+            
             if (metaGameDataProto is UIWidgetEntityIconsPrototype uiWidgetEntityIconsProto && uiWidgetEntityIconsProto.Entities.HasValue())
             {
-                HashSet<PrototypeId> contextRefs = new ();
+                HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();
                 foreach (var entryP in uiWidgetEntityIconsProto.Entities)
                 {
                     if (entryP == null) continue;
@@ -187,13 +188,15 @@ namespace MHServerEmu.Games.Dialog
                     var option = CreateOption<UIWidgetOption>();
                     if (option == null)
                     {
-                        Logger.Warn($"Failed to create UIWidgetOption for prototype! METAGAMEDATA={metaGameDataProto}");
+                        Logger.Warn($"Failed to create UIWidgetOption for prototype! METAGAMEDATA={metaGameDataProto}"); 
+                        HashSetPool<PrototypeId>.Instance.Return(contextRefs);
                         return;
                     }
                     option.UIWidgetRef = uiWidgetRef;
                     option.Proto = uiWidgetEntityIconsProto;                        
                     BindOptionToMap(option, contextRefs);                    
                 }
+                HashSetPool<PrototypeId>.Instance.Return(contextRefs);
             }
         }
 
@@ -262,10 +265,11 @@ namespace MHServerEmu.Games.Dialog
 
                     if (objectivePrototype.ObjectiveHints.HasValue())
                     {
+                        HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();                        
                         foreach (var hintProto in objectivePrototype.ObjectiveHints)
                         {
                             if (hintProto == null) continue;
-                            HashSet<PrototypeId> contextRefs = new();
+                            contextRefs.Clear();
                             hintProto.GetPrototypeContextRefs(contextRefs);
                             if (contextRefs.Count > 0)
                             {
@@ -273,6 +277,7 @@ namespace MHServerEmu.Games.Dialog
                                 if (option == null)
                                 {
                                     Logger.Error($"Failed to create MissionObjectiveHintOption! MISSION={missionProto}");
+                                    HashSetPool<PrototypeId>.Instance.Return(contextRefs);
                                     return;
                                 }
                                 option.Proto = hintProto;
@@ -280,6 +285,7 @@ namespace MHServerEmu.Games.Dialog
                                 BindOptionToMap(option, contextRefs);
                             }
                         }
+                        HashSetPool<PrototypeId>.Instance.Return(contextRefs);
                     }
 
                     if (objectivePrototype.DialogText.HasValue())
@@ -352,10 +358,11 @@ namespace MHServerEmu.Games.Dialog
         {
             if (interactionSpec.IsNullOrEmpty()) return;
 
+            HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();
             foreach (var specProto in interactionSpec)
             {
                 if (specProto == null) continue;
-                HashSet<PrototypeId> contextRefs = new ();
+                contextRefs.Clear();
                 specProto.GetPrototypeContextRefs(contextRefs);
 
                 if (contextRefs.Count > 0)
@@ -388,11 +395,12 @@ namespace MHServerEmu.Games.Dialog
                         option = connectionTargetEnable;                        
                     }
 
-                    if (option == null) return;                    
+                    if (option == null) continue;                    
                     option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, MissionOptionTypeFlags.None);
                     BindOptionToMap(option, contextRefs);                    
                 }
             }
+            HashSetPool<PrototypeId>.Instance.Return(contextRefs);
         }
 
         private void RegisterDialogTextFromList(MissionPrototype missionProto, MissionDialogTextPrototype[] dialogTexts, 
@@ -400,22 +408,24 @@ namespace MHServerEmu.Games.Dialog
         {
             if (dialogTexts.IsNullOrEmpty()) return;
 
+            HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();
             foreach (var missionDialogTextProto in dialogTexts)
             {
                 if (missionDialogTextProto == null) continue;
-                HashSet<PrototypeId> contextRefs = new ();
+                contextRefs.Clear();
                 missionDialogTextProto.GetPrototypeContextRefs(contextRefs);
 
                 if (contextRefs.Count > 0)
                 {
                     var option = CreateOption<MissionDialogOption>();
-                    if (option == null) return;                    
+                    if (option == null) break;
                     option.EntityFilterWrapper.AddEntityFilter(missionDialogTextProto.EntityFilter);
                     option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, MissionOptionTypeFlags.None);
                     option.Proto = missionDialogTextProto;
                     BindOptionToMap(option, contextRefs);                    
                 }
             }
+            HashSetPool<PrototypeId>.Instance.Return(contextRefs);
         }
 
         private void RegisterConditionInfoFromList(MissionPrototype missionProto, MissionConditionListPrototype conditionList, 
@@ -423,13 +433,14 @@ namespace MHServerEmu.Games.Dialog
             MissionOptionTypeFlags optionType, InteractionOptimizationFlags optimizationFlag)
         {
             if (conditionList == null) return;
+            HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();
             foreach (MissionConditionPrototype prototype in conditionList.IteratePrototypes())
             {
                 if (prototype == null) continue;
                 if (optionType.HasFlag(MissionOptionTypeFlags.SkipComplete) && prototype is MissionConditionMissionCompletePrototype)
                     continue;
 
-                HashSet<PrototypeId> contextRefs = new ();
+                contextRefs.Clear();
                 prototype.GetPrototypeContextRefs(contextRefs);
                 if (contextRefs.Count > 0)
                 {
@@ -457,23 +468,26 @@ namespace MHServerEmu.Games.Dialog
                     BindOptionToMap(option, contextRefs);
                 }
             }
+            HashSetPool<PrototypeId>.Instance.Return(contextRefs);
         }
 
         private void RegisterActionInfoFromList(MissionPrototype missionProto, MissionActionPrototype[] actionList, MissionStateFlags state, 
             sbyte objectiveIndex, MissionObjectiveStateFlags objectiveState, MissionOptionTypeFlags optionType)
         {
             if (actionList.IsNullOrEmpty()) return;
+
+            HashSet<PrototypeId> contextRefs = HashSetPool<PrototypeId>.Instance.Get();
             foreach (var prototype in actionList)
             {
                 if (prototype == null) continue;
                 if (prototype is MissionActionEntityTargetPrototype actionEntityTargetProto)
                 {
-                    HashSet<PrototypeId> contextRefs = new ();
+                    contextRefs.Clear();
                     actionEntityTargetProto.GetPrototypeContextRefs(contextRefs);
                     if (contextRefs.Count > 0)
                     {
                         var option = CreateOption<MissionActionEntityTargetOption>();
-                        if (option == null) return;
+                        if (option == null) break;
                         option.InitializeForMission(missionProto, state, objectiveIndex, objectiveState, optionType);
                         option.Proto = actionEntityTargetProto;
                         BindOptionToMap(option, contextRefs);
@@ -484,6 +498,7 @@ namespace MHServerEmu.Games.Dialog
                     RegisterActionInfoFromList(missionProto, timedActionProto.ActionsToPerform, state, objectiveIndex, objectiveState, optionType);
                 }
             }
+            HashSetPool<PrototypeId>.Instance.Return(contextRefs);
         }
 
         public bool GetEntityContextInvolvement(WorldEntity entity, EntityTrackingContextMap map)
@@ -497,8 +512,10 @@ namespace MHServerEmu.Games.Dialog
 
             if (entity is Transition transition)
             {
-                foreach (Destination destination in transition.Destinations)
+                for (int i = 0; i < transition.Destinations.Count; i++)
                 {
+                    TransitionDestination destination = transition.Destinations[i];
+
                     var regionRef = destination.RegionRef;
                     if (regionRef != PrototypeId.Invalid)
                     {
@@ -741,7 +758,7 @@ namespace MHServerEmu.Games.Dialog
             const int startingPriority = int.MaxValue;
             int lastAvailableOptionPriority = startingPriority;
 
-            List<InteractionOption> optionsList = new();
+            List<InteractionOption> optionsList = ListPool<InteractionOption>.Instance.Get();
             if (optimizationFlags == InteractionOptimizationFlags.None)
             {
                 GetInteractionDataFromWorldEntityPrototype(optionsList, interactee.PrototypeDataRef);
@@ -755,11 +772,11 @@ namespace MHServerEmu.Games.Dialog
 
             var interactionData = worldEntityProto.GetInteractionData();
             bool hasInteractionData = interactionData != null;
-            bool hasKeywords = worldEntityProto.Keywords != null;
+            bool hasKeywords = worldEntityProto.Keywords.HasValue();
 
             if (optionsList.Count > 0 || hasInteractionData || hasKeywords)
             {
-                HashSet<InteractionOption> interactionOptions = new();
+                HashSet<InteractionOption> interactionOptions = HashSetPool<InteractionOption>.Instance.Get();
                 if (hasInteractionData)
                     if (optimizationFlags == InteractionOptimizationFlags.None || interactionData.HasOptionFlags(optimizationFlags))
                         foreach (var option in interactionData.Options)
@@ -773,6 +790,7 @@ namespace MHServerEmu.Games.Dialog
                                     interactionOptions.Add(option);
 
                 optionsList.AddRange(interactionOptions);
+                HashSetPool<InteractionOption>.Instance.Return(interactionOptions);
                 optionsList.Sort((a, b) => a.SortPriority(b));
 
                 bool before = false;
@@ -785,6 +803,7 @@ namespace MHServerEmu.Games.Dialog
                         if (!(lastAvailableOptionPriority == startingPriority || currentOptionPriority >= lastAvailableOptionPriority))
                         {
                             Logger.Warn($"InteractionManager's options for '{interactee.PrototypeName}' must be sorted in ascending order of priority, but the following option isn't!\n{currentOption}");
+                            ListPool<InteractionOption>.Instance.Return(optionsList);
                             return InteractionMethod.None;
                         }
 
@@ -806,23 +825,30 @@ namespace MHServerEmu.Games.Dialog
                 if (before && after)
                     interactionsResult |= InteractionMethod.Neutral;
             }
-
+            ListPool<InteractionOption>.Instance.Return(optionsList);
             return interactionsResult;
         }
+
         private bool EvaluateInteractionOption(WorldEntity interactee, WorldEntity interactor, InteractionOption option, InteractionFlags interactionFlags,
             ref InteractionMethod outInteractions, ref InteractData outInteractData)
         {
             bool result;
+            List<BaseMissionOption> checkList = ListPool<BaseMissionOption>.Instance.Get();
+
             if (option is BaseMissionOption baseMissionOption)
             {
-                List<BaseMissionOption> checkList = new ();
+                checkList.Clear();
                 var missionResult = ParseBaseMissionOption(interactee, interactor, baseMissionOption, ref outInteractData, interactionFlags, null, checkList);
                 result = missionResult != InteractionMethod.None;
                 if (result)
                     outInteractions |= missionResult;
             }
-            else
-                result = option.Evaluate( new EntityDesc(interactee), interactor, interactionFlags, ref outInteractions, ref outInteractData);
+            else 
+            {
+                result = option.Evaluate(new EntityDesc(interactee), interactor, interactionFlags, ref outInteractions, ref outInteractData);
+            }
+
+            ListPool<BaseMissionOption>.Instance.Return(checkList);
             return result;
         }
 
@@ -1098,7 +1124,6 @@ namespace MHServerEmu.Games.Dialog
             return missionResult;
         }
 
-
         private static bool CheckOptionFilters(WorldEntity interactee, WorldEntity interactor, InteractionOption option)
         {
             if (option.EntityFilterWrapper.EvaluateEntity(interactee) == false) return false;
@@ -1372,30 +1397,6 @@ namespace MHServerEmu.Games.Dialog
             _optionFlags |= option.OptimizationFlags;
         }
 
-        public MissionActionEntityPerformPowerPrototype GetStartPower(MissionPrototype missionProto)
-        {            
-            foreach(var option in Options)
-            {
-                if (option is not MissionActionEntityTargetOption targetOption) continue;
-                if (targetOption.MissionProto != missionProto) continue;
-                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart) == false) continue;
-                if (targetOption.Proto is MissionActionEntityPerformPowerPrototype performPower) return performPower;
-            }
-            return null;
-        }
-
-        public MissionActionEntityPerformPowerPrototype GetStartPowerIntersect(InteractionData targetData)
-        {
-            var intersectingOptions = Options.Intersect(targetData.Options);
-            foreach (var option in intersectingOptions)
-            {
-                if (option is not MissionActionEntityTargetOption targetOption) continue;
-                if (targetOption.MissionState.HasFlag(MissionStateFlags.OnStart) == false) continue;
-                if (targetOption.Proto is MissionActionEntityPerformPowerPrototype performPower) return performPower;
-            }
-            return null;
-        }
-
         public bool HasOptionFlags(InteractionOptimizationFlags optimizationFlags)
         {
             return (_optionFlags & optimizationFlags) != 0;
@@ -1412,7 +1413,7 @@ namespace MHServerEmu.Games.Dialog
     {      
         public PrototypeId MissionRef { get; set; }
         public HashSet<BaseMissionOption> Options { get; set; }
-        public SortedSet<PrototypeId> Contexts { get; set; }
+        public HashSet<PrototypeId> Contexts { get; set; }
         public HashSet<BaseMissionOption> CompleteOptions { get; set; }
         public bool PlayerHUDShowObjs { get; set; }
 

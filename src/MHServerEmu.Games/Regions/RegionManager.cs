@@ -174,7 +174,7 @@ namespace MHServerEmu.Games.Regions
             if (regionProto == null)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): {regionProtoRef} is not a valid region prototype ref");
 
-            PrototypeId difficultyTierProtoRef = playerConnection.Player.GetDifficultyTierForRegion(regionProtoRef);
+            PrototypeId difficultyTierProtoRef = playerConnection.Player.GetDifficultyTierForRegion(regionProtoRef, regionContext.DifficultyTierRef);
             if (difficultyTierProtoRef == PrototypeId.Invalid)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): Failed to get difficulty tier for region {regionProto}");
 
@@ -208,7 +208,8 @@ namespace MHServerEmu.Games.Regions
                 if (regionId == 0 
                     || _allRegions.TryGetValue(regionId, out region) == false 
                     || region.DifficultyTierRef != regionContext.DifficultyTierRef 
-                    || region.Settings.EndlessLevel != regionContext.EndlessLevel) // Danger Room next level
+                    || region.Settings.EndlessLevel != regionContext.EndlessLevel // Danger Room next level
+                    || region.Settings.PortalId != regionContext.PortalId) // TODO remake portal for Party
                 {
                     // MetaStateShutdown will shutdown old region
                     if (region != null && region.Settings.EndlessLevel == regionContext.EndlessLevel)
@@ -219,9 +220,13 @@ namespace MHServerEmu.Games.Regions
                     }
 
                     region = GenerateAndInitRegion(regionContext);
-                    playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
+                    if (region != null)
+                        playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
                 }
             }
+
+            // Reset preferred difficulty
+            regionContext.DifficultyTierRef = PrototypeId.Invalid;
 
             return region;
         }

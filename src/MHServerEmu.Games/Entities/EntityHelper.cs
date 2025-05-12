@@ -3,8 +3,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -56,113 +54,39 @@ namespace MHServerEmu.Games.Entities
             return orb;
         }
 
-        public static void OnDeathSummonFromPowerPrototype(WorldEntity entity, SummonPowerPrototype summonPowerProto)
+        public static Agent CreateAgent(AgentPrototype agentProto, Avatar avatar, Vector3 spawnPosition, Orientation orientation)
         {
-            AssetId creatorAsset = entity.GetEntityWorldAsset();
-            if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
-            PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
-            var summonerProto = entity.WorldEntityPrototype;
+            var region = avatar.Region;
 
-            var summonProto = GameDatabase.GetPrototype<AgentPrototype>(summonerRef);
-            if (summonProto == null) return; // Only Agent can be spawn, skip hotspot
+            using EntitySettings entitySettings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            entitySettings.EntityRef = agentProto.DataRef;
+            entitySettings.Position = spawnPosition;
+            entitySettings.Orientation = orientation;
+            entitySettings.RegionId = region.Id;
+            entitySettings.IsPopulation = true;
 
-            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
-            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
-            {
-                settings.EntityRef = summonerRef;
-                settings.Position = entity.RegionLocation.Position;
-                settings.Orientation = entity.RegionLocation.Orientation;
-                settings.RegionId = entity.Region.Id;
+            using PropertyCollection settingsProperties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            settingsProperties[PropertyEnum.DifficultyTier] = region.DifficultyTierRef;
+            settingsProperties[PropertyEnum.Rank] = agentProto.Rank;
+            settingsProperties[PropertyEnum.CharacterLevel] = avatar.CharacterLevel;
+            settingsProperties[PropertyEnum.CombatLevel] = avatar.CharacterLevel;
+            entitySettings.Properties = settingsProperties;
 
-                properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
-                properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
-                properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
-                properties[PropertyEnum.SummonedByPower] = true;
-                properties[PropertyEnum.Rank] = summonerProto.Rank;
-                settings.Properties = properties;
+            var agent = avatar.Game.EntityManager.CreateEntity(entitySettings) as Agent;
 
-                var group = entity.SpawnGroup;
+            if (agentProto.ModifiersGuaranteed.HasValue())
+                foreach (var boost in agentProto.ModifiersGuaranteed)
+                    agent.Properties[PropertyEnum.EnemyBoost, boost] = true;
 
-                if (group != null && summonPowerProto.SummonAsPopulation)
-                {
-                    var spec = entity.Region.PopulationManager.CreateSpawnSpec(group);
-                    spec.EntityRef = summonerRef;
-                    spec.Transform = Transform3.BuildTransform(settings.Position - group.Transform.Translation, settings.Orientation);
-                    spec.Properties.FlattenCopyFrom(properties, false);
-                    spec.Spawn();
-                }
-                else
-                {
-                    Agent summoner = (Agent)entity.Game.EntityManager.CreateEntity(settings);
-                }
-            }
+            return agent;
         }
 
-        public static void SummonEntityFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto, Item item = null)
+        public static bool GetSpawnPositionNearAvatar(Avatar avatar, Region region, BoundsPrototype entityBoundsPrototype, float maxDistance, out Vector3 spawnPositionResult)
         {
-            AssetId creatorAsset = avatar.GetEntityWorldAsset();
-            PrototypeId allianceRef = (PrototypeId)15452561577132953366;    // Entity/Alliances/NPCNeutral.prototype, should be set by EvalOnSummon
-
-            if (summonPowerProto.SummonEntityContexts.IsNullOrEmpty()) return;
-            PrototypeId summonerRef = summonPowerProto.SummonEntityContexts[0].SummonEntity;
-            var summonerProto = GameDatabase.GetPrototype<WorldEntityPrototype>(summonerRef);
-            if (summonerProto == null) return;
-            if (summonerProto is not AgentPrototype && summonerProto is not TransitionPrototype) return;
-
-            WorldEntity summoner;
-            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
-            using (PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>())
-            {
-                settings.EntityRef = summonerRef;
-
-                // DangerRoomScenario
-                if (summonerProto is TransitionPrototype && item != null)
-                {
-                    item.SetScenarioProperties(properties);
-
-                    var player = avatar.GetOwnerOfType<Player>();
-                    properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
-                }
-
-                properties[PropertyEnum.NoMissileCollide] = true; // EvalOnCreate
-                properties[PropertyEnum.CreatorEntityAssetRefBase] = creatorAsset;
-                properties[PropertyEnum.CreatorEntityAssetRefCurrent] = creatorAsset;
-                properties[PropertyEnum.CreatorPowerPrototype] = summonPowerProto.DataRef;
-                properties[PropertyEnum.SummonedByPower] = true;
-                properties[PropertyEnum.AllianceOverride] = allianceRef;
-                properties[PropertyEnum.Rank] = summonerProto.Rank;
-                settings.Properties = properties;
-
-                summoner = (WorldEntity)avatar.Game.EntityManager.CreateEntity(settings);
-            }
-
-            using (EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>())
-            {
-                settings.OptionFlags = EntitySettingsOptionFlags.IsNewOnServer;
-                summoner.EnterWorld(avatar.Region, summoner.GetPositionNearAvatar(avatar), avatar.RegionLocation.Orientation, settings);
-            }
-
-            if (summoner is Agent agent && summonPowerProto.ActionsTriggeredOnPowerEvent.HasValue())
-                agent.AIController.Blackboard.PropertyCollection[PropertyEnum.AIAssistedEntityID] = avatar.Id;
-            summoner.Properties[PropertyEnum.PowerUserOverrideID] = avatar.Id;
-
-            Inventory summonedInventory = avatar.GetInventory(InventoryConvenienceLabel.Summoned);
-            summoner.ChangeInventoryLocation(summonedInventory);
-        }
-
-        public static void DestroySummonerFromPowerPrototype(Avatar avatar, SummonPowerPrototype summonPowerProto)
-        {
-            var summonerProto = summonPowerProto.GetSummonEntity(0, avatar.GetOriginalWorldAsset());
-            Inventory summonedInventory = avatar.GetInventory(InventoryConvenienceLabel.Summoned);
-            Agent summoner = summonedInventory.GetMatchingEntity(summonerProto.DataRef) as Agent;
-            summoner?.Destroy();
-        }
-
-        private static PrototypeId GetVisibleParentRef(PrototypeId invisibleId)
-        {
-            WorldEntityPrototype invisibleProto = GameDatabase.GetPrototype<WorldEntityPrototype>(invisibleId);
-            if (invisibleProto.VisibleByDefault == false) return GetVisibleParentRef(invisibleProto.ParentDataRef);
-            return invisibleId;
+            Bounds entityBounds = new();
+            entityBounds.InitializeFromPrototype(entityBoundsPrototype);
+            entityBounds.Center = avatar.RegionLocation.Position + avatar.Forward * 120;
+            return region.ChoosePositionAtOrNearPoint(entityBounds, avatar.Locomotor.PathFlags, PositionCheckFlags.CanBeBlockedEntity, BlockingCheckFlags.None, maxDistance, out spawnPositionResult, maxPositionTests: 32);
         }
     }
 }

@@ -419,7 +419,7 @@ namespace MHServerEmu.Games.Network
         public static NetMessagePowerResult BuildPowerResultMessage(PowerResults results)
         {
             // Get data from power results
-            PrototypeId powerProtoRef = results.PowerPrototype.DataRef;
+            PrototypeId powerProtoRef = results.PowerPrototype != null ? results.PowerPrototype.DataRef : PrototypeId.Invalid;
             ulong powerOwnerEntityId = results.PowerOwnerId;
             ulong ultimateOwnerEntityId = results.UltimateOwnerId;
             ulong targetEntityId = results.TargetId;

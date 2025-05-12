@@ -73,6 +73,17 @@
             return value & ~(value - 1);
         }
 
+        public static ulong SwizzleSignBit(long value)
+        {
+            ulong bits = (ulong)value;
+            return (bits << 1) | (bits >> 63);
+        }
+
+        public static long UnswizzleSignBit(ulong bits)
+        {
+            return (long)((bits >> 1) | (bits << 63));
+        }
+
         public static float Round(float value)
         {
             if (value < 0.0f)
@@ -87,6 +98,14 @@
                 return (int)(value - 0.5f);
             else
                 return (int)(value + 0.5f);
+        }
+
+        public static int RoundToInt(double value)
+        {
+            if (value < 0.0)
+                return (int)(value - 0.5);
+            else
+                return (int)(value + 0.5);
         }
 
         public static long RoundToInt64(float value)
@@ -138,6 +157,20 @@
         /// Performs clamp without throwing when min > max.
         /// </summary>
         public static float ClampNoThrow(float value, float min, float max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
+        }
+
+        /// <summary>
+        /// Performs clamp without throwing when min > max.
+        /// </summary>
+        public static int ClampNoThrow(int value, int min, int max)
         {
             if (value < min)
                 return min;

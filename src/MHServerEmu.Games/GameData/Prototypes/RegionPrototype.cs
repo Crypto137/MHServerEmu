@@ -1,8 +1,16 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
+using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -144,6 +152,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool AllowLocalCoopMode { get; protected set; }
 
         //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
         public KeywordsMask KeywordsMask { get; private set; }
@@ -374,7 +384,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return largestTeamSize;
         }
 
-        public static void BuildRegionsFromFilters(SortedSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
+        public static void BuildRegionsFromFilters(HashSet<PrototypeId> regions, PrototypeId[] includeRegions, bool includeChildren, PrototypeId[] excludeRegions)
         {
             if (includeRegions.HasValue())
                 foreach (var regionRef in includeRegions)
@@ -382,7 +392,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (includeChildren)
             {
-                List<PrototypeId> parentRegions = new(regions);
+                List<PrototypeId> parentRegions = ListPool<PrototypeId>.Instance.Get(regions);
                 foreach (var childRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<RegionPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
                     foreach (var parentRef in parentRegions)
                         if (GameDatabase.DataDirectory.PrototypeIsAPrototype(childRef, parentRef))
@@ -390,13 +400,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
                             regions.Add(childRef);
                             break;
                         }
+                ListPool<PrototypeId>.Instance.Return(parentRegions);
             }
 
             if (excludeRegions.HasValue())
                 foreach (var regionRef in excludeRegions)
                     regions.Remove(regionRef);
 
-            List<PrototypeId> altRegions = new(regions);
+            List<PrototypeId> altRegions = ListPool<PrototypeId>.Instance.Get(regions);
             foreach (var regionRef in altRegions)
             {
                 var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
@@ -404,26 +415,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     foreach (var altRegionRef in regionProto.AltRegions)
                         regions.Add(altRegionRef);
             }
+            ListPool<PrototypeId>.Instance.Return(altRegions);
         }
 
-        public static HashSet<PrototypeId> GetAreasInGenerator(PrototypeId regionRef)
+        public static void GetAreasInGenerator(PrototypeId regionRef, HashSet<PrototypeId> areas)
         {
-            HashSet<PrototypeId> areas = new();
-            if (regionRef == PrototypeId.Invalid) return areas;
+            if (regionRef == PrototypeId.Invalid) return;
             var regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
-            if (regionProto == null) return areas;
+            if (regionProto == null) return;
 
             if (regionProto.AreasInGenerator == null)
             {
-                regionProto.AreasInGenerator = new();
-                HashSet<PrototypeId> regions = new();
+                regionProto.AreasInGenerator = [];
+                HashSet<PrototypeId> regions = HashSetPool<PrototypeId>.Instance.Get();
                 GetAreasInGenerator(regionProto, regionProto.AreasInGenerator, regions);
+                HashSetPool<PrototypeId>.Instance.Return(regions);
             }
 
             if (regionProto.AreasInGenerator != null)
-                return regionProto.AreasInGenerator;
-
-            return areas;
+                areas.Insert(regionProto.AreasInGenerator);
         }
 
         private static void GetAreasInGenerator(RegionPrototype regionProto, HashSet<PrototypeId> areas, HashSet<PrototypeId> regions)
@@ -480,6 +490,65 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
             return RegionGenerator is SequenceRegionGeneratorPrototype sequenceRegion && sequenceRegion.EndlessThemes.HasValue();
         }
+
+        public PrototypeId GetLootTableOverride(WorldEntity worldEntity, AssetId source, LootDropEventType lootEvent)
+        {
+            if (_lootTableMap.TryGetValue(source, out List<LootTableAssignmentPrototype> tables))
+            {
+                foreach (LootTableAssignmentPrototype tableAssignment in tables)
+                {
+                    LootDropEventType tableAssignmentEvent = tableAssignment.Event;
+
+                    if (tableAssignmentEvent == lootEvent)
+                        return tableAssignment.Table;
+
+                    if (tableAssignmentEvent == LootDropEventType.None && (lootEvent == LootDropEventType.OnKilled || lootEvent == LootDropEventType.OnInteractedWith))
+                        return tableAssignment.Table;
+                }
+            }
+
+            return Logger.WarnReturn(PrototypeId.Invalid, $"GetLootTableOverride(): Region [{this}] has no overrides for source=[{source}], lootEvent=[{lootEvent}] requested by entity [{worldEntity}]");
+        }
+
+        public bool RunEvalAccessRestriction(Player player, Avatar avatar, PrototypeId difficultyProtoRef)
+        {
+            // Default to true if no valid avatar
+            if (avatar == null) return Logger.WarnReturn(true, "RunEvalAccessRestriction(): avatar == null");
+
+            bool success = true;
+
+            if (AccessChecks.HasValue())
+            {
+                foreach (RegionAccessCheckPrototype checkProto in AccessChecks)
+                {
+                    if (checkProto == null)
+                    {
+                        Logger.Warn("RunEvalAccessRestriction(): checkProto == null");
+                        continue;
+                    }
+
+                    if (checkProto.NoAccessOnFail == false)
+                        continue;
+
+                    success &= checkProto.Check(player, avatar);
+                }
+            }
+
+            DifficultyTierPrototype difficultyProto = difficultyProtoRef.As<DifficultyTierPrototype>();
+            if (success && difficultyProto != null)
+                success &= avatar.CharacterLevel >= difficultyProto.UnlockLevel;
+
+            if (success && EvalAccessRestriction != null)
+            {
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                evalContext.SetReadOnlyVar_ProtoRef(EvalContext.Var1, difficultyProtoRef);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, avatar);
+                evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Other, player);
+                success = Eval.RunBool(EvalAccessRestriction, evalContext);
+            }
+
+            return success;
+        }
     }
 
     public class RegionConnectionTargetPrototype : Prototype
@@ -509,6 +578,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public bool NoAccessOnFail { get; protected set; }
         public bool NoDisplayOnFail { get; protected set; }
+
+        //---
+
+        public virtual bool Check(Player player, Avatar avatar)
+        {
+            return false;
+        }
     }
 
     public class LevelAccessCheckPrototype : RegionAccessCheckPrototype
@@ -519,6 +595,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LocaleStringId UIWaypointNameTag { get; protected set; }
         public int LevelMin { get; protected set; }
         public int LevelMax { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override bool Check(Player player, Avatar avatar)
+        {
+            if (player == null) return Logger.WarnReturn(false, "Check(): player == null");
+            if (avatar == null) return Logger.WarnReturn(false, "Check(): avatar == null");
+
+            int avatarLevel = avatar.CharacterLevel;
+
+            // Check party
+            if (NoAccessOnFail == false)
+            {
+                Party party = player.Party;
+                if (party != null)
+                {
+                    CommunityMember communityMember = party.GetCommunityMemberForLeader(player);
+                    if (communityMember != null)
+                    {
+                        AvatarSlotInfo avatarSlotInfo = communityMember.GetAvatarSlotInfo();
+                        avatarLevel = avatarSlotInfo != null ? avatarSlotInfo.Level : 0;
+                    }
+                }
+            }
+
+            // Not doing LocaleString things because they are not needed server-side
+            return avatarLevel >= LevelMin && avatarLevel <= LevelMax;
+        }
     }
 
     public class RegionQueueStateEntryPrototype : Prototype

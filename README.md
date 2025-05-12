@@ -2,7 +2,7 @@
 
 MHServerEmu is a server emulator for Marvel Heroes.
 
-The only currently supported version of the game client is **1.52.0.1700** (also known as **2.16a**). 
+The only currently supported version of the game client is **1.52.0.1700** (also known as **2.16a**) released on September 7th, 2017.
 
 We post development progress reports on our [blog](https://crypto137.github.io/MHServerEmu/). You can find additional information on various topics in the [documentation](./docs/Index.md). If you would like to discuss this project and/or help with its development, feel free to join our [Discord](https://discord.gg/hjR8Bj52t3).
 
@@ -10,7 +10,19 @@ We post development progress reports on our [blog](https://crypto137.github.io/M
 
 ## Download
 
-If you are setting the server up for the first time, we recommend you to start with a stable build. See [Initial Setup](./docs/Setup/InitialSetup.md) for information on how to set the server up.
+We provide two kinds of builds: stable and nightly.
+
+|                      | Stable         | Nightly               |
+| -------------------- | -------------- | --------------------- |
+| **Update Frequency** | Quarterly      | Daily                 |
+| **Features**         | Fewer          | More                  |
+| **Stability**        | High           | Medium                |
+| **Platforms**        | Windows        | Windows / Linux       |
+| **Configuration**    | Pre-Configured | Just the Server Files |
+
+If you are setting the server up for the first time and/or unsure which one to use, we recommend you to start with a stable build. See [Initial Setup](./docs/Setup/InitialSetup.md) for information on how to set the server up.
+
+You can always upgrade from stable to nightly simply by downloading the latest nightly build and overwriting your stable files.
 
 ### Stable
 
@@ -22,22 +34,62 @@ If you are setting the server up for the first time, we recommend you to start w
 
 ## Features
 
-MHServerEmu is in active development. Currently it features:
+MHServerEmu is in active development. Overall the game is in a very playable state.
 
-- Playing as any hero available in version 1.52.
+- All heroes with the vast majority of their powers are playable.
 
-- Basic combat mechanics: using powers, dealing direct damage to enemies. More complex powers, such as those that rely on debuff effects or summoned allies, are currently not implemented.
+- The story mode is fully playable from beginning to end, including all main and secondary missions and region events.
 
-- Leveling from 1 to 60 with working dynamic combat level (enemy level scaling).
+- Most of the endgame modes (Midtown Patrol, X-Defense, etc.) are playable.
 
-- Summoning team-ups and vanity pets.
+- Procedural generation of regions and loot is fully functional.
 
-- AI system for non-playable characters, such as enemies and team-ups.
+- Enemies and AI-controlled allies (team-ups, pets, etc.) are fully working.
 
-- Fully-featured implementation of DRAG (dynamic random area generator) with procedural enemy population spawning.
+- Multiplayer is supported in a limited fashion.
 
-- Implementation of the loot system that uses the original loot tables for picking quality and base types, as well as rolling random affixes.
+## Known Issues
 
-- SQLite-based persistence layer for saving accounts, player data, avatars, items, and more. An optional JSON mode for offline single-player is also available.
+Some features are still being worked on, including, but not limited to:
 
-- Multiplayer functionality: you can see and interact with other players connected to the same server in hubs and public combat zones. Parties and coop in private instances are currently not implemented.
+- Talents
+
+- Crafting
+
+- Prestige
+
+- Social features (parties, matchmaking, leaderboards, etc.)
+
+- PvP
+
+You can find up to date information on what we are working on in [our roadmap](https://github.com/users/Crypto137/projects/5).
+
+## FAQ
+
+**Where can I download the game?**
+
+We do not provide download links for the game client for legal reasons. If you have played the game through Steam when it was live, you should be able to download it in your Steam library.
+
+**How to update the server?**
+
+Download the latest stable or nightly build and overwrite your existing files. Nightly builds can be potentially unstable, so it is recommended to back up your account database file located in `MHServerEmu\Data\Account.db` before updating.
+
+**Will there be any wipes?**
+
+We plan to force a fresh start when version 1.0 comes out. Your data will not be deleted, but it will no longer be compatible with the server. You will be able to continue using your existing data on whatever the last 0.x version is going to be.
+
+**Are you going to support other versions of the game, like the ones from before the Biggest Update Ever (BUE) came out?**
+
+Yes, we do plan to implement support for other versions of the game after 1.52 is fully restored. The final pre-BUE version (1.48) has the highest priority.
+
+**Are you going to add new content to the game (heroes, team-ups, powers, etc.)?**
+
+The scope of this project is restoring the game to its original state. We do not have any plans to create custom content. However, all of our research on the game is completely open-source, and it can be potentially used by others in such endeavors.
+
+**Are you going to upgrade the game to Unreal Engine 5?**
+
+No, we do not touch the client side of the game in any way. This project is a recreation of only the server backend needed to run the game.
+
+**I have problems with setting the server up.**
+
+Feel free to join our [Discord](https://discord.gg/hjR8Bj52t3) and ask for help in the `#setup-help` channel.

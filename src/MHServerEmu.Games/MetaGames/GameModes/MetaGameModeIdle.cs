@@ -15,7 +15,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
     public class MetaGameModeIdle : MetaGameMode
     {
         private MetaGameModeIdlePrototype _proto;
-        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
+        private Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
         private EventPointer<NextModeEvent> _nextModeEvent;
         private TimeSpan _endTime;
         private int _playerCount;
@@ -137,7 +137,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
             }
         }
 
-        private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEntityEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             if (evt.Entity is not Avatar avatar) return;
             if (_proto.PlayerLockVisualsPower != PrototypeId.Invalid)

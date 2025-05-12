@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.DRAG
 
         public bool TestCellConnected(GenCellContainer container, GenCell cell)
         {
-            if (cell.Connections.Any() == false) return false;
+            if (cell.Connections.Count == 0) return false;
 
             Reset(container);
             RunTreeWithExcludedCell(cell, null);

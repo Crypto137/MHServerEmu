@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionItemBuy : MissionPlayerCondition
     {
         private MissionConditionItemBuyPrototype _proto;
-        private Action<PlayerBoughtItemGameEvent> _playerBoughtItemAction;
+        private Event<PlayerBoughtItemGameEvent>.Action _playerBoughtItemAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionItemBuy(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _playerBoughtItemAction = OnPlayerBoughtItem;
         }
 
-        private void OnPlayerBoughtItem(PlayerBoughtItemGameEvent evt)
+        private void OnPlayerBoughtItem(in PlayerBoughtItemGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;

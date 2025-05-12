@@ -23,8 +23,8 @@ namespace MHServerEmu.Games.Social.Communities
     public enum CommunityMemberUpdateOptionBits
     {
         None            = 0,
-        Flag0           = 1 << 0,
-        Flag1           = 1 << 1,
+        NewlyCreated    = 1 << 0,
+        Circle          = 1 << 1,
         RegionRef       = 1 << 2,
         AvatarRef       = 1 << 3,
         CostumeRef      = 1 << 4,
@@ -35,7 +35,9 @@ namespace MHServerEmu.Games.Social.Communities
         PrestigeLevel   = 1 << 9,
         LastLogoutTime  = 1 << 10,
         DifficultyRef   = 1 << 11,
-        SecondaryPlayer = 1 << 12
+        SecondaryPlayer = 1 << 12,
+
+        AvatarSlotBits = AvatarRef | CostumeRef | Level | PrestigeLevel
     }
 
     public class CommunityMember : ISerialize
@@ -391,7 +393,90 @@ namespace MHServerEmu.Games.Social.Communities
                     circle.OnMemberReceivedBroadcast(this, updateOptionBits);
             }
 
+            // Relay this broadcast to the client
+            if (updateOptionBits != 0)
+                SendUpdateToOwner(updateOptionBits);
+
             return updateOptionBits;
+        }
+
+        /// <summary>
+        /// Sends a <see cref="NetMessageModifyCommunityMember"/> to the owner <see cref="Player"/> containing
+        /// data specified by provided <see cref="CommunityMemberUpdateOptionBits"/>.
+        /// </summary>
+        public void SendUpdateToOwner(CommunityMemberUpdateOptionBits updateOptions)
+        {
+            // Early out if there is nothing to update
+            if (updateOptions == CommunityMemberUpdateOptionBits.None)
+                return;
+
+            NetMessageModifyCommunityMember.Builder messageBuilder = NetMessageModifyCommunityMember.CreateBuilder();
+
+            // Broadcast
+            CommunityMemberBroadcast.Builder broadcastBuilder = CommunityMemberBroadcast.CreateBuilder()
+                .SetMemberPlayerDbId(DbId);
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.RegionRef))
+                broadcastBuilder.SetCurrentRegionRefId((ulong)RegionRef);
+
+            if ((updateOptions & CommunityMemberUpdateOptionBits.AvatarSlotBits) != 0)
+            {
+                foreach (AvatarSlotInfo avatarSlotInfo in _slots)
+                {
+                    CommunityMemberAvatarSlot.Builder avatarSlotBuilder = CommunityMemberAvatarSlot.CreateBuilder();
+
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.AvatarRef))
+                        avatarSlotBuilder.SetAvatarRefId((ulong)avatarSlotInfo.AvatarRef);
+
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.CostumeRef))
+                        avatarSlotBuilder.SetCostumeRefId((ulong)avatarSlotInfo.CostumeRef);
+
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.Level))
+                        avatarSlotBuilder.SetLevel((uint)avatarSlotInfo.Level);
+
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.PrestigeLevel))
+                        avatarSlotBuilder.SetPrestigeLevel((uint)avatarSlotInfo.PrestigeLevel);
+
+                    broadcastBuilder.AddSlots(avatarSlotBuilder.Build());
+                }
+            }
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.IsOnline))
+                broadcastBuilder.SetIsOnline((int)IsOnline);
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.Name))
+                broadcastBuilder.SetCurrentPlayerName(GetName());
+
+            if (IsOnline != CommunityMemberOnlineStatus.Online && updateOptions.HasFlag(CommunityMemberUpdateOptionBits.LastLogoutTime))
+                broadcastBuilder.SetLastLogoutTimeAsFileTimeUtc(_lastLogoutTimeAsFileTimeUtc);
+
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.DifficultyRef))
+                broadcastBuilder.SetCurrentDifficultyRefId((ulong)DifficultyRef);
+
+            // We don't care about secondary players on PC
+
+            messageBuilder.SetBroadcast(broadcastBuilder.Build());
+
+            // PlayerName
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.NewlyCreated))
+                messageBuilder.SetPlayerName(GetName());
+
+            // SystemCirclesBitSets
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.Circle))
+            {
+                // TODO: Switch to GBitArray and use underlying words directly?
+                ulong circleBits = 0;
+                for (CircleId circle = 0; circle < CircleId.NumCircles; circle++)
+                {
+                    int i = (int)circle;
+                    if (_systemCircles[i])
+                        circleBits |= 1ul << i;
+                }
+
+                messageBuilder.SetSystemCirclesBitSet(circleBits);
+            }
+
+            Community.Owner.SendMessage(messageBuilder.Build());
         }
 
         public override string ToString()

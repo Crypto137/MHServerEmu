@@ -214,7 +214,8 @@ namespace MHServerEmu.Games.Populations
         {
             if (fixedProto == null || fixedProto.Slots.IsNullOrEmpty()) return;
 
-            if (GetFormationObjects(out List<ClusterObject> formationObjects))
+            List<ClusterObject> formationObjects = ListPool<ClusterObject>.Instance.Get();
+            if (GetFormationObjects(formationObjects))
             {
                 int num = formationObjects.Count;
                 int slots = fixedProto.Slots.Length;
@@ -222,6 +223,7 @@ namespace MHServerEmu.Games.Populations
                 if (slots < num)
                 {
                     Logger.Warn($"[DESIGN] PopulationObject using FixedFormation with fewer slots than mobs in population. OBJECT={ObjectProto}");
+                    ListPool<ClusterObject>.Instance.Return(formationObjects);
                     return;
                 }
 
@@ -248,13 +250,15 @@ namespace MHServerEmu.Games.Populations
                     obj.SetParentRelativeOrientation(orientation);
                 }
             }
+            ListPool<ClusterObject>.Instance.Return(formationObjects);
         }
 
         private void DoArc(ArcFormationTypePrototype arcProto)
         {
             if (arcProto == null || arcProto.ArcRadians <= 0) return;
 
-            if (GetFormationObjects(out List<ClusterObject> formationObjects))
+            List<ClusterObject> formationObjects = ListPool<ClusterObject>.Instance.Get();
+            if (GetFormationObjects(formationObjects))
             {
                 int num = formationObjects.Count;
 
@@ -274,9 +278,10 @@ namespace MHServerEmu.Games.Populations
 
                 if (num > 2)
                 {
-                    List<ClusterObject> oldObjects = new(formationObjects);
+                    List<ClusterObject> oldObjects = ListPool<ClusterObject>.Instance.Get(formationObjects);
                     for (int i = 0; i < oldObjects.Count; i++)
                         formationObjects[GetAlternatingIndex(i, oldObjects.Count)] = oldObjects[i];
+                    ListPool<ClusterObject>.Instance.Return(oldObjects);
                 }
 
                 Vector3 pos = Vector3.Forward;
@@ -298,12 +303,14 @@ namespace MHServerEmu.Games.Populations
                     pos = Vector3.AxisAngleRotate(pos, Vector3.ZAxis, angle);
                 }
             }
+            ListPool<ClusterObject>.Instance.Return(formationObjects);
         }
 
         private void DoLine(LineFormationTypePrototype lineProto)
         {
             if (lineProto == null) return;
-            if (GetFormationObjects(out List<ClusterObject> formationObjects))
+            List<ClusterObject> formationObjects = ListPool<ClusterObject>.Instance.Get();
+            if (GetFormationObjects(formationObjects))
             {
                 int numRows = lineProto.Rows.HasValue() ? lineProto.Rows.Length : 1;
                 float center = 0f;
@@ -362,6 +369,7 @@ namespace MHServerEmu.Games.Populations
                     }
                 }
             }
+            ListPool<ClusterObject>.Instance.Return(formationObjects);
         }
 
         private static int GetAlternatingIndex(int index, int length)
@@ -383,7 +391,8 @@ namespace MHServerEmu.Games.Populations
             const int MaxObjects = 4;
             float width = SubObjectRadiusMax * 2.0f;
 
-            if (GetFormationObjects(out List<ClusterObject> formationObjects))
+            List<ClusterObject> formationObjects = ListPool<ClusterObject>.Instance.Get();
+            if (GetFormationObjects(formationObjects))
             {
                 int box = 0;
                 int formationIndex = 0;
@@ -395,7 +404,11 @@ namespace MHServerEmu.Games.Populations
                     {
                         obj.SetParentRelativePosition(Vector3.Zero);
                         obj.SetParentRelativeOrientation(Orientation.Zero);
-                        if (++formationIndex == formationObjects.Count) return;
+                        if (++formationIndex == formationObjects.Count)
+                        {
+                            ListPool<ClusterObject>.Instance.Return(formationObjects);
+                            return;
+                        }
                     }
                     else
                     {
@@ -420,7 +433,11 @@ namespace MHServerEmu.Games.Populations
                                 pos.Y = point.Y * width;
                                 obj.SetParentRelativePosition(pos);
                                 obj.SetParentRelativeOrientation(DoFacing(boxProto.Facing, pos));
-                                if (++formationIndex == formationObjects.Count) return;
+                                if (++formationIndex == formationObjects.Count)
+                                {
+                                    ListPool<ClusterObject>.Instance.Return(formationObjects);
+                                    return;
+                                }
                                 obj = formationObjects[formationIndex];
                             }
                         }
@@ -428,6 +445,7 @@ namespace MHServerEmu.Games.Populations
                     box++;
                 }
             }
+            ListPool<ClusterObject>.Instance.Return(formationObjects);
         }
 
         private static Orientation DoFacing(FormationFacing facing, in Vector3 delta)
@@ -452,9 +470,8 @@ namespace MHServerEmu.Games.Populations
             };
         }
 
-        private bool GetFormationObjects(out List<ClusterObject> formationObjects)
+        private bool GetFormationObjects(List<ClusterObject> formationObjects)
         {
-            formationObjects = new();
             foreach (ClusterObject obj in Objects)
                 if (obj?.IsFormationObject() == true)
                     formationObjects.Add(obj);
@@ -475,16 +492,22 @@ namespace MHServerEmu.Games.Populations
 
             var random = Region.Game.Random;
 
-            var overrides = GetMobAffixesFromProperties();
+            HashSet<PrototypeId> overrides = HashSetPool<PrototypeId>.Instance.Get();
+            GetMobAffixesFromProperties(overrides);
+
             var popcornRank = popGlobals.GetRankByEnum(Rank.Popcorn);
             Region.ApplyRegionAffixesEnemyBoosts(popcornRank.DataRef, overrides);
 
-            if (overrides.Count == 0 && HasModifiableEntities() == false) return;
+            if (overrides.Count == 0 && HasModifiableEntities() == false)
+            {
+                HashSetPool<PrototypeId>.Instance.Return(overrides);
+                return;
+            }
 
-            HashSet<PrototypeId> exemptOverrides = new();
+            HashSet<PrototypeId> exemptOverrides = HashSetPool<PrototypeId>.Instance.Get();
             ShiftExemptFromOverrides(overrides, exemptOverrides);
 
-            List<RankPrototype> ranks = new();
+            List<RankPrototype> ranks = ListPool<RankPrototype>.Instance.Get();
             GetRanks(ranks);
 
             var rollRank = difficulty.RollRank(ranks, overrides.Count == 0);
@@ -497,18 +520,22 @@ namespace MHServerEmu.Games.Populations
             ranks.Clear();
             GetRanks(ranks);
 
-            HashSet<PrototypeId> affixesSet = new();
+            HashSet<PrototypeId> affixesSet = HashSetPool<PrototypeId>.Instance.Get();
+            List<PrototypeId> slots = ListPool<PrototypeId>.Instance.Get();
+            HashSet<PrototypeId> currentAffixes = HashSetPool<PrototypeId>.Instance.Get();
+            HashSet<PrototypeId> excludeAffixes = HashSetPool<PrototypeId>.Instance.Get();
+
             foreach (var rankProto in ranks)
             {
                 var rankEntryProto = tuningProto.GetDifficultyRankEntry(Region.DifficultyTierRef, rankProto);
 
-                overrides = GetMobAffixesFromProperties();
+                GetMobAffixesFromProperties(overrides);
                 Region.ApplyRegionAffixesEnemyBoosts(rankProto.DataRef, overrides);
                 ShiftExemptFromOverrides(overrides, exemptOverrides);
-                affixesSet.UnionWith(overrides);
+                affixesSet.Insert(overrides);
 
                 int maxAffixes = (rankEntryProto != null) ? rankEntryProto.GetMaxAffixes() : 0;
-                List<PrototypeId> slots = new(maxAffixes);
+                slots.Clear();
                 for (int slot = 0; slot < maxAffixes; slot++) slots.Add(PrototypeId.Invalid); 
 
                 if (overrides.Count > 0 && rankEntryProto != null)
@@ -545,8 +572,8 @@ namespace MHServerEmu.Games.Populations
 
                 if (rankEntryProto != null)
                 {
-                    HashSet<PrototypeId> currentAffixes = new(affixesSet);
-                    HashSet<PrototypeId> excludeAffixes = new();
+                    currentAffixes.Set(affixesSet);
+                    excludeAffixes.Clear();
 
                     foreach (var slot in slots)
                         if (slot != PrototypeId.Invalid)
@@ -608,11 +635,19 @@ namespace MHServerEmu.Games.Populations
                             if (newEntity != null)
                             {
                                 newEntity.RankProto = popGlobals.TwinEnemyRank.As<RankPrototype>();
-                                newEntity.Modifiers = new(entity.Modifiers);
+                                newEntity.Modifiers.Set(entity.Modifiers);
                             }
                             break;
                         }
-                }            
+                }
+
+            HashSetPool<PrototypeId>.Instance.Return(overrides);
+            HashSetPool<PrototypeId>.Instance.Return(exemptOverrides);
+            ListPool<RankPrototype>.Instance.Return(ranks);
+            HashSetPool<PrototypeId>.Instance.Return(affixesSet);
+            ListPool<PrototypeId>.Instance.Return(slots);
+            HashSetPool<PrototypeId>.Instance.Return(currentAffixes);
+            HashSetPool<PrototypeId>.Instance.Return(excludeAffixes);
         }
 
         public override void UpgradeToRank(RankPrototype upgradeRank, ref int numUpgrade)
@@ -629,7 +664,7 @@ namespace MHServerEmu.Games.Populations
 
         private static void ShiftExemptFromOverrides(HashSet<PrototypeId> overrides, HashSet<PrototypeId> exemptOverrides)
         {
-            List<PrototypeId> toRemove = new();
+            List<PrototypeId> toRemove = ListPool<PrototypeId>.Instance.Get();
 
             foreach (var overrideRef in overrides)
             {
@@ -643,6 +678,8 @@ namespace MHServerEmu.Games.Populations
 
             foreach (var overrideRef in toRemove)
                 overrides.Remove(overrideRef);
+
+            ListPool<PrototypeId>.Instance.Return(toRemove);
         }
 
         private void GetRanks(List<RankPrototype> ranks)
@@ -667,15 +704,15 @@ namespace MHServerEmu.Games.Populations
             return false;
         }
 
-        private HashSet<PrototypeId> GetMobAffixesFromProperties()
+        private bool GetMobAffixesFromProperties(HashSet<PrototypeId> mobAffixes)
         {
-            HashSet<PrototypeId> mobAffixes = new();
+            mobAffixes.Clear();
             foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.EnemyBoost))
             {
                 Property.FromParam(kvp.Key, 0, out PrototypeId affix);
                 mobAffixes.Add(affix);
             }
-            return mobAffixes;
+            return mobAffixes.Count > 0;
         }
 
         public ClusterEntity CreateClusterEntity(PrototypeId entityRef)
@@ -992,7 +1029,6 @@ namespace MHServerEmu.Games.Populations
             return position;
         }
 
-
         public override ulong Spawn(SpawnGroup group, WorldEntity spawner, SpawnHeat spawnHeat, List<WorldEntity> entities)
         {
             var manager = Region.PopulationManager;
@@ -1079,7 +1115,7 @@ namespace MHServerEmu.Games.Populations
                         Modifiers.Add(affixRef);
 
             if (EntityProto.ModifiersGuaranteed.HasValue())
-                Modifiers.UnionWith(EntityProto.ModifiersGuaranteed);
+                Modifiers.Insert(EntityProto.ModifiersGuaranteed);
         }
     }
 }

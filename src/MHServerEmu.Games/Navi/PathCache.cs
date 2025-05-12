@@ -71,7 +71,7 @@ namespace MHServerEmu.Games.Navi
 
         public bool UpdateCurrentPathNode(ref int pathNode, ref Vector3 pathNodePosition, ref bool reverse, int group, PathMethod method, Vector3 position, float distanceThreshold)
         {
-            if (_pathNodeMap.TryGetValue(group, out var pathNodeList) && pathNodeList != null && pathNodeList.Any())
+            if (_pathNodeMap.TryGetValue(group, out var pathNodeList) && pathNodeList != null && pathNodeList.Count > 0)
             {
                 int lastNode = pathNodeList.Count - 1;
                 if (method == PathMethod.ForwardLoop || method == PathMethod.ReverseLoop)

@@ -1,3 +1,6 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionAvatarIsUnlocked : MissionPlayerCondition
     {
         private MissionConditionAvatarIsUnlockedPrototype _proto;
-        private Action<PlayerUnlockedAvatarGameEvent> _playerUnlockedAvatarAction;
+        private Event<PlayerUnlockedAvatarGameEvent>.Action _playerUnlockedAvatarAction;
 
         public MissionConditionAvatarIsUnlocked(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -19,18 +22,26 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool isUnlocked = false;
-            foreach (var player in Mission.GetParticipants())
-                if (player.HasAvatarFullyUnlocked(_proto.AvatarPrototype))
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
+            {
+                foreach (var player in participants)
                 {
-                    isUnlocked = true;
-                    break;
+                    if (player.HasAvatarFullyUnlocked(_proto.AvatarPrototype))
+                    {
+                        isUnlocked = true;
+                        break;
+                    }
                 }
+            }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(isUnlocked);
             return true;
         }
 
-        private void OnPlayerUnlockedAvatar(PlayerUnlockedAvatarGameEvent evt)
+        private void OnPlayerUnlockedAvatar(in PlayerUnlockedAvatarGameEvent evt)
         {
             var player = evt.Player;
             var avatarRef = evt.AvatarRef;

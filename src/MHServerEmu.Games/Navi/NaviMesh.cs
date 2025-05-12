@@ -142,7 +142,7 @@ namespace MHServerEmu.Games.Navi
         {
             IsMeshValid = false;
 
-            if (_modifyMeshPatches.Any())
+            if (_modifyMeshPatches.Count > 0)
             {
                 foreach (var patch in _modifyMeshPatches)
                     if (ModifyMesh(patch.Transform, patch.Patch, false) == false) break;
@@ -150,7 +150,7 @@ namespace MHServerEmu.Games.Navi
             }
             _modifyMeshPatches.Clear();
 
-            if (_modifyMeshPatchesProjZ.Any())
+            if (_modifyMeshPatchesProjZ.Count > 0)
             {
                 foreach (var patch in _modifyMeshPatchesProjZ)
                     if (ModifyMesh(patch.Transform, patch.Patch, true) == false) break;

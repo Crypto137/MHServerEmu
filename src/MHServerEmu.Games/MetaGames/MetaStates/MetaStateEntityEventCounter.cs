@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -8,10 +9,10 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     public class MetaStateEntityEventCounter : MetaState
     {
 	    private MetaStateEntityEventCounterPrototype _proto;
-        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
-        private Action<EntityExitedWorldGameEvent> _entityExitedWorldAction;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
-        private Action<PlayerInteractGameEvent> _playerInteractAction;
+        private Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
+        private Event<EntityExitedWorldGameEvent>.Action _entityExitedWorldAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
+        private Event<PlayerInteractGameEvent>.Action _playerInteractAction;
         private Dictionary<EntityGameEventEnum, HashSet<ulong>> _eventEntities;
 
         public MetaStateEntityEventCounter(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
@@ -55,22 +56,22 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             base.OnRemove();
         }
 
-        private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEntityEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             CountEntity(evt.Entity, EntityGameEventEnum.EntityEnteredWorld);
         }
 
-        private void OnEntityExitedWorld(EntityExitedWorldGameEvent evt)
+        private void OnEntityExitedWorld(in EntityExitedWorldGameEvent evt)
         {
             CountEntity(evt.Entity, EntityGameEventEnum.EntityExitedWorld);
         }
 
-        private void OnEntityDead(EntityDeadGameEvent evt)
+        private void OnEntityDead(in EntityDeadGameEvent evt)
         {
             CountEntity(evt.Defender, EntityGameEventEnum.EntityDead);
         }
 
-        private void OnPlayerInteract(PlayerInteractGameEvent evt)
+        private void OnPlayerInteract(in PlayerInteractGameEvent evt)
         {
             CountEntity(evt.InteractableObject, EntityGameEventEnum.PlayerInteract);
         }

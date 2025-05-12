@@ -1,8 +1,10 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
@@ -153,7 +155,12 @@ namespace MHServerEmu.Games.Populations
                 if (objectProto == null) continue;
                 int weight = objectInstance.Weight;
                 if (weight > 0)
+                {
+                    // LiveTuning PopulationObjectWeight
+                    weight = (int)(weight * LiveTuningManager.GetLivePopObjTuningVar(objectProto, PopObjTuningVar.ePOTV_PopulationObjectWeight));
+
                     picker.Add(objectProto, weight);
+                }
             }
 
             return picker;

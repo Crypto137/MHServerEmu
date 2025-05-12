@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,8 +8,8 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionEntityAggro : MissionPlayerCondition
     {
         private MissionConditionEntityAggroPrototype _proto;
-        private Action<EntityAggroedGameEvent> _entityAggroedAction;
-        private Action<AdjustHealthGameEvent> _adjustHealthAction;
+        private Event<EntityAggroedGameEvent>.Action _entityAggroedAction;
+        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
 
         public MissionConditionEntityAggro(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -25,7 +26,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return EvaluateEntityFilter(_proto.EntityFilter, entity);
         }
 
-        private void OnAdjustHealth(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
         {
             var player = evt.Player;
             var entity = evt.Entity;
@@ -38,7 +39,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             Count++;
         }
 
-        private void OnEntityAggroed(EntityAggroedGameEvent evt)
+        private void OnEntityAggroed(in EntityAggroedGameEvent evt)
         {
             var player = evt.Player;
             var entity = evt.AggroEntity;

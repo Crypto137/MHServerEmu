@@ -121,7 +121,7 @@ namespace MHServerEmu.Games.Populations
                     var spawner = manager.GetEntity<Spawner>(Group.SpawnerId);
                     if (spawner != null)
                     {
-                        var inventory = spawner.GetInventory(InventoryConvenienceLabel.Summoned);
+                        var inventory = spawner.SummonedInventory;
                         if (inventory != null)
                             settings.InventoryLocation = new(spawner.Id, inventory.PrototypeDataRef);
                     }
@@ -206,7 +206,7 @@ namespace MHServerEmu.Games.Populations
             if (Defeat(killer, cleanUp)) Group?.ScheduleClearCluster(ActiveEntity, killer);
         }
 
-        private bool Defeat(WorldEntity killer = null, bool cleanUp = false)
+        public bool Defeat(WorldEntity killer = null, bool cleanUp = false)
         {
             if (State == SpawnState.Destroyed || State == SpawnState.Defeated) return false;
             State = SpawnState.Defeated;
@@ -261,7 +261,7 @@ namespace MHServerEmu.Games.Populations
                 ActiveEntity = null;
             }
 
-            EntitySelectorProto?.SetUniqueEntity(EntityRef, entity.Region, false);
+            EntitySelectorProto?.SetUniqueEntity(EntityRef, entity?.Region, false);
 
             if (destroyGroup)
                 Group?.ScheduleClearCluster(entity, null);

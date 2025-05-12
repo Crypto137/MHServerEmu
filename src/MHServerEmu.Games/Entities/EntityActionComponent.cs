@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Entities
         private Dictionary<EntitySelectorActionPrototype, FireActionPointer> _pendingActions;
         private readonly EventGroup _pendingEvents = new();
         public bool RequiresBrain { get; private set; }
-        public SortedSet<PrototypeId> PerformPowers { get; private set; }
+        public HashSet<PrototypeId> PerformPowers { get; private set; }
 
         public EntityActionComponent(WorldEntity owner)
         {
@@ -31,6 +31,13 @@ namespace MHServerEmu.Games.Entities
             CancelTable = new();
             PerformPowers = new();
             _pendingActions = new();
+        }
+
+        public void Destroy()
+        {
+            ActionTable.Clear();
+            CancelTable.Clear();
+            CancelAll();
         }
 
         public void Register(List<EntitySelectorActionPrototype> actions)

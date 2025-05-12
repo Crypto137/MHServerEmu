@@ -20,10 +20,12 @@ namespace MHServerEmu.Games.Powers
         public ulong ItemSourceId { get; set; }
 
         public bool SkipRangeCheck { get; set; }
-        public int BeamSweepVar { get; set; } = -1;
+        public int BeamSweepTick { get; set; } = -1;
         public TimeSpan UnknownTimeSpan { get; set; } = TimeSpan.Zero;
 
         public bool IsFree { get; set; }
+
+        public PowerResults PowerResults { get; set; }
 
         public PowerApplication() { }
 
@@ -43,7 +45,7 @@ namespace MHServerEmu.Games.Powers
             ItemSourceId = other.ItemSourceId;
 
             SkipRangeCheck = other.SkipRangeCheck;
-            BeamSweepVar = other.BeamSweepVar;
+            BeamSweepTick = other.BeamSweepTick;
             UnknownTimeSpan = other.UnknownTimeSpan;
         }
     }

@@ -16,14 +16,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         Contributors,
     }
 
-    [AssetEnum((int)Type1)]
-    public enum ManaType
-    {
-        Type1 = 0,
-        Type2 = 1,
-        TypeAll = 3,
-    }
-
     [AssetEnum((int)Undefined)]
     public enum TriBool
     {
@@ -377,11 +369,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override MissionAction AllocateAction(IMissionActionOwner owner)
         {
             return new MissionActionTimedAction(owner, this);
-        }
-
-        public void SetDelayInSeconds(double delayInSeconds)
-        {
-            DelayInSeconds = delayInSeconds;
         }
     }
 

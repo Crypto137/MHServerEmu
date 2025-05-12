@@ -1,1 +1,0 @@
-Copy Calligraphy.sip and mu_cdata.sip from Marvel Heroes\Data\Game to here

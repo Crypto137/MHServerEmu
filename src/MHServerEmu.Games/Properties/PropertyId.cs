@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Powers;
 
 namespace MHServerEmu.Games.Properties
@@ -81,10 +82,15 @@ namespace MHServerEmu.Games.Properties
         /// <summary>
         /// Constructs a <see cref="PropertyId"/> with the provided params
         /// </summary>
-        public PropertyId(PropertyEnum propertyEnum, DamageType param0)
+        public PropertyId(PropertyEnum propertyEnum, DamageType param0) : this(propertyEnum, (PropertyParam)param0)
         {
-            PropertyInfo info = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
-            Raw = info.EncodeParameters(propertyEnum, (PropertyParam)param0).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, ManaType param0) : this(propertyEnum, (PropertyParam)param0)
+        {
         }
 
         /// <summary>
@@ -153,6 +159,14 @@ namespace MHServerEmu.Games.Properties
         public PropertyId(PropertyEnum propertyEnum, int param0, PrototypeId param1)
         {
             Raw = new PropertyId(propertyEnum, (PropertyParam)param0, Property.ToParam(propertyEnum, 1, param1)).Raw;
+        }
+
+        /// <summary>
+        /// Constructs a <see cref="PropertyId"/> with the provided params
+        /// </summary>
+        public PropertyId(PropertyEnum propertyEnum, int param0, int param1, PrototypeId param2)
+        {
+            Raw = new PropertyId(propertyEnum, (PropertyParam)param0, (PropertyParam)param1, Property.ToParam(propertyEnum, 2, param2)).Raw;
         }
 
         /// <summary>

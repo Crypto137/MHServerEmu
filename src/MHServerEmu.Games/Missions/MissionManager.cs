@@ -45,14 +45,14 @@ namespace MHServerEmu.Games.Missions
 
         public bool EventsRegistred { get; private set; }
 
-        private Action<AreaCreatedGameEvent> _areaCreatedAction;
-        private Action<CellCreatedGameEvent> _cellCreatedAction;
-        private Action<EntityEnteredMissionHotspotGameEvent> _entityEnteredMissionHotspotAction;
-        private Action<EntityLeftMissionHotspotGameEvent> _entityLeftMissionHotspotAction;
-        private Action<PlayerLeftRegionGameEvent> _playerLeftRegionAction;
-        private Action<PlayerInteractGameEvent> _playerInteractAction;
-        private Action<PlayerCompletedMissionGameEvent> _playerCompletedMissionAction;
-        private Action<PlayerFailedMissionGameEvent> _playerFailedMissionAction;
+        private Event<AreaCreatedGameEvent>.Action _areaCreatedAction;
+        private Event<CellCreatedGameEvent>.Action _cellCreatedAction;
+        private Event<EntityEnteredMissionHotspotGameEvent>.Action _entityEnteredMissionHotspotAction;
+        private Event<EntityLeftMissionHotspotGameEvent>.Action _entityLeftMissionHotspotAction;
+        private Event<PlayerLeftRegionGameEvent>.Action _playerLeftRegionAction;
+        private Event<PlayerInteractGameEvent>.Action _playerInteractAction;
+        private Event<PlayerCompletedMissionGameEvent>.Action _playerCompletedMissionAction;
+        private Event<PlayerFailedMissionGameEvent>.Action _playerFailedMissionAction;
 
         private ulong _regionId;
         private readonly HashSet<ulong> _missionInterestEntities;
@@ -580,7 +580,7 @@ namespace MHServerEmu.Games.Missions
             if (Player == null || HasMissions == false) return;
 
             // initialize and clear old missions
-            List<Mission> oldMissions = new();
+            List<Mission> oldMissions = ListPool<Mission>.Instance.Get();
             foreach (var mission in _missionDict.Values)
             {
                 if (mission == null) continue;
@@ -595,6 +595,7 @@ namespace MHServerEmu.Games.Missions
                 else
                     DeleteMission(mission.PrototypeDataRef);
             }
+            ListPool<Mission>.Instance.Return(oldMissions);
 
             ResetMissionsToCheckpoint();
 
@@ -658,13 +659,6 @@ namespace MHServerEmu.Games.Missions
             var mission = FindMissionByDataRef(missionRef);
             mission ??= CreateMissionByDataRef(missionRef);
             return mission;
-        }
-
-        public bool SetAvatar(PrototypeId avatarPrototypeRef)
-        {
-            // TODO: Pass the avatar instance itself rather than its prototype and do all the necessary initialization
-            _avatarPrototypeRef = avatarPrototypeRef;
-            return true;
         }
 
         public static bool HasReceivedRewardsForMission(Player player, Avatar avatar, PrototypeId missionRef)
@@ -756,7 +750,7 @@ namespace MHServerEmu.Games.Missions
             EventsRegistred = false;
         }
 
-        private void OnAreaCreated(AreaCreatedGameEvent evt)
+        private void OnAreaCreated(in AreaCreatedGameEvent evt)
         {
             var area = evt.Area;
             if (area == null || area.IsDynamicArea) return;
@@ -766,7 +760,7 @@ namespace MHServerEmu.Games.Missions
                     mission.RegisterAreaEvents(area);
         }
 
-        private void OnCellCreated(CellCreatedGameEvent evt)
+        private void OnCellCreated(in CellCreatedGameEvent evt)
         {
             var cell = evt.Cell;
             if (cell == null) return;
@@ -776,7 +770,7 @@ namespace MHServerEmu.Games.Missions
                     mission.RegisterCellEvents(cell);
         }
 
-        private void OnEntityEnteredMissionHotspot(EntityEnteredMissionHotspotGameEvent evt)
+        private void OnEntityEnteredMissionHotspot(in EntityEnteredMissionHotspotGameEvent evt)
         {
             if (evt.Target is not Avatar avatar) return;
             var player = avatar.GetOwnerOfType<Player>();
@@ -791,7 +785,7 @@ namespace MHServerEmu.Games.Missions
             mission.OnPlayerEnteredMission(player);
         }
 
-        private void OnEntityLeftMissionHotspot(EntityLeftMissionHotspotGameEvent evt)
+        private void OnEntityLeftMissionHotspot(in EntityLeftMissionHotspotGameEvent evt)
         {
             if (evt.Target is not Avatar avatar) return;
             var player = avatar.GetOwnerOfType<Player>();
@@ -806,7 +800,7 @@ namespace MHServerEmu.Games.Missions
             mission.OnPlayerLeftMission(player);
         }
 
-        private void OnPlayerLeftRegion(PlayerLeftRegionGameEvent evt)
+        private void OnPlayerLeftRegion(in PlayerLeftRegionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -815,7 +809,7 @@ namespace MHServerEmu.Games.Missions
                     mission?.OnPlayerLeftRegion(player);
         }
 
-        private void OnPlayerInteract(PlayerInteractGameEvent evt)
+        private void OnPlayerInteract(in PlayerInteractGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -827,7 +821,7 @@ namespace MHServerEmu.Games.Missions
             SchedulePlayerInteract(player, target);
         }
 
-        private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
+        private void OnPlayerCompletedMission(in PlayerCompletedMissionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -862,7 +856,7 @@ namespace MHServerEmu.Games.Missions
             }
         }
 
-        private void OnPlayerFailedMission(PlayerFailedMissionGameEvent evt)
+        private void OnPlayerFailedMission(in PlayerFailedMissionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null) return;
@@ -1256,6 +1250,24 @@ namespace MHServerEmu.Games.Missions
                 return null;
         }
 
+        /// <summary>
+        /// Return missions based on pattern. Used for MissionCommands
+        /// </summary>
+        public List<Mission> FindMissionsByPattern(string pattern)
+        {
+            List<Mission> missionsFound = new();
+            if (string.IsNullOrWhiteSpace(pattern) || _missionDict == null)
+                return missionsFound;
+
+            foreach (KeyValuePair<PrototypeId, Mission> entries in _missionDict)
+            {
+                if (entries.Key.ToString().Contains(pattern) || entries.Value.Prototype.ToString().Contains(pattern, StringComparison.CurrentCultureIgnoreCase))
+                    missionsFound.Add(entries.Value);
+            }
+
+            return missionsFound;
+        }
+
         public void ActivateMission(PrototypeId missionProtoRef)
         {
             var mission = MissionByDataRef(missionProtoRef);
@@ -1421,10 +1433,14 @@ namespace MHServerEmu.Games.Missions
                 }
             }
 
-
+            var legendaryMissions = ListPool<Mission>.Instance.Get();
             foreach (var mission in _missionDict.Values)
                 if (mission.IsLegendaryMission)
-                    mission.RestoreLegendaryMissionState(properties);
+                    legendaryMissions.Add(mission);
+
+            foreach (var mission in legendaryMissions)
+                mission.RestoreLegendaryMissionState(properties);
+            ListPool<Mission>.Instance.Return(legendaryMissions);
 
             InitializeMissions();
 
@@ -1439,6 +1455,65 @@ namespace MHServerEmu.Games.Missions
             _avatarPrototypeRef = avatar.PrototypeDataRef;
         }
 
+        public bool ResetAvatarMissionsForStoryWarp(PrototypeId chapterProtoRef, bool sendToClient)
+        {
+            Player player = Player;
+            if (player == null) return Logger.WarnReturn(false, "ResetMissions(): player == null");
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "ResetMissions(): avatar == null");
+
+            // Default to chapter 0 (full reset)
+            int chapterNumber = 0;
+            if (chapterProtoRef != PrototypeId.Invalid)
+            {
+                ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
+                if (chapterProto != null)
+                    chapterNumber = chapterProto.ChapterNumber;
+                else
+                    Logger.Warn("ResetMissions(): chapterProto == null");
+            }
+
+            player.SetActiveChapter(chapterProtoRef);
+
+            // Clear mission state
+            foreach (Mission mission in _missionDict.Values)
+            {
+                // Check chapter filter if needed
+                if (chapterProtoRef != PrototypeId.Invalid && mission.ShouldResetForStoryWarp(chapterNumber) == false)
+                    continue;
+
+                // Do not send to client yet, this will be done below
+                if (mission.State != MissionState.Invalid)
+                    mission.SetState(MissionState.Invalid, false);
+            }
+
+            // Set mission state to inactive
+            foreach (Mission mission in _missionDict.Values)
+            {
+                // Check chapter filter if needed
+                if (chapterProtoRef != PrototypeId.Invalid && mission.ShouldResetForStoryWarp(chapterNumber) == false)
+                    continue;
+
+                MissionPrototype missionProto = mission.Prototype;
+                if (missionProto == null)
+                {
+                    Logger.Warn("ResetAvatarMissionsForStoryWarp(): missionProto == null");
+                    continue;
+                }
+
+                bool hasConditions = missionProto.PrereqConditions != null || missionProto.ActivateConditions != null || missionProto.ActivateNowConditions != null;
+                if (mission.IsAdvancedMission == false && hasConditions)
+                    mission.SetState(MissionState.Inactive, sendToClient);
+                else if (sendToClient)
+                    mission.SendToParticipants(MissionUpdateFlags.Default, MissionObjectiveUpdateFlags.None);
+            }
+
+            // Force a save immediately
+            StoreAvatarMissions(avatar);
+            return true;
+        }
+
         public void UpdateMissionInterest()
         {
             if (Player == null) return;
@@ -1448,8 +1523,13 @@ namespace MHServerEmu.Games.Missions
 
         public void UpdateMissionEntities(Mission mission)
         {
-            foreach (var player in mission.GetParticipants())
-                UpdateMissionEntitiesForPlayer(mission, player);
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (mission.GetParticipants(participants))
+            {
+                foreach (var player in participants)
+                    UpdateMissionEntitiesForPlayer(mission, player);
+            }
+            ListPool<Player>.Instance.Return(participants);
         }
 
         public static void UpdateMissionEntitiesForPlayer(Mission mission, Player player)
@@ -1499,8 +1579,10 @@ namespace MHServerEmu.Games.Missions
                 hasInterest |= outInteractData.PlayerHUDFlags.HasFlag(PlayerHUDEnum.ShowObjs);
 
                 if (worldEntity is Transition transition)
-                    foreach (var dest in transition.Destinations)
+                    for (int i = 0; i < transition.Destinations.Count; i++)
                     {
+                        var dest = transition.Destinations[i];
+
                         var regionRef = dest.RegionRef;
                         if (regionRef != PrototypeId.Invalid)
                         {
@@ -1614,202 +1696,5 @@ namespace MHServerEmu.Games.Missions
         {
             protected override CallbackDelegate GetCallback() => (manager) => manager.OnDailyMissionUpdate();
         }
-
-        #region Hardcoded
-
-        public static readonly MissionPrototypeId[] DisabledMissions = new MissionPrototypeId[]
-        {
-         /*   MissionPrototypeId.CivilWarDailyCapOM01DefeatSpiderman,
-            MissionPrototypeId.CivilWarDailyCapOM02DestroyCrates,
-            MissionPrototypeId.CivilWarDailyCapOM03DefeatThor,
-            MissionPrototypeId.CivilWarDailyCapOM04SaveDumDum,
-            MissionPrototypeId.CivilWarDailyCapOM05HydraZoo,
-            MissionPrototypeId.CivilWarDailyCapOM06TeamUpDefeatSHIELD,
-            MissionPrototypeId.CivilWarDailyCapOM07InteractDefeatTurrets,
-            MissionPrototypeId.CivilWarDailyIronmanOM01DefeatSpiderman,
-            MissionPrototypeId.CivilWarDailyIronmanOM02DefeatThor,
-            MissionPrototypeId.CivilWarDailyIronmanOM03SaveJocasta,
-            MissionPrototypeId.CivilWarDailyIronmanOM04DestroyCrates,
-            MissionPrototypeId.CivilWarDailyIronmanOM05HydraZoo,
-            MissionPrototypeId.CivilWarDailyIronmanOM06TeamUpDefeatAIM,
-            MissionPrototypeId.CivilWarDailyIronmanOM07InteractDefeatHand,*/
-            MissionPrototypeId.XMasGiftXChange,
-            MissionPrototypeId.SiegeMissionGiverController,
-            MissionPrototypeId.AgentsOfSHIELDEvent,
-        };
-
-
-        public static readonly MissionPrototypeId[] EnabledMissions = new MissionPrototypeId[]
-        {
-            MissionPrototypeId.PlayOpening,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV1,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV2,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV3,
-        };
-
-        // TODO replace this mission to MetaStates
-        public static readonly MissionPrototypeId[] EventMissions = new MissionPrototypeId[]
-        {
-            /*
-            MissionPrototypeId.MoloidAttackAftermath,
-            MissionPrototypeId.Moloid3AgainstLeaper,
-            MissionPrototypeId.MoloidRescueCivilian,
-            MissionPrototypeId.MoloidAmbushBreakIn,
-            */
-
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV1,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV2,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV3,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV4,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV5,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV6,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV7,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV8,
-            MissionPrototypeId.NorwayFrostGolemsFaeAmbushV9,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV1,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV2,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV3,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV4,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV5,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV6,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV7,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV8,
-            MissionPrototypeId.NorwayFrostGolemsMeleeAmbushV9,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV1,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV2,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV3,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV4,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV5,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV6,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV7,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV8,
-            MissionPrototypeId.NorwayFrostGolemsRangedAmbushV9,
-
-            MissionPrototypeId.PoliceVsShark,
-            MissionPrototypeId.CivTrappedUnderRhino,
-            MissionPrototypeId.NamedEliteLizardMonkey, 
-        };
-
-        public enum MissionPrototypeId : ulong
-        {
-            PlayOpening = 10963313100249436843,
-
-            NPE1Flag = 10079041614323716371,
-            NPE2Flag = 11142636152886137108,
-
-            XMasGiftXChange = 13809096718282792311,
-            AgentsOfSHIELDEvent = 3971370332354387752,
-
-            CH00TrainingPathingController = 3126128604301631533,
-            CH00NPETrainingRoom = 17508547083537161214,
-
-            CivilWarDailyCapOM01DefeatSpiderman = 422011357013684087,
-            CivilWarDailyCapOM02DestroyCrates = 16726105122650140376,
-            CivilWarDailyCapOM03DefeatThor = 17525168409710964083,
-            CivilWarDailyCapOM04SaveDumDum = 1605098401643834761,
-            CivilWarDailyCapOM05HydraZoo = 16108444317179587775,
-            CivilWarDailyCapOM06TeamUpDefeatSHIELD = 16147585525915463870,
-            CivilWarDailyCapOM07InteractDefeatTurrets = 11425191689973609005,
-
-            CivilWarDailyIronmanOM01DefeatSpiderman = 10006467310735077687,
-            CivilWarDailyIronmanOM02DefeatThor = 10800373542996422450,
-            CivilWarDailyIronmanOM03SaveJocasta = 1692932771743412129,
-            CivilWarDailyIronmanOM04DestroyCrates = 2469191070689800346,
-            CivilWarDailyIronmanOM05HydraZoo = 14812369129072701055,
-            CivilWarDailyIronmanOM06TeamUpDefeatAIM = 6784016171053232444,
-            CivilWarDailyIronmanOM07InteractDefeatHand = 8062690480896488047,
-
-            // Event Missions
-            LavaBugOverCiv1 = 3051637045813386860,
-            LavaBugOverCiv2 = 12951210928479411821,
-            LavaBugOverCiv3 = 8229534989490265710,
-            MoloidAttackAftermath = 9846291500756181529,
-            Moloid3AgainstLeaper = 7901699126451183992,
-            MoloidRescueCivilian = 2105266359721140667,
-            MoloidAmbushBreakIn = 8273714847963488577,
-
-            // Ch05MutantTown
-            OMMutantsUnderFire = 1307786597808155026,
-            MutantsRunningGroup1 = 10873519943997006861,
-            MutantsRunningGroup2 = 1082243550031913998,
-            MutantRunningSoloF5 = 6582400594476082068,
-            OMSentinelAttack = 8470993979061837457,
-            OMNgaraiInvasion = 17739825775665686436,
-            // Ch07SavageLand
-            OMRaptorVillageSurvival = 9997628235003932057,
-            OMBroodSensors = 18170546091391854063,
-            SunTribeKingLizard = 4490088042433880038,
-            SunTribeLeadingRaptors = 10007010211070222742,
-            // Ch08Latveria
-            OMCommArray = 4824312982332121730,
-            OMSHIELDBeachhead = 8114921592377321192,
-            // Ch09Asgard
-            OMStoneCircle = 3980473410108269374,
-            OMForgottenPyre = 10224091465615418680,
-            OMAshesToAshes = 6056188340475601950,
-            OMNorwaySHIELDAssist = 4758892475970890088,
-            // Ambushes
-            NorwayFrostGolemsFaeAmbushV1 = 6885407105936335832,
-            NorwayFrostGolemsFaeAmbushV2 = 14298796090790781913,
-            NorwayFrostGolemsFaeAmbushV3 = 567832374723683290,
-            NorwayFrostGolemsFaeAmbushV4 = 3376095577277866971,
-            NorwayFrostGolemsFaeAmbushV5 = 17245570270655488988,
-            NorwayFrostGolemsFaeAmbushV6 = 8554293696219063261,
-            NorwayFrostGolemsFaeAmbushV7 = 13202349635148653534,
-            NorwayFrostGolemsFaeAmbushV8 = 2648362653723272159,
-            NorwayFrostGolemsFaeAmbushV9 = 16523144139972355040,
-            NorwayFrostGolemsMeleeAmbushV1 = 11237279034766402740,
-            NorwayFrostGolemsMeleeAmbushV2 = 148816423127164085,
-            NorwayFrostGolemsMeleeAmbushV3 = 14095823178937410742,
-            NorwayFrostGolemsMeleeAmbushV4 = 16908054501776368823,
-            NorwayFrostGolemsMeleeAmbushV5 = 3110762746763683000,
-            NorwayFrostGolemsMeleeAmbushV6 = 12883039579802248377,
-            NorwayFrostGolemsMeleeAmbushV7 = 8306643211702772922,
-            NorwayFrostGolemsMeleeAmbushV8 = 16194921426191328443,
-            NorwayFrostGolemsMeleeAmbushV9 = 2391751132260738236,
-            NorwayFrostGolemsRangedAmbushV1 = 5625787139408602397,
-            NorwayFrostGolemsRangedAmbushV2 = 15560123190288327966,
-            NorwayFrostGolemsRangedAmbushV3 = 1620863043653018911,
-            NorwayFrostGolemsRangedAmbushV4 = 4559159988866131232,
-            NorwayFrostGolemsRangedAmbushV5 = 18359975128891467041,
-            NorwayFrostGolemsRangedAmbushV6 = 7433712472581743906,
-            NorwayFrostGolemsRangedAmbushV7 = 12008573372694471971,
-            NorwayFrostGolemsRangedAmbushV8 = 3846057716786537764,
-            NorwayFrostGolemsRangedAmbushV9 = 17640932745242813733,
-            // Formations
-            CH9HYDRALargeV1 = 2870567467016199194,
-            CH9HYDRALargeV2 = 13705627841416535067,
-            CH9HYDRALargeV3 = 9203937241110486044,
-            CH9HYDRAMediumV1 = 3960261659038456976,
-            CH9HYDRAMediumV2 = 12616776073852558481,
-            CH9HYDRAMediumV3 = 7969424372122000530,
-            CH9HYDRAMediumV4 = 5161688935150591123,
-            CH9HYDRAMediumV5 = 9668348228504001684,
-            CH9HYDRAMediumV6 = 2291973203088448661,
-            // Siege
-            SiegeMissionGiverController = 1084743840769385009,
-            Ch09ActivateSiegeDoorDefense = 17270497231078564226,
-            OMSiegeDropshipAssault = 12090724917985880814,
-            OMSiegeRescue = 3946739667481535280,
-
-            PoliceVsShark = 9206170907141351562,
-            CivTrappedUnderRhino = 12254878804928310140,
-            NamedEliteLizardMonkey = 1618332889826339901,
-
-            // KismetController
-            RaftNPEJuggernautKismetController = 12317849348317127661,
-            RaftNPEElectroKismetController = 910214907513610911,
-            RaftNPEVenomKismetController = 6265104569686237654,
-            RaftNPEGreenGoblinKismetController = 8708148294014084157,
-            RaftNPEQuinjetKismetController = 3549921242402792113,
-            OpVultureKismetController = 1433700762134324290,
-            CH06BlobKismetController = 8503609374989820818,
-            CH07MrSinisterKismetController = 10313743698614297996,
-            CH07SabretoothKismetController = 1519881959113893239,
-            CH08MODOKSpawnKismetController = 15291664867109315779,
-        }
-
-        #endregion
-
     }
 }

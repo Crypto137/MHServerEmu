@@ -119,6 +119,7 @@ namespace MHServerEmu.Games.Missions.Conditions
         {            
             if (count < 0) count = 0; //_count = Math.Clamp(count, 0, RequiredCount);
             _count = count;
+            // Logger.Debug($"[{Mission.PrototypeName}] SetCount = {count}");
             OnUpdate();
         }
 

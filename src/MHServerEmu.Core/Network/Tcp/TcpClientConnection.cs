@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
@@ -24,7 +23,7 @@ namespace MHServerEmu.Core.Network.Tcp
         public bool Connected { get => Socket.Connected; }
         public IPEndPoint RemoteEndPoint { get => (IPEndPoint)Socket.RemoteEndPoint; }
 
-        public ITcpClient Client { get; set; }
+        public TcpClient Client { get; set; }
 
         /// <summary>
         /// Constructs a new client connection instance.
@@ -33,6 +32,14 @@ namespace MHServerEmu.Core.Network.Tcp
         {
             _server = server;
             Socket = socket;
+        }
+
+        public override string ToString()
+        {
+            if (HideSensitiveInformation)
+                return RemoteEndPoint?.ToStringMasked();
+
+            return RemoteEndPoint?.ToString();
         }
 
         /// <summary>
@@ -53,43 +60,20 @@ namespace MHServerEmu.Core.Network.Tcp
                 _server.DisconnectClient(this);
         }
 
-        #region Send Methods
-
         /// <summary>
         /// Sends a <see cref="byte"/> buffer over this connection.
         /// </summary>
-        public int Send(byte[] buffer, int size, SocketFlags flags = SocketFlags.None)
+        public void Send(byte[] buffer, int size, SocketFlags flags = SocketFlags.None)
         {
-            // Send one message at a time for each client
-            lock (_server)
-                return _server.Send(this, buffer, size, flags);
+            _server.Send(this, buffer, size, flags);
         }
-
-        private static readonly Logger Logger = LogManager.CreateLogger();
 
         /// <summary>
         /// Sends an <see cref="IPacket"/> over this connection.
         /// </summary>
-        public int Send(IPacket packet, SocketFlags flags = SocketFlags.None)
+        public void Send<T>(T packet, SocketFlags flags = SocketFlags.None) where T: IPacket
         {
-            int size = packet.SerializedSize;
-            byte[] buffer = ArrayPool<byte>.Shared.Rent(size);
-            
-            packet.Serialize(buffer);
-            int sent = Send(buffer, size, flags);
-            
-            ArrayPool<byte>.Shared.Return(buffer);
-            return sent;
-        }
-
-        #endregion
-
-        public override string ToString()
-        {
-            if (HideSensitiveInformation)
-                return RemoteEndPoint?.ToStringMasked();
-
-            return RemoteEndPoint?.ToString();
+            _server.Send(this, packet, flags);
         }
     }
 }

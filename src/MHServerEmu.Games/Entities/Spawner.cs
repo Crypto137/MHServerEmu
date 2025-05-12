@@ -69,7 +69,7 @@ namespace MHServerEmu.Games.Entities
                 hotspotSettings.RegionId = Region.Id;
                 hotspotSettings.Position = RegionLocation.Position;
 
-                var inventory = GetInventory(InventoryConvenienceLabel.Summoned);
+                var inventory = SummonedInventory;
                 if (inventory != null) hotspotSettings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
                 var hotspot = Game.EntityManager.CreateEntity(hotspotSettings);
                 if (hotspot != null)
@@ -83,32 +83,14 @@ namespace MHServerEmu.Games.Entities
             var spawnerProto = SpawnerPrototype;
             int count = SpawnedCount();
             if (count < spawnerProto.SpawnSimultaneousMax)
-            {
-                if (PrototypeDataRef == (PrototypeId)966079004089914920) // NorwayFrostGolemsSpawner
-                {
-                    if (count < 3) SpawnEntry(spawnerProto.SpawnSequence[0]);
-                    return;
-                }
-
-                // HardFix for LegendaryCH08Doomstadt2
-                if (PrototypeDataRef == (PrototypeId)15992471948099589621) // TRBonusChestSpawner
-                {
-                    var popObject = spawnerProto.SpawnSequence[0].Object as PopulationEntityPrototype;
-                    popObject.SetEntity((PrototypeId)9710110594970293035); // ShieldCrateGreen => ShieldCrateOrnate
-                }
-
                 SpawnEntry(NextSequence(spawnerProto.SpawnSequence));
-            }
         }
 
         private int SpawnedCount()
         {
-            var manager = Game.EntityManager;
             int spawnedCount = 0;
-            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
-            {
-                var summoned = manager.GetEntity<WorldEntity>(inventory.Id);
-                if (summoned == null) continue;                
+            foreach (var summoned in new SummonedEntityIterator(this))
+            {             
                 if (summoned.IsDead || summoned.IsDestroyed || summoned.IsControlledEntity) continue;
                 if (summoned is Hotspot && _spawnedSequences.ContainsKey(summoned.Id) == false) continue;
                 spawnedCount++;                
@@ -119,11 +101,8 @@ namespace MHServerEmu.Games.Entities
         public bool FilterEntity(SpawnGroupEntityQueryFilterFlags filterFlag, EntityFilterPrototype entityFilter, EntityFilterContext entityFilterContext,
             AlliancePrototype allianceProto)
         {
-            var manager = Game.EntityManager;
-            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
+            foreach (var summoned in new SummonedEntityIterator(this))
             {
-                var summoned = manager.GetEntity<WorldEntity>(inventory.Id);
-                if (summoned == null) continue;
                 if (filterFlag.HasFlag(SpawnGroupEntityQueryFilterFlags.NotDeadDestroyedControlled)
                     && (summoned.IsDead || summoned.IsDestroyed || summoned.IsControlledEntity)) continue;
                 if (entityFilter != null && entityFilter.Evaluate(summoned, entityFilterContext) == false) continue;
@@ -167,7 +146,7 @@ namespace MHServerEmu.Games.Entities
                 region.EvalRegionProperties(spawnerProto.EvalSpawnProperties, evalProperties);
             entry.EvaluateSpawnProperties(evalProperties, region, null);
 
-            List<WorldEntity> spawnedEntities = new();
+            List<WorldEntity> spawnedEntities = ListPool<WorldEntity>.Instance.Get();
             for (int i = 0; i < entry.Count; i++) 
             { 
                 if (DebugLog) Logger.Debug($"SpawnObject[{i}] {popObject.GetType().Name}");
@@ -187,6 +166,7 @@ namespace MHServerEmu.Games.Entities
                         if (text.OverheadTextEntityFilter == null || text.OverheadTextEntityFilter.Evaluate(entity, new()))
                             entity.ShowOverheadText(text.OverheadText, 10.0f);
                     }
+            ListPool<WorldEntity>.Instance.Return(spawnedEntities);
         }
 
         private void SpawnObject(PopulationObjectPrototype popObject, PropertyCollection properties, List<WorldEntity> spawnedEntities)
@@ -255,13 +235,9 @@ namespace MHServerEmu.Games.Entities
 
         public void KillSummonedInventory()
         {
-            var manager = Game.EntityManager;
-            foreach (var inventory in GetInventory(InventoryConvenienceLabel.Summoned))
-            {
-                var summoned = manager.GetEntity<WorldEntity>(inventory.Id);
-                if (summoned != null && summoned.IsDead == false)
+            foreach (var summoned in new SummonedEntityIterator(this))
+                if (summoned.IsDead == false)
                     summoned.Kill();
-            }
         }
 
         private bool DefeatSpawnerOnKilled(WorldEntity entity)

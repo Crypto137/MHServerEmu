@@ -1,3 +1,6 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionCellEnter : MissionPlayerCondition
     {
         private MissionConditionCellEnterPrototype _proto;
-        private Action<PlayerEnteredCellGameEvent> _playerEnteredCellAction;
+        private Event<PlayerEnteredCellGameEvent>.Action _playerEnteredCellAction;
 
         public MissionConditionCellEnter(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -19,21 +22,27 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool cellEnter = false;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                var cell = player.CurrentAvatar?.Cell;
-                if (cell != null && _proto.Contains(cell.PrototypeDataRef))
+                foreach (var player in participants)
                 {
-                    cellEnter = true;
-                    break;
+                    var cell = player.CurrentAvatar?.Cell;
+                    if (cell != null && _proto.Contains(cell.PrototypeDataRef))
+                    {
+                        cellEnter = true;
+                        break;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(cellEnter);
             return true;
         }
 
-        private void OnPlayerEnteredCell(PlayerEnteredCellGameEvent evt)
+        private void OnPlayerEnteredCell(in PlayerEnteredCellGameEvent evt)
         {
             var player = evt.Player;
             var cellRef = evt.CellRef;

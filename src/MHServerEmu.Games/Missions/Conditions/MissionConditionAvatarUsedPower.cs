@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -8,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionAvatarUsedPower : MissionPlayerCondition
     {
         private MissionConditionAvatarUsedPowerPrototype _proto;
-        private Action<AvatarUsedPowerGameEvent> _avatarUsedPowerAction;
+        private Event<AvatarUsedPowerGameEvent>.Action _avatarUsedPowerAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionAvatarUsedPower(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -20,7 +21,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             // _proto.WithinSeconds always 0
         }
 
-        private void OnAvatarUsedPower(AvatarUsedPowerGameEvent evt)
+        private void OnAvatarUsedPower(in AvatarUsedPowerGameEvent evt)
         {
             var player = evt.Player;
             var avatar = evt.Avatar;

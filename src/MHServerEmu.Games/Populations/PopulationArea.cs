@@ -1,7 +1,10 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -92,7 +95,14 @@ namespace MHServerEmu.Games.Populations
 
                 bool spawn = false;
                 if (random.NextFloat() < spawnMap.MaxChance)
-                    spawn = random.Next((int)HeatData.Max + 1) <= heat;
+                {
+                    // LiveTuning AreaMobSpawnHeat
+                    float liveHeat = heat * LiveTuningManager.GetLiveAreaTuningVar(Area.Prototype, AreaTuningVar.eATV_AreaMobSpawnHeat);
+                    int maxHeat = (int)HeatData.Max + 1;
+                    heat = MathHelper.ClampNoThrow((int)liveHeat, 0, maxHeat);
+
+                    spawn = random.Next(maxHeat) <= heat;
+                }
 
                 spawn &= spawnMap.ProjectToPosition(index, out Vector3 spawnPosition);
 

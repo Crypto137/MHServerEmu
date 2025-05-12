@@ -371,7 +371,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int numAffixes = itemSpec.AffixSpecs.Count;
 
             // Check for live tuning price override
-            if (Currency == GameDatabase.CurrencyGlobalsPrototype.EternitySplinters)
+            if (item.ItemPrototype != null && Currency == GameDatabase.CurrencyGlobalsPrototype.EternitySplinters)
             {
                 int liveTuneCost = item.ItemPrototype.LiveTuneEternitySplinterCost;
                 if (liveTuneCost != 1)

@@ -4,6 +4,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.GameData.Calligraphy;
+using MHServerEmu.Games.GameData.PatchManager;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Leaderboards;
@@ -95,6 +96,9 @@ namespace MHServerEmu.Games.GameData
             // Initialize PropertyInfoTable
             PropertyInfoTable = new();
             PropertyInfoTable.Initialize();
+
+            // Initialize PrototypePatchManager
+            PrototypePatchManager.Instance.Initialize(config.EnablePatchManager);
 
             // Load globals prototypes
             PrototypeId globalsPrototypeId = GetPrototypeRefByName("Globals/Globals.defaults");

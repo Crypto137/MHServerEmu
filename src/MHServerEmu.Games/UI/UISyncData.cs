@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
@@ -144,12 +145,15 @@ namespace MHServerEmu.Games.UI
             if (contextProto is OpenMissionPrototype openProto)
             {
                 if (openProto.ActiveInAreas.HasValue())
-                    _areaList.UnionWith(openProto.ActiveInAreas);
+                    _areaList.Insert(openProto.ActiveInAreas);
                 UpdateUI();
             }
             else if (contextProto is RegionPrototype)
             {
-                _areaList.UnionWith(RegionPrototype.GetAreasInGenerator(contextRef));
+                HashSet<PrototypeId> areaList = HashSetPool<PrototypeId>.Instance.Get();
+                RegionPrototype.GetAreasInGenerator(contextRef, areaList);
+                _areaList.Insert(areaList);
+                HashSetPool<PrototypeId>.Instance.Return(areaList);
                 UpdateUI();
             }
         }

@@ -26,7 +26,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         private EventGroup _timedGroup = new();
         protected EventGroup _pendingEvents = new();
         private EventPointer<ActiveGoalRepeatEvent> _activeGoalRepeatEvent = new();
-        private Action<EntityEnteredWorldGameEvent> _entityEnteredWorldAction;
+        private Event<EntityEnteredWorldGameEvent>.Action _entityEnteredWorldAction;
         private LocaleStringId _modeText;
 
         public MetaGameMode(MetaGame metaGame, MetaGameModePrototype proto)
@@ -127,7 +127,7 @@ namespace MHServerEmu.Games.MetaGames.GameModes
 
         #endregion
 
-        private void OnEntityEnteredWorld(EntityEnteredWorldGameEvent evt)
+        private void OnEntityEnteredWorld(in EntityEnteredWorldGameEvent evt)
         {
             var proto = Prototype;
             if (proto.PlayerEnterAudioTheme == AssetId.Invalid) return;

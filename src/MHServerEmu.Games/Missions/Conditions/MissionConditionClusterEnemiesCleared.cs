@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Populations;
@@ -10,7 +11,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionClusterEnemiesCleared : MissionPlayerCondition
     {
         private MissionConditionClusterEnemiesClearedPrototype _proto;
-        private Action<ClusterEnemiesClearedGameEvent> _clusterEnemiesClearedAction;
+        private Event<ClusterEnemiesClearedGameEvent>.Action _clusterEnemiesClearedAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionClusterEnemiesCleared(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -21,7 +22,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _clusterEnemiesClearedAction = OnClusterEnemiesCleared;
         }
 
-        private void OnClusterEnemiesCleared(ClusterEnemiesClearedGameEvent evt)
+        private void OnClusterEnemiesCleared(in ClusterEnemiesClearedGameEvent evt)
         {
             var spawnGroup = evt.SpawnGroup;
             var killer = evt.KillerId;

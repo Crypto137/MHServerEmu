@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -11,9 +12,9 @@ namespace MHServerEmu.Games.Missions.Conditions
         protected override PrototypeId MissionProtoRef => _proto.MissionPrototype;
         protected override long RequiredCount => _proto.Count;
 
-        private Action<AvatarEnteredRegionGameEvent> _avatarEnteredRegionAction;
-        private Action<PlayerCompletedMissionObjectiveGameEvent> _playerCompletedMissionObjectiveAction;
-        private Action<MissionObjectiveUpdatedGameEvent> _missionObjectiveUpdatedAction;
+        private Event<AvatarEnteredRegionGameEvent>.Action _avatarEnteredRegionAction;
+        private Event<PlayerCompletedMissionObjectiveGameEvent>.Action _playerCompletedMissionObjectiveAction;
+        private Event<MissionObjectiveUpdatedGameEvent>.Action _missionObjectiveUpdatedAction;
 
         public MissionConditionObjectiveComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -85,7 +86,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return objectiveState == MissionObjectiveState.Completed || mission.State == MissionState.Completed;
         }
 
-        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
+        private void OnAvatarEnteredRegion(in AvatarEnteredRegionGameEvent evt)
         {
             var player = evt.Player;
             if (player == null || IsMissionPlayer(player) == false) return;
@@ -95,7 +96,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             Count++;
         }
 
-        private void OnPlayerCompletedMissionObjective(PlayerCompletedMissionObjectiveGameEvent evt)
+        private void OnPlayerCompletedMissionObjective(in PlayerCompletedMissionObjectiveGameEvent evt)
         {
             var player = evt.Player;
             var missionRef = evt.MissionRef;
@@ -131,7 +132,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             Count++;
         }
 
-        private void OnMissionObjectiveUpdated(MissionObjectiveUpdatedGameEvent evt)
+        private void OnMissionObjectiveUpdated(in MissionObjectiveUpdatedGameEvent evt)
         {
             var player = evt.Player;
             var missionRef = evt.MissionRef;

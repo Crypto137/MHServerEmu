@@ -27,6 +27,8 @@ namespace MHServerEmu.Games.Entities.Avatars
         State15                 // Something to do with avatar switching
     }
 
+    // NOTE: While pending actions are used extensively client-side to queue player input,
+    // server side we really need them only for WaitingForPrevPower, DelayedPowerActivate and FindingLandingSpot.
     public class PendingAction : PendingPowerData
     {
         private static readonly Logger Logger = LogManager.CreateLogger();

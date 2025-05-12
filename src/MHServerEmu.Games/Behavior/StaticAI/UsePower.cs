@@ -27,11 +27,11 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (state == StaticBehaviorReturnType.Interrupted && agent.IsExecutingPower)
             {
-                Power activatePower = agent.ActivePower;
-                if (activatePower != null) return;
+                Power activePower = agent.ActivePower;
+                if (activePower == null) return;
 
-                if (activatePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting) == false)
-                    Logger.Warn($"{agent}: is trying to end {activatePower} but something went wrong");
+                if (activePower.EndPower(EndPowerFlags.ExplicitCancel | EndPowerFlags.Interrupting) == false)
+                    Logger.Warn($"End(): [{agent}] is trying to end [{activePower}] but something went wrong");
             }
 
             BehaviorBlackboard blackboard = ownerController.Blackboard;
@@ -270,7 +270,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
 
             if (powerContext.ForceCheckTargetRegionLocation)
             {
-                Bounds targetPositionBounds = agent.Bounds;
+                Bounds targetPositionBounds = new(agent.Bounds);
                 targetPositionBounds.Center = targetPositionForPower;
 
                 PositionCheckFlags positionCheckFlags = PositionCheckFlags.CanBeBlockedEntity | PositionCheckFlags.CanSweepTo;
@@ -419,7 +419,7 @@ namespace MHServerEmu.Games.Behavior.StaticAI
             Region region = agent.Region;
             if (region == null) return false;
 
-            Bounds bounds = agent.Bounds;
+            Bounds bounds = new(agent.Bounds);
             bounds.Center = worldEntity.RegionLocation.Position;
 
             float minTargetDistance = powerContext.TargetOffset;

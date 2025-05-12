@@ -68,7 +68,7 @@ namespace MHServerEmu.Games.Common.SpatialPartitions
 
         public bool IsEmpty()
         {
-            if (Elements.Any() || AtTargetLevelCount != 0) return false;
+            if (Elements.Count > 0 || AtTargetLevelCount != 0) return false;
             foreach (var child in Children)
                 if (child != null) return false;
             return true;

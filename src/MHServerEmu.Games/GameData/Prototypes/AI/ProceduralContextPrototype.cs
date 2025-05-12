@@ -153,7 +153,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             long currentTime = (long)game.CurrentTime.TotalMilliseconds;
             long nextFleeTime = currentTime + game.Random.Next(MinFleeCooldownMS, MaxFleeCooldownMS);
-            blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime] = nextFleeTime;
+            blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFleeTime] = nextFleeTime;
         }
     }
 

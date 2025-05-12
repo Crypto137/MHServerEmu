@@ -31,6 +31,9 @@ namespace MHServerEmu.Games.GameData.Calligraphy
 
         public Curve GetCurve(CurveId id)
         {
+            if (id == CurveId.Invalid)
+                return null;
+
             // Look for a record for the specified id
             if (_curveRecordDict.TryGetValue(id, out CurveRecord record) == false)
                 return Logger.WarnReturn<Curve>(null, $"Failed to get curve id {id}");

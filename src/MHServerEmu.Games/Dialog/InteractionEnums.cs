@@ -231,8 +231,8 @@ namespace MHServerEmu.Games.Dialog
 
             if (_encounterRefs.Count > 0)
             {
-                var ecounterRef = entity.EncounterResourcePrototype;
-                if (ecounterRef == PrototypeId.Invalid || _encounterRefs.Contains(ecounterRef) == false) return false;
+                var encounterRef = entity.EncounterResourcePrototype;
+                if (encounterRef == PrototypeId.Invalid || _encounterRefs.Contains(encounterRef) == false) return false;
             }
 
             if (_missionRefs.Count > 0)

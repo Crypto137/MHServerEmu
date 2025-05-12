@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Config;
+﻿using System.Diagnostics;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -13,9 +14,13 @@ namespace MHServerEmu.Games.GameData.Tables
 
         public EquipmentSlotTable()
         {
-            // Caching equipment slot table requires preloading all item prototypes, which is too slow
+            // Caching equipment slot table requires preloading all item prototypes, which is too slow unless running in a public server environment
             var config = ConfigManager.Instance.GetConfig<GameDataConfig>();
-            if (config.UseEquipmentSlotTableCache == false) return;
+            if (config.UseEquipmentSlotTableCache == false)
+                return;
+
+            Logger.Info("Building EquipmentInvUISlot cache...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             _equipmentSlotDict = new();
             foreach (var avatarRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<AvatarPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
@@ -30,11 +35,16 @@ namespace MHServerEmu.Games.GameData.Tables
                         _equipmentSlotDict[(itemProto.DataRef, avatarProto.DataRef)] = slot;
                 }
             }
+
+            stopwatch.Stop();
+            Logger.Info($"Finished building EquipmentInvUISlot cache in {stopwatch.ElapsedMilliseconds} ms");
         }
 
         public EquipmentInvUISlot EquipmentUISlotForAvatar(ItemPrototype itemProto, AvatarPrototype avatarProto)
         {
-            if (_equipmentSlotDict == null) return FindEquipmentUISlotForAvatar(itemProto, avatarProto);
+            // To do the slow lookup if we don't have a cache
+            if (_equipmentSlotDict == null)
+                return FindEquipmentUISlotForAvatar(itemProto, avatarProto);
 
             if (itemProto == null) return Logger.WarnReturn(EquipmentInvUISlot.Invalid, "EquipmentUISlotForAvatar(): itemProto == null");
             if (avatarProto == null) return Logger.WarnReturn(EquipmentInvUISlot.Invalid, "EquipmentUISlotForAvatar(): avatarProto == null");

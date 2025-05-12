@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
@@ -92,6 +93,12 @@ namespace MHServerEmu.Games.Properties
             set => SetProperty(value, new(propertyEnum, param0));
         }
 
+        public PropertyValue this[PropertyEnum propertyEnum, ManaType param0]
+        {
+            get => GetProperty(new(propertyEnum, param0));
+            set => SetProperty(value, new(propertyEnum, param0));
+        }
+
         // 2 params
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1]
@@ -119,6 +126,12 @@ namespace MHServerEmu.Games.Properties
         }
 
         // 3 params
+
+        public PropertyValue this[PropertyEnum propertyEnum, int param0, int param1, PrototypeId param2]
+        {
+            get => GetProperty(new(propertyEnum, param0, param1, param2));
+            set => SetProperty(value, new(propertyEnum, param0, param1, param2));
+        }
 
         public PropertyValue this[PropertyEnum propertyEnum, PropertyParam param0, PropertyParam param1, PropertyParam param2]
         {
@@ -156,6 +169,45 @@ namespace MHServerEmu.Games.Properties
         public PropertyValue GetProperty(PropertyId id)
         {
             return GetPropertyValue(id);
+        }
+
+        public void GetPropertyMinMaxFloat(PropertyId id, out float min, out float max)
+        {
+            // This is ugly
+            PropertyInfoTable propertyInfoTable = GameDatabase.PropertyInfoTable;
+            PropertyInfo propertyInfo = propertyInfoTable.LookupPropertyInfo(id.Enum);
+
+            if (propertyInfo.DataType != PropertyDataType.Real)
+            {
+                min = 0f;
+                max = 0f;
+                Logger.Warn("GetPropertyMinMaxFloat(): Attempting to lookup min/max float values for a non-float property");
+                return;
+            }
+
+            switch (id.Enum)
+            {
+                // Default to prototype data
+                default:
+                    PropertyInfoPrototype propertyInfoProto = propertyInfo.Prototype;
+                    min = propertyInfoProto.Min;
+                    max = propertyInfoProto.Max;
+                    break;
+
+                // Cap to max values for resources
+                case PropertyEnum.Endurance:
+                    Property.FromParam(id, 0, out int manaType);
+                    min = 0f;
+                    max = GetProperty(new(PropertyEnum.EnduranceMax, (PropertyParam)manaType));
+
+                    break;
+
+                case PropertyEnum.SecondaryResource:
+                    min = 0f;
+                    max = GetProperty(PropertyEnum.SecondaryResourceMax);
+
+                    break;
+            }
         }
 
         /// <summary>
@@ -341,6 +393,20 @@ namespace MHServerEmu.Games.Properties
         public bool HasProperty(PropertyId id)
         {
             return _aggregateList.GetPropertyValue(id, out _);
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="PropertyCollection"/> contains any properties that are applied over time.
+        /// </summary>
+        public bool HasOverTimeProperties()
+        {
+            foreach (var kvp in this)
+            {
+                if (Property.OverTimeProperties.Contains(kvp.Key.Enum))
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -761,8 +827,8 @@ namespace MHServerEmu.Games.Properties
             {
                 case PropertyDataType.Real:
                 case PropertyDataType.Curve:        return BitConverter.SingleToUInt32Bits(value.RawFloat);
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return CodedOutputStream.EncodeZigZag64(value.RawLong);
+                case PropertyDataType.Integer:      return MathHelper.SwizzleSignBit(value.RawLong);
+                case PropertyDataType.Time:         return MathHelper.SwizzleSignBit(value.RawLong - (long)Game.StartTime.TotalMilliseconds);
                 case PropertyDataType.Prototype:    return (ulong)GameDatabase.DataDirectory.GetPrototypeEnumValue<Prototype>((PrototypeId)value.RawLong);
                 default:                            return (ulong)value.RawLong;
             }
@@ -776,11 +842,11 @@ namespace MHServerEmu.Games.Properties
             switch (type)
             {
                 case PropertyDataType.Real:
-                case PropertyDataType.Curve:        return new(BitConverter.ToSingle(BitConverter.GetBytes(bits)));
-                case PropertyDataType.Integer:
-                case PropertyDataType.Time:         return new(CodedInputStream.DecodeZigZag64(bits));
-                case PropertyDataType.Prototype:    return new(GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits));
-                default:                            return new((long)bits);
+                case PropertyDataType.Curve:        return BitConverter.UInt32BitsToSingle((uint)bits);
+                case PropertyDataType.Integer:      return MathHelper.UnswizzleSignBit(bits);
+                case PropertyDataType.Time:         return (long)Game.StartTime.TotalMilliseconds + MathHelper.UnswizzleSignBit(bits);
+                case PropertyDataType.Prototype:    return GameDatabase.DataDirectory.GetPrototypeFromEnumValue<Prototype>((int)bits);
+                default:                            return (long)bits;
             }
         }
 

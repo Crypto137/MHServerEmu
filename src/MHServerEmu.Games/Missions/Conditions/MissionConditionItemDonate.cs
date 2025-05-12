@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionItemDonate : MissionPlayerCondition
     {
         private MissionConditionItemDonatePrototype _proto;
-        private Action<PlayerDonatedItemGameEvent> _playerDonatedItemAction;
+        private Event<PlayerDonatedItemGameEvent>.Action _playerDonatedItemAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionItemDonate(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _playerDonatedItemAction = OnPlayerDonatedItem;
         }
 
-        private void OnPlayerDonatedItem(PlayerDonatedItemGameEvent evt)
+        private void OnPlayerDonatedItem(in PlayerDonatedItemGameEvent evt)
         {
             var player = evt.Player;
             var item = evt.Item;

@@ -7,8 +7,10 @@ using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.PowerCollections;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
@@ -123,9 +125,14 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnTargetKill, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnSummonEntity()             // 11
+        public void HandleTriggerPowerEventOnSummonEntity(ulong summonEntityId)             // 11
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = summonEntityId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSummonEntity, ref settings);
         }
 
         public void HandleTriggerPowerEventOnHoldBegin()                // 12
@@ -158,24 +165,46 @@ namespace MHServerEmu.Games.Powers
             HandleTriggerPowerEvent(PowerEventType.OnMissileKilled, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotNegated()           // 15
+        public void HandleTriggerPowerEventOnHotspotNegated(Hotspot hotspot)           // 15
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = hotspot.Id;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.TargetPosition = hotspot.RegionLocation.Position;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotNegated, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotNegatedByOther()    // 16
+        public void HandleTriggerPowerEventOnHotspotNegatedByOther(Hotspot hotspot)    // 16
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = hotspot.Id;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.TargetPosition = hotspot.RegionLocation.Position;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotNegatedByOther, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotOverlapBegin()      // 17
+        public void HandleTriggerPowerEventOnHotspotOverlapBegin(ulong targetId)      // 17
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = targetId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotOverlapBegin, ref settings);
         }
 
-        public void HandleTriggerPowerEventOnHotspotOverlapEnd()        // 18
+        public void HandleTriggerPowerEventOnHotspotOverlapEnd(ulong targetId)        // 18
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TargetEntityId = targetId;
+            settings.TriggeringPowerRef = PrototypeDataRef;
+            settings.Flags |= PowerActivationSettingsFlags.ServerCombo;
 
+            HandleTriggerPowerEvent(PowerEventType.OnHotspotOverlapEnd, ref settings);
         }
 
         public void HandleTriggerPowerEventOnRemoveCondition(PowerResults powerResults, int numRemoved) // 19
@@ -298,17 +327,26 @@ namespace MHServerEmu.Games.Powers
 
         public void HandleTriggerPowerEventOnSpecializationPowerAssigned()      // 27
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSpecializationPowerAssigned, ref settings);
         }
 
         public void HandleTriggerPowerEventOnSpecializationPowerUnassigned()    // 28
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnSpecializationPowerUnassigned, ref settings);
         }
 
         public void HandleTriggerPowerEventOnEntityControlled()                 // 29
         {
+            PowerActivationSettings settings = _lastActivationSettings;
+            settings.TriggeringPowerRef = PrototypeDataRef;
 
+            HandleTriggerPowerEvent(PowerEventType.OnEntityControlled, ref settings);
         }
 
         public void HandleTriggerPowerEventOnOutOfRangeActivateMovementPower()  // 30
@@ -468,6 +506,8 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
+        public virtual void OnPayloadInit(PowerPayload payload) { }
+
         private bool DoActivateComboPower(Power triggeredPower, PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings initialSettings)
         {
             // Activate combo power - a power triggered by a power event action
@@ -492,6 +532,9 @@ namespace MHServerEmu.Games.Powers
 
             // Copy settings
             PowerActivationSettings settings = initialSettings;
+
+            // Select random target if needed
+            DoRandomTargetSelection(triggeredPower, ref settings);
 
             // Check target
             bool needsTarget = triggeredPower.NeedsTarget();
@@ -532,7 +575,7 @@ namespace MHServerEmu.Games.Powers
                     direction = transform * direction;
 
                     // Apply offset
-                    settings.TargetPosition = direction * offsetActivationAoe.PositionOffsetMagnitude;
+                    settings.TargetPosition += direction * offsetActivationAoe.PositionOffsetMagnitude;
                     if (offsetActivationAoe.UseIncomingTargetPosAsUserPos)
                         settings.UserPosition = settings.TargetPosition;
 
@@ -611,7 +654,7 @@ namespace MHServerEmu.Games.Powers
             }
 
             if (triggeredPowerEvent.Keywords.HasValue())
-                outputList.AddRange(powerCollection.GetPowersMatchingAnyKeyword(triggeredPowerEvent.Keywords));
+                powerCollection.GetPowersMatchingAnyKeyword(outputList, triggeredPowerEvent.Keywords);
 
             return outputList.Count > 0;
         }
@@ -701,9 +744,7 @@ namespace MHServerEmu.Games.Powers
 
         // 4
         private bool DoPowerEventActionContextCallback(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
-        {
-            // Disabled until we have summon powers working to reduce log spam
-            /*
+        {            
             PowerEventContextPrototype contextProto = triggeredPowerEvent.PowerEventContext;
             if (contextProto == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): contextProto == null");
 
@@ -717,7 +758,7 @@ namespace MHServerEmu.Games.Powers
 
             if (contextCallbackProto.SetContextOnOwnerSummonEntities)
             {
-                Inventory summonedInventory = Owner.GetInventory(InventoryConvenienceLabel.Summoned);
+                Inventory summonedInventory = Owner.SummonedInventory;
                 if (summonedInventory == null) return Logger.WarnReturn(false, "DoPowerEventActionContextCallback(): summonedInventory == null");
 
                 if (contextCallbackProto.SummonedEntitiesUsePowerTarget == false)
@@ -743,7 +784,6 @@ namespace MHServerEmu.Games.Powers
             {
                 contextCallbackProto.HandlePowerEvent(Owner, target, targetPosition);
             }
-            */
 
             return true;
         }
@@ -936,18 +976,36 @@ namespace MHServerEmu.Games.Powers
             if (triggeredPowerEvent.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext)
                 return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): triggeredPowerEvent.PowerEventContext is not PowerEventContextLootTablePrototype lootTableContext");
 
-            Avatar avatar = Owner as Avatar;
-            Player player = avatar?.GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
+            if (Owner.IsInWorld == false) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): Owner.IsInWorld == false");
 
-            List<Player> playerList = ListPool<Player>.Instance.Get();
+            Avatar avatar = Owner as Avatar;
+
+            HashSet<Player> recipientPlayers = HashSetPool<Player>.Instance.Get();
 
             if (lootTableContext.IncludeNearbyAvatars)
-                ComputeNearbyPlayers(avatar.Region, avatar.RegionLocation.Position, 0, false, playerList);
-            else
-                playerList.Add(player);
+            {
+                List<Player> nearbyPlayerList = ListPool<Player>.Instance.Get();
+                ComputeNearbyPlayers(Owner.Region, Owner.RegionLocation.Position, 0, false, nearbyPlayerList);
 
-            int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : avatar.CharacterLevel;
+                foreach (Player player in nearbyPlayerList)
+                    recipientPlayers.Add(player);
+
+                ListPool<Player>.Instance.Return(nearbyPlayerList);
+            }
+            else if (avatar == null)
+            {
+                return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): avatar == null");
+            }
+            
+            if (avatar != null)
+            {
+                Player player = avatar.GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionSpawnLootTable(): player == null");
+
+                recipientPlayers.Add(player);
+            }
+
+            int level = lootTableContext.UseItemLevelForLootRoll ? Properties[PropertyEnum.ItemLevel] : Owner.CharacterLevel;
 
             Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
             {
@@ -955,14 +1013,14 @@ namespace MHServerEmu.Games.Powers
             };
 
             int recipientId = 1;
-            foreach (Player recipient in playerList)
+            foreach (Player recipient in recipientPlayers)
             {
                 using LootInputSettings lootSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-                lootSettings.Initialize(LootContext.Drop, recipient, avatar, level);
+                lootSettings.Initialize(LootContext.Drop, recipient, Owner, level);
                 Game.LootManager.AwardLootFromTables(tables, lootSettings, recipientId++);
             }
 
-            ListPool<Player>.Instance.Return(playerList);
+            HashSetPool<Player>.Instance.Return(recipientPlayers);
             return true;
         }
 
@@ -1005,15 +1063,62 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 17
-        private void DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionTransformModeChange(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionTransformModeChange(): Not implemented");
+            if (Owner is not Avatar ownerAvatar) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): Owner is not Avatar ownerAvatar");
+
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTransformModePrototype contextProto)
+                return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): Incompatible power event context type");
+
+            PrototypeId transformModeRef = contextProto.TransformMode;
+
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeChange(): transformModeProto == null");
+
+            PrototypeId currentTransformMode = ownerAvatar.CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid && currentTransformMode != transformModeRef)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTransformModeChange(): Unexpected transform mode {currentTransformMode.GetName()} for avatar [{ownerAvatar}]");
+
+            // If already in this transform mode, toggle it off
+            if (currentTransformMode == transformModeRef)
+                transformModeRef = PrototypeId.Invalid;
+
+            ownerAvatar.ScheduleTransformModeChange(transformModeRef, currentTransformMode);
+            return true;
         }
 
         // 18
-        private void DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionTransformModeStart(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionTransformModeStart(): Not implemented");
+            if (Owner is not Avatar ownerAvatar) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): Owner is not Avatar ownerAvatar");
+
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTransformModePrototype contextProto)
+                return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): Incompatible power event context type");
+
+            PrototypeId transformModeRef = contextProto.TransformMode;
+
+            TransformModePrototype transformModeProto = transformModeRef.As<TransformModePrototype>();
+            if (transformModeProto == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformModeProto == null");
+
+            PrototypeId currentTransformMode = ownerAvatar.CurrentTransformMode;
+            if (currentTransformMode != PrototypeId.Invalid && currentTransformMode != transformModeRef)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTransformModeStart(): Unexpected transform mode {currentTransformMode.GetName()} for avatar [{ownerAvatar}]");
+
+            PrototypeId transformComboPowerRef = currentTransformMode == PrototypeId.Invalid
+                ? transformModeProto.EnterTransformModePower
+                : transformModeProto.ExitTransformModePower;
+
+            if (transformComboPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformComboRef == PrototypeId.Invalid");
+
+            Power transformComboPower = ownerAvatar.PowerCollection.GetPower(transformComboPowerRef);
+            if (transformComboPower == null) return Logger.WarnReturn(false, "DoPowerEventActionTransformModeStart(): transformComboPower == null");
+
+            PowerActivationSettings newSettings = settings;
+            newSettings.TriggeringPowerRef = PrototypeDataRef;
+            newSettings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+
+            DoActivateComboPower(transformComboPower, triggeredPowerEvent, ref newSettings);
+            return true;
         }
 
         // 19
@@ -1060,15 +1165,78 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 21
-        private void DoPowerEventActionControlAgentAI(ulong targetId)
+        private bool DoPowerEventActionControlAgentAI(ulong targetId)
         {
-            Logger.Warn($"DoPowerEventActionControlAgentAI(): Not implemented");
+            var manager = Game.EntityManager;
+            var target = manager.GetEntity<WorldEntity>(targetId);
+            if (target == null || target.IsControlledEntity) return false;
+
+            var conditionCollection = target.ConditionCollection;
+            if (conditionCollection == null) return false;
+
+            var keywordGlobals = GameDatabase.KeywordGlobalsPrototype;
+            if (keywordGlobals == null || keywordGlobals.ControlPowerKeywordPrototype == PrototypeId.Invalid) return false;
+
+            Avatar masterAvatar = null;
+            Power masterControlPower = null;
+            TimeSpan maxTime = TimeSpan.Zero;
+
+            List<Power> controlPowerEndList = ListPool<Power>.Instance.Get();
+
+            foreach (var condition in conditionCollection)
+            {
+                if (condition == null) continue;
+                if (condition.HasKeyword(keywordGlobals.ControlPowerKeywordPrototype) == false) continue;
+                
+                var controller = manager.GetEntity<WorldEntity>(condition.UltimateCreatorId);
+                if (controller is not Avatar avatar) continue;
+
+                var elapsedTime = condition.ElapsedTime;                    
+                if (elapsedTime >= maxTime)
+                {
+                    masterAvatar = avatar;
+                    maxTime = elapsedTime;
+                }
+
+                var powerRef = condition.CreatorPowerPrototypeRef;
+                if (powerRef != PrototypeId.Invalid && condition.Duration == TimeSpan.Zero)
+                {
+                    var controlPower = avatar.GetPower(powerRef);
+                    if (controlPower != null)
+                    {
+                        if (masterAvatar == avatar)
+                            masterControlPower = controlPower;
+
+                        controlPowerEndList.Add(controlPower);
+                    }
+                }
+            }
+
+            if (masterAvatar != null)
+            {
+                if (target is Agent targetAgent && masterAvatar.SetControlledAgent(targetAgent) == false)
+                {
+                    ListPool<Power>.Instance.Return(controlPowerEndList);
+                    return Logger.WarnReturn(false,
+                        $"DoPowerEventActionControlAgentAI(): Failed SetControlledAgent {targetAgent}");
+                }
+
+                masterControlPower?.HandleTriggerPowerEventOnEntityControlled();
+            }
+
+            foreach (var controlPower in controlPowerEndList)
+                controlPower?.SchedulePowerEnd(TimeSpan.Zero, EndPowerFlags.ExplicitCancel);
+
+            ListPool<Power>.Instance.Return(controlPowerEndList);
+
+            return true;
         }
 
         // 22
         private void DoPowerEventActionRemoveAndKillControlledAgentsFromInv()
         {
-            Logger.Warn($"DoPowerEventActionRemoveAndKillControlledAgentsFromInv(): Not implemented");
+            if (Owner is Avatar avatar) 
+                avatar.RemoveAndKillControlledAgent();
         }
 
         // 23
@@ -1192,7 +1360,11 @@ namespace MHServerEmu.Games.Powers
             if (Owner is not Avatar avatar)
                 return Logger.WarnReturn(false, $"DoPowerEventActionTeamUpAgentSummon(): A non-avatar entity {Owner} is trying to summon a team-up agent");
 
-            avatar.SummonTeamUpAgent();
+            float eventParam = triggeredPowerEvent.GetEventParam(Properties, Owner);
+            if (eventParam < 0.0f)
+                return Logger.WarnReturn(false, $"DoPowerEventActionTeamUpAgentSummon(): eventParam {eventParam} < 0.0f");
+
+            avatar.SummonTeamUpAgent(TimeSpan.FromSeconds(eventParam));
             return true;
         }
 
@@ -1203,35 +1375,68 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 30
-        private void DoPowerEventActionStealPower(ulong targetId)
+        private bool DoPowerEventActionStealPower(ulong targetId)
         {
-            Logger.Warn($"DoPowerEventActionStealPower(): Not implemented");
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): Owner is not Avatar avatar");
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): player == null");
+
+            // Non-agent targets don't have stealable powers
+            Agent target = Game.EntityManager.GetEntity<Agent>(targetId);
+            if (target == null)
+                return true;
+
+            AgentPrototype agentProto = target.AgentPrototype;
+            if (agentProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): agentProto == null");
+
+            // Check if there is a power to steal
+            StealablePowerInfoPrototype stealablePowerInfoProto = agentProto.StealablePower.As<StealablePowerInfoPrototype>();
+            if (stealablePowerInfoProto == null)
+                return true;
+
+            PrototypeId stolenPowerRef = stealablePowerInfoProto.Power;
+            if (stolenPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): stolenPowerRef == PrototypeId.Invalid");
+
+            BannerMessagePrototype bannerMessageProto = null;
+            if (avatar.IsStolenPowerAvailable(stealablePowerInfoProto.Power) == false)
+            {
+                avatar.Properties[PropertyEnum.StolenPowerAvailable, stolenPowerRef] = true;
+                bannerMessageProto = GameDatabase.UIGlobalsPrototype.MessageStolenPowerAvailable.As<BannerMessagePrototype>();
+            }
+            else
+            {
+                bannerMessageProto = GameDatabase.UIGlobalsPrototype.MessageStolenPowerDuplicate.As<BannerMessagePrototype>();
+            }
+
+            if (bannerMessageProto == null) return Logger.WarnReturn(false, "DoPowerEventActionStealPower(): bannerMessageProto == null");
+            player.SendBannerMessage(bannerMessageProto);
+
+            return true;
         }
 
         // 31
         private bool DoPowerEventActionPetItemDonate(PowerEventActionPrototype triggeredPowerEvent)
         {
-            //Logger.Trace($"DoPowerEventActionPetItemDonate()");
-
-            // We need the right context
             if (triggeredPowerEvent.PowerEventContext is not PowerEventContextPetDonateItemPrototype itemDonateContext)
                 return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): Incompatible power event context type");
 
-            // We need a player to give credits to
-            Player player = Owner.GetOwnerOfType<Player>();
+            Avatar avatar = Owner as Avatar;
+            if (avatar == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): avatar == null");
+
+            Player player = avatar.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): player == null");
 
-            // Region to search for items to vacuum
-            Region region = Owner.Region;
+            Region region = avatar.Region;
             if (region == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): region == null");
 
             // Find items to vacuum
-            Sphere vacuumVolume = new(Owner.RegionLocation.Position, itemDonateContext.Radius);
-            Stack<Item> vacuumStack = new();
+            Sphere vacuumVolume = new(avatar.RegionLocation.Position, itemDonateContext.Radius);
             DataDirectory dataDirectory = DataDirectory.Instance;
             BlueprintId donationBlueprint = dataDirectory.GetPrototypeBlueprintDataRef(GameDatabase.AdvancementGlobalsPrototype.PetTechDonationItemPrototype);
             RarityPrototype rarityThresholdProto = itemDonateContext.RarityThreshold.As<RarityPrototype>();
 
+            List<Item> vacuumedItems = ListPool<Item>.Instance.Get();
             foreach (WorldEntity worldEntity in region.IterateEntitiesInVolume(vacuumVolume, new()))
             {
                 // Skip non-item world entities
@@ -1253,52 +1458,115 @@ namespace MHServerEmu.Games.Powers
                 if (itemRarityProto.Tier > rarityThresholdProto.Tier)
                     continue;
 
-                // Push the item to the stack
-                vacuumStack.Push(item);
+                // Add the item to the vacuum list
+                vacuumedItems.Add(item);
             }
 
-            // TODO: Proper donation
-
-            // Destroy vacuumed items
-            PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
-            uint creditsToAdd = 0;
-
-            while (vacuumStack.Count > 0)
+            // Acquire vacuumed items
+            foreach (Item item in vacuumedItems)
             {
-                Item item = vacuumStack.Pop();
-                creditsToAdd += item.GetSellPrice(player);
+                if (item.Properties.HasProperty(PropertyEnum.RestrictedToPlayerGuid))
+                {
+                    PrototypeId rarityProtoRef = item.Properties[PropertyEnum.ItemRarity];
+                    player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProtoRef.As<Prototype>()));
+                }
+
+                // TODO: PetTech donation
+                int sellPrice = Math.Max(MathHelper.RoundUpToInt(item.GetSellPrice(player) * (float)avatar.Properties[PropertyEnum.PetTechDonationMultiplier]), 1);
+                player.AcquireCredits(sellPrice);
                 item.Destroy();
             }
 
-            // Add credits for all vacuumed items
-            if (creditsToAdd > 0)
-                player.Properties[PropertyEnum.Currency, creditsProtoRef] += creditsToAdd;
-
+            ListPool<Item>.Instance.Return(vacuumedItems);
             return true;
         }
 
         // 32
-        private void DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionMapPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionMapPowers(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextMapPowersPrototype mapPowersContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionMapPowers(): Incompatible power event context type");
+
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionMapPowers(): Owner is not Avatar avatar");
+
+            if (mapPowersContext.MappedPowers.IsNullOrEmpty())
+                return true;
+
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            foreach (MapPowerPrototype mapPowerProto in mapPowersContext.MappedPowers)
+            {
+                if (mapPowerProto.OriginalPower == continuousPowerRef)
+                    avatar.ClearContinuousPower();
+
+                avatar.MapPower(mapPowerProto.OriginalPower, mapPowerProto.MappedPower);
+            }
+
+            return true;
         }
 
         // 33
-        private void DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
+        private bool DoPowerEventActionUnassignMappedPowers(PowerEventActionPrototype triggeredPowerEvent)
         {
-            Logger.Warn($"DoPowerEventActionUnassignMappedPowers(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextUnassignMappedPowersPrototype unassignMappedPowersContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionUnassignMappedPowers(): Incompatible power event context type");
+
+            if (Owner is not Avatar avatar) return Logger.WarnReturn(false, "DoPowerEventActionUnassignMappedPowers(): Owner is not Avatar avatar");
+
+            if (unassignMappedPowersContext.MappedPowersToUnassign.IsNullOrEmpty())
+                return true;
+
+            PrototypeId continuousPowerRef = avatar.ContinuousPowerDataRef;
+
+            foreach (MapPowerPrototype mapPowerProto in unassignMappedPowersContext.MappedPowersToUnassign)
+            {
+                if (mapPowerProto.MappedPower == continuousPowerRef)
+                    avatar.ClearContinuousPower();
+
+                avatar.UnassignMappedPower(mapPowerProto.MappedPower);
+            }
+
+            return true;
         }
 
         // 34
-        private void DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionRemoveSummonedAgentsWithKeywords(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Not implemented");
+            if (Game == null || Owner is not Avatar avatar) return false;
+
+            float count = triggeredPowerEvent.GetEventParam(Properties, avatar);
+            if (count < 0) return Logger.WarnReturn(false, $"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): eventParam {count} < 0");
+            if (triggeredPowerEvent.Keywords.IsNullOrEmpty()) 
+                return Logger.WarnReturn(false, $"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Keywords is null or empty");
+
+            int removed = avatar.RemoveSummonedAgentsWithKeywords(count, triggeredPowerEvent.KeywordsMask);
+            if (removed > 0 && triggeredPowerEvent.Power != PrototypeId.Invalid)
+            {
+                var powerCollection = avatar.PowerCollection;
+                if (powerCollection == null) return false;
+                var comboPower = powerCollection.GetPower(triggeredPowerEvent.Power);
+                if (comboPower == null)
+                    return Logger.WarnReturn(false, $"DoPowerEventActionRemoveSummonedAgentsWithKeywords(): Failed GetPower {triggeredPowerEvent.Power.GetNameFormatted()}");
+                
+                while (removed > 0)
+                {
+                    PowerActivationSettings localSettings = settings;
+                    localSettings.TriggeringPowerRef = PrototypeDataRef;
+                    localSettings.Flags |= PowerActivationSettingsFlags.ServerCombo;
+                    DoActivateComboPower(comboPower, triggeredPowerEvent, ref localSettings);
+                    removed--;
+                }
+            }
+
+            return true;
         }
 
         // 35
         private void DoPowerEventActionSummonControlledAgentWithDuration()
         {
-            Logger.Warn($"DoPowerEventActionSummonControlledAgentWithDuration(): Not implemented");
+            if (Game == null || Owner is not Avatar avatar) return;
+            if (avatar.ControlledAgent == null) return;
+            avatar.SummonControlledAgentWithDuration();
         }
 
         // 36

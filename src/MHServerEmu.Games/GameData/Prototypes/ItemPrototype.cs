@@ -356,6 +356,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return entryList.Count > 0;
         }
 
+        public PrototypeId GetOnUsePower()
+        {
+            return GetTriggeredPower(ActionsTriggeredOnItemEvent, ItemEventType.OnUse, ItemActionType.UsePower);
+        }
+
         public static bool AvatarUsesEquipmentType(ItemPrototype itemProto, AgentPrototype agentProto)
         {
             if (agentProto == null)
@@ -433,6 +438,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
             affixSeed = (affixSeed >> count) & 0xFFFFFFFF;
 
             return itemSeed ^ (int)affixSeed;
+        }
+
+        private static PrototypeId GetTriggeredPower(ItemActionSetPrototype actionSetProto, ItemEventType eventType, ItemActionType actionType)
+        {
+            if (actionSetProto == null || actionSetProto.Choices.IsNullOrEmpty())
+                return PrototypeId.Invalid;
+
+            foreach (ItemActionBasePrototype actionBaseProto in actionSetProto.Choices)
+            {
+                if (actionBaseProto is not ItemActionPrototype actionProto)
+                {
+                    Logger.Warn("GetTriggeredPower(): actionBaseProto is not ItemActionPrototype actionProto");
+                    continue;
+                }
+
+                if (actionProto.TriggeringEvent != eventType)
+                    continue;
+
+                if (actionType == ItemActionType.AssignPower && actionProto is ItemActionAssignPowerPrototype assignPowerActionProto)
+                    return assignPowerActionProto.Power;
+                else if (actionType == ItemActionType.UsePower && actionProto is ItemActionUsePowerPrototype usePowerActionProto)
+                    return usePowerActionProto.Power;
+            }
+
+            return PrototypeId.Invalid;
         }
     }
 
@@ -816,6 +846,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         [DoNotCopy]
+        public bool GrantsCharacterUnlock { get => TokenType == CharacterTokenType.UnlockCharacterOnly || TokenType == CharacterTokenType.UnlockCharOrUpgradeUlt; }
+        [DoNotCopy]
+        public bool GrantsUltimateUpgrade { get => TokenType == CharacterTokenType.UpgradeUltimateOnly || TokenType == CharacterTokenType.UnlockCharOrUpgradeUlt; }
+
+        [DoNotCopy]
         public bool IsForAvatar { get => Character.As<AvatarPrototype>() != null; }
         [DoNotCopy]
         public bool IsForTeamUp { get => Character.As<AgentTeamUpPrototype>() != null; }
@@ -827,6 +862,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             AgentPrototype agentProto = Character.As<AgentPrototype>();
             return agentProto?.ApprovedForUse() == true;
+        }
+
+        public override bool IsLiveTuningEnabled()
+        {
+            if (base.IsLiveTuningEnabled() == false)
+                return false;
+
+            return IsLiveTuningEnabled(Character);
         }
 
         public bool HasUnlockedCharacter(Player player)

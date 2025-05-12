@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,8 +18,13 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            foreach (Player player in GetDistributors(_proto.SendTo))
-                player.QueuePlayKismetSeq(_proto.KismetSeqPrototype);
+            List<Player> players = ListPool<Player>.Instance.Get();
+            if (GetDistributors(_proto.SendTo, players))
+            {
+                foreach (Player player in players)
+                    player.QueuePlayKismetSeq(_proto.KismetSeqPrototype);
+            }
+            ListPool<Player>.Instance.Return(players);
 
             if (MissionManager.Debug) Logger.Debug($"QueuePlayKismetSeq {Mission.PrototypeName} {_proto.KismetSeqPrototype.GetNameFormatted()}");
         }

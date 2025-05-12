@@ -6,11 +6,12 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.Network.Tcp;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
@@ -24,6 +25,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social;
 using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games
@@ -52,6 +54,7 @@ namespace MHServerEmu.Games
         private FixedQuantumGameTime _realGameTime = new(TimeSpan.FromMilliseconds(1));
         private TimeSpan _currentGameTime = TimeSpan.FromMilliseconds(1);   // Current time in the game simulation
         private TimeSpan _lastFixedTimeUpdateProcessTime;                   // How long the last fixed update took
+        private TimeSpan _fixedTimeUpdateProcessTimeLogThreshold;
         private long _frameCount;
 
         private int _liveTuningChangeNum;
@@ -73,6 +76,7 @@ namespace MHServerEmu.Games
         public AdminCommandManager AdminCommandManager { get; }
         public LootManager LootManager { get; }
         public GameDialogManager GameDialogManager { get; }
+        public ChatManager ChatManager { get; }
         public LiveTuningData LiveTuningData { get; private set; } = new();
 
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
@@ -85,11 +89,17 @@ namespace MHServerEmu.Games
         public bool OmegaMissionsEnabled { get; set; }
         public bool AchievementsEnabled { get; set; }
         public bool LeaderboardsEnabled { get; set; }
+        public bool InfinitySystemEnabled { get => GameOptions.InfinitySystemEnabled; }
+
+        public int PlayerCount { get => EntityManager.PlayerCount; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
         public Game(ulong id)
         {
+            // Small lags are fine, and logging all of them creates too much noise
+            _fixedTimeUpdateProcessTimeLogThreshold = FixedTimeBetweenUpdates * 2;
+
             Id = id;
 
             // Initialize game options
@@ -109,6 +119,7 @@ namespace MHServerEmu.Games
             EntityManager = new(this);
             LootManager = new(this);
             GameDialogManager = new(this);
+            ChatManager = new(this);
             Random = new();
 
             Initialize();
@@ -144,7 +155,7 @@ namespace MHServerEmu.Games
             IsRunning = true;
 
             // Initialize and start game thread
-            _gameThread = new(GameLoop) { IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+            _gameThread = new(GameLoop) { Name = $"Game [{this}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
             _gameThread.Start();
 
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
@@ -157,14 +168,15 @@ namespace MHServerEmu.Games
 
             Logger.Info($"Game shutdown requested. Game={this}, Reason={reason}");
 
-            // Cancel all events
-            GameEventScheduler.CancelAllEvents();
-
             // Clean up network manager
             NetworkManager.SendAllPendingMessages();
             foreach (PlayerConnection playerConnection in NetworkManager)
                 playerConnection.Disconnect();
             NetworkManager.Update();        // We need this to process player saves (for now)
+
+            // Clean up entities
+            EntityManager.DestroyAllEntities();
+            EntityManager.ProcessDeferredLists();
 
             // Clean up regions
             RegionManager.DestroyAllRegions();
@@ -181,35 +193,19 @@ namespace MHServerEmu.Games
             IsRunning = false;
         }
 
-        public void AddClient(FrontendClient client)
+        public void AddClient(IFrontendClient client)
         {
             NetworkManager.AsyncAddClient(client);
         }
 
-        public void RemoveClient(FrontendClient client)
+        public void RemoveClient(IFrontendClient client)
         {
             NetworkManager.AsyncRemoveClient(client);
         }
 
-        public void PostMessage(FrontendClient client, MessagePackage message)
+        public void ReceiveMessageBuffer(IFrontendClient client, in MessageBuffer messageBuffer)
         {
-            NetworkManager.AsyncPostMessage(client, message);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> over the specified <see cref="PlayerConnection"/>.
-        /// </summary>
-        public void SendMessage(PlayerConnection connection, IMessage message)
-        {
-            NetworkManager.SendMessage(connection, message);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> to all connected players.
-        /// </summary>
-        public void BroadcastMessage(IMessage message)
-        {
-            NetworkManager.BroadcastMessage(message);
+            NetworkManager.AsyncReceiveMessageBuffer(client, messageBuffer);
         }
 
         public Entity AllocateEntity(PrototypeId entityRef)
@@ -276,6 +272,9 @@ namespace MHServerEmu.Games
             Current = this;
             _gameTimer.Start();
 
+            CollectionPoolSettings.UseThreadLocalStorage = true;
+            ObjectPoolManager.UseThreadLocalStorage = true;
+
             try
             {
                 while (IsRunning)
@@ -340,8 +339,8 @@ namespace MHServerEmu.Games
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.EntityCount, EntityManager.EntityCount);
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.PlayerCount, EntityManager.PlayerCount);
 
-                if (_lastFixedTimeUpdateProcessTime > FixedTimeBetweenUpdates)
-                    Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than FixedTimeBetweenUpdates ({FixedTimeBetweenUpdates.TotalMilliseconds:0.00} ms)");
+                if (_lastFixedTimeUpdateProcessTime > _fixedTimeUpdateProcessTimeLogThreshold)
+                    Logger.Trace($"UpdateFixedTime(): Frame took longer ({_lastFixedTimeUpdateProcessTime.TotalMilliseconds:0.00} ms) than _fixedTimeUpdateWarningThreshold ({_fixedTimeUpdateProcessTimeLogThreshold.TotalMilliseconds:0.00} ms)");
 
                 // Bail out if we have fallen behind more exceeded frame budget
                 if (_gameTimer.Elapsed - updateStartTime > FixedTimeBetweenUpdates)
@@ -439,9 +438,8 @@ namespace MHServerEmu.Games
                     writer.WriteLine(region.ToString());
                 writer.WriteLine();
 
-                writer.WriteLine("Scheduled Events:");
-                foreach (var kvp in GameEventScheduler.GetScheduledEventCounts())
-                    writer.WriteLine($"{kvp.Key} x{kvp.Value}");
+                writer.WriteLine("Scheduled Event Pool:");
+                writer.Write(GameEventScheduler.GetPoolReportString());
                 writer.WriteLine();
 
                 writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");

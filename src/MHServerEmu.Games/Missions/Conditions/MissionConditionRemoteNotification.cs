@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 {
     public class MissionConditionRemoteNotification : MissionPlayerCondition
     {
-        private Action<NotificationInteractGameEvent> _notificationInteractAction;
+        private Event<NotificationInteractGameEvent>.Action _notificationInteractAction;
 
         public MissionConditionRemoteNotification(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -15,7 +16,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _notificationInteractAction = OnNotificationInteract;
         }
 
-        private void OnNotificationInteract(NotificationInteractGameEvent evt)
+        private void OnNotificationInteract(in NotificationInteractGameEvent evt)
         {
             var player = evt.Player;
             var missionRef = evt.MissionRef;

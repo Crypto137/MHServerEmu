@@ -1,5 +1,6 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
@@ -12,7 +13,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
     {
         public static readonly Logger Logger = LogManager.CreateLogger();
         private MetaStateLimitPlayerDeathsPrototype _proto;
-        private Action<PlayerDeathRecordedEvent> _playerDeathRecordedAction;
+        private Event<PlayerDeathRecordedEvent>.Action _playerDeathRecordedAction;
 
         public MetaStateLimitPlayerDeaths(MetaGame metaGame, MetaStatePrototype prototype) : base(metaGame, prototype)
         {
@@ -86,7 +87,7 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             if (MetaGame.Debug) Logger.Info($"UpdateWidgetCount {_proto.UIWidget.GetNameFormatted()} [{current}/{total}]");
         }
 
-        private void OnPlayerDeathRecorded(PlayerDeathRecordedEvent evt)
+        private void OnPlayerDeathRecorded(in PlayerDeathRecordedEvent evt)
         {
             var region = Region;
             if (region == null) return;

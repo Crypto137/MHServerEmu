@@ -1,3 +1,6 @@
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +9,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionCellLeave : MissionPlayerCondition
     {
         private MissionConditionCellLeavePrototype _proto;
-        private Action<PlayerLeftCellGameEvent> _playerLeftCellAction;
+        private Event<PlayerLeftCellGameEvent>.Action _playerLeftCellAction;
 
         public MissionConditionCellLeave(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -19,21 +22,27 @@ namespace MHServerEmu.Games.Missions.Conditions
         public override bool OnReset()
         {
             bool cellLeave = true;
-            foreach (var player in Mission.GetParticipants())
+
+            List<Player> participants = ListPool<Player>.Instance.Get();
+            if (Mission.GetParticipants(participants))
             {
-                var cell = player.CurrentAvatar?.Cell;
-                if (cell != null && _proto.Contains(cell.PrototypeDataRef))
+                foreach (var player in participants)
                 {
-                    cellLeave = false;
-                    break;
+                    var cell = player.CurrentAvatar?.Cell;
+                    if (cell != null && _proto.Contains(cell.PrototypeDataRef))
+                    {
+                        cellLeave = false;
+                        break;
+                    }
                 }
             }
+            ListPool<Player>.Instance.Return(participants);
 
             SetCompletion(cellLeave);
             return true;
         }
 
-        private void OnPlayerLeftCell(PlayerLeftCellGameEvent evt)
+        private void OnPlayerLeftCell(in PlayerLeftCellGameEvent evt)
         {
             var player = evt.Player;
             var cellRef = evt.CellRef;

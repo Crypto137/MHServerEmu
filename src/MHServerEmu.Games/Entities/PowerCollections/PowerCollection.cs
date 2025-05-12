@@ -133,18 +133,19 @@ namespace MHServerEmu.Games.Entities.PowerCollections
             return record.Power;
         }
 
-        public IEnumerable<Power> GetPowersMatchingAnyKeyword(IEnumerable<PrototypeId> powerKeywordRefs)
+        public void GetPowersMatchingAnyKeyword(List<Power> powers, PrototypeId[] keywords)
         {
             foreach (PowerCollectionRecord record in _powerDict.Values)
             {
                 Power power = record.Power;
-                if (power == null) continue;
+                if (power == null)
+                    continue;
 
-                foreach (PrototypeId powerKeywordProtoRef in powerKeywordRefs)
+                foreach (PrototypeId keywordProtoRef in keywords)
                 {
-                    if (power.HasKeyword(powerKeywordProtoRef.As<KeywordPrototype>()))
+                    if (power.HasKeyword(keywordProtoRef.As<KeywordPrototype>()))
                     {
-                        yield return power;
+                        powers.Add(power);
                         break;
                     }
                 }

@@ -13,11 +13,11 @@ namespace MHServerEmu.Games.Powers
         public ulong TargetId { get; protected set; }
         public Vector3 PowerOwnerPosition { get; protected set; }
         public PowerPrototype PowerPrototype { get; protected set; }
+        public KeywordsMask KeywordsMask { get; protected set; }
 
         public PropertyCollection Properties { get; } = new();
 
         // long - TimeSpan?
-        // BitArray - keywords?
 
         public virtual void Clear()
         {
@@ -26,8 +26,14 @@ namespace MHServerEmu.Games.Powers
             TargetId = default;
             PowerOwnerPosition = default;
             PowerPrototype = default;
+            KeywordsMask = default;
 
             Properties.Clear();
+        }
+
+        public void SetKeywordsMask(KeywordsMask keywordsMask)
+        {
+            KeywordsMask = keywordsMask.Copy<KeywordsMask>();
         }
     }
 }

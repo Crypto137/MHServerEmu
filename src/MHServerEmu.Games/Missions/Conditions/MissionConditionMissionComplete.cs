@@ -1,5 +1,7 @@
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -12,9 +14,9 @@ namespace MHServerEmu.Games.Missions.Conditions
         protected override PrototypeId MissionProtoRef => _proto.MissionPrototype;
         protected override long RequiredCount => _proto.Count;
 
-        private Action<OpenMissionCompleteGameEvent> _openMissionCompleteAction;
-        private Action<PlayerCompletedMissionGameEvent> _playerCompletedMissionAction;
-        private Action<AvatarEnteredRegionGameEvent> _avatarEnteredRegionAction;
+        private Event<OpenMissionCompleteGameEvent>.Action _openMissionCompleteAction;
+        private Event<PlayerCompletedMissionGameEvent>.Action _playerCompletedMissionAction;
+        private Event<AvatarEnteredRegionGameEvent>.Action _avatarEnteredRegionAction;
 
         public MissionConditionMissionComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -94,7 +96,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             };
         }
 
-        private void OnOpenMissionComplete(OpenMissionCompleteGameEvent evt)
+        private void OnOpenMissionComplete(in OpenMissionCompleteGameEvent evt)
         {
             var missionRef = evt.MissionRef;
             if (FilterMission(missionRef) == false) return;
@@ -117,7 +119,7 @@ namespace MHServerEmu.Games.Missions.Conditions
 
                 bool isPartipant = false;
                 bool isContributor = false;
-                List<Entity> participants = new();
+                List<Player> participants = ListPool<Player>.Instance.Get();
                 mission.GetParticipants(participants);
 
                 var party = player.Party;
@@ -137,12 +139,14 @@ namespace MHServerEmu.Games.Missions.Conditions
 
                 if (EvaluatePlayer(player, missionRef, isPartipant, isContributor))
                     UpdatePlayerContribution(player);
+
+                ListPool<Player>.Instance.Return(participants);
             }
             
             Count++;
         }
 
-        private void OnPlayerCompletedMission(PlayerCompletedMissionGameEvent evt)
+        private void OnPlayerCompletedMission(in PlayerCompletedMissionGameEvent evt)
         {
             var player = evt.Player;
             var missionRef = evt.MissionRef;
@@ -158,7 +162,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             Count++;
         }
 
-        private void OnAvatarEnteredRegion(AvatarEnteredRegionGameEvent evt)
+        private void OnAvatarEnteredRegion(in AvatarEnteredRegionGameEvent evt)
         {
             var player = evt.Player;
 

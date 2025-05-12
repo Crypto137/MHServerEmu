@@ -54,24 +54,29 @@ namespace MHServerEmu.Games.Powers
             for (int i = 0; i < _damageForClient.Length; i++)
                 _damageForClient[i] = default;
 
-            foreach (Condition condition in _conditionAddList)
-            {
-                if (condition.IsInPool == false && condition.IsInCollection == false)
-                    ConditionCollection.DeleteCondition(condition);
-            }
+            ClearConditionInstances();
+            _conditionRemoveList.Clear();
 
             TeleportPosition = default;
             KnockbackSourcePosition = default;
 
             ActivationSettings = default;
 
-            _conditionAddList.Clear();
-            _conditionRemoveList.Clear();
-
             HealingForClient = default;
             PowerAssetRefOverride = default;
             Flags = default;
             TransferToId = default;
+        }
+
+        public void ClearConditionInstances()
+        {
+            foreach (Condition condition in _conditionAddList)
+            {
+                if (condition.IsInPool == false && condition.IsInCollection == false)
+                    ConditionCollection.DeleteCondition(condition);
+            }
+
+            _conditionAddList.Clear();
         }
 
         public bool HasDamageForClient()

@@ -29,20 +29,25 @@ namespace MHServerEmu.Games.Loot
         [FieldOffset(8)]
         private readonly LootNodePrototype _callbackNodeProto = default;
 
+        // Vaporization flag
+        [FieldOffset(16)]
+        private readonly bool _isVaporized = default;
+
         // Value types
-        [FieldOffset(16)]
+        [FieldOffset(20)]
         private readonly AgentSpec _agentSpec = default;
-        [FieldOffset(16)]
+        [FieldOffset(20)]
         private readonly CurveId _xpCurveRef = default;
-        [FieldOffset(16)]
+        [FieldOffset(20)]
         private readonly PrototypeId _vanityTitleProtoRef = default;
-        [FieldOffset(16)]
+        [FieldOffset(20)]
         private readonly VendorXPSummary _vendorXPSummary = default;
-        [FieldOffset(16)]
+        [FieldOffset(20)]
         private readonly CurrencySpec _currencySpec = default;
 
         public LootType Type { get => _type; }
         public int Amount { get => _amount; }
+        public bool IsVaporized { get => _isVaporized; }
         
         public ItemSpec ItemSpec { get => _type == LootType.Item ? _itemSpec : null; }
         public LootDropRealMoneyPrototype RealMoneyProto { get => _type == LootType.RealMoney ? _realMoneyProto : null; }
@@ -54,10 +59,11 @@ namespace MHServerEmu.Games.Loot
         public VendorXPSummary VendorXPSummary { get => _type == LootType.VendorXP ? _vendorXPSummary : default; }
         public CurrencySpec CurrencySpec { get => _type == LootType.Currency ? _currencySpec : default; }
 
-        public LootResult(ItemSpec itemSpec)
+        public LootResult(ItemSpec itemSpec, bool isVaporized = false)
         {
             _type = LootType.Item;
             _itemSpec = itemSpec;
+            _isVaporized = isVaporized;
         }
 
         public LootResult(in AgentSpec agentSpec)
@@ -73,7 +79,7 @@ namespace MHServerEmu.Games.Loot
             _xpCurveRef = xpCurveRef;
         }
 
-        public LootResult(LootType type, int amount)
+        public LootResult(LootType type, int amount, bool isVaporized = false)
         {
             switch (type)
             {
@@ -96,6 +102,7 @@ namespace MHServerEmu.Games.Loot
 
             _type = type;
             _amount = amount;
+            _isVaporized = isVaporized;
         }
 
         public LootResult(LootDropRealMoneyPrototype lootDropRealMoneyProto)

@@ -1,4 +1,5 @@
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,9 +8,9 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionAreaContains : MissionConditionContains
     {
         private MissionConditionAreaContainsPrototype _proto;
-        private Action<EntityEnteredAreaGameEvent> _entityEnteredAreaAction;
-        private Action<EntityLeftAreaGameEvent> _entityLeftAreaAction;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
+        private Event<EntityEnteredAreaGameEvent>.Action _entityEnteredAreaAction;
+        private Event<EntityLeftAreaGameEvent>.Action _entityLeftAreaAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
         protected override long CountMin => _proto.CountMin;
         protected override long CountMax => _proto.CountMax;
 
@@ -57,13 +58,13 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnEntityEnteredArea(EntityEnteredAreaGameEvent evt)
+        private void OnEntityEnteredArea(in EntityEnteredAreaGameEvent evt)
         {
             if (EvaluateEntity(evt.Entity, evt.Area))
                 Count++;
         }
 
-        private void OnEntityLeftArea(EntityLeftAreaGameEvent evt)
+        private void OnEntityLeftArea(in EntityLeftAreaGameEvent evt)
         {
             var entity = evt.Entity;
             if (entity == null || entity.IsDead) return;
@@ -71,7 +72,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 Count--;
         }
 
-        private void OnEntityDead(EntityDeadGameEvent evt)
+        private void OnEntityDead(in EntityDeadGameEvent evt)
         {
             var entity = evt.Defender;
             if (entity == null || entity.IsInWorld == false) return;

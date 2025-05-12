@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -66,6 +67,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public override int LiveTuneEternitySplinterCost { get => (int)LiveTuningManager.GetLiveAvatarTuningVar(this, AvatarEntityTuningVar.eAETV_EternitySplinterPrice); }
 
+        [DoNotCopy]
+        public bool HasPowerProgressionTables { get => PowerProgressionTables.HasValue(); }
+
+        [DoNotCopy]
+        public PrimaryResourceManaBehaviorPrototype[] PrimaryResourceBehaviorsCache { get; private set; }
+        [DoNotCopy]
+        public SecondaryResourceManaBehaviorPrototype SecondaryResourceBehaviorCache { get; private set; }
+
+        [DoNotCopy]
+        public int SynergyUnlockLevel { get; private set; } = int.MaxValue;
+
         public override bool ApprovedForUse()
         {
             if (base.ApprovedForUse() == false) return false;
@@ -114,10 +126,30 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 }
             }
 
-            // TODO: SynergyTable
+            if (SynergyTable.HasValue())
+            {
+                Array.Sort(SynergyTable, static (a, b) => a.Level.CompareTo(b.Level));
+                SynergyUnlockLevel = SynergyTable[0].Level;                
+            }
+
             // TODO: StealablePowersAllowed
 
             AvatarPrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetAvatarBlueprintDataRef());
+
+            // Validate and cache resource behaviors
+            if (PrimaryResourceBehaviors.HasValue())
+            {
+                PrimaryResourceBehaviorsCache = new PrimaryResourceManaBehaviorPrototype[PrimaryResourceBehaviors.Length];
+                for (int i = 0; i < PrimaryResourceBehaviors.Length; i++)
+                    PrimaryResourceBehaviorsCache[i] = PrimaryResourceBehaviors[i].As<PrimaryResourceManaBehaviorPrototype>();
+            }
+            else
+            {
+                Logger.Warn($"PostProcess(): [{this}] does not have primary resource behaviors defined");
+            }
+
+            // Not having a secondary resource is valid for avatars
+            SecondaryResourceBehaviorCache = SecondaryResourceBehavior.As<SecondaryResourceManaBehaviorPrototype>();
         }
 
         /// <summary>
@@ -271,6 +303,64 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return null;
         }
 
+        public bool HasPowerInPowerProgression(PrototypeId powerProtoRef)
+        {
+            return GetPowerProgressionEntryForPower(powerProtoRef) != null;
+        }
+
+        public TransformModePrototype FindTransformModeThatAssignsPower(PrototypeId powerProtoRef)
+        {
+            if (TransformModes.IsNullOrEmpty())
+                return null;
+
+            foreach (TransformModeEntryPrototype entryProto in TransformModes)
+            {
+                if (entryProto.TransformMode == PrototypeId.Invalid)
+                    continue;
+
+                TransformModePrototype transformModeProto = entryProto.TransformMode.As<TransformModePrototype>();
+                if (transformModeProto == null)
+                {
+                    Logger.Warn("FindTransformModeThatAssignsPower(): transformModeProto == null");
+                    continue;
+                }
+
+                if (transformModeProto.DefaultEquippedAbilities.HasValue())
+                {
+                    foreach (AbilityAssignmentPrototype abilityAssignment in transformModeProto.DefaultEquippedAbilities)
+                    {
+                        if (abilityAssignment.Ability == powerProtoRef)
+                            return transformModeProto;
+                    }
+                }
+
+                if (transformModeProto.HiddenPassivePowers.HasValue())
+                {
+                    foreach (PrototypeId hiddenPassivePowerProtoRef in transformModeProto.HiddenPassivePowers)
+                    {
+                        if (hiddenPassivePowerProtoRef == powerProtoRef)
+                            return transformModeProto;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public PrototypeId[] GetAllowedPowersForTransformMode(PrototypeId transformModeRef)
+        {
+            if (TransformModes.IsNullOrEmpty())
+                return null;
+
+            foreach (TransformModeEntryPrototype entryProto in TransformModes)
+            {
+                if (entryProto.TransformMode == transformModeRef)
+                    return entryProto.AllowedPowers;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Returns <see langword="true"/> if the provided costume is approved for use.
         /// </summary>
@@ -359,6 +449,31 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int IntelligenceValue { get; protected set; }
         public int SpeedValue { get; protected set; }
         public int StrengthValue { get; protected set; }
+
+        //---
+
+        public bool TryUpdateStats(PropertyCollection properties)
+        {
+            bool TryUpdateStatHelper(PropertyEnum statProperty, int statValue)
+            {
+                if (statValue > 0 && properties[statProperty] != statValue)
+                {
+                    properties[statProperty] = statValue;
+                    return true;
+                }
+
+                return false;
+            }
+
+            bool statsChanged = false;
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatDurability, DurabilityValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatStrength, StrengthValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatFightingSkills, FightingSkillsValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatSpeed, SpeedValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatEnergyProjection, EnergyProjectionValue);
+            statsChanged |= TryUpdateStatHelper(PropertyEnum.StatIntelligence, IntelligenceValue);
+            return statsChanged;
+        }
     }
 
     public class PowerProgressionEntryPrototype : ProgressionEntryPrototype
@@ -375,7 +490,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsTrait { get; protected set; }
 
         public override int GetRequiredLevel() => Level;
-        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.StartingRank : 0;
+        public override int GetStartingRank() => PowerAssignment != null ? PowerAssignment.Rank : 0;
 
         public override CurveId GetMaxRankForPowerAtCharacterLevel() => MaxRankForPowerAtCharacterLevel;
         public override PrototypeId[] GetPrerequisites() => Prerequisites;

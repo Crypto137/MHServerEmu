@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         OnIntraRegionTeleport   = 1 << 5
     }
 
-    public class Condition
+    public class Condition : IKeyworded
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -84,6 +84,8 @@ namespace MHServerEmu.Games.Powers.Conditions
 
         public ulong CreatorPlayerId { get; private set; }  // PlayerGuid
         public ConditionCollection Collection { get; set; }
+        public ulong PropertyTickerId { get; set; } = PropertyTicker.InvalidId;
+        public PowerPayload PropertyTickerPayload { get; set; }
         public StackId StackId { get; private set; } = StackId.Invalid;
 
         public EventPointer<ConditionCollection.RemoveConditionEvent> RemoveEvent { get; set; }
@@ -384,12 +386,15 @@ namespace MHServerEmu.Games.Powers.Conditions
 
             CreatorPlayerId = default;
             Collection = default;
+            PropertyTickerId = PropertyTicker.InvalidId;
+            PropertyTickerPayload = null;
             StackId = StackId.Invalid;
 
             RemoveEvent = default;
         }
 
-        public bool InitializeFromPower(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
+        public bool InitializeFromPower(ulong conditionId, PowerPayload payload, ConditionPrototype conditionProto, TimeSpan duration,
+            PropertyCollection properties = null, bool linkToPower = true)
         {
             _conditionId = conditionId;
 
@@ -410,8 +415,13 @@ namespace MHServerEmu.Games.Powers.Conditions
             }
 
             _conditionPrototype = conditionProto;
-            _creatorPowerPrototype = payload.PowerPrototype;
-            _creatorPowerPrototypeRef = payload.PowerProtoRef;
+
+            // For some power-induced conditions (e.g. hit reacts) we don't want to link them to the creator power to avoid stacking
+            if (linkToPower)
+            {
+                _creatorPowerPrototype = payload.PowerPrototype;
+                _creatorPowerPrototypeRef = payload.PowerProtoRef;
+            }
 
             if (conditionProto.DataRef == PrototypeId.Invalid)
             {
@@ -439,6 +449,54 @@ namespace MHServerEmu.Games.Powers.Conditions
 
                 if (GenerateConditionProperties(Properties, conditionProto, payload.Properties, creator, target, payload.Game) == false)
                     Logger.Warn($"InitializeFromPowerMixinPrototype(): Failed to generate properties for [{this}]");
+            }
+
+            return true;
+        }
+
+        public bool InitializeFromConditionPrototype(ulong conditionId, Game game, ulong creatorId, ulong ultimateCreatorId, ulong targetId,
+            ConditionPrototype conditionProto, TimeSpan duration, PropertyCollection properties = null)
+        {
+            _conditionId = conditionId;
+
+            _creatorId = creatorId;
+            _ultimateCreatorId = ultimateCreatorId != Entity.InvalidId ? ultimateCreatorId : creatorId;
+
+            WorldEntity ultimateCreator = game.EntityManager.GetEntity<WorldEntity>(_ultimateCreatorId);
+            if (ultimateCreator != null)
+            {
+                if (ultimateCreator is Avatar avatar)
+                {
+                    Player player = avatar.GetOwnerOfType<Player>();
+                    if (player != null)
+                        CreatorPlayerId = player.DatabaseUniqueId;
+                }
+
+                _ownerAssetRef = DetermineAssetRefByOwner(ultimateCreator, conditionProto);
+            }
+
+            _conditionPrototype = conditionProto;
+            _creatorPowerPrototype = null;
+            _creatorPowerPrototypeRef = PrototypeId.Invalid;
+
+            _conditionPrototypeRef = conditionProto.DataRef;
+            _creatorPowerIndex = -1;
+
+            _durationMS = (long)duration.TotalMilliseconds;
+            _updateIntervalMS = conditionProto.UpdateIntervalMS;
+            _cancelOnFlags = conditionProto.CancelOnFlags;
+
+            if (properties != null)
+            {
+                Properties.FlattenCopyFrom(properties, true);
+            }
+            else
+            {
+                WorldEntity creator = game.EntityManager.GetEntity<WorldEntity>(_creatorId);
+                WorldEntity target = game.EntityManager.GetEntity<WorldEntity>(targetId);
+
+                if (GenerateConditionProperties(Properties, conditionProto, null, creator, target, game) == false)
+                    Logger.Warn($"InitializeFromConditionPrototype(): Failed to generate properties for [{this}]");
             }
 
             return true;
@@ -710,6 +768,16 @@ namespace MHServerEmu.Games.Powers.Conditions
             return _conditionPrototype.IsHitReactCondition;
         }
 
+        public bool OverridesHitReactConditions()
+        {
+            return Properties[PropertyEnum.Knockback] ||
+                   Properties[PropertyEnum.Knockdown] ||
+                   Properties[PropertyEnum.Knockup] ||
+                   Properties[PropertyEnum.Stunned] ||
+                   Properties[PropertyEnum.Mesmerized] ||
+                   Properties[PropertyEnum.NPCAmbientLock];
+        }
+
         public bool IsTransferToCurrentAvatar()
         {
             if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsTransferToCurrentAvatar(): _conditionPrototype == null");
@@ -720,6 +788,18 @@ namespace MHServerEmu.Games.Powers.Conditions
         {
             if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPauseDurationCountdown(): _conditionPrototype == null");
             return _conditionPrototype.PauseDurationCountdown;
+        }
+
+        public bool ShouldApplyOverTimeEffectsToOriginator()
+        {
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "IsPauseDurationCountdown(): _conditionPrototype == null");
+            return _conditionPrototype.ApplyOverTimeEffectsToOriginator;
+        }
+
+        public bool ShouldApplyInitialTickImmediately()
+        {
+            if (_conditionPrototype == null) return Logger.WarnReturn(false, "ShouldApplyInitialTickImmediately(): _conditionPrototype == null");
+            return _conditionPrototype.ApplyInitialTickImmediately;
         }
 
         public PrototypeId[] GetKeywords()

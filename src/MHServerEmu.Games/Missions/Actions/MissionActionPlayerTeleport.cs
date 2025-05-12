@@ -1,3 +1,4 @@
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -15,20 +16,25 @@ namespace MHServerEmu.Games.Missions.Actions
 
         public override void Run()
         {
-            bool teleportRegion = _proto.TeleportRegionTarget != PrototypeId.Invalid;
-            foreach (Player player in GetDistributors(_proto.SendTo))
+            List<Player> players = ListPool<Player>.Instance.Get();
+            if (GetDistributors(_proto.SendTo, players))
             {
-                if (teleportRegion)
+                bool teleportRegion = _proto.TeleportRegionTarget != PrototypeId.Invalid;
+                foreach (Player player in players)
                 {
-                    if (Mission.PrototypeDataRef == (PrototypeId)2356138960907149996 // TimesBehaviorController
-                        || Mission.PrototypeDataRef == (PrototypeId)3656606685775927811) // RaidSurturFinalPhase
-                        Transition.TeleportToLocalTarget(player, _proto.TeleportRegionTarget);
+                    if (teleportRegion)
+                    {
+                        if (Mission.PrototypeDataRef == (PrototypeId)2356138960907149996 // TimesBehaviorController
+                            || Mission.PrototypeDataRef == (PrototypeId)3656606685775927811) // RaidSurturFinalPhase
+                            Transition.TeleportToLocalTarget(player, _proto.TeleportRegionTarget);
+                        else
+                            Transition.TeleportToRemoteTarget(player, _proto.TeleportRegionTarget);
+                    }
                     else
-                        Transition.TeleportToRemoteTarget(player, _proto.TeleportRegionTarget);
+                        Transition.TeleportToLastTown(player);
                 }
-                else
-                    Transition.TeleportToLastTown(player);
             }
+            ListPool<Player>.Instance.Return(players);
         }
     }
 }

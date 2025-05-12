@@ -1,0 +1,12 @@
+[
+    {
+        "Enabled": true,
+        "Prototype": "Entity/Characters/Mobs/MGH/Chapter/MGHChapter05/MGHBruteNamedCH04.prototype",
+        "Path": "Properties",
+        "Description": "Set LootTablePrototype [OnKilledMiniBoss, 0, Spawn, EasterEggHuntObjective]",
+        "ValueType": "Properties",
+        "Value": {
+            "LootTablePrototype": [ 17910267881806762587, 0, 9316722085805298222, 16576396162899383486 ]
+        }
+    }
+]

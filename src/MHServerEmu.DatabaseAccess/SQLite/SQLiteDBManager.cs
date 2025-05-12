@@ -13,7 +13,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
     /// </summary>
     public class SQLiteDBManager : IDBManager
     {
-        private const int CurrentSchemaVersion = 2;         // Increment this when making changes to the database schema
+        private const int CurrentSchemaVersion = 3;         // Increment this when making changes to the database schema
         private const int NumTestAccounts = 5;              // Number of test accounts to create for new database files
         private const int NumPlayerDataWriteAttempts = 3;   // Number of write attempts to do when saving player data
 
@@ -292,7 +292,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     {
                         connection.Execute(@$"INSERT OR IGNORE INTO Player (DbGuid) VALUES (@DbGuid)", account.Player, transaction);
                         connection.Execute(@$"UPDATE Player SET ArchiveData=@ArchiveData, StartTarget=@StartTarget,
-                                            StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume WHERE DbGuid = @DbGuid",
+                                            StartTargetRegionOverride=@StartTargetRegionOverride, AOIVolume=@AOIVolume,
+                                            GazillioniteBalance=@GazillioniteBalance WHERE DbGuid = @DbGuid",
                                             account.Player, transaction);
                     }
                     else

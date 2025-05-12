@@ -358,6 +358,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
+        public static bool IsLiveTuningEnabled(PrototypeId worldEntityProtoRef)
+        {
+            WorldEntityPrototype thisProto = worldEntityProtoRef.As<WorldEntityPrototype>();
+            if (thisProto == null)
+                return Logger.WarnReturn(false, $"IsLiveTuningEnabled(): Attempting to check LiveTuningDefaultEnabled on something that is not a WorldEntityPrototype!\n DataRef: {worldEntityProtoRef.GetName()}");
+
+            return thisProto.IsLiveTuningEnabled();
+        }
+
         public bool IsLiveTuningVendorEnabled()
         {
             if (IsLiveTuningEnabled() == false)
@@ -549,6 +558,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     EntitySelectorActionEventType.OnDetectedEnemy |
                     EntitySelectorActionEventType.OnDetectedFriend |
                     EntitySelectorActionEventType.OnEnemyProximity |
+                    EntitySelectorActionEventType.OnDetectedPlayer |
                     EntitySelectorActionEventType.OnPlayerProximity;
 
                 foreach (var eventType in EventTypes)
@@ -729,6 +739,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public PrototypeId Appearance { get; protected set; }
         public PrototypeId[] OnActivatePowers { get; protected set; }
+
+        [DoNotCopy]
+        public EntityAppearanceEnum AppearanceEnum { get; protected set; }
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+            var appreanceProto = Appearance.As<EntityAppearancePrototype>();
+            AppearanceEnum = (appreanceProto != null) ? appreanceProto.AppearanceEnum : EntityAppearanceEnum.None;
+        }
     }
 
     public class DoorEntityStatePrototype : EntityStatePrototype

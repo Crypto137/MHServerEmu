@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Locomotion;
@@ -42,7 +43,7 @@ namespace MHServerEmu.Games.Behavior
                 SpawnOffset = spec.Transform.Translation;
        
             PropertyCollection[PropertyEnum.AIAggroDropRange] = profile.AggroDropDistance;
-            PropertyCollection[PropertyEnum.AIAggroDropByLOSChance] = profile.AggroDropChanceLOS / 100.0f;
+            PropertyCollection[PropertyEnum.AIAggroDropByLOSChance] = MathHelper.ClampNoThrow(profile.AggroDropChanceLOS, 0.0f, 1.0f); // Prototype have 0.4
             PropertyCollection[PropertyEnum.AIAggroRangeHostile] = profile.AggroRangeHostile;
             PropertyCollection[PropertyEnum.AIAggroRangeAlly] = profile.AggroRangeAlly;
 
@@ -121,6 +122,81 @@ namespace MHServerEmu.Games.Behavior
         {
             _proceduralProfileData[typeof(T)] = runtimeData;
         }
+
+        public bool ChangeBlackboardFact(PrototypeId propertyInfoRef, int value, BlackboardOperatorType operation, ulong targetId)
+        {
+            var infoTable = GameDatabase.PropertyInfoTable;
+            var index = infoTable.GetPropertyEnumFromPrototype(propertyInfoRef);
+            if (index == PropertyEnum.Invalid) return false;
+
+            var dataType = infoTable.LookupPropertyInfo(index).DataType;
+
+            if (operation == BlackboardOperatorType.SetTargetId)
+            {
+                if (dataType != PropertyDataType.EntityId) return false;
+                if (_owner == null) return false;
+
+                var controller = _owner.AIController;
+                if (controller == null) return false;
+
+                if (targetId != Entity.InvalidId)
+                {
+                    PropertyCollection.SetProperty(targetId, index);
+                }
+                else
+                {
+                    var targetEntity = controller.TargetEntity;
+                    if (targetEntity != null)
+                        PropertyCollection.SetProperty(targetEntity.Id, index);
+                    else
+                        return false;
+                }
+            }
+            else if (operation == BlackboardOperatorType.ClearTargetId)
+            {
+                if (dataType != PropertyDataType.EntityId) return false;
+                PropertyCollection.RemoveProperty(index);
+            }
+            else
+            {
+                if (dataType == PropertyDataType.EntityId) return false;
+
+                if (dataType == PropertyDataType.Boolean)
+                {
+                    if (operation != BlackboardOperatorType.Set || (value < 0 || value > 1)) return false;
+                    PropertyCollection.SetProperty(value == 1, index);
+                }
+                else
+                {
+                    int newValue = PropertyCollection.GetProperty(index);
+
+                    switch (operation)
+                    {
+                        case BlackboardOperatorType.Add:
+                            newValue += value;
+                            break;
+                        case BlackboardOperatorType.Div:
+                            if (value == 0) return Logger.DebugReturn(false, "Attempted division by zero!");
+                            newValue /= value;
+                            break;
+                        case BlackboardOperatorType.Mul:
+                            newValue *= value;
+                            break;
+                        case BlackboardOperatorType.Set:
+                            newValue = value;
+                            break;
+                        case BlackboardOperatorType.Sub:
+                            newValue -= value;
+                            break;
+                    }
+
+                    PropertyCollection.SetProperty(newValue, index);
+                }
+            }
+
+            return true;
+        }
+
     }
 
     public class ProceduralProfileRuntimeData { }

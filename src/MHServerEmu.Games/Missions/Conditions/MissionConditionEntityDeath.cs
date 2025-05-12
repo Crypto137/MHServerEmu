@@ -14,8 +14,8 @@ namespace MHServerEmu.Games.Missions.Conditions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         private MissionConditionEntityDeathPrototype _proto;
-        private Action<AdjustHealthGameEvent> _adjustHealthAction;
-        private Action<EntityDeadGameEvent> _entityDeadAction;
+        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
+        private Event<EntityDeadGameEvent>.Action _entityDeadAction;
         private EventGroup _pendingEvents = new();
         private bool _deathEventRegistred;
 
@@ -52,7 +52,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
             else if (_proto.MustBeTaggedByPlayer && killer == null)
             {
-                if (tagPlayers.GetPlayers().Any() == false) return false;
+                if (tagPlayers.HasTags == false) return false;
             }
 
             if (EvaluateEntityFilter(_proto.EntityFilter, entity) == false) return false;
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnAdjustHealth(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
         {
             var entity = evt.Entity;
             var attacker = evt.Attacker;
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
         }
 
-        private void OnEntityDead(EntityDeadGameEvent evt)
+        private void OnEntityDead(in EntityDeadGameEvent evt)
         {
             var entity = evt.Defender;
             var killer = evt.Killer;

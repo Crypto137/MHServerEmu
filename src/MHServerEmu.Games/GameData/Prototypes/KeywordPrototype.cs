@@ -3,9 +3,22 @@ using MHServerEmu.Core.Extensions;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
-    public class KeywordsMask : GBitArray
+    /// <summary>
+    /// Indicates that an object can be flagged with one or more <see cref="KeywordPrototype"/> instances.
+    /// </summary>
+    public interface IKeyworded
+    {
+        public bool HasKeyword(KeywordPrototype keywordProto);
+    }
+
+    public class KeywordsMask : GBitArray, IKeyworded
     {
         public static readonly KeywordsMask Empty = new();
+
+        public bool HasKeyword(KeywordPrototype keywordProto)
+        {
+            return KeywordPrototype.TestKeywordBit(this, keywordProto);
+        }
     }
 
     public class KeywordPrototype : Prototype

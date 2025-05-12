@@ -388,8 +388,51 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private LootRollResult PickLiveTuningNodes(LootRollSettings settings, IItemResolver resolver)
         {
-            // TODO
-            return LootRollResult.NoRoll;
+            int groupNum = (int)LiveTuningManager.GetLiveLootTableTuningVar(this, LootTableTuningVar.eLTTV_GroupNum);
+            if (groupNum == LiveTuningData.DefaultTuningVarValue)
+                return LootRollResult.NoRoll;
+
+            LiveTuningManager.GetLiveLootGroup(groupNum, out IReadOnlyList<WorldEntityPrototype> lootGroup);
+            if (lootGroup.Count == 0)
+                return LootRollResult.NoRoll;
+
+            LootRollResult result = LootRollResult.NoRoll;
+            for (int i = 0; i < lootGroup.Count; i++)
+            {
+                WorldEntityPrototype entityProto = lootGroup[i];
+                if (entityProto == null)
+                {
+                    Logger.Warn("PickLiveTuningNodes(): entityProto == null");
+                    continue;
+                }
+
+                // Check custom drop chance
+                float noDropPercent = LiveTuningManager.GetLiveWorldEntityTuningVar(entityProto, WorldEntityTuningVar.eWETV_LootNoDropPercent);
+                if (Segment.EpsilonTest(noDropPercent, LiveTuningData.DefaultTuningVarValue) == false && resolver.CheckDropChance(settings, noDropPercent) == false)
+                    continue;
+
+                // CUSTOM: Override loot context for live tuning drops to allow costumes to drop
+                resolver.LootContextOverride = LootContext.CashShop;
+
+                switch (entityProto)
+                {
+                    case AgentPrototype agentProto:
+                        result |= LootDropAgentPrototype.RollAgent(agentProto, 1, settings, resolver);
+                        break;
+
+                    case ItemPrototype itemProto:
+                        result |= RollItem(itemProto, 1, settings, resolver, null);
+                        break;
+
+                    default:
+                        Logger.Warn($"PickLiveTuningNodes(): None ItemPrototype or AgentPrototype being used in a live-tuning roll!\n Prototype: {entityProto}");
+                        break;
+                }
+
+                resolver.LootContextOverride = LootContext.None;
+            }
+
+            return result;
         }
     }
 

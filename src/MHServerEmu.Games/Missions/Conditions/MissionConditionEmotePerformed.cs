@@ -1,4 +1,5 @@
 using MHServerEmu.Core.Collisions;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -7,7 +8,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionEmotePerformed : MissionPlayerCondition
     {
         private MissionConditionEmotePerformedPrototype _proto;
-        private Action<EmotePerformedGameEvent> _emotePerformedAction;
+        private Event<EmotePerformedGameEvent>.Action _emotePerformedAction;
 
         public MissionConditionEmotePerformed(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _emotePerformedAction = OnEmotePerformed;
         }
 
-        private void OnEmotePerformed(EmotePerformedGameEvent evt)
+        private void OnEmotePerformed(in EmotePerformedGameEvent evt)
         {
             var player = evt.Player;
             var emotePowerRef = evt.EmotePowerRef;

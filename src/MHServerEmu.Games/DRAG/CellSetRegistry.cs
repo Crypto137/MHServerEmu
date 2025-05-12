@@ -134,7 +134,7 @@ namespace MHServerEmu.Games.DRAG
             {
                 bool skip = false;
 
-                if (skipList != null && skipList.Any())
+                if (skipList != null && skipList.Count > 0)
                 {
                     foreach (var skipCell in skipList)
                     {

@@ -43,6 +43,50 @@ namespace MHServerEmu.Games.Entities.Avatars
         NumRequestTypes
     }
 
+    public enum AbilitySlotOpValidateResult
+    {
+        Valid,
+        PowerNotUsableByAvatar,
+        PowerNotActive,
+        PowerSlotMismatch,
+        PowerNotUnlocked,
+        SwapSameSlot,
+        ItemNotEquipped,
+        AvatarIsInCombat,
+        GenericError
+    }
+
+    public enum CanToggleTalentResult
+    {
+        Success,
+        InCombat,
+        RestrictiveCondition,
+        LevelRequirement,
+        GenericError
+    }
+
+    public enum CanSetInfinityRankResult
+    {
+        Success,
+        ErrorGeneric,
+        ErrorLevelRequirement,
+        ErrorInsufficientPoints,
+        Error4,
+        ErrorCannotRemove,
+        ErrorPrerequisiteRequirement
+    }
+
+    public enum CanSetOmegaRankResult
+    {
+        Success,
+        ErrorGeneric,
+        ErrorLevelRequirement,
+        ErrorInsufficientPoints,
+        Error4,
+        ErrorCannotRemove,
+        ErrorPrerequisiteRequirement
+    }
+
     public enum AvatarPrototypeId : ulong
     {
         Angela = 13124420519155930214,

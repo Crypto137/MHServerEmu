@@ -1140,7 +1140,7 @@ namespace MHServerEmu.Games.Properties.Evals
                     resultVal = evalVar.Value.Props;
                     return true;
                 case EvalReturnType.EntityPtr:
-                    resultVal = evalVar.Value.Entity.Properties;
+                    resultVal = evalVar.Value.Entity?.Properties;
                     return true;
                 case EvalReturnType.EntityGuid:
                     resultVal = null;
@@ -1584,7 +1584,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 return Logger.WarnReturn(evalVar, "Or: Non-Bool/Error field Arg1");
 
             if (arg1.Value.Bool)
-                evalVar.SetBool(false); 
+                evalVar.SetBool(true); 
             else
             {
                 EvalVar arg2 = Run(OrProto.Arg2, data);
@@ -2357,7 +2357,17 @@ namespace MHServerEmu.Games.Properties.Evals
             {
                 case PropertyDataType.Integer:
                     if (FromValue(assignVar, out long intValue))
+                    {
+                        // HACK: Fix for Health = Health * 0.999f evals
+                        // (not sure if this is actually happening, but leaving it here for now just in case)
+                        if (intValue == 0 && propId.Enum == PropertyEnum.Health)
+                        {
+                            Logger.Warn("RunAssignProp(): Eval is trying to set Health to 0");
+                            intValue = 1;
+                        }
+
                         collection[propId] = intValue;
+                    }
                     else
                         return Logger.WarnReturn(evalVar, $"Unable to convert TYPE to Int, Property: [{propInfo.PropertyName}]");
                     break;
@@ -3041,7 +3051,7 @@ namespace MHServerEmu.Games.Properties.Evals
                     if (agent.GetPowerProgressionInfo(calcPowerRankProto.Power, out PowerProgressionInfo powerInfo) == false)
                         return evalVar;
 
-                    int powerRank = agent.ComputePowerRank(powerInfo, agent.PowerSpecIndexActive);
+                    int powerRank = agent.ComputePowerRank(ref powerInfo, agent.GetPowerSpecIndexActive(), out _);
                     if (showNextRank) powerRank++;
 
                     evalVar.SetInt(powerRank);
@@ -3088,7 +3098,7 @@ namespace MHServerEmu.Games.Properties.Evals
                 if (entity is WorldEntity worldEntity)
                 {
                     float defenseRating = worldEntity.GetDefenseRating(getDamageReductionPctProto.VsDamageType);
-                    evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity, null));
+                    evalVar.SetFloat(worldEntity.GetDamageReductionPct(defenseRating, worldEntity.Properties, null));
                 }
 
             return evalVar;

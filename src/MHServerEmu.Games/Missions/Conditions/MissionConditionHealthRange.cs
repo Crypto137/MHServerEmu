@@ -1,7 +1,9 @@
 using MHServerEmu.Core.Helpers;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
@@ -11,7 +13,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionHealthRange : MissionPlayerCondition
     {
         private MissionConditionHealthRangePrototype _proto;
-        private Action<AdjustHealthGameEvent> _adjustHealthAction;
+        private Event<AdjustHealthGameEvent>.Action _adjustHealthAction;
 
         public MissionConditionHealthRange(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -41,16 +43,23 @@ namespace MHServerEmu.Games.Missions.Conditions
             }
             else
             {
-                foreach (var player in Mission.GetParticipants())
+                List<Player> participants = ListPool<Player>.Instance.Get();
+                if (Mission.GetParticipants(participants))
                 {
-                    var avatar = player.CurrentAvatar;
-                    if (avatar != null)
-                        if (EvaluateEntity(avatar))
+                    foreach (var player in participants)
+                    {
+                        var avatar = player.CurrentAvatar;
+                        if (avatar != null)
                         {
-                            healthChanged = true;
-                            break;
+                            if (EvaluateEntity(avatar))
+                            {
+                                healthChanged = true;
+                                break;
+                            }
                         }
+                    }
                 }
+                ListPool<Player>.Instance.Return(participants);
             }               
 
             SetCompletion(healthChanged);
@@ -82,7 +91,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnAdjustHealth(AdjustHealthGameEvent evt)
+        private void OnAdjustHealth(in AdjustHealthGameEvent evt)
         {
             if (evt.Dodged) return;
             var player = evt.Player;

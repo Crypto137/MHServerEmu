@@ -1,90 +1,141 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using System.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData.Prototypes;
-using System.Collections;
 
 namespace MHServerEmu.Games.Missions
 {
-    public class MissionConditionPrototypeIterator : IEnumerable<MissionConditionPrototype>
+    public readonly struct MissionConditionPrototypeIterator
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        // NOTE: We have to use class enumerators here because of recursion (any condition can be a list of conditions).
+        // To avoid generating too much garbage we pool enumerators per thread using ThreadStatic.
+        [ThreadStatic]
+        private static Stack<Enumerator> _enumerators;
+
         private readonly MissionConditionPrototype[] _conditions;
         private readonly Type _conditionType;
-        private int _currentIndex;
-        private MissionConditionPrototypeIterator _sublistIterator;
 
         public MissionConditionPrototypeIterator(MissionConditionListPrototype list, Type conditionType = null)
         {
             _conditions = list?.Conditions;
             _conditionType = conditionType;
-            if (_conditions.HasValue())
+        }
+
+        public Enumerator GetEnumerator()
+        {
+            _enumerators ??= new();
+
+            Enumerator enumerator = _enumerators.Count > 0 ? _enumerators.Pop() : new();
+            enumerator.Initialize(_conditions, _conditionType);
+            return enumerator;
+        }
+
+        private static void ReturnEnumerator(Enumerator enumerator)
+        {
+            _enumerators.Push(enumerator);
+        }
+
+        public sealed class Enumerator : IEnumerator<MissionConditionPrototype>
+        {
+            private MissionConditionPrototype[] _conditions;
+            private Type _conditionType;
+
+            private int _currentIndex;
+            private Enumerator _sublistIterator;
+
+            public MissionConditionPrototype Current { get; private set; }
+            object IEnumerator.Current { get => Current; }
+
+            public Enumerator()
             {
-                _currentIndex = 0;
-                if (IsValid() == false) Advance();
             }
-        }
 
-        public IEnumerator<MissionConditionPrototype> GetEnumerator()
-        {
-            while (End() == false)
+            public void Initialize(MissionConditionPrototype[] conditions, Type conditionType)
             {
-                yield return Current;
-                MoveNext();
+                _conditions = conditions;
+                _conditionType = conditionType;
+
+                _currentIndex = -1;
+                ClearSublistIterator();
             }
-        }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public bool End() => _conditions == null || (_sublistIterator == null && _currentIndex >= _conditions.Length);
-
-        public MissionConditionPrototype Current => GetMissionConditionPrototype();
-
-        private MissionConditionPrototype GetMissionConditionPrototype()
-        {
-            if (_sublistIterator != null)
-                return _sublistIterator.Current;
-            else if (_currentIndex >= 0 && _currentIndex < _conditions.Length)
-                return _conditions[_currentIndex];
-            else
-                return null;
-        }
-
-        public void MoveNext()
-        {
-            if (_conditions.HasValue()) Advance();
-        }
-
-        private void Advance()
-        {
-            do
+            public bool MoveNext()
             {
+                if (_conditions == null)
+                    return false;
+
+                // Continue iterating the current sublist if there is one
                 if (_sublistIterator != null)
-                    _sublistIterator.MoveNext();
-                else
                 {
-                    var condition = GetMissionConditionPrototype();
-                    if (condition == null) return;
-                    if (condition is MissionConditionListPrototype conditionList)
+                    if (_sublistIterator.MoveNext())
                     {
-                        if (_sublistIterator != null) return;
-                        _sublistIterator = new(conditionList, _conditionType);
+                        Current = _sublistIterator.Current;
+                        return true;
                     }
-                    ++_currentIndex;
+                    else
+                    {
+                        // Finish iterating the sublist
+                        ClearSublistIterator();
+                    }
                 }
 
-                if (_sublistIterator != null && _sublistIterator.End())
-                    _sublistIterator = null;
-            }
-            while (IsValid() == false);
-        }
+                // Advance to the next condition in the current list
+                while (++_currentIndex < _conditions.Length)
+                {
+                    MissionConditionPrototype condition = _conditions[_currentIndex];
+                    if (condition == null)
+                    {
+                        Logger.Warn("MoveNext(): condition == null");
+                        continue;
+                    }
 
-        private bool IsValid()
-        {
-            if (End()) return false;
-            var condition = GetMissionConditionPrototype();
-            if (condition == null) return false;
-            if (_conditionType != null && condition.GetType() != _conditionType) return false;
-            else if (condition is MissionConditionListPrototype) return false;
-            return true;
+                    // Start enumerating this condition as a sublist
+                    if (condition is MissionConditionListPrototype conditionList)
+                    {
+                        _sublistIterator = new MissionConditionPrototypeIterator(conditionList, _conditionType).GetEnumerator();
+                        if (_sublistIterator.MoveNext())
+                        {
+                            Current = _sublistIterator.Current;
+                            return true;
+                        }
+                        else
+                        {
+                            // Skip this sublist if it doesn't contain any valid conditions
+                            ClearSublistIterator();
+                            continue;
+                        }
+                    }
+
+                    // Filter by type if needed
+                    if (_conditionType != null && condition.GetType() != _conditionType)
+                        continue;
+
+                    Current = condition;
+                    return true;
+                }
+
+                Current = null;
+                return false;
+            }
+
+            public void Reset()
+            {
+                Initialize(_conditions, _conditionType);
+            }
+
+            public void Dispose()
+            {
+                ClearSublistIterator();
+                ReturnEnumerator(this);
+            }
+            
+            private void ClearSublistIterator()
+            {
+                // NOTE: We need to call Dispose() on all sublist iterators to make sure they return to the pool.
+                _sublistIterator?.Dispose();
+                _sublistIterator = null;
+            }
         }
     }
-
 }

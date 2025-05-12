@@ -22,6 +22,8 @@ namespace MHServerEmu.Games.Entities
         private static readonly Logger Logger = LogManager.CreateLogger();
         public MissilePrototype MissilePrototype { get => Prototype as MissilePrototype; }
 
+        private bool _returnWeapon = true;
+
         private Bounds _entityCollideBounds;
         public override Bounds EntityCollideBounds { get => _entityCollideBounds; set => _entityCollideBounds = value; }
         public override bool CanRepulseOthers => false;
@@ -189,7 +191,42 @@ namespace MHServerEmu.Games.Entities
                 StartMovement();
             }
 
-            // TODO set PropertyEnum.WeaponMissing to owner if PropertyEnum.PowerUsesReturningWeapon
+            StartPropertyTicker(Properties, Id, OwnerId, TimeSpan.FromMilliseconds(50));
+            SetOwnerWeaponMissing(true);
+        }
+
+        public override SimulateResult SetSimulated(bool simulated)
+        {
+            SimulateResult result = base.SetSimulated(simulated);
+            if (result == SimulateResult.Clear)
+                SetOwnerWeaponMissing(false);
+
+            return result;
+        }
+
+        public override bool EnterCombat()
+        {
+            ulong missileCreatorId = Properties[PropertyEnum.MissileCreatorId];
+            if (missileCreatorId == InvalidId)
+                return false;
+
+            WorldEntity missileCreator = Game.EntityManager.GetEntity<WorldEntity>(missileCreatorId);
+            if (missileCreator == null || missileCreator.IsInWorld == false)
+                return false;
+
+            return missileCreator.EnterCombat();
+        }
+
+        // Never activate OnHit / OnKill procs on the missile itself
+
+        public override void TryActivateOnHitProcs(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            TryForwardOnHitProcsToOwner(triggerType, powerResults);
+        }
+
+        public override void TryActivateOnKillProcs(ProcTriggerType triggerType, PowerResults powerResults)
+        {
+            TryForwardOnKillProcsToOwner(triggerType, powerResults);
         }
 
         private void StartMovement()
@@ -262,7 +299,7 @@ namespace MHServerEmu.Games.Entities
 
         public override void OnDeallocate()
         {
-            // TODO set PropertyEnum.WeaponMissing to owner
+            SetOwnerWeaponMissing(false);
             NotifyCreatorPowerEnd();
             base.OnDeallocate();
         }
@@ -417,7 +454,7 @@ namespace MHServerEmu.Games.Entities
                 if (Game == null) return false;
                 if (Random.NextFloat() < absorbChancePct)
                 {
-                    // TODO checkAbsorb for collidedWith
+                    collidedWith.TryActivateOnMissileAbsorbedProcs();
                     return true; 
                 }
             }
@@ -494,6 +531,9 @@ namespace MHServerEmu.Games.Entities
         private void OnValidTargetHit(WorldEntity collidedWith)
         {
             NotifyCreatorPowerEvent(PowerEventType.OnMissileHit, collidedWith);
+
+            if (_contextPrototype?.ReturnWeaponOnlyOnMiss == true)
+                _returnWeapon = false;
         }
 
         private bool CheckAndApplyMissileReflection(WorldEntity collidedWith, Vector3 position)
@@ -554,7 +594,7 @@ namespace MHServerEmu.Games.Entities
                     StartMovement();
                 }
 
-                collidedWith.OnSkillshotReflected(this); // TODO check all virtual for this
+                collidedWith.OnSkillshotReflected(this);
                 return true;
             }
 
@@ -793,6 +833,25 @@ namespace MHServerEmu.Games.Entities
                 return;
             }
             ScheduleEntityEvent(_pendingKillEvent, TimeSpan.Zero);
+        }
+
+        private void SetOwnerWeaponMissing(bool value)
+        {
+            if (_returnWeapon == false)
+                return;
+
+            if (Properties[PropertyEnum.PowerUsesReturningWeapon] == false)
+                return;
+
+            ulong missileCreatorId = Properties[PropertyEnum.MissileCreatorId];
+            if (missileCreatorId == InvalidId)
+                return;
+
+            WorldEntity missileCreator = Game.EntityManager.GetEntity<WorldEntity>(missileCreatorId);
+            if (missileCreator == null)
+                return;
+
+            missileCreator.Properties[PropertyEnum.WeaponMissing] = value;
         }
 
         private class PendingKillCallback : CallMethodEvent<Entity>

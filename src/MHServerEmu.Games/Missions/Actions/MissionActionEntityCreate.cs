@@ -29,13 +29,13 @@ namespace MHServerEmu.Games.Missions.Actions
 
             if (Mission.IsOpenMission)
             {
-                var hotspot = Mission.GetMissionHotspots().First();
+                var hotspot = Mission.GetFirstMissionHotspot();
                 if (hotspot == null) return;
                 position = hotspot.RegionLocation.Position;
             }
             else
             {
-                var player = Mission.GetParticipants().First();
+                var player = Mission.GetFirstParticipant();
                 if (player == null) return;
                 var avatar = player.CurrentAvatar;
                 if (avatar == null) return;

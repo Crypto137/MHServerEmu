@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
-            float flankTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime];
+            long flankTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFlankTime];
             if (proceduralAI.GetState(0) == Flank.Instance || currentTime > flankTime)
                 HandleMovementContext(proceduralAI, ownerController, locomotor, proceduralFlankContext.FlankContext, checkPower, out contextResult, proceduralFlankContext);
 
@@ -214,7 +214,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (proceduralFleeContext == null) return StaticBehaviorReturnType.None;
 
             StaticBehaviorReturnType contextResult = StaticBehaviorReturnType.None;
-            float fleeTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFleeTime];
+            long fleeTime = ownerController.Blackboard.PropertyCollection[PropertyEnum.AIProceduralNextFleeTime];
             if (proceduralAI.GetState(0) == Flee.Instance || currentTime > fleeTime)
                 contextResult = HandleContext(proceduralAI, ownerController, proceduralFleeContext.FleeContext, proceduralFleeContext);
 
@@ -245,7 +245,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return false;
         }
 
-        protected bool CommonSimplifiedSensory(WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, 
+        protected bool CommonSimplifiedSensory(ref WorldEntity target, AIController ownerController, ProceduralAI proceduralAI, 
             SelectEntityContextPrototype selectTarget, CombatTargetType targetType)
         {
             BehaviorSensorySystem senses = ownerController.Senses;
@@ -631,17 +631,42 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (EffectPower != PrototypeId.Invalid)
                 agent.AIController.AttemptActivatePower(EffectPower, avatar.Id, avatar.RegionLocation.Position);
 
+            // Run OnOrbPickup procs
+            KeywordPrototype orbEntityKeywordProto = GameDatabase.KeywordGlobalsPrototype.OrbEntityKeywordPrototype;
+            if (orbProto.HasKeyword(orbEntityKeywordProto))
+                avatar.TryActivateOnOrbPickupProcs(agent);
+
             // Experience
             // Scale exp based on avatar level rather than orb level
             if (orbProto.GetXPAwarded(avatar.CharacterLevel, out long xp, out long minXP, player.CanUseLiveTuneBonuses()))
             {
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
-                avatar.AwardXP(xp, agent.Properties[PropertyEnum.ShowXPRewardText]);
+                avatar.AwardXP(xp, minXP, agent.Properties[PropertyEnum.ShowXPRewardText]);
+            }
+
+            // Alternate advancement experience
+            if (avatar.Game.InfinitySystemEnabled)
+            {
+                long infinityXP = agent.Properties[PropertyEnum.InfinityXP];
+                if (infinityXP > 0)
+                    player.AwardInfinityXP(infinityXP, true);
+            }
+            else
+            {
+                long omegaXP = agent.Properties[PropertyEnum.OmegaXP];
+                if (omegaXP > 0)
+                    player.AwardOmegaXP(omegaXP, true);
             }
 
             // Credits / currency
-            player.AcquireCurrencyItem(agent);
+            if (player.AcquireCurrencyItem(agent))
+            {
+                avatar.TryActivateOnLootPickupProcs(agent);
+
+                if (agent.Properties.HasProperty(PropertyEnum.RunestonesAmount))
+                    avatar.TryActivateOnRunestonePickupProcs();
+            }
 
             // Invoke OrbPickUp event
             agent.Region?.OrbPickUpEvent.Invoke(new(player, agent));            
@@ -782,7 +807,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (Power == null || Power.Power == PrototypeId.Invalid) return;
             BehaviorBlackboard blackboard = ownerController.Blackboard;
             WorldEntity target = ownerController.TargetEntity;
-            CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
+            CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile);
 
             StaticBehaviorReturnType contextResult = HandleContext(proceduralAI, ownerController, Power, null);
             if (contextResult == StaticBehaviorReturnType.Running)
@@ -857,7 +882,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             }
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) 
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) 
             { 
                 if (SecondaryTargetSelection != null)
                 {
@@ -887,7 +912,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AINextSensoryUpdate);
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false)
             {
                 if (SecondaryTargetSelection != null)
                 {
@@ -920,7 +945,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
 
             Locomotor locomotor = agent.Locomotor;
             if (locomotor == null) return;
@@ -966,7 +991,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (game == null) return;
 
             WorldEntity target = ownerController.TargetEntity;
-            if (CommonSimplifiedSensory(target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
+            if (CommonSimplifiedSensory(ref target, ownerController, proceduralAI, SelectTarget, CombatTargetType.Hostile) == false) return;
             HandleContext(proceduralAI, ownerController, MoveToTarget);
         }
 
@@ -1024,7 +1049,6 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 float distanceToMasterSq = Vector3.DistanceSquared2D(agent.RegionLocation.Position, master.RegionLocation.Position);
                 if (distanceToMasterSq > MaxDistToMasterBeforeTeleport * MaxDistToMasterBeforeTeleport)
                 {
-                    ProceduralAI.Logger.Debug($"Teleport agent {agent.RegionLocation.Position} to master {master.RegionLocation.Position}");
                     HandleContext(proceduralAI, ownerController, TeleportToMasterIfTooFarAway);
                 }
             }

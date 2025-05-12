@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionRegionBeginTravelTo : MissionPlayerCondition
     {
         private MissionConditionRegionBeginTravelToPrototype _proto;
-        private Action<PlayerBeginTravelToRegionGameEvent> _playerBeginTravelToRegionAction;
+        private Event<PlayerBeginTravelToRegionGameEvent>.Action _playerBeginTravelToRegionAction;
 
         public MissionConditionRegionBeginTravelTo(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
             : base(mission, owner, prototype)
@@ -22,7 +23,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             return true;
         }
 
-        private void OnPlayerBeginTravelToRegion(PlayerBeginTravelToRegionGameEvent evt)
+        private void OnPlayerBeginTravelToRegion(in PlayerBeginTravelToRegionGameEvent evt)
         {
             var player = evt.Player;
             var regionRef = evt.RegionRef;

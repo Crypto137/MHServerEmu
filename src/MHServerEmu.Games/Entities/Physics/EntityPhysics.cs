@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
@@ -14,7 +15,7 @@ namespace MHServerEmu.Games.Entities.Physics
         public uint RegisteredPhysicsFrameId { get; set; }
         public int CollisionId { get; private set; }
         public SortedDictionary<ulong, OverlapEntityEntry> OverlappedEntities { get; private set; }
-        public SortedSet<ulong> AttachedEntities { get; private set; }
+        public SortedVector<ulong> AttachedEntities { get; private set; }
 
         private readonly Vector3[] _externalForces;
         private readonly Vector3[] _repulsionForces;
@@ -87,10 +88,20 @@ namespace MHServerEmu.Games.Entities.Physics
             if (AttachedEntities == null)
                 return false;
 
-            foreach (ulong entityId in AttachedEntities)
-                attachedEntities.Add(entityId);
-
+            // SortedVector implements ICollection, so it should be more efficient to AddRange instead of iterating
+            attachedEntities.AddRange(AttachedEntities);
             return attachedEntities.Count > 0;
+        }
+
+        public bool GetOverlappingEntities(List<ulong> overlappingEntities)
+        {
+            foreach (var kvp in OverlappedEntities)
+            {
+                if (kvp.Value.Overlapped)
+                    overlappingEntities.Add(kvp.Key);
+            }
+
+            return overlappingEntities.Count > 0;
         }
 
         public void AddRepulsionForce(in Vector3 force)
@@ -153,7 +164,17 @@ namespace MHServerEmu.Games.Entities.Physics
             ListPool<ulong>.Instance.Return(attachedEntities);
         }
 
-        private void DetachChild(EntityPhysics physics)
+        public void AttachChild(EntityPhysics physics)
+        {
+            if (Entity == null && physics.Entity == null) return;
+            if (Entity.IsInWorld == false || Entity.TestStatus(EntityStatus.ExitingWorld)) return;
+            if (physics.Entity.IsInWorld == false || physics.Entity.TestStatus(EntityStatus.ExitingWorld)) return;
+
+            AttachedEntities ??= new();
+            AttachedEntities.Add(physics.Entity.Id);
+        }
+
+        public void DetachChild(EntityPhysics physics)
         {
             if (AttachedEntities != null && Entity != null && physics.Entity != null)
                 AttachedEntities.Remove(physics.Entity.Id);

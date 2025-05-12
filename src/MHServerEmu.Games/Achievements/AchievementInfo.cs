@@ -196,7 +196,7 @@ namespace MHServerEmu.Games.Achievements
             sb.AppendLine($"{nameof(Enabled)}: {Enabled}");
             sb.AppendLine($"{nameof(ParentId)}: {ParentId}");
 
-            if (Children.Any())
+            if (Children.Count > 0)
             {
                 sb.Append("Children: ");
                 foreach (AchievementInfo child in Children)

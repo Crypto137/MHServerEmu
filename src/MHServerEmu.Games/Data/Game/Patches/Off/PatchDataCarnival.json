@@ -1,0 +1,149 @@
+[
+    {
+        "Enabled": true,
+        "Prototype": "Loot/Tables/Test/TestItemsLootTable.prototype",
+        "Path": "Choices[0].Choices[0].Item",
+        "Description": "Add MGCarnivalMask1",
+        "ValueType": "PrototypeId",
+        "Value": 11724566541057138893
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Loot/Tables/Test/TestItemsLootTable.prototype",
+        "Path": "Choices[0].Choices[]",
+        "Description": "Add [MGBeads, MGBeads2] as LootDropItemPrototype",
+        "ValueType": "Prototype[]",
+        "Value": [
+            {
+                "ParentDataRef": 1071992662862269383,
+                "Item": 7800473051294539167,
+                "Weight": 50
+            },
+            {
+                "ParentDataRef": 1071992662862269383,
+                "Item": 10014849647161122257,
+                "Weight": 20
+            }
+        ]
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Loot/Tables/Mob/Bosses/SpecialEventsTable.prototype",
+        "Path": "Choices[]",
+        "Description": "Add TestItemsLootTable for CarnivalEvent",
+        "ValueType": "PrototypeDataRef",
+        "Value": 14120665269944980064
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarnivalMissionDay1.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarnivalMissionDay1",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarnivalMissionDay1.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarnivalMissionDay1",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay2.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarvnivalMissionDay2",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay2.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarvnivalMissionDay2",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay3.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarvnivalMissionDay3",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay3.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarvnivalMissionDay3",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay4.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarvnivalMissionDay4",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay4.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarvnivalMissionDay4",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay5.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarvnivalMissionDay5",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay5.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarvnivalMissionDay5",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay6.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarvnivalMissionDay6",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay6.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarvnivalMissionDay6",
+        "ValueType": "Boolean",
+        "Value": false
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay7.prototype",
+        "Path": "DesignState",
+        "Description": "Enable CarvnivalMissionDay7",
+        "ValueType": "Enum",
+        "Value": "Live"
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Missions/Prototypes/BonusMissions/WeeklyEventMissions/CarvnivalMissionDay7.prototype",
+        "Path": "Objectives[4].Required",
+        "Description": "Off Gambit Return for CarvnivalMissionDay7",
+        "ValueType": "Boolean",
+        "Value": false
+    }
+]

@@ -5,68 +5,50 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Games.Powers
 {
-    public class PowerProgressionInfo
+    public struct PowerProgressionInfo
     {
+        // TODO?: Potentially make this struct readonly, constructors private and Init() functions static
+
+        public const int RankLocked = -1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ProgressionEntryPrototype _progressionEntryPrototype;
         private TalentEntryPrototype _talentEntryPrototype;
         private TalentGroupPrototype _talentGroupPrototype;
 
-        // Auto properties
         public PowerPrototype PowerPrototype { get; private set; }
         public PrototypeId MappedPowerRef { get; private set; }
         public PrototypeId PowerTabRef { get; private set; }
         public uint TalentIndex { get; private set; }
         public uint TalentGroupIndex { get; private set; }
 
-        // Accessor properties
-        public PowerProgressionEntryPrototype PowerProgressionEntryPrototype { get => _progressionEntryPrototype as PowerProgressionEntryPrototype; }
-        public PrototypeId PowerRef { get => PowerPrototype != null ? PowerPrototype.DataRef : PrototypeId.Invalid; }
-        public bool IsValid { get => PowerPrototype != null; }
+        public readonly PowerProgressionEntryPrototype PowerProgressionEntryPrototype { get => _progressionEntryPrototype as PowerProgressionEntryPrototype; }
+        public readonly PrototypeId PowerRef { get => PowerPrototype != null ? PowerPrototype.DataRef : PrototypeId.Invalid; }
+        public readonly bool IsValid { get => PowerPrototype != null; }
 
-        public bool IsForAvatar { get => _progressionEntryPrototype is PowerProgressionEntryPrototype || _talentEntryPrototype != null; }
-        public bool IsForTeamUp { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype; }
-        public bool IsInPowerProgression { get => IsForAvatar || IsForTeamUp; }
-        
-        public int RequiredLevel
+        public readonly bool IsForAvatar { get => _progressionEntryPrototype is PowerProgressionEntryPrototype || _talentEntryPrototype != null; }
+        public readonly bool IsForTeamUp { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype; }
+        public readonly bool IsInPowerProgression { get => IsForAvatar || IsForTeamUp; }
+
+        public readonly PrototypeId[] PrerequisitePowerRefs { get => _progressionEntryPrototype?.GetPrerequisites(); }
+        public readonly PrototypeId[] AntirequisitePowerRefs { get => _progressionEntryPrototype?.GetAntirequisites(); }
+        public readonly bool IsUltimatePower { get => PowerPrototype != null && Power.IsUltimatePower(PowerPrototype); }
+        public readonly bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.IsTrait; }
+        public readonly bool IsTalent { get => _talentEntryPrototype != null && _talentGroupPrototype != null; }
+        public readonly bool IsPassivePowerOnAvatarWhileAway { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileAway; }
+        public readonly bool IsPassivePowerOnAvatarWhileSummoned { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileSummoned; }
+
+        public PowerProgressionInfo() { }
+
+        public bool InitNonProgressionPower(PrototypeId powerRef)
         {
-            get
-            {
-                if (_progressionEntryPrototype != null) return _progressionEntryPrototype.GetRequiredLevel();
-                if (_talentEntryPrototype != null) return _talentEntryPrototype.UnlockLevel;
-                return 0;
-            }
-        }
-        
-        public int StartingRank
-        {
-            get
-            {
-                if (_progressionEntryPrototype != null) return _progressionEntryPrototype.GetStartingRank();
-                if (_talentEntryPrototype != null) return 1;
-                return 0;
-            }
-        }
+            if (PowerPrototype != null) return Logger.WarnReturn(false, "InitNonProgressionPower(): PowerPrototype != null");
 
-        public Curve MaxRankCurve { get => _progressionEntryPrototype?.GetMaxRankForPowerAtCharacterLevel().AsCurve(); }
+            PowerPrototype = powerRef.As<PowerPrototype>();
 
-        public bool CanBeRankedUp
-        {
-            get
-            {
-                Curve maxRankCurve = MaxRankCurve;
-                if (maxRankCurve == null) return false;
-                return maxRankCurve.GetIntAt(maxRankCurve.MaxPosition) > StartingRank;
-            }
+            return true;
         }
-
-        public IEnumerable<PrototypeId> PrerequisitePowerRefs { get => _progressionEntryPrototype?.GetPrerequisites(); }
-        public IEnumerable<PrototypeId> AntirequisitePowerRefs { get => _progressionEntryPrototype?.GetAntirequisites(); }
-        public bool IsUltimatePower { get => PowerPrototype != null && Power.IsUltimatePower(PowerPrototype); }
-        public bool IsTrait { get => _progressionEntryPrototype is PowerProgressionEntryPrototype entry && entry.IsTrait; }
-        public bool IsTalent { get => _talentEntryPrototype != null && _talentGroupPrototype != null; }
-        public bool IsPassivePowerOnAvatarWhileAway { get => _progressionEntryPrototype is TeamUpPowerProgressionEntryPrototype entry && entry.IsPassiveOnAvatarWhileAway; }
 
         public bool InitForAvatar(PowerProgressionEntryPrototype powerProgressionEntryPrototype, PrototypeId mappedPowerRef, PrototypeId powerTabRef)
         {
@@ -107,13 +89,40 @@ namespace MHServerEmu.Games.Powers
             return true;
         }
 
-        public bool InitNonProgressionPower(PrototypeId powerRef)
+        public readonly int GetRequiredLevel()
         {
-            if (PowerPrototype != null) return Logger.WarnReturn(false, "InitNonProgressionPower(): PowerPrototype != null");
+            if (_progressionEntryPrototype != null)
+                return _progressionEntryPrototype.GetRequiredLevel();
             
-            PowerPrototype = powerRef.As<PowerPrototype>();
+            if (_talentEntryPrototype != null)
+                return _talentEntryPrototype.UnlockLevel;
             
-            return true;
+            return 0;
+        }
+
+        public readonly int GetStartingRank()
+        {
+            if (_progressionEntryPrototype != null)
+                return _progressionEntryPrototype.GetStartingRank();
+
+            if (_talentEntryPrototype != null)
+                return 1;
+
+            return 0;
+        }
+
+        public readonly Curve GetMaxRankCurve()
+        {
+            return _progressionEntryPrototype?.GetMaxRankForPowerAtCharacterLevel().AsCurve();
+        }
+
+        public readonly bool CanBeRankedUp()
+        {
+            Curve maxRankCurve = GetMaxRankCurve();
+            if (maxRankCurve == null)
+                return false;
+            
+            return maxRankCurve.GetIntAt(maxRankCurve.MaxPosition) > GetStartingRank();
         }
     }
 }

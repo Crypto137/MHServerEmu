@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Loot.Visitors;
@@ -349,6 +350,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public DesignWorkflowState DesignStatePS4 { get; protected set; }
         public DesignWorkflowState DesignStateXboxOne { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public override bool ShouldCacheCRC { get => true; }
 
@@ -368,17 +371,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public List<PrototypeId> MissionActionReferencedPowers { get; private set; }
 
-        private readonly SortedSet<PrototypeId> PopulationRegions = new();
-        private readonly SortedSet<PrototypeId> PopulationAreas = new();
+        private readonly HashSet<PrototypeId> PopulationRegions = new();
+        private readonly HashSet<PrototypeId> PopulationAreas = new();
         private KeywordsMask _keywordsMask;
         private KeywordsMask _regionRestrictionKeywordsMask;
 
         public override bool ApprovedForUse()
         {
-            // TODO: console support
-                   
-            if (DisabledMissions.Contains((MissionPrototypeId)DataRef)) return false;
-            if (EnabledMissions.Contains((MissionPrototypeId)DataRef)) return true;    
+            // TODO: console support                   
             return GameDatabase.DesignStateOk(DesignState);
         }
 
@@ -500,7 +500,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         private void PopulateMissionActionReferencedPowers()
         {
             bool hasPowers = false;
-            HashSet<PrototypeId> powers = new();
+            HashSet<PrototypeId> powers = HashSetPool<PrototypeId>.Instance.Get();
 
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnAvailableActions);
             hasPowers |= AddMissionActionEntityPerformPowerPrototypePowerFromList(powers, OnStartActions);
@@ -519,6 +519,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             if (hasPowers)
                 MissionActionReferencedPowers = new(powers);
+
+            HashSetPool<PrototypeId>.Instance.Return(powers);
         }
 
         private bool AddMissionActionEntityPerformPowerPrototypePowerFromList(HashSet<PrototypeId> powers, MissionActionPrototype[] actions)
@@ -602,17 +604,17 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 PrototypeId regionRef = region.PrototypeDataRef;
 
-                if (PopulationRegions.Any())
+                if (PopulationRegions.Count > 0)
                     return PopulationRegions.Contains(regionRef);
 
-                if (PopulationAreas.Any())
+                if (PopulationAreas.Count > 0)
                     foreach (var areaRef in PopulationAreas)
                         if (region.GetArea(areaRef) != null) return true;
             }
             return false;
         }
 
-        public bool PopulatePopulationForZoneLookups(SortedSet<PrototypeId> regions, SortedSet<PrototypeId> areas)
+        public bool PopulatePopulationForZoneLookups(HashSet<PrototypeId> regions, HashSet<PrototypeId> areas)
         {
             if (PopulationSpawns.HasValue())
             {
@@ -647,7 +649,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
                 if (regions.Count > 0)
                 {
-                    List<PrototypeId> regionList = new (regions);
+                    List<PrototypeId> regionList = ListPool<PrototypeId>.Instance.Get(regions);
                     foreach (PrototypeId regionRef in regionList)
                     {
                         RegionPrototype regionProto = GameDatabase.GetPrototype<RegionPrototype>(regionRef);
@@ -657,6 +659,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                                 regions.Add(altRegionRef);
                         }
                     }
+                    ListPool<PrototypeId>.Instance.Return(regionList);
                 }
             }
 
@@ -717,9 +720,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public long AchievementTimeLimitSeconds { get; protected set; }
         public bool ShowToastMessages { get; protected set; }
 
-        private SortedSet<PrototypeId> _activeRegions = new();
-        private SortedSet<PrototypeId> _activeAreas = new();
-        private SortedSet<PrototypeId> _activeCells = new();
+        //---
+
+        private readonly HashSet<PrototypeId> _activeRegions = new();
+        private readonly HashSet<PrototypeId> _activeAreas = new();
+        private readonly HashSet<PrototypeId> _activeCells = new();
 
         public override void PostProcess()
         {
@@ -736,9 +741,16 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     if (areaRef != PrototypeId.Invalid) _activeAreas.Add(areaRef);
 
             if (_activeAreas.Count == 0)
+            {
+                HashSet<PrototypeId> activeAreas = HashSetPool<PrototypeId>.Instance.Get();
                 foreach (var regionRef in _activeRegions)
-                    foreach (var areaRef in RegionPrototype.GetAreasInGenerator(regionRef))
-                        _activeAreas.Add(areaRef);
+                {
+                    activeAreas.Clear();
+                    RegionPrototype.GetAreasInGenerator(regionRef, activeAreas);
+                    _activeAreas.Insert(activeAreas);
+                }
+                HashSetPool<PrototypeId>.Instance.Return(activeAreas);
+            }
 
             // cache for mission active cells
             if (ParticipationBasedOnAreaCell && ActiveInCells.HasValue())

@@ -1,3 +1,4 @@
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
 
@@ -6,7 +7,7 @@ namespace MHServerEmu.Games.Missions.Conditions
     public class MissionConditionMetaGameComplete : MissionPlayerCondition
     {
         private MissionConditionMetaGameCompletePrototype _proto;
-        private Action<PlayerMetaGameCompleteGameEvent> _playerMetaGameCompleteAction;
+        private Event<PlayerMetaGameCompleteGameEvent>.Action _playerMetaGameCompleteAction;
         protected override long RequiredCount => _proto.Count;
 
         public MissionConditionMetaGameComplete(Mission mission, IMissionConditionOwner owner, MissionConditionPrototype prototype) 
@@ -17,7 +18,7 @@ namespace MHServerEmu.Games.Missions.Conditions
             _playerMetaGameCompleteAction = OnPlayerMetaGameComplete;
         }
 
-        private void OnPlayerMetaGameComplete(PlayerMetaGameCompleteGameEvent evt)
+        private void OnPlayerMetaGameComplete(in PlayerMetaGameCompleteGameEvent evt)
         {
             var player = evt.Player;
             var metaGameRef = evt.MetaGameRef;

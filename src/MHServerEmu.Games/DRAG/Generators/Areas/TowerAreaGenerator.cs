@@ -132,7 +132,7 @@ namespace MHServerEmu.Games.DRAG.Generators.Areas
                 }
             }
 
-            if (cellList.Any())
+            if (cellList.Count > 0)
             {
                 List<TowerFixupData> list = Area.GetTowerFixup(true);
                 Cell previous = null;
