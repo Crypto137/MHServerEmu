@@ -196,7 +196,7 @@ namespace MHServerEmu.Games.Entities
             _community = new(this);
             _community.Initialize();
 
-            _leaderboardManager.Initialize();
+            LeaderboardManager.Initialize();
 
             // Default loading screen before we start loading into a region
             QueueLoadingScreen(PrototypeId.Invalid);
@@ -551,6 +551,13 @@ namespace MHServerEmu.Games.Entities
             int eventInstance = eventProto.GetEventInstance();
             var teamProp = new PropertyId(PropertyEnum.PublicEventTeamAssignment, eventProto.DataRef, eventInstance);
             return Properties[teamProp];
+        }
+
+        public PublicEventTeamPrototype GetPublicEventTeamPrototype()
+        {
+            // TODO PropertyEnum.PublicEventTeamAssignment
+            // GetPublicEventTeam(ActivePublicEvent).As<PublicEventTeamPrototype>()
+            return null;
         }
 
         #region Region

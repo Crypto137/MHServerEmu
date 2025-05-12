@@ -1,24 +1,30 @@
-﻿using MHServerEmu.Commands.Attributes;
+﻿using System.Text;
+using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Leaderboards;
-using System.Text;
 
 namespace MHServerEmu.Commands.Implementations
 {
-    [CommandGroup("leaderboards", "Manages leaderboards.", AccountUserLevel.Admin)]
+    [CommandGroup("leaderboards")]
+    [CommandGroupDescription("Commands related to the leaderboard system")]
+    [CommandGroupUserLevel(AccountUserLevel.Admin)]
     public class LeaderboardsCommands : CommandGroup
     {
-        [Command("jsonreload", "Reload json config file for leaderboards.\nUsage: leaderboards jsonreload")]
+        [Command("jsonreload")]
+        [CommandDescription("Reload json config file for leaderboards.")]
+        [CommandUsage("leaderboards jsonreload")]
         public string JsonReload(string[] @params, FrontendClient client)
         {
             LeaderboardDatabase.Instance.ReloadJsonConfig();
             return "Leaderboards Reloaded";
         }
 
-        [Command("instance", "Show details info for leaderboard Instance.\nUsage: leaderboards instance [id]")]
+        [Command("instance")]
+        [CommandDescription("Show details info for leaderboard Instance.")]
+        [CommandUsage("leaderboards instance [id]")]
         public string Instance(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help leaderboards instance' to get help.";
@@ -32,7 +38,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"{instance}";
         }
 
-        [Command("leaderboard", "Show details info for leaderboard.\nUsage: leaderboards leaderboard [guid]")]
+        [Command("leaderboard")]
+        [CommandDescription("Show details info for leaderboard.")]
+        [CommandUsage("leaderboards leaderboard [guid]")]
         public string Leaderboard(string[] @params, FrontendClient client)
         {
             if (@params.Length == 0) return "Invalid arguments. Type 'help leaderboards leaderboard' to get help.";
@@ -46,7 +54,9 @@ namespace MHServerEmu.Commands.Implementations
             return $"{leaderboard}";
         }
 
-        [Command("now", "Show all active instances.\nUsage: leaderboards now")]
+        [Command("now")]
+        [CommandDescription("Show all active instances.")]
+        [CommandUsage("leaderboards now")]
         public string Now(string[] @params, FrontendClient client)
         {
             var sb = new StringBuilder();
@@ -63,7 +73,9 @@ namespace MHServerEmu.Commands.Implementations
             return sb.ToString();
         }
 
-        [Command("active", "Show all IsActive leaderboards.\nUsage: leaderboards active")]
+        [Command("active")]
+        [CommandDescription("Show all IsActive leaderboards.")]
+        [CommandUsage("leaderboards active")]
         public string Active(string[] @params, FrontendClient client)
         {
             var sb = new StringBuilder();
@@ -80,7 +92,9 @@ namespace MHServerEmu.Commands.Implementations
             return sb.ToString();
         }
 
-        [Command("all", "Show all leaderboards.\nUsage: leaderboards all")]
+        [Command("all")]
+        [CommandDescription("Show all leaderboards.")]
+        [CommandUsage("leaderboards all")]
         public string All(string[] @params, FrontendClient client)
         {
             var sb = new StringBuilder();

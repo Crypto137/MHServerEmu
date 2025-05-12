@@ -40,6 +40,9 @@ namespace MHServerEmu.PlayerManagement
 
             _targetGameInstanceCount = gameInstanceCount;
             _playerCountDivisor = Math.Max(playerCountDivisor, 1);
+
+            // REMOVEME: Adding this to test merge
+            LeaderboardGameDatabase.Instance.Game = _gameDict.Values.FirstOrDefault();
         }
 
         /// <summary>

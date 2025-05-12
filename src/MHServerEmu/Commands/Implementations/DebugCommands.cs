@@ -133,10 +133,10 @@ namespace MHServerEmu.Commands.Implementations
             return $"AI [{(enableAI ? "On" : "Off")}]";
         }
 
-        [Command("leaderboard"]
+        [Command("leaderboard")]
         [CommandUsage("debug leaderboard [on|off]")]
         [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Leaderboard(string[] @params, FrontendClient client)
+        public string Leaderboard(string[] @params, NetClient client)
         {
             if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
                 flags = Switch.Off;   // Default Off
