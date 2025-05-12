@@ -158,14 +158,12 @@ namespace MHServerEmu.Games.Powers
             TimeSpan cooldownTimeRemaining = GetCooldownTimeRemaining();
             if (cooldownTimeRemaining > TimeSpan.Zero)
             {
-                // Restore saved cooldown that is still in progress.
-                StartCooldown(cooldownTimeRemaining);
+                // Restore saved cooldown that is still in progress, halved.
+                StartCooldown(TimeSpan.FromMilliseconds(cooldownTimeRemaining.TotalMilliseconds / 2));
             }
             else
             {
-                // One or more cooldown cycles may have finished while the owner was not in the world
-                // (cooldown ran out during transition, when the player swapped to another avatar, etc.).
-                // If not handled, this will break the cooldown cycle and prevent charges from replenishing.
+                // One or more cooldown cycles may have finished while the owner was not in the world.
                 int powerChargesMax = Owner.GetPowerChargesMax(PrototypeDataRef);
                 if (powerChargesMax > 0)
                 {
@@ -177,14 +175,14 @@ namespace MHServerEmu.Games.Powers
 
                         if (cooldownTimeElapsed != TimeSpan.Zero)
                         {
-                            // Replenish charges that would have been replenished if the cooldown continued to cycle normally
+                            // Replenish charges, but account for halved cooldown.
                             cooldownDuration = GetCooldownDuration();
-                            float numCooldowns = (float)(cooldownTimeElapsed.TotalMilliseconds / cooldownDuration.TotalMilliseconds);
+                            float numCooldowns = (float)(cooldownTimeElapsed.TotalMilliseconds / (cooldownDuration.TotalMilliseconds / 2)); // Divide cooldown by 2
                             numCooldowns = MathF.Min(numCooldowns, powerChargesMax - powerChargesAvailable);
                             Owner.Properties.AdjustProperty((int)numCooldowns, new(PropertyEnum.PowerChargesAvailable, PrototypeDataRef));
 
-                            // Restore the current cooldown from remaining time
-                            cooldownDuration *= 1f - (numCooldowns - MathF.Floor(numCooldowns));
+                            // Restore the current cooldown, halved.
+                            cooldownDuration = TimeSpan.FromMilliseconds((cooldownDuration.TotalMilliseconds / 2) * (1f - (numCooldowns - MathF.Floor(numCooldowns)))); //Halve duration and use it.
                         }
 
                         StartCooldown(cooldownDuration);
@@ -1540,7 +1538,7 @@ namespace MHServerEmu.Games.Powers
 
                         // Cancel timeout and start cooldown after reaching the number of activations before cooldown
                         Owner.Properties[PropertyEnum.PowerActivationCount, PrototypeDataRef] = 0;
-                        CancelExtraActivationTimeout();
+                        CancelExtraActivationTimeout(); 
                         HandleTriggerPowerEventOnExtraActivationCooldown();
                     }
                 }
@@ -1688,7 +1686,12 @@ namespace MHServerEmu.Games.Powers
         {
             // This callback is only for replenishing power charges
             if (ShouldReplenishCharges() == false)
+            {
+                // If no charges to replenish, simply remove the cooldown flags
+                Owner.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownStartTime, PrototypeDataRef));
+                Owner.Properties.RemoveProperty(new(PropertyEnum.PowerCooldownDuration, PrototypeDataRef));
                 return;
+            }
 
             // Replenish a charge
             PrototypeId powerProtoRef = PrototypeDataRef;
@@ -3175,6 +3178,9 @@ namespace MHServerEmu.Games.Powers
             // Get interrupt cooldown and use it to override the value we calculated if its longer
             TimeSpan interruptCooldown = owner.GetPowerInterruptCooldown(powerProto);
             cooldown = Clock.Max(cooldown, interruptCooldown);
+
+            // Halve the final calculated cooldown duration
+            cooldown *= 0.5f;
 
             // Make we don't get a negative cooldown
             return Clock.Max(cooldown, TimeSpan.Zero);

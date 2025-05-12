@@ -229,7 +229,17 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (Power.IsCooldownPersistent(powerProto) == false)
                         continue;
 
-                    setDict[new(PropertyEnum.PowerCooldownDuration, powerProtoRef)] = kvp.Value;
+                    // HALVE THE PERSISTENT COOLDOWN DURATION HERE (Final Solution)
+                    try
+                    {
+                        TimeSpan persistentDuration = (TimeSpan)kvp.Value;
+                        persistentDuration *= 0.5f;
+                        setDict[new(PropertyEnum.PowerCooldownDuration, powerProtoRef)] = persistentDuration;
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        Logger.Warn($"OnUnpackComplete(): Could not cast persistent cooldown duration for {powerProtoRef.GetName()} to TimeSpan. Error: {ex.Message}");
+                    }
                 }
 
                 foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.PowerCooldownStartTimePersistent))
