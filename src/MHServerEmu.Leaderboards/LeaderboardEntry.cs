@@ -1,5 +1,5 @@
 ﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;

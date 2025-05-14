@@ -2,7 +2,7 @@
 using System.Data.SQLite;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 
 namespace MHServerEmu.DatabaseAccess.SQLite
 {

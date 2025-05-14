@@ -1,4 +1,4 @@
-﻿using MHServerEmu.DatabaseAccess.Models;
+﻿using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData.Prototypes;
 using System.Text;
 
