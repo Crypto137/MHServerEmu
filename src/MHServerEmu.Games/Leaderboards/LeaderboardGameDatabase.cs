@@ -50,14 +50,15 @@ namespace MHServerEmu.Games.Leaderboards
             return true;
         }
 
-        public IEnumerable<LeaderboardPrototype> GetActiveLeaderboardPrototypes()
+        public void GetActiveLeaderboardPrototypes(List<LeaderboardPrototype> activeLeaderboards)
         {
+            // Get all prototypes in one go instead of using an iterator to minimize lock time.
             lock (_lock)
             {
                 foreach (var leaderboard in _leaderboardInfoMap.Values)
                     foreach (var instance in leaderboard.Instances)
                         if (instance.State == LeaderboardState.eLBS_Active)
-                            yield return leaderboard.Prototype;
+                            activeLeaderboards.Add(leaderboard.Prototype);
             }
         }
 
