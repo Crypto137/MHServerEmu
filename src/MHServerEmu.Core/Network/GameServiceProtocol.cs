@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Buffers;
+using Gazillion;
 
 namespace MHServerEmu.Core.Network
 {
@@ -53,6 +54,37 @@ namespace MHServerEmu.Core.Network
         {
             public readonly IFrontendClient Client = client;
             public readonly NetMessageTell Tell = tell;
+        }
+
+        #endregion
+
+        #region Leaderboards
+
+        public readonly struct LeaderboardScoreUpdate(ulong leaderboardId, ulong gameId, ulong avatarId, ulong ruleId, ulong count) : IGameServiceMessage
+        {
+            public readonly ulong LeaderboardId = leaderboardId;
+            public readonly ulong GameId = gameId;
+            public readonly ulong AvatarId = avatarId;
+            public readonly ulong RuleId = ruleId;
+            public readonly ulong Count = count;
+        }
+
+        public readonly struct LeaderboardScoreUpdateBatch(int count) : IGameServiceMessage
+        {
+            private static readonly ArrayPool<LeaderboardScoreUpdate> Pool = ArrayPool<LeaderboardScoreUpdate>.Create();
+
+            // Use arrays instead of lists to access data by reference instead of copying.
+            // ArrayPool can return arrays larger than requested, so we also need to specify count.
+            private readonly LeaderboardScoreUpdate[] _updates = Pool.Rent(count);
+
+            public readonly int Count = count;
+
+            public ref LeaderboardScoreUpdate this[int i] { get => ref _updates[i]; }
+
+            public void Destroy()
+            {
+                Pool.Return(_updates);
+            }
         }
 
         #endregion

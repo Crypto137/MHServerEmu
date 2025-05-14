@@ -1,9 +1,9 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -25,9 +25,9 @@ namespace MHServerEmu.Leaderboards
             RuleStates = dbEntry.GetRuleStates();
         }
 
-        public LeaderboardEntry(in LeaderboardQueue queue)
+        public LeaderboardEntry(ref GameServiceProtocol.LeaderboardScoreUpdate update)
         {
-            GameId = queue.GameId;
+            GameId = (PrototypeGuid)update.GameId;
             Name = LeaderboardDatabase.Instance.GetPlayerNameById(GameId);
             RuleStates = new();
         }
@@ -72,9 +72,9 @@ namespace MHServerEmu.Leaderboards
             return entryBuilder.Build();
         }
 
-        public void UpdateScore(in LeaderboardQueue queue, LeaderboardPrototype leaderboardProto)
+        public void UpdateScore(ref GameServiceProtocol.LeaderboardScoreUpdate update, LeaderboardPrototype leaderboardProto)
         {
-            var ruleId = (ulong)queue.RuleId;
+            ulong ruleId = update.RuleId;
             var ruleState = RuleStates.Find(rule => rule.RuleId == ruleId);
             if (ruleState == null)
             {
@@ -88,7 +88,7 @@ namespace MHServerEmu.Leaderboards
             if (scoringRule == null || scoringRule.Event == null) return;
             if (scoringRule is not LeaderboardScoringRuleIntPrototype ruleIntProto) return;
 
-            ulong count = queue.Count;
+            ulong count = update.Count;
             ulong oldCount = ruleState.Count;
             ulong score = count * (ulong)ruleIntProto.ValueInt;
             ulong deltaScore = score - ruleState.Score;

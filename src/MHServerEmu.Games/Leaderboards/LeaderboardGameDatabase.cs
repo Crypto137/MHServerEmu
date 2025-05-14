@@ -15,7 +15,6 @@ namespace MHServerEmu.Games.Leaderboards
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private Dictionary<PrototypeGuid, LeaderboardInfo> _leaderboardInfoMap = new();
-        private Queue<LeaderboardQueue> _updateQueue = new(); 
         private readonly object _lock = new object();
         public static LeaderboardGameDatabase Instance { get; } = new();
         public Game Game { get; set; }
@@ -133,24 +132,6 @@ namespace MHServerEmu.Games.Leaderboards
                         player.SendMessage(message);
                     }
                 }
-            }
-        }
-
-        public void AddUpdateQueue(LeaderboardQueue queue)
-        {
-            lock (_lock)
-            {
-                _updateQueue.Enqueue(queue);
-            }
-        }
-
-        public Queue<LeaderboardQueue> GetUpdateQueue()
-        {
-            lock (_lock)
-            {
-                Queue<LeaderboardQueue> queue = new(_updateQueue);
-                _updateQueue.Clear();
-                return queue;
             }
         }
     }

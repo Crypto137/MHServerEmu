@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -88,9 +89,9 @@ namespace MHServerEmu.Leaderboards
             return Instances.Find(instance => instance.InstanceId == instanceId);
         }
 
-        public void OnScoreUpdate(in LeaderboardQueue queue)
+        public void OnScoreUpdate(ref GameServiceProtocol.LeaderboardScoreUpdate update)
         {
-            if (IsActive) ActiveInstance.OnScoreUpdate(queue);
+            if (IsActive) ActiveInstance.OnScoreUpdate(ref update);
         }
 
         public void UpdateState(DateTime updateTime)

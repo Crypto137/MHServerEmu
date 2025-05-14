@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.Entities;
@@ -63,7 +64,7 @@ namespace MHServerEmu.Games.Leaderboards
 
         public void Destory()
         {
-            UpdateEvents();
+            FlushScoreUpdates();
             CancelUpdateEvent();
             CancelRewardsEvent();
         }
@@ -188,7 +189,7 @@ namespace MHServerEmu.Games.Leaderboards
         {
             if (LeaderboardsEnabled == false) return;
 
-            UpdateEvents();
+            FlushScoreUpdates();
             ScheduleUpdateEvent();
         }
 
@@ -223,14 +224,21 @@ namespace MHServerEmu.Games.Leaderboards
             CheckRewards = true;
         }
 
-        private void UpdateEvents()
+        private void FlushScoreUpdates()
         {
+            int numUpdates = _ruleEvents.Count;
+            GameServiceProtocol.LeaderboardScoreUpdateBatch updateBatch = new(numUpdates);
+
+            int i = 0;
             foreach (var kvp in _ruleEvents)
             {
                 var key = kvp.Key;
                 int count = kvp.Value;
-                LeaderboardGameDatabase.Instance.AddUpdateQueue(new(key, count));
+                updateBatch[i++] = new((ulong)key.LeaderboardGuid, key.PlayerGuid, (ulong)key.AvatarGuid, (ulong)key.RuleGuid, (ulong)count);
             }
+
+            ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, updateBatch);
+
             _ruleEvents.Clear();
         }
 

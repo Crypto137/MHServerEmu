@@ -5,7 +5,6 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games;
 using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -15,11 +14,15 @@ namespace MHServerEmu.Leaderboards
     public class LeaderboardService : IGameService
     {
         private const ushort MuxChannel = 1;
-        private const int UpdateTimeMs = 1000;
+        private const int UpdateTimeMS = 1000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
         private LeaderboardDatabase _database;
         private bool _isRunning;
+
+        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _pendingScoreUpdateQueue = new();
+        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _scoreUpdateQueue = new();
+        private readonly object _scoreUpdateLock = new();
 
         #region IGameService Implementation
 
@@ -34,15 +37,16 @@ namespace MHServerEmu.Leaderboards
 
             while (_isRunning)
             {
-                // Get uptade queue from LeaderboardGameDatabase and update
-                var updateQueue = LeaderboardGameDatabase.Instance.GetUpdateQueue();
-                if (updateQueue.Count > 0)
-                    _database.ScoreUpdateForLeaderboards(updateQueue);
-                    
-                Thread.Sleep(UpdateTimeMs);
-
                 // update state for instances
                 _database.UpdateState();
+
+                // process updates
+                lock (_scoreUpdateLock)
+                    (_pendingScoreUpdateQueue, _scoreUpdateQueue) = (_scoreUpdateQueue, _pendingScoreUpdateQueue);
+
+                _database.ProcessLeaderboardScoreUpdateQueue(_scoreUpdateQueue);
+                    
+                Thread.Sleep(UpdateTimeMS);
             }
         }
 
@@ -58,6 +62,10 @@ namespace MHServerEmu.Leaderboards
             {
                 case GameServiceProtocol.RouteMessage routeMailboxMessage:
                     OnRouteMailboxMessage(routeMailboxMessage);
+                    break;
+
+                case GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch:
+                    OnLeaderboardScoreUpdateBatch(leaderboardScoreUpdateBatch);
                     break;
 
                 default:
@@ -83,6 +91,13 @@ namespace MHServerEmu.Leaderboards
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private void OnLeaderboardScoreUpdateBatch(in GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch)
+        {
+            // TODO: Use SpinLock here?
+            lock (_scoreUpdateLock)
+                _pendingScoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
         }
 
         #endregion

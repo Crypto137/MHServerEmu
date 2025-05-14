@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
@@ -494,12 +495,19 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void ScoreUpdateForLeaderboards(Queue<LeaderboardQueue> updateQueue)
+        public void ProcessLeaderboardScoreUpdateQueue(Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> updateQueue)
         {
-            while (updateQueue.TryDequeue(out var queue)) 
+            while (updateQueue.Count > 0)
             {
-                var leaderboard = GetLeaderboard(queue.LeaderboardId);
-                leaderboard?.OnScoreUpdate(queue);
+                GameServiceProtocol.LeaderboardScoreUpdateBatch batch = updateQueue.Dequeue();
+                for (int i = 0; i < batch.Count; i++)
+                {
+                    ref GameServiceProtocol.LeaderboardScoreUpdate update = ref batch[i];
+                    Leaderboard leaderboard = GetLeaderboard((PrototypeGuid)update.LeaderboardId);
+                    leaderboard?.OnScoreUpdate(ref update);
+                }
+
+                batch.Destroy();
             }
         }
 

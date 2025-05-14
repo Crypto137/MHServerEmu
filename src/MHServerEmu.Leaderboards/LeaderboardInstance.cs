@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData;
@@ -344,19 +345,19 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void OnScoreUpdate(in LeaderboardQueue queue)
+        public void OnScoreUpdate(ref GameServiceProtocol.LeaderboardScoreUpdate update)
         {
             lock (_lock)
             {
-                var gameId = queue.GameId;
-                if (_entryMap.TryGetValue(gameId, out var entry) == false)
+                PrototypeGuid gameId = (PrototypeGuid)update.GameId;    // FIXME: This is a DbGuid (player/guild), not DataGuid, this should probably be a ulong
+                if (_entryMap.TryGetValue(gameId, out var entry) == false)   
                 {
-                    entry = new(queue);
+                    entry = new(ref update);
                     Entries.Add(entry);
                     _entryMap.Add(gameId, entry);
                 }
 
-                entry.UpdateScore(queue, LeaderboardPrototype);
+                entry.UpdateScore(ref update, LeaderboardPrototype);
 
                 _sorted = false;
             }
