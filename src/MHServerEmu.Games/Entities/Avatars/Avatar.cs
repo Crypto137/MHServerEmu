@@ -5798,7 +5798,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                         if (HasPowerWithKeyword(mappedPowerProto, keywordProtoRef) == false)
                             continue;
 
-                        Properties[PropertyEnum.PowerChargesMaxBonus, PrototypeDataRef] = kvp.Value;
+                        Properties[PropertyEnum.PowerChargesMaxBonus, mappedPowerProto.DataRef] = newValue;
                     }
 
                     DictionaryPool<PropertyId, PropertyValue>.Instance.Return(mappedPowerDict);
