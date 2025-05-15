@@ -5441,9 +5441,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "AwardPrestigeLoot(): player == null");
 
-            if (Game.CustomGameOptions.GrantStartingCostumeForPrestige == false)
+            if (Game.CustomGameOptions.UsePrestigeLootTable)
             {
-                // Award loot from the prestige loot table (same as BIF boxes), BUE behavior
+                // Award loot from the prestige loot table (same as BIF boxes by default), it appears this was never fully implemented
                 PrototypeId prestigeLootTableProtoRef = prestigeLevelProto.Reward;
                 if (prestigeLootTableProtoRef != PrototypeId.Invalid)
                 {
@@ -5452,15 +5452,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                     Span<(PrototypeId, LootActionType)> tables = stackalloc (PrototypeId, LootActionType)[]
                     {
-                    (prestigeLootTableProtoRef, LootActionType.Give)
-                };
+                        (prestigeLootTableProtoRef, LootActionType.Give)
+                    };
 
                     Game.LootManager.AwardLootFromTables(tables, settings, 1);
                 }
             }
             else
             {
-                // Grant a copy of the starting costume, pre-BUE behavior
+                // Grant a copy of the starting costume, original behavior
                 GiveStartingCostume();
             }
 
