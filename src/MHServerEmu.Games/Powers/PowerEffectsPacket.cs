@@ -33,6 +33,7 @@ namespace MHServerEmu.Games.Powers
 
         public void SetKeywordsMask(KeywordsMask keywordsMask)
         {
+            keywordsMask ??= KeywordsMask.Empty;    // This can happen for auto-activated powers because of the order of power assignment events
             KeywordsMask = keywordsMask.Copy<KeywordsMask>();
         }
     }
