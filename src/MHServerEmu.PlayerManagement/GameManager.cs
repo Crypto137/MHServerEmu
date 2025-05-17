@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games;
-using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -40,9 +40,6 @@ namespace MHServerEmu.PlayerManagement
 
             _targetGameInstanceCount = gameInstanceCount;
             _playerCountDivisor = Math.Max(playerCountDivisor, 1);
-
-            // REMOVEME: Adding this to test merge
-            LeaderboardGameDatabase.Instance.Game = _gameDict.Values.FirstOrDefault();
         }
 
         /// <summary>
@@ -81,6 +78,13 @@ namespace MHServerEmu.PlayerManagement
                 kvp.Value.RequestShutdown();
                 _gameDict.Remove(kvp.Key);  // Should be safe to remove while iterating as long as we use a dictionary
             }
+        }
+
+        public void BroadcastServiceMessage<T>(in T message) where T: struct, IGameServiceMessage
+        {
+            // REMOVEME: This should be handled by the GameInstanceService
+            foreach (Game game in _gameDict.Values)
+                game.ReceiveServiceMessage(message);
         }
 
         /// <summary>

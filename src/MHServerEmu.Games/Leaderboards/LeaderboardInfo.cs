@@ -1,5 +1,5 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.System.Time;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -19,14 +19,24 @@ namespace MHServerEmu.Games.Leaderboards
 
     public class LeaderboardInstanceInfo
     {
-        public PrototypeGuid LeaderboardId { get; set; }
-        public ulong InstanceId { get; set; }
-        public LeaderboardState State { get; set; }
-        public DateTime ActivationTime { get; set; }
-        public DateTime ExpirationTime { get; set; }
-        public bool Visible { get; set; }
+        public PrototypeGuid LeaderboardId { get; private set; }
+        public ulong InstanceId { get; private set; }
+        public LeaderboardState State { get; private set; }
+        public DateTime ActivationTime { get; private set; }
+        public DateTime ExpirationTime { get; private set; }
+        public bool Visible { get; private set; }
 
-        public void Update(LeaderboardInstanceInfo updateInstance)
+        public LeaderboardInstanceInfo(in GameServiceProtocol.LeaderboardStateChange instanceInfo)
+        {
+            LeaderboardId = (PrototypeGuid)instanceInfo.LeaderboardId;
+            InstanceId = instanceInfo.InstanceId;
+            State = instanceInfo.State;
+            ActivationTime = instanceInfo.ActivationTime;
+            ExpirationTime = instanceInfo.ExpirationTime;
+            Visible = instanceInfo.Visible;
+        }
+
+        public void Update(in GameServiceProtocol.LeaderboardStateChange updateInstance)
         {
             if (State != updateInstance.State 
                 || ActivationTime != updateInstance.ActivationTime 
@@ -38,18 +48,6 @@ namespace MHServerEmu.Games.Leaderboards
                 ExpirationTime = updateInstance.ExpirationTime;
                 Visible = updateInstance.Visible;
             }
-        }
-
-        public NetMessageLeaderboardStateChange ToLeaderboardStateChange()
-        {
-            return NetMessageLeaderboardStateChange.CreateBuilder()
-                .SetLeaderboardId((ulong)LeaderboardId)
-                .SetInstanceId(InstanceId)
-                .SetNewState(State)
-                .SetActivationTimestamp(Clock.DateTimeToTimestamp(ActivationTime))
-                .SetExpirationTimestamp(Clock.DateTimeToTimestamp(ExpirationTime))
-                .SetVisible(Visible)
-                .Build();
         }
     }
 }

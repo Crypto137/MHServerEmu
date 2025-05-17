@@ -96,6 +96,11 @@ namespace MHServerEmu.PlayerManagement
                     OnRouteMessage(routeMessage);
                     break;
 
+                case GameServiceProtocol.LeaderboardStateChange leaderboardStateChange:
+                    // REMOVEME: This should be handled by the GameInstanceService on its own
+                    _gameManager.BroadcastServiceMessage(leaderboardStateChange);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;

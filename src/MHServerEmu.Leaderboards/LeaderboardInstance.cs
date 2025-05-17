@@ -89,17 +89,14 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Returns <see cref="LeaderboardInstanceInfo"/> from <see cref="LeaderboardInstance"/>.
         /// </summary>
-        public LeaderboardInstanceInfo ToInstanceInfo()
+        public GameServiceProtocol.LeaderboardStateChange ToStateChangeMessage(LeaderboardState? stateOverride = null)
         {
-            return new LeaderboardInstanceInfo
-            {
-                LeaderboardId = LeaderboardId,
-                InstanceId = InstanceId,
-                State = State,
-                ActivationTime = ActivationTime,
-                ExpirationTime = ExpirationTime,
-                Visible = Visible
-            };
+            return new((ulong)LeaderboardId,
+                InstanceId,
+                stateOverride != null ? stateOverride.Value : State,
+                ActivationTime,
+                ExpirationTime,
+                Visible);
         }
 
         public LeaderboardEntry GetEntry(PrototypeGuid guid, ulong avatarId)

@@ -70,6 +70,7 @@ namespace MHServerEmu.Games
 
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
+        public ServiceMailbox ServiceMailbox { get; }
         public EventScheduler GameEventScheduler { get; private set; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }
@@ -115,6 +116,7 @@ namespace MHServerEmu.Games
 
             AdminCommandManager = new(this);
             NetworkManager = new(this);
+            ServiceMailbox = new(this);
             RegionManager = new();
             EntityManager = new(this);
             LootManager = new(this);
@@ -206,6 +208,11 @@ namespace MHServerEmu.Games
         public void ReceiveMessageBuffer(IFrontendClient client, in MessageBuffer messageBuffer)
         {
             NetworkManager.AsyncReceiveMessageBuffer(client, messageBuffer);
+        }
+
+        public void ReceiveServiceMessage<T>(in T message) where T: struct, IGameServiceMessage
+        {
+            ServiceMailbox.PostMessage(message);
         }
 
         public Entity AllocateEntity(PrototypeId entityRef)
@@ -369,6 +376,10 @@ namespace MHServerEmu.Games
         {
             TimeSpan referenceTime;
             MetricsManager metrics = MetricsManager.Instance;
+
+            referenceTime = _gameTimer.Elapsed;
+            ServiceMailbox.ProcessMessages();
+            metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameProcessServiceMessagesTime, _gameTimer.Elapsed - referenceTime);
 
             referenceTime = _gameTimer.Elapsed;
             GameEventScheduler.TriggerEvents(_currentGameTime);

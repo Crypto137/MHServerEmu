@@ -206,16 +206,16 @@ namespace MHServerEmu.Leaderboards
             var instance = GetInstance(instanceId);
             if (instance == null) return;
 
-            var instanceInfo = instance.ToInstanceInfo();
-            LeaderboardGameDatabase.Instance.OnLeaderboardStateChange(instanceInfo, state);
+            var changeMessage = instance.ToStateChangeMessage(state);
+            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, changeMessage);
         }
 
-        public void GetInstancesInfo(List<LeaderboardInstanceInfo> instancesInfo)
+        public void GetInstancesInfo(List<GameServiceProtocol.LeaderboardStateChange> changeList)
         {
             var maxInstances = Prototype.MaxArchivedInstances;
             foreach(var instance in Instances)
             {
-                instancesInfo.Add(instance.ToInstanceInfo());
+                changeList.Add(instance.ToStateChangeMessage());
                 if (--maxInstances < 0) break;
             }
         }

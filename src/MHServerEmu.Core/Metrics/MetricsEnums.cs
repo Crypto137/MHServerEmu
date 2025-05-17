@@ -10,6 +10,7 @@
     {
         Invalid = -1,
         FrameTime,
+        FrameProcessServiceMessagesTime,
         FrameTriggerEventsTime,
         FrameLocomoteEntitiesTime,
         FramePhysicsResolveEntitiesTime,

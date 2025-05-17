@@ -63,8 +63,8 @@ namespace MHServerEmu.Leaderboards
             LoadJsonConfig(jsonConfigPath, activeLeaderboards, refreshInstances);
             LoadLeaderboards();
 
-            // send to LeaderboardGameDatabase
-            SendLeaderboardsToGameDatabase();
+            // send initial leaderboard state to games
+            SendLeaderboardsToGames();
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
             return true;
@@ -238,9 +238,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        private void SendLeaderboardsToGameDatabase()
+        private void SendLeaderboardsToGames()
         {
-            List<LeaderboardInstanceInfo> instances = new();
+            List<GameServiceProtocol.LeaderboardStateChange> instances = new();
 
             foreach (var leaderboard in _leaderboards.Values)
                 leaderboard.GetInstancesInfo(instances);
@@ -248,7 +248,8 @@ namespace MHServerEmu.Leaderboards
             foreach (var leaderboard in _metaLeaderboards.Values)
                 leaderboard.GetInstancesInfo(instances);
 
-            LeaderboardGameDatabase.Instance.UpdateLeaderboards(instances);
+            GameServiceProtocol.LeaderboardStateChangeList message = new(instances);
+            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, message);
         }
 
         private void GenerateTables(string jsonConfigPath)

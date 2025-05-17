@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using Gazillion;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
 {
@@ -84,6 +85,40 @@ namespace MHServerEmu.Core.Network
             public void Destroy()
             {
                 Pool.Return(_updates);
+            }
+        }
+
+        public readonly struct LeaderboardStateChange(ulong leaderboardId, ulong instanceId, LeaderboardState state, 
+            DateTime activationTime, DateTime expirationTime, bool visible) : IGameServiceMessage
+        {
+            public readonly ulong LeaderboardId = leaderboardId;
+            public readonly ulong InstanceId = instanceId;
+            public readonly LeaderboardState State = state;
+            public readonly DateTime ActivationTime = activationTime;
+            public readonly DateTime ExpirationTime = expirationTime;
+            public readonly bool Visible = visible;
+
+            public NetMessageLeaderboardStateChange ToProtobuf()
+            {
+                return NetMessageLeaderboardStateChange.CreateBuilder()
+                    .SetLeaderboardId(LeaderboardId)
+                    .SetInstanceId(InstanceId)
+                    .SetNewState(State)
+                    .SetActivationTimestamp(Clock.DateTimeToTimestamp(ActivationTime))
+                    .SetExpirationTimestamp(Clock.DateTimeToTimestamp(ExpirationTime))
+                    .SetVisible(Visible)
+                    .Build();
+            }
+        }
+
+        public readonly struct LeaderboardStateChangeList(List<LeaderboardStateChange> list) : IGameServiceMessage
+        {
+            // This is currently used only during server initialization, so it's okay not to pool this.
+            public readonly IReadOnlyList<LeaderboardStateChange> List = list;
+
+            public List<LeaderboardStateChange>.Enumerator GetEnumerator()
+            {
+                return ((List<LeaderboardStateChange>)List).GetEnumerator();
             }
         }
 

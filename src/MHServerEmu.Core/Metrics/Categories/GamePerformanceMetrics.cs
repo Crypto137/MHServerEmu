@@ -50,6 +50,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             switch (metric)
             {
                 case GamePerformanceMetricEnum.FrameTime:
+                case GamePerformanceMetricEnum.FrameProcessServiceMessagesTime:
                 case GamePerformanceMetricEnum.FrameTriggerEventsTime:
                 case GamePerformanceMetricEnum.FrameLocomoteEntitiesTime:
                 case GamePerformanceMetricEnum.FramePhysicsResolveEntitiesTime:
@@ -90,6 +91,7 @@ namespace MHServerEmu.Core.Metrics.Categories
         {
             // TODO: Clean this up
             public MetricTracker.ReportEntry FrameTime { get; }
+            public MetricTracker.ReportEntry FrameProcessServiceMessagesTime { get; }
             public MetricTracker.ReportEntry FrameTriggerEventsTime { get; }
             public MetricTracker.ReportEntry FrameLocomoteEntitiesTime { get; }
             public MetricTracker.ReportEntry FramePhysicsResolveEntitiesTime { get; }
@@ -106,6 +108,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             public Report(GamePerformanceMetrics metrics)
             {
                 FrameTime                       = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.FrameTime);
+                FrameProcessServiceMessagesTime = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.FrameProcessServiceMessagesTime);
                 FrameTriggerEventsTime          = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.FrameTriggerEventsTime);
                 FrameLocomoteEntitiesTime       = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.FrameLocomoteEntitiesTime);
                 FramePhysicsResolveEntitiesTime = metrics.GetReportEntryForMetric(GamePerformanceMetricEnum.FramePhysicsResolveEntitiesTime);
@@ -124,6 +127,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             {
                 StringBuilder sb = new();
                 sb.AppendLine($"{nameof(FrameTime)}: {FrameTime}");
+                sb.AppendLine($"{nameof(FrameProcessServiceMessagesTime)}: {FrameProcessServiceMessagesTime}");
                 sb.AppendLine($"{nameof(FrameTriggerEventsTime)}: {FrameTriggerEventsTime}");
                 sb.AppendLine($"{nameof(FrameLocomoteEntitiesTime)}: {FrameLocomoteEntitiesTime}");
                 sb.AppendLine($"{nameof(FramePhysicsResolveEntitiesTime)}: {FramePhysicsResolveEntitiesTime}");
