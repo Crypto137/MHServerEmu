@@ -15,7 +15,7 @@ namespace MHServerEmu.Games
         public float TrashedItemExpirationTimeMultiplier { get; private set; } = 1f;
         public bool DisableAccountBinding { get; private set; } = false;
         public bool DisableCharacterBinding { get; private set; } = true;
-        public bool GrantStartingCostumeForPrestige { get; private set; } = false;
+        public bool UsePrestigeLootTable { get; private set; } = false;
 
         [ConfigIgnore]
         public TimeSpan RegionCleanupInterval { get => TimeSpan.FromMilliseconds(RegionCleanupIntervalMS); }
