@@ -12,7 +12,6 @@ namespace MHServerEmu.Games
         public bool AllowSameGroupTalents { get; private set; } = false;
         public bool DisableInstancedLoot { get; private set; } = false;
         public float LootSpawnGridCellRadius { get; private set; } = 20f;
-        public int UISyncDataTimeStartOffsetMS { get; private set; } = 100;
         public float TrashedItemExpirationTimeMultiplier { get; private set; } = 1f;
         public bool DisableAccountBinding { get; private set; } = false;
         public bool DisableCharacterBinding { get; private set; } = true;
