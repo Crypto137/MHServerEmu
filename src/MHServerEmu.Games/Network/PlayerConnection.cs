@@ -1964,7 +1964,7 @@ namespace MHServerEmu.Games.Network
 
         private bool OnLeaderboardRequest(MailboxMessage message)   // 157
         {
-            // TODO: Send a service message to leaderboards here
+            // Leaderboard details are not cached in games, so route this request to the leaderboard service.
             RouteMessageToService(ServerType.Leaderboard, message);
             return true;
         }
@@ -1976,6 +1976,7 @@ namespace MHServerEmu.Games.Network
             var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
             if (initializeRequest == null) return Logger.WarnReturn(false, $"OnLeaderboardInitializeRequest(): Failed to retrieve message");
 
+            // All the data with need to handle initialize requests is cached in games, so no need to use the leaderboard service here.
             var response = LeaderboardInfoCache.Instance.BuildInitializeRequestResponse(initializeRequest);
             SendMessage(response);
 

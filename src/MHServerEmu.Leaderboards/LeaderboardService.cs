@@ -4,7 +4,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games;
-using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -13,7 +12,6 @@ namespace MHServerEmu.Leaderboards
     /// </summary>
     public class LeaderboardService : IGameService
     {
-        private const ushort MuxChannel = 1;
         private const int UpdateTimeMS = 1000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -81,38 +79,45 @@ namespace MHServerEmu.Leaderboards
 
         private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
         {
+            if (routeMailboxMessage.Protocol != typeof(ClientToGameServerMessage))
+            {
+                Logger.Warn($"OnRouteMailboxMessage(): Unhandled protocol {routeMailboxMessage.Protocol.Name}");
+                return;
+            }
+
             IFrontendClient client = routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;
 
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(client, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnLeaderboardRequest(client, message); break;
 
-                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
+                default: Logger.Warn($"OnRouteMailboxMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
         private void OnLeaderboardScoreUpdateBatch(in GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch)
         {
-            // TODO: Use SpinLock here?
+            // We could probably potentially use a SpinLock here
             lock (_scoreUpdateLock)
                 _pendingScoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
         }
 
         #endregion
 
-        private bool OnRequest(IFrontendClient client, MailboxMessage message)
+        private bool OnLeaderboardRequest(IFrontendClient client, MailboxMessage message)
         {
-            // TODO: Move message handling to game and send a service message to leaderboards instead
-
             var request = message.As<NetMessageLeaderboardRequest>();
-            if (request == null) return Logger.WarnReturn(false, $"OnRequest(): Failed to retrieve message");
+            if (request == null) return Logger.WarnReturn(false, $"OnLeaderboardRequest(): Failed to retrieve message");
 
             if (request.HasDataQuery == false)
                 return Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
 
-            Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
-            
+            //Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
+
+            // NOTE: If we ever end up separating LeaderboardService from GIS, we need to change this to a response service message to GIS.
+            const ushort MuxChannel = 1;
+
             client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
                 .SetReport(_database.GetLeaderboardReport(request))
                 .Build());
