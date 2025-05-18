@@ -25,10 +25,4 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Data\Leaderboards\IMPORTANT.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

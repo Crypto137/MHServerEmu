@@ -1,1 +1,0 @@
-The Leaderboards.db and LeaderboardsConfig.json files should be located here.

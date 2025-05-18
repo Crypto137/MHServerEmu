@@ -44,6 +44,10 @@ namespace MHServerEmu.Leaderboards
 
             var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
 
+            // Create the leaderboards data directory if needed
+            if (Directory.Exists(LeaderboardsDirectory) == false)
+                Directory.CreateDirectory(LeaderboardsDirectory);
+
             // Initialize leaderboard database
             string configPath = Path.Combine(LeaderboardsDirectory, config.FileName);
             bool noTables = false;
