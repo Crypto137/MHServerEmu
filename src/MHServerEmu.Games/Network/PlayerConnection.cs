@@ -21,6 +21,7 @@ using MHServerEmu.Games.Entities.Persistence;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Powers;
@@ -496,6 +497,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageWidgetButtonResult:                OnWidgetButtonResult(message); break;               // 154
                 case ClientToGameServerMessage.NetMessageStashTabInsert:                    OnStashTabInsert(message); break;                   // 155
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:                OnLeaderboardRequest(message); break;               // 157
+                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:      OnLeaderboardInitializeRequest(message); break;     // 159
                 case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:           OnMissionTrackerFiltersUpdate(message); break;              // 166
                 case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;    // 167
 
@@ -506,13 +509,6 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
                 case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
                     RouteMessageToService(ServerType.Billing, message);
-                    break;
-
-                // Leaderboards
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:                                                                    // 157
-                case ClientToGameServerMessage.NetMessageLeaderboardArchivedInstanceListRequest:                                                // 158
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:                                                          // 159
-                    RouteMessageToService(ServerType.Leaderboard, message);
                     break;
 
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
@@ -1964,6 +1960,26 @@ namespace MHServerEmu.Games.Network
             if (stashTabOptions == null) return Logger.WarnReturn(false, $"OnStashTabOptions(): Failed to retrieve message");
 
             return Player.UpdateStashTabOptions(stashTabOptions);
+        }
+
+        private bool OnLeaderboardRequest(MailboxMessage message)   // 157
+        {
+            // TODO: Send a service message to leaderboards here
+            RouteMessageToService(ServerType.Leaderboard, message);
+            return true;
+        }
+
+        // NOTE: Doesn't seem like the client ever sends NetMessageLeaderboardArchivedInstanceListRequest (at least in 1.52)
+
+        private bool OnLeaderboardInitializeRequest(MailboxMessage message) // 159
+        {
+            var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
+            if (initializeRequest == null) return Logger.WarnReturn(false, $"OnLeaderboardInitializeRequest(): Failed to retrieve message");
+
+            var response = LeaderboardInfoCache.Instance.BuildInitializeRequestResponse(initializeRequest);
+            SendMessage(response);
+
+            return true;
         }
 
         private bool OnMissionTrackerFiltersUpdate(MailboxMessage message)  // 166

@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -48,6 +49,17 @@ namespace MHServerEmu.Games.Leaderboards
                 ExpirationTime = updateInstance.ExpirationTime;
                 Visible = updateInstance.Visible;
             }
+        }
+
+        public LeaderboardInstanceData ToProtobuf()
+        {
+            return LeaderboardInstanceData.CreateBuilder()
+                .SetInstanceId(InstanceId)
+                .SetState(State)
+                .SetActivationTimestamp(Clock.DateTimeToTimestamp(ActivationTime))
+                .SetExpirationTimestamp(Clock.DateTimeToTimestamp(ExpirationTime))
+                .SetVisible(Visible)
+                .Build();
         }
     }
 }

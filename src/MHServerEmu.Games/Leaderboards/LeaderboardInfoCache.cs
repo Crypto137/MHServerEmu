@@ -64,6 +64,33 @@ namespace MHServerEmu.Games.Leaderboards
             }
         }
 
+        public NetMessageLeaderboardInitializeRequestResponse BuildInitializeRequestResponse(NetMessageLeaderboardInitializeRequest initializeRequest)
+        {
+            var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
+
+            lock (_leaderboardInfoMap)
+            {
+                foreach (ulong guid in initializeRequest.LeaderboardIdsList)
+                    if (_leaderboardInfoMap.TryGetValue((PrototypeGuid)guid, out LeaderboardInfo info))
+                    {
+                        var instances = info.Instances;
+
+                        var initDataBuilder = LeaderboardInitData.CreateBuilder().SetLeaderboardId(guid);
+                        foreach (var instance in instances)
+                        {
+                            var instanceData = instance.ToProtobuf();
+                            if (instance.State == LeaderboardState.eLBS_Active || instance.State == LeaderboardState.eLBS_Created)
+                                initDataBuilder.SetCurrentInstanceData(instanceData);
+                            else
+                                initDataBuilder.AddArchivedInstanceList(instanceData);
+                        }
+                        response.AddLeaderboardInitDataList(initDataBuilder.Build());
+                    }
+            }
+
+            return response.Build();
+        }
+
         public void UpdateLeaderboardInstances(in GameServiceProtocol.LeaderboardStateChangeList instances)
         {
             lock (_leaderboardInfoMap)

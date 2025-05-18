@@ -86,7 +86,6 @@ namespace MHServerEmu.Leaderboards
 
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(client, message); break;
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(client, message); break;
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
@@ -102,42 +101,15 @@ namespace MHServerEmu.Leaderboards
 
         #endregion
 
-        private bool OnInitializeRequest(IFrontendClient client, MailboxMessage message)
-        {
-            var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
-            if (initializeRequest == null) return Logger.WarnReturn(false, $"OnInitializeRequest(): Failed to retrieve message");
-
-            Logger.Trace("Received NetMessageLeaderboardInitializeRequest");
-
-            var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
-
-            foreach (var guid in initializeRequest.LeaderboardIdsList)
-                if (_database.GetLeaderboardInstances((PrototypeGuid)guid, out var instances))
-                {
-                    var initDataBuilder = LeaderboardInitData.CreateBuilder().SetLeaderboardId(guid);
-                    foreach (var instance in instances)
-                    {
-                        var instanceData = instance.ToInstanceData();
-                        if (instance.State == LeaderboardState.eLBS_Active || instance.State == LeaderboardState.eLBS_Created)
-                            initDataBuilder.SetCurrentInstanceData(instanceData);
-                        else
-                            initDataBuilder.AddArchivedInstanceList(instanceData);
-                    }
-                    response.AddLeaderboardInitDataList(initDataBuilder.Build());
-                }
-
-            client.SendMessage(MuxChannel, response.Build());
-
-            return true;
-        }
-
         private bool OnRequest(IFrontendClient client, MailboxMessage message)
         {
+            // TODO: Move message handling to game and send a service message to leaderboards instead
+
             var request = message.As<NetMessageLeaderboardRequest>();
             if (request == null) return Logger.WarnReturn(false, $"OnRequest(): Failed to retrieve message");
 
             if (request.HasDataQuery == false)
-                Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
+                return Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
 
             Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
             

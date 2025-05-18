@@ -58,20 +58,6 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Returns <see cref="LeaderboardInstanceData"/> from <see cref="LeaderboardInstance"/>.
-        /// </summary>
-        public LeaderboardInstanceData ToInstanceData()
-        {
-            return LeaderboardInstanceData.CreateBuilder()
-                    .SetInstanceId(InstanceId)
-                    .SetState(State)
-                    .SetActivationTimestamp(Clock.DateTimeToTimestamp(ActivationTime))
-                    .SetExpirationTimestamp(Clock.DateTimeToTimestamp(ExpirationTime))
-                    .SetVisible(Visible)
-                    .Build();
-        }
-
-        /// <summary>
         /// Returns <see cref="LeaderboardMetadata"/> from <see cref="LeaderboardInstance"/>.
         /// </summary>
         public LeaderboardMetadata ToMetadata()
