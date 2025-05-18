@@ -3,8 +3,6 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
-using MHServerEmu.DatabaseAccess.Models.Leaderboards;
-using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
@@ -25,15 +23,13 @@ namespace MHServerEmu.Games.Leaderboards
         private readonly Dictionary<LeaderboardScoringRulePrototype, ulong> _ruleEntities = new();
         private readonly Dictionary<LeaderboardGuidKey, int> _ruleEvents = new();
 
-        private readonly SQLiteLeaderboardDBManager _dbManager = SQLiteLeaderboardDBManager.Instance;
-        private readonly List<DBRewardEntry> _pendingRewards = new();
+        private readonly List<GameServiceProtocol.LeaderboardRewardEntry[]> _pendingRewards = new();
 
         private readonly EventPointer<UpdateRuleEvent> _updateEvent = new();
         private readonly EventPointer<RewardsEvent> _rewardsEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
         private bool _cachedActives = false;
-        private bool _checkRewards = false;
 
         public Game Game { get; }
         public Player Owner { get; }
@@ -223,7 +219,14 @@ namespace MHServerEmu.Games.Leaderboards
 
         public void RequestRewards()
         {
-            _checkRewards = true;
+            GameServiceProtocol.LeaderboardRewardRequest rewardRequest = new(Owner.DatabaseUniqueId);
+            ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, rewardRequest);
+        }
+
+        public void AddPendingRewards(GameServiceProtocol.LeaderboardRewardEntry[] rewards)
+        {
+            _pendingRewards.Add(rewards);
+            ScheduleRewardsEvent();
         }
 
         private void FlushScoreUpdates()
@@ -244,48 +247,42 @@ namespace MHServerEmu.Games.Leaderboards
             _ruleEvents.Clear();
         }
 
-        private void DoCheckRewards()
-        {
-            GivePendingRewards();
-
-            if (_checkRewards)
-            {
-                if (Debug) Logger.Debug($"DoCheckRewards try get reward for {Owner.GetName()}");
-                _pendingRewards.AddRange(_dbManager.GetRewards(Owner.DatabaseUniqueId));
-                _checkRewards = false;
-            }
-
-            ScheduleRewardsEvent();
-        }
-
         private void GivePendingRewards()
         {
             if (_pendingRewards.Count == 0) return;
 
-            foreach (var reward in _pendingRewards)
+            foreach (GameServiceProtocol.LeaderboardRewardEntry[] rewardEntries in _pendingRewards)
             {
-                var rewardGuid = (PrototypeGuid)reward.RewardId;
-                var rewardDataRef = GameDatabase.GetDataRefByPrototypeGuid(rewardGuid);
-                var leaderboardGuid = (PrototypeGuid)reward.LeaderboardId;
-                var leaderboardDataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardGuid);
-                var leaderboardProto = GameDatabase.GetPrototype<LeaderboardPrototype>(leaderboardDataRef);
-                if (leaderboardProto == null) continue;
-
-                if (GiveReward(rewardDataRef))
+                for (int i = 0; i < rewardEntries.Length; i++)
                 {
-                    if (leaderboardProto.Public)
+                    ref GameServiceProtocol.LeaderboardRewardEntry entry = ref rewardEntries[i];
+
+                    var rewardGuid = (PrototypeGuid)entry.RewardId;
+                    PrototypeId rewardDataRef = GameDatabase.GetDataRefByPrototypeGuid(rewardGuid);
+
+                    var leaderboardGuid = (PrototypeGuid)entry.LeaderboardId;
+                    var leaderboardDataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardGuid);
+                    LeaderboardPrototype leaderboardProto = GameDatabase.GetPrototype<LeaderboardPrototype>(leaderboardDataRef);
+                    if (leaderboardProto == null) continue;
+
+                    if (GiveReward(rewardDataRef))
                     {
-                        var message = NetMessageLeaderboardRewarded.CreateBuilder()
-                            .SetLeaderboardId((ulong)reward.LeaderboardId)
-                            .SetLeaderboardInstance((ulong)reward.InstanceId)
-                            .SetRewardGuid((ulong)reward.RewardId)
-                            .SetRank((ulong)reward.Rank).Build();
+                        // Send reward notification to the client if needed
+                        if (leaderboardProto.Public)
+                        {
+                            var message = NetMessageLeaderboardRewarded.CreateBuilder()
+                                .SetLeaderboardId(entry.LeaderboardId)
+                                .SetLeaderboardInstance(entry.InstanceId)
+                                .SetRewardGuid(entry.RewardId)
+                                .SetRank((ulong)entry.Rank).Build();
 
-                        Owner.SendMessage(message);                        
+                            Owner.SendMessage(message);
+                        }
+
+                        // Send reward confirmation to the leaderboard service
+                        GameServiceProtocol.LeaderboardRewardConfirmation confirmation = new(entry.LeaderboardId, entry.InstanceId, entry.GameId);
+                        ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, confirmation);
                     }
-
-                    reward.Rewarded();
-                    _dbManager.SetRewarded(reward);
                 }
             }
 
@@ -299,7 +296,7 @@ namespace MHServerEmu.Games.Leaderboards
 
             if (itemProtoRef == PrototypeId.Invalid) return false;
 
-            if (Debug) Logger.Debug($"GiveReward try give reward {itemProtoRef.GetNameFormatted()} for {Owner.GetName()}");
+            Logger.Info($"Giving leaderboard reward {itemProtoRef.GetName()} to {Owner}");
 
             ItemSpec itemSpec = Game.LootManager.CreateItemSpec(itemProtoRef, LootContext.LeaderboardReward, Owner);
             if (itemSpec == null) return false;
@@ -361,7 +358,7 @@ namespace MHServerEmu.Games.Leaderboards
 
         private class RewardsEvent : CallMethodEvent<LeaderboardManager>
         {
-            protected override CallbackDelegate GetCallback() => (manager) => manager.DoCheckRewards();
+            protected override CallbackDelegate GetCallback() => (manager) => manager.GivePendingRewards();
         }
     }
 

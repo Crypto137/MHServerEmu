@@ -122,6 +122,34 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+        public readonly struct LeaderboardRewardRequest(ulong gameId) : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+        }
+
+        public readonly struct LeaderboardRewardEntry(ulong leaderboardId, ulong instanceId, ulong gameId, ulong rewardId, int rank) : IGameServiceMessage
+        {
+            public readonly ulong LeaderboardId = leaderboardId;
+            public readonly ulong InstanceId = instanceId;
+            public readonly ulong GameId = gameId;
+            public readonly ulong RewardId = rewardId;
+            public readonly int Rank = rank;
+        }
+
+        public readonly struct LeaderboardRewardRequestResponse(ulong gameId, LeaderboardRewardEntry[] entries) : IGameServiceMessage
+        {
+            // This probably doesn't happen frequently enough to pool
+            public readonly ulong GameId = gameId;
+            public readonly LeaderboardRewardEntry[] Entries = entries;
+        }
+
+        public readonly struct LeaderboardRewardConfirmation(ulong leaderboardId, ulong instanceId, ulong gameId) : IGameServiceMessage
+        {
+            public readonly ulong LeaderboardId = leaderboardId;
+            public readonly ulong InstanceId = instanceId;
+            public readonly ulong GameId = gameId;
+        }
+
         #endregion
     }
 }

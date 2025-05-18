@@ -75,6 +75,10 @@ namespace MHServerEmu.Games.Network
                 case GameServiceProtocol.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
+
+                case GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
+                    OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
+                    break;
             }
         }
 
@@ -107,6 +111,17 @@ namespace MHServerEmu.Games.Network
                     player.SendMessage(message);
                 }
             }
+        }
+
+        private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
+        {
+            ulong playerId = leaderboardRewardRequestResponse.GameId;
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(leaderboardRewardRequestResponse.GameId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnLeaderboardRewardRequestResponse(): Player 0x{playerId:X} not found in game [{Game}]");
+
+            player.LeaderboardManager.AddPendingRewards(leaderboardRewardRequestResponse.Entries);
+            return true;
         }
 
         #endregion

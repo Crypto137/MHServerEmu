@@ -18,9 +18,12 @@ namespace MHServerEmu.Leaderboards
         private LeaderboardDatabase _database;
         private bool _isRunning;
 
+        // TODO: Move this to LeaderboardDatabase?
         private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _pendingScoreUpdateQueue = new();
         private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _scoreUpdateQueue = new();
         private readonly object _scoreUpdateLock = new();
+
+        private readonly LeaderboardRewardManager _rewardManager = new();
 
         #region IGameService Implementation
 
@@ -43,7 +46,10 @@ namespace MHServerEmu.Leaderboards
                     (_pendingScoreUpdateQueue, _scoreUpdateQueue) = (_scoreUpdateQueue, _pendingScoreUpdateQueue);
 
                 _database.ProcessLeaderboardScoreUpdateQueue(_scoreUpdateQueue);
-                    
+
+                // Process rewards
+                _rewardManager.ProcessMessages();
+
                 Thread.Sleep(UpdateTimeMS);
             }
         }
@@ -64,6 +70,14 @@ namespace MHServerEmu.Leaderboards
 
                 case GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch:
                     OnLeaderboardScoreUpdateBatch(leaderboardScoreUpdateBatch);
+                    break;
+
+                case GameServiceProtocol.LeaderboardRewardRequest leaderboardRewardRequest:
+                    _rewardManager.OnLeaderboardRewardRequest(leaderboardRewardRequest);
+                    break;
+
+                case GameServiceProtocol.LeaderboardRewardConfirmation leaderboardRewardConfirmation:
+                    _rewardManager.OnLeaderboardRewardConfirmation(leaderboardRewardConfirmation);
                     break;
 
                 default:

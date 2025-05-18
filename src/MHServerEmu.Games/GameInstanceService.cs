@@ -36,6 +36,11 @@ namespace MHServerEmu.Games
                     LeaderboardInfoCache.Instance.UpdateLeaderboardInstances(leaderboardStateChangeList);
                     break;
 
+                case GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
+                    // TODO/FIXME: Same as LeaderboardStateChange above
+                    ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, leaderboardRewardRequestResponse);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
