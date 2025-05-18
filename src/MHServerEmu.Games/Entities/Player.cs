@@ -497,7 +497,7 @@ namespace MHServerEmu.Games.Entities
             if (region != null)
                 MissionManager.Shutdown(region);
 
-            LeaderboardManager.Destory();
+            LeaderboardManager.Destroy();
 
             base.Destroy();
         }

@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.Network
                 player.LeaderboardManager.OnUpdateEventContext();
 
                 if (rewarded)
-                    player.LeaderboardManager.CheckRewards = true;
+                    player.LeaderboardManager.RequestRewards();
 
                 if (sendClient)
                 {

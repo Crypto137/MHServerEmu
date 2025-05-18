@@ -20,38 +20,29 @@ namespace MHServerEmu.Games.Leaderboards
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
         public static bool Debug = true;
-        private bool _cachedActives;
-        private EventPointer<UpdateRuleEvent> _updateEvent;
-        private EventPointer<RewardsEvent> _rewardsEvent;
-        private Dictionary<ScoringEventType, List<ScoringRule>> _activeRules;
-        private Dictionary<LeaderboardScoringRulePrototype, ulong> _ruleEntities;
-        private Dictionary<LeaderboardGuidKey, int> _ruleEvents;
-        private EventGroup _pendingEvents;
-        private List<DBRewardEntry> _pendingRewards;
-        private SQLiteLeaderboardDBManager _dbManager;
+
+        private readonly Dictionary<ScoringEventType, List<ScoringRule>> _activeRules = new();
+        private readonly Dictionary<LeaderboardScoringRulePrototype, ulong> _ruleEntities = new();
+        private readonly Dictionary<LeaderboardGuidKey, int> _ruleEvents = new();
+
+        private readonly SQLiteLeaderboardDBManager _dbManager = SQLiteLeaderboardDBManager.Instance;
+        private readonly List<DBRewardEntry> _pendingRewards = new();
+
+        private readonly EventPointer<UpdateRuleEvent> _updateEvent = new();
+        private readonly EventPointer<RewardsEvent> _rewardsEvent = new();
+        private readonly EventGroup _pendingEvents = new();
+
+        private bool _cachedActives = false;
+        private bool _checkRewards = false;
 
         public Game Game { get; }
         public Player Owner { get; }
         public bool LeaderboardsEnabled { get => Game.LeaderboardsEnabled; }
-        public bool CheckRewards { get; set; }
-
 
         public LeaderboardManager(Player owner)
         {
             Owner = owner;
             Game = Owner.Game;
-
-            _activeRules = new();
-            _ruleEntities = new();
-            _ruleEvents = new();
-
-            _updateEvent = new();
-            _rewardsEvent = new();
-            _pendingEvents = new();
-            _pendingRewards = new();
-
-            CheckRewards = false;
-            _dbManager = SQLiteLeaderboardDBManager.Instance;
         }
 
         public void Initialize()
@@ -62,7 +53,7 @@ namespace MHServerEmu.Games.Leaderboards
             ScheduleRewardsEvent();            
         }
 
-        public void Destory()
+        public void Destroy()
         {
             FlushScoreUpdates();
             CancelUpdateEvent();
@@ -227,7 +218,12 @@ namespace MHServerEmu.Games.Leaderboards
                     }
             ListPool<LeaderboardPrototype>.Instance.Return(activeLeaderboards);
 
-            CheckRewards = true;
+            RequestRewards();
+        }
+
+        public void RequestRewards()
+        {
+            _checkRewards = true;
         }
 
         private void FlushScoreUpdates()
@@ -248,16 +244,15 @@ namespace MHServerEmu.Games.Leaderboards
             _ruleEvents.Clear();
         }
 
-
         private void DoCheckRewards()
         {
             GivePendingRewards();
 
-            if (CheckRewards)
+            if (_checkRewards)
             {
                 if (Debug) Logger.Debug($"DoCheckRewards try get reward for {Owner.GetName()}");
                 _pendingRewards.AddRange(_dbManager.GetRewards(Owner.DatabaseUniqueId));
-                CheckRewards = false;
+                _checkRewards = false;
             }
 
             ScheduleRewardsEvent();
@@ -359,18 +354,18 @@ namespace MHServerEmu.Games.Leaderboards
             scheduler.CancelEvent(_rewardsEvent);
         }
 
-        protected class UpdateRuleEvent : CallMethodEvent<LeaderboardManager>
+        private class UpdateRuleEvent : CallMethodEvent<LeaderboardManager>
         {
             protected override CallbackDelegate GetCallback() => (manager) => manager.DoUpdate();
         }
 
-        protected class RewardsEvent : CallMethodEvent<LeaderboardManager>
+        private class RewardsEvent : CallMethodEvent<LeaderboardManager>
         {
             protected override CallbackDelegate GetCallback() => (manager) => manager.DoCheckRewards();
         }
     }
 
-    public struct LeaderboardGuidKey
+    public struct LeaderboardGuidKey : IEquatable<LeaderboardGuidKey>
     {
         public PrototypeGuid LeaderboardGuid;
         public long RuleGuid;
@@ -383,17 +378,23 @@ namespace MHServerEmu.Games.Leaderboards
             RuleGuid = ruleProto.GUID;
         }
 
-        public override bool Equals(object obj)
+        public override readonly bool Equals(object obj)
         {
-            if (obj is not LeaderboardGuidKey other) return false;
+            if (obj is not LeaderboardGuidKey other)
+                return false;
 
+            return Equals(other);
+        }
+
+        public readonly bool Equals(LeaderboardGuidKey other)
+        {
             return LeaderboardGuid == other.LeaderboardGuid
                 && RuleGuid == other.RuleGuid
                 && PlayerGuid == other.PlayerGuid
                 && AvatarGuid == other.AvatarGuid;
         }
 
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             return LeaderboardGuid.GetHashCode() ^ RuleGuid.GetHashCode() ^ PlayerGuid.GetHashCode() ^ AvatarGuid.GetHashCode();
         }
