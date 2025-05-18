@@ -48,7 +48,7 @@ namespace MHServerEmu.Leaderboards
                 _database.ProcessLeaderboardScoreUpdateQueue(_scoreUpdateQueue);
 
                 // Process rewards
-                _rewardManager.ProcessMessages();
+                _rewardManager.Update();
 
                 Thread.Sleep(UpdateTimeMS);
             }

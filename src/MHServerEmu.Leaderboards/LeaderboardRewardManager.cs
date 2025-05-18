@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
 
@@ -8,8 +9,9 @@ namespace MHServerEmu.Leaderboards
     public class LeaderboardRewardManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);    // If we don't get all confirmations in 5 minutes, something must have gone very wrong
 
-        private readonly Dictionary<ulong, List<DBRewardEntry>> _pendingRewards = new();
+        private readonly Dictionary<ulong, RewardQueryResult> _pendingRewards = new();
 
         private Queue<GameServiceProtocol.LeaderboardRewardRequest> _requestQueue = new();
         private Queue<GameServiceProtocol.LeaderboardRewardRequest> _processRequestQueue = new();
@@ -34,7 +36,7 @@ namespace MHServerEmu.Leaderboards
                 _confirmationQueue.Enqueue(confirmation);
         }
 
-        public void ProcessMessages()
+        public void Update()
         {
             // Swap queues
             lock (_queueLock)
@@ -56,6 +58,17 @@ namespace MHServerEmu.Leaderboards
                 GameServiceProtocol.LeaderboardRewardRequest request = _processRequestQueue.Dequeue();
                 QueryRewards(request.GameId);
             }
+
+            // Check for timeouts
+            TimeSpan now = Clock.UnixTime;
+            foreach (var kvp in _pendingRewards)
+            {
+                if ((now - kvp.Value.Timestamp) >= Timeout)
+                {
+                    Logger.Error($"Update(): Reward timeout for player 0x{kvp.Key:X}");
+                    _pendingRewards.Remove(kvp.Key);
+                }
+            }
         }
 
         private bool QueryRewards(ulong gameId)
@@ -74,7 +87,7 @@ namespace MHServerEmu.Leaderboards
             }
 
             // Keep track of all pending rewards
-            _pendingRewards.Add(gameId, dbRewards);
+            _pendingRewards.Add(gameId, new(dbRewards));
 
             // Send reward information to game
             GameServiceProtocol.LeaderboardRewardEntry[]  rewardEntries = new GameServiceProtocol.LeaderboardRewardEntry[dbRewards.Count];
@@ -95,8 +108,10 @@ namespace MHServerEmu.Leaderboards
         {
             Logger.Debug($"FinalizeReward(): leaderboardId={leaderboardId}, instanceId={instanceId}, gameId=0x{gameId:X}");
 
-            if (_pendingRewards.TryGetValue(gameId, out List<DBRewardEntry> rewards) == false)
+            if (_pendingRewards.TryGetValue(gameId, out RewardQueryResult rewardQuery) == false)
                 return Logger.WarnReturn(false, $"FinalizeReward(): Received confirmation for player 0x{gameId:X}, who does not have pending rewards");
+
+            List<DBRewardEntry> rewards = rewardQuery.Rewards;
 
             // Find the specified pending reward
             DBRewardEntry reward = null;
@@ -126,6 +141,12 @@ namespace MHServerEmu.Leaderboards
             }
 
             return true;
+        }
+
+        private readonly struct RewardQueryResult(List<DBRewardEntry> rewards)
+        {
+            public readonly List<DBRewardEntry> Rewards = rewards;
+            public readonly TimeSpan Timestamp = Clock.UnixTime;
         }
     }
 }
