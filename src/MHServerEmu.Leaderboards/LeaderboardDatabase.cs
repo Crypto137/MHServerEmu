@@ -353,27 +353,6 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public bool GetLeaderboardInstances(PrototypeGuid guid, out List<LeaderboardInstance> instances)
-        {
-            lock (_leaderboardLock)
-            {
-                instances = new();
-
-                if (_leaderboards.TryGetValue(guid, out var info) == false) return false;
-                if (info.Prototype == null) return false;
-
-                int maxInstances = info.Prototype.MaxArchivedInstances;
-                var sortedInstances = info.Instances.OrderByDescending(instance => instance.InstanceId);
-                foreach (var instance in sortedInstances)
-                {
-                    instances.Add(instance);
-                    if (--maxInstances < 0) break;
-                }
-
-                return true;
-            }
-        }
-
         public LeaderboardReport GetLeaderboardReport(NetMessageLeaderboardRequest request)
         {
             PrototypeGuid leaderboardId = 0;

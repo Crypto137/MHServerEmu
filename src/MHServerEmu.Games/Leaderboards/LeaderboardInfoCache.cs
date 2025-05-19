@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -64,17 +65,40 @@ namespace MHServerEmu.Games.Leaderboards
             }
         }
 
+        public bool GetLeaderboardInstances(PrototypeGuid guid, List<LeaderboardInstanceInfo> instances)
+        {
+            lock (_leaderboardInfoMap)
+            {
+                if (_leaderboardInfoMap.TryGetValue(guid, out LeaderboardInfo info) == false)
+                    return false;
+
+                if (info.Prototype == null)
+                    return false;
+
+                int maxInstances = info.Prototype.MaxArchivedInstances;
+                foreach (LeaderboardInstanceInfo instance in info.Instances)
+                {
+                    instances.Add(instance);
+                    if (--maxInstances < 0)
+                        break;
+                }
+
+                return true;
+            }
+        }
+
         public NetMessageLeaderboardInitializeRequestResponse BuildInitializeRequestResponse(NetMessageLeaderboardInitializeRequest initializeRequest)
         {
             var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
+            List<LeaderboardInstanceInfo> instances = ListPool<LeaderboardInstanceInfo>.Instance.Get();
 
             lock (_leaderboardInfoMap)
             {
                 foreach (ulong guid in initializeRequest.LeaderboardIdsList)
-                    if (_leaderboardInfoMap.TryGetValue((PrototypeGuid)guid, out LeaderboardInfo info))
+                {
+                    instances.Clear();
+                    if (GetLeaderboardInstances((PrototypeGuid)guid, instances))
                     {
-                        var instances = info.Instances;
-
                         var initDataBuilder = LeaderboardInitData.CreateBuilder().SetLeaderboardId(guid);
                         foreach (var instance in instances)
                         {
@@ -86,8 +110,10 @@ namespace MHServerEmu.Games.Leaderboards
                         }
                         response.AddLeaderboardInitDataList(initDataBuilder.Build());
                     }
+                }
             }
 
+            ListPool<LeaderboardInstanceInfo>.Instance.Return(instances);
             return response.Build();
         }
 
@@ -112,7 +138,7 @@ namespace MHServerEmu.Games.Leaderboards
                     if (updateInstance != null)
                         updateInstance.Update(instanceInfo);
                     else
-                        leaderboardInfo.Instances.Add(new(instanceInfo));
+                        leaderboardInfo.SortedInsertInstance(new(instanceInfo));
                 }
                 else
                 {
@@ -122,7 +148,7 @@ namespace MHServerEmu.Games.Leaderboards
                     if (proto != null)
                     {
                         leaderboardInfo = new(proto);
-                        leaderboardInfo.Instances.Add(new(instanceInfo));
+                        leaderboardInfo.SortedInsertInstance(new(instanceInfo));
                         _leaderboardInfoMap[(PrototypeGuid)instanceInfo.LeaderboardId] = leaderboardInfo;
                     }
                 }

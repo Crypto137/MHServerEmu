@@ -72,7 +72,10 @@ namespace MHServerEmu.Leaderboards
                 if (Prototype.IsMetaLeaderboard)
                     instance.InitMetaLeaderboardEntries(Prototype.MetaLeaderboardEntries);
 
+                // Keep instances sorted in descending order so that the most recent instances appear first.
+                // This way when the instance list is queried we can quickly get the current instance + the last archived one.
                 Instances.Add(instance);
+                Instances.Sort((a, b) => b.InstanceId.CompareTo(a.InstanceId));
 
                 if (loadEntries) 
                     instance.LoadEntries();
