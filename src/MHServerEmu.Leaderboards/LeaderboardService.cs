@@ -15,15 +15,11 @@ namespace MHServerEmu.Leaderboards
         private const int UpdateTimeMS = 1000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private LeaderboardDatabase _database;
-        private bool _isRunning;
 
-        // TODO: Move this to LeaderboardDatabase?
-        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _pendingScoreUpdateQueue = new();
-        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _scoreUpdateQueue = new();
-        private readonly object _scoreUpdateLock = new();
-
+        private readonly LeaderboardDatabase _database = LeaderboardDatabase.Instance;
         private readonly LeaderboardRewardManager _rewardManager = new();
+
+        private bool _isRunning;
 
         #region IGameService Implementation
 
@@ -32,20 +28,18 @@ namespace MHServerEmu.Leaderboards
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
             _isRunning = config.LeaderboardsEnabled;
 
-            _database = LeaderboardDatabase.Instance;
-            if (_isRunning) 
-                _database.Initialize(SQLiteLeaderboardDBManager.Instance);
+            if (_isRunning == false)
+                return;
+
+            _database.Initialize(SQLiteLeaderboardDBManager.Instance);
 
             while (_isRunning)
             {
-                // update state for instances
+                // Update state for instances
                 _database.UpdateState();
 
-                // process updates
-                lock (_scoreUpdateLock)
-                    (_pendingScoreUpdateQueue, _scoreUpdateQueue) = (_scoreUpdateQueue, _pendingScoreUpdateQueue);
-
-                _database.ProcessLeaderboardScoreUpdateQueue(_scoreUpdateQueue);
+                // Process score updates
+                _database.ProcessLeaderboardScoreUpdateQueue();
 
                 // Process rewards
                 _rewardManager.Update();
@@ -69,7 +63,7 @@ namespace MHServerEmu.Leaderboards
                     break;
 
                 case GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch:
-                    OnLeaderboardScoreUpdateBatch(leaderboardScoreUpdateBatch);
+                    _database.EnqueueLeaderboardScoreUpdate(leaderboardScoreUpdateBatch);
                     break;
 
                 case GameServiceProtocol.LeaderboardRewardRequest leaderboardRewardRequest:
@@ -108,13 +102,6 @@ namespace MHServerEmu.Leaderboards
 
                 default: Logger.Warn($"OnRouteMailboxMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        private void OnLeaderboardScoreUpdateBatch(in GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch)
-        {
-            // We could probably potentially use a SpinLock here
-            lock (_scoreUpdateLock)
-                _pendingScoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
         }
 
         #endregion

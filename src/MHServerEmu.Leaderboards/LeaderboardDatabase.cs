@@ -25,11 +25,15 @@ namespace MHServerEmu.Leaderboards
         private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Leaderboards");
 
-        private readonly object _lock = new object();
+        private readonly object _leaderboardLock = new();
+        private readonly object _scoreUpdateLock = new();
 
         private readonly Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
         private readonly Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
         private readonly Dictionary<ulong, string> _playerNames = new();
+
+        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _pendingScoreUpdateQueue = new();
+        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _scoreUpdateQueue = new();
 
         public SQLiteLeaderboardDBManager DBManager { get; private set; }
         public int LeaderboardCount { get => _leaderboards.Count; }
@@ -193,7 +197,7 @@ namespace MHServerEmu.Leaderboards
 
         public void ReloadJsonConfig()
         {
-            lock (_lock)
+            lock (_leaderboardLock)
             {
                 var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
                 string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
@@ -342,7 +346,7 @@ namespace MHServerEmu.Leaderboards
 
         public string GetPlayerNameById(PrototypeGuid id)
         {
-            lock (_lock)
+            lock (_leaderboardLock)
             {
                 if (_playerNames.TryGetValue((ulong)id, out var playerName)) return playerName;
                 return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, (ulong)id);
@@ -351,7 +355,7 @@ namespace MHServerEmu.Leaderboards
 
         public bool GetLeaderboardInstances(PrototypeGuid guid, out List<LeaderboardInstance> instances)
         {
-            lock (_lock)
+            lock (_leaderboardLock)
             {
                 instances = new();
 
@@ -378,7 +382,7 @@ namespace MHServerEmu.Leaderboards
             var report = LeaderboardReport.CreateBuilder()
                 .SetNextUpdateTimeIntervalMS(UpdateTimeIntervalMS);
 
-            lock (_lock)
+            lock (_leaderboardLock)
             {
                 if (request.HasPlayerScoreQuery)
                 {
@@ -492,7 +496,7 @@ namespace MHServerEmu.Leaderboards
 
         public Leaderboard GetLeaderboard(PrototypeGuid guid)
         {
-            lock (_lock)
+            lock (_leaderboardLock)
             {
                 if (_leaderboards.TryGetValue(guid, out var leaderboard))
                     return leaderboard;
@@ -504,11 +508,21 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void ProcessLeaderboardScoreUpdateQueue(Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> updateQueue)
+        public void EnqueueLeaderboardScoreUpdate(in GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch)
         {
-            while (updateQueue.Count > 0)
+            // We could probably potentially use a SpinLock here, but I'm not sure if it's worth it
+            lock (_scoreUpdateLock)
+                _pendingScoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
+        }
+
+        public void ProcessLeaderboardScoreUpdateQueue()
+        {
+            lock (_scoreUpdateLock)
+                (_pendingScoreUpdateQueue, _scoreUpdateQueue) = (_scoreUpdateQueue, _pendingScoreUpdateQueue);
+
+            while (_scoreUpdateQueue.Count > 0)
             {
-                GameServiceProtocol.LeaderboardScoreUpdateBatch batch = updateQueue.Dequeue();
+                GameServiceProtocol.LeaderboardScoreUpdateBatch batch = _scoreUpdateQueue.Dequeue();
                 for (int i = 0; i < batch.Count; i++)
                 {
                     ref GameServiceProtocol.LeaderboardScoreUpdate update = ref batch[i];
@@ -522,7 +536,7 @@ namespace MHServerEmu.Leaderboards
 
         public void GetLeaderboards(List<Leaderboard> leaderboards)
         {
-            lock (_lock)
+            lock (_leaderboardLock)
             {
                 leaderboards.AddRange(_leaderboards.Values);
                 leaderboards.AddRange(_metaLeaderboards.Values);
