@@ -546,6 +546,8 @@ namespace MHServerEmu.Games.Entities
             CurrentAvatar?.UpdateAvatarSynergyExperienceBonus();
         }
 
+        #region Public Event Team
+
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {
             int eventInstance = eventProto.GetEventInstance();
@@ -557,8 +559,11 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO PropertyEnum.PublicEventTeamAssignment
             // GetPublicEventTeam(ActivePublicEvent).As<PublicEventTeamPrototype>()
+            //return ((PrototypeId)12697619663363773645).As<PublicEventTeamPrototype>();  // Events/PublicEvents/Teams/CivilWarAntiReg.prototype
             return null;
         }
+
+        #endregion
 
         #region Region
 
