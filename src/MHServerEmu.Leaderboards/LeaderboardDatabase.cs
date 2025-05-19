@@ -1,17 +1,17 @@
-﻿using Gazillion;
+﻿using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Leaderboards;
-using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace MHServerEmu.Leaderboards
 {   
@@ -20,17 +20,21 @@ namespace MHServerEmu.Leaderboards
     /// </summary>
     public class LeaderboardDatabase
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
         private const ulong UpdateTimeIntervalMS = 30 * 1000;   // 30 seconds
 
-        private readonly object _lock = new object();
+        private static readonly Logger Logger = LogManager.CreateLogger();
         private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Leaderboards");
-        private Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
-        private Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
-        private Dictionary<ulong, string> _playerNames = new();
+
+        private readonly object _lock = new object();
+
+        private readonly Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
+        private readonly Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
+        private readonly Dictionary<ulong, string> _playerNames = new();
+
         public SQLiteLeaderboardDBManager DBManager { get; private set; }
         public int LeaderboardCount { get => _leaderboards.Count; }
         public static LeaderboardDatabase Instance { get; } = new();
+
         private LeaderboardDatabase() { }
 
         /// <summary>
@@ -516,38 +520,56 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public List<Leaderboard> GetLeaderboards()
+        public void GetLeaderboards(List<Leaderboard> leaderboards)
         {
-            List<Leaderboard> leaderboards = new();
             lock (_lock)
             {
                 leaderboards.AddRange(_leaderboards.Values);
                 leaderboards.AddRange(_metaLeaderboards.Values);
             }
-            return leaderboards;
         }
 
         public void UpdateState()
         {
+            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            GetLeaderboards(leaderboards);
+
             var updateTime = Clock.UtcNowPrecise;
-            foreach (var leaderboard in GetLeaderboards())
+            foreach (var leaderboard in leaderboards)
                 leaderboard.UpdateState(updateTime);
+
+            ListPool<Leaderboard>.Instance.Return(leaderboards);
         }
 
         public void Save()
         {
-            foreach (var leaderboard in GetLeaderboards())                
+            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            GetLeaderboards(leaderboards);
+
+            foreach (var leaderboard in leaderboards)                
                 leaderboard.ActiveInstance?.SaveEntries(true);
+
+            ListPool<Leaderboard>.Instance.Return(leaderboards);
         }
 
         public LeaderboardInstance FindInstance(ulong instanceId)
         {
-            foreach (var leaderboard in GetLeaderboards())
-                foreach (var instance in leaderboard.Instances)
-                    if (instance.InstanceId == instanceId)
-                        return instance;
+            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            GetLeaderboards(leaderboards);
 
-            return null;
+            try
+            {
+                foreach (var leaderboard in leaderboards)
+                    foreach (var instance in leaderboard.Instances)
+                        if (instance.InstanceId == instanceId)
+                            return instance;
+
+                return null;
+            }
+            finally
+            {
+                ListPool<Leaderboard>.Instance.Return(leaderboards);
+            }
         }
     }
 }

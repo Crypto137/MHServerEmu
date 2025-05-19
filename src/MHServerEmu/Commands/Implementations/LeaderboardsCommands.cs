@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using MHServerEmu.Commands.Attributes;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Frontend;
@@ -61,7 +62,10 @@ namespace MHServerEmu.Commands.Implementations
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
-            var leaderboards = LeaderboardDatabase.Instance.GetLeaderboards();
+
+            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
+
             foreach (var leaderboard in leaderboards)
                 if (leaderboard.IsActive)
                     sb.AppendLine(
@@ -70,6 +74,7 @@ namespace MHServerEmu.Commands.Implementations
                         $"{leaderboard.ActiveInstance.ActivationTime} - " +
                         $"{leaderboard.ActiveInstance.ExpirationTime}");
 
+            ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();
         }
 
@@ -80,7 +85,10 @@ namespace MHServerEmu.Commands.Implementations
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
-            var leaderboards = LeaderboardDatabase.Instance.GetLeaderboards();
+
+            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
+
             foreach (var leaderboard in leaderboards)
                 if (leaderboard.Scheduler.IsActive)
                     sb.AppendLine(
@@ -89,6 +97,7 @@ namespace MHServerEmu.Commands.Implementations
                         $"{leaderboard.ActiveInstance.ActivationTime} - " +
                         $"{leaderboard.ActiveInstance.ExpirationTime}");
 
+            ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();
         }
 
@@ -99,7 +108,10 @@ namespace MHServerEmu.Commands.Implementations
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
-            var leaderboards = LeaderboardDatabase.Instance.GetLeaderboards();
+
+            List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
+            LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
+
             foreach (var leaderboard in leaderboards)
                 sb.AppendLine(
                     $"[{(leaderboard.Scheduler.IsActive ? "+" : "-")}]" +
@@ -108,6 +120,7 @@ namespace MHServerEmu.Commands.Implementations
                     $"{leaderboard.Scheduler.StartEvent} - " +
                     $"{leaderboard.Scheduler.EndEvent}");
 
+            ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();
         }
     }
