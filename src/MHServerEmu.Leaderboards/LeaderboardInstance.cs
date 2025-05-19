@@ -528,7 +528,7 @@ namespace MHServerEmu.Leaderboards
 
                 if (changed)
                 {
-                    if (LeaderboardManager.Debug) Logger.Debug($"SetState {LeaderboardPrototype.DataRef.GetNameFormatted()} {InstanceId} [{State}] => [{state}]");
+                    Logger.Info($"SetState(): {LeaderboardPrototype.DataRef.GetNameFormatted()} {InstanceId} [{State}] => [{state}]");
                     State = state;
                     _leaderboard.OnStateChange(InstanceId, state);
                 }

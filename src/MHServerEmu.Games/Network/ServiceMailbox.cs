@@ -106,8 +106,7 @@ namespace MHServerEmu.Games.Network
 
                 if (sendClient)
                 {
-                    if (LeaderboardManager.Debug)
-                        Logger.Debug($"OnLeaderboardStateChange Send [{leaderboardStateChange.InstanceId}][{state}] to {player.GetName()}");
+                    //Logger.Debug($"OnLeaderboardStateChange(): Sending [{leaderboardStateChange.InstanceId}][{state}] to {player.GetName()}");
                     player.SendMessage(message);
                 }
             }

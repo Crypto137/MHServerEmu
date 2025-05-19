@@ -65,8 +65,10 @@ namespace MHServerEmu.Leaderboards
             string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
             if (noTables) GenerateTables(jsonConfigPath);
 
-            // load PlayerNames
-            if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames) == false)
+            // Load and cache player names (remove/disable this if the number of accounts gets out of hand)
+            if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames))
+                Logger.Info($"Loaded and cached {_playerNames.Count} player names");
+            else
                 Logger.Warn($"Failed get player names from SQLiteDBManager");
 
             // load ActiveLeaderboards

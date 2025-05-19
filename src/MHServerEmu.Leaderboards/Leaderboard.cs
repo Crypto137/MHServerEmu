@@ -192,7 +192,7 @@ namespace MHServerEmu.Leaderboards
 
         private void AddNewInstance(DBLeaderboardInstance dbInstance, LeaderboardInstance metaInstance)
         {
-            if (LeaderboardManager.Debug) Logger.Debug($"AddNewInstance {Prototype.DataRef.GetNameFormatted()} {dbInstance.InstanceId}");
+            Logger.Info($"AddNewInstance(): {Prototype.DataRef.GetNameFormatted()} {dbInstance.InstanceId}");
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             dbManager.SetInstance(dbInstance);
 
@@ -230,7 +230,7 @@ namespace MHServerEmu.Leaderboards
             if (instance == null)
             {
                 // Add new instances
-                if (LeaderboardManager.Debug) Logger.Debug($"RefreshInstance Add New {Prototype.DataRef.GetNameFormatted()} {refreshInstance.InstanceId}");
+                Logger.Info($"RefreshInstance(): Adding new instance {Prototype.DataRef.GetNameFormatted()} {refreshInstance.InstanceId}");
 
                 if (Prototype.IsMetaLeaderboard)
                 {
@@ -245,7 +245,7 @@ namespace MHServerEmu.Leaderboards
             else
             {
                 // update Instance
-                if (LeaderboardManager.Debug) Logger.Debug($"RefreshInstance Update {Prototype.DataRef.GetNameFormatted()} {refreshInstance.InstanceId}");
+                Logger.Info($"RefreshInstance(): Updating instance {Prototype.DataRef.GetNameFormatted()} {refreshInstance.InstanceId}");
 
                 bool changed = false;
 
@@ -264,7 +264,7 @@ namespace MHServerEmu.Leaderboards
                 var newActivationTime = refreshInstance.GetActivationDateTime();
                 if (instance.ActivationTime != newActivationTime)
                 {
-                    if (LeaderboardManager.Debug) Logger.Debug($"RefreshInstance ActivationTime {instance.ActivationTime} => {newActivationTime}");
+                    Logger.Info($"RefreshInstance(): Changing ActivationTime {instance.ActivationTime} => {newActivationTime}");
                     instance.ActivationTime = newActivationTime;
                     instance.ExpirationTime = Scheduler.CalcExpirationTime(newActivationTime);
                     changed = true;

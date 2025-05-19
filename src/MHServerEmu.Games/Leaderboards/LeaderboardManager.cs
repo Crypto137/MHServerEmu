@@ -17,7 +17,6 @@ namespace MHServerEmu.Games.Leaderboards
     public class LeaderboardManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-        public static bool Debug = true;
 
         private readonly Dictionary<ScoringEventType, List<ScoringRule>> _activeRules = new();
         private readonly Dictionary<LeaderboardScoringRulePrototype, ulong> _ruleEntities = new();

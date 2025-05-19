@@ -11,7 +11,6 @@ using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
@@ -131,19 +130,6 @@ namespace MHServerEmu.Commands.Implementations
             bool enableAI = entityManager.IsAIEnabled == false;
             entityManager.EnableAI(enableAI);
             return $"AI [{(enableAI ? "On" : "Off")}]";
-        }
-
-        [Command("leaderboard")]
-        [CommandUsage("debug leaderboard [on|off]")]
-        [CommandUserLevel(AccountUserLevel.Admin)]
-        public string Leaderboard(string[] @params, NetClient client)
-        {
-            if ((@params.Length > 0 && Enum.TryParse(@params[0], true, out Switch flags)) == false)
-                flags = Switch.Off;   // Default Off
-
-            LeaderboardManager.Debug = (flags == Switch.On) ? true : false;
-
-            return $"Leaderboard Log [{flags}]";
         }
 
         [Command("metagame")]
