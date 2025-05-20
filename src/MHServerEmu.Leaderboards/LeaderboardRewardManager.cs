@@ -6,6 +6,9 @@ using MHServerEmu.DatabaseAccess.SQLite;
 
 namespace MHServerEmu.Leaderboards
 {
+    /// <summary>
+    /// Manages reward distribution for leaderboard participants.
+    /// </summary>
     public class LeaderboardRewardManager
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -24,18 +27,27 @@ namespace MHServerEmu.Leaderboards
         {
         }
 
+        /// <summary>
+        /// Enqueues a <see cref="GameServiceProtocol.LeaderboardRewardRequest"/> to be processed during the next update.
+        /// </summary>
         public void OnLeaderboardRewardRequest(in GameServiceProtocol.LeaderboardRewardRequest request)
         {
             lock (_queueLock)
                 _requestQueue.Enqueue(request);
         }
 
+        /// <summary>
+        /// Enqueues a <see cref="GameServiceProtocol.LeaderboardRewardConfirmation"/> to be processed during the next update.
+        /// </summary>
         public void OnLeaderboardRewardConfirmation(in GameServiceProtocol.LeaderboardRewardConfirmation confirmation)
         {
             lock (_queueLock)
                 _confirmationQueue.Enqueue(confirmation);
         }
 
+        /// <summary>
+        /// Processes queued messages.
+        /// </summary>
         public void Update()
         {
             // Swap queues
@@ -71,6 +83,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Queries the database for rewards for the specified participant and relays the data to the game instance service.
+        /// </summary>
         private bool QueryRewards(ulong participantId)
         {
             Logger.Debug($"QueryRewards(): participantId=0x{participantId:X}");
@@ -94,7 +109,7 @@ namespace MHServerEmu.Leaderboards
             for (int i = 0; i < dbRewards.Count; i++)
             {
                 DBRewardEntry dbReward = dbRewards[i];
-                Logger.Debug($"QueryRewards(): Found reward for participant 0x{participantId}: leaderboardId={dbReward.LeaderboardId}, instanceId={dbReward.InstanceId}");
+                Logger.Debug($"QueryRewards(): Found reward for participant 0x{participantId:X}: leaderboardId={dbReward.LeaderboardId}, instanceId={dbReward.InstanceId}");
                 rewardEntries[i] = new((ulong)dbReward.LeaderboardId, (ulong)dbReward.InstanceId, (ulong)dbReward.ParticipantId, (ulong)dbReward.RewardId, dbReward.Rank);
             }
 
@@ -104,6 +119,9 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
+        /// <summary>
+        /// Marks a leaderboard reward as distributed in the database.
+        /// </summary>
         private bool FinalizeReward(long leaderboardId, long instanceId, ulong participantId)
         {
             Logger.Debug($"FinalizeReward(): leaderboardId={leaderboardId}, instanceId={instanceId}, participantId=0x{participantId:X}");
@@ -130,8 +148,8 @@ namespace MHServerEmu.Leaderboards
                 return Logger.WarnReturn(false, $"FinalizeReward(): Failed to find reward for leaderboardId={leaderboardId}, instanceId={instanceId}, participant=0x{participantId:X}");
 
             // Update reward in the database
-            reward.Rewarded();
-            SQLiteLeaderboardDBManager.Instance.SetRewarded(reward);
+            reward.UpdateRewardedDate();
+            SQLiteLeaderboardDBManager.Instance.UpdateReward(reward);
 
             // Finish this batch of rewards if we have received confirmations for everything
             if (rewards.Count == 0)

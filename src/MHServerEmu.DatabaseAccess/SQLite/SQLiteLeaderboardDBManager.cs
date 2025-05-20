@@ -63,7 +63,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return connection;
         }
 
-        public void SetLeaderboards(List<DBLeaderboard> dbLeaderboards)
+        public void InsertLeaderboards(List<DBLeaderboard> dbLeaderboards)
         {
             if (dbLeaderboards.Count == 0) return;
             using var connection = GetConnection();
@@ -102,7 +102,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return connection.Query<DBLeaderboard>("SELECT * FROM Leaderboards").ToArray();
         }
 
-        public bool SetActiveInstanceState(long leaderboardId, long activeInstanceId, int state)
+        public bool UpdateActiveInstanceState(long leaderboardId, long activeInstanceId, int state)
         {
             using SQLiteConnection connection = GetConnection();
 
@@ -111,7 +111,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 WHERE LeaderboardId = @LeaderboardId",
                 new { LeaderboardId = leaderboardId, ActiveInstanceId = activeInstanceId });
 
-            rows += UpdateInstanceState(connection, activeInstanceId, state);
+            rows += DoUpdateInstanceState(connection, activeInstanceId, state);
 
             return rows == 2;
         }
@@ -177,9 +177,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances }).ToList();
         }
 
-        public void SetInstances(List<DBLeaderboardInstance> dbInstances)
+        public void UpdateOrInsertInstances(List<DBLeaderboardInstance> dbInstances)
         {
-            if (dbInstances.Count == 0) return;
+            if (dbInstances.Count == 0)
+                return;
+
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
@@ -199,7 +201,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             transaction.Commit();
         }
 
-        public void SetInstance(DBLeaderboardInstance dbInstance)
+        public void InsertInstance(DBLeaderboardInstance dbInstance)
         {
             using SQLiteConnection connection = GetConnection();
 
@@ -208,13 +210,13 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 VALUES (@InstanceId, @LeaderboardId, @State, @ActivationDate, @Visible);", dbInstance);
         }
 
-        public void SetInstanceState(long instanceId, int state)
+        public void UpdateInstanceState(long instanceId, int state)
         {
             using SQLiteConnection connection = GetConnection();
-            UpdateInstanceState(connection, instanceId, state);
+            DoUpdateInstanceState(connection, instanceId, state);
         }
 
-        private int UpdateInstanceState(SQLiteConnection connection, long instanceId, int state)
+        private int DoUpdateInstanceState(SQLiteConnection connection, long instanceId, int state)
         {
             return connection.Execute(@"
                 UPDATE Instances SET State = @State 
@@ -242,9 +244,11 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 new { InstanceId = instanceId }).ToList();
         }
 
-        public void SetEntries(List<DBLeaderboardEntry> dbEntries)
+        public void UpdateOrInsertEntries(List<DBLeaderboardEntry> dbEntries)
         {
-            if (dbEntries.Count == 0) return;
+            if (dbEntries.Count == 0)
+                return;
+
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
@@ -274,13 +278,15 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 new { LeaderboardId = leaderboardId, InstanceId = instanceId, MetaLeaderboardId = metaLeaderboardId });
         }
 
-        public void SetMetaInstances(List<DBMetaInstance> instances)
+        public void InsertMetaInstances(List<DBMetaInstance> instances)
         {
-            if (instances.Count == 0) return;
+            if (instances.Count == 0)
+                return;
+
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
-            var insertCommand = @"
+            const string insertCommand = @"
                 INSERT INTO MetaInstances (LeaderboardId, InstanceId, MetaLeaderboardId, MetaInstanceId)
                 VALUES (@LeaderboardId, @InstanceId, @MetaLeaderboardId, @MetaInstanceId)";
 
@@ -297,7 +303,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 new { LeaderboardId = leaderboardId, InstanceId = instanceId }).ToList();
         }
 
-        public void SetRewards(List<DBRewardEntry> dbRewards)
+        public void InsertRewards(List<DBRewardEntry> dbRewards)
         {
             if (dbRewards.Count == 0) return;
             using var connection = GetConnection();
@@ -319,7 +325,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 new { ParticipantId = (long)participantId }).ToList();
         }
 
-        public void SetRewarded(DBRewardEntry reward)
+        public void UpdateReward(DBRewardEntry reward)
         {
             using SQLiteConnection connection = GetConnection();
             using var transaction = connection.BeginTransaction();

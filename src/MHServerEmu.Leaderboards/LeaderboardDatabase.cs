@@ -12,11 +12,12 @@ using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Leaderboards.Scheduling;
 
 namespace MHServerEmu.Leaderboards
 {   
     /// <summary>
-    /// A singleton that contains leaderboard infomation.
+    /// A singleton that manages runtime leaderboard data.
     /// </summary>
     public class LeaderboardDatabase
     {
@@ -63,7 +64,8 @@ namespace MHServerEmu.Leaderboards
 
             // Add leaderboards from prototypes
             string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
-            if (noTables) GenerateTables(jsonConfigPath);
+            if (noTables)
+                GenerateTables(jsonConfigPath);
 
             // Load and cache player names (remove/disable this if the number of accounts gets out of hand)
             if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames))
@@ -84,6 +86,9 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
+        /// <summary>
+        /// Loads leaderboard schedule from JSON.
+        /// </summary>
         private bool LoadJsonConfig(string jsonConfigPath, List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
         {
             string leaderboardsJson = File.ReadAllText(jsonConfigPath);
@@ -192,11 +197,14 @@ namespace MHServerEmu.Leaderboards
             }
 
             DBManager.UpdateLeaderboards(activeLeaderboards);
-            DBManager.SetInstances(refreshInstances);
+            DBManager.UpdateOrInsertInstances(refreshInstances);
 
             return activeLeaderboards.Count > 0;
         }
 
+        /// <summary>
+        /// Reloads JSON config and updates active leaderboards.
+        /// </summary>
         public void ReloadJsonConfig()
         {
             lock (_leaderboardLock)
@@ -211,21 +219,28 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Initializes <see cref="LeaderboardScheduler"/> and refreshes <see cref="DBLeaderboardInstance">DBLeaderboardInstances</see>
+        /// for the provided list of active <see cref="DBLeaderboard">DBLeaderboards</see>.
+        /// </summary>
         private void ReloadActiveLeaderboards(List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
         {            
-            foreach (var activeLeaderboard in activeLeaderboards)
+            foreach (DBLeaderboard activeLeaderboard in activeLeaderboards)
             {
-                var leaderboard = GetLeaderboard((PrototypeGuid)activeLeaderboard.LeaderboardId);
-                if (leaderboard == null) continue;                
+                Leaderboard leaderboard = GetLeaderboard((PrototypeGuid)activeLeaderboard.LeaderboardId);
+                if (leaderboard == null)
+                    continue;                
 
                 leaderboard.Scheduler.Initialize(activeLeaderboard);
 
-                var leaderboarInstances = refreshInstances.Where(inst => inst.LeaderboardId == activeLeaderboard.LeaderboardId);
-                foreach (var refreshInstance in leaderboarInstances)
+                foreach (DBLeaderboardInstance refreshInstance in refreshInstances.Where(inst => inst.LeaderboardId == activeLeaderboard.LeaderboardId))
                     leaderboard.RefreshInstance(refreshInstance);
             }
         }
 
+        /// <summary>
+        /// Loads <see cref="Leaderboard"/> data from the database.
+        /// </summary>
         private void LoadLeaderboards()
         {
             foreach (var dbLeaderboard in DBManager.GetLeaderboards())
@@ -252,46 +267,54 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Sends the state of all leaderboards to the game instance service.
+        /// </summary>
         private void SendLeaderboardsToGames()
         {
             List<GameServiceProtocol.LeaderboardStateChange> instances = new();
 
             foreach (var leaderboard in _leaderboards.Values)
-                leaderboard.GetInstancesInfo(instances);
+                leaderboard.GetInstanceInfos(instances);
 
             foreach (var leaderboard in _metaLeaderboards.Values)
-                leaderboard.GetInstancesInfo(instances);
+                leaderboard.GetInstanceInfos(instances);
 
             GameServiceProtocol.LeaderboardStateChangeList message = new(instances);
             ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, message);
         }
 
+        /// <summary>
+        /// Initializes database data.
+        /// </summary>
         private void GenerateTables(string jsonConfigPath)
         {
             List<DBLeaderboard> dbLeaderboards = new();
             List<DBLeaderboardInstance> dbInstances = new();
             List<LeaderboardSchedule> jsonLeaderboards = new();
 
-            var currentYear = new DateTime(DateTime.Now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            var startEvent = Clock.DateTimeToTimestamp(currentYear);
-            var endEvent = Clock.DateTimeToTimestamp(currentYear.AddYears(1));
+            DateTime currentYear = new(DateTime.Now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            long startEvent = Clock.DateTimeToTimestamp(currentYear);
+            long endEvent = Clock.DateTimeToTimestamp(currentYear.AddYears(1));
 
-            foreach (var dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+            foreach (PrototypeId dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
-                var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
-                if (proto == null || proto.DesignState != DesignWorkflowState.Live || proto.Public == false) continue;
+                LeaderboardPrototype proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+                if (proto == null || proto.DesignState != DesignWorkflowState.Live || proto.Public == false)
+                    continue;
 
-                var leaderboardId = GameDatabase.GetPrototypeGuid(dataRef);
-                var instanceId = (long)Leaderboard.GenInstanceId(leaderboardId);
+                PrototypeGuid leaderboardId = GameDatabase.GetPrototypeGuid(dataRef);
+                ulong instanceId = Leaderboard.GenerateInitialInstanceId(leaderboardId);
 
                 bool isActive = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset;
-                if (leaderboardId == (PrototypeGuid)16486420054343424221) isActive = false; // Anniversary2016
+                if (leaderboardId == (PrototypeGuid)16486420054343424221)   // Anniversary2016
+                    isActive = false;
 
-                var dbLeaderboard = new DBLeaderboard
+                DBLeaderboard dbLeaderboard = new()
                 {
                     LeaderboardId = (long)leaderboardId,
                     PrototypeName = dataRef.GetNameFormatted(),
-                    ActiveInstanceId = instanceId,
+                    ActiveInstanceId = (long)instanceId,
                     IsActive = isActive,
                     Frequency = (int)LeaderboardResetFrequency.Weekly,
                     Interval = 1,
@@ -299,7 +322,7 @@ namespace MHServerEmu.Leaderboards
                     EndEvent = endEvent
                 };
 
-                var dbSchedule = new LeaderboardSchedule(dbLeaderboard);
+                LeaderboardSchedule dbSchedule = new LeaderboardSchedule(dbLeaderboard);
                 dbSchedule.Scheduler.InitFromProto(proto);
 
                 dbLeaderboards.Add(dbLeaderboard);
@@ -307,7 +330,7 @@ namespace MHServerEmu.Leaderboards
 
                 dbInstances.Add(new DBLeaderboardInstance
                 {
-                    InstanceId = instanceId,
+                    InstanceId = (long)instanceId,
                     LeaderboardId = (long)leaderboardId,
                     State = isActive ? LeaderboardState.eLBS_Created : LeaderboardState.eLBS_Rewarded,
                     ActivationDate = 0,
@@ -317,23 +340,23 @@ namespace MHServerEmu.Leaderboards
                 if (proto.IsMetaLeaderboard)
                 {
                     List<DBMetaInstance> dbMetaInstances = new();
-                    foreach (var meta in proto.MetaLeaderboardEntries)
+                    foreach (MetaLeaderboardEntryPrototype meta in proto.MetaLeaderboardEntries)
                     {
-                        var metaLeaderboardId = GameDatabase.GetPrototypeGuid(meta.Leaderboard);
-                        var metaInstanceId = (long)Leaderboard.GenInstanceId(metaLeaderboardId);
+                        PrototypeGuid metaLeaderboardId = GameDatabase.GetPrototypeGuid(meta.Leaderboard);
+                        ulong metaInstanceId = Leaderboard.GenerateInitialInstanceId(metaLeaderboardId);
                         dbMetaInstances.Add(new DBMetaInstance
                         {
                             LeaderboardId = (long)leaderboardId,
-                            InstanceId = instanceId,
+                            InstanceId = (long)instanceId,
                             MetaLeaderboardId = (long)metaLeaderboardId,
-                            MetaInstanceId = metaInstanceId
+                            MetaInstanceId = (long)metaInstanceId
                         });
                     }
-                    DBManager.SetMetaInstances(dbMetaInstances);
+                    DBManager.InsertMetaInstances(dbMetaInstances);
                 }
             }
 
-            var options = new JsonSerializerOptions 
+            JsonSerializerOptions options = new()
             { 
                 Converters = { new JsonStringEnumConverter() },
                 WriteIndented = true 
@@ -342,10 +365,13 @@ namespace MHServerEmu.Leaderboards
             string json = JsonSerializer.Serialize<IEnumerable<LeaderboardSchedule>>(jsonLeaderboards, options);
             File.WriteAllText(jsonConfigPath, json);
 
-            DBManager.SetLeaderboards(dbLeaderboards);
-            DBManager.SetInstances(dbInstances);
+            DBManager.InsertLeaderboards(dbLeaderboards);
+            DBManager.UpdateOrInsertInstances(dbInstances);
         }
 
+        /// <summary>
+        /// Returns a <see cref="string"/> containing the name of the specified player participant. 
+        /// </summary>
         public string GetPlayerNameById(ulong participantId)
         {
             lock (_leaderboardLock)
@@ -359,12 +385,15 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Builds a <see cref="LeaderboardReport"/> for the provided <see cref="NetMessageLeaderboardRequest"/>.
+        /// </summary>
         public LeaderboardReport GetLeaderboardReport(NetMessageLeaderboardRequest request)
         {
             PrototypeGuid leaderboardId = 0;
             ulong instanceId = 0;
 
-            var report = LeaderboardReport.CreateBuilder()
+            LeaderboardReport.Builder report = LeaderboardReport.CreateBuilder()
                 .SetNextUpdateTimeIntervalMS(UpdateTimeIntervalMS);
 
             lock (_leaderboardLock)
@@ -419,30 +448,42 @@ namespace MHServerEmu.Leaderboards
             return report.Build();
         }
 
+        /// <summary>
+        /// Retrieves the <see cref="LeaderboardTableData"/> for the specified leaderboard instance.
+        /// </summary>
         private bool GetLeaderboardTableData(PrototypeGuid leaderboardId, ulong instanceId, out LeaderboardTableData tableData)
         {
             tableData = null;
-            var leaderboard = GetLeaderboard(leaderboardId);
-            if (leaderboard == null) return false;
+            
+            Leaderboard leaderboard = GetLeaderboard(leaderboardId);
+            if (leaderboard == null)
+                return false;
 
-            var instance = leaderboard.GetInstance(instanceId);
-            if (instance == null) return false;
+            LeaderboardInstance instance = leaderboard.GetInstance(instanceId);
+            if (instance == null)
+                return false;
 
             tableData = instance.GetTableData();
             return true;
         }
 
+        /// <summary>
+        /// Builds <see cref="LeaderboardScoreData"/> for a participant in the specified leaderboard instance.
+        /// </summary>
         private bool GetLeaderboardScoreData(PrototypeGuid leaderboardId, ulong instanceId, ulong participantId, ulong avatarId, 
             out LeaderboardScoreData scoreData)
         {
             scoreData = null;
-            var leaderboard = GetLeaderboard(leaderboardId);
-            if (leaderboard == null) return false;
 
-            var type = leaderboard.Prototype.Type;
+            Leaderboard leaderboard = GetLeaderboard(leaderboardId);
+            if (leaderboard == null)
+                return false;
 
-            var instance = leaderboard.GetInstance(instanceId);
-            if (instance == null) return false;
+            LeaderboardType type = leaderboard.Prototype.Type;
+
+            LeaderboardInstance instance = leaderboard.GetInstance(instanceId);
+            if (instance == null)
+                return false;
 
             LeaderboardEntry entry;
             if (type == LeaderboardType.MetaLeaderboard)
@@ -455,12 +496,14 @@ namespace MHServerEmu.Leaderboards
                 entry = instance.GetEntry(participantId, avatarId);
             }
 
-            if (entry == null) return false;
+            if (entry == null)
+                return false;
 
-            var scoreDataBuilder = LeaderboardScoreData.CreateBuilder()
+            LeaderboardScoreData.Builder scoreDataBuilder = LeaderboardScoreData.CreateBuilder()
                 .SetLeaderboardId((ulong)leaderboardId);
 
-            if (instanceId != 0) scoreDataBuilder.SetInstanceId(instanceId);
+            if (instanceId != 0)
+                scoreDataBuilder.SetInstanceId(instanceId);
 
             if (type == LeaderboardType.Player) 
             {
@@ -479,20 +522,26 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        public Leaderboard GetLeaderboard(PrototypeGuid guid)
+        /// <summary>
+        /// Returns the <see cref="Leaderboard"/> with the specified <see cref="PrototypeGuid"/>.
+        /// </summary>
+        public Leaderboard GetLeaderboard(PrototypeGuid leaderboardId)
         {
             lock (_leaderboardLock)
             {
-                if (_leaderboards.TryGetValue(guid, out var leaderboard))
+                if (_leaderboards.TryGetValue(leaderboardId, out Leaderboard leaderboard))
                     return leaderboard;
 
-                if (_metaLeaderboards.TryGetValue(guid, out var metaLeaderboard))
+                if (_metaLeaderboards.TryGetValue(leaderboardId, out Leaderboard metaLeaderboard))
                     return metaLeaderboard;
 
                 return null;
             }
         }
 
+        /// <summary>
+        /// Enqueues a <see cref="GameServiceProtocol.LeaderboardScoreUpdateBatch"/> to be processed during the next update.
+        /// </summary>
         public void EnqueueLeaderboardScoreUpdate(in GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch)
         {
             // We could probably potentially use a SpinLock here, but I'm not sure if it's worth it
@@ -500,6 +549,9 @@ namespace MHServerEmu.Leaderboards
                 _pendingScoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
         }
 
+        /// <summary>
+        /// Processes queued <see cref="GameServiceProtocol.LeaderboardScoreUpdateBatch"/> instances.
+        /// </summary>
         public void ProcessLeaderboardScoreUpdateQueue()
         {
             lock (_scoreUpdateLock)
@@ -519,6 +571,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Adds all <see cref="Leaderboard">Leaderboards</see> to the provided <see cref="List{T}"/>.
+        /// </summary>
         public void GetLeaderboards(List<Leaderboard> leaderboards)
         {
             lock (_leaderboardLock)
@@ -528,18 +583,24 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Updates the state of all <see cref="Leaderboard">Leaderboards</see>.
+        /// </summary>
         public void UpdateState()
         {
             List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
             GetLeaderboards(leaderboards);
 
-            var updateTime = Clock.UtcNowPrecise;
-            foreach (var leaderboard in leaderboards)
+            DateTime updateTime = Clock.UtcNowPrecise;
+            foreach (Leaderboard leaderboard in leaderboards)
                 leaderboard.UpdateState(updateTime);
 
             ListPool<Leaderboard>.Instance.Return(leaderboards);
         }
 
+        /// <summary>
+        /// Saves all <see cref="LeaderboardEntry"/> instances for all active leaderboards to the database.
+        /// </summary>
         public void Save()
         {
             List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
@@ -551,6 +612,9 @@ namespace MHServerEmu.Leaderboards
             ListPool<Leaderboard>.Instance.Return(leaderboards);
         }
 
+        /// <summary>
+        /// Searches for the <see cref="LeaderboardInstance"/> with the specified instance id.
+        /// </summary>
         public LeaderboardInstance FindInstance(ulong instanceId)
         {
             List<Leaderboard> leaderboards = ListPool<Leaderboard>.Instance.Get();
@@ -558,8 +622,8 @@ namespace MHServerEmu.Leaderboards
 
             try
             {
-                foreach (var leaderboard in leaderboards)
-                    foreach (var instance in leaderboard.Instances)
+                foreach (Leaderboard leaderboard in leaderboards)
+                    foreach (LeaderboardInstance instance in leaderboard.Instances)
                         if (instance.InstanceId == instanceId)
                             return instance;
 

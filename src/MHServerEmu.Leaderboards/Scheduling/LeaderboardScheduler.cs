@@ -1,53 +1,9 @@
-﻿using MHServerEmu.DatabaseAccess.Models.Leaderboards;
+﻿using System.Text;
+using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData.Prototypes;
-using System.Text;
 
-namespace MHServerEmu.Leaderboards
+namespace MHServerEmu.Leaderboards.Scheduling
 {
-    public class LeaderboardSchedule
-    {
-        public long LeaderboardId { get; set; }
-        public string PrototypeName { get; set; }
-        public LeaderboardScheduler Scheduler { get; set; }
-
-        public LeaderboardSchedule() { }
-
-        public DBLeaderboard ToDBLeaderboard()
-        {
-            var dbleaderboard = new DBLeaderboard
-            {
-                LeaderboardId = LeaderboardId,
-                PrototypeName = PrototypeName,
-                IsActive = Scheduler.IsActive,
-                Frequency = (int)Scheduler.Frequency,
-                Interval = Scheduler.Interval
-
-            };
-
-            dbleaderboard.SetStartDateTime(Scheduler.StartEvent);
-            dbleaderboard.SetEndDateTime(Scheduler.EndEvent);
-
-            return dbleaderboard;
-        }
-
-        public bool Compare(DBLeaderboard dbLeaderboard)
-        {
-            return Scheduler.IsActive == dbLeaderboard.IsActive 
-                && Scheduler.Frequency == (LeaderboardResetFrequency)dbLeaderboard.Frequency 
-                && Scheduler.Interval == dbLeaderboard.Interval 
-                && Scheduler.StartEvent == dbLeaderboard.GetStartDateTime() 
-                && Scheduler.EndEvent == dbLeaderboard.GetEndDateTime();
-        }
-
-        public LeaderboardSchedule(DBLeaderboard dbLeaderboard)
-        {
-            LeaderboardId = dbLeaderboard.LeaderboardId;
-            PrototypeName = dbLeaderboard.PrototypeName;
-            Scheduler = new LeaderboardScheduler();
-            Scheduler.Initialize(dbLeaderboard);
-        }
-    }
-
     public class LeaderboardScheduler
     {
         public bool IsActive { get; set; }
@@ -59,6 +15,19 @@ namespace MHServerEmu.Leaderboards
         public DateTime EndEvent { get; set; }
 
         public LeaderboardScheduler() { }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"IsActive: {IsActive}");
+            sb.AppendLine($"Reset Frequency: {ResetFrequency}");
+            sb.AppendLine($"Duration: {Duration}");
+            sb.AppendLine($"Frequency: {Frequency}");
+            sb.AppendLine($"Interval: {Interval}");
+            sb.AppendLine($"Start Event: {StartEvent}");
+            sb.AppendLine($"End Event: {EndEvent}");
+            return sb.ToString();
+        }
 
         public void Initialize(DBLeaderboard dbLeaderboard)
         {
@@ -146,7 +115,7 @@ namespace MHServerEmu.Leaderboards
             var nextResetDay = new DateTime(nextReset.Year, nextReset.Month, nextReset.Day, 0, 0, 0, DateTimeKind.Utc);
 
             // Get first day for new event
-            if (activationTime == null && nextActivationDay.Value < nextResetDay) 
+            if (activationTime == null && nextActivationDay.Value < nextResetDay)
                 return nextActivationDay.Value;
 
             // Compare reset and activation days
@@ -196,19 +165,6 @@ namespace MHServerEmu.Leaderboards
             }
 
             return resetTime;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"IsActive: {IsActive}");
-            sb.AppendLine($"Reset Frequency: {ResetFrequency}");
-            sb.AppendLine($"Duration: {Duration}");
-            sb.AppendLine($"Frequency: {Frequency}");
-            sb.AppendLine($"Interval: {Interval}");
-            sb.AppendLine($"Start Event: {StartEvent}");
-            sb.AppendLine($"End Event: {EndEvent}");
-            return sb.ToString();
         }
     }
 }

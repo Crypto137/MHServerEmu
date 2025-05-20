@@ -111,9 +111,6 @@ namespace MHServerEmu.Leaderboards
             var request = message.As<NetMessageLeaderboardRequest>();
             if (request == null) return Logger.WarnReturn(false, $"OnLeaderboardRequest(): Failed to retrieve message");
 
-            if (request.HasDataQuery == false)
-                return Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
-
             //Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
 
             // NOTE: If we ever end up separating LeaderboardService from GIS, we need to change this to a response service message to GIS.

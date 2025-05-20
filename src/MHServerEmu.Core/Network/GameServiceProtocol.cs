@@ -61,6 +61,9 @@ namespace MHServerEmu.Core.Network
 
         #region Leaderboards
 
+        /// <summary>
+        /// [Game -> LeaderboardService] Communicates a change of state of a specific leaderboard rule.
+        /// </summary>
         public readonly struct LeaderboardScoreUpdate(ulong leaderboardId, ulong participantId, ulong avatarId, ulong ruleId, ulong count) : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
@@ -70,6 +73,9 @@ namespace MHServerEmu.Core.Network
             public readonly ulong Count = count;
         }
 
+        /// <summary>
+        /// [Game -> LeaderboardService] Container for a batch of <see cref="LeaderboardScoreUpdate"/> instances.
+        /// </summary>
         public readonly struct LeaderboardScoreUpdateBatch(int count) : IGameServiceMessage
         {
             private static readonly ArrayPool<LeaderboardScoreUpdate> Pool = ArrayPool<LeaderboardScoreUpdate>.Create();
@@ -82,12 +88,18 @@ namespace MHServerEmu.Core.Network
 
             public ref LeaderboardScoreUpdate this[int i] { get => ref _updates[i]; }
 
+            /// <summary>
+            /// Releases resources used by this <see cref="LeaderboardScoreUpdateBatch"/>. Call this when this instance is no longer needed.
+            /// </summary>
             public void Destroy()
             {
                 Pool.Return(_updates);
             }
         }
 
+        /// <summary>
+        /// [LeaderboardService -> Game] Communicates a change of state of a specific leaderboard.
+        /// </summary>
         public readonly struct LeaderboardStateChange(ulong leaderboardId, ulong instanceId, LeaderboardState state, 
             DateTime activationTime, DateTime expirationTime, bool visible) : IGameServiceMessage
         {
@@ -111,6 +123,9 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+        /// <summary>
+        /// [LeaderboardService -> Game] Container for a batch of <see cref="LeaderboardStateChange"/> instances.
+        /// </summary>
         public readonly struct LeaderboardStateChangeList(List<LeaderboardStateChange> list) : IGameServiceMessage
         {
             // This is currently used only during server initialization, so it's okay not to pool this.
@@ -122,11 +137,17 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+        /// <summary>
+        /// [Game -> LeaderboardService] Requests for a list of <see cref="LeaderboardRewardEntry"/> instances for the specified participant.
+        /// </summary>
         public readonly struct LeaderboardRewardRequest(ulong participantId) : IGameServiceMessage
         {
             public readonly ulong ParticipantId = participantId;
         }
 
+        /// <summary>
+        /// [LeaderboardService -> Game] Communicates a reward for the specified participant.
+        /// </summary>
         public readonly struct LeaderboardRewardEntry(ulong leaderboardId, ulong instanceId, ulong participantId, ulong rewardId, int rank) : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
@@ -136,6 +157,9 @@ namespace MHServerEmu.Core.Network
             public readonly int Rank = rank;
         }
 
+        /// <summary>
+        /// [LeaderboardService -> Game] Container for a batch of <see cref="LeaderboardRewardEntry"/> instances.
+        /// </summary>
         public readonly struct LeaderboardRewardRequestResponse(ulong participantId, LeaderboardRewardEntry[] entries) : IGameServiceMessage
         {
             // This probably doesn't happen frequently enough to pool
@@ -143,6 +167,9 @@ namespace MHServerEmu.Core.Network
             public readonly LeaderboardRewardEntry[] Entries = entries;
         }
 
+        /// <summary>
+        /// [Game -> LeaderboardService] Communicates that a reward has been distributed to the specified participant.
+        /// </summary>
         public readonly struct LeaderboardRewardConfirmation(ulong leaderboardId, ulong instanceId, ulong participantId) : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;

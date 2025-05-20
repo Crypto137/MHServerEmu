@@ -26,7 +26,7 @@ namespace MHServerEmu.DatabaseAccess.Models.Leaderboards
             RewardedDate = 0;
         }
 
-        public void Rewarded()
+        public void UpdateRewardedDate()
         {
             RewardedDate = Clock.UtcNowTimestamp;
         }
