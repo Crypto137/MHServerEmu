@@ -61,10 +61,10 @@ namespace MHServerEmu.Core.Network
 
         #region Leaderboards
 
-        public readonly struct LeaderboardScoreUpdate(ulong leaderboardId, ulong gameId, ulong avatarId, ulong ruleId, ulong count) : IGameServiceMessage
+        public readonly struct LeaderboardScoreUpdate(ulong leaderboardId, ulong participantId, ulong avatarId, ulong ruleId, ulong count) : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
-            public readonly ulong GameId = gameId;
+            public readonly ulong ParticipantId = participantId;
             public readonly ulong AvatarId = avatarId;
             public readonly ulong RuleId = ruleId;
             public readonly ulong Count = count;
@@ -122,32 +122,32 @@ namespace MHServerEmu.Core.Network
             }
         }
 
-        public readonly struct LeaderboardRewardRequest(ulong gameId) : IGameServiceMessage
+        public readonly struct LeaderboardRewardRequest(ulong participantId) : IGameServiceMessage
         {
-            public readonly ulong GameId = gameId;
+            public readonly ulong ParticipantId = participantId;
         }
 
-        public readonly struct LeaderboardRewardEntry(ulong leaderboardId, ulong instanceId, ulong gameId, ulong rewardId, int rank) : IGameServiceMessage
+        public readonly struct LeaderboardRewardEntry(ulong leaderboardId, ulong instanceId, ulong participantId, ulong rewardId, int rank) : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong InstanceId = instanceId;
-            public readonly ulong GameId = gameId;
+            public readonly ulong ParticipantId = participantId;
             public readonly ulong RewardId = rewardId;
             public readonly int Rank = rank;
         }
 
-        public readonly struct LeaderboardRewardRequestResponse(ulong gameId, LeaderboardRewardEntry[] entries) : IGameServiceMessage
+        public readonly struct LeaderboardRewardRequestResponse(ulong participantId, LeaderboardRewardEntry[] entries) : IGameServiceMessage
         {
             // This probably doesn't happen frequently enough to pool
-            public readonly ulong GameId = gameId;
+            public readonly ulong ParticipantId = participantId;
             public readonly LeaderboardRewardEntry[] Entries = entries;
         }
 
-        public readonly struct LeaderboardRewardConfirmation(ulong leaderboardId, ulong instanceId, ulong gameId) : IGameServiceMessage
+        public readonly struct LeaderboardRewardConfirmation(ulong leaderboardId, ulong instanceId, ulong participantId) : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong InstanceId = instanceId;
-            public readonly ulong GameId = gameId;
+            public readonly ulong ParticipantId = participantId;
         }
 
         #endregion

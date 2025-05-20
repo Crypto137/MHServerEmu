@@ -3,7 +3,7 @@
     public class DBLeaderboardEntry
     {
         public long InstanceId { get; set; }
-        public long GameId { get; set; }
+        public long ParticipantId { get; set; }
         public long Score { get; set; }
         public long HighScore { get; set; }
         public byte[] RuleStates { get; set; }

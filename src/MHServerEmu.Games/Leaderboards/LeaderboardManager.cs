@@ -256,11 +256,11 @@ namespace MHServerEmu.Games.Leaderboards
                 {
                     ref GameServiceProtocol.LeaderboardRewardEntry entry = ref rewardEntries[i];
 
-                    var rewardGuid = (PrototypeGuid)entry.RewardId;
+                    PrototypeGuid rewardGuid = (PrototypeGuid)entry.RewardId;
                     PrototypeId rewardDataRef = GameDatabase.GetDataRefByPrototypeGuid(rewardGuid);
 
-                    var leaderboardGuid = (PrototypeGuid)entry.LeaderboardId;
-                    var leaderboardDataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardGuid);
+                    PrototypeGuid leaderboardGuid = (PrototypeGuid)entry.LeaderboardId;
+                    PrototypeId leaderboardDataRef = GameDatabase.GetDataRefByPrototypeGuid(leaderboardGuid);
                     LeaderboardPrototype leaderboardProto = GameDatabase.GetPrototype<LeaderboardPrototype>(leaderboardDataRef);
                     if (leaderboardProto == null) continue;
 
@@ -279,7 +279,7 @@ namespace MHServerEmu.Games.Leaderboards
                         }
 
                         // Send reward confirmation to the leaderboard service
-                        GameServiceProtocol.LeaderboardRewardConfirmation confirmation = new(entry.LeaderboardId, entry.InstanceId, entry.GameId);
+                        GameServiceProtocol.LeaderboardRewardConfirmation confirmation = new(entry.LeaderboardId, entry.InstanceId, entry.ParticipantId);
                         ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, confirmation);
                     }
                 }

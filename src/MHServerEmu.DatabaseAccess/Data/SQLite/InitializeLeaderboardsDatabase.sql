@@ -24,11 +24,11 @@ CREATE TABLE "Instances" (
 
 CREATE TABLE "Entries" (
 	"InstanceId"	INTEGER NOT NULL,
-	"GameId"	INTEGER NOT NULL,
+	"ParticipantId"	INTEGER NOT NULL,
 	"Score"	INTEGER,
 	"HighScore"	INTEGER,
 	"RuleStates"	BLOB,
-	PRIMARY KEY ("InstanceId", "GameId"),
+	PRIMARY KEY ("InstanceId", "ParticipantId"),
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
 );
 
@@ -44,15 +44,15 @@ CREATE TABLE "MetaInstances" (
 CREATE TABLE "Rewards" (
 	"LeaderboardId"	INTEGER NOT NULL,
 	"InstanceId"	INTEGER NOT NULL,
-	"GameId"	INTEGER NOT NULL,
+	"ParticipantId"	INTEGER NOT NULL,
 	"Rank"	INTEGER NOT NULL,
 	"RewardId"	INTEGER NOT NULL,
 	"CreationDate"	INTEGER,
 	"RewardedDate"	INTEGER,
-	PRIMARY KEY ("LeaderboardId", "InstanceId", "GameId"),
+	PRIMARY KEY ("LeaderboardId", "InstanceId", "ParticipantId"),
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
 );
 
 CREATE INDEX idx_instances_leaderboardid ON Instances (LeaderboardId);
 CREATE INDEX idx_entries_instanceid ON Entries (InstanceId);
-CREATE INDEX idx_rewards_gameid ON Rewards (GameId);
+CREATE INDEX idx_rewards_participantid ON Rewards (ParticipantId);

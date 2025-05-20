@@ -346,12 +346,16 @@ namespace MHServerEmu.Leaderboards
             DBManager.SetInstances(dbInstances);
         }
 
-        public string GetPlayerNameById(PrototypeGuid id)
+        public string GetPlayerNameById(ulong participantId)
         {
             lock (_leaderboardLock)
             {
-                if (_playerNames.TryGetValue((ulong)id, out var playerName)) return playerName;
-                return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, (ulong)id);
+                // Check name cache
+                if (_playerNames.TryGetValue(participantId, out string playerName))
+                    return playerName;
+
+                // Query the database if not cached
+                return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, participantId);
             }
         }
 
@@ -367,10 +371,10 @@ namespace MHServerEmu.Leaderboards
             {
                 if (request.HasPlayerScoreQuery)
                 {
-                    var query = request.PlayerScoreQuery;
+                    LeaderboardPlayerScoreQuery query = request.PlayerScoreQuery;
                     leaderboardId = (PrototypeGuid)query.LeaderboardId;
                     instanceId = query.InstanceId;
-                    var playerId = (PrototypeGuid)query.PlayerId;
+                    ulong playerId = query.PlayerId;
                     ulong avatarId = query.HasAvatarId ? query.AvatarId : 0;
 
                     if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, avatarId, out LeaderboardScoreData scoreData))
@@ -379,21 +383,21 @@ namespace MHServerEmu.Leaderboards
 
                 if (request.HasGuildScoreQuery) // Not used
                 {
-                    var query = request.GuildScoreQuery;
+                    LeaderboardGuildScoreQuery query = request.GuildScoreQuery;
                     leaderboardId = (PrototypeGuid)query.LeaderboardId;
                     instanceId = query.InstanceId;
-                    var guid = (PrototypeGuid)query.GuildId;
+                    ulong guildId = query.GuildId;
 
-                    if (GetLeaderboardScoreData(leaderboardId, instanceId, guid, 0, out LeaderboardScoreData scoreData))
+                    if (GetLeaderboardScoreData(leaderboardId, instanceId, guildId, 0, out LeaderboardScoreData scoreData))
                         report.SetScoreData(scoreData);
                 }
 
                 if (request.HasMetaScoreQuery) // Tournament: Civil War
                 {
-                    var query = request.MetaScoreQuery;
+                    LeaderboardMetaScoreQuery query = request.MetaScoreQuery;
                     leaderboardId = (PrototypeGuid)query.LeaderboardId;
                     instanceId = query.InstanceId;
-                    var playerId = (PrototypeGuid)query.PlayerId;
+                    ulong playerId = query.PlayerId;
 
                     if (GetLeaderboardScoreData(leaderboardId, instanceId, playerId, 0, out LeaderboardScoreData scoreData))
                         report.SetScoreData(scoreData);
@@ -401,7 +405,7 @@ namespace MHServerEmu.Leaderboards
 
                 if (request.HasDataQuery)
                 {
-                    var query = request.DataQuery;
+                    LeaderboardDataQuery query = request.DataQuery;
                     leaderboardId = (PrototypeGuid)query.LeaderboardId;
                     instanceId = query.InstanceId;
 
@@ -428,7 +432,7 @@ namespace MHServerEmu.Leaderboards
             return true;
         }
 
-        private bool GetLeaderboardScoreData(PrototypeGuid leaderboardId, ulong instanceId, PrototypeGuid guid, ulong avatarId, 
+        private bool GetLeaderboardScoreData(PrototypeGuid leaderboardId, ulong instanceId, ulong participantId, ulong avatarId, 
             out LeaderboardScoreData scoreData)
         {
             scoreData = null;
@@ -443,12 +447,12 @@ namespace MHServerEmu.Leaderboards
             LeaderboardEntry entry;
             if (type == LeaderboardType.MetaLeaderboard)
             {
-                var metaLeaderboardId = instance.GetMetaLeaderboardId(guid);
-                entry = instance.GetEntry(metaLeaderboardId, avatarId);
+                PrototypeGuid metaLeaderboardId = instance.GetMetaLeaderboardId(participantId);
+                entry = instance.GetEntry((ulong)metaLeaderboardId, avatarId);
             }
             else
             {
-                entry = instance.GetEntry(guid, avatarId);
+                entry = instance.GetEntry(participantId, avatarId);
             }
 
             if (entry == null) return false;
@@ -461,11 +465,11 @@ namespace MHServerEmu.Leaderboards
             if (type == LeaderboardType.Player) 
             {
                 scoreDataBuilder.SetAvatarId(avatarId);
-                scoreDataBuilder.SetPlayerId((ulong)guid);
+                scoreDataBuilder.SetPlayerId(participantId);
             }
 
             if (type == LeaderboardType.Guild)
-                scoreDataBuilder.SetGuildId((ulong)guid);
+                scoreDataBuilder.SetGuildId(participantId);
 
             scoreDataBuilder.SetScore(entry.Score);
             scoreDataBuilder.SetPercentileBucket((uint)instance.GetPercentileBucket(entry));

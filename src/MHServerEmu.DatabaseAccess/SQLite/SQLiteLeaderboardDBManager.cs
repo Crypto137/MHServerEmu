@@ -183,12 +183,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
-            var updateCommand = @"
+            const string updateCommand = @"
                 UPDATE Instances
                 SET State = @State, ActivationDate = @ActivationDate, Visible = @Visible
                 WHERE InstanceId = @InstanceId";
 
-            var insertCommand = @"
+            const string insertCommand = @"
                 INSERT INTO Instances (InstanceId, LeaderboardId, State, ActivationDate, Visible) 
                 VALUES (@InstanceId, @LeaderboardId, @State, @ActivationDate, @Visible)";
 
@@ -248,14 +248,14 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var connection = GetConnection();
             using var transaction = connection.BeginTransaction();
 
-            var updateCommand = @"
+            const string updateCommand = @"
                 UPDATE Entries
                 SET Score = @Score, HighScore = @HighScore, RuleStates = @RuleStates
-                WHERE InstanceId = @InstanceId AND GameId = @GameId";
+                WHERE InstanceId = @InstanceId AND ParticipantId = @ParticipantId";
 
-            var insertCommand = @"
-                INSERT INTO Entries (InstanceId, GameId, Score, HighScore, RuleStates)
-                VALUES (@InstanceId, @GameId, @Score, @HighScore, @RuleStates)";
+            const string insertCommand = @"
+                INSERT INTO Entries (InstanceId, ParticipantId, Score, HighScore, RuleStates)
+                VALUES (@InstanceId, @ParticipantId, @Score, @HighScore, @RuleStates)";
 
             foreach (var entry in dbEntries)
                 if (connection.Execute(updateCommand, entry, transaction) == 0)
@@ -304,19 +304,19 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var transaction = connection.BeginTransaction();
 
             connection.Execute(@"
-                INSERT INTO Rewards (LeaderboardId, InstanceId, GameId, RewardId, Rank, CreationDate)
-                VALUES (@LeaderboardId, @InstanceId, @GameId, @RewardId, @Rank, @CreationDate)", dbRewards, transaction);
+                INSERT INTO Rewards (LeaderboardId, InstanceId, ParticipantId, RewardId, Rank, CreationDate)
+                VALUES (@LeaderboardId, @InstanceId, @ParticipantId, @RewardId, @Rank, @CreationDate)", dbRewards, transaction);
 
             transaction.Commit();
         }
 
-        public List<DBRewardEntry> GetRewards(ulong gameId)
+        public List<DBRewardEntry> GetRewards(ulong participantId)
         {
             using SQLiteConnection connection = GetConnection();
 
             return connection.Query<DBRewardEntry>(@"
-                SELECT * FROM Rewards WHERE GameId = @GameId AND RewardedDate IS NULL",
-                new { GameId = (long)gameId }).ToList();
+                SELECT * FROM Rewards WHERE ParticipantId = @ParticipantId AND RewardedDate IS NULL",
+                new { ParticipantId = (long)participantId }).ToList();
         }
 
         public void SetRewarded(DBRewardEntry reward)
@@ -326,7 +326,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             connection.Execute(@"
                 UPDATE Rewards SET RewardedDate = @RewardedDate 
-                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId AND GameId = @GameId", reward, transaction);
+                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId AND ParticipantId = @ParticipantId", reward, transaction);
 
             transaction.Commit();
         }

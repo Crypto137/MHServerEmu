@@ -9,7 +9,7 @@ namespace MHServerEmu.Leaderboards
 {
     public class LeaderboardEntry
     {
-        public PrototypeGuid GameId { get; set; }
+        public ulong ParticipantId { get; set; }
         public string Name { get; set; }
         public LocaleStringId NameId { get; set; }
         public ulong Score { get; set; }
@@ -19,7 +19,7 @@ namespace MHServerEmu.Leaderboards
 
         public LeaderboardEntry(DBLeaderboardEntry dbEntry)
         {
-            GameId = (PrototypeGuid)dbEntry.GameId;
+            ParticipantId = (ulong)dbEntry.ParticipantId;
             Score = (ulong)dbEntry.Score;
             HighScore = (ulong)dbEntry.HighScore;
             RuleStates = dbEntry.GetRuleStates();
@@ -27,21 +27,21 @@ namespace MHServerEmu.Leaderboards
 
         public LeaderboardEntry(ref GameServiceProtocol.LeaderboardScoreUpdate update)
         {
-            GameId = (PrototypeGuid)update.GameId;
-            Name = LeaderboardDatabase.Instance.GetPlayerNameById(GameId);
+            ParticipantId = update.ParticipantId;
+            Name = LeaderboardDatabase.Instance.GetPlayerNameById(ParticipantId);
             RuleStates = new();
         }
 
         public LeaderboardEntry(PrototypeGuid metaLeaderboardId)
         {
-            GameId = metaLeaderboardId;
+            ParticipantId = (ulong)metaLeaderboardId;
             SetNameFromLeaderboardGuid(metaLeaderboardId);
         }
 
         public void SetNameFromLeaderboardGuid(PrototypeGuid guid)
         {
-            var dataRef = GameDatabase.GetDataRefByPrototypeGuid(guid);
-            var proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
+            PrototypeId dataRef = GameDatabase.GetDataRefByPrototypeGuid(guid);
+            LeaderboardPrototype proto = GameDatabase.GetPrototype<LeaderboardPrototype>(dataRef);
             Name = string.Empty;
             NameId = proto != null ? proto.Name : LocaleStringId.Blank;
         }
@@ -51,7 +51,7 @@ namespace MHServerEmu.Leaderboards
             DBLeaderboardEntry entry = new()
             {
                 InstanceId = (long)instanceId,
-                GameId = (long)GameId,
+                ParticipantId = (long)ParticipantId,
                 Score = (long)Score,
                 HighScore = (long)HighScore
             };
@@ -62,7 +62,7 @@ namespace MHServerEmu.Leaderboards
         public Gazillion.LeaderboardEntry ToProtobuf()
         {
             var entryBuilder = Gazillion.LeaderboardEntry.CreateBuilder()
-                .SetGameId((ulong)GameId)
+                .SetGameId(ParticipantId)
                 .SetName(Name)
                 .SetScore(Score);
 

@@ -114,8 +114,8 @@ namespace MHServerEmu.Games.Network
 
         private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
         {
-            ulong playerId = leaderboardRewardRequestResponse.GameId;
-            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(leaderboardRewardRequestResponse.GameId);
+            ulong playerId = leaderboardRewardRequestResponse.ParticipantId;
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(leaderboardRewardRequestResponse.ParticipantId);
             if (player == null)
                 return Logger.WarnReturn(false, $"OnLeaderboardRewardRequestResponse(): Player 0x{playerId:X} not found in game [{Game}]");
 

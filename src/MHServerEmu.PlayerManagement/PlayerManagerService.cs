@@ -172,7 +172,7 @@ namespace MHServerEmu.PlayerManagement
             ulong gameId = 0;
             lock (_playerDict)
             {
-                if (_playerDict.TryGetValue(leaderboardRewardRequestResponse.GameId, out FrontendClient client))
+                if (_playerDict.TryGetValue(leaderboardRewardRequestResponse.ParticipantId, out FrontendClient client))
                     gameId = client.GameId;
             }
 

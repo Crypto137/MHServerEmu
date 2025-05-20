@@ -28,8 +28,8 @@ namespace MHServerEmu.Leaderboards
         public bool Visible { get; set; }
         public List<LeaderboardEntry> Entries { get; }
 
-        private Dictionary<PrototypeGuid, LeaderboardEntry> _entryMap = new();
-        private Dictionary<PrototypeGuid, PrototypeGuid> _entryGuidMap;
+        private Dictionary<ulong, LeaderboardEntry> _entryMap = new();
+        private Dictionary<ulong, PrototypeGuid> _entryGuidMap;
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
         private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
         private bool _sorted;
@@ -85,30 +85,32 @@ namespace MHServerEmu.Leaderboards
                 Visible);
         }
 
-        public LeaderboardEntry GetEntry(PrototypeGuid guid, ulong avatarId)
+        public LeaderboardEntry GetEntry(ulong participantId, ulong avatarId)
         {
-            // avatarId don't used in active Leaderboards
-            if (_entryMap.TryGetValue(guid, out var entry) == false) return null;
+            // avatarId isn't used in active Leaderboards
+            if (_entryMap.TryGetValue(participantId, out LeaderboardEntry entry) == false)
+                return null;
+
             return entry;
         }
 
-        public PrototypeGuid GetMetaLeaderboardId(PrototypeGuid guid)
+        public PrototypeGuid GetMetaLeaderboardId(ulong participantId)
         {
-            if (_entryGuidMap.TryGetValue(guid, out var metaLeaderboardId) == false)
+            if (_entryGuidMap.TryGetValue(participantId, out PrototypeGuid metaLeaderboardId) == false)
                 foreach (var entry in _metaLeaderboardEntries)
-                    if (entry.MetaInstance != null && entry.MetaInstance.HasEntryGuid(guid))
+                    if (entry.MetaInstance != null && entry.MetaInstance.HasEntryGuid(participantId))
                     {
                         metaLeaderboardId = entry.MetaLeaderboardId;
-                        _entryGuidMap[guid] = metaLeaderboardId;
+                        _entryGuidMap[participantId] = metaLeaderboardId;
                         break;
                     }
 
             return metaLeaderboardId;
         }
 
-        private bool HasEntryGuid(PrototypeGuid guid)
+        private bool HasEntryGuid(ulong participantId)
         {
-            return _entryGuidMap.ContainsKey(guid);
+            return _entryGuidMap.ContainsKey(participantId);
         }
 
         private void InitPercentileBuckets()
@@ -190,10 +192,10 @@ namespace MHServerEmu.Leaderboards
                 foreach (var entry in Entries)
                     score += entry.Score;
 
-                if (_entryMap.TryGetValue(metaLeaderboardId, out var updateEntry) == false)
+                if (_entryMap.TryGetValue((ulong)metaLeaderboardId, out LeaderboardEntry updateEntry) == false)
                 {
                     updateEntry = new(metaLeaderboardId);
-                    _entryMap[metaLeaderboardId] = updateEntry;
+                    _entryMap[(ulong)metaLeaderboardId] = updateEntry;
                 }
 
                 updateEntry.Score = score;
@@ -255,12 +257,12 @@ namespace MHServerEmu.Leaderboards
                 {
                     LeaderboardEntry entry = new(dbEntry);
                     if (leaderboardProto.IsMetaLeaderboard)
-                        entry.SetNameFromLeaderboardGuid(entry.GameId);
+                        entry.SetNameFromLeaderboardGuid((PrototypeGuid)entry.ParticipantId);
                     else
-                        entry.Name = LeaderboardDatabase.Instance.GetPlayerNameById(entry.GameId);
+                        entry.Name = LeaderboardDatabase.Instance.GetPlayerNameById(entry.ParticipantId);
 
                     Entries.Add(entry);
-                    _entryMap[entry.GameId] = entry;
+                    _entryMap[entry.ParticipantId] = entry;
                 }
 
                 _sorted = true;
@@ -332,12 +334,12 @@ namespace MHServerEmu.Leaderboards
         {
             lock (_lock)
             {
-                PrototypeGuid gameId = (PrototypeGuid)update.GameId;    // FIXME: This is a DbGuid (player/guild), not DataGuid, this should probably be a ulong
-                if (_entryMap.TryGetValue(gameId, out var entry) == false)   
+                ulong participantId = update.ParticipantId;
+                if (_entryMap.TryGetValue(participantId, out LeaderboardEntry entry) == false)   
                 {
                     entry = new(ref update);
                     Entries.Add(entry);
-                    _entryMap.Add(gameId, entry);
+                    _entryMap.Add(participantId, entry);
                 }
 
                 entry.UpdateScore(ref update, LeaderboardPrototype);
@@ -387,18 +389,18 @@ namespace MHServerEmu.Leaderboards
             int prevRank = 0;
             int entryIndex = 0;
 
-            foreach (var entry in Entries)
+            foreach (LeaderboardEntry entry in Entries)
             {
                 int rank = entryIndex + 1;
 
                 if (entry.Score == prevScore)
                     rank = prevRank;
 
-                var metaEntry = _metaLeaderboardEntries.Find(meta => meta.MetaLeaderboardId == entry.GameId);
+                MetaLeaderboardEntry metaEntry = _metaLeaderboardEntries.Find(meta => (ulong)meta.MetaLeaderboardId == entry.ParticipantId);
                 if (metaEntry == null || metaEntry.MetaInstance == null || metaEntry.Rewards.IsNullOrEmpty()) 
                     continue;
 
-                foreach (var rewardProto in metaEntry.Rewards)
+                foreach (LeaderboardRewardEntryPrototype rewardProto in metaEntry.Rewards)
                     if (EvaluateReward(rewardProto, entry, rank))
                     {
                         var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
@@ -406,7 +408,7 @@ namespace MHServerEmu.Leaderboards
                         foreach (var entryInst in metaEntry.MetaInstance.Entries)
                             rewardsList.Add(new DBRewardEntry(
                                 (long)LeaderboardId, (long)InstanceId, 
-                                (long)rewardId, (long)entryInst.GameId, rank));
+                                (long)rewardId, (long)entryInst.ParticipantId, rank));
 
                         prevScore = entry.Score;
                         prevRank = rank;
@@ -426,11 +428,11 @@ namespace MHServerEmu.Leaderboards
             int prevRank = 0;
             int entryIndex = 0;
 
-            foreach (var rewardProto in rewards)
+            foreach (LeaderboardRewardEntryPrototype rewardProto in rewards)
             {
                 while (entryIndex < count)
                 {
-                    var entry = Entries[entryIndex];
+                    LeaderboardEntry entry = Entries[entryIndex];
                     int rank = entryIndex + 1;
 
                     if (entry.Score == prevScore)
@@ -438,10 +440,10 @@ namespace MHServerEmu.Leaderboards
 
                     if (EvaluateReward(rewardProto, entry, rank) == false) break;
 
-                    var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
+                    PrototypeGuid rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
                     rewardsList.Add(new DBRewardEntry(
                         (long)LeaderboardId, (long)InstanceId, 
-                        (long)rewardId, (long)entry.GameId, rank));
+                        (long)rewardId, (long)entry.ParticipantId, rank));
 
                     prevScore = entry.Score;
                     prevRank = rank;
@@ -563,20 +565,6 @@ namespace MHServerEmu.Leaderboards
             sb.AppendLine($"Expiration Time: {ExpirationTime}");
             sb.AppendLine($"Visible: {Visible}");
             return sb.ToString();
-        }
-    }
-
-    public class MetaLeaderboardEntry
-    {
-        public PrototypeGuid MetaLeaderboardId { get; }
-        public ulong MetaInstanceId { get; set; }
-        public LeaderboardInstance MetaInstance { get; set; }
-        public LeaderboardRewardEntryPrototype[] Rewards { get; }
-
-        public MetaLeaderboardEntry(PrototypeGuid metaLeaderboardId, LeaderboardRewardEntryPrototype[] rewards)
-        {
-            MetaLeaderboardId = metaLeaderboardId;
-            Rewards = rewards;
         }
     }
 }
