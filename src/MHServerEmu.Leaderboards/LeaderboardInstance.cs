@@ -204,16 +204,37 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Updates the score of all subleaderboard instances.
         /// </summary>
-        private void UpdateMetaEntries()
+        private void UpdateMetaScore()
         {
             lock (_lock)
             { 
                 foreach (MetaLeaderboardEntry metaEntry in _metaLeaderboardEntries)
                 {
                     RestoreSubInstanceReference(metaEntry);
+
+                    PrototypeGuid subLeaderboardId = metaEntry.SubLeaderboardId;
+                    LeaderboardInstance subInstance = metaEntry.SubInstance;
                     
-                    // FIXME: this should update the score of this leaderboard using the sum of scores from subleaderboards
-                    metaEntry.SubInstance?.UpdateMetaScore(metaEntry.SubLeaderboardId);
+                    // We need a subinstance here
+                    if (subInstance == null)
+                    {
+                        Logger.Warn("UpdateMetaScore(): subInstance == null");
+                        continue;
+                    }
+
+                    ulong score = 0;
+                    foreach (LeaderboardEntry subEntry in subInstance.Entries)
+                        score += subEntry.Score;
+
+                    if (_entryMap.TryGetValue((ulong)subLeaderboardId, out LeaderboardEntry updateEntry) == false)
+                    {
+                        updateEntry = new(subLeaderboardId);
+                        Entries.Add(updateEntry);
+                        _entryMap[(ulong)subLeaderboardId] = updateEntry;
+                    }
+
+                    updateEntry.Score = score;
+                    updateEntry.HighScore = score;
                 }
 
                 _sorted = false;
@@ -241,25 +262,6 @@ namespace MHServerEmu.Leaderboards
 
             SetSubInstance(metaEntry.SubLeaderboardId, metaEntry.SubInstanceId);
             return true;
-        }
-
-        private void UpdateMetaScore(PrototypeGuid subLeaderboardId)
-        {
-            lock (_lock)
-            {
-                ulong score = 0;
-                foreach (LeaderboardEntry entry in Entries)
-                    score += entry.Score;
-
-                if (_entryMap.TryGetValue((ulong)subLeaderboardId, out LeaderboardEntry updateEntry) == false)
-                {
-                    updateEntry = new(subLeaderboardId);
-                    _entryMap[(ulong)subLeaderboardId] = updateEntry;
-                }
-
-                updateEntry.Score = score;
-                updateEntry.HighScore = score;
-            }
         }
 
         /// <summary>
@@ -365,7 +367,7 @@ namespace MHServerEmu.Leaderboards
                 if (leaderboardProto == null) return;
 
                 if (leaderboardProto.IsMetaLeaderboard)
-                    UpdateMetaEntries();
+                    UpdateMetaScore();
 
                 if (_sorted)
                     return;
@@ -686,8 +688,7 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void Update()
         {
-            if (_sorted == false)
-                SortEntries();
+            SortEntries();
 
             var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
             int intervalMinutes = config.AutoSaveIntervalMinutes;

@@ -36,6 +36,7 @@ namespace MHServerEmu.Leaderboards
         {
             ParticipantId = (ulong)subLeaderboardId;
             SetNameFromLeaderboardGuid(subLeaderboardId);
+            RuleStates = new();
         }
 
         public void SetNameFromLeaderboardGuid(PrototypeGuid guid)
