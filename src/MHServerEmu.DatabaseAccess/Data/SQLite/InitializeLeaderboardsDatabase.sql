@@ -32,12 +32,12 @@ CREATE TABLE "Entries" (
 	FOREIGN KEY("InstanceId") REFERENCES "Instances"("InstanceId") ON DELETE CASCADE
 );
 
-CREATE TABLE "MetaInstances" (
+CREATE TABLE "MetaEntries" (
 	"LeaderboardId"	INTEGER NOT NULL,
 	"InstanceId"	INTEGER NOT NULL,
-	"MetaLeaderboardId"	INTEGER NOT NULL,
-	"MetaInstanceId"	INTEGER NOT NULL,
-	PRIMARY KEY("LeaderboardId", "InstanceId", "MetaLeaderboardId"),
+	"SubLeaderboardId"	INTEGER NOT NULL,
+	"SubInstanceId"	INTEGER NOT NULL,
+	PRIMARY KEY("LeaderboardId", "InstanceId", "SubLeaderboardId"),
 	FOREIGN KEY("LeaderboardId") REFERENCES "Leaderboards"("LeaderboardId") ON DELETE CASCADE
 );
 

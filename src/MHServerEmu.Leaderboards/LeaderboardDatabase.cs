@@ -339,20 +339,20 @@ namespace MHServerEmu.Leaderboards
 
                 if (proto.IsMetaLeaderboard)
                 {
-                    List<DBMetaInstance> dbMetaInstances = new();
+                    List<DBMetaEntry> dbMetaEntries = new();
                     foreach (MetaLeaderboardEntryPrototype meta in proto.MetaLeaderboardEntries)
                     {
-                        PrototypeGuid metaLeaderboardId = GameDatabase.GetPrototypeGuid(meta.Leaderboard);
-                        ulong metaInstanceId = Leaderboard.GenerateInitialInstanceId(metaLeaderboardId);
-                        dbMetaInstances.Add(new DBMetaInstance
+                        PrototypeGuid subLeaderboardId = GameDatabase.GetPrototypeGuid(meta.Leaderboard);
+                        ulong subInstanceId = Leaderboard.GenerateInitialInstanceId(subLeaderboardId);
+                        dbMetaEntries.Add(new DBMetaEntry
                         {
                             LeaderboardId = (long)leaderboardId,
                             InstanceId = (long)instanceId,
-                            MetaLeaderboardId = (long)metaLeaderboardId,
-                            MetaInstanceId = (long)metaInstanceId
+                            SubLeaderboardId = (long)subLeaderboardId,
+                            SubInstanceId = (long)subInstanceId
                         });
                     }
-                    DBManager.InsertMetaInstances(dbMetaInstances);
+                    DBManager.InsertMetaEntries(dbMetaEntries);
                 }
             }
 
@@ -488,8 +488,8 @@ namespace MHServerEmu.Leaderboards
             LeaderboardEntry entry;
             if (type == LeaderboardType.MetaLeaderboard)
             {
-                PrototypeGuid metaLeaderboardId = instance.GetMetaLeaderboardId(participantId);
-                entry = instance.GetEntry((ulong)metaLeaderboardId, avatarId);
+                PrototypeGuid subLeaderboardId = instance.GetSubLeaderboardId(participantId);
+                entry = instance.GetEntry((ulong)subLeaderboardId, avatarId);
             }
             else
             {

@@ -114,7 +114,7 @@ namespace MHServerEmu.Leaderboards
                     instance.UpdateCachedTableData();
 
                 if (Prototype.IsMetaLeaderboard)
-                    instance.LoadMetaInstances();
+                    instance.LoadSubInstances();
             }
         }
 
@@ -146,7 +146,7 @@ namespace MHServerEmu.Leaderboards
             lock (_lock)
             {
                 DBLeaderboardInstance newInstanceDb = null;
-                LeaderboardInstance metaInstance = null;
+                LeaderboardInstance previousInstance = null;
                 foreach (LeaderboardInstance instance in Instances)
                 {
                     switch (instance.State)
@@ -180,7 +180,7 @@ namespace MHServerEmu.Leaderboards
                                     newInstanceDb.SetActivationDateTime(nextActivationTime);
 
                                     if (Prototype.IsMetaLeaderboard)
-                                        metaInstance = instance;
+                                        previousInstance = instance;
                                 }
                             }
                             else
@@ -225,7 +225,7 @@ namespace MHServerEmu.Leaderboards
                 }
 
                 if (newInstanceDb != null)
-                    AddNewInstance(newInstanceDb, metaInstance);
+                    AddNewInstance(newInstanceDb, previousInstance);
             }
         }
 
@@ -244,14 +244,14 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Inserts the provided <see cref="DBLeaderboardInstance"/> into the database.
         /// </summary>
-        private void AddNewInstance(DBLeaderboardInstance dbInstance, LeaderboardInstance metaInstance)
+        private void AddNewInstance(DBLeaderboardInstance dbInstance, LeaderboardInstance previousInstance)
         {
             Logger.Info($"AddNewInstance(): {Prototype.DataRef.GetNameFormatted()} {dbInstance.InstanceId}");
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             dbManager.InsertInstance(dbInstance);
 
-            // add new MetaInstances
-            metaInstance?.AddMetaInstances((ulong)dbInstance.InstanceId);
+            // add new SubInstances
+            previousInstance?.AddNewMetaEntries((ulong)dbInstance.InstanceId);
 
             AddInstance(dbInstance, true);
             OnStateChange((ulong)dbInstance.InstanceId, dbInstance.State);
@@ -300,9 +300,9 @@ namespace MHServerEmu.Leaderboards
                 if (Prototype.IsMetaLeaderboard)
                 {
                     // Get the previous instance of this leaderboard (InstanceId - 1)
-                    LeaderboardInstance metaInstance = GetInstance((ulong)refreshInstance.InstanceId - 1);
-                    // add new MetaInstances
-                    metaInstance?.AddMetaInstances((ulong)refreshInstance.InstanceId);
+                    LeaderboardInstance previousInstance = GetInstance((ulong)refreshInstance.InstanceId - 1);
+                    // add new SubInstances
+                    previousInstance?.AddNewMetaEntries((ulong)refreshInstance.InstanceId);
                 }
 
                 AddInstance(refreshInstance, false);

@@ -94,7 +94,7 @@ namespace MHServerEmu.Leaderboards
                 return Logger.WarnReturn(false, $"QueryRewards(): Participant 0x{participantId:X} already has pending rewards");
 
             // Query the database and exit early if there are no rewards to give
-            List<DBRewardEntry> dbRewards = SQLiteLeaderboardDBManager.Instance.GetRewards(participantId);
+            List<DBRewardEntry> dbRewards = SQLiteLeaderboardDBManager.Instance.GetRewards((long)participantId);
             if (dbRewards.Count == 0)
             {
                 Logger.Debug($"QueryRewards(): No rewards for 0x{participantId:X}");

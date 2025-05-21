@@ -5,14 +5,14 @@ namespace MHServerEmu.Leaderboards
 {
     public class MetaLeaderboardEntry
     {
-        public PrototypeGuid MetaLeaderboardId { get; }
-        public ulong MetaInstanceId { get; set; }
-        public LeaderboardInstance MetaInstance { get; set; }
+        public PrototypeGuid SubLeaderboardId { get; }
+        public ulong SubInstanceId { get; set; }
+        public LeaderboardInstance SubInstance { get; set; }
         public LeaderboardRewardEntryPrototype[] Rewards { get; }
 
-        public MetaLeaderboardEntry(PrototypeGuid metaLeaderboardId, LeaderboardRewardEntryPrototype[] rewards)
+        public MetaLeaderboardEntry(PrototypeGuid subLeaderboardId, LeaderboardRewardEntryPrototype[] rewards)
         {
-            MetaLeaderboardId = metaLeaderboardId;
+            SubLeaderboardId = subLeaderboardId;
             Rewards = rewards;
         }
     }

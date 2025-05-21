@@ -268,17 +268,17 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             transaction.Commit();
         }
 
-        public long GetMetaInstanceId(long leaderboardId, long instanceId, long metaLeaderboardId)
+        public long GetSubInstanceId(long leaderboardId, long instanceId, long subLeaderboardId)
         {
             using var connection = GetConnection();
             return connection.QuerySingleOrDefault<long>(@"
-                SELECT MetaInstanceId FROM MetaInstances
+                SELECT SubInstanceId FROM MetaEntries
                 WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId 
-                AND MetaLeaderboardId = @MetaLeaderboardId",
-                new { LeaderboardId = leaderboardId, InstanceId = instanceId, MetaLeaderboardId = metaLeaderboardId });
+                AND SubLeaderboardId = @SubLeaderboardId",
+                new { LeaderboardId = leaderboardId, InstanceId = instanceId, SubLeaderboardId = subLeaderboardId });
         }
 
-        public void InsertMetaInstances(List<DBMetaInstance> instances)
+        public void InsertMetaEntries(List<DBMetaEntry> instances)
         {
             if (instances.Count == 0)
                 return;
@@ -287,18 +287,18 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             using var transaction = connection.BeginTransaction();
 
             const string insertCommand = @"
-                INSERT INTO MetaInstances (LeaderboardId, InstanceId, MetaLeaderboardId, MetaInstanceId)
-                VALUES (@LeaderboardId, @InstanceId, @MetaLeaderboardId, @MetaInstanceId)";
+                INSERT INTO MetaEntries (LeaderboardId, InstanceId, SubLeaderboardId, SubInstanceId)
+                VALUES (@LeaderboardId, @InstanceId, @SubLeaderboardId, @SubInstanceId)";
 
             connection.Execute(insertCommand, instances, transaction);
             transaction.Commit();
         }
 
-        public List<DBMetaInstance> GetMetaInstances(long leaderboardId, long instanceId)
+        public List<DBMetaEntry> GetMetaEntries(long leaderboardId, long instanceId)
         {
             using var connection = GetConnection();
-            return connection.Query<DBMetaInstance>(@"
-                SELECT * FROM MetaInstances
+            return connection.Query<DBMetaEntry>(@"
+                SELECT * FROM MetaEntries
                 WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId", 
                 new { LeaderboardId = leaderboardId, InstanceId = instanceId }).ToList();
         }
@@ -316,7 +316,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             transaction.Commit();
         }
 
-        public List<DBRewardEntry> GetRewards(ulong participantId)
+        public List<DBRewardEntry> GetRewards(long participantId)
         {
             using SQLiteConnection connection = GetConnection();
 

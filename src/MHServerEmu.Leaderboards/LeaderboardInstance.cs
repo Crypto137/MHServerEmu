@@ -19,7 +19,7 @@ namespace MHServerEmu.Leaderboards
         private readonly Leaderboard _leaderboard;
 
         private readonly Dictionary<ulong, LeaderboardEntry> _entryMap = new();
-        private Dictionary<ulong, PrototypeGuid> _subleaderboardParticipantMap;
+        private Dictionary<ulong, PrototypeGuid> _subLeaderboardParticipantMap;
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
         private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
         private bool _sorted;
@@ -116,23 +116,23 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Returns the <see cref="PrototypeGuid"/> of the subleaderboard that contains the specified participant.
         /// </summary>
-        public PrototypeGuid GetMetaLeaderboardId(ulong participantId)
+        public PrototypeGuid GetSubLeaderboardId(ulong participantId)
         {
-            if (_subleaderboardParticipantMap.TryGetValue(participantId, out PrototypeGuid metaLeaderboardId) == false)
+            if (_subLeaderboardParticipantMap.TryGetValue(participantId, out PrototypeGuid subLeaderboardId) == false)
             {
                 // Look for a subleaderboard that has the specified participant and cache it.
                 foreach (MetaLeaderboardEntry entry in _metaLeaderboardEntries)
                 {
-                    if (entry.MetaInstance != null && entry.MetaInstance.HasParticipant(participantId))
+                    if (entry.SubInstance != null && entry.SubInstance.HasParticipant(participantId))
                     {
-                        metaLeaderboardId = entry.MetaLeaderboardId;
-                        _subleaderboardParticipantMap[participantId] = metaLeaderboardId;
+                        subLeaderboardId = entry.SubLeaderboardId;
+                        _subLeaderboardParticipantMap[participantId] = subLeaderboardId;
                         break;
                     }
                 }
             }
 
-            return metaLeaderboardId;
+            return subLeaderboardId;
         }
 
         /// <summary>
@@ -201,38 +201,48 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Updates the score of all child leaderboard instances.
+        /// Updates the score of all subleaderboard instances.
         /// </summary>
-        private void UpdateMetaInstances()
+        private void UpdateMetaEntries()
         {
             lock (_lock)
             { 
                 foreach (MetaLeaderboardEntry metaEntry in _metaLeaderboardEntries)
                 {
-                    CheckMetaInstance(metaEntry);
-                    metaEntry.MetaInstance?.UpdateMetaScore(metaEntry.MetaLeaderboardId);
+                    RestoreSubInstanceReference(metaEntry);
+                    
+                    // FIXME: this should update the score of this leaderboard using the sum of scores from subleaderboards
+                    metaEntry.SubInstance?.UpdateMetaScore(metaEntry.SubLeaderboardId);
                 }
 
                 _sorted = false;
             }            
         }
 
-        private void CheckMetaInstance(MetaLeaderboardEntry metaEntry)
+        /// <summary>
+        /// Restores the reference to the SubLeaderboard's <see cref="LeaderboardInstance"/> for the provided <see cref="MetaLeaderboardEntry"/>.
+        /// </summary>
+        private bool RestoreSubInstanceReference(MetaLeaderboardEntry metaEntry)
         {
-            if (metaEntry.MetaInstance == null)
-            {
-                if (metaEntry.MetaInstanceId == 0)
-                {
-                    var dbManager = LeaderboardDatabase.Instance.DBManager;
-                    metaEntry.MetaInstanceId = (ulong)dbManager.GetMetaInstanceId((long)LeaderboardId, (long)InstanceId, (long)metaEntry.MetaLeaderboardId);
-                }
+            // No need to do anything if we already have a reference
+            if (metaEntry.SubInstance != null)
+                return true;
 
-                if (metaEntry.MetaInstanceId != 0)
-                    SetMetaInstance(metaEntry.MetaLeaderboardId, metaEntry.MetaInstanceId);
+            // Query the subleaderboard's instance id from the database if we don't have one
+            if (metaEntry.SubInstanceId == 0)
+            {
+                var dbManager = LeaderboardDatabase.Instance.DBManager;
+                metaEntry.SubInstanceId = (ulong)dbManager.GetSubInstanceId((long)LeaderboardId, (long)InstanceId, (long)metaEntry.SubLeaderboardId);
             }
+
+            if (metaEntry.SubInstanceId == 0)
+                return Logger.WarnReturn(false, $"RestoreSubInstanceReference(): Failed to retrieve SubInstanceId for SubLeaderboard {metaEntry.SubLeaderboardId}");
+
+            SetSubInstance(metaEntry.SubLeaderboardId, metaEntry.SubInstanceId);
+            return true;
         }
 
-        private void UpdateMetaScore(PrototypeGuid metaLeaderboardId)
+        private void UpdateMetaScore(PrototypeGuid subLeaderboardId)
         {
             lock (_lock)
             {
@@ -240,10 +250,10 @@ namespace MHServerEmu.Leaderboards
                 foreach (LeaderboardEntry entry in Entries)
                     score += entry.Score;
 
-                if (_entryMap.TryGetValue((ulong)metaLeaderboardId, out LeaderboardEntry updateEntry) == false)
+                if (_entryMap.TryGetValue((ulong)subLeaderboardId, out LeaderboardEntry updateEntry) == false)
                 {
-                    updateEntry = new(metaLeaderboardId);
-                    _entryMap[(ulong)metaLeaderboardId] = updateEntry;
+                    updateEntry = new(subLeaderboardId);
+                    _entryMap[(ulong)subLeaderboardId] = updateEntry;
                 }
 
                 updateEntry.Score = score;
@@ -251,44 +261,55 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void LoadMetaInstances()
+        public void LoadSubInstances()
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            foreach (var dbMetaInstance in dbManager.GetMetaInstances((long)LeaderboardId, (long)InstanceId))
-                SetMetaInstance((PrototypeGuid)dbMetaInstance.MetaLeaderboardId, (ulong)dbMetaInstance.MetaInstanceId);
+            foreach (DBMetaEntry dbMetaEntry in dbManager.GetMetaEntries((long)LeaderboardId, (long)InstanceId))
+                SetSubInstance((PrototypeGuid)dbMetaEntry.SubLeaderboardId, (ulong)dbMetaEntry.SubInstanceId);
         }
 
-        public void AddMetaInstances(ulong instanceId)
+        /// <summary>
+        /// Writes new <see cref="DBMetaEntry"/> instances for the next instance of this metaleaderboard.
+        /// </summary>
+        public void AddNewMetaEntries(ulong instanceId)
         {
             // This assumes that meta leaderboards will always stay in sync with their participant leaderboards, which is not ideal.
             // Because this is used only for the Civil War leaderboard it's probably fine, but it will have to change if we ever implement custom meta leaderboards.
-            List<DBMetaInstance> metaInstances = new();
-            foreach (var entry in _metaLeaderboardEntries)
-                metaInstances.Add(
-                    new DBMetaInstance
+            List<DBMetaEntry> metaEntries = new();
+            foreach (MetaLeaderboardEntry entry in _metaLeaderboardEntries)
+            {
+                metaEntries.Add(
+                    new DBMetaEntry
                     {
                         LeaderboardId = (long)LeaderboardId,
                         InstanceId = (long)instanceId,
-                        MetaInstanceId = (long)entry.MetaInstanceId + 1,
-                        MetaLeaderboardId = (long)entry.MetaLeaderboardId 
+                        SubInstanceId = (long)(entry.SubInstanceId + 1),
+                        SubLeaderboardId = (long)entry.SubLeaderboardId 
                     });
+            }
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
-            dbManager.InsertMetaInstances(metaInstances);
+            dbManager.InsertMetaEntries(metaEntries);
         }
 
-        private void SetMetaInstance(PrototypeGuid metaLeaderboardId, ulong metaInstanceId)
+        private void SetSubInstance(PrototypeGuid subLeaderboardId, ulong subInstanceId)
         {
             lock (_lock)
             {
-                var leaderboard = LeaderboardDatabase.Instance.GetLeaderboard(metaLeaderboardId);
-                if (leaderboard == null) return;
-                var metaInstance = leaderboard.GetInstance(metaInstanceId);
-                if (metaInstance == null) return;
-                var metaEntry = _metaLeaderboardEntries.Find(meta => meta.MetaLeaderboardId == metaLeaderboardId);
-                if (metaEntry == null) return;
-                metaEntry.MetaInstance = metaInstance;
-                metaEntry.MetaInstanceId = metaInstanceId;
+                Leaderboard leaderboard = LeaderboardDatabase.Instance.GetLeaderboard(subLeaderboardId);
+                if (leaderboard == null)
+                    return;
+                
+                LeaderboardInstance subInstance = leaderboard.GetInstance(subInstanceId);
+                if (subInstance == null)
+                    return;
+                
+                MetaLeaderboardEntry metaEntry = _metaLeaderboardEntries.Find(entry => entry.SubLeaderboardId == subLeaderboardId);
+                if (metaEntry == null)
+                    return;
+                
+                metaEntry.SubInstance = subInstance;
+                metaEntry.SubInstanceId = subInstanceId;
             }
         }
 
@@ -331,7 +352,7 @@ namespace MHServerEmu.Leaderboards
                 if (leaderboardProto == null) return;
 
                 if (leaderboardProto.IsMetaLeaderboard)
-                    UpdateMetaInstances();
+                    UpdateMetaEntries();
 
                 if (_sorted) return;
 
@@ -404,7 +425,7 @@ namespace MHServerEmu.Leaderboards
                 return;
 
             _metaLeaderboardEntries = new();
-            _subleaderboardParticipantMap = new();
+            _subLeaderboardParticipantMap = new();
 
             foreach (MetaLeaderboardEntryPrototype entryProto in metaLeaderboardEntries)
             {
@@ -450,8 +471,8 @@ namespace MHServerEmu.Leaderboards
                 if (entry.Score == prevScore)
                     rank = prevRank;
 
-                MetaLeaderboardEntry metaEntry = _metaLeaderboardEntries.Find(meta => (ulong)meta.MetaLeaderboardId == entry.ParticipantId);
-                if (metaEntry == null || metaEntry.MetaInstance == null || metaEntry.Rewards.IsNullOrEmpty()) 
+                MetaLeaderboardEntry metaEntry = _metaLeaderboardEntries.Find(meta => (ulong)meta.SubLeaderboardId == entry.ParticipantId);
+                if (metaEntry == null || metaEntry.SubInstance == null || metaEntry.Rewards.IsNullOrEmpty()) 
                     continue;
 
                 foreach (LeaderboardRewardEntryPrototype rewardProto in metaEntry.Rewards)
@@ -459,7 +480,7 @@ namespace MHServerEmu.Leaderboards
                     {
                         var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
 
-                        foreach (var entryInst in metaEntry.MetaInstance.Entries)
+                        foreach (var entryInst in metaEntry.SubInstance.Entries)
                             rewardsList.Add(new DBRewardEntry(
                                 (long)LeaderboardId, (long)InstanceId, 
                                 (long)rewardId, (long)entryInst.ParticipantId, rank));
