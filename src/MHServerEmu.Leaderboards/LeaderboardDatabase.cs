@@ -95,6 +95,8 @@ namespace MHServerEmu.Leaderboards
             try
             {
                 LeaderboardSchedule[] leaderboards = JsonSerializer.Deserialize<LeaderboardSchedule[]>(scheduleJson, LeaderboardSchedule.JsonSerializerOptions);
+                LeaderboardSchedule.ValidateMetaLeaderboards(leaderboards);
+
                 DBLeaderboard[] oldDbLeaderboards = DBManager.GetLeaderboards();
 
                 foreach (LeaderboardSchedule leaderboard in leaderboards)

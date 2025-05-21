@@ -279,7 +279,7 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void AddNewMetaEntries(ulong instanceId)
         {
-            // This assumes that meta leaderboards will always stay in sync with their participant leaderboards, which is not ideal.
+            // This assumes that meta leaderboards will always stay in sync with their subleaderboards, which is not ideal.
             // Because this is used only for the Civil War leaderboard it's probably fine, but it will have to change if we ever implement custom meta leaderboards.
             List<DBMetaEntry> metaEntries = new();
             foreach (MetaLeaderboardEntry entry in _metaLeaderboardEntries)
