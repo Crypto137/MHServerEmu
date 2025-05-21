@@ -89,14 +89,14 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Initializes a new <see cref="LeaderboardInstance"/> of this <see cref="Leaderboard"/> from the provided <see cref="DBLeaderboardInstance"/>.
         /// </summary>
-        public void AddInstance(DBLeaderboardInstance dbInstance, bool loadEntries)
+        public LeaderboardInstance AddInstance(DBLeaderboardInstance dbInstance, bool loadEntries)
         {
             lock (_lock)
             {
                 // Early exit if this instance is already initialized
                 LeaderboardInstance instance = GetInstance((ulong)dbInstance.InstanceId);
                 if (instance != null)
-                    return;
+                    return instance;
 
                 instance = new(this, dbInstance);
 
@@ -115,18 +115,29 @@ namespace MHServerEmu.Leaderboards
 
                 if (Prototype.IsMetaLeaderboard)
                     instance.LoadMetaEntries();
+
+                return instance;
             }
         }
 
         /// <summary>
         /// Returns the <see cref="LeaderboardInstance"/> with the specified id.
         /// </summary>
-        /// <remarks>
-        /// This searches only the instances that have already been loaded from the database.
-        /// </remarks>
-        public LeaderboardInstance GetInstance(ulong instanceId)
+        public LeaderboardInstance GetInstance(ulong instanceId, bool loadFromDb = false)
         {
-            return Instances.Find(instance => instance.InstanceId == instanceId);
+            LeaderboardInstance instance = Instances.Find(instance => instance.InstanceId == instanceId);
+            if (instance == null && loadFromDb)
+            {
+                // If not found, this instance may not be loaded from the database
+                var dbManager = LeaderboardDatabase.Instance.DBManager;
+                DBLeaderboardInstance dbInstance = dbManager.GetInstance((long)LeaderboardId, (long)instanceId);
+                if (dbInstance == null)
+                    return Logger.WarnReturn(instance, $"GetInstance(): Failed to find instance for id {instanceId}");
+
+                instance = AddInstance(dbInstance, true);
+            }
+
+            return instance;
         }
 
         /// <summary>
@@ -300,7 +311,7 @@ namespace MHServerEmu.Leaderboards
                 if (Prototype.IsMetaLeaderboard)
                 {
                     // Get the previous instance of this leaderboard (InstanceId - 1)
-                    LeaderboardInstance previousInstance = GetInstance((ulong)refreshInstance.InstanceId - 1);
+                    LeaderboardInstance previousInstance = GetInstance((ulong)refreshInstance.InstanceId - 1, true);
                     // add new SubInstances
                     previousInstance?.AddNewMetaEntries((ulong)refreshInstance.InstanceId);
                 }

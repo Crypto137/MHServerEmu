@@ -307,7 +307,7 @@ namespace MHServerEmu.Leaderboards
                 if (leaderboard == null)
                     return;
                 
-                LeaderboardInstance subInstance = leaderboard.GetInstance(subInstanceId);
+                LeaderboardInstance subInstance = leaderboard.GetInstance(subInstanceId, true);
                 if (subInstance == null)
                     return;
                 

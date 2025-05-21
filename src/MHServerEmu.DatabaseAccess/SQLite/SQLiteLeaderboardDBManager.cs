@@ -120,6 +120,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             using SQLiteConnection connection = GetConnection();
 
+            // Get active instances
             List<DBLeaderboardInstance> instanceList = new(
                 connection.Query<DBLeaderboardInstance>(@"
                     SELECT * FROM Instances 
@@ -127,15 +128,37 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     ORDER BY InstanceId DESC",
                     new { LeaderboardId = leaderboardId }));
 
-            List<DBLeaderboardInstance> archivedInstances = GetAndProcessArchivedInstances(connection, leaderboardId, maxArchivedInstances);
-            if (archivedInstances.Count > 0)
-                instanceList.AddRange(archivedInstances);
+            // Update visibility of archived instances
+            UpdateArchivedInstanceVisibility(connection, leaderboardId, maxArchivedInstances);
+
+            // Get visible archived instances
+            IEnumerable<DBLeaderboardInstance> archivedInstances = connection.Query<DBLeaderboardInstance>(@"
+                SELECT * FROM Instances 
+                WHERE LeaderboardId = @LeaderboardId AND State > 1 AND Visible = 1
+                ORDER BY InstanceId DESC
+                LIMIT @MaxArchivedInstances",
+                new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances });
+
+            instanceList.AddRange(archivedInstances);
 
             return instanceList;
         }
 
-        private List<DBLeaderboardInstance> GetAndProcessArchivedInstances(SQLiteConnection connection, long leaderboardId, int maxArchivedInstances)
+        public DBLeaderboardInstance GetInstance(long leaderboardId, long instanceId)
         {
+            using SQLiteConnection connection = GetConnection();
+            return connection.QueryFirstOrDefault<DBLeaderboardInstance>(@"
+                SELECT * FROM Instances
+                WHERE LeaderboardId = @LeaderboardId AND InstanceId = @InstanceId",
+                new { LeaderboardId = leaderboardId, InstanceId = instanceId });
+        }
+
+        /// <summary>
+        /// Updates archived leaderboard visiblity and retrieves 
+        /// </summary>
+        private void UpdateArchivedInstanceVisibility(SQLiteConnection connection, long leaderboardId, int maxArchivedInstances)
+        {
+            // Make archived instances that had no participants invisible
             connection.Execute(@"
                 UPDATE Instances 
                 SET Visible = 0 
@@ -146,6 +169,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                   )",
                 new { LeaderboardId = leaderboardId });
 
+            // Get the most recent archived instances
             List<long> excludedInstanceIds = connection.Query<long>(@"
                 SELECT InstanceId 
                 FROM Instances 
@@ -154,8 +178,10 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 LIMIT @MaxArchivedInstances",
                 new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances }).ToList();
 
-            if (excludedInstanceIds.Count == 0) excludedInstanceIds.Add(0);
+            if (excludedInstanceIds.Count == 0)
+                excludedInstanceIds.Add(0);
 
+            // Make non-recent archived instances that have no rewards invisible
             connection.Execute(@"
                 UPDATE Instances 
                 SET Visible = 0 
@@ -168,13 +194,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                         AND Rewards.RewardedDate IS NOT NULL
                   )",
                 new { LeaderboardId = leaderboardId, ExcludedInstanceIds = excludedInstanceIds });
-
-            return connection.Query<DBLeaderboardInstance>(@"
-                SELECT * FROM Instances 
-                WHERE LeaderboardId = @LeaderboardId AND State > 1 AND Visible = 1
-                ORDER BY InstanceId DESC
-                LIMIT @MaxArchivedInstances",
-                new { LeaderboardId = leaderboardId, MaxArchivedInstances = maxArchivedInstances }).ToList();
         }
 
         public void UpdateOrInsertInstances(List<DBLeaderboardInstance> dbInstances)
