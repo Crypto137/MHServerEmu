@@ -8,7 +8,6 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -20,7 +19,7 @@ namespace MHServerEmu.Leaderboards
         private readonly Leaderboard _leaderboard;
 
         private readonly Dictionary<ulong, LeaderboardEntry> _entryMap = new();
-        private Dictionary<ulong, PrototypeGuid> _entryGuidMap;
+        private Dictionary<ulong, PrototypeGuid> _subleaderboardParticipantMap;
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
         private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
         private bool _sorted;
@@ -90,7 +89,7 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Builds <see cref="LeaderboardInstanceInfo"/> for this <see cref="LeaderboardInstance"/>.
+        /// Builds <see cref="GameServiceProtocol.LeaderboardStateChange"/> for this <see cref="LeaderboardInstance"/>.
         /// </summary>
         public GameServiceProtocol.LeaderboardStateChange BuildLeaderboardStateChange(LeaderboardState? stateOverride = null)
         {
@@ -115,29 +114,33 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Returns the <see cref="PrototypeGuid"/> of the specified participant leaderboard instance.
+        /// Returns the <see cref="PrototypeGuid"/> of the subleaderboard that contains the specified participant.
         /// </summary>
         public PrototypeGuid GetMetaLeaderboardId(ulong participantId)
         {
-            // How would a MetaInstance get an EntryGuid in its _entryGuidMap? Something must be wrong here.
-            if (_entryGuidMap.TryGetValue(participantId, out PrototypeGuid metaLeaderboardId) == false)
+            if (_subleaderboardParticipantMap.TryGetValue(participantId, out PrototypeGuid metaLeaderboardId) == false)
+            {
+                // Look for a subleaderboard that has the specified participant and cache it.
                 foreach (MetaLeaderboardEntry entry in _metaLeaderboardEntries)
-                    if (entry.MetaInstance != null && entry.MetaInstance.HasEntryGuid(participantId))
+                {
+                    if (entry.MetaInstance != null && entry.MetaInstance.HasParticipant(participantId))
                     {
                         metaLeaderboardId = entry.MetaLeaderboardId;
-                        _entryGuidMap[participantId] = metaLeaderboardId;
+                        _subleaderboardParticipantMap[participantId] = metaLeaderboardId;
                         break;
                     }
+                }
+            }
 
             return metaLeaderboardId;
         }
 
         /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="LeaderboardInstance"/> has a <see cref="PrototypeGuid"/> lookup for the specified participant.
+        /// Returns <see langword="true"/> if this <see cref="LeaderboardInstance"/> contains an entry for the specified participant.
         /// </summary>
-        private bool HasEntryGuid(ulong participantId)
+        private bool HasParticipant(ulong participantId)
         {
-            return _entryGuidMap.ContainsKey(participantId);
+            return _entryMap.ContainsKey(participantId);
         }
 
         /// <summary>
@@ -401,7 +404,7 @@ namespace MHServerEmu.Leaderboards
                 return;
 
             _metaLeaderboardEntries = new();
-            _entryGuidMap = new();
+            _subleaderboardParticipantMap = new();
 
             foreach (MetaLeaderboardEntryPrototype entryProto in metaLeaderboardEntries)
             {
