@@ -3,6 +3,9 @@ using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Leaderboards
 {
+    /// <summary>
+    /// Represents a reference to a SubLeaderboard instance tracked by a MetaLeaderboard.
+    /// </summary>
     public class MetaLeaderboardEntry
     {
         public PrototypeGuid SubLeaderboardId { get; }

@@ -114,7 +114,7 @@ namespace MHServerEmu.Leaderboards
                     instance.UpdateCachedTableData();
 
                 if (Prototype.IsMetaLeaderboard)
-                    instance.LoadSubInstances();
+                    instance.LoadMetaEntries();
             }
         }
 
@@ -199,7 +199,7 @@ namespace MHServerEmu.Leaderboards
                                     }
                                 }
 
-                                instance.AutoSave();
+                                instance.Update();
                             }
 
                             break;

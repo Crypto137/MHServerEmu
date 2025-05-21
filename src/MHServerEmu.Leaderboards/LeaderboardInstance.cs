@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
@@ -261,7 +262,10 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public void LoadSubInstances()
+        /// <summary>
+        /// Loads <see cref="MetaLeaderboardEntry"/> data from the database.
+        /// </summary>
+        public void LoadMetaEntries()
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             foreach (DBMetaEntry dbMetaEntry in dbManager.GetMetaEntries((long)LeaderboardId, (long)InstanceId))
@@ -292,6 +296,9 @@ namespace MHServerEmu.Leaderboards
             dbManager.InsertMetaEntries(metaEntries);
         }
 
+        /// <summary>
+        /// Binds a SubLeaderboard instance to this MetaLeaderboard.
+        /// </summary>
         private void SetSubInstance(PrototypeGuid subLeaderboardId, ulong subInstanceId)
         {
             lock (_lock)
@@ -313,6 +320,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Loads <see cref="LeaderboardEntry">LeaderboardEntries</see> from the database.
+        /// </summary>
         public void LoadEntries()
         {
             lock (_lock)
@@ -344,17 +354,21 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void SortEntries()
         {
             lock (_lock)
             {
-                var leaderboardProto = LeaderboardPrototype;
+                LeaderboardPrototype leaderboardProto = LeaderboardPrototype;
                 if (leaderboardProto == null) return;
 
                 if (leaderboardProto.IsMetaLeaderboard)
                     UpdateMetaEntries();
 
-                if (_sorted) return;
+                if (_sorted)
+                    return;
 
                 if (leaderboardProto.RankingRule == LeaderboardRankingRule.Ascending)
                     Entries.Sort((a, b) => a.Score.CompareTo(b.Score));
@@ -368,6 +382,10 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Saves <see cref="LeaderboardEntry">LeaderboardEntries</see> to the database.
+        /// </summary>
+        /// <param name="forceUpdate">Forces entries that haven't changed to be saved.</param>
         public void SaveEntries(bool forceUpdate = false)
         {
             lock (_lock)
@@ -384,6 +402,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Updates cached <see cref="LeaderboardTableData"/>.
+        /// </summary>
         public void UpdateCachedTableData()
         {
             var tableDataBuilder = LeaderboardTableData.CreateBuilder()
@@ -392,15 +413,20 @@ namespace MHServerEmu.Leaderboards
             lock (_lock)
             {
                 int depthOfStandings = LeaderboardPrototype.DepthOfStandings;
-                foreach (var entry in Entries)
+                foreach (LeaderboardEntry entry in Entries)
                 {
-                    if (depthOfStandings-- == 0) break;
+                    if (depthOfStandings-- == 0)
+                        break;
+
                     tableDataBuilder.AddEntries(entry.ToProtobuf());
                 }
                 _cachedTableData = tableDataBuilder.Build();
             }
         }
 
+        /// <summary>
+        /// Updates score using data from the provided <see cref="GameServiceProtocol.LeaderboardScoreUpdate"/>.
+        /// </summary>
         public void OnScoreUpdate(ref GameServiceProtocol.LeaderboardScoreUpdate update)
         {
             lock (_lock)
@@ -419,6 +445,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Initializes <see cref="MetaLeaderboardEntry"/> instances.
+        /// </summary>
         public void InitMetaLeaderboardEntries(MetaLeaderboardEntryPrototype[] metaLeaderboardEntries)
         {
             if (metaLeaderboardEntries.IsNullOrEmpty())
@@ -429,23 +458,27 @@ namespace MHServerEmu.Leaderboards
 
             foreach (MetaLeaderboardEntryPrototype entryProto in metaLeaderboardEntries)
             {
-                PrototypeGuid metaLeaderboardId = GameDatabase.GetPrototypeGuid(entryProto.Leaderboard);
-                if (metaLeaderboardId == PrototypeGuid.Invalid)
+                PrototypeGuid subLeaderboardId = GameDatabase.GetPrototypeGuid(entryProto.Leaderboard);
+                if (subLeaderboardId == PrototypeGuid.Invalid)
                     continue;
 
-                _metaLeaderboardEntries.Add(new(metaLeaderboardId, entryProto.Rewards));
+                _metaLeaderboardEntries.Add(new(subLeaderboardId, entryProto.Rewards));
             }
         }
 
+        /// <summary>
+        /// Distributes rewards to participants of this <see cref="LeaderboardInstance"/>.
+        /// </summary>
         public bool GiveRewards()
         {
             lock (_lock) 
             {
-                if (Entries.Count == 0) return true;
+                if (Entries.Count == 0)
+                    return true;
 
-                List<DBRewardEntry> rewardsList = new();
+                List<DBRewardEntry> rewardsList = ListPool<DBRewardEntry>.Instance.Get();
 
-                var rewards = LeaderboardPrototype.Rewards;
+                LeaderboardRewardEntryPrototype[] rewards = LeaderboardPrototype.Rewards;
                 if (rewards.HasValue())
                     GetRewards(rewards, rewardsList);
 
@@ -454,10 +487,16 @@ namespace MHServerEmu.Leaderboards
 
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.InsertRewards(rewardsList);
+
+                ListPool<DBRewardEntry>.Instance.Return(rewardsList);
             }
+
             return true;
         }
 
+        /// <summary>
+        /// Determines rewards for participants of this MetaLeaderboard and adds them to the provided <see cref="List{T}"/>.
+        /// </summary>
         private void GetMetaRewards(List<DBRewardEntry> rewardsList)
         {
             ulong prevScore = 0;
@@ -471,30 +510,35 @@ namespace MHServerEmu.Leaderboards
                 if (entry.Score == prevScore)
                     rank = prevRank;
 
-                MetaLeaderboardEntry metaEntry = _metaLeaderboardEntries.Find(meta => (ulong)meta.SubLeaderboardId == entry.ParticipantId);
+                MetaLeaderboardEntry metaEntry = _metaLeaderboardEntries.Find(metaEntry => (ulong)metaEntry.SubLeaderboardId == entry.ParticipantId);
                 if (metaEntry == null || metaEntry.SubInstance == null || metaEntry.Rewards.IsNullOrEmpty()) 
                     continue;
 
                 foreach (LeaderboardRewardEntryPrototype rewardProto in metaEntry.Rewards)
+                {
                     if (EvaluateReward(rewardProto, entry, rank))
                     {
-                        var rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
+                        PrototypeGuid rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
 
-                        foreach (var entryInst in metaEntry.SubInstance.Entries)
+                        foreach (LeaderboardEntry subEntry in metaEntry.SubInstance.Entries)
                             rewardsList.Add(new DBRewardEntry(
-                                (long)LeaderboardId, (long)InstanceId, 
-                                (long)rewardId, (long)entryInst.ParticipantId, rank));
+                                (long)LeaderboardId, (long)InstanceId,
+                                (long)rewardId, (long)subEntry.ParticipantId, rank));
 
                         prevScore = entry.Score;
                         prevRank = rank;
 
                         break;
                     }
+                }
                 
                 entryIndex++;
             }
         }
 
+        /// <summary>
+        /// Determines rewards for participants of this <see cref="LeaderboardInstance"/> and adds them to the provided <see cref="List{T}"/>.
+        /// </summary>
         private void GetRewards(LeaderboardRewardEntryPrototype[] rewards, List<DBRewardEntry> rewardsList)
         {
             int count = Entries.Count;
@@ -513,7 +557,8 @@ namespace MHServerEmu.Leaderboards
                     if (entry.Score == prevScore)
                         rank = prevRank;
 
-                    if (EvaluateReward(rewardProto, entry, rank) == false) break;
+                    if (EvaluateReward(rewardProto, entry, rank) == false)
+                        break;
 
                     PrototypeGuid rewardId = GameDatabase.GetPrototypeGuid(rewardProto.RewardItem);
                     rewardsList.Add(new DBRewardEntry(
@@ -528,6 +573,9 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if the provided <see cref="LeaderboardEntry"/> is eligible for the specified <see cref="LeaderboardRewardEntryPrototype"/>.
+        /// </summary>
         private bool EvaluateReward(LeaderboardRewardEntryPrototype rewardProto, LeaderboardEntry entry, int position)
         {
             if (rewardProto is LeaderboardRewardEntryPercentilePrototype percentileProto)
@@ -547,16 +595,26 @@ namespace MHServerEmu.Leaderboards
             return false;
         }
 
+        /// <summary>
+        /// Return <see langword="true"/> if this <see cref="LeaderboardInstance"/> has expired.
+        /// </summary>
         public bool IsExpired(DateTime currentTime)
         {
             return ExpirationTime != ActivationTime && currentTime >= ExpirationTime;
         }
 
+        /// <summary>
+        /// Return <see langword="true"/> if this <see cref="LeaderboardInstance"/> is active.
+        /// </summary>
         public bool IsActive(DateTime currentTime)
         {
             return currentTime >= ActivationTime || _leaderboard.CanReset == false;
         }
 
+        /// <summary>
+        /// Updates the <see cref="LeaderboardState"/> of this <see cref="LeaderboardInstance"/>.
+        /// Returns <see langword="true"/> if the state changed.
+        /// </summary>
         public bool SetState(LeaderboardState state)
         {
             bool changed = false;
@@ -614,15 +672,22 @@ namespace MHServerEmu.Leaderboards
             return changed;
         }
 
+        /// <summary>
+        /// Writes the new <see cref="LeaderboardState"/> to the database.
+        /// </summary>
         public void UpdateDBState(LeaderboardState state)
         {
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             dbManager.UpdateInstanceState((long)InstanceId, (int)state);
         }
 
-        public void AutoSave()
+        /// <summary>
+        /// Sorts this <see cref="LeaderboardInstance"/> and saves it to the database if enough time has passed.
+        /// </summary>
+        public void Update()
         {
-            if (_sorted == false) SortEntries();
+            if (_sorted == false)
+                SortEntries();
 
             var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
             int intervalMinutes = config.AutoSaveIntervalMinutes;

@@ -32,10 +32,10 @@ namespace MHServerEmu.Leaderboards
             RuleStates = new();
         }
 
-        public LeaderboardEntry(PrototypeGuid metaLeaderboardId)
+        public LeaderboardEntry(PrototypeGuid subLeaderboardId)
         {
-            ParticipantId = (ulong)metaLeaderboardId;
-            SetNameFromLeaderboardGuid(metaLeaderboardId);
+            ParticipantId = (ulong)subLeaderboardId;
+            SetNameFromLeaderboardGuid(subLeaderboardId);
         }
 
         public void SetNameFromLeaderboardGuid(PrototypeGuid guid)
