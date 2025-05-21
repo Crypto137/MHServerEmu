@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.05.04 09:08:02 UTC` using server version `0.6.0`.
+This list was automatically generated on `2025.05.21 14:51:12 UTC` using server version `0.6.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -107,6 +107,18 @@ Commands for managing items.
 | !item give [pattern] [count] | Creates and gives the specified item to the current player.                | Admin      | Client        |
 | !item roll [pattern]         | Rolls the specified loot table.                                            | Admin      | Client        |
 | !item rollall                | Rolls all loot tables.                                                     | Admin      | Client        |
+
+## Leaderboards
+Commands related to the leaderboard system
+
+| Command                                   | Description                                           | User Level | Invoker Type  |
+| ----------------------------------------- | ----------------------------------------------------- | ---------- | ------------  |
+| !leaderboards active                      | Shows IsActive leaderboards.                          | Admin      | Any           |
+| !leaderboards all                         | Shows all leaderboards.                               | Admin      | Any           |
+| !leaderboards instance [instanceId]       | Shows details for the specified leaderboard instance. | Admin      | Any           |
+| !leaderboards leaderboard [prototypeGuid] | Shows details for the specified leaderboard.          | Admin      | Any           |
+| !leaderboards now                         | Shows all active instances.                           | Admin      | Any           |
+| !leaderboards reloadschedule              | Reloads leaderboard schedule from JSON.               | Admin      | Any           |
 
 ## Level
 Level management commands.

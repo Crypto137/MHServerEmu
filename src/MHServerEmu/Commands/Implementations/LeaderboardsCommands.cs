@@ -24,7 +24,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("instance")]
-        [CommandDescription("Shows details info for leaderboard Instance.")]
+        [CommandDescription("Shows details for the specified leaderboard instance.")]
         [CommandUsage("leaderboards instance [instanceId]")]
         public string Instance(string[] @params, FrontendClient client)
         {
@@ -40,7 +40,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("leaderboard")]
-        [CommandDescription("Shows details info for leaderboard.")]
+        [CommandDescription("Shows details for the specified leaderboard.")]
         [CommandUsage("leaderboards leaderboard [prototypeGuid]")]
         public string Leaderboard(string[] @params, FrontendClient client)
         {
@@ -79,7 +79,7 @@ namespace MHServerEmu.Commands.Implementations
         }
 
         [Command("active")]
-        [CommandDescription("Shows all IsActive leaderboards.")]
+        [CommandDescription("Shows IsActive leaderboards.")]
         [CommandUsage("leaderboards active")]
         public string Active(string[] @params, FrontendClient client)
         {
