@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
@@ -58,14 +57,14 @@ namespace MHServerEmu.Leaderboards
                 Directory.CreateDirectory(LeaderboardsDirectory);
 
             // Initialize leaderboard database
-            string configPath = Path.Combine(LeaderboardsDirectory, config.FileName);
+            string databasePath = Path.Combine(LeaderboardsDirectory, config.DatabaseFile);
             bool noTables = false;
-            DBManager.Initialize(configPath, ref noTables);
+            DBManager.Initialize(databasePath, ref noTables);
 
-            // Add leaderboards from prototypes
-            string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
+            // Initialize leaderboards from prototypes if there is no data in the database
+            string schedulePath = Path.Combine(LeaderboardsDirectory, config.ScheduleFile);
             if (noTables)
-                GenerateTables(jsonConfigPath);
+                GenerateTables(schedulePath);
 
             // Load and cache player names (remove/disable this if the number of accounts gets out of hand)
             if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames))
@@ -76,7 +75,7 @@ namespace MHServerEmu.Leaderboards
             // load ActiveLeaderboards
             List<DBLeaderboard> activeLeaderboards = new();
             List<DBLeaderboardInstance> refreshInstances = new();
-            LoadJsonConfig(jsonConfigPath, activeLeaderboards, refreshInstances);
+            LoadSchedule(schedulePath, activeLeaderboards, refreshInstances);
             LoadLeaderboards();
 
             // send initial leaderboard state to games
@@ -89,19 +88,14 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Loads leaderboard schedule from JSON.
         /// </summary>
-        private bool LoadJsonConfig(string jsonConfigPath, List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
+        private bool LoadSchedule(string schedulePath, List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
         {
-            string leaderboardsJson = File.ReadAllText(jsonConfigPath);
+            string scheduleJson = File.ReadAllText(schedulePath);
 
             try
             {
-                var options = new JsonSerializerOptions
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                };
-
-                var leaderboards = JsonSerializer.Deserialize<IEnumerable<LeaderboardSchedule>>(leaderboardsJson, options);
-                var oldDbLeaderboards = DBManager.GetLeaderboards();
+                LeaderboardSchedule[] leaderboards = JsonSerializer.Deserialize<LeaderboardSchedule[]>(scheduleJson, LeaderboardSchedule.JsonSerializerOptions);
+                DBLeaderboard[] oldDbLeaderboards = DBManager.GetLeaderboards();
 
                 foreach (LeaderboardSchedule leaderboard in leaderboards)
                 {
@@ -193,8 +187,10 @@ namespace MHServerEmu.Leaderboards
             }
             catch (Exception e)
             {
-                return Logger.WarnReturn(false, $"Initialize(): LeaderboardsJson {jsonConfigPath} deserialization failed - {e.Message}");
+                return Logger.WarnReturn(false, $"LoadSchedule(): Schedule {schedulePath} deserialization failed - {e.Message}");
             }
+
+            Logger.Info($"Loaded leaderboard schedule from {Path.GetFileName(schedulePath)}");
 
             DBManager.UpdateLeaderboards(activeLeaderboards);
             DBManager.UpdateOrInsertInstances(refreshInstances);
@@ -203,18 +199,18 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Reloads JSON config and updates active leaderboards.
+        /// Reloads the schedule from JSON and updates active leaderboards.
         /// </summary>
-        public void ReloadJsonConfig()
+        public void ReloadSchedule()
         {
             lock (_leaderboardLock)
             {
                 var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
-                string jsonConfigPath = Path.Combine(LeaderboardsDirectory, config.JsonConfig);
+                string schedulePath = Path.Combine(LeaderboardsDirectory, config.ScheduleFile);
                 
                 List<DBLeaderboard> activeLeaderboards = new();
                 List<DBLeaderboardInstance> refreshInstances = new();
-                if (LoadJsonConfig(jsonConfigPath, activeLeaderboards, refreshInstances))
+                if (LoadSchedule(schedulePath, activeLeaderboards, refreshInstances))
                     ReloadActiveLeaderboards(activeLeaderboards, refreshInstances);
             }
         }
@@ -287,11 +283,11 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Initializes database data.
         /// </summary>
-        private void GenerateTables(string jsonConfigPath)
+        private void GenerateTables(string schedulePath)
         {
             List<DBLeaderboard> dbLeaderboards = new();
             List<DBLeaderboardInstance> dbInstances = new();
-            List<LeaderboardSchedule> jsonLeaderboards = new();
+            List<LeaderboardSchedule> schedule = new();
 
             DateTime currentYear = new(DateTime.Now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             long startEvent = Clock.DateTimeToTimestamp(currentYear);
@@ -326,7 +322,7 @@ namespace MHServerEmu.Leaderboards
                 dbSchedule.Scheduler.InitFromProto(proto);
 
                 dbLeaderboards.Add(dbLeaderboard);
-                jsonLeaderboards.Add(dbSchedule);
+                schedule.Add(dbSchedule);
 
                 dbInstances.Add(new DBLeaderboardInstance
                 {
@@ -356,14 +352,8 @@ namespace MHServerEmu.Leaderboards
                 }
             }
 
-            JsonSerializerOptions options = new()
-            { 
-                Converters = { new JsonStringEnumConverter() },
-                WriteIndented = true 
-            };
-
-            string json = JsonSerializer.Serialize<IEnumerable<LeaderboardSchedule>>(jsonLeaderboards, options);
-            File.WriteAllText(jsonConfigPath, json);
+            string scheduleJson = JsonSerializer.Serialize(schedule, LeaderboardSchedule.JsonSerializerOptions);
+            File.WriteAllText(schedulePath, scheduleJson);
 
             DBManager.InsertLeaderboards(dbLeaderboards);
             DBManager.UpdateOrInsertInstances(dbInstances);

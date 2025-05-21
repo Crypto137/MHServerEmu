@@ -1,10 +1,18 @@
-﻿using MHServerEmu.DatabaseAccess.Models.Leaderboards;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.Leaderboards.Scheduling
 {
     public class LeaderboardSchedule
     {
+        public static readonly JsonSerializerOptions JsonSerializerOptions = new()
+        {
+            Converters = { new JsonStringEnumConverter() },
+            WriteIndented = true
+        };
+
         public long LeaderboardId { get; init; }
         public string PrototypeName { get; init; }
         public LeaderboardScheduler Scheduler { get; init; }
@@ -24,20 +32,19 @@ namespace MHServerEmu.Leaderboards.Scheduling
 
         public DBLeaderboard ToDBLeaderboard()
         {
-            var dbleaderboard = new DBLeaderboard
+            DBLeaderboard dbLeaderboard = new()
             {
                 LeaderboardId = LeaderboardId,
                 PrototypeName = PrototypeName,
                 IsActive = Scheduler.IsActive,
                 Frequency = (int)Scheduler.Frequency,
                 Interval = Scheduler.Interval
-
             };
 
-            dbleaderboard.SetStartDateTime(Scheduler.StartEvent);
-            dbleaderboard.SetEndDateTime(Scheduler.EndEvent);
+            dbLeaderboard.SetStartDateTime(Scheduler.StartEvent);
+            dbLeaderboard.SetEndDateTime(Scheduler.EndEvent);
 
-            return dbleaderboard;
+            return dbLeaderboard;
         }
 
         public bool Compare(DBLeaderboard dbLeaderboard)
