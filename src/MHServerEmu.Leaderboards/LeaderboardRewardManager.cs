@@ -88,18 +88,13 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         private bool QueryRewards(ulong participantId)
         {
-            Logger.Debug($"QueryRewards(): participantId=0x{participantId:X}");
-
             if (_pendingRewards.ContainsKey(participantId))
                 return Logger.WarnReturn(false, $"QueryRewards(): Participant 0x{participantId:X} already has pending rewards");
 
             // Query the database and exit early if there are no rewards to give
             List<DBRewardEntry> dbRewards = SQLiteLeaderboardDBManager.Instance.GetRewards((long)participantId);
             if (dbRewards.Count == 0)
-            {
-                Logger.Debug($"QueryRewards(): No rewards for 0x{participantId:X}");
                 return true;
-            }
 
             // Keep track of all pending rewards
             _pendingRewards.Add(participantId, new(dbRewards));
@@ -109,7 +104,7 @@ namespace MHServerEmu.Leaderboards
             for (int i = 0; i < dbRewards.Count; i++)
             {
                 DBRewardEntry dbReward = dbRewards[i];
-                Logger.Debug($"QueryRewards(): Found reward for participant 0x{participantId:X}: leaderboardId={dbReward.LeaderboardId}, instanceId={dbReward.InstanceId}");
+                Logger.Info($"Found reward for participant 0x{participantId:X}: leaderboardId={dbReward.LeaderboardId}, instanceId={dbReward.InstanceId}");
                 rewardEntries[i] = new((ulong)dbReward.LeaderboardId, (ulong)dbReward.InstanceId, (ulong)dbReward.ParticipantId, (ulong)dbReward.RewardId, dbReward.Rank);
             }
 
@@ -124,8 +119,6 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         private bool FinalizeReward(long leaderboardId, long instanceId, ulong participantId)
         {
-            Logger.Debug($"FinalizeReward(): leaderboardId={leaderboardId}, instanceId={instanceId}, participantId=0x{participantId:X}");
-
             if (_pendingRewards.TryGetValue(participantId, out RewardQueryResult rewardQuery) == false)
                 return Logger.WarnReturn(false, $"FinalizeReward(): Received confirmation for participant 0x{participantId:X}, who does not have pending rewards");
 
@@ -154,7 +147,7 @@ namespace MHServerEmu.Leaderboards
             // Finish this batch of rewards if we have received confirmations for everything
             if (rewards.Count == 0)
             {
-                Logger.Debug($"FinalizeReward(): Received confirmation for all pending rewards for participant 0x{participantId:X}");
+                Logger.Info($"FinalizeReward(): Received confirmation for all pending rewards for participant 0x{participantId:X}");
                 _pendingRewards.Remove(participantId);
             }
 
