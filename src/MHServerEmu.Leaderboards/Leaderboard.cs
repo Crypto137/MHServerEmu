@@ -31,11 +31,9 @@ namespace MHServerEmu.Leaderboards
             Prototype = proto;
             LeaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
 
-            if (CanReset)
-            {
-                Scheduler.InitFromProto(proto);
-                Scheduler.Initialize(dbLeaderboard);
-            }
+            // 2025/05/24 - Removed CanReset check here to allow permanent leaderboards to be included in the enabled leaderboard list
+            Scheduler.InitFromProto(proto);
+            Scheduler.Initialize(dbLeaderboard);
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
             List<DBLeaderboardInstance> instanceList = dbManager.GetInstances(dbLeaderboard.LeaderboardId, proto.MaxArchivedInstances);
