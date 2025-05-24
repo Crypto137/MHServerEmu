@@ -39,7 +39,7 @@ namespace MHServerEmu.Leaderboards.Scheduling
             {
                 LeaderboardId = LeaderboardId,
                 PrototypeName = PrototypeName,
-                IsActive = Scheduler.IsActive,
+                IsEnabled = Scheduler.IsEnabled,
                 Frequency = (int)Scheduler.Frequency,
                 Interval = Scheduler.Interval
             };
@@ -52,7 +52,7 @@ namespace MHServerEmu.Leaderboards.Scheduling
 
         public bool Compare(DBLeaderboard dbLeaderboard)
         {
-            return Scheduler.IsActive == dbLeaderboard.IsActive 
+            return Scheduler.IsEnabled == dbLeaderboard.IsEnabled 
                 && Scheduler.Frequency == (LeaderboardResetFrequency)dbLeaderboard.Frequency 
                 && Scheduler.Interval == dbLeaderboard.Interval 
                 && Scheduler.StartEvent == dbLeaderboard.GetStartDateTime() 
@@ -80,16 +80,16 @@ namespace MHServerEmu.Leaderboards.Scheduling
             if (metaSchedules.Count != 3)
                 throw new InvalidDataException($"Expected 3 meta schedules, but found {metaSchedules.Count}.");
 
-            bool isActive = false;
+            bool isEnabled = false;
             foreach (LeaderboardSchedule schedule in metaSchedules)
-                isActive |= schedule.Scheduler.IsActive;
+                isEnabled |= schedule.Scheduler.IsEnabled;
 
             foreach (LeaderboardSchedule schedule in metaSchedules)
             {
-                if (schedule.Scheduler.IsActive != isActive)
+                if (schedule.Scheduler.IsEnabled != isEnabled)
                 {
-                    Logger.Warn($"ValidateMetaLeaderboards(): Schedule for {schedule.PrototypeName} is out of sync, forcing IsActive = {isActive}");
-                    schedule.Scheduler.IsActive = isActive;
+                    Logger.Warn($"ValidateMetaLeaderboards(): Schedule for {schedule.PrototypeName} is out of sync, forcing IsEnabled = {isEnabled}");
+                    schedule.Scheduler.IsEnabled = isEnabled;
                 }
             }
         }

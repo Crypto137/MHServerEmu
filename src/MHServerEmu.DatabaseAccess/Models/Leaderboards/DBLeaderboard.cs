@@ -7,7 +7,7 @@ namespace MHServerEmu.DatabaseAccess.Models.Leaderboards
         public long LeaderboardId { get; set; }	
         public string PrototypeName { get; set; }
         public long ActiveInstanceId { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsEnabled { get; set; }
         public int Frequency { get; set; }
         public int Interval { get; set; }
         public long StartEvent { get; set; }

@@ -6,7 +6,7 @@ namespace MHServerEmu.Leaderboards.Scheduling
 {
     public class LeaderboardScheduler
     {
-        public bool IsActive { get; set; }
+        public bool IsEnabled { get; set; }
         public LeaderboardResetFrequency ResetFrequency { get; set; }
         public LeaderboardDurationType Duration { get; set; }
         public LeaderboardResetFrequency Frequency { get; set; }
@@ -19,7 +19,7 @@ namespace MHServerEmu.Leaderboards.Scheduling
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"IsActive: {IsActive}");
+            sb.AppendLine($"IsEnabled: {IsEnabled}");
             sb.AppendLine($"Reset Frequency: {ResetFrequency}");
             sb.AppendLine($"Duration: {Duration}");
             sb.AppendLine($"Frequency: {Frequency}");
@@ -31,7 +31,7 @@ namespace MHServerEmu.Leaderboards.Scheduling
 
         public void Initialize(DBLeaderboard dbLeaderboard)
         {
-            IsActive = dbLeaderboard.IsActive;
+            IsEnabled = dbLeaderboard.IsEnabled;
             Frequency = (LeaderboardResetFrequency)dbLeaderboard.Frequency;
             Interval = dbLeaderboard.Interval;
             StartEvent = dbLeaderboard.GetStartDateTime();
@@ -134,7 +134,7 @@ namespace MHServerEmu.Leaderboards.Scheduling
 
         public DateTime? GetNextActivationDay(DateTime currentTime)
         {
-            if (IsActive == false || Interval == 0) return null;
+            if (IsEnabled == false || Interval == 0) return null;
 
             var currentDay = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 0, 0, 0, DateTimeKind.Utc);
 

@@ -78,10 +78,10 @@ namespace MHServerEmu.Commands.Implementations
             return sb.ToString();
         }
 
-        [Command("active")]
-        [CommandDescription("Shows IsActive leaderboards.")]
-        [CommandUsage("leaderboards active")]
-        public string Active(string[] @params, FrontendClient client)
+        [Command("enabled")]
+        [CommandDescription("Shows enabled leaderboards.")]
+        [CommandUsage("leaderboards enabled")]
+        public string Enabled(string[] @params, FrontendClient client)
         {
             var sb = new StringBuilder();
             sb.AppendLine($"Current Time: [{Clock.UtcNowTimestamp}] {Clock.UtcNowPrecise}");
@@ -90,7 +90,7 @@ namespace MHServerEmu.Commands.Implementations
             LeaderboardDatabase.Instance.GetLeaderboards(leaderboards);
 
             foreach (var leaderboard in leaderboards)
-                if (leaderboard.Scheduler.IsActive)
+                if (leaderboard.Scheduler.IsEnabled)
                     sb.AppendLine(
                         $"{leaderboard.Prototype.DataRef.GetNameFormatted()}" +
                         $"[{leaderboard.ActiveInstance.InstanceId}][{leaderboard.ActiveInstance.State}] = " +
@@ -114,7 +114,7 @@ namespace MHServerEmu.Commands.Implementations
 
             foreach (var leaderboard in leaderboards)
                 sb.AppendLine(
-                    $"[{(leaderboard.Scheduler.IsActive ? "+" : "-")}]" +
+                    $"[{(leaderboard.Scheduler.IsEnabled ? "+" : "-")}]" +
                     $"[{(long)leaderboard.LeaderboardId}] " +
                     $"{leaderboard.Prototype.DataRef.GetNameFormatted()} = " +
                     $"{leaderboard.Scheduler.StartEvent} - " +

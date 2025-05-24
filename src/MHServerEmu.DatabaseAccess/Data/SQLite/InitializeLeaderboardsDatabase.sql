@@ -6,7 +6,7 @@ CREATE TABLE "Leaderboards" (
 	"LeaderboardId"	INTEGER NOT NULL PRIMARY KEY,
 	"PrototypeName"	TEXT,
 	"ActiveInstanceId"	INTEGER,
-	"IsActive"	INTEGER,
+	"IsEnabled"	INTEGER,
 	"Frequency"	INTEGER,
 	"Interval"	INTEGER,
 	"StartEvent"	INTEGER,

@@ -110,9 +110,9 @@ namespace MHServerEmu.Leaderboards
                     activeLeaderboard.ActiveInstanceId = oldLeaderboard.ActiveInstanceId;
                     activeLeaderboards.Add(activeLeaderboard);
 
-                    if (oldLeaderboard.IsActive == false)
+                    if (oldLeaderboard.IsEnabled == false)
                     {
-                        if (leaderboard.Scheduler.IsActive)
+                        if (leaderboard.Scheduler.IsEnabled)
                         {
                             // Add new instance
                             var activationDate = leaderboard.Scheduler.CalcNextUtcActivationDate();
@@ -148,7 +148,7 @@ namespace MHServerEmu.Leaderboards
                         var instances = DBManager.GetInstances(leaderboard.LeaderboardId, 0);
                         foreach (var instance in instances)
                         {
-                            if (leaderboard.Scheduler.IsActive)
+                            if (leaderboard.Scheduler.IsEnabled)
                             {
                                 // Update instance
                                 long activationDate = instance.ActivationDate;
@@ -304,16 +304,17 @@ namespace MHServerEmu.Leaderboards
                 PrototypeGuid leaderboardId = GameDatabase.GetPrototypeGuid(dataRef);
                 ulong instanceId = Leaderboard.GenerateInitialInstanceId(leaderboardId);
 
-                bool isActive = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset;
+                // Enabled all permanent leaderboards except for Anniversary2016 by default
+                bool isEnabled = proto.ResetFrequency == LeaderboardResetFrequency.NeverReset;
                 if (leaderboardId == (PrototypeGuid)16486420054343424221)   // Anniversary2016
-                    isActive = false;
+                    isEnabled = false;
 
                 DBLeaderboard dbLeaderboard = new()
                 {
                     LeaderboardId = (long)leaderboardId,
                     PrototypeName = dataRef.GetNameFormatted(),
                     ActiveInstanceId = (long)instanceId,
-                    IsActive = isActive,
+                    IsEnabled = isEnabled,
                     Frequency = (int)LeaderboardResetFrequency.Weekly,
                     Interval = 1,
                     StartEvent = startEvent,
@@ -330,9 +331,9 @@ namespace MHServerEmu.Leaderboards
                 {
                     InstanceId = (long)instanceId,
                     LeaderboardId = (long)leaderboardId,
-                    State = isActive ? LeaderboardState.eLBS_Created : LeaderboardState.eLBS_Rewarded,
+                    State = isEnabled ? LeaderboardState.eLBS_Created : LeaderboardState.eLBS_Rewarded,
                     ActivationDate = 0,
-                    Visible = isActive
+                    Visible = isEnabled
                 });
 
                 if (proto.IsMetaLeaderboard)

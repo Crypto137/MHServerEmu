@@ -71,9 +71,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
             connection.Execute(@"
                 INSERT INTO Leaderboards 
-                (LeaderboardId, PrototypeName, ActiveInstanceId, IsActive, Frequency, Interval, StartEvent, EndEvent)
+                (LeaderboardId, PrototypeName, ActiveInstanceId, IsEnabled, Frequency, Interval, StartEvent, EndEvent)
                 VALUES 
-                (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsActive, @Frequency, @Interval, @StartEvent, @EndEvent)",
+                (@LeaderboardId, @PrototypeName, @ActiveInstanceId, @IsEnabled, @Frequency, @Interval, @StartEvent, @EndEvent)",
                 dbLeaderboards, transaction);
 
             transaction.Commit();
@@ -87,7 +87,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 UPDATE Leaderboards 
                 SET 
                     ActiveInstanceId = @ActiveInstanceId,
-                    IsActive = @IsActive,
+                    IsEnabled = @IsEnabled,
                     Frequency = @Frequency,
                     Interval = @Interval,
                     StartEvent = @StartEvent,
