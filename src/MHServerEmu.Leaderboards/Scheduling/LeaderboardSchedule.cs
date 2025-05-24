@@ -33,6 +33,14 @@ namespace MHServerEmu.Leaderboards.Scheduling
             Scheduler.Initialize(dbLeaderboard);
         }
 
+        public override string ToString()
+        {
+            return $"{PrototypeName}[{LeaderboardId}]";
+        }
+
+        /// <summary>
+        /// Creates a <see cref="DBLeaderboard"/> instance containing data from this <see cref="LeaderboardSchedule"/>.
+        /// </summary>
         public DBLeaderboard ToDBLeaderboard()
         {
             DBLeaderboard dbLeaderboard = new()
@@ -50,7 +58,10 @@ namespace MHServerEmu.Leaderboards.Scheduling
             return dbLeaderboard;
         }
 
-        public bool Compare(DBLeaderboard dbLeaderboard)
+        /// <summary>
+        /// Returns <see langword="true"/> if the data contained in this <see cref="LeaderboardSchedule"/> matches the provided <see cref="DBLeaderboard"/>.
+        /// </summary>
+        public bool IsEquivalent(DBLeaderboard dbLeaderboard)
         {
             return Scheduler.IsEnabled == dbLeaderboard.IsEnabled 
                 && Scheduler.Frequency == (LeaderboardResetFrequency)dbLeaderboard.Frequency 
@@ -59,10 +70,12 @@ namespace MHServerEmu.Leaderboards.Scheduling
                 && Scheduler.EndEvent == dbLeaderboard.GetEndDateTime();
         }
 
+        /// <summary>
+        /// Makes sure MetaLeaderboards get enabled along with their SubLeaderboards to avoid instance id desync.
+        /// </summary>
         public static void ValidateMetaLeaderboards(LeaderboardSchedule[] schedules)
         {
-            // HACK: Make sure Civil War leaderboards get enabled together to prevent instance ids from going out of sync.
-            // See LeaderboardInstance.AddNewMetaEntries() for context why we need this.
+            // HACK: This affects only Civil War leaderboards. See LeaderboardInstance.AddNewMetaEntries() for context why we need this.
             List<LeaderboardSchedule> metaSchedules = new();
 
             foreach (LeaderboardSchedule schedule in schedules)

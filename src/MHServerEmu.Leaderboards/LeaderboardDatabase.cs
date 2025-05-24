@@ -72,13 +72,16 @@ namespace MHServerEmu.Leaderboards
             else
                 Logger.Warn($"Failed get player names from SQLiteDBManager");
 
-            // load ActiveLeaderboards
-            List<DBLeaderboard> activeLeaderboards = new();
-            List<DBLeaderboardInstance> refreshInstances = new();
-            LoadSchedule(schedulePath, activeLeaderboards, refreshInstances);
+            // Load the schedule and write changes to the database if needed
+            List<DBLeaderboard> updatedLeaderboards = new();
+            List<DBLeaderboardInstance> updatedInstances = new();
+            if (LoadSchedule(schedulePath, updatedLeaderboards, updatedInstances))
+                SaveScheduleChanges(updatedLeaderboards, updatedInstances);
+
+            // Load leaderboards from the database
             LoadLeaderboards();
 
-            // send initial leaderboard state to games
+            // Send initial leaderboard state to game instances
             SendLeaderboardsToGames();
 
             Logger.Info($"Initialized {_leaderboards.Count} leaderboards in {stopwatch.ElapsedMilliseconds} ms");
@@ -86,154 +89,186 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Loads leaderboard schedule from JSON.
+        /// Loads leaderboard schedule from JSON and adds updated models to provided lists.
+        /// Returns <see langword="true"/> if any changes were applied.
         /// </summary>
-        private bool LoadSchedule(string schedulePath, List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
+        private bool LoadSchedule(string schedulePath, List<DBLeaderboard> updatedLeaderboards, List<DBLeaderboardInstance> updatedInstances)
         {
+            // Load schedule
             string scheduleJson = File.ReadAllText(schedulePath);
+
+            LeaderboardSchedule[] scheduleEntries;
 
             try
             {
-                LeaderboardSchedule[] leaderboards = JsonSerializer.Deserialize<LeaderboardSchedule[]>(scheduleJson, LeaderboardSchedule.JsonSerializerOptions);
-                LeaderboardSchedule.ValidateMetaLeaderboards(leaderboards);
-
-                DBLeaderboard[] oldDbLeaderboards = DBManager.GetLeaderboards();
-
-                foreach (LeaderboardSchedule leaderboard in leaderboards)
-                {
-                    // Skip old
-                    var oldLeaderboard = oldDbLeaderboards.FirstOrDefault(lb => lb.LeaderboardId == leaderboard.LeaderboardId);
-                    if (oldLeaderboard == null || leaderboard.Compare(oldLeaderboard)) continue;
-                    
-                    // Add changed leaderboards
-                    var activeLeaderboard = leaderboard.ToDBLeaderboard();
-                    activeLeaderboard.ActiveInstanceId = oldLeaderboard.ActiveInstanceId;
-                    activeLeaderboards.Add(activeLeaderboard);
-
-                    if (oldLeaderboard.IsEnabled == false)
-                    {
-                        if (leaderboard.Scheduler.IsEnabled)
-                        {
-                            // Add new instance
-                            var activationDate = leaderboard.Scheduler.CalcNextUtcActivationDate();
-
-                            refreshInstances.Add(new DBLeaderboardInstance
-                            {
-                                InstanceId = oldLeaderboard.ActiveInstanceId + 1,
-                                LeaderboardId = leaderboard.LeaderboardId,
-                                State = LeaderboardState.eLBS_Created,
-                                ActivationDate = Clock.DateTimeToTimestamp(activationDate),
-                                Visible = true
-                            });
-                        }
-                        else
-                        {
-                            // Deactivate active instances
-
-                            var instances = DBManager.GetInstances(leaderboard.LeaderboardId, 0);
-                            foreach (var instance in instances)
-                                refreshInstances.Add(new DBLeaderboardInstance
-                                {
-                                    InstanceId = instance.InstanceId,
-                                    LeaderboardId = instance.LeaderboardId,
-                                    State = LeaderboardState.eLBS_Rewarded,
-                                    ActivationDate = instance.ActivationDate,
-                                    Visible = false
-                                });
-                        }
-                    }
-                    else
-                    {
-                        // old Instance inactive
-                        var instances = DBManager.GetInstances(leaderboard.LeaderboardId, 0);
-                        foreach (var instance in instances)
-                        {
-                            if (leaderboard.Scheduler.IsEnabled)
-                            {
-                                // Update instance
-                                long activationDate = instance.ActivationDate;
-
-                                if (leaderboard.Scheduler.StartEvent != oldLeaderboard.GetStartDateTime())
-                                {
-                                    // Find next activation time
-                                    var nextEvent = leaderboard.Scheduler.CalcNextUtcActivationDate();
-                                    activationDate = Clock.DateTimeToTimestamp(nextEvent);
-                                }
-
-                                refreshInstances.Add(new DBLeaderboardInstance
-                                {
-                                    InstanceId = instance.InstanceId,
-                                    LeaderboardId = instance.LeaderboardId,
-                                    State = instance.State,
-                                    ActivationDate = activationDate,
-                                    Visible = true
-                                });
-                            }
-                            else
-                            {
-                                // Deactivate active instance
-
-                                refreshInstances.Add(new DBLeaderboardInstance
-                                {
-                                    InstanceId = instance.InstanceId,
-                                    LeaderboardId = instance.LeaderboardId,
-                                    State = LeaderboardState.eLBS_Rewarded,
-                                    ActivationDate = instance.ActivationDate,
-                                    Visible = false
-                                });
-                            }
-                        }
-                    }
-                    
-                }
+                scheduleEntries = JsonSerializer.Deserialize<LeaderboardSchedule[]>(scheduleJson, LeaderboardSchedule.JsonSerializerOptions);
+                LeaderboardSchedule.ValidateMetaLeaderboards(scheduleEntries);
             }
             catch (Exception e)
             {
                 return Logger.WarnReturn(false, $"LoadSchedule(): Schedule {schedulePath} deserialization failed - {e.Message}");
             }
 
+            // Load current leaderboard data from the database
+            DBLeaderboard[] oldDbLeaderboards = DBManager.GetLeaderboards();
+
+            // Apply schedule changes
+            foreach (LeaderboardSchedule scheduleEntry in scheduleEntries)
+            {
+                DBLeaderboard oldDbLeaderboard = oldDbLeaderboards.FirstOrDefault(lb => lb.LeaderboardId == scheduleEntry.LeaderboardId);
+                if (oldDbLeaderboard == null)
+                {
+                    Logger.Warn($"LoadSchedule(): Loaded schedule entry {scheduleEntry}, but found no record for it in the database");
+                    continue;
+                }
+
+                // Skip unchanged
+                if (scheduleEntry.IsEquivalent(oldDbLeaderboard))
+                    continue;
+
+                // Add changed leaderboard
+                DBLeaderboard updatedLeaderboard = scheduleEntry.ToDBLeaderboard();
+                updatedLeaderboard.ActiveInstanceId = oldDbLeaderboard.ActiveInstanceId;
+                updatedLeaderboards.Add(updatedLeaderboard);
+
+                // Apply changes to instances if needed
+                if (oldDbLeaderboard.IsEnabled == false)
+                {
+                    if (scheduleEntry.Scheduler.IsEnabled)
+                    {
+                        // IsEnabled: False -> True
+                        // Add new instance
+                        DateTime activationDate = scheduleEntry.Scheduler.CalcNextUtcActivationDate();
+
+                        updatedInstances.Add(new DBLeaderboardInstance
+                        {
+                            InstanceId = oldDbLeaderboard.ActiveInstanceId + 1,
+                            LeaderboardId = scheduleEntry.LeaderboardId,
+                            State = LeaderboardState.eLBS_Created,
+                            ActivationDate = Clock.DateTimeToTimestamp(activationDate),
+                            Visible = true
+                        });
+                    }
+                    else
+                    {
+                        // IsEnabled: False -> False
+                        // Deactivate active instances
+                        List<DBLeaderboardInstance> instances = DBManager.GetInstances(scheduleEntry.LeaderboardId, 0);
+                        foreach (DBLeaderboardInstance instance in instances)
+                        {
+                            updatedInstances.Add(new DBLeaderboardInstance
+                            {
+                                InstanceId = instance.InstanceId,
+                                LeaderboardId = instance.LeaderboardId,
+                                State = LeaderboardState.eLBS_Rewarded,
+                                ActivationDate = instance.ActivationDate,
+                                Visible = false
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    // Update instances
+                    List<DBLeaderboardInstance> instances = DBManager.GetInstances(scheduleEntry.LeaderboardId, 0);
+                    foreach (DBLeaderboardInstance instance in instances)
+                    {
+                        if (scheduleEntry.Scheduler.IsEnabled)
+                        {
+                            // IsEnabled: True -> True
+                            // Update instance
+                            long activationDate = instance.ActivationDate;
+
+                            if (scheduleEntry.Scheduler.StartEvent != oldDbLeaderboard.GetStartDateTime())
+                            {
+                                // Find next activation time
+                                var nextEvent = scheduleEntry.Scheduler.CalcNextUtcActivationDate();
+                                activationDate = Clock.DateTimeToTimestamp(nextEvent);
+                            }
+
+                            updatedInstances.Add(new DBLeaderboardInstance
+                            {
+                                InstanceId = instance.InstanceId,
+                                LeaderboardId = instance.LeaderboardId,
+                                State = instance.State,
+                                ActivationDate = activationDate,
+                                Visible = true
+                            });
+                        }
+                        else
+                        {
+                            // IsEnabled: True -> False
+                            // Deactivate active instance
+                            updatedInstances.Add(new DBLeaderboardInstance
+                            {
+                                InstanceId = instance.InstanceId,
+                                LeaderboardId = instance.LeaderboardId,
+                                State = LeaderboardState.eLBS_Rewarded,
+                                ActivationDate = instance.ActivationDate,
+                                Visible = false
+                            });
+                        }
+                    }
+                }
+            }
+
             Logger.Info($"Loaded leaderboard schedule from {Path.GetFileName(schedulePath)}");
 
-            DBManager.UpdateLeaderboards(activeLeaderboards);
-            DBManager.UpdateOrInsertInstances(refreshInstances);
-
-            return activeLeaderboards.Count > 0;
+            return updatedLeaderboards.Count > 0;
         }
 
         /// <summary>
-        /// Reloads the schedule from JSON and updates active leaderboards.
+        /// Reloads the leaderboard schedule from JSON and reapplies it if needed.
         /// </summary>
-        public void ReloadSchedule()
+        public void ReloadAndReapplySchedule()
         {
             lock (_leaderboardLock)
             {
                 var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
                 string schedulePath = Path.Combine(LeaderboardsDirectory, config.ScheduleFile);
                 
-                List<DBLeaderboard> activeLeaderboards = new();
-                List<DBLeaderboardInstance> refreshInstances = new();
-                if (LoadSchedule(schedulePath, activeLeaderboards, refreshInstances))
-                    ReloadActiveLeaderboards(activeLeaderboards, refreshInstances);
+                List<DBLeaderboard> updatedLeaderboards = new();
+                List<DBLeaderboardInstance> updatedInstances = new();
+                if (LoadSchedule(schedulePath, updatedLeaderboards, updatedInstances))
+                {
+                    SaveScheduleChanges(updatedLeaderboards, updatedInstances);
+                    ApplyScheduleChanges(updatedLeaderboards, updatedInstances);
+                }
             }
         }
 
         /// <summary>
-        /// Initializes <see cref="LeaderboardScheduler"/> and refreshes <see cref="DBLeaderboardInstance">DBLeaderboardInstances</see>
-        /// for the provided list of active <see cref="DBLeaderboard">DBLeaderboards</see>.
+        /// Saves leaderboard schedule changes to the database.
         /// </summary>
-        private void ReloadActiveLeaderboards(List<DBLeaderboard> activeLeaderboards, List<DBLeaderboardInstance> refreshInstances)
+        private void SaveScheduleChanges(List<DBLeaderboard> updatedLeaderboards, List<DBLeaderboardInstance> updatedInstances)
+        {
+            // Write changes to the database
+            DBManager.UpdateLeaderboards(updatedLeaderboards);
+            DBManager.UpdateOrInsertInstances(updatedInstances);
+
+            Logger.Info($"Saved schedule changes affecting {updatedLeaderboards.Count} leaderboard(s) and {updatedInstances.Count} instance(s) to the database");
+        }
+
+        /// <summary>
+        /// Applies leaderboard schedule changes to runtime data.
+        /// </summary>
+        private void ApplyScheduleChanges(List<DBLeaderboard> updatedLeaderboards, List<DBLeaderboardInstance> updatedInstances)
         {            
-            foreach (DBLeaderboard activeLeaderboard in activeLeaderboards)
+            foreach (DBLeaderboard updatedLeaderboard in updatedLeaderboards)
             {
-                Leaderboard leaderboard = GetLeaderboard((PrototypeGuid)activeLeaderboard.LeaderboardId);
+                Leaderboard leaderboard = GetLeaderboard((PrototypeGuid)updatedLeaderboard.LeaderboardId);
                 if (leaderboard == null)
                     continue;                
 
-                leaderboard.Scheduler.Initialize(activeLeaderboard);
+                // Update leaderboard scheduler
+                leaderboard.Scheduler.Initialize(updatedLeaderboard);
 
-                foreach (DBLeaderboardInstance refreshInstance in refreshInstances.Where(inst => inst.LeaderboardId == activeLeaderboard.LeaderboardId))
-                    leaderboard.RefreshInstance(refreshInstance);
+                // Update instances
+                foreach (DBLeaderboardInstance updatedInstance in updatedInstances.Where(instance => instance.LeaderboardId == updatedLeaderboard.LeaderboardId))
+                    leaderboard.RefreshInstance(updatedInstance);
             }
+
+            Logger.Info($"Applied schedule changes affecting {updatedLeaderboards.Count} leaderboard(s) and {updatedInstances.Count} instance(s) to runtime data");
         }
 
         /// <summary>

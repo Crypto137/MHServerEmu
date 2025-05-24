@@ -19,7 +19,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUsage("leaderboards reloadschedule")]
         public string ReloadSchedule(string[] @params, FrontendClient client)
         {
-            LeaderboardDatabase.Instance.ReloadSchedule();
+            LeaderboardDatabase.Instance.ReloadAndReapplySchedule();
             return "Leaderboard schedule reloaded.";
         }
 
