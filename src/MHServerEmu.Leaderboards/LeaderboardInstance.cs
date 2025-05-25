@@ -49,7 +49,7 @@ namespace MHServerEmu.Leaderboards
 
             if (dbInstance.ActivationDate == 0 && leaderboard.CanReset)
             {
-                DateTime activationDate = _leaderboard.Scheduler.CalcNextUtcActivationDate();
+                DateTime activationDate = _leaderboard.Scheduler.CalcNextUtcActivationTime();
                 dbInstance.SetActivationDateTime(activationDate);
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.UpdateInstanceActivationDate(dbInstance);

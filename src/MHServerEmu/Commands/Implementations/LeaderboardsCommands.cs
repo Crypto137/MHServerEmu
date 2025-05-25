@@ -117,8 +117,7 @@ namespace MHServerEmu.Commands.Implementations
                     $"[{(leaderboard.Scheduler.IsEnabled ? "+" : "-")}]" +
                     $"[{(long)leaderboard.LeaderboardId}] " +
                     $"{leaderboard.Prototype.DataRef.GetNameFormatted()} = " +
-                    $"{leaderboard.Scheduler.StartEvent} - " +
-                    $"{leaderboard.Scheduler.EndEvent}");
+                    $"{leaderboard.Scheduler.StartTime}");
 
             ListPool<Leaderboard>.Instance.Return(leaderboards);
             return sb.ToString();

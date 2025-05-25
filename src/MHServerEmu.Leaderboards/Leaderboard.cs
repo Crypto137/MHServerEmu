@@ -5,7 +5,6 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Leaderboards.Scheduling;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -32,7 +31,6 @@ namespace MHServerEmu.Leaderboards
             LeaderboardId = (PrototypeGuid)dbLeaderboard.LeaderboardId;
 
             // 2025/05/24 - Removed CanReset check here to allow permanent leaderboards to be included in the enabled leaderboard list
-            Scheduler.InitFromProto(proto);
             Scheduler.Initialize(dbLeaderboard);
 
             var dbManager = LeaderboardDatabase.Instance.DBManager;
@@ -175,8 +173,9 @@ namespace MHServerEmu.Leaderboards
 
                                 if (CanReset && newInstanceDb == null && Scheduler.IsEnabled)
                                 {
-                                    var nextActivationTime = Scheduler.CalcNextUtcActivationDate(instance.ActivationTime, updateTime);
-                                    if (nextActivationTime == instance.ActivationTime || nextActivationTime >= Scheduler.EndEvent) continue;
+                                    DateTime nextActivationTime = Scheduler.CalcNextUtcActivationTime(instance.ActivationTime, updateTime);
+                                    if (nextActivationTime == instance.ActivationTime || Scheduler.CheckMaxResetCount(nextActivationTime) == false)
+                                        continue;
 
                                     newInstanceDb = new()
                                     {

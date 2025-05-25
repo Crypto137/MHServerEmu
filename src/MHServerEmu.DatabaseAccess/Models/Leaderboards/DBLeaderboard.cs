@@ -8,29 +8,31 @@ namespace MHServerEmu.DatabaseAccess.Models.Leaderboards
         public string PrototypeName { get; set; }
         public long ActiveInstanceId { get; set; }
         public bool IsEnabled { get; set; }
-        public int Frequency { get; set; }
-        public int Interval { get; set; }
-        public long StartEvent { get; set; }
-        public long EndEvent { get; set; }
+        public long StartTime { get; set; }
+        public int MaxResetCount { get; set; }
+
+        public DBLeaderboard()
+        {
+        }
+
+        public DBLeaderboard(DBLeaderboard other)
+        {
+            LeaderboardId = other.LeaderboardId;
+            PrototypeName = other.PrototypeName;
+            ActiveInstanceId = other.ActiveInstanceId;
+            IsEnabled = other.IsEnabled;
+            StartTime = other.StartTime;
+            MaxResetCount = other.MaxResetCount;
+        }
 
         public DateTime GetStartDateTime()
         {
-            return Clock.TimestampToDateTime(StartEvent);
+            return Clock.TimestampToDateTime(StartTime);
         }
 
         public void SetStartDateTime(DateTime dateTime)
         {
-            StartEvent = Clock.DateTimeToTimestamp(dateTime);
-        }
-
-        public DateTime GetEndDateTime()
-        {
-            return Clock.TimestampToDateTime(EndEvent);
-        }
-
-        public void SetEndDateTime(DateTime dateTime)
-        {
-            EndEvent = Clock.DateTimeToTimestamp(dateTime);
+            StartTime = Clock.DateTimeToTimestamp(dateTime);
         }
     }
 }

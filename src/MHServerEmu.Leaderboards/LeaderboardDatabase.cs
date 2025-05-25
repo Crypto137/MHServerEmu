@@ -11,7 +11,6 @@ using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Leaderboards.Scheduling;
 
 namespace MHServerEmu.Leaderboards
 {   
@@ -97,12 +96,12 @@ namespace MHServerEmu.Leaderboards
             // Load schedule
             string scheduleJson = File.ReadAllText(schedulePath);
 
-            LeaderboardSchedule[] scheduleEntries;
+            LeaderboardScheduler[] schedulers;
 
             try
             {
-                scheduleEntries = JsonSerializer.Deserialize<LeaderboardSchedule[]>(scheduleJson, LeaderboardSchedule.JsonSerializerOptions);
-                LeaderboardSchedule.ValidateMetaLeaderboards(scheduleEntries);
+                schedulers = JsonSerializer.Deserialize<LeaderboardScheduler[]>(scheduleJson, LeaderboardScheduler.JsonSerializerOptions);
+                LeaderboardScheduler.ValidateMetaLeaderboards(schedulers);
             }
             catch (Exception e)
             {
@@ -113,37 +112,36 @@ namespace MHServerEmu.Leaderboards
             DBLeaderboard[] oldDbLeaderboards = DBManager.GetLeaderboards();
 
             // Apply schedule changes
-            foreach (LeaderboardSchedule scheduleEntry in scheduleEntries)
+            foreach (LeaderboardScheduler scheduler in schedulers)
             {
-                DBLeaderboard oldDbLeaderboard = oldDbLeaderboards.FirstOrDefault(lb => lb.LeaderboardId == scheduleEntry.LeaderboardId);
+                DBLeaderboard oldDbLeaderboard = oldDbLeaderboards.FirstOrDefault(lb => lb.LeaderboardId == (long)scheduler.LeaderboardId);
                 if (oldDbLeaderboard == null)
                 {
-                    Logger.Warn($"LoadSchedule(): Loaded schedule entry {scheduleEntry}, but found no record for it in the database");
+                    Logger.Warn($"LoadSchedule(): Loaded scheduler {scheduler}, but found no record for it in the database");
                     continue;
                 }
 
                 // Skip unchanged
-                if (scheduleEntry.IsEquivalent(oldDbLeaderboard))
+                if (scheduler.IsEquivalent(oldDbLeaderboard))
                     continue;
 
                 // Add changed leaderboard
-                DBLeaderboard updatedLeaderboard = scheduleEntry.ToDBLeaderboard();
-                updatedLeaderboard.ActiveInstanceId = oldDbLeaderboard.ActiveInstanceId;
+                DBLeaderboard updatedLeaderboard = scheduler.ApplyToDBLeaderboard(oldDbLeaderboard);
                 updatedLeaderboards.Add(updatedLeaderboard);
 
                 // Apply changes to instances if needed
                 if (oldDbLeaderboard.IsEnabled == false)
                 {
-                    if (scheduleEntry.Scheduler.IsEnabled)
+                    if (scheduler.IsEnabled)
                     {
                         // IsEnabled: False -> True
                         // Add new instance
-                        DateTime activationDate = scheduleEntry.Scheduler.CalcNextUtcActivationDate();
+                        DateTime activationDate = scheduler.CalcNextUtcActivationTime();
 
                         updatedInstances.Add(new DBLeaderboardInstance
                         {
                             InstanceId = oldDbLeaderboard.ActiveInstanceId + 1,
-                            LeaderboardId = scheduleEntry.LeaderboardId,
+                            LeaderboardId = (long)scheduler.LeaderboardId,
                             State = LeaderboardState.eLBS_Created,
                             ActivationDate = Clock.DateTimeToTimestamp(activationDate),
                             Visible = true
@@ -153,7 +151,7 @@ namespace MHServerEmu.Leaderboards
                     {
                         // IsEnabled: False -> False
                         // Deactivate active instances
-                        List<DBLeaderboardInstance> instances = DBManager.GetInstances(scheduleEntry.LeaderboardId, 0);
+                        List<DBLeaderboardInstance> instances = DBManager.GetInstances((long)scheduler.LeaderboardId, 0);
                         foreach (DBLeaderboardInstance instance in instances)
                         {
                             updatedInstances.Add(new DBLeaderboardInstance
@@ -170,19 +168,19 @@ namespace MHServerEmu.Leaderboards
                 else
                 {
                     // Update instances
-                    List<DBLeaderboardInstance> instances = DBManager.GetInstances(scheduleEntry.LeaderboardId, 0);
+                    List<DBLeaderboardInstance> instances = DBManager.GetInstances((long)scheduler.LeaderboardId, 0);
                     foreach (DBLeaderboardInstance instance in instances)
                     {
-                        if (scheduleEntry.Scheduler.IsEnabled)
+                        if (scheduler.IsEnabled)
                         {
                             // IsEnabled: True -> True
                             // Update instance
                             long activationDate = instance.ActivationDate;
 
-                            if (scheduleEntry.Scheduler.StartEvent != oldDbLeaderboard.GetStartDateTime())
+                            if (scheduler.StartTime != oldDbLeaderboard.GetStartDateTime())
                             {
                                 // Find next activation time
-                                var nextEvent = scheduleEntry.Scheduler.CalcNextUtcActivationDate();
+                                DateTime nextEvent = scheduler.CalcNextUtcActivationTime();
                                 activationDate = Clock.DateTimeToTimestamp(nextEvent);
                             }
 
@@ -324,11 +322,10 @@ namespace MHServerEmu.Leaderboards
         {
             List<DBLeaderboard> dbLeaderboards = new();
             List<DBLeaderboardInstance> dbInstances = new();
-            List<LeaderboardSchedule> schedule = new();
+            List<LeaderboardScheduler> schedule = new();
 
             DateTime currentYear = new(DateTime.Now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            long startEvent = Clock.DateTimeToTimestamp(currentYear);
-            long endEvent = Clock.DateTimeToTimestamp(currentYear.AddYears(1));
+            long startTime = Clock.DateTimeToTimestamp(currentYear);
 
             foreach (PrototypeId dataRef in GameDatabase.DataDirectory.IteratePrototypesInHierarchy<LeaderboardPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
             {
@@ -350,17 +347,12 @@ namespace MHServerEmu.Leaderboards
                     PrototypeName = dataRef.GetNameFormatted(),
                     ActiveInstanceId = (long)instanceId,
                     IsEnabled = isEnabled,
-                    Frequency = (int)LeaderboardResetFrequency.Weekly,
-                    Interval = 1,
-                    StartEvent = startEvent,
-                    EndEvent = endEvent
+                    StartTime = startTime,
+                    MaxResetCount = 0
                 };
 
-                LeaderboardSchedule dbSchedule = new LeaderboardSchedule(dbLeaderboard);
-                dbSchedule.Scheduler.InitFromProto(proto);
-
                 dbLeaderboards.Add(dbLeaderboard);
-                schedule.Add(dbSchedule);
+                schedule.Add(new(dbLeaderboard));
 
                 dbInstances.Add(new DBLeaderboardInstance
                 {
@@ -390,7 +382,7 @@ namespace MHServerEmu.Leaderboards
                 }
             }
 
-            string scheduleJson = JsonSerializer.Serialize(schedule, LeaderboardSchedule.JsonSerializerOptions);
+            string scheduleJson = JsonSerializer.Serialize(schedule, LeaderboardScheduler.JsonSerializerOptions);
             File.WriteAllText(schedulePath, scheduleJson);
 
             DBManager.InsertLeaderboards(dbLeaderboards);
