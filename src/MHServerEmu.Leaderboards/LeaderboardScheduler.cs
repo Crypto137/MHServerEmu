@@ -110,7 +110,7 @@ namespace MHServerEmu.Leaderboards
             }
         }
 
-        public DateTime CalcNextUtcActivationTime(DateTime? referenceTimeArg = null, DateTime? currentTimeArg = null)
+        public DateTime CalcNextUtcActivationDate(DateTime? referenceTimeArg = null, DateTime? currentTimeArg = null)
         {
             // Fall back to StartTime if no referenceTime is provided
             DateTime referenceTime = referenceTimeArg ?? StartTime;
@@ -122,10 +122,23 @@ namespace MHServerEmu.Leaderboards
             currentTime = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, 0, currentTime.Kind);
 
             // Calculate the next reset time relative to the reference time
-            return CalcNextUtcActivationTimeHelper(referenceTime, currentTime);
+            DateTime activationTime = CalcNextUtcActivationDateHelper(referenceTime, currentTime);
+
+            // Check reset cap if needed
+            if (MaxResetCount > 0)
+            {
+                DateTime finalActivationTime = StartTime;
+                for (int i = 0; i < MaxResetCount; i++)
+                    finalActivationTime = CalcResetTime(finalActivationTime);
+
+                if (activationTime > finalActivationTime)
+                    return finalActivationTime;
+            }
+
+            return activationTime;
         }
 
-        private DateTime CalcNextUtcActivationTimeHelper(DateTime activationTime, DateTime currentTime)
+        private DateTime CalcNextUtcActivationDateHelper(DateTime activationTime, DateTime currentTime)
         {
             DateTime expirationTime = currentTime;
             if (activationTime == currentTime || activationTime == StartTime)
@@ -139,21 +152,6 @@ namespace MHServerEmu.Leaderboards
             }
 
             return activationTime;
-        }
-
-        public bool CheckMaxResetCount(DateTime activationTime)
-        {
-            // TODO: Should probably be combined with CalcNextUtcActivationTime to apply in all cases
-
-            // <= 0 means that MaxResetCount is disabled
-            if (MaxResetCount <= 0)
-                return true;
-
-            DateTime finalActivationTime = StartTime;
-            for (int i = 0; i < MaxResetCount; i++)
-                finalActivationTime = CalcResetTime(finalActivationTime);
-
-            return activationTime <= finalActivationTime;
         }
 
         public DateTime CalcExpirationTime(DateTime activationTime)

@@ -136,7 +136,7 @@ namespace MHServerEmu.Leaderboards
                     {
                         // IsEnabled: False -> True
                         // Add new instance
-                        DateTime activationDate = scheduler.CalcNextUtcActivationTime();
+                        DateTime activationDate = scheduler.CalcNextUtcActivationDate();
 
                         updatedInstances.Add(new DBLeaderboardInstance
                         {
@@ -180,7 +180,7 @@ namespace MHServerEmu.Leaderboards
                             if (scheduler.StartTime != oldDbLeaderboard.GetStartDateTime())
                             {
                                 // Find next activation time
-                                DateTime nextEvent = scheduler.CalcNextUtcActivationTime();
+                                DateTime nextEvent = scheduler.CalcNextUtcActivationDate();
                                 activationDate = Clock.DateTimeToTimestamp(nextEvent);
                             }
 
