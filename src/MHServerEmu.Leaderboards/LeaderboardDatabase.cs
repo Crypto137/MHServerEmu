@@ -177,7 +177,7 @@ namespace MHServerEmu.Leaderboards
                             // Update instance
                             long activationDate = instance.ActivationDate;
 
-                            if (scheduler.StartTime != oldDbLeaderboard.GetStartDateTime())
+                            if (scheduler.StartTime != oldDbLeaderboard.GetStartDateTime() || scheduler.MaxResetCount != oldDbLeaderboard.MaxResetCount)
                             {
                                 // Find next activation time
                                 DateTime nextEvent = scheduler.CalcNextUtcActivationDate();
