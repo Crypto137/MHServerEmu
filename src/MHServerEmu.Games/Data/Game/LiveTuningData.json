@@ -17,7 +17,7 @@
   {
     "Prototype": "",
     "Setting": "eGTV_PVPEnabled",
-    "Value": 2.0
+    "Value": 0.0
   },
   {
     "Prototype": "",
@@ -130,16 +130,6 @@
     "Value": 1.0
   },
   {
-    "Prototype": "Entity/Items/CurrencyItems/SeasonalLE/Seasonal/Anniversary/BirthdayCakeSlice2016.prototype",
-    "Setting": "eWETV_Enabled",
-    "Value": 0.0
-  },
-  {
-    "Prototype": "Entity/Items/Orbs/PowerUps/Items/Event/WinterEvent/BirthdayEventPowerUpParent.prototype",
-    "Setting": "eWETV_Enabled",
-    "Value": 0.0
-  },
-  {
     "Prototype": "Powers/EnemyPowers/Boss/MindlessOneBoss/GroundStomp.prototype",
     "Setting": "ePTV_PowerDamagePVE",
     "Value": 0.3
@@ -247,6 +237,11 @@
   {
     "Prototype": "Regions/RAIDS/AxisRaid/AxisRaidRegionRed.prototype",
     "Setting": "eRTV_Enabled",
+    "Value": 0.0
+  },
+  {
+    "Prototype": "Loot/Tables/Events/Anniversary2017Loot.prototype",
+    "Setting": "eLTTV_Enabled",
     "Value": 0.0
   },
   {
