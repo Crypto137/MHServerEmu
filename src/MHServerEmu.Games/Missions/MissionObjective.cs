@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Missions
         public byte PrototypeIndex { get => _prototypeIndex; }
         public MissionObjectiveState State { get => _objectiveState; }
         public TimeSpan TimeExpire { get => _objectiveStateExpireTime; }
-        public TimeSpan TimeRemainingForObjective { get => _objectiveStateExpireTime - Clock.GameTime; }
+        public TimeSpan TimeRemainingForObjective { get => _objectiveStateExpireTime - Game.CurrentTime; }
         public bool IsChangingState { get; private set; }
         public EventGroup EventGroup { get; } = new();
         public bool IsTimed { get => Prototype.TimeLimitSeconds > 0; }
@@ -905,7 +905,7 @@ namespace MHServerEmu.Games.Missions
         {
             if (_timeLimitEvent.IsValid) return false;
 
-            _objectiveStateExpireTime = Clock.GameTime + timeLimit;
+            _objectiveStateExpireTime = Game.CurrentTime + timeLimit;
 
             var scheduler = Game.GameEventScheduler;
             if (scheduler == null) return false;

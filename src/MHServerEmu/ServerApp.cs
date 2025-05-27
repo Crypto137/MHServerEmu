@@ -11,6 +11,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Frontend;
+using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
@@ -85,6 +86,7 @@ namespace MHServerEmu
             serverManager.RegisterGameService(new AuthServer(), ServerType.AuthServer);
             serverManager.RegisterGameService(new PlayerManagerService(), ServerType.PlayerManager);
             serverManager.RegisterGameService(new GroupingManagerService(), ServerType.GroupingManager);
+            serverManager.RegisterGameService(new GameInstanceService(), ServerType.GameInstanceServer);
             serverManager.RegisterGameService(new BillingService(), ServerType.Billing);
             serverManager.RegisterGameService(new LeaderboardService(), ServerType.Leaderboard);
 

@@ -467,7 +467,7 @@ namespace MHServerEmu.Games.UI.Widgets
             sb.AppendLine($"{nameof(HealthPercent)}: {HealthPercent}");
             sb.AppendLine($"{nameof(IconIndexForHealthPercentEval)}: {IconIndexForHealthPercentEval}");
             sb.AppendLine($"{nameof(ForceRefreshEntityHealthPercent)}: {ForceRefreshEntityHealthPercent}");
-            sb.AppendLine($"{nameof(EnrageStartTime)}: {EnrageStartTime - Clock.GameTime}");
+            sb.AppendLine($"{nameof(EnrageStartTime)}: {EnrageStartTime - Game.Current.CurrentTime}");
             sb.AppendLine($"{nameof(HasPropertyEntryEval)}: {HasPropertyEntryEval}");
             sb.AppendLine($"{nameof(PropertyEntryTableIndex)}: {PropertyEntryTableIndex}");
             return sb.ToString();

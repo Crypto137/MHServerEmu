@@ -34,14 +34,17 @@ namespace MHServerEmu.Core.Config
         /// </summary>
         public T GetConfig<T>() where T: ConfigContainer, new()
         {
-            if (_configContainerDict.TryGetValue(typeof(T), out ConfigContainer container) == false)
+            lock (_configContainerDict)
             {
-                container = new T();
-                container.Initialize(_iniFile, _overrideFile);
-                _configContainerDict.Add(typeof(T), container);
-            }
+                if (_configContainerDict.TryGetValue(typeof(T), out ConfigContainer container) == false)
+                {
+                    container = new T();
+                    container.Initialize(_iniFile, _overrideFile);
+                    _configContainerDict.Add(typeof(T), container);
+                }
 
-            return (T)container;
+                return (T)container;
+            }
         }
     }
 }

@@ -24,6 +24,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Missions;
@@ -130,6 +131,7 @@ namespace MHServerEmu.Games.Entities
         public GameplayOptions GameplayOptions { get; private set; } = new();
         public AchievementState AchievementState { get; private set; } = new();
         public AchievementManager AchievementManager { get; private set; }
+        public LeaderboardManager LeaderboardManager { get; private set; }
         public ScoringEventContext ScoringEventContext { get; set; }
 
         public bool IsFullscreenMoviePlaying { get => Properties[PropertyEnum.FullScreenMoviePlaying]; }
@@ -171,6 +173,7 @@ namespace MHServerEmu.Games.Entities
         {
             MissionManager = new(Game, this);
             AchievementManager = new(this);
+            LeaderboardManager = new(this);
             ScoringEventContext = new();
             GameplayOptions.SetOwner(this);
         }
@@ -192,6 +195,8 @@ namespace MHServerEmu.Games.Entities
 
             _community = new(this);
             _community.Initialize();
+
+            LeaderboardManager.Initialize();
 
             // Default loading screen before we start loading into a region
             QueueLoadingScreen(PrototypeId.Invalid);
@@ -492,6 +497,8 @@ namespace MHServerEmu.Games.Entities
             if (region != null)
                 MissionManager.Shutdown(region);
 
+            LeaderboardManager.Destroy();
+
             base.Destroy();
         }
 
@@ -539,12 +546,24 @@ namespace MHServerEmu.Games.Entities
             CurrentAvatar?.UpdateAvatarSynergyExperienceBonus();
         }
 
+        #region Public Event Team
+
         public PrototypeId GetPublicEventTeam(PublicEventPrototype eventProto)
         {
             int eventInstance = eventProto.GetEventInstance();
             var teamProp = new PropertyId(PropertyEnum.PublicEventTeamAssignment, eventProto.DataRef, eventInstance);
             return Properties[teamProp];
         }
+
+        public PublicEventTeamPrototype GetPublicEventTeamPrototype()
+        {
+            // TODO PropertyEnum.PublicEventTeamAssignment
+            // GetPublicEventTeam(ActivePublicEvent).As<PublicEventTeamPrototype>()
+            //return ((PrototypeId)12697619663363773645).As<PublicEventTeamPrototype>();  // Events/PublicEvents/Teams/CivilWarAntiReg.prototype
+            return null;
+        }
+
+        #endregion
 
         #region Region
 
@@ -2725,12 +2744,14 @@ namespace MHServerEmu.Games.Entities
         public void OnScoringEvent(in ScoringEvent scoringEvent, ulong entityId = Entity.InvalidId)
         {
             AchievementManager.OnScoringEvent(scoringEvent, entityId);
+            LeaderboardManager.OnScoringEvent(scoringEvent, entityId);
         }
 
         public void UpdateScoringEventContext()
         {
             ScoringEventContext = new(this);
             AchievementManager.OnUpdateEventContext();
+            LeaderboardManager.OnUpdateEventContext();
         }
 
         #endregion

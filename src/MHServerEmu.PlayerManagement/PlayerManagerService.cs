@@ -96,6 +96,16 @@ namespace MHServerEmu.PlayerManagement
                     OnRouteMessage(routeMessage);
                     break;
 
+                case GameServiceProtocol.LeaderboardStateChange leaderboardStateChange:
+                    // REMOVEME: This should be handled by the GameInstanceService on its own
+                    _gameManager.BroadcastServiceMessage(leaderboardStateChange);
+                    break;
+
+                case GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
+                    // REMOVEME: This should be handled by the GameInstanceService on its own
+                    OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
@@ -154,6 +164,23 @@ namespace MHServerEmu.PlayerManagement
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
+        }
+
+        private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
+        {
+            // REMOVEME: This should be handled by the GameInstanceService on its own
+            ulong gameId = 0;
+            lock (_playerDict)
+            {
+                if (_playerDict.TryGetValue(leaderboardRewardRequestResponse.ParticipantId, out FrontendClient client))
+                    gameId = client.GameId;
+            }
+
+            Game game = _gameManager.GetGameById(gameId);
+            if (game == null) return Logger.WarnReturn(false, "OnLeaderboardRewardRequestResponse(): game == null");
+
+            game.ReceiveServiceMessage(leaderboardRewardRequestResponse);
+            return true;
         }
 
         #endregion

@@ -34,6 +34,11 @@ namespace MHServerEmu.Core.System.Time
         public static DateTime UtcNowPrecise { get => _utcBase.Add(_utcStopwatch.Elapsed); }
 
         /// <summary>
+        /// Returns a Timestamp representing the current precise date and time, expressed as the Coordinated Universal Time (UTC).
+        /// </summary>
+        public static long UtcNowTimestamp { get => (long)(UtcNowPrecise - UnixEpoch).TotalSeconds; }
+
+        /// <summary>
         /// Returns a <see cref="TimeSpan"/> representing the current calendar Unix time (epoch Jan 01 1970 00:00:00 GMT+0000).
         /// </summary>
         public static TimeSpan UnixTime { get => UtcNowPrecise - UnixEpoch; }
@@ -99,6 +104,14 @@ namespace MHServerEmu.Core.System.Time
         }
 
         /// <summary>
+        /// Converts the provided <see cref="DateTime"/> value to a Timestamp representing Unix time.
+        /// </summary>
+        public static long DateTimeToTimestamp(DateTime dateTime)
+        {
+            return (long)(dateTime - UnixEpoch).TotalSeconds;
+        }
+
+        /// <summary>
         /// Converts the provided <see cref="DateTime"/> value to a <see cref="TimeSpan"/> representing game time.
         /// </summary>
         public static TimeSpan DateTimeToGameTime(DateTime dateTime)
@@ -112,6 +125,14 @@ namespace MHServerEmu.Core.System.Time
         public static DateTime UnixTimeToDateTime(TimeSpan timeSpan)
         {
             return UnixEpoch.Add(timeSpan);
+        }
+
+        /// <summary>
+        /// Converts the provided Timestamp value representing Unix time to <see cref="DateTime"/>.
+        /// </summary>
+        public static DateTime TimestampToDateTime(long timestamp)
+        {
+            return UnixEpoch.Add(TimeSpan.FromSeconds(timestamp));
         }
 
         /// <summary>

@@ -17,6 +17,8 @@ namespace MHServerEmu.Games.UI
     /// </summary>
     public class UISyncData : ISerialize
     {
+        private const int UISyncDataTimeStartOffsetMS = 100;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         protected readonly UIDataProvider _uiDataProvider;
@@ -97,8 +99,8 @@ namespace MHServerEmu.Games.UI
 
             var game = Game.Current;
 
-            // Client checks _timeStart against its own GameTime, so here need to add time offset
-            var clientCurrentTime = (long)game.CurrentTime.TotalMilliseconds - 100;
+            // Client checks _timeStart against its own GameTime, so we need to add a time offset here to avoid UI issues
+            var clientCurrentTime = (long)game.CurrentTime.TotalMilliseconds - UISyncDataTimeStartOffsetMS;
 
             _timeStart = clientCurrentTime - timeElapsedMS;
             UpdateUI();

@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Missions
         public MissionState State { get => _state; }
         public float CurrentObjectiveSequence { get => _currentObjectiveSequence; }
         public TimeSpan TimeExpireCurrentState { get => _timeExpireCurrentState; }
-        public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Clock.GameTime; }
+        public TimeSpan TimeRemainingForCurrentState { get => _timeExpireCurrentState - Game.CurrentTime; }
         public PrototypeId PrototypeDataRef { get => _prototypeDataRef; }
         public MissionPrototype Prototype { get; }
         public int LootSeed { get => _lootSeed; set => _lootSeed = value; } // AvatarMissionLootSeed
@@ -2515,7 +2515,7 @@ namespace MHServerEmu.Games.Missions
                     timeLimit = TimeSpan.FromMilliseconds(1);
             }
 
-            _timeExpireCurrentState = Clock.GameTime + timeLimit;
+            _timeExpireCurrentState = Game.CurrentTime + timeLimit;
 
             var scheduler = GameEventScheduler;
             if (scheduler == null) return false;

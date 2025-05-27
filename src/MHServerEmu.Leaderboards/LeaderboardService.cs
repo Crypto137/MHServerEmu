@@ -1,8 +1,9 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.DatabaseAccess;
-using MHServerEmu.Games.GameData;
+using MHServerEmu.DatabaseAccess.SQLite;
+using MHServerEmu.Games;
 
 namespace MHServerEmu.Leaderboards
 {
@@ -11,17 +12,47 @@ namespace MHServerEmu.Leaderboards
     /// </summary>
     public class LeaderboardService : IGameService
     {
-        private const ushort MuxChannel = 1;
+        private const int UpdateTimeMS = 1000;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly LeaderboardManager _leaderboardManager = new();
+        private readonly LeaderboardDatabase _database = LeaderboardDatabase.Instance;
+        private readonly LeaderboardRewardManager _rewardManager = new();
+
+        private bool _isRunning;
 
         #region IGameService Implementation
 
-        public void Run() { }
+        public void Run()
+        {
+            var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();
+            _isRunning = config.LeaderboardsEnabled;
 
-        public void Shutdown() { }
+            if (_isRunning == false)
+                return;
+
+            _database.Initialize(SQLiteLeaderboardDBManager.Instance);
+
+            while (_isRunning)
+            {
+                // Update state for instances
+                _database.UpdateState();
+
+                // Process score updates
+                _database.ProcessLeaderboardScoreUpdateQueue();
+
+                // Process rewards
+                _rewardManager.Update();
+
+                Thread.Sleep(UpdateTimeMS);
+            }
+        }
+
+        public void Shutdown() 
+        {
+            _database?.Save();
+            _isRunning = false;
+        }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
@@ -29,6 +60,18 @@ namespace MHServerEmu.Leaderboards
             {
                 case GameServiceProtocol.RouteMessage routeMailboxMessage:
                     OnRouteMailboxMessage(routeMailboxMessage);
+                    break;
+
+                case GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch:
+                    _database.EnqueueLeaderboardScoreUpdate(leaderboardScoreUpdateBatch);
+                    break;
+
+                case GameServiceProtocol.LeaderboardRewardRequest leaderboardRewardRequest:
+                    _rewardManager.OnLeaderboardRewardRequest(leaderboardRewardRequest);
+                    break;
+
+                case GameServiceProtocol.LeaderboardRewardConfirmation leaderboardRewardConfirmation:
+                    _rewardManager.OnLeaderboardRewardConfirmation(leaderboardRewardConfirmation);
                     break;
 
                 default:
@@ -39,56 +82,42 @@ namespace MHServerEmu.Leaderboards
 
         public string GetStatus()
         {
-            return $"Active Leaderboards: {_leaderboardManager.LeaderboardCount}";
+            return $"Active Leaderboards: {(_database != null ? _database.LeaderboardCount : 0)}";
         }
 
         private void OnRouteMailboxMessage(in GameServiceProtocol.RouteMessage routeMailboxMessage)
         {
+            if (routeMailboxMessage.Protocol != typeof(ClientToGameServerMessage))
+            {
+                Logger.Warn($"OnRouteMailboxMessage(): Unhandled protocol {routeMailboxMessage.Protocol.Name}");
+                return;
+            }
+
             IFrontendClient client = routeMailboxMessage.Client;
             MailboxMessage message = routeMailboxMessage.Message;
 
             switch ((ClientToGameServerMessage)message.Id)
             {
-                case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:  OnInitializeRequest(client, message); break;
-                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnRequest(client, message); break;
+                case ClientToGameServerMessage.NetMessageLeaderboardRequest:            OnLeaderboardRequest(client, message); break;
 
-                default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
+                default: Logger.Warn($"OnRouteMailboxMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
         }
 
         #endregion
 
-        private bool OnInitializeRequest(IFrontendClient client, MailboxMessage message)
-        {
-            var initializeRequest = message.As<NetMessageLeaderboardInitializeRequest>();
-            if (initializeRequest == null) return Logger.WarnReturn(false, $"OnInitializeRequest(): Failed to retrieve message");
-
-            Logger.Trace("Received NetMessageLeaderboardInitializeRequest");
-
-            var response = NetMessageLeaderboardInitializeRequestResponse.CreateBuilder();
-
-            foreach (PrototypeGuid guid in initializeRequest.LeaderboardIdsList)
-                response.AddLeaderboardInitDataList(_leaderboardManager.GetLeaderboardInitData(guid));
-
-            client.SendMessage(MuxChannel, response.Build());
-
-            return true;
-        }
-
-        private bool OnRequest(IFrontendClient client, MailboxMessage message)
+        private bool OnLeaderboardRequest(IFrontendClient client, MailboxMessage message)
         {
             var request = message.As<NetMessageLeaderboardRequest>();
-            if (request == null) return Logger.WarnReturn(false, $"OnRequest(): Failed to retrieve message");
+            if (request == null) return Logger.WarnReturn(false, $"OnLeaderboardRequest(): Failed to retrieve message");
 
-            if (request.HasDataQuery == false)
-                Logger.WarnReturn(false, "OnRequest(): HasDataQuery == false");
+            //Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
 
-            Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
+            // NOTE: If we ever end up separating LeaderboardService from GIS, we need to change this to a response service message to GIS.
+            const ushort MuxChannel = 1;
 
-            Leaderboard leaderboard = _leaderboardManager.GetLeaderboard((PrototypeGuid)request.DataQuery.LeaderboardId, request.DataQuery.InstanceId);;
-            
             client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
-                .SetReport(leaderboard.GetReport(request, ((IDBAccountOwner)client).Account.PlayerName))
+                .SetReport(_database.GetLeaderboardReport(request))
                 .Build());
 
             return true;
