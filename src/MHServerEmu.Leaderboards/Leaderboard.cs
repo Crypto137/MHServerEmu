@@ -104,6 +104,10 @@ namespace MHServerEmu.Leaderboards
                 Instances.Add(instance);
                 Instances.Sort((a, b) => b.InstanceId.CompareTo(a.InstanceId));
 
+                // Remove the oldest instance from runtime data if we are already at cap
+                if (Instances.Count > Prototype.MaxArchivedInstances + 1)
+                    Instances.RemoveAt(Instances.Count - 1);
+
                 if (loadEntries) 
                     instance.LoadEntries();
                 else
