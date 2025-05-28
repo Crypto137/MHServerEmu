@@ -113,12 +113,15 @@ namespace MHServerEmu.Leaderboards
 
             //Logger.Trace($"Received NetMessageLeaderboardRequest for {GameDatabase.GetPrototypeNameByGuid((PrototypeGuid)request.DataQuery.LeaderboardId)}");
 
-            // NOTE: If we ever end up separating LeaderboardService from GIS, we need to change this to a response service message to GIS.
+            // TODO: Handle this in the leaderboard service thread and send the report to the game instance as a service message.
             const ushort MuxChannel = 1;
 
-            client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
-                .SetReport(_database.GetLeaderboardReport(request))
-                .Build());
+            Task.Run(() =>
+            {
+                client.SendMessage(MuxChannel, NetMessageLeaderboardReportClient.CreateBuilder()
+                    .SetReport(_database.GetLeaderboardReport(request))
+                    .Build());
+            });
 
             return true;
         }
