@@ -70,6 +70,27 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return account != null;
         }
 
+        public bool TryGetPlayerName(ulong id, out string playerName)
+        {
+            using SQLiteConnection connection = GetConnection();
+            
+            playerName = connection.QueryFirstOrDefault<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)id });
+
+            return string.IsNullOrWhiteSpace(playerName) == false;
+        }
+
+        public bool GetPlayerNames(Dictionary<ulong, string> playerNames)
+        {
+            using SQLiteConnection connection = GetConnection();
+            
+            var accounts = connection.Query<DBAccount>("SELECT Id, PlayerName FROM Account");
+
+            foreach (DBAccount account in accounts)
+                playerNames[(ulong)account.Id] = account.PlayerName;
+
+            return playerNames.Count > 0;
+        }
+
         public bool QueryIsPlayerNameTaken(string playerName)
         {
             using SQLiteConnection connection = GetConnection();
@@ -398,41 +419,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             connection.Execute(@$"UPDATE {tableName} SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
                                 Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
                                 entries, transaction);
-        }
-
-        /// <summary>
-        /// Queries a player names from the database.
-        /// </summary>
-        public bool TryGetPlayerNames(Dictionary<ulong, string> playerNames)
-        {
-            if (_connectionString == null) return false;
-
-            using SQLiteConnection connection = GetConnection();
-            var playersList = connection.Query<DBPlayerName>("SELECT Id, PlayerName FROM Account");
-
-            foreach (var player in playersList)
-            {
-                playerNames[(ulong)player.Id] = player.PlayerName;
-            }
-
-            return playerNames.Count > 0;
-        }
-
-        public string UpdatePlayerName(Dictionary<ulong, string> playerNames, ulong id)
-        {
-            string playerName = $"Player{id}";
-            if (_connectionString == null) return playerName;
-
-            using SQLiteConnection connection = GetConnection();
-            var result = connection.Query<string>("SELECT PlayerName FROM Account WHERE Id = @Id", new { Id = (long)id });
-
-            if (result.Count() == 1) 
-            {
-                playerName = result.First();
-                playerNames[id] = playerName;                
-            }
-
-            return playerName;
         }
     }
 }

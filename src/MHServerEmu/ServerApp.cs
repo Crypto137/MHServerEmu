@@ -204,13 +204,14 @@ namespace MHServerEmu
         {
             // JsonDBManager saves a single account in a JSON file
             var config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
-            IDBManager dbManager = config.UseJsonDBManager ? JsonDBManager.Instance : SQLiteDBManager.Instance;
+            IDBManager.Instance = config.UseJsonDBManager ? JsonDBManager.Instance : SQLiteDBManager.Instance;
 
             return PakFileSystem.Instance.Initialize()
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.Instance.Initialize()
-                && AccountManager.Initialize(dbManager);
+                && IDBManager.Instance.Initialize()
+                && AccountManager.Initialize();
         }
     }
 }

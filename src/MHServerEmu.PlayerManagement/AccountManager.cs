@@ -20,10 +20,10 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Initializes <see cref="AccountManager"/>.
         /// </summary>
-        public static bool Initialize(IDBManager dbManager)
+        public static bool Initialize()
         {
-            DBManager = dbManager;
-            return DBManager.Initialize();
+            DBManager = IDBManager.Instance;
+            return true;
         }
 
         /// <summary>

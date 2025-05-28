@@ -72,6 +72,17 @@ namespace MHServerEmu.DatabaseAccess.Json
             return true;
         }
 
+        public bool TryGetPlayerName(ulong id, out string playerName)
+        {
+            playerName = $"Player{id}";
+            return true;
+        }
+
+        public bool GetPlayerNames(Dictionary<ulong, string> playerNames)
+        {
+            return false;
+        }
+
         public bool QueryIsPlayerNameTaken(string playerName)
         {
             return Logger.WarnReturn(true, "QueryIsPlayerNameTaken(): Operation not supported");
@@ -121,6 +132,5 @@ namespace MHServerEmu.DatabaseAccess.Json
 
             _lastBackupTime = now;
         }
-
     }
 }

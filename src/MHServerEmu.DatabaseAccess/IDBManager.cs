@@ -8,6 +8,11 @@ namespace MHServerEmu.DatabaseAccess
     public interface IDBManager
     {
         /// <summary>
+        /// The current <see cref="IDBManager"/> implementation.
+        /// </summary>
+        public static IDBManager Instance { get; set; }
+
+        /// <summary>
         /// Set this to false to disable password and flag verification for accounts.
         /// </summary>
         public bool VerifyAccounts { get => true; }
@@ -21,6 +26,16 @@ namespace MHServerEmu.DatabaseAccess
         /// Queries a <see cref="DBAccount"/> from the database by its email.
         /// </summary>
         public bool TryQueryAccountByEmail(string email, out DBAccount account);
+
+        /// <summary>
+        /// Queries the name of the player with the specified id. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool TryGetPlayerName(ulong id, out string playerName);
+
+        /// <summary>
+        /// Queries the names of all registered players from the database and adds them to the provided <see cref="Dictionary{TKey, TValue}"/>.
+        /// </summary>
+        public bool GetPlayerNames(Dictionary<ulong, string> playerNames);
 
         /// <summary>
         /// Queries if the specified player name is already taken.

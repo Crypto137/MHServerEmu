@@ -7,6 +7,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Games.GameData;
@@ -66,10 +67,8 @@ namespace MHServerEmu.Leaderboards
                 GenerateTables(schedulePath);
 
             // Load and cache player names (remove/disable this if the number of accounts gets out of hand)
-            if (SQLiteDBManager.Instance.TryGetPlayerNames(_playerNames))
+            if (IDBManager.Instance.GetPlayerNames(_playerNames))
                 Logger.Info($"Loaded and cached {_playerNames.Count} player names");
-            else
-                Logger.Warn($"Failed get player names from SQLiteDBManager");
 
             // Load the schedule and write changes to the database if needed
             List<DBLeaderboard> updatedLeaderboards = new();
@@ -401,7 +400,14 @@ namespace MHServerEmu.Leaderboards
                     return playerName;
 
                 // Query the database if not cached
-                return SQLiteDBManager.Instance.UpdatePlayerName(_playerNames, participantId);
+                if (IDBManager.Instance.TryGetPlayerName(participantId, out playerName) == false)
+                {
+                    playerName = $"Player{participantId}";
+                    Logger.Warn($"GetPlayerNameById(): Failed to get player name for participant 0x{participantId:X}");
+                }
+
+                _playerNames[participantId] = playerName;
+                return playerName;
             }
         }
 
