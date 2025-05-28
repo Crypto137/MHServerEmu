@@ -1694,6 +1694,20 @@ namespace MHServerEmu.Games.Entities
             return success;
         }
 
+        public bool ApplyDamageTransferPowerResults(PowerResults powerResults)
+        {
+            // Applies power results without extra stuff (e.g. checking procs)
+
+            // Send power results to clients
+            if (powerResults.ShouldSendToClient())
+            {
+                NetMessagePowerResult powerResultMessage = ArchiveMessageBuilder.BuildPowerResultMessage(powerResults);
+                Game.NetworkManager.SendMessageToInterested(powerResultMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+            }
+
+            return ApplyPowerResultsInternal(powerResults);
+        }
+
         private bool TriggerOnHitEffects(PowerResults powerResults, WorldEntity powerOwner)
         {
             // powerOwner has been null checked above in ApplyPowerResults()

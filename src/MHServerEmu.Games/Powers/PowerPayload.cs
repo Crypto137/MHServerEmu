@@ -1886,7 +1886,106 @@ namespace MHServerEmu.Games.Powers
 
         private bool CalculateResultDamageTransfer(PowerResults results, WorldEntity target)
         {
-            // TODO, used for SurturRaid - MistressOfMagma
+            EntityManager entityManager = Game.EntityManager;
+
+            Span<float> transferredDamageCurrent = stackalloc float[(int)DamageType.NumDamageTypes];
+            Span<float> transferredDamageCurrentClient = stackalloc float[(int)DamageType.NumDamageTypes];
+
+            Span<float> transferredDamageTotal = stackalloc float[(int)DamageType.NumDamageTypes];
+            transferredDamageTotal.Clear();
+
+            // Apply damage transfer from conditions
+            foreach (Condition condition in target.ConditionCollection)
+            {
+                ulong transferTargetId = condition.Properties[PropertyEnum.DamageTransferID];
+                if (transferTargetId == Entity.InvalidId)
+                    continue;
+
+                // Transferring to itself can cause a loop
+                if (transferTargetId == target.Id)
+                {
+                    Logger.Warn($"CalculateResultDamageTransfer(): Target [{target}] is attempting to transfer damage to itself");
+                    continue;
+                }
+
+                WorldEntity transferTarget = entityManager.GetEntity<WorldEntity>(transferTargetId);
+                if (transferTarget == null || transferTarget.IsInWorld == false)
+                    continue;
+
+                // Check transfer chance
+                if (Game.Random.NextFloat() > condition.Properties[PropertyEnum.DamageTransferChance])
+                    continue;
+
+                results.TransferToId = transferTargetId;
+
+                float damageTransferPct = condition.Properties[PropertyEnum.DamageTransferPct];
+                if (damageTransferPct <= 0f)
+                    continue;
+
+                // Accumulate damage transfer
+                float damageTransferMax = condition.Properties[PropertyEnum.DamageTransferMax];
+
+                transferredDamageCurrent.Clear();
+                transferredDamageCurrentClient.Clear();
+
+                foreach (var kvp in results.Properties.IteratePropertyRange(PropertyEnum.Damage))
+                {
+                    Property.FromParam(kvp.Key, 0, out int damageTypeValue);
+                    DamageType damageType = (DamageType)damageTypeValue;
+
+                    float damage = kvp.Value;
+                    transferredDamageCurrent[damageTypeValue] = damage * damageTransferPct;
+
+                    if (damageTransferMax > 0f)
+                        transferredDamageCurrent[damageTypeValue] = MathHelper.ClampNoThrow(transferredDamageCurrent[damageTypeValue], 0f, damageTransferMax);
+
+                    if (transferredDamageCurrent[damageTypeValue] <= 0f)
+                        continue;
+
+                    transferredDamageTotal[damageTypeValue] += transferredDamageCurrent[damageTypeValue];
+
+                    float damageForClient = results.GetDamageForClient(damageType);
+                    float damageForClientRatio = transferredDamageCurrent[damageTypeValue] / damage;
+                    transferredDamageCurrentClient[damageTypeValue] = damageForClient * damageForClientRatio;
+                }
+
+                // Apply damage transfer
+                PowerResults transferResults = new();
+
+                transferResults.Init(results.PowerOwnerId, results.UltimateOwnerId, transferTarget.Id,
+                    results.PowerOwnerPosition, results.PowerPrototype, results.PowerAssetRefOverride, true);
+                transferResults.SetKeywordsMask(KeywordsMask);
+                transferResults.SetFlag(PowerResultFlags.OverTime, results.TestFlag(PowerResultFlags.OverTime));
+
+                for (DamageType damageType = 0; damageType < DamageType.NumDamageTypes; damageType++)
+                {
+                    transferResults.Properties[PropertyEnum.Damage, damageType] = transferredDamageCurrent[(int)damageType];
+                    transferResults.SetDamageForClient(damageType, transferredDamageCurrentClient[(int)damageType]);
+                }
+
+                transferTarget.ApplyDamageTransferPowerResults(transferResults);
+            }
+
+            // Remove transferred damage from the results for this target
+            for (DamageType type = 0; type < DamageType.NumDamageTypes; type++)
+            {
+                float transferredDamageForType = transferredDamageTotal[(int)type];
+                if (transferredDamageForType <= 0f)
+                    continue;
+
+                float damage = results.Properties[PropertyEnum.Damage, type];
+                if (damage <= 0f)
+                    continue;
+
+                // Reduce actual damage
+                results.Properties[PropertyEnum.Damage, type] = damage - transferredDamageForType;
+
+                // Reduce client facing fake damage
+                float transferRatio = Math.Min(1f - (transferredDamageForType / damage), 1f);
+                float damageForClient = results.GetDamageForClient(type) * transferRatio;
+                results.SetDamageForClient(type, damageForClient);
+            }
+
             return true;
         }
 
@@ -2262,6 +2361,10 @@ namespace MHServerEmu.Games.Powers
             // Taunt
             if (conditionProps[PropertyEnum.Taunted] && PowerOwnerId != Entity.InvalidId)
                 conditionProps[PropertyEnum.TauntersID] = PowerOwnerId;
+
+            // Damage Transfer
+            if (conditionProps[PropertyEnum.DamageTransferChance] > 0f)
+                conditionProps[PropertyEnum.DamageTransferID] = PowerOwnerId;
 
             // Procs
             CalculateResultConditionProcProperties(results, target, condition.Properties);
