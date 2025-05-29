@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Diagnostics;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
@@ -373,6 +374,7 @@ namespace MHServerEmu.Games.Network
         {
             // We need to recreate the player entity when we transfer between regions because client UI breaks
             // when we reuse the same player entity id (e.g. inventory grid stops updating).
+            Stopwatch stopwatch = Stopwatch.StartNew();
             
             // Player entity exiting the game removes it from its AOI and also removes the current avatar from the world.
             Player.ExitGame();
@@ -387,6 +389,10 @@ namespace MHServerEmu.Games.Network
 
             // Recreate player
             LoadFromDBAccount();
+
+            stopwatch.Stop();
+            if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
+                Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
         }
 
         #endregion
