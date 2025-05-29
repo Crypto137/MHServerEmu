@@ -151,8 +151,11 @@ namespace MHServerEmu.Games.Entities.Persistence
             long containerDbGuid = (long)container.DatabaseUniqueId;
             ulong containerEntityId = container.Id;
 
-            foreach (DBEntity dbEntity in entities.GetEntriesForContainer(containerDbGuid))
+            IReadOnlyList<DBEntity> dbEntityList = entities.GetEntriesForContainer(containerDbGuid);
+            for (int i = 0; i < dbEntityList.Count; i++)
             {
+                DBEntity dbEntity = dbEntityList[i];
+
                 if (dbEntity.ContainerDbGuid != containerDbGuid)
                 {
                     Logger.Warn($"RestoreContainer(): Attempting to restore entity belonging to 0x{dbEntity.ContainerDbGuid:X} in 0x{containerDbGuid:X}");

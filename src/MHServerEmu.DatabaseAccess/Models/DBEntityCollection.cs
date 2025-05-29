@@ -1,12 +1,11 @@
-﻿using System.Collections;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
     /// <summary>
     /// Represents a collection of <see cref="DBEntity"/> instances in the database belonging to a specific <see cref="DBAccount"/>.
     /// </summary>
-    public class DBEntityCollection : IEnumerable<DBEntity>
+    public class DBEntityCollection
     {
         // TODO: Calculate checksum for added entities and update only those that changed
         private static readonly Logger Logger = LogManager.CreateLogger();
@@ -59,7 +58,7 @@ namespace MHServerEmu.DatabaseAccess.Models
                 bucket.Clear();
         }
 
-        public IEnumerable<DBEntity> GetEntriesForContainer(long containerDbGuid)
+        public IReadOnlyList<DBEntity> GetEntriesForContainer(long containerDbGuid)
         {
             if (_bucketedEntities.TryGetValue(containerDbGuid, out List<DBEntity> bucket) == false)
                 return Array.Empty<DBEntity>();
@@ -67,14 +66,9 @@ namespace MHServerEmu.DatabaseAccess.Models
             return bucket;
         }
 
-        public IEnumerator<DBEntity> GetEnumerator()
+        public Dictionary<long, DBEntity>.ValueCollection.Enumerator GetEnumerator()
         {
             return _allEntities.Values.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }
