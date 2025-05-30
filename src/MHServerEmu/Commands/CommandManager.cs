@@ -36,10 +36,10 @@ namespace MHServerEmu.Commands
             // Find and register command group classes using reflection
             foreach (Type type in assembly.GetTypes())
             {
-                if (type.IsSubclassOf(typeof(CommandGroup)) == false)
+                if (!type.IsSubclassOf(typeof(CommandGroup)))
                     continue;
 
-                if (type.IsDefined(typeof(CommandGroupAttribute), true) == false)
+                if (!type.IsDefined(typeof(CommandGroupAttribute), true))
                     continue;
 
                 CommandGroupDefinition groupDefinition = new(type);
@@ -65,8 +65,11 @@ namespace MHServerEmu.Commands
         /// </summary>
         public bool TryParse(string input, NetClient client = null)
         {
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+            
             // Extract the command and its parameters from our input string
-            if (ExtractCommandAndParameters(input, out string command, out string parameters) == false)
+            if (!ExtractCommandAndParameters(input, out string command, out string parameters))
             {
                 if (client == null)
                     Logger.Info($"Unknown command {input}");
@@ -117,10 +120,10 @@ namespace MHServerEmu.Commands
         /// </summary>
         private string InvokeCommand(string command, string parameters, NetClient client)
         {
-            if (_commandGroupDict.TryGetValue(command, out CommandGroup commandGroup) == false)
+            if (!_commandGroupDict.TryGetValue(command, out CommandGroup commandGroup))
                 return $"Unknown command: {command} {parameters}";
 
-            if (commandGroup.IsSilent == false)
+            if (!commandGroup.IsSilent)
                 Logger.Info($"Command invoked: invoker=[{(client != null ? client : "ServerConsole")}], command=[{command}], parameters=[{parameters}]");
             
             return commandGroup.Handle(parameters, client);
@@ -153,10 +156,9 @@ namespace MHServerEmu.Commands
             {
                 StringBuilder sb = new("Available commands: ");
 
-                foreach (CommandGroup commandGroup in Instance._commandGroupDict.Values)
+                foreach (CommandGroupDefinition groupDefinition in Instance._commandGroupDict.Values
+                             .Select(d => d.GroupDefinition).Where(d => d != null))
                 {
-                    CommandGroupDefinition groupDefinition = commandGroup.GroupDefinition;
-
                     if (groupDefinition.CanInvoke(client) != CommandCanInvokeResult.Success)
                         continue;
 
@@ -179,7 +181,7 @@ namespace MHServerEmu.Commands
         {
             public override string Fallback(string[] @params = null, NetClient client = null)
             {
-                return "Usage: help [command]"; ;
+                return "Usage: help [command]";
             }
 
             public override string Handle(string parameters, NetClient client = null)
@@ -191,7 +193,7 @@ namespace MHServerEmu.Commands
                 string group = @params[0];
                 string command = @params.Length > 1 ? @params[1] : string.Empty;
 
-                if (Instance._commandGroupDict.TryGetValue(group, out CommandGroup commandGroup) == false)
+                if (!Instance._commandGroupDict.TryGetValue(group, out CommandGroup commandGroup))
                     return $"Unknown command: {group} {command}";
 
                 if (command == string.Empty)
