@@ -92,6 +92,9 @@ namespace MHServerEmu.Commands
             command = string.Empty;
             parameters = string.Empty;
 
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
             input = input.Trim();
 
             // Only input that starts with our command prefix char followed by something else can be a command
@@ -179,7 +182,7 @@ namespace MHServerEmu.Commands
         {
             public override string Fallback(string[] @params = null, NetClient client = null)
             {
-                return "Usage: help [command]"; ;
+                return "Usage: help [command]";
             }
 
             public override string Handle(string parameters, NetClient client = null)
