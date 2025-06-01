@@ -2838,6 +2838,13 @@ namespace MHServerEmu.Games.Entities
             _newPlayerUISystemsUnlocked = true;
         }
 
+        public bool HasFinishedTutorial()
+        {
+            // HACK: Chat unlocks when the player finishes the tutorial in 1.52, so this can be used to check tutorial completion.
+            // We unlock chat by default for accounts with elevated privileges, so they effectively always have the tutorial completed.
+            return Properties[PropertyEnum.UISystemLock, UIGlobalsPrototype.ChatSystemLock];
+        }
+
         public void UpdateUISystemLocks()
         {
             foreach (PrototypeId uiSystemLockProtoRef in GameDatabase.UIGlobalsPrototype.UISystemLockList)

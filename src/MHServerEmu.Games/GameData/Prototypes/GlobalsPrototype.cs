@@ -799,6 +799,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public int InfinityNotificationThreshold { get; protected set; }
         public PrototypeId HelpTextConsole { get; protected set; }
         public PrototypeId MessageRegionNotDownloaded { get; protected set; }
+
+        //---
+
+        public const PrototypeId ChatSystemLock = (PrototypeId)809347018162704299;
     }
 
     public class UINotificationGlobalsPrototype : Prototype

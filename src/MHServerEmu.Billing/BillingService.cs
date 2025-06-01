@@ -144,6 +144,10 @@ namespace MHServerEmu.Billing
         {
             BuyItemResultErrorCodes result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_UNKNOWN;
 
+            // Make sure the player has already finished the tutorial, which could unlock characters depending on server settings.
+            if (player.HasFinishedTutorial() == false)
+                return result;
+
             // Validate the order
             CatalogEntry entry = _catalog.GetEntry(skuId);
             if (entry == null || entry.GuidItems.Length == 0)
