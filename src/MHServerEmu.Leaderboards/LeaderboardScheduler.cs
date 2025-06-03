@@ -128,7 +128,7 @@ namespace MHServerEmu.Leaderboards
             if (MaxResetCount > 0)
             {
                 DateTime finalActivationTime = StartTime;
-                for (int i = 0; i < MaxResetCount; i++)
+                for (int i = 0; i < MaxResetCount - 1; i++)
                     finalActivationTime = CalcResetTime(finalActivationTime);
 
                 if (activationTime > finalActivationTime)
