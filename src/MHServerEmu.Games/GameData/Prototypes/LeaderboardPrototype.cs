@@ -106,6 +106,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public LeaderboardScoreDisplayFormat ScoreDisplayFormat { get; protected set; }
         public MetaLeaderboardEntryPrototype[] MetaLeaderboardEntries { get; protected set; }
 
+        //---
+
         [DoNotCopy]
         public List<LeaderboardPrototype> MetaLeaderboards { get; private set; }
         [DoNotCopy]
@@ -143,6 +145,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 IsMetaLeaderboard = true;
             }
         }
+
+        public LeaderboardScoringRulePrototype GetScoringRulePrototype(long guid)
+        {
+            if (ScoringRules.IsNullOrEmpty())
+                return null;
+
+            foreach (LeaderboardScoringRulePrototype scoringRulePrototype in ScoringRules)
+            {
+                if (scoringRulePrototype.GUID == guid)
+                    return scoringRulePrototype;
+            }
+
+            return null;
+        }
     }
 
     public class LeaderboardCategoryPrototype : Prototype
@@ -174,6 +190,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public ScoringEventPrototype Event { get; protected set; }
         public long GUID { get; protected set; }
+
+        //---
 
         [DoNotCopy]
         public LeaderboardPrototype LeaderboardProto { get; set; }

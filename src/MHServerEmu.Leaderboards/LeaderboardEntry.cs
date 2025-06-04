@@ -1,5 +1,4 @@
-﻿using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Network;
+﻿using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models.Leaderboards;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
@@ -74,25 +73,21 @@ namespace MHServerEmu.Leaderboards
         public void UpdateScore(ref GameServiceProtocol.LeaderboardScoreUpdate update, LeaderboardPrototype leaderboardProto)
         {
             ulong ruleId = update.RuleId;
-            var ruleState = RuleStates.Find(rule => rule.RuleId == ruleId);
-            if (ruleState == null)
-            {
-                ruleState = new() { RuleId = ruleId };
-                RuleStates.Add(ruleState);
-            }
+            LeaderboardRuleState ruleState = GetOrCreateRuleState(ruleId);
 
-            if (leaderboardProto.ScoringRules.IsNullOrEmpty()) return;
-
-            var scoringRule = leaderboardProto.ScoringRules.First(rule => (ulong)rule.GUID == ruleId);
-            if (scoringRule == null || scoringRule.Event == null) return;
-            if (scoringRule is not LeaderboardScoringRuleIntPrototype ruleIntProto) return;
+            LeaderboardScoringRulePrototype scoringRule = leaderboardProto.GetScoringRulePrototype((long)ruleId);
+            if (scoringRule == null || scoringRule.Event == null)
+                return;
+            
+            if (scoringRule is not LeaderboardScoringRuleIntPrototype ruleIntProto)
+                return;
 
             ulong count = update.Count;
             ulong oldCount = ruleState.Count;
             ulong score = count * (ulong)ruleIntProto.ValueInt;
             ulong deltaScore = score - ruleState.Score;
 
-            var method = ScoringEvents.GetMethod(scoringRule.Event.Type);
+            ScoringMethod method = ScoringEvents.GetMethod(scoringRule.Event.Type);
             switch (method)
             {
                 case ScoringMethod.Update:
@@ -143,6 +138,20 @@ namespace MHServerEmu.Leaderboards
             }
 
             SaveRequired = true;
+        }
+
+        private LeaderboardRuleState GetOrCreateRuleState(ulong ruleId)
+        {
+            foreach (LeaderboardRuleState ruleState in RuleStates)
+            {
+                if (ruleState.RuleId == ruleId)
+                    return ruleState;
+            }
+
+            // Create a new rule state if not found
+            LeaderboardRuleState newRuleState = new() { RuleId = ruleId };
+            RuleStates.Add(newRuleState);
+            return newRuleState;
         }
     }
 }
