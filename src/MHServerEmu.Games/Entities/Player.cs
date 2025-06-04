@@ -963,6 +963,32 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public bool TryInventoryMove(ulong itemId, ulong containerId, PrototypeId inventoryProtoRef, uint slot)
+        {          
+            Item item = Game.EntityManager.GetEntity<Item>(itemId);
+            if (item == null) return Logger.WarnReturn(false, "TryInventoryMove(): item == null");
+
+            Entity container = Game.EntityManager.GetEntity<Entity>(containerId);
+            if (container == null) return Logger.WarnReturn(false, "TryInventoryMove(): container == null");
+
+            Inventory inventory = container.GetInventoryByRef(inventoryProtoRef);
+            if (inventory == null) return Logger.WarnReturn(false, "TryInventoryMove(): inventory == null");
+
+            InventoryResult result = item.ChangeInventoryLocation(inventory, slot);
+            if (result != InventoryResult.Success)
+                return Logger.WarnReturn(false, $"TryInventoryMove(): Failed to change inventory location ({result})");
+
+            // TODO: Log inventory movements to a separate file
+            //Logger.Trace($"TryInventoryMove(): [{item}] to container=[{container}], inventory=[{inventory}], slot=[{slot}]");
+
+            return true;
+        }
+
+        public bool TryInventoryStackSplit(ulong itemId, ulong containerId, PrototypeId inventoryProtoRef, uint slot)
+        {
+            return Logger.WarnReturn(false, "TryInventoryStackSplit(): Not yet implemented");
+        }
+
         public bool TrashItem(Item item)
         {
             // See CPlayer::RequestItemTrash for reference
