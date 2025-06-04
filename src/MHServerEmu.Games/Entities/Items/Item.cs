@@ -364,6 +364,15 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public bool PlayerCanMove(Player player, InventoryLocation invLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
+        {
+            // TODO
+            result = default;
+            resultProperty = default;
+            resultItem = default;
+            return true;
+        }
+
         public bool PlayerCanDestroy(Player player)
         {
             if (player.Owns(this) == false)

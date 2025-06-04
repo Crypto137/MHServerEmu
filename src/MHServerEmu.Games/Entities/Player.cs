@@ -964,21 +964,66 @@ namespace MHServerEmu.Games.Entities
         }
 
         public bool TryInventoryMove(ulong itemId, ulong containerId, PrototypeId inventoryProtoRef, uint slot)
-        {          
+        {
+            // NOTE: This is sensitive code, because it's a prime target for potential cheaters,
+            // while also having common enough valid failure cases due to lag.
             Item item = Game.EntityManager.GetEntity<Item>(itemId);
-            if (item == null) return Logger.WarnReturn(false, "TryInventoryMove(): item == null");
+            if (item == null)
+                return false;
 
             Entity container = Game.EntityManager.GetEntity<Entity>(containerId);
-            if (container == null) return Logger.WarnReturn(false, "TryInventoryMove(): container == null");
+            if (container == null)
+                return false;
 
+            // Validate ownership
+            Player itemOwner = item.GetOwnerOfType<Player>();
+            if (itemOwner != null && itemOwner != this)
+                return Logger.WarnReturn(false, $"TryInventoryMove(): Player [{this}] is attempting to move item [{item}] owned by another player [{itemOwner}]");
+
+            Player containerOwner = container.GetOwnerOfType<Player>();
+            if (containerOwner != null && containerOwner != this)
+                return Logger.WarnReturn(false, $"TryInventoryMove(): Player [{this}] is attempting to move item [{item}] to container [{container}] owned by another player [{containerOwner}]");
+
+            if (itemOwner == null && containerOwner == null)
+                return Logger.WarnReturn(false, $"TryInventoryMove(): Player [{this}] is attempting to move item [{item}] to container [{container}], and neither of them is owned by this player");
+
+            // Validate inventory
             Inventory inventory = container.GetInventoryByRef(inventoryProtoRef);
             if (inventory == null) return Logger.WarnReturn(false, "TryInventoryMove(): inventory == null");
 
-            InventoryResult result = item.ChangeInventoryLocation(inventory, slot);
-            if (result != InventoryResult.Success)
-                return Logger.WarnReturn(false, $"TryInventoryMove(): Failed to change inventory location ({result})");
+            // Check if the destination inventory is full if we don't have a specific slot
+            if (slot == Inventory.InvalidSlot)
+            {
+                bool isAdding = inventory.PrototypeDataRef != item.InventoryLocation.InventoryRef;
+                slot = inventory.GetFreeSlot(item, true, isAdding);
+                if (slot == Inventory.InvalidSlot)
+                {
+                    SendMessage(NetMessageInventoryFull.CreateBuilder()
+                        .SetPlayerID(Id)
+                        .SetItemID(InvalidId)
+                        .Build());
 
-            // TODO: Log inventory movements to a separate file
+                    return false;
+                }
+            }
+
+            // Repeat PlayerCanMove validation done by the client
+            InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);   // <-- This is heap allocated, which is not great. TODO: pooling?
+            if (item.PlayerCanMove(this, invLoc, out InventoryResult canMoveResult, out PropertyEnum canMoveResultProperty, out _) == false)
+                return Logger.WarnReturn(false, $"TryInventoryMove(): PlayerCanMove check failed, player=[{this}], item={item}, canMoveResult={canMoveResult}, canMoveResultProperty=[{canMoveResultProperty}]");
+
+            // Move
+            ulong? stackEntityId = InvalidId;
+            InventoryResult result = item.ChangeInventoryLocation(inventory, slot, ref stackEntityId, true);
+
+            if (result == InventoryResult.Success && inventory.IsEquipment)
+            {
+                // The original item may have been destroyed by stacking with another item (e.g. equipping relics)
+                Item eventItem = stackEntityId != InvalidId ? Game.EntityManager.GetEntity<Item>(stackEntityId.Value) : item;
+                GetRegion()?.PlayerEquippedItemEvent.Invoke(new(this, eventItem));
+            }
+
+            // TODO: Log inventory movements to a separate file?
             //Logger.Trace($"TryInventoryMove(): [{item}] to container=[{container}], inventory=[{inventory}], slot=[{slot}]");
 
             return true;
