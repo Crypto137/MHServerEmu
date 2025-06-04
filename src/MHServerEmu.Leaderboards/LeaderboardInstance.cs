@@ -15,6 +15,7 @@ namespace MHServerEmu.Leaderboards
     public class LeaderboardInstance
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+        private static readonly int AutoSaveIntervalMinutes = ConfigManager.Instance.GetConfig<LeaderboardsConfig>().AutoSaveIntervalMinutes;
 
         private readonly object _lock = new();
         private readonly Leaderboard _leaderboard;
@@ -24,7 +25,7 @@ namespace MHServerEmu.Leaderboards
         private List<(LeaderboardPercentile Percentile, ulong Score)> _percentileBuckets;
         private List<MetaLeaderboardEntry> _metaLeaderboardEntries;
         private bool _sorted;
-        private DateTime _lastSaveTime;
+        private DateTime _nextAutoSaveTime;
 
         private LeaderboardTableData _cachedTableData;
 
@@ -323,7 +324,7 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Loads <see cref="LeaderboardEntry">LeaderboardEntries</see> from the database.
+        /// Loads <see cref="LeaderboardEntry">LeaderboardEntries</see> from the database and updates cache.
         /// </summary>
         public void LoadEntries()
         {
@@ -349,15 +350,16 @@ namespace MHServerEmu.Leaderboards
                 }
 
                 _sorted = true;
-                _lastSaveTime = Clock.UtcNowPrecise;
 
                 UpdatePercentileBuckets();
                 UpdateCachedTableData();
+
+                ScheduleNextAutoSave();
             }
         }
 
         /// <summary>
-        /// 
+        /// Sorts <see cref="LeaderboardEntry">LeaderboardEntries</see> and updates cache.
         /// </summary>
         public void SortEntries()
         {
@@ -390,18 +392,27 @@ namespace MHServerEmu.Leaderboards
         /// <param name="forceUpdate">Forces entries that haven't changed to be saved.</param>
         public void SaveEntries(bool forceUpdate = false)
         {
+            List<DBLeaderboardEntry> dbEntries = ListPool<DBLeaderboardEntry>.Instance.Get();
+
             lock (_lock)
             {
-                List<DBLeaderboardEntry> dbEntries = new();
-                foreach (var entry in Entries)
-                    if (forceUpdate || entry.NeedUpdate)
-                        dbEntries.Add(entry.ToDbEntry(InstanceId));
+                foreach (LeaderboardEntry entry in Entries)
+                {
+                    if (forceUpdate || entry.SaveRequired)
+                    {
+                        DBLeaderboardEntry dbEntry = entry.ToDbEntry(InstanceId);
+                        dbEntries.Add(dbEntry);
+                        entry.SaveRequired = false;
+                    }
+                }
 
                 var dbManager = LeaderboardDatabase.Instance.DBManager;
                 dbManager.UpdateOrInsertEntries(dbEntries);
 
-                _lastSaveTime = Clock.UtcNowPrecise;
+                ScheduleNextAutoSave();
             }
+
+            ListPool<DBLeaderboardEntry>.Instance.Return(dbEntries);
         }
 
         /// <summary>
@@ -690,10 +701,16 @@ namespace MHServerEmu.Leaderboards
         {
             SortEntries();
 
-            var config = ConfigManager.Instance.GetConfig<LeaderboardsConfig>();
-            int intervalMinutes = config.AutoSaveIntervalMinutes;
-            if (_lastSaveTime.AddMinutes(intervalMinutes) < Clock.UtcNowPrecise)
-                SaveEntries();
+            if (Clock.UtcNowPrecise >= _nextAutoSaveTime)
+                SaveEntries();                
+        }
+
+        /// <summary>
+        /// Schedules the next time entries for this <see cref="LeaderboardInstance"/> will be saved to the database.
+        /// </summary>
+        private void ScheduleNextAutoSave()
+        {
+            _nextAutoSaveTime = Clock.UtcNowPrecise.AddMinutes(AutoSaveIntervalMinutes);
         }
     }
 }

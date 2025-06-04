@@ -14,29 +14,27 @@ namespace MHServerEmu.Leaderboards
         public LocaleStringId NameId { get; set; }
         public ulong Score { get; set; }
         public ulong HighScore { get; set; }
-        public List<LeaderboardRuleState> RuleStates { get; set; }
-        public bool NeedUpdate { get; set; }
+        public List<LeaderboardRuleState> RuleStates { get; } = new();
+        public bool SaveRequired { get; set; }
 
         public LeaderboardEntry(DBLeaderboardEntry dbEntry)
         {
             ParticipantId = (ulong)dbEntry.ParticipantId;
             Score = (ulong)dbEntry.Score;
             HighScore = (ulong)dbEntry.HighScore;
-            RuleStates = dbEntry.GetRuleStates();
+            dbEntry.GetRuleStates(RuleStates);
         }
 
         public LeaderboardEntry(ref GameServiceProtocol.LeaderboardScoreUpdate update)
         {
             ParticipantId = update.ParticipantId;
             Name = LeaderboardDatabase.Instance.GetPlayerNameById(ParticipantId);
-            RuleStates = new();
         }
 
         public LeaderboardEntry(PrototypeGuid subLeaderboardId)
         {
             ParticipantId = (ulong)subLeaderboardId;
             SetNameFromLeaderboardGuid(subLeaderboardId);
-            RuleStates = new();
         }
 
         public void SetNameFromLeaderboardGuid(PrototypeGuid guid)
@@ -144,7 +142,7 @@ namespace MHServerEmu.Leaderboards
                 HighScore = Math.Max(Score, HighScore);
             }
 
-            NeedUpdate = true;
+            SaveRequired = true;
         }
     }
 }
