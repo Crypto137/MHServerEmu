@@ -4025,6 +4025,87 @@ namespace MHServerEmu.Games.Entities.Avatars
             return InventoryResult.UnknownFailure;
         }
 
+        /// <summary>
+        /// Validates item movement when equipping items to an avatar.
+        /// </summary>
+        /// <remarks>
+        /// In practice this validates only artifacts equipment.
+        /// </remarks>
+        public static InventoryResult ValidateEquipmentChange(Game game, Item itemToBeMoved, InventoryLocation fromInvLoc, InventoryLocation toInvLoc, out Item resultItem)
+        {
+            resultItem = null;
+
+            if (itemToBeMoved.InventoryLocation.Equals(fromInvLoc) == false)
+                return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): itemToBeMoved.InventoryLocation.Equals(fromInvLoc) == false");
+            
+            // Validate only items that are being moved to avatar inventories (i.e. being equipped)
+            Avatar containerAvatar = game.EntityManager.GetEntity<Avatar>(toInvLoc.ContainerId);
+            if (containerAvatar == null)
+                return InventoryResult.Success;
+
+            // Validate only artifacts (TODO: make sure this is the case in other versions of the game)
+            if (toInvLoc.IsArtifactInventory == false || fromInvLoc.IsArtifactInventory)
+                return InventoryResult.Success;
+
+            List<Inventory> otherArtifactInvs = ListPool<Inventory>.Instance.Get();
+
+            switch (toInvLoc.InventoryConvenienceLabel)
+            {
+                case InventoryConvenienceLabel.AvatarArtifact1:
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact2));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact3));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact4));
+                    break;
+
+                case InventoryConvenienceLabel.AvatarArtifact2:
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact1));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact3));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact4));
+                    break;
+
+                case InventoryConvenienceLabel.AvatarArtifact3:
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact1));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact2));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact4));
+                    break;
+
+                case InventoryConvenienceLabel.AvatarArtifact4:
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact1));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact2));
+                    otherArtifactInvs.Add(containerAvatar.GetInventory(InventoryConvenienceLabel.AvatarArtifact3));
+                    break;
+            }
+
+            try
+            {
+                if (otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null)
+                    return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifactInvs[0] == null || otherArtifactInvs[1] == null || otherArtifactInvs[2] == null");
+
+                EntityManager entityManager = game.EntityManager;
+                for (int i = 0; i < otherArtifactInvs.Count; i++)
+                {
+                    ulong otherArtifactId = otherArtifactInvs[i].GetEntityInSlot(0);
+                    Item otherArtifact = entityManager.GetEntity<Item>(otherArtifactId);
+                    if (otherArtifact == null) return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifact == null");
+
+                    if (itemToBeMoved.PrototypeDataRef == otherArtifact.PrototypeDataRef)
+                        return InventoryResult.InvalidTwoOfSameArtifact;
+
+                    if (itemToBeMoved.CanBeEquippedWithItem(otherArtifact) == false)
+                    {
+                        resultItem = otherArtifact;
+                        return InventoryResult.InvalidRestrictedByOtherItem;
+                    }
+                }
+
+                return InventoryResult.Success;
+            }
+            finally
+            {
+                ListPool<Inventory>.Instance.Return(otherArtifactInvs);
+            }
+        }
+
         public override void OnOtherEntityAddedToMyInventory(Entity entity, InventoryLocation invLoc, bool unpackedArchivedEntity)
         {
             base.OnOtherEntityAddedToMyInventory(entity, invLoc, unpackedArchivedEntity);

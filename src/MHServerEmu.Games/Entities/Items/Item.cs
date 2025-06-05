@@ -358,10 +358,16 @@ namespace MHServerEmu.Games.Entities.Items
             }
         }
 
-        public bool CanUse(Agent agent, bool powerUse)
+        public bool CanUse(Agent agent, bool checkPower = true, bool checkInventory = true)
         {
-            // TODO
-            return true;
+            if (agent is not Avatar avatar)
+                return false;
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null)
+                return false;
+
+            return PlayerCanUse(player, avatar, checkPower, checkInventory) == InteractionValidateResult.Success;
         }
 
         public bool PlayerCanMove(Player player, InventoryLocation invLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
@@ -379,13 +385,38 @@ namespace MHServerEmu.Games.Entities.Items
                 return false;
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null)
-                return Logger.WarnReturn(false, "PlayerCanDestroy(): itemProto == null");
+            if (itemProto == null) return Logger.WarnReturn(false, "PlayerCanDestroy(): itemProto == null");
 
             if (itemProto.CanBeDestroyed == false)
                 return false;
 
-            // TODO: Avatar::ValidateEquipmentChange
+            if (Avatar.ValidateEquipmentChange(Game, this, InventoryLocation, InventoryLocation.Invalid, out _) != InventoryResult.Success)
+                return false;
+
+            return true;
+        }
+
+        public bool CanBeEquippedWithItem(Item otherItem)
+        {
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "CanBeEquippedWithItem(): itemProto == null");
+
+            ItemPrototype otherItemProto = otherItem?.ItemPrototype;
+            if (otherItemProto == null) return Logger.WarnReturn(false, "CanBeEquippedWithItem(): otherItemProto == null");
+
+            return CanBeEquippedWithItemHelper(itemProto, otherItem) && CanBeEquippedWithItemHelper(otherItemProto, this);
+        }
+
+        private static bool CanBeEquippedWithItemHelper(ItemPrototype itemProto, Item otherItem)
+        {
+            if (itemProto.CannotEquipWithItemsOfKeyword.IsNullOrEmpty())
+                return true;
+
+            foreach (PrototypeId keywordProtoRef in itemProto.CannotEquipWithItemsOfKeyword)
+            {
+                if (otherItem.HasKeyword(keywordProtoRef))
+                    return false;
+            }
 
             return true;
         }

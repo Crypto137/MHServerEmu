@@ -66,6 +66,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool IsPlayerVendorBuybackInventory { get => ConvenienceLabel == InventoryConvenienceLabel.VendorBuyback; }
 
         [DoNotCopy]
+        public bool IsArtifactInventory { get => ConvenienceLabel >= InventoryConvenienceLabel.AvatarArtifact1 && ConvenienceLabel <= InventoryConvenienceLabel.AvatarArtifact4; }
+
+        [DoNotCopy]
         public bool IsVisible { get => VisibleToOwner || VisibleToTrader || VisibleToParty || VisibleToProximity; } 
 
         /// <summary>
