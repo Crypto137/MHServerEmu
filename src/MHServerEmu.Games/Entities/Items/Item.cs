@@ -370,13 +370,86 @@ namespace MHServerEmu.Games.Entities.Items
             return PlayerCanUse(player, avatar, checkPower, checkInventory) == InteractionValidateResult.Success;
         }
 
-        public bool PlayerCanMove(Player player, InventoryLocation invLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
+        public bool PlayerCanMove(Player player, InventoryLocation destInvLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
         {
-            // TODO
-            result = default;
-            resultProperty = default;
-            resultItem = default;
-            return true;
+            result = InventoryResult.Invalid;
+            resultProperty = PropertyEnum.Invalid;
+            resultItem = null;
+
+            // Validate ownership
+            if (player.Owns(this) == false) return Logger.WarnReturn(false, "PlayerCanMove(): player.Owns(this) == false");
+
+            // Validate inventories
+            InventoryLocation fromInvLoc = InventoryLocation;
+
+            if (fromInvLoc.IsValid == false)
+                return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a fromInvLoc that isn't valid (the pickup interaction should be used for that case!)\nItem: [{this}]");
+
+            if (destInvLoc.IsValid == false)
+                return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a destInvLoc that isn't valid (RequestItemTrash() should be used for that case!)\nItem: [{this}]");
+
+            Entity fromInventoryOwner = Game.EntityManager.GetEntity<Entity>(fromInvLoc.ContainerId);
+            if (fromInventoryOwner == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Unable to get source owner sourceInvLoc=[{fromInvLoc}] when moving [{this}]");
+
+            Inventory fromInventory = fromInventoryOwner.GetInventoryByRef(fromInvLoc.InventoryRef);
+            if (fromInventory == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Invalid source inventory for sourceInvLoc=[{fromInvLoc}], sourceOwner=[{fromInventoryOwner}], when moving [{this}]");
+
+            Entity toInventoryOwner = Game.EntityManager.GetEntity<Entity>(destInvLoc.ContainerId);
+            if (toInventoryOwner == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Unable to get destination owner destInvLoc=[{destInvLoc}] when moving [{this}]");
+
+            Inventory toInventory = toInventoryOwner.GetInventoryByRef(destInvLoc.InventoryRef);
+            if (toInventory == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Invalid dest inventory [{destInvLoc}] on destOwner=[{toInventoryOwner}] when moving [{this}]");
+
+            // Check if this item can be moved to the requested destination
+            result = CanChangeInventoryLocation(toInventory, out resultProperty);
+            if (result != InventoryResult.Success)
+                return false;
+
+            result = Avatar.ValidateEquipmentChange(Game, this, fromInvLoc, destInvLoc, out resultItem);
+            if (result != InventoryResult.Success)
+                return false;
+
+            result = player.ValidatePlayerInventoryMoveConstraints(fromInvLoc, destInvLoc);
+            if (result != InventoryResult.Success)
+                return false;
+
+            // Check the destination slot
+            ulong entityIdInSlot = toInventory.GetEntityInSlot(destInvLoc.Slot);
+            if (entityIdInSlot == InvalidId)
+            {
+                // Make sure there is a free slot
+                if (toInventory.IsSlotFree(destInvLoc.Slot) == false)
+                {
+                    result = InventoryResult.SlotAlreadyOccupied;
+                    return false;
+                }
+            }
+            else
+            {
+                Item itemInSlot = Game.EntityManager.GetEntity<Item>(entityIdInSlot);
+                if (itemInSlot != null && CanStackOnto(itemInSlot) == false)
+                {
+                    // If two items can't stack, it means they needs to be swapped.
+                    // Check if the item in the destination slot can be swapped with this item's current location.
+                    result = itemInSlot.CanChangeInventoryLocation(fromInventory, out resultProperty);
+                    if (result != InventoryResult.Success)
+                        return false;
+
+                    result = Avatar.ValidateEquipmentChange(Game, itemInSlot, destInvLoc, fromInvLoc, out resultItem);
+                    if (result != InventoryResult.Success)
+                        return false;
+
+                    result = player.ValidatePlayerInventoryMoveConstraints(destInvLoc, fromInvLoc);
+                    if (result != InventoryResult.Success)
+                        return false;
+                }
+            }
+
+            return result == InventoryResult.Success;
         }
 
         public bool PlayerCanDestroy(Player player)

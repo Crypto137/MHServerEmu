@@ -153,7 +153,6 @@ namespace MHServerEmu.Games.Entities
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
 
         public bool IsInParty { get; internal set; }
-        public static bool IsPlayerTradeEnabled { get; internal set; }
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
@@ -168,6 +167,9 @@ namespace MHServerEmu.Games.Entities
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
+
+        public static bool IsPlayerTradeEnabled { get; internal set; }
+        public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
 
         public Player(Game game) : base(game)
         {
@@ -1280,6 +1282,110 @@ namespace MHServerEmu.Games.Entities
             
             CurrentAvatar?.InitPowerFromCreationItem(item);
             return true;
+        }
+
+        public InventoryResult ValidatePlayerInventoryMoveConstraints(InventoryLocation fromInvLoc, InventoryLocation toInvLoc)
+        {
+            InventoryResult result = ValidatePlayerCanMoveDirectlyOutOfInventory(fromInvLoc);
+            if (result != InventoryResult.Success)
+                return result;
+
+            return ValidatePlayerCanMoveDirectlyIntoInventory(toInvLoc);
+        }
+
+        public InventoryResult ValidatePlayerCanMoveDirectlyOutOfInventory(InventoryLocation fromInvLoc)
+        {
+            if (fromInvLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.CraftingResults)
+            {
+                // CraftingResults inventory is available only when interacting with a crafter
+                WorldEntity dialogTarget = GetDialogTarget();
+                if (dialogTarget == null || dialogTarget.IsCrafter == false)
+                    return InventoryResult.InvalidNotInteractingWithCrafter;
+
+                return InventoryResult.Success;
+            }
+
+            switch (fromInvLoc.InventoryCategory)
+            {
+                case InventoryCategory.PlayerStashAvatarSpecific:
+                case InventoryCategory.PlayerStashGeneral:
+                {
+                    // PlayerStash inventories are available only when interacting with a stash
+                    WorldEntity dialogTarget = GetDialogTarget();
+                    if (dialogTarget == null || dialogTarget.IsStash == false)
+                        return InventoryResult.InvalidNotInteractingWithStash;
+
+                    return InventoryResult.Success;
+                }
+
+                case InventoryCategory.PlayerTrade:
+                    // PlayerTrade inventory is available only when trading
+                    if (PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_SentInvitation && PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_TradeInProgress)
+                        return InventoryResult.InvalidNotTrading;
+
+                    return InventoryResult.Success;
+
+                // These categories are always okay to move out of
+                case InventoryCategory.AvatarEquipment:
+                case InventoryCategory.BagItem:
+                case InventoryCategory.PlayerAdmin:
+                case InventoryCategory.PlayerGeneral:
+                case InventoryCategory.PlayerGeneralExtra:
+                case InventoryCategory.PlayerStashTeamUpGear:
+                case InventoryCategory.TeamUpEquipment:
+                    return InventoryResult.Success;
+            }
+
+            // Players are not allowed to move entities out of inventories not covered by the switch statement above
+            return InventoryResult.InvalidPlayerCannotMoveOutOfThisInventory;
+        }
+
+        public InventoryResult ValidatePlayerCanMoveDirectlyIntoInventory(InventoryLocation toInvLoc)
+        {
+            switch (toInvLoc.InventoryCategory)
+            {
+                case InventoryCategory.BagItem:
+                    Item bagItem = Game.EntityManager.GetEntity<Item>(toInvLoc.ContainerId);
+                    BagItemPrototype bagItemProto = bagItem?.Prototype as BagItemPrototype;
+                    if (bagItemProto != null)
+                    {
+                        if (bagItemProto.AllowsPlayerAdds == false)
+                            return InventoryResult.InvalidBagItemPreventsPlayerAdds;
+
+                        return InventoryResult.Success;
+                    }
+
+                    break;
+
+                case InventoryCategory.PlayerStashAvatarSpecific:
+                case InventoryCategory.PlayerStashGeneral:
+                {
+                    // PlayerStash inventories are available only when interacting with a stash
+                    WorldEntity dialogTarget = GetDialogTarget();
+                    if (dialogTarget == null || dialogTarget.IsStash == false)
+                        return InventoryResult.InvalidNotInteractingWithStash;
+
+                    return InventoryResult.Success;
+                }
+
+                case InventoryCategory.PlayerTrade:
+                    // PlayerTrade inventory is available only when trading
+                    if (PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_SentInvitation && PlayerTradeStatusCode != PlayerTradeStatusCode.ePTSC_TradeInProgress)
+                        return InventoryResult.InvalidNotTrading;
+
+                    return InventoryResult.Success;
+
+                // These categories are always okay to move into
+                case InventoryCategory.AvatarEquipment:
+                case InventoryCategory.PlayerGeneral:
+                case InventoryCategory.PlayerGeneralExtra:
+                case InventoryCategory.PlayerStashTeamUpGear:
+                case InventoryCategory.TeamUpEquipment:
+                    return InventoryResult.Success;
+            }
+
+            // Players are not allowed to move entities into inventories not covered by the switch statement above
+            return InventoryResult.InvalidPlayerCannotMoveIntoThisInventory;
         }
 
         protected override bool InitInventories(bool populateInventories)
