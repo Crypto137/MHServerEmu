@@ -74,6 +74,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool IsTradable { get => Properties[PropertyEnum.ItemIsTradable] && _itemSpec.GetTradeRestricted() == false; }
         public PrototypeId BoundAgentProtoRef { get => _itemSpec.GetBindingState(out PrototypeId agentProtoRef) ? agentProtoRef : PrototypeId.Invalid; }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
+        public bool StacksCanBeSplit { get => ItemPrototype?.StackSettings?.StacksCanBeSplit == true; }
 
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
         public bool IsCraftingRecipe { get => Prototype is CraftingRecipePrototype; }
@@ -358,6 +359,31 @@ namespace MHServerEmu.Games.Entities.Items
             }
         }
 
+        public override InventoryResult CanChangeInventoryLocation(Inventory destInventory, out PropertyEnum propertyRestriction)
+        {
+            InventoryResult baseResult = base.CanChangeInventoryLocation(destInventory, out propertyRestriction);
+            if (baseResult != InventoryResult.Success)
+                return baseResult;
+
+            // Check binding if needed (mirrors CItem::CanChangeInventoryLocation())
+            if (IsBoundToCharacter && TestStatus(EntityStatus.SkipItemBindingCheck) == false)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): player == null");
+
+                Entity destInvOwner = Game.EntityManager.GetEntity<Entity>(destInventory.OwnerId);
+                if (destInvOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): destInvOwner == null");
+
+                Player destInvOwnerAsPlayer = destInvOwner.GetSelfOrOwnerOfType<Player>();
+                if (destInvOwnerAsPlayer == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): destInvOwnerAsPlayer == null");
+
+                if (player != destInvOwnerAsPlayer)
+                    return InventoryResult.InvalidBound;
+            }
+
+            return InventoryResult.Success;
+        }
+
         public bool CanUse(Agent agent, bool checkPower = true, bool checkInventory = true)
         {
             if (agent is not Avatar avatar)
@@ -613,6 +639,107 @@ namespace MHServerEmu.Games.Entities.Items
                 ScheduleDestroyEvent(TimeSpan.Zero);
 
             return true;
+        }
+
+        public InventoryResult SplitStack(InventoryLocation toInvLoc, int count)
+        {
+            // Some stacks are not splittable
+            if (StacksCanBeSplit == false)
+                return InventoryResult.StacksNotSplittable;
+
+            // Check if there is enough stuff in the stack for the requested split
+            if (CurrentStackSize < (count + 1))
+                return InventoryResult.SplitParamExceedsStackSize;
+
+            // Cannot split to the same slot
+            InventoryLocation fromInvLoc = InventoryLocation;
+            if (fromInvLoc.Equals(toInvLoc))
+                return InventoryResult.InvalidSlotParam;
+
+            // Check inventories
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(InventoryResult.PlayerOwnerNotFound, "SplitStack(): player == null");
+
+            Entity fromInventoryOwner = Game.EntityManager.GetEntity<Entity>(fromInvLoc.ContainerId);
+            if (fromInventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "SplitStack(): fromInventoryOwner == null");
+
+            Inventory fromInventory = fromInventoryOwner.GetInventoryByRef(fromInvLoc.InventoryRef);
+            if (fromInventory == null) return Logger.WarnReturn(InventoryResult.NoAvailableInventory, "SplitStack(): fromInventory == null");
+
+            Entity toInventoryOwner = Game.EntityManager.GetEntity<Entity>(toInvLoc.ContainerId);
+            if (toInventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "SplitStack(): toInventoryOwner == null");
+
+            Inventory toInventory = toInventoryOwner.GetInventoryByRef(toInvLoc.InventoryRef);
+            if (toInventory == null) return Logger.WarnReturn(InventoryResult.InvalidReceivingInventory, "SplitStack(): toInventory == null");
+
+            // Find a free slot if needed
+            if (toInvLoc.Slot == Inventory.InvalidSlot)
+            {
+                uint freeSlot = toInventory.GetFreeSlot(this, true);
+                if (freeSlot == Inventory.InvalidSlot)
+                    return InventoryResult.InventoryFull;
+
+                toInvLoc.Set(toInvLoc.ContainerId, toInvLoc.InventoryRef, freeSlot);
+            }
+
+            // Do move validation
+            if (PlayerCanMove(player, toInvLoc, out InventoryResult canMoveResult, out _, out _) == false)
+                return canMoveResult;
+
+            // Do the split
+            InventoryResult splitResult = DoStackSplit(toInvLoc, toInventory, count, out ulong newItemId);
+
+            if (splitResult != InventoryResult.Success)
+            {
+                Logger.Error($"SplitStack(): FAILED for item [{this}] belonging to player [{player}], reason=[{splitResult}]");
+
+                // Clean up the newly created item if something went wrong (hopefully this never ever happens)
+                Item newItem = Game.EntityManager.GetEntity<Item>(newItemId);
+                if (newItem != null)
+                {
+                    InventoryResult errorRecoveryResult = newItem.ChangeInventoryLocation(fromInventory, fromInvLoc.Slot);
+                    if (errorRecoveryResult != InventoryResult.Success)
+                    {
+                        Logger.Error($"SplitStack(): ERROR RECOVERY FAILED for item [{this}] belonging to player [{player}], reason=[{errorRecoveryResult}], something has gone REALLY wrong");
+                        newItem.Destroy();
+                    }
+                }
+            }
+
+            return splitResult;
+        }
+
+        private InventoryResult DoStackSplit(InventoryLocation toInvLoc, Inventory toInventory, int count, out ulong newItemId)
+        {
+            newItemId = InvalidId;
+
+            // Remove from the original stack
+            DecrementStack(count);
+
+            // Create a new stack
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = PrototypeDataRef;
+            settings.ItemSpec = new(ItemSpec);
+            settings.ItemSpec.StackCount = count;
+
+            Item newItem = Game.EntityManager.CreateEntity(settings) as Item;
+            if (newItem == null)
+                return InventoryResult.ErrorCreatingNewSplitEntity;
+
+            newItemId = newItem.Id;
+
+            // Move the created item to the destination, ignoring binding checks
+            newItem.SetStatus(EntityStatus.SkipItemBindingCheck, true);
+            
+            ulong? stackEntityId = 0;
+            InventoryResult moveResult = newItem.ChangeInventoryLocation(toInventory, toInvLoc.Slot, ref stackEntityId, true);
+            
+            newItem.SetStatus(EntityStatus.SkipItemBindingCheck, false);
+
+            if (stackEntityId == Id)
+                return Logger.WarnReturn(InventoryResult.UnknownFailure, $"DoStackSplit(): Splitting stack [{this}] resulted in the item being stacked with itself");
+
+            return moveResult; 
         }
 
         public void SetRecentlyAdded(bool value)

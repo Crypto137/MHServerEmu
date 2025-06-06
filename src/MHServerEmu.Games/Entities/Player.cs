@@ -1033,7 +1033,40 @@ namespace MHServerEmu.Games.Entities
 
         public bool TryInventoryStackSplit(ulong itemId, ulong containerId, PrototypeId inventoryProtoRef, uint slot)
         {
-            return Logger.WarnReturn(false, "TryInventoryStackSplit(): Not yet implemented");
+            Item item = Game.EntityManager.GetEntity<Item>(itemId);
+            if (item == null)
+                return false;
+
+            Entity container = Game.EntityManager.GetEntity<Entity>(containerId);
+            if (container == null)
+                return false;
+
+            // Validate ownership
+            Player itemOwner = item.GetOwnerOfType<Player>();
+            if (itemOwner != this)
+                return Logger.WarnReturn(false, $"TryInventoryStackSplit(): Player [{this}] is attempting to split stack [{item}] owned by another player [{itemOwner}]");
+
+            Player containerOwner = container.GetOwnerOfType<Player>();
+            if (container != this && containerOwner != this)
+                return Logger.WarnReturn(false, $"TryInventoryStackSplit(): Player [{this}] is attempting to split stack [{item}] to container [{container}] owned by another player [{containerOwner}]");
+
+            // Validate inventory
+            Inventory inventory = container.GetInventoryByRef(inventoryProtoRef);
+            if (inventory == null) return Logger.WarnReturn(false, "TryInventoryStackSplit(): inventory == null");
+
+            // Do the split
+            InventoryLocation invLoc = new(containerId, inventoryProtoRef, slot);   // <-- This is heap allocated, which is not great. TODO: pooling?
+            InventoryResult result = item.SplitStack(invLoc, 1);
+
+            if (result == InventoryResult.InventoryFull)
+            {
+                SendMessage(NetMessageInventoryFull.CreateBuilder()
+                    .SetPlayerID(Id)
+                    .SetItemID(InvalidId)
+                    .Build());
+            }
+
+            return result == InventoryResult.Success;
         }
 
         public bool TrashItem(Item item)

@@ -1137,7 +1137,7 @@ namespace MHServerEmu.Games.Entities
             return CanChangeInventoryLocation(destInventory, out _);
         }
 
-        public InventoryResult CanChangeInventoryLocation(Inventory destInventory, out PropertyEnum propertyRestriction)
+        public virtual InventoryResult CanChangeInventoryLocation(Inventory destInventory, out PropertyEnum propertyRestriction)
         {
             propertyRestriction = PropertyEnum.Invalid;
 
