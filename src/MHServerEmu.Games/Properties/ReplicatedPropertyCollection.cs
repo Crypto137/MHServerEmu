@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
@@ -22,6 +23,10 @@ namespace MHServerEmu.Games.Properties
 
         public ulong ReplicationId { get => _replicationId; }
         public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        
+        // REMOVEME: memory leak debug
+        public TimeSpan BindTimestamp { get; set; }
+        public IArchiveMessageDispatcher MessageDispatcher { get => _messageDispatcher; }
 
         public ReplicatedPropertyCollection() { }
 
@@ -41,6 +46,8 @@ namespace MHServerEmu.Games.Properties
             _messageDispatcher = messageDispatcher;
             _interestPolicies = interestPolicies;
             _replicationId = messageDispatcher.RegisterMessageHandler(this, ref _replicationId);    // pass repId field by ref so that we don't have to expose a setter
+
+            BindTimestamp = Clock.UnixTime;
 
             return true;
         }

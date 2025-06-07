@@ -6,6 +6,7 @@
     {
         public ulong ReplicationId { get; }
         public bool IsBound { get; }
+        public TimeSpan BindTimestamp { get; set; }
 
         public bool Bind(IArchiveMessageDispatcher messageDispatcher, AOINetworkPolicyValues interestPolicies);
         public void Unbind();

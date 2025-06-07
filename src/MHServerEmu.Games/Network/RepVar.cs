@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Network
 
         public ulong ReplicationId { get => _replicationId; }
         public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        public TimeSpan BindTimestamp { get; set; }     // REMOVEME: memory leak debug
 
         public RepInt() { }
 
@@ -88,6 +89,7 @@ namespace MHServerEmu.Games.Network
 
         public ulong ReplicationId { get => _replicationId; }
         public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        public TimeSpan BindTimestamp { get; set; }     // REMOVEME: memory leak debug
 
         public RepULong() { }
 
@@ -154,6 +156,7 @@ namespace MHServerEmu.Games.Network
 
         public ulong ReplicationId { get => _replicationId; }
         public bool IsBound { get => _replicationId != IArchiveMessageDispatcher.InvalidReplicationId && _messageDispatcher != null; }
+        public TimeSpan BindTimestamp { get; set; }     // REMOVEME: memory leak debug
 
         public RepString() { }
 
