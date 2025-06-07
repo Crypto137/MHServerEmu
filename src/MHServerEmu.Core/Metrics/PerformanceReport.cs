@@ -3,6 +3,7 @@ using System.Text.Json;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics.Categories;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Metrics
 {
@@ -10,6 +11,9 @@ namespace MHServerEmu.Core.Metrics
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static uint _currentReportId = 0;
+
+        public ulong Id { get; private set; }
         public MemoryMetrics.Report Memory { get; private set; }
         public Dictionary<ulong, GamePerformanceMetrics.Report> Games { get; } = new();
 
@@ -19,6 +23,8 @@ namespace MHServerEmu.Core.Metrics
 
         public void Initialize(MemoryMetrics memoryMetrics, IEnumerable<GamePerformanceMetrics> gameMetrics)
         {
+            Id = (ulong)Clock.UnixTime.TotalSeconds << 32 | ++_currentReportId;
+
             Memory = memoryMetrics.GetReport();
 
             foreach (GamePerformanceMetrics metrics in gameMetrics)
@@ -61,6 +67,7 @@ namespace MHServerEmu.Core.Metrics
         private string AsPlainText()
         {
             StringBuilder sb = new();
+            sb.AppendLine($"Performance Report 0x{Id:X}");
 
             sb.AppendLine("Memory:");
             sb.AppendLine(Memory.ToString());

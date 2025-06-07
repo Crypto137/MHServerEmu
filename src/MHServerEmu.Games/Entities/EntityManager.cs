@@ -193,7 +193,7 @@ namespace MHServerEmu.Games.Entities
             if (initSuccess == false)
             {
                 // Entity initialization failed
-                Logger.Warn($"CreateEntity(): Entity initialization failed");
+                Logger.Warn($"CreateEntity(): Initialization failed for entity [{entity}]");
                 entity.Destroy();
                 return null;
             }
@@ -279,7 +279,9 @@ namespace MHServerEmu.Games.Entities
                         position = worldEntity.FloorToCenter(position);
                     }
 
-                    worldEntity.EnterWorld(region, position, settings.Orientation, settings);
+                    // NOTE: While this is not client-accurate, if we don't clean up the entity here, it will stay in the message handler collection and cause a memory leak
+                    if (worldEntity.EnterWorld(region, position, settings.Orientation, settings) == false)
+                        return false;
                 }
             }
 

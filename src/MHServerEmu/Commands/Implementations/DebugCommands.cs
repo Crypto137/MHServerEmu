@@ -1,8 +1,10 @@
-﻿using Gazillion;
+﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games;
@@ -15,6 +17,7 @@ using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
 using MHServerEmu.Games.Powers.Conditions;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -185,6 +188,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("getconditionlist")]
         [CommandDescription("Gets a list of all conditions tracked by the ConditionPool in the current game.")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string GetConditionList(string[] @params, NetClient client)
         {
@@ -223,6 +227,7 @@ namespace MHServerEmu.Commands.Implementations
 
         [Command("geteventpoolreport")]
         [CommandDescription("Returns a report representing the state of the ScheduledEventPool in the current game.")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string GetEventPoolStatus(string[] @params, NetClient client)
         {
@@ -236,6 +241,37 @@ namespace MHServerEmu.Commands.Implementations
                 .SetResponse($"Saved scheduled event pool report for the current game to {filePath}")
                 .SetFilerelativepath(filePath)
                 .SetFilecontents(reportString)
+                .Build());
+
+            return string.Empty;
+        }
+
+        [Command("messagehandlerreport")]
+        [CommandDescription("Returns a report representing the state of the MessageHandlerDict in the current game.")]
+        [CommandUserLevel(AccountUserLevel.Moderator)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string MessageHandlerReport(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Game game = playerConnection.Game;
+
+            StringBuilder sb = new();
+
+            sb.AppendLine($"ArchiveMessageHandler report for game 0x{game.Id:X} (totalCount={game.MessageHandlerDict.Count})");
+            sb.AppendLine();
+
+            foreach (var kvp in game.MessageHandlerDict.Where(kvp => kvp.Value is ReplicatedPropertyCollection).OrderBy(kvp => kvp.Key))
+            {
+                ReplicatedPropertyCollection properties = (ReplicatedPropertyCollection)kvp.Value;
+                sb.AppendLine($"{Clock.UnixTimeToDateTime(kvp.Value.BindTimestamp)}\t{kvp.Key}\t{properties.MessageDispatcher}");
+            }
+
+            string filePath = $"Download/ArchiveMessageHandlerReport_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
+
+            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
+                .SetResponse($"Saved archive message handler report for the current game to {filePath}")
+                .SetFilerelativepath(filePath)
+                .SetFilecontents(sb.ToString())
                 .Build());
 
             return string.Empty;
