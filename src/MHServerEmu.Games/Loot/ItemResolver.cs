@@ -81,6 +81,7 @@ namespace MHServerEmu.Games.Loot
 
         public void ResetForPool()
         {
+            _context.Clear();
             _avatarPicker = default;
 
             Random = default;

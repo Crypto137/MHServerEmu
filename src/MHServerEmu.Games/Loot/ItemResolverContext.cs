@@ -43,6 +43,17 @@ namespace MHServerEmu.Games.Loot
             SetInternal(LootContext.MissionReward, player, null, mission);
         }
 
+        public void Clear()
+        {
+            _allowedCooldownDrops.Clear();
+
+            _lootBonusData.Reset();
+            _cooldownData.Reset();
+
+            LootContext = default;
+            Player = default;
+        }
+
         public float GetDropChance(LootRollSettings settings, float noDropPercent)
         {
             // Do not drop if there are any hard restrictions (this should have already been handled when selecting the loot table node)
