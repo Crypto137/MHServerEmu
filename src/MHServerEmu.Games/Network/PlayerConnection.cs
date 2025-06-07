@@ -260,7 +260,7 @@ namespace MHServerEmu.Games.Network
 
             AOI.SetRegion(0, true);
 
-            Game.EntityManager.DestroyEntity(Player);
+            Player?.Destroy();
 
             // Destroy all private region instances in the world view since they are not persistent anyway
             foreach (var kvp in WorldView)
