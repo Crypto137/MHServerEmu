@@ -520,6 +520,109 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public CraftingResult CanCraftRecipe(Player player, List<ulong> ingredientIds, WorldEntity vendor, bool isRecraft)
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            // If this isn't a recraft, the results inventory needs to be empty
+            if (isRecraft == false)
+            {
+                Inventory resultsInv = player.GetInventory(InventoryConvenienceLabel.CraftingResults);
+                if (resultsInv == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipe(): resultsInv == null");
+
+                if (resultsInv.Count > 0)
+                    return CraftingResult.CraftingFailed;
+            }
+
+            // Validate vendor
+            CraftingResult vendorResult = player.CanCraftRecipeWithVendor(0, this, vendor);
+            if (vendorResult != CraftingResult.Success)
+                return vendorResult;
+
+            // Validate ownership
+            if (player.Owns(this) == false)
+                return CraftingResult.CraftingFailed;
+
+            // Validate the recipe
+            if (ItemPrototype is not CraftingRecipePrototype craftingRecipeProto)
+                return CraftingResult.CraftingFailed;
+
+            if (craftingRecipeProto.IsLiveTuningEnabled() == false)
+                return CraftingResult.DisabledByLiveTuning;
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipe(): vendorTypeProto == null");
+
+            bool isInRecipeLibrary = false;
+
+            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Get();
+            if (vendorTypeProto.GetInventories(inventoryList))
+            {
+                foreach (PrototypeId crafterVendorInvProtoRef in inventoryList)
+                {
+                    Inventory crafterVendorInv = player.GetInventoryByRef(crafterVendorInvProtoRef);
+                    if (crafterVendorInv == null)
+                    {
+                        Logger.Warn("CanCraftRecipe(): crafterVendorInv == null");
+                        continue;
+                    }
+
+                    foreach (var entry in crafterVendorInv)
+                    {
+                        Item vendorRecipe = entityManager.GetEntity<Item>(entry.Id);
+                        if (vendorRecipe == null)
+                        {
+                            Logger.Warn("CanCraftRecipe(): vendorRecipe == null");
+                            continue;
+                        }
+
+                        if (vendorRecipe.PrototypeDataRef == PrototypeDataRef)
+                        {
+                            isInRecipeLibrary = true;
+                            break;
+                        }
+                    }
+
+                    if (isInRecipeLibrary)
+                        break;
+                }
+            }
+
+            ListPool<PrototypeId>.Instance.Return(inventoryList);
+
+            if (isInRecipeLibrary == false)
+                return CraftingResult.RecipeNotInRecipeLibrary;
+
+            // Validate ingredients
+            CraftingResult ingredientsResult = craftingRecipeProto.ValidateIngredients(player, ingredientIds);
+            if (ingredientsResult != CraftingResult.Success)
+                return ingredientsResult;
+
+            // Validate cost
+            CurrencyGlobalsPrototype currencyGlobals = GameDatabase.CurrencyGlobalsPrototype;
+
+            using PropertyCollection currencyCost = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            if (craftingRecipeProto.GetCraftingCost(player, ingredientIds, out uint creditsCost, out uint legendaryMarksCost, currencyCost) == false)
+                return CraftingResult.InsufficientIngredients;
+
+            if (creditsCost > 0 && player.Properties[PropertyEnum.Currency, currencyGlobals.Credits] < creditsCost)
+                return CraftingResult.InsufficientCredits;
+
+            if (legendaryMarksCost > 0 && player.Properties[PropertyEnum.Currency, currencyGlobals.LegendaryMarks] < legendaryMarksCost)
+                return CraftingResult.InsufficientLegendaryMarks;
+
+            foreach (var kvp in currencyCost.IteratePropertyRange(PropertyEnum.Currency))
+            {
+                // Other currencies use a generic error
+                uint cost = kvp.Value;
+                if (player.Properties[kvp.Key] < cost)
+                    return CraftingResult.InsufficientIngredients;
+            }
+
+            return CraftingResult.Success;
+        }
+
         public PrototypeId GetBoundAgentProtoRef()
         {
             _itemSpec.GetBindingState(out PrototypeId agentProtoRef);

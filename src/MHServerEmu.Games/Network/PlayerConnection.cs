@@ -1095,7 +1095,7 @@ namespace MHServerEmu.Games.Network
                     ingredientIds.Add(ingredientId);
                 }
 
-                CraftingResult craftingResult = Player.Craft(recipeItemId, ingredientIds, tryCraft.IsRecraft);
+                CraftingResult craftingResult = Player.Craft(recipeItemId, tryCraft.IdVendor, ingredientIds, tryCraft.IsRecraft);
 
                 if (craftingResult != CraftingResult.Success)
                 {

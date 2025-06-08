@@ -1,4 +1,7 @@
-﻿namespace MHServerEmu.Games.GameData.Prototypes
+﻿using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Properties;
+
+namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class CraftingInputPrototype : Prototype
     {
@@ -76,5 +79,21 @@
         public EvalPrototype OnRecipeComplete { get; protected set; }
         public PrototypeId RecipeCategory { get; protected set; }
         public AssetId RecipeIconPathHiRes { get; protected set; }
+
+        //---
+
+        public CraftingResult ValidateIngredients(Player player, List<ulong> ingredientIds)
+        {
+            // TODO
+            return CraftingResult.Success;
+        }
+
+        public bool GetCraftingCost(Player player, List<ulong> ingredientIds, out uint creditsCost, out uint legendaryMarksCost, PropertyCollection currencyCost)
+        {
+            // TODO
+            creditsCost = 0;
+            legendaryMarksCost = 0;
+            return true;
+        }
     }
 }
