@@ -441,6 +441,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageThrowInteraction:                  OnThrowInteraction(message); break;                 // 36
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:           OnPerformPreInteractPower(message); break;          // 37
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:             OnUseInteractableObject(message); break;            // 38
+                case ClientToGameServerMessage.NetMessageTryCraft:                          OnTryCraft(message); break;                         // 39
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;                      // 40
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;                     // 42
                 case ClientToGameServerMessage.NetMessageChangeDifficulty:                  OnChangeDifficulty(message); break;                 // 43
@@ -1053,6 +1054,65 @@ namespace MHServerEmu.Games.Network
 
             avatar.UseInteractableObject(useInteractableObject.IdTarget, (PrototypeId)useInteractableObject.MissionPrototypeRef);
             return true;
+        }
+
+        private bool OnTryCraft(in MailboxMessage message) // 39
+        {
+            var tryCraft = message.As<NetMessageTryCraft>();
+            if (tryCraft == null) return Logger.WarnReturn(false, "OnTryCraft(): Failed to retrieve message");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            // Validate recipe item
+            ulong recipeItemId = tryCraft.IdRecipe;
+
+            Item recipeItem = entityManager.GetEntity<Item>(recipeItemId);
+            if (recipeItem == null) return Logger.WarnReturn(false, "OnTryCraft(): recipeItem == null");
+
+            if (Player.Owns(recipeItem) == false)
+                return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use recipe item [{recipeItem}] that does not belong to them");
+
+            // Validate ingredients
+            List<ulong> ingredientIds = ListPool<ulong>.Instance.Get();
+
+            try     // Entering a try block here to ensure the ingredient list is returned to the pool
+            {
+                int numIngredientIds = tryCraft.IdIngredientsCount;
+                for (int i = 0; i < numIngredientIds; i++)
+                {
+                    ulong ingredientId = tryCraft.IdIngredientsList[i];
+
+                    // Invalid ingredient id indicates it needs to be picked by the server
+                    if (ingredientId != Entity.InvalidId)
+                    {
+                        Entity ingredient = entityManager.GetEntity<Entity>(ingredientId);
+                        if (ingredient == null) return Logger.WarnReturn(false, "OnTryCraft(): ingredient == null");
+
+                        if (Player.Owns(ingredient) == false)
+                            return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use ingredient [{ingredient}] that does not belong to them");
+                    }
+
+                    ingredientIds.Add(ingredientId);
+                }
+
+                CraftingResult craftingResult = Player.Craft(recipeItemId, ingredientIds, tryCraft.IsRecraft);
+
+                if (craftingResult != CraftingResult.Success)
+                {
+                    SendMessage(NetMessageCraftingFailure.CreateBuilder()
+                        .SetCraftingResult((uint)craftingResult)
+                        .Build());
+
+                    return false;
+                }
+
+                SendMessage(NetMessageCraftingSuccess.DefaultInstance);
+                return true;
+            }
+            finally
+            {
+                ListPool<ulong>.Instance.Return(ingredientIds);
+            }
         }
 
         private bool OnUseWaypoint(MailboxMessage message)  // 40
