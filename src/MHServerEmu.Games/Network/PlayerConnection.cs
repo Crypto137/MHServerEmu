@@ -13,6 +13,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -892,6 +893,11 @@ namespace MHServerEmu.Games.Network
             var pickupInteraction = message.As<NetMessagePickupInteraction>();
             if (pickupInteraction == null) return Logger.WarnReturn(false, $"OnPickupInteraction(): Failed to retrieve message");
 
+            // Make sure there is an avatar in play
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null)
+                return false;
+
             // Find item entity
             Item item = Game.EntityManager.GetEntity<Item>(pickupInteraction.IdTarget);
 
@@ -899,12 +905,22 @@ namespace MHServerEmu.Games.Network
             if (item == null || Player.Owns(item))
                 return true;
 
-            // TODO: Validate pickup range
+            // Validate pickup range
+            bool useInteractFallbackRange = pickupInteraction.HasUseInteractFallbackRange && pickupInteraction.UseInteractFallbackRange;
+            if (avatar.InInteractRange(item, InteractionMethod.PickUp, useInteractFallbackRange) == false)
+                return false;
+
+            // Validate ownership
+            if (item.IsRootOwner == false)
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player [{Player}] is attempting to pick up item [{item}] owned by another player [{item.GetOwnerOfType<Player>()}]");
+
+            if (item.IsBoundToAccount)
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player [{Player}] is attempting to pick up item [{item}] that is account bound");
 
             // Do not allow to pick up items belonging to other players
             ulong restrictedToPlayerGuid = item.Properties[PropertyEnum.RestrictedToPlayerGuid];
             if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != Player.DatabaseUniqueId)
-                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player {Player} is attempting to pick up item {item} restricted to player 0x{restrictedToPlayerGuid:X}");
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player [{Player}] is attempting to pick up item [{item}] restricted to player 0x{restrictedToPlayerGuid:X}");
 
             // Try to pick up the item as currency
             if (Player.AcquireCurrencyItem(item))
@@ -932,7 +948,18 @@ namespace MHServerEmu.Games.Network
             InventoryResult result = item.ChangeInventoryLocation(inventory);
             if (result != InventoryResult.Success)
             {
-                Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
+                if (result == InventoryResult.InventoryFull || result == InventoryResult.NoAvailableInventory)
+                {
+                    SendMessage(NetMessageInventoryFull.CreateBuilder()
+                        .SetPlayerID(Player.Id)
+                        .SetItemID(item.Id)
+                        .Build());
+                }
+                else
+                {
+                    Logger.Warn($"OnPickupInteraction(): Failed to add item [{item}] to inventory of player [{Player}], reason: {result}");
+                }
+
                 return false;
             }
 
