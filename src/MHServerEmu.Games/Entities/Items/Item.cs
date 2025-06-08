@@ -548,7 +548,7 @@ namespace MHServerEmu.Games.Entities.Items
                 return CraftingResult.CraftingFailed;
 
             if (craftingRecipeProto.IsLiveTuningEnabled() == false)
-                return CraftingResult.DisabledByLiveTuning;
+                return CraftingResult.RecipeDisabledByLiveTuning;
 
             PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
             VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();

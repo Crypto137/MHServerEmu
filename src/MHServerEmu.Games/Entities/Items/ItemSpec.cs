@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec() { }
 
-        public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef, int itemLevel,
+        public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef = PrototypeId.Invalid, int itemLevel = 1,
             int creditsAmount = 0, IEnumerable<AffixSpec> affixSpecs = null, int seed = 0, PrototypeId equippableBy = PrototypeId.Invalid)
         {
             _itemProtoRef = itemProtoRef;

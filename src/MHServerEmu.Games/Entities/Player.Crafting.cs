@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -9,21 +11,21 @@ namespace MHServerEmu.Games.Entities
         Success,
         CraftingFailed,
         RecipeNotInRecipeLibrary,
-        DisabledByLiveTuning,
+        RecipeDisabledByLiveTuning,
         InsufficientIngredients,
         InsufficientCredits,
         InsufficientLegendaryMarks,
-        Result7,
-        Result8,   // InsufficientIngredients
-        Result9,   // InsufficientIngredients
+        IngredientInvalid,
+        IngredientNotApproved,              // InsufficientIngredients
+        IngredientDisabledByLiveTuning,     // InsufficientIngredients
         IngredientLevelRestricted,
-        Result11,  // InsufficientIngredients
-        Result12,  // InsufficientIngredients
-        Result13,  // InsufficientIngredients
-        Result14,  // InsufficientIngredients
-        Result15,  // InsufficientIngredients
-        Result16,  // InsufficientIngredients
-        Result17,  // InsufficientIngredients
+        Result11,                           // InsufficientIngredients
+        Result12,                           // InsufficientIngredients
+        InputFirstIngredientMismatch,       // InsufficientIngredients
+        Result14,                           // InsufficientIngredients
+        Result15,                           // InsufficientIngredients
+        Result16,                           // InsufficientIngredients
+        Result17,                           // InsufficientIngredients
         LootRollFailed,
     }
 
@@ -58,6 +60,16 @@ namespace MHServerEmu.Games.Entities
         {
             // TODO
             return CraftingResult.Success;
+        }
+
+        public int GetCraftingIngredientAvailableStackCount(PrototypeId craftingIngredientProtoRef)
+        {
+            int count = 0;
+
+            foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.CraftingIngredientAvailable, craftingIngredientProtoRef))
+                count += kvp.Value;
+
+            return count;
         }
     }
 }

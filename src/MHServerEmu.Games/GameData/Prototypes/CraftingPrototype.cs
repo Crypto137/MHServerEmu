@@ -1,4 +1,10 @@
-﻿using MHServerEmu.Games.Entities;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -10,22 +16,60 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool OnlyNotDroppableForThisAvatar { get; protected set; }
         public bool OnlyEquippableAtThisAvatarLevel { get; protected set; }
         public bool MatchFirstInput { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public virtual ItemPrototype AutoPopulatedIngredientPrototype { get => null; }
+
+        public virtual CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
+        {
+            // TODO;
+            return CraftingResult.Success;
+        }
     }
 
     public class AutoPopulatedInputPrototype : CraftingInputPrototype
     {
         public PrototypeId Ingredient { get; protected set; }
         public int Quantity { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public override ItemPrototype AutoPopulatedIngredientPrototype { get => Ingredient.As<ItemPrototype>(); }
+
+        public override CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
+        {
+            // TODO;
+            return CraftingResult.Success;
+        }
     }
 
     public class RestrictionSetInputPrototype : CraftingInputPrototype
     {
         public DropRestrictionPrototype[] Restrictions { get; protected set; }
+
+        //---
+
+        public override CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
+        {
+            // TODO;
+            return CraftingResult.Success;
+        }
     }
 
     public class AllowedItemListInputPrototype : CraftingInputPrototype
     {
         public PrototypeId[] AllowedItems { get; protected set; }
+
+        //---
+
+        public override CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
+        {
+            // TODO;
+            return CraftingResult.Success;
+        }
     }
 
     public class CraftingCostPrototype : Prototype
@@ -82,9 +126,122 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public CraftingResult ValidateIngredients(Player player, List<ulong> ingredientIds)
         {
-            // TODO
+            if (RecipeInputs.IsNullOrEmpty()) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredients(): RecipeInputs.IsNullOrEmpty()");
+
+            Dictionary<ulong, int> usedStackCounts = DictionaryPool<ulong, int>.Instance.Get();
+            try
+            {
+                for (int slot = 0; slot < RecipeInputs.Length; slot++)
+                {
+                    CraftingResult slotResult = ValidateIngredient(player, ingredientIds, slot, usedStackCounts);
+                    if (slotResult != CraftingResult.Success)
+                        return slotResult;
+                }
+
+                return CraftingResult.Success;
+            }
+            finally
+            {
+                DictionaryPool<ulong, int>.Instance.Return(usedStackCounts);
+            }
+        }
+
+        public CraftingResult ValidateIngredient(Player player, List<ulong> ingredientIds, int slot, Dictionary<ulong, int> usedStackCounts)
+        {
+            if (RecipeInputs.IsNullOrEmpty()) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): RecipeInputs.IsNullOrEmpty()");
+
+            if (RecipeInputs.Length != ingredientIds.Count) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): RecipeInputs.Length != ingredientIds.Count");
+
+            if (slot < 0 || slot >= RecipeInputs.Length) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): slot < 0 || slot >= RecipeInputs.Length");
+
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): avatar == null");
+
+            CraftingInputPrototype firstInputProto = RecipeInputs[0];
+            if (firstInputProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): firstInputProto == null");
+
+            CraftingInputPrototype targetInputProto = RecipeInputs[slot];
+            if (targetInputProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): targetInputProto == null");
+
+            CraftingInputPrototype inputProtoToUse = null;
+            ItemPrototype ingredientProtoToMatch = null;
+
+            if (targetInputProto.MatchFirstInput)
+            {
+                // MatchFirstInput handles combining items of the same type (e.g. 3 -> 1 of higher tier), in which case they all need to be the same item
+                if (targetInputProto == firstInputProto)
+                    return Logger.WarnReturn(CraftingResult.CraftingFailed, $"ValidateIngredient(): The first input CANNOT itself have MatchFirstInput set recipe=[{this}]");
+
+                inputProtoToUse = firstInputProto;
+                
+                Item firstIngredient = player.Game.EntityManager.GetEntity<Item>(ingredientIds[0]);
+                if (firstIngredient == null)
+                    return CraftingResult.InputFirstIngredientMismatch;
+
+                ingredientProtoToMatch = firstIngredient.ItemPrototype;
+            }
+            else
+            {
+                inputProtoToUse = targetInputProto;
+            }
+
+            ulong ingredientId = ingredientIds[slot];
+
+            ItemPrototype ingredientProto;
+            ItemSpec ingredientSpec;
+
+            ItemPrototype autoPopulatedIngredientProto = inputProtoToUse.AutoPopulatedIngredientPrototype;
+
+            if (autoPopulatedIngredientProto != null)
+            {
+                if (ingredientId != Entity.InvalidId)
+                    return Logger.WarnReturn(CraftingResult.IngredientInvalid, $"ValidateIngredient(): ingredient entity id is unexpectedly set for an AutoPopulated input. entityId=[{ingredientId}] slot=[{slot}] recipe=[{this}]");
+
+                ingredientProto = autoPopulatedIngredientProto;
+
+                // Create a new item spec for auto populated ingredients
+                ingredientSpec = new(ingredientProto.DataRef);
+                ingredientSpec.StackCount = player.GetCraftingIngredientAvailableStackCount(autoPopulatedIngredientProto.DataRef);
+            }
+            else
+            {
+                Item ingredientItem = player.Game.EntityManager.GetEntity<Item>(ingredientId);
+                if (ingredientItem == null) return Logger.WarnReturn(CraftingResult.IngredientInvalid, $"ValidateIngredient(): ingredientItem == null");
+
+                if (ingredientItem.IsScheduledToDestroy)
+                    return CraftingResult.IngredientInvalid;
+
+                ingredientProto = ingredientItem.ItemPrototype;
+
+                // Use the specified item's spec for manual ingredients (TODO: see if we can get away with passing by reference here)
+                ingredientSpec = new(ingredientItem.ItemSpec);
+                ingredientSpec.StackCount = ingredientItem.CurrentStackSize;
+            }
+
+            if (ingredientProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "ValidateIngredient(): ingredientProto == null");
+
+            if (ingredientProto.ApprovedForUse() == false)
+                return CraftingResult.IngredientNotApproved;
+
+            if (ingredientProto.IsLiveTuningEnabled() == false)
+                return CraftingResult.IngredientDisabledByLiveTuning;
+
+            if (ingredientProtoToMatch != null && ingredientProto != ingredientProtoToMatch)
+                return CraftingResult.InputFirstIngredientMismatch;
+
+            CraftingResult result = inputProtoToUse.AllowItem(ingredientSpec, avatar);
+            if (result == CraftingResult.Success && autoPopulatedIngredientProto == null && usedStackCounts != null)
+            {
+                usedStackCounts.TryGetValue(ingredientId, out int count);
+                usedStackCounts[ingredientId] = ++count;
+                if (count > ingredientSpec.StackCount)
+                    return CraftingResult.InsufficientIngredients;
+            }
+
             return CraftingResult.Success;
         }
 
