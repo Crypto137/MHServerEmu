@@ -245,36 +245,5 @@ namespace MHServerEmu.Commands.Implementations
 
             return string.Empty;
         }
-
-        [Command("messagehandlerreport")]
-        [CommandDescription("Returns a report representing the state of the MessageHandlerDict in the current game.")]
-        [CommandUserLevel(AccountUserLevel.Moderator)]
-        [CommandInvokerType(CommandInvokerType.Client)]
-        public string MessageHandlerReport(string[] @params, NetClient client)
-        {
-            PlayerConnection playerConnection = (PlayerConnection)client;
-            Game game = playerConnection.Game;
-
-            StringBuilder sb = new();
-
-            sb.AppendLine($"ArchiveMessageHandler report for game 0x{game.Id:X} (totalCount={game.MessageHandlerDict.Count})");
-            sb.AppendLine();
-
-            foreach (var kvp in game.MessageHandlerDict.Where(kvp => kvp.Value is ReplicatedPropertyCollection).OrderBy(kvp => kvp.Key))
-            {
-                ReplicatedPropertyCollection properties = (ReplicatedPropertyCollection)kvp.Value;
-                sb.AppendLine($"{Clock.UnixTimeToDateTime(kvp.Value.BindTimestamp)}\t{kvp.Key}\t{properties.MessageDispatcher}");
-            }
-
-            string filePath = $"Download/ArchiveMessageHandlerReport_{DateTime.UtcNow.ToString(FileHelper.FileNameDateFormat)}.txt";
-
-            playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
-                .SetResponse($"Saved archive message handler report for the current game to {filePath}")
-                .SetFilerelativepath(filePath)
-                .SetFilecontents(sb.ToString())
-                .Build());
-
-            return string.Empty;
-        }
     }
 }
