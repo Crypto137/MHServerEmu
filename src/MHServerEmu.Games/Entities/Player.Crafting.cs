@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.Inventories;
+﻿using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -59,7 +60,31 @@ namespace MHServerEmu.Games.Entities
 
         public CraftingResult CanCraftRecipeWithVendor(int avatarIndex, Item recipeItem, WorldEntity vendor)
         {
-            // TODO
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            if (vendorTypeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): vendorTypeProtoRef == PrototypeId.Invalid");
+
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): vendorTypeProto == null");
+
+            if (vendorTypeProto.IsCrafter == false)
+                return CraftingResult.CraftingFailed;
+
+            CraftingRecipePrototype recipeProto = recipeItem.ItemPrototype as CraftingRecipePrototype;
+            if (recipeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): recipeProto == null");
+
+            PrototypeId invProtoRef = recipeItem.InventoryLocation.InventoryRef;
+            if (invProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): invProtoRef == PrototypeId.Invalid");
+
+            if (vendorTypeProto.ContainsInventory(invProtoRef) == false)
+                return CraftingResult.CraftingFailed;
+
+            Avatar avatar = GetActiveAvatarByIndex(avatarIndex);
+            if (avatar == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipeWithVendor(): avatar == null");
+
+            int vendorLevel = Properties[PropertyEnum.VendorLevel, vendorTypeProtoRef];
+            if (recipeProto.UnlockAtCrafterRank > vendorLevel)
+                return CraftingResult.CraftingFailed;
+
             return CraftingResult.Success;
         }
 
