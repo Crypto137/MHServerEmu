@@ -330,26 +330,34 @@ namespace MHServerEmu.Games.Entities.Items
                     RefreshProcPowerIndexProperties();
 
                     int delta = (int)newValue - oldValue;
-                    if (delta == 0) return;
+                    if (delta == 0)
+                        return;
 
                     Player owner = GetOwnerOfType<Player>();
-                    if (owner == null) return;
+                    if (owner == null)
+                        return;
+
+                    Inventory ownerInventory = GetOwnerInventory();
+                    if (ownerInventory != null)
+                        owner.AdjustCraftingIngredientAvailable(PrototypeDataRef, delta, ownerInventory.Category);
+
+                    // TODO: trade-specific stuff
 
                     Region region = owner.GetRegion();
-                    if (region == null) return;
+                    if (region == null)
+                        return;
 
                     InventoryPrototype inventoryProto = InventoryLocation?.InventoryPrototype;
-                    if (inventoryProto == null) return;
-                    if (inventoryProto.IsPlayerGeneralInventory == false && inventoryProto.IsEquipmentInventory == false) return;
+                    if (inventoryProto == null)
+                        return;
+
+                    if (inventoryProto.IsPlayerGeneralInventory == false && inventoryProto.IsEquipmentInventory == false)
+                        return;
 
                     if (delta > 0)
-                    {
                         region.PlayerCollectedItemEvent.Invoke(new(owner, this, delta));
-                    }
                     else if (delta < 0)
-                    {
                         region.PlayerLostItemEvent.Invoke(new(owner, this, delta));
-                    }
 
                     break;
 

@@ -920,6 +920,37 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
+            // Update vendor inventories if we are adding a recipe
+            if (invLoc.InventoryConvenienceLabel == InventoryConvenienceLabel.CraftingRecipesLearned)
+            {
+                List<VendorTypePrototype> vendorsToUpdate = ListPool<VendorTypePrototype>.Instance.Get();
+
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.VendorLevel))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId vendorTypeProtoRef);
+                    VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+                    if (vendorTypeProto == null)
+                    {
+                        Logger.Warn("OnOtherEntityAddedToMyInventory(): vendorTypeProto == null");
+                        continue;
+                    }
+
+                    if (vendorTypeProto.IsCrafter == false)
+                        continue;
+
+                    vendorsToUpdate.Add(vendorTypeProto);
+                }
+
+                foreach (VendorTypePrototype vendorTypeProto in vendorsToUpdate)
+                    RollVendorInventory(vendorTypeProto, false);
+
+                ListPool<VendorTypePrototype>.Instance.Return(vendorsToUpdate);
+            }
+
+            // Adjust available ingredients for auto populated inputs
+            if (unpackedArchivedEntity == false)
+                AdjustCraftingIngredientAvailable(item.PrototypeDataRef, item.CurrentStackSize, category);
+
             // Highlight items that get put into stash tabs different from the current one
             if (invLoc.InventoryRef != CurrentOpenStashPagePrototypeRef &&
                 (category == InventoryCategory.PlayerStashGeneral ||
@@ -963,6 +994,9 @@ namespace MHServerEmu.Games.Entities
                     }
                 }
             }
+
+            // Adjust available ingredients for auto populated inputs
+            AdjustCraftingIngredientAvailable(item.PrototypeDataRef, -item.CurrentStackSize, category);
         }
 
         public bool TryInventoryMove(ulong itemId, ulong containerId, PrototypeId inventoryProtoRef, uint slot)

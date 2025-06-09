@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Entities.Avatars;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
@@ -96,6 +97,85 @@ namespace MHServerEmu.Games.Entities
                 count += kvp.Value;
 
             return count;
+        }
+
+        public void AdjustCraftingIngredientAvailable(PrototypeId itemProtoRef, int delta, InventoryCategory inventoryCategory)
+        {
+            if (itemProtoRef == PrototypeId.Invalid)
+                return;
+
+            if (delta == 0)
+                return;
+
+            if (inventoryCategory != InventoryCategory.PlayerGeneral && inventoryCategory != InventoryCategory.PlayerGeneralExtra &&
+                inventoryCategory != InventoryCategory.PlayerStashAvatarSpecific && inventoryCategory != InventoryCategory.PlayerStashGeneral)
+            {
+                return;
+            }
+
+            PropertyId propId = new(PropertyEnum.CraftingIngredientAvailable, itemProtoRef);
+            if (Properties.HasProperty(propId) == false)
+                return;
+
+            // REMOVEME: debug
+            //int currentValue = Properties[propId];
+            //Logger.Debug($"AdjustCraftingIngredientAvailable(): {propId} = {currentValue} => {currentValue + delta}");
+
+            Properties.AdjustProperty(delta, propId);
+        }
+
+        private void InitializeCraftingIngredientAvailable(CraftingRecipePrototype recipeProto, HashSet<PrototypeId> ingredientSet)
+        {
+            if (recipeProto.RecipeInputs.IsNullOrEmpty())
+                return;
+
+            foreach (CraftingInputPrototype inputProto in recipeProto.RecipeInputs)
+            {
+                ItemPrototype ingredientProto = inputProto.AutoPopulatedIngredientPrototype;
+                if (ingredientProto == null)
+                    continue;
+
+                PropertyId propId = new(PropertyEnum.CraftingIngredientAvailable, ingredientProto.DataRef);
+
+                if (Properties.HasProperty(propId))
+                    continue;
+
+                Properties[propId] = 0;
+                ingredientSet.Add(ingredientProto.DataRef);
+            }
+        }
+
+        private void UpdateCraftingIngredientAvailableStackCounts(HashSet<PrototypeId> ingredientSet)
+        {
+            if (ingredientSet.Count == 0)
+                return;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            const InventoryIterationFlags flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra |
+                InventoryIterationFlags.PlayerStashAvatarSpecific | InventoryIterationFlags.PlayerStashGeneral;
+
+            foreach (Inventory inventory in new InventoryIterator(this, flags))
+            {
+                foreach (var entry in inventory)
+                {
+                    if (ingredientSet.Contains(entry.ProtoRef) == false)
+                        continue;
+
+                    Item item = entityManager.GetEntity<Item>(entry.Id);
+                    if (item == null)
+                    {
+                        Logger.Warn("UpdateCraftingIngredientAvailableStackCounts(): item == null");
+                        continue;
+                    }
+
+                    Properties.AdjustProperty(item.CurrentStackSize, new(PropertyEnum.CraftingIngredientAvailable, entry.ProtoRef));
+                }
+            }
+
+            // REMOVEME: debug
+            //foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.CraftingIngredientAvailable))
+            //    Logger.Debug($"UpdateCraftingIngredientAvailableStackCounts(): {kvp.Key} = {(int)kvp.Value}");
         }
     }
 }

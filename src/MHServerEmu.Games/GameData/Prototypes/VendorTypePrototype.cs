@@ -78,5 +78,19 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             return inventoryList.Count > 0;
         }
+
+        public bool ContainsCraftingRecipeCategory(PrototypeId recipeCategoryProtoRef)
+        {
+            if (CraftingRecipeCategories.IsNullOrEmpty())
+                return false;
+
+            foreach (PrototypeId itRecipeCategory in CraftingRecipeCategories)
+            {
+                if (itRecipeCategory == recipeCategoryProtoRef)
+                    return true;
+            }
+
+            return false;
+        }
     }
 }
