@@ -1,5 +1,5 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
@@ -8,6 +8,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -171,6 +172,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public bool DependsOnInput5 { get; protected set; }
         public EvalPrototype CostEvalLegendaryMarks { get; protected set; }
         public EvalPrototype CostEvalCurrencies { get; protected set; }
+
+        //---
+
+        [DoNotCopy]
+        public bool DependsOnAnyInput { get => DependsOnInput1 || DependsOnInput2 || DependsOnInput3 || DependsOnInput4 || DependsOnInput5; }
+
+        [DoNotCopy]
+        public bool HasAnyCostEval { get => CostEvalCredits != null || CostEvalLegendaryMarks != null || CostEvalCurrencies != null; }
     }
 
     public class CraftingIngredientPrototype : ItemPrototype
@@ -336,9 +345,80 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public bool GetCraftingCost(Player player, List<ulong> ingredientIds, out uint creditsCost, out uint legendaryMarksCost, PropertyCollection currencyCost)
         {
-            // TODO
             creditsCost = 0;
             legendaryMarksCost = 0;
+
+            // Early out if there is no cost
+            if (CraftingCost == null)
+                return true;
+
+            if (ingredientIds == null && CraftingCost.DependsOnAnyInput)
+                return false;
+
+            if (CraftingCost.HasAnyCostEval == false)
+                return true;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Entity, player.Properties);
+
+            // Add ingredients to eval context
+            Span<bool> dependsOnInput = stackalloc bool[]
+{
+                CraftingCost.DependsOnInput1,
+                CraftingCost.DependsOnInput2,
+                CraftingCost.DependsOnInput3,
+                CraftingCost.DependsOnInput4,
+                CraftingCost.DependsOnInput5
+            };
+
+            if (ingredientIds != null)
+            {
+                EntityManager entityManager = player.Game.EntityManager;
+
+                for (int i = 0; i < 5; i++)
+                {
+                    if (dependsOnInput[i] == false)
+                        continue;
+
+                    // Early out if the required ingredient was not specified
+                    if (i >= ingredientIds.Count || ingredientIds[i] == Entity.InvalidId)
+                        return false;
+
+                    Entity ingredient = entityManager.GetEntity<Entity>(ingredientIds[i]);
+                    if (ingredient == null) return Logger.WarnReturn(false, "GetCraftingCost(): ingredient == null");
+
+                    evalContext.SetReadOnlyVar_PropertyCollectionPtr(EvalContext.Var1 + i, ingredient.Properties);
+                }
+            }
+
+            // Run evals
+            if (CraftingCost.CostEvalCredits != null)
+            {
+                creditsCost += (uint)Eval.RunInt(CraftingCost.CostEvalCredits, evalContext);
+
+                // Apply CraftingCostCreditsModPct if we have one
+                Avatar avatar = player.CurrentAvatar;
+                if (avatar != null)
+                {
+                    float craftingCostCreditsModPct = avatar.Properties[PropertyEnum.CraftingCostCreditsModPct];
+                    if (MathHelper.IsNearZero(craftingCostCreditsModPct) == false)
+                    {
+                        float mult = Math.Max(1f + craftingCostCreditsModPct, 0f);
+                        creditsCost = (uint)MathHelper.RoundDownToInt(creditsCost * mult);
+                    }
+                }
+            }
+
+            if (CraftingCost.CostEvalLegendaryMarks != null)
+                legendaryMarksCost += (uint)Eval.RunInt(CraftingCost.CostEvalLegendaryMarks, evalContext);
+
+            if (CraftingCost.CostEvalCurrencies != null)
+            {
+                evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, currencyCost);
+                if (Eval.RunBool(CraftingCost.CostEvalCurrencies, evalContext) == false)
+                    return Logger.WarnReturn(false, "GetCraftingCost(): Eval.RunBool(CraftingCost.CostEvalCurrencies, evalContext) == false");
+            }
+
             return true;
         }
     }
