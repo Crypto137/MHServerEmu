@@ -6,6 +6,7 @@ using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
 {
+    // NOTE: Many of the different ingredient error codes are displayed in the client as InsufficientIngredients
     public enum CraftingResult  // CPlayer::DisplayCraftingFailureMessage()
     {
         Success,
@@ -19,12 +20,12 @@ namespace MHServerEmu.Games.Entities
         IngredientNotApproved,              // InsufficientIngredients
         IngredientDisabledByLiveTuning,     // InsufficientIngredients
         IngredientLevelRestricted,
-        Result11,                           // InsufficientIngredients
-        Result12,                           // InsufficientIngredients
-        InputFirstIngredientMismatch,       // InsufficientIngredients
-        Result14,                           // InsufficientIngredients
-        Result15,                           // InsufficientIngredients
-        Result16,                           // InsufficientIngredients
+        IngredientNotDroppableForAvatar,    // InsufficientIngredients
+        IngredientDroppableForAvatar,       // InsufficientIngredients
+        IngredientFirstMismatch,            // InsufficientIngredients
+        IngredientDropRestricted,           // InsufficientIngredients
+        IngredientNotInAllowedItemList,     // InsufficientIngredients
+        IngredientAutoPopulatedMismatch,    // InsufficientIngredients
         Result17,                           // InsufficientIngredients
         LootRollFailed,
     }

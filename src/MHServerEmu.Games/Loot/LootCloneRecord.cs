@@ -12,7 +12,7 @@ namespace MHServerEmu.Games.Loot
 
         private readonly List<AffixRecord> _affixRecordList = new();
 
-        public IEnumerable<AffixRecord> AffixRecords { get => _affixRecordList != null ? _affixRecordList : Array.Empty<AffixRecord>(); }
+        public IReadOnlyList<AffixRecord> AffixRecords { get => _affixRecordList != null ? _affixRecordList : Array.Empty<AffixRecord>(); }
 
         public LootCloneRecord() { }    // Use pooling instead of calling this directly
 

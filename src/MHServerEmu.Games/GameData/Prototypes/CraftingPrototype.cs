@@ -1,10 +1,12 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy.Attributes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -19,12 +21,36 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         [DoNotCopy]
         public virtual ItemPrototype AutoPopulatedIngredientPrototype { get => null; }
 
         public virtual CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
         {
-            // TODO;
+            if (itemSpec.StackCount < 1)
+                return CraftingResult.InsufficientIngredients;
+
+            if (OnlyDroppableForThisAvatar || OnlyNotDroppableForThisAvatar)
+            {
+                ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
+                if (itemProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): itemProto == null");
+
+                bool isDroppable = itemProto.IsDroppableForAgent(avatar.AgentPrototype);
+
+                if (OnlyDroppableForThisAvatar && isDroppable == false)
+                    return CraftingResult.IngredientNotDroppableForAvatar;
+
+                if (OnlyNotDroppableForThisAvatar && isDroppable)
+                    return CraftingResult.IngredientDroppableForAvatar;
+            }
+
+            if (OnlyEquippableAtThisAvatarLevel)
+            {
+                if (avatar.CharacterLevel < Item.GetEquippableAtLevelForItemLevel(itemSpec.ItemLevel))
+                    return CraftingResult.IngredientLevelRestricted;
+            }
+
             return CraftingResult.Success;
         }
     }
@@ -36,12 +62,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         [DoNotCopy]
         public override ItemPrototype AutoPopulatedIngredientPrototype { get => Ingredient.As<ItemPrototype>(); }
 
         public override CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
         {
-            // TODO;
+            // Auto populated ingredients use fake item specs, so they don't have rarity specified and will fail the IsValid check.
+            if (itemSpec.ItemProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): itemSpec.ItemProtoRef == PrototypeId.Invalid");
+
+            if (Ingredient == PrototypeId.Invalid)
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): Ingredient == PrototypeId.Invalid");
+
+            if (itemSpec.ItemProtoRef != Ingredient)
+                return CraftingResult.IngredientAutoPopulatedMismatch;
+
+            if (itemSpec.StackCount < Quantity)
+                return CraftingResult.InsufficientIngredients;
+
+            // This prototype validation seems overkill, but it's here to match the client.
+            ItemPrototype ingredient = Ingredient.As<ItemPrototype>();
+            if (ingredient.StackSettings == null || ingredient.StackSettings.MaxStacks <= 1)
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): ingredient.StackSettings == null || ingredient.StackSettings.MaxStacks <= 1");
+
+            if (ingredient.BindingSettings?.DefaultSettings?.BindsToCharacterOnEquip == true)
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): ingredient.BindingSettings?.DefaultSettings?.BindsToCharacterOnEquip == true");
+
             return CraftingResult.Success;
         }
     }
@@ -52,9 +100,26 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public override CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
         {
-            // TODO;
+            if (itemSpec.IsValid == false)
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): itemSpec.IsValid == false");
+
+            CraftingResult baseResult = base.AllowItem(itemSpec, avatar);
+            if (baseResult != CraftingResult.Success)
+                return baseResult;
+
+            using LootCloneRecord lootCloneRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            LootCloneRecord.Initialize(lootCloneRecord, LootContext.Crafting, itemSpec, avatar.PrototypeDataRef);
+
+            foreach (DropRestrictionPrototype dropRestrictionProto in Restrictions)
+            {
+                if (dropRestrictionProto.AllowAsCraftingInput(lootCloneRecord) == false)
+                    return CraftingResult.IngredientDropRestricted;
+            }
+
             return CraftingResult.Success;
         }
     }
@@ -65,9 +130,33 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         public override CraftingResult AllowItem(ItemSpec itemSpec, Avatar avatar)
         {
-            // TODO;
+            if (itemSpec.IsValid == false)
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): itemSpec.IsValid == false");
+
+            if (AllowedItems.IsNullOrEmpty())
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, "AllowItem(): AllowedItems.IsNullOrEmpty()");
+
+            CraftingResult baseResult = base.AllowItem(itemSpec, avatar);
+            if (baseResult != CraftingResult.Success)
+                return baseResult;
+
+            bool contains = false;
+            foreach (PrototypeId allowedItemProtoRef in AllowedItems)
+            {
+                if (itemSpec.ItemProtoRef == allowedItemProtoRef)
+                {
+                    contains = true;
+                    break;
+                }
+            }
+
+            if (contains == false)
+                return CraftingResult.IngredientNotInAllowedItemList;
+
             return CraftingResult.Success;
         }
     }
@@ -180,7 +269,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 
                 Item firstIngredient = player.Game.EntityManager.GetEntity<Item>(ingredientIds[0]);
                 if (firstIngredient == null)
-                    return CraftingResult.InputFirstIngredientMismatch;
+                    return CraftingResult.IngredientFirstMismatch;
 
                 ingredientProtoToMatch = firstIngredient.ItemPrototype;
             }
@@ -231,7 +320,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 return CraftingResult.IngredientDisabledByLiveTuning;
 
             if (ingredientProtoToMatch != null && ingredientProto != ingredientProtoToMatch)
-                return CraftingResult.InputFirstIngredientMismatch;
+                return CraftingResult.IngredientFirstMismatch;
 
             CraftingResult result = inputProtoToUse.AllowItem(ingredientSpec, avatar);
             if (result == CraftingResult.Success && autoPopulatedIngredientProto == null && usedStackCounts != null)
