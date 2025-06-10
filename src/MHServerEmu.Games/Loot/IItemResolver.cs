@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.System.Random;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -144,6 +145,21 @@ namespace MHServerEmu.Games.Loot
         /// Returns <see langword="true"/> if an agent is allowed to drop given the specified filters.
         /// </summary>
         public bool CheckAgent(PrototypeId agentProtoRef, RestrictionTestFlags restrictionFlags);
+
+        #endregion
+
+        #region Clone Source Management
+
+        /// <summary>
+        /// Initializes the provided <see cref="LootCloneRecord"/> using the clone source with the specified index.
+        /// Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool InitializeCloneRecordFromSource(int index, LootCloneRecord lootCloneRecord);
+
+        /// <summary>
+        /// Sets the clone source for the specified index.
+        /// </summary>
+        public void SetCloneSource(int index, ItemSpec itemSpec);
 
         #endregion
 

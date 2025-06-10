@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
@@ -236,8 +237,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
-            Logger.Warn($"Roll()");
-            return LootRollResult.NoRoll;
+            using LootCloneRecord lootCloneRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+            if (resolver.InitializeCloneRecordFromSource(SourceIndex, lootCloneRecord) == false)
+                return LootRollResult.Failure;
+
+            // Set up flags
+            if (lootCloneRecord.RollFor == PrototypeId.Invalid)
+                lootCloneRecord.RestrictionFlags &= ~RestrictionTestFlags.UsableBy;
+
+            lootCloneRecord.RestrictionFlags &= ~RestrictionTestFlags.Rarity;
+
+            // Apply mutations
+            if (Mutations.HasValue())
+            {
+                MutationResults mutationResult = MutationResults.None;
+                foreach (LootMutationPrototype lootMutationProto in Mutations)
+                {
+                    mutationResult |= lootMutationProto.Mutate(settings, resolver, lootCloneRecord);
+                    if (mutationResult.HasFlag(MutationResults.Error))
+                    {
+                        resolver.ClearPending();
+                        return LootRollResult.Failure;
+                    }
+                }
+            }
+
+            // Push to the resolver
+            LootRollResult result = resolver.PushClone(lootCloneRecord);
+            if (result.HasFlag(LootRollResult.Failure))
+            {
+                resolver.ClearPending();
+                return LootRollResult.Failure;
+            }
+
+            return resolver.ProcessPending(settings) ? result : LootRollResult.Failure;
         }
     }
 

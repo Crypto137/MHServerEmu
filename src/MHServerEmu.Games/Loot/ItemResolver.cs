@@ -25,6 +25,8 @@ namespace MHServerEmu.Games.Loot
         private readonly int _itemLevelMin;
         private readonly int _itemLevelMax;
 
+        private readonly List<ItemSpec> _cloneSourceList = new();
+
         private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<LootResult> _processedItemList = new();
 
@@ -82,6 +84,7 @@ namespace MHServerEmu.Games.Loot
 
         public void ResetForPool()
         {
+            _cloneSourceList.Clear();
             _context.Clear();
             _avatarPicker = default;
 
@@ -437,6 +440,31 @@ namespace MHServerEmu.Games.Loot
                 return false;
 
             return true;
+        }
+
+        #endregion
+
+        #region Clone Source Management
+
+        public bool InitializeCloneRecordFromSource(int index, LootCloneRecord lootCloneRecord)
+        {
+            if (index >= _cloneSourceList.Count)
+                return false;
+
+            ItemSpec cloneSource = _cloneSourceList[index];
+            if (cloneSource == null)    // If this check triggers, we probably need to replace nulls with dummy specs (see SetCloneSource() below)
+                return Logger.WarnReturn(false, "InitializeRecordFromCloneSource(): cloneSource == null");
+
+            LootCloneRecord.Initialize(lootCloneRecord, LootContext, cloneSource, PrototypeId.Invalid);
+            return true;
+        }
+
+        public void SetCloneSource(int index, ItemSpec itemSpec)
+        {
+            while (_cloneSourceList.Count <= index)
+                _cloneSourceList.Add(null); // Should this be null or a dummy? It would be better if we could get away with a null
+
+            _cloneSourceList[index] = itemSpec;
         }
 
         #endregion
