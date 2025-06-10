@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using System.Runtime.InteropServices;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
@@ -14,29 +15,57 @@ namespace MHServerEmu.Games.Properties
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private byte _propertyVersion = 0;
+        private byte _propertyVersion;
         private PropertyEnum _propertyEnum = PropertyEnum.Invalid;
-        private ulong _propertyProtoGuid = 0;   // PrototypeGuid
-        private PrototypeId _propertyProtoRef = PrototypeId.Invalid;
-        private byte _paramCount = 0;
+        private ulong _propertyProtoGuid;   // PrototypeGuid
+        private PrototypeId _propertyProtoRef;
+        private byte _paramCount;
         private int _propertyDataType = (int)PropertyDataType.Invalid;
 
-        private long _propertyValueLong = 0;
-        private float _propertyValueFloat = 0f;
-        private AssetId _propertyValueAssetRef = AssetId.Invalid;
-        private PrototypeId _propertyValueProtoRef = PrototypeId.Invalid;
-        private ulong _propertyValueGuid = 0;
+        private long _propertyValueLong;
+        private float _propertyValueFloat;
+        private AssetId _propertyValueAssetRef;
+        private PrototypeId _propertyValueProtoRef;
+        private ulong _propertyValueGuid;
 
-        private readonly Span<sbyte> _paramTypes = new sbyte[Property.MaxParamCount];
-        private readonly Span<int> _paramValueInts = new int[Property.MaxParamCount];
-        private readonly Span<AssetId> _paramValueAssetRefs = new AssetId[Property.MaxParamCount];
-        private readonly Span<PrototypeId> _paramValueProtoRefs = new PrototypeId[Property.MaxParamCount];
-        private readonly Span<ulong> _paramValueGuids = new ulong[Property.MaxParamCount];
+        // Use "unrolled" arrays to avoid heap allocations
+        private sbyte _paramTypes0 = (sbyte)PropertyParamType.Invalid;
+        private sbyte _paramTypes1 = (sbyte)PropertyParamType.Invalid;
+        private sbyte _paramTypes2 = (sbyte)PropertyParamType.Invalid;
+        private sbyte _paramTypes3 = (sbyte)PropertyParamType.Invalid;
+        private readonly Span<sbyte> _paramTypes;
+
+        private int _paramValueInts0;
+        private int _paramValueInts1;
+        private int _paramValueInts2;
+        private int _paramValueInts3;
+        private readonly Span<int> _paramValueInts;
+
+        private AssetId _paramValueAssetRefs0;
+        private AssetId _paramValueAssetRefs1;
+        private AssetId _paramValueAssetRefs2;
+        private AssetId _paramValueAssetRefs3;
+        private readonly Span<AssetId> _paramValueAssetRefs;
+
+        private PrototypeId _paramValueProtoRefs0;
+        private PrototypeId _paramValueProtoRefs1;
+        private PrototypeId _paramValueProtoRefs2;
+        private PrototypeId _paramValueProtoRefs3;
+        private readonly Span<PrototypeId> _paramValueProtoRefs;
+
+        private ulong _paramValueGuids0;
+        private ulong _paramValueGuids1;
+        private ulong _paramValueGuids2;
+        private ulong _paramValueGuids3;
+        private readonly Span<ulong> _paramValueGuids;
 
         public PropertyStore()
         {
-            for (int i = 0; i < Property.MaxParamCount; i++)
-                _paramTypes[i] = (sbyte)PropertyParamType.Invalid;
+            _paramTypes = MemoryMarshal.CreateSpan(ref _paramTypes0, Property.MaxParamCount);
+            _paramValueInts = MemoryMarshal.CreateSpan(ref _paramValueInts0, Property.MaxParamCount);
+            _paramValueAssetRefs = MemoryMarshal.CreateSpan(ref _paramValueAssetRefs0, Property.MaxParamCount);
+            _paramValueProtoRefs = MemoryMarshal.CreateSpan(ref _paramValueProtoRefs0, Property.MaxParamCount);
+            _paramValueGuids = MemoryMarshal.CreateSpan(ref _paramValueGuids0, Property.MaxParamCount);
         }
 
         public bool Serialize(ref PropertyId propertyId, ref PropertyValue propertyValue, PropertyCollection propertyCollection, Archive archive)

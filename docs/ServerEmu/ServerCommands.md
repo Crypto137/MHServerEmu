@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.05.27 11:27:12 UTC` using server version `0.6.0`.
+This list was automatically generated on `2025.06.10 07:13:32 UTC` using server version `0.7.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -64,8 +64,8 @@ Debug commands for development.
 | !debug crashserver           | Crashes the entire server.                                                             | Admin      | ServerConsole  |
 | !debug difficulty            | Shows information about the current difficulty level.                                  | Any        | Client         |
 | !debug forcegc               | Requests the garbage collector to perform a collection.                                | Admin      | Any            |
-| !debug getconditionlist      | Gets a list of all conditions tracked by the ConditionPool in the current game.        | Any        | Client         |
-| !debug geteventpoolreport    | Returns a report representing the state of the ScheduledEventPool in the current game. | Any        | Client         |
+| !debug getconditionlist      | Gets a list of all conditions tracked by the ConditionPool in the current game.        | Moderator  | Client         |
+| !debug geteventpoolreport    | Returns a report representing the state of the ScheduledEventPool in the current game. | Moderator  | Client         |
 | !debug metagame [on/off]     | No description available.                                                              | Admin      | Any            |
 | !debug navi2obj [PathFlags]  | Default PathFlags is Walk, can be [None/Fly/Power/Sight].                              | Admin      | Client         |
 | !debug region                | Shows current region.                                                                  | Any        | Client         |
@@ -101,6 +101,7 @@ Commands for managing items.
 
 | Command                      | Description                                                                | User Level | Invoker Type  |
 | ---------------------------- | -------------------------------------------------------------------------- | ---------- | ------------  |
+| !item cleardeliverybox       | Destroys all items contained in the delivery box inventory.                | Any        | Client        |
 | !item creditchest            | Converts 500k credits to a sellable chest item.                            | Any        | Client        |
 | !item destroyindestructible  | Destroys indestructible items contained in the player's general inventory. | Any        | Client        |
 | !item drop [pattern] [count] | Creates and drops the specified item from the current avatar.              | Admin      | Client        |
