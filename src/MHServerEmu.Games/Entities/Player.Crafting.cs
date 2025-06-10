@@ -1,9 +1,11 @@
 ﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
@@ -49,12 +51,40 @@ namespace MHServerEmu.Games.Entities
             WorldEntity vendor = Game.EntityManager.GetEntity<WorldEntity>(vendorId);
             if (vendor == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): vendor == null");
 
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): avatar == null");
+
             // Validate craftability
             CraftingResult canCraftRecipeResult = recipeItem.CanCraftRecipe(this, ingredientIds, vendor, isRecraft);
             if (canCraftRecipeResult != CraftingResult.Success)
                 return Logger.WarnReturn(canCraftRecipeResult, $"Craft(): CanCraftRecipe() failed for player=[{this}], recipeItem=[{recipeItem}], result=[{canCraftRecipeResult}]");
 
-            // TODO: the actual crafting
+            // Get crafting costs (already validated in CanCraftRecipe() above)
+            using PropertyCollection currencyCost = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            recipeProto.GetCraftingCost(this, ingredientIds, out uint creditsCost, out uint legendaryMarksCost, currencyCost);
+
+            if (isRecraft)
+            {
+                // TODO
+                return Logger.WarnReturn(CraftingResult.CraftingFailed, $"Craft(): Recraft is not yet implemented");
+            }
+
+            // Crafting is done through generating new items via the loot system
+            using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
+            resolver.Initialize(Game.Random);
+            resolver.SetContext(LootContext.Crafting, this);
+
+            using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+            settings.Player = this;
+            settings.UsableAvatar = avatar.AvatarPrototype;
+            settings.Level = avatar.CharacterLevel;
+
+            LootRollResult rollResult = recipeProto.RecipeOutput.RollLootTable(settings, resolver);
+            if (rollResult != LootRollResult.Success)
+                return CraftingResult.LootRollFailed;
+
+            using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+            resolver.FillLootResultSummary(summary);
 
             return Logger.DebugReturn(CraftingResult.CraftingFailed, $"Craft(): recipeItemId={recipeItemId}, ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}");
         }
