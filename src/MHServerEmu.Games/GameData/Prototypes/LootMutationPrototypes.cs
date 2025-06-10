@@ -4,6 +4,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 {
     public class LootMutationPrototype : Prototype
     {
+        //---
+
+        public virtual MutationResults Mutate(LootRollSettings settings, IItemResolver itemResolver, LootCloneRecord lootCloneRecord)
+        {
+            // TODO
+            return MutationResults.None;
+        }
     }
 
     public class LootAddAffixesPrototype : LootMutationPrototype

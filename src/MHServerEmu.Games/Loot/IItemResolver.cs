@@ -27,7 +27,12 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Pushes the result of rolling a <see cref="LootDropItemPrototype"/> or a <see cref="LootDropItemFilterPrototype"/> to this <see cref="IItemResolver"/>.
         /// </summary>
-        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations);
+        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, LootMutationPrototype[] mutations);
+
+        /// <summary>
+        /// Pushes the result of rolling a <see cref="LootDropClonePrototype"/> to this <see cref="IItemResolver"/>.
+        /// </summary>
+        public LootRollResult PushClone(LootCloneRecord cloneRecord);
 
         /// <summary>
         /// Pushes the result of rolling a <see cref="LootDropAgentPrototype"/> to this <see cref="IItemResolver"/>.
@@ -133,7 +138,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Returns <see langword="true"/> if an item is allowed to drop given the specified filters.
         /// </summary>
-        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2, int amount = 1);
+        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2 = false, int amount = 1);
 
         /// <summary>
         /// Returns <see langword="true"/> if an agent is allowed to drop given the specified filters.

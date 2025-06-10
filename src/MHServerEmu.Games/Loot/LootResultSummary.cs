@@ -29,6 +29,7 @@ namespace MHServerEmu.Games.Loot
         public int RealMoney { get; private set; }
         //public List<long> CouponCodes { get; private set; } = new();  // seems to be unused
         public List<LootNodePrototype> CallbackNodes { get; } = new();
+        public List<LootMutationPrototype> LootMutations { get; } = new();
         public List<PrototypeId> VanityTitles { get; } = new();
         public List<VendorXPSummary> VendorXP { get; } = new();
         public List<CurrencySpec> Currencies { get; } = new();
@@ -101,6 +102,11 @@ namespace MHServerEmu.Games.Loot
                 case LootType.CallbackNode:
                     CallbackNodes.Add(lootResult.CallbackNodeProto);
                     Types |= LootType.CallbackNode;
+                    break;
+
+                case LootType.LootMutation:
+                    LootMutations.Add(lootResult.LootMutationProto);
+                    Types |= LootType.LootMutation;
                     break;
 
                 case LootType.VanityTitle:
@@ -303,6 +309,7 @@ namespace MHServerEmu.Games.Loot
             EnduranceBonus = default;
             RealMoney = default;
             CallbackNodes.Clear();
+            LootMutations.Clear();
             VanityTitles.Clear();
             VendorXP.Clear();
             Currencies.Clear();

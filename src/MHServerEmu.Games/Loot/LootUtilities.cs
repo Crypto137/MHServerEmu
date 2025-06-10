@@ -39,7 +39,7 @@ namespace MHServerEmu.Games.Loot
                     currentArgs.ItemProto = itemProto;
                     currentArgs.RollFor = itemProto.GetRollForAgent(currentArgs.RollFor, teamUpProto);
 
-                    if (resolver.CheckItem(currentArgs, restrictionFlags, false))
+                    if (resolver.CheckItem(currentArgs, restrictionFlags))
                     {
                         pickedItemProto = itemProto;
                         if (rarityProtoRef != null)

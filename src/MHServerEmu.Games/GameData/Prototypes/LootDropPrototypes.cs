@@ -227,6 +227,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            SourceIndex = (short)Math.Max((int)SourceIndex, 0);
+        }
+
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
         {
             Logger.Warn($"Roll()");

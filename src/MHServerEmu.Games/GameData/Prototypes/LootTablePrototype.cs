@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             if (NumMax < NumMin) NumMax = NumMin;
         }
 
-        public LootRollResult RollItem(ItemPrototype itemProto, int numItems, LootRollSettings settings, IItemResolver resolver, IEnumerable<LootMutationPrototype> mutations)
+        public LootRollResult RollItem(ItemPrototype itemProto, int numItems, LootRollSettings settings, IItemResolver resolver, LootMutationPrototype[] mutations)
         {
             LootRollResult result = LootRollResult.NoRoll;
 
