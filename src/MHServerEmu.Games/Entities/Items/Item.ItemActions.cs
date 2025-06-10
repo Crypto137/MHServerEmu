@@ -295,6 +295,18 @@ namespace MHServerEmu.Games.Entities.Items
             Inventory deliveryBox = player.GetInventory(InventoryConvenienceLabel.DeliveryBox);
             if (deliveryBox == null) return Logger.WarnReturn(false, "ReplaceSelfHelper(): deliveryBox == null");
 
+            // Try to avoid delivery box overflow because people can abuse it to hoard loot and cause performance issues
+            int itemCount = lootResultSummary.ItemSpecs.Count;
+            if (itemCount > 1 && inventory.Count + itemCount >= inventory.MaxCapacity)
+            {
+                player.SendMessage(NetMessageInventoryFull.CreateBuilder()
+                    .SetPlayerID(player.Id)
+                    .SetItemID(InvalidId)
+                    .Build());
+
+                return false;
+            }
+
             // If this is the last item in the stack, move it out of the inventory while we try to replace it
             InventoryLocation oldInvLoc = new(InventoryLocation);
 
