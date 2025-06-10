@@ -462,7 +462,7 @@ namespace MHServerEmu.Games.Loot
         public void SetCloneSource(int index, ItemSpec itemSpec)
         {
             while (_cloneSourceList.Count <= index)
-                _cloneSourceList.Add(null); // Should this be null or a dummy? It would be better if we could get away with a null
+                _cloneSourceList.Add(null); // null here represents auto populated slots
 
             _cloneSourceList[index] = itemSpec;
         }

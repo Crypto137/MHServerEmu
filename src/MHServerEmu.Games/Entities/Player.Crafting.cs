@@ -74,6 +74,11 @@ namespace MHServerEmu.Games.Entities
             resolver.Initialize(Game.Random);
             resolver.SetContext(LootContext.Crafting, this);
 
+            // Prepare crafting ingredients
+            if (CraftPrepareIngredients(recipeProto, ingredientIds, resolver) == false)
+                return CraftingResult.InsufficientIngredients;
+
+            // Roll the crafting output
             using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
             settings.Player = this;
             settings.UsableAvatar = avatar.AvatarPrototype;
@@ -206,6 +211,35 @@ namespace MHServerEmu.Games.Entities
             // REMOVEME: debug
             //foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.CraftingIngredientAvailable))
             //    Logger.Debug($"UpdateCraftingIngredientAvailableStackCounts(): {kvp.Key} = {(int)kvp.Value}");
+        }
+
+        private bool CraftPrepareIngredients(CraftingRecipePrototype recipeProto, List<ulong> ingredientIds, ItemResolver resolver)
+        {
+            // TODO: This is just basic scaffolding to test loot mutations for now
+
+            EntityManager entityManager = Game.EntityManager;
+
+            for (int i = 0; i < ingredientIds.Count; i++)
+            {
+                ulong ingredientId = ingredientIds[i];
+
+                if (ingredientId != InvalidId)
+                {
+                    Item ingredient = entityManager.GetEntity<Item>(ingredientId);
+                    if (ingredient == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): ingredient == null");
+
+                    ItemSpec cloneSource = new(ingredient.ItemSpec);
+                    cloneSource.StackCount = ingredient.IsRelic ? ingredient.CurrentStackSize : 1;
+
+                    resolver.SetCloneSource(i, cloneSource);
+                }
+                else
+                {
+                    // TODO: auto populated ingredients
+                }
+            }
+
+            return true;
         }
     }
 }
