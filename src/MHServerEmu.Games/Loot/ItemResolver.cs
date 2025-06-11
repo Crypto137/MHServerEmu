@@ -527,7 +527,7 @@ namespace MHServerEmu.Games.Loot
                                 if (mutationResult != MutationResults.None)
                                 {
                                     if (CheckItem(mutationArgs, mutationArgs.RestrictionFlags))
-                                        itemSpec = mutationArgs.ToItemSpec();
+                                        itemSpec.Set(mutationArgs);
                                     else
                                         return Logger.WarnReturn(false, "ProcessPending(): Mutations failed to pass CheckItem()");
                                 }

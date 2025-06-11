@@ -8,6 +8,8 @@ namespace MHServerEmu.Games.Loot
 {
     public class LootCloneRecord : DropFilterArguments
     {
+        // LootCloneRecord is effectively a fully mutable version of ItemSpec used for cloning and mutating
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly List<AffixRecord> _affixRecordList = new();
@@ -105,20 +107,7 @@ namespace MHServerEmu.Games.Loot
 
         public ItemSpec ToItemSpec()
         {
-            List<AffixSpec> affixSpecs = ListPool<AffixSpec>.Instance.Get();
-            foreach (AffixRecord affixRecord in _affixRecordList)
-            {
-                AffixSpec affixSpec = new(affixRecord.AffixProtoRef.As<AffixPrototype>(), affixRecord.ScopeProtoRef, affixRecord.Seed);
-                affixSpecs.Add(affixSpec);
-            }
-
-            ItemSpec itemSpec = new ItemSpec(ItemProto.DataRef, Rarity, Level, 0, affixSpecs, Seed, EquippableBy);
-            itemSpec.StackCount = StackCount;
-
-            // The constructor for ItemSpec takes only AffixSpec references from the provided list, so we can return the list itself to the pool now
-            ListPool<AffixSpec>.Instance.Return(affixSpecs);
-
-            return itemSpec;
+            return new(this);
         }
     }
 }

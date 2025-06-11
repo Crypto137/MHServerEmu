@@ -76,18 +76,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec(ItemSpec other)
         {
-            _itemProtoRef = other._itemProtoRef;
-            _rarityProtoRef = other._rarityProtoRef;
-            _itemLevel = other._itemLevel;
-            _creditsAmount = other._creditsAmount;
+            Set(other);
+        }
 
-            foreach (AffixSpec affixSpec in other._affixSpecList)
-                _affixSpecList.Add(new(affixSpec));
-
-            _seed = other._seed;
-            _equippableBy = other._equippableBy;
-
-            StackCount = other.StackCount;
+        public ItemSpec(LootCloneRecord lootCloneRecord)
+        {
+            Set(lootCloneRecord);
         }
 
         public bool Serialize(Archive archive)
@@ -127,19 +121,44 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void Set(ItemSpec other)
         {
-            if (other == null) throw new ArgumentException("other == null");
-            if (ReferenceEquals(this, other)) return;
+            // This can be called with this ItemSpec itself as an argument when doing initialization after deserialization
+            if (ReferenceEquals(this, other))
+                return;
 
             _itemProtoRef = other._itemProtoRef;
             _rarityProtoRef = other._rarityProtoRef;
             _itemLevel = other._itemLevel;
             _creditsAmount = other._creditsAmount;
-            _seed = other._seed;
-            _equippableBy = other._equippableBy;
 
             _affixSpecList.Clear();
             foreach (AffixSpec otherAffixSpec in other._affixSpecList)
                 _affixSpecList.Add(new(otherAffixSpec));
+
+            _seed = other._seed;
+            _equippableBy = other._equippableBy;
+
+            StackCount = other.StackCount;
+        }
+
+        public void Set(LootCloneRecord lootCloneRecord)
+        {
+            _itemProtoRef = lootCloneRecord.ItemProto.DataRef;
+            _rarityProtoRef = lootCloneRecord.Rarity;
+            _itemLevel = lootCloneRecord.Level;
+            _creditsAmount = 0;
+
+            _affixSpecList.Clear();
+            for (int i = 0; i < lootCloneRecord.AffixRecords.Count; i++)
+            {
+                AffixRecord affixRecord = lootCloneRecord.AffixRecords[i];
+                AffixSpec affixSpec = new(affixRecord.AffixProtoRef.As<AffixPrototype>(), affixRecord.ScopeProtoRef, affixRecord.Seed);
+                _affixSpecList.Add(affixSpec);
+            }
+
+            _seed = lootCloneRecord.Seed;
+            _equippableBy = lootCloneRecord.EquippableBy;
+
+            StackCount = lootCloneRecord.StackCount;
         }
 
         public override string ToString()
