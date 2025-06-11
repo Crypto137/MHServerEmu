@@ -28,7 +28,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         {
         }
 
-        public virtual void Visit<T>(T visitor) where T: ILootTableNodeVisitor
+        public virtual void Visit<T>(ref T visitor) where T: ILootTableNodeVisitor
         {
             visitor.Visit(this);
         }
@@ -229,15 +229,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
             LootTablePrototypeEnumValue = GetEnumValueFromBlueprint(LiveTuningData.GetLootTableBlueprintDataRef());
         }
 
-        public override void Visit<T>(T visitor)
+        public override void Visit<T>(ref T visitor)
         {
-            base.Visit(visitor);
+            base.Visit(ref visitor);
 
             if (Choices.IsNullOrEmpty())
                 return;
 
             foreach (LootNodePrototype node in Choices)
-                node.Visit(visitor);
+                node.Visit(ref visitor);
         }
 
         public bool IsLiveTuningEnabled()

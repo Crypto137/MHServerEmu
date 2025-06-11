@@ -13,11 +13,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         //---
 
-        public override void Visit<T>(T visitor)
+        public override void Visit<T>(ref T visitor)
         {
-            base.Visit(visitor);
+            base.Visit(ref visitor);
 
-            Target?.Visit(visitor);
+            Target?.Visit(ref visitor);
         }
 
         protected LootRollResult SelectTarget(LootRollSettings settings, IItemResolver resolver)

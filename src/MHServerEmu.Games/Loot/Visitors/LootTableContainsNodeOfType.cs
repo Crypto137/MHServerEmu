@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Loot.Visitors
                 return;
 
             foreach (LootTablePrototype lootTableProto in tables)
-                lootTableProto.Visit(this);
+                lootTableProto.Visit(ref this);
         }
 
         public void Visit(LootNodePrototype lootNodeProto)

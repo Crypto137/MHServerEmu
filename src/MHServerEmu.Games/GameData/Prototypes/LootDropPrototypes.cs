@@ -110,11 +110,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public override void Visit<T>(T visitor)
+        public override void Visit<T>(ref T visitor)
         {
-            base.Visit(visitor);
+            base.Visit(ref visitor);
 
-            OnTokenUnavailable?.Visit(visitor);
+            OnTokenUnavailable?.Visit(ref visitor);
         }
 
         protected internal override LootRollResult Roll(LootRollSettings settings, IItemResolver resolver)
