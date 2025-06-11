@@ -180,7 +180,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return true;
         }
 
-        public MutationResults UpdatePetTechAffixes(GRandom random, PrototypeId rollFor, ItemSpec itemSpec)
+        public static MutationResults UpdatePetTechAffixes(GRandom random, PrototypeId rollFor, ItemSpec itemSpec)
         {
             //Logger.Debug($"UpdatePetTechAffixes(): {itemSpec.ItemProtoRef.GetName()}");
             return MutationResults.None;

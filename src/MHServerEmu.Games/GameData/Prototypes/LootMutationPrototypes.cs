@@ -3,11 +3,13 @@ using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
+    // TODO: Add pooling for temporary ItemSpec instances if it creates a problem with garbage collection.
+
     public class LootMutationPrototype : Prototype
     {
         //---
 
-        public virtual MutationResults Mutate(LootRollSettings settings, IItemResolver itemResolver, LootCloneRecord lootCloneRecord)
+        public virtual MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             return MutationResults.None;
         }
@@ -37,6 +39,21 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public short Count { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }       // VectorPrototypeRefPtr AffixCategoryPrototype 
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            ItemSpec itemSpec = new(lootCloneRecord);
+            MutationResults affixResults = LootUtilities.AddAffixes(resolver, lootCloneRecord, Count, itemSpec, Position, Categories, Keywords, settings);
+            
+            if (affixResults.HasFlag(MutationResults.Error))
+                return MutationResults.Error;
+
+            lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
+
+            return affixResults;
+        }
     }
 
     public class LootApplyNoVisualsOverridePrototype : LootMutationPrototype
