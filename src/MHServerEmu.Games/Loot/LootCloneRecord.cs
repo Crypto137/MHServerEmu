@@ -105,6 +105,16 @@ namespace MHServerEmu.Games.Loot
             ObjectPoolManager.Instance.Return(this);
         }
 
+        public void SetAffixes(IReadOnlyList<AffixSpec> affixSpecs)
+        {
+            _affixRecordList.Clear();
+            for (int i = 0; i < affixSpecs.Count; i++)
+            {
+                AffixSpec affixSpec = affixSpecs[i];
+                _affixRecordList.Add(new(affixSpec));
+            }
+        }
+
         public ItemSpec ToItemSpec()
         {
             return new(this);

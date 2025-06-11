@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Games.Loot;
+﻿using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -8,8 +9,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public virtual MutationResults Mutate(LootRollSettings settings, IItemResolver itemResolver, LootCloneRecord lootCloneRecord)
         {
-            // TODO
             return MutationResults.None;
+        }
+
+        public virtual void OnItemCreated(Item item)
+        {
+        }
+
+        protected MutationResults FinalizeMutation(IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            if (resolver.CheckItem(lootCloneRecord, lootCloneRecord.RestrictionFlags, true) == false)
+                return MutationResults.Error;
+
+            ItemSpec itemSpec = new(lootCloneRecord);
+            MutationResults affixResults = LootUtilities.UpdateAffixes(resolver, lootCloneRecord, AffixCountBehavior.Keep, itemSpec, null);
+
+            if (affixResults != MutationResults.None && affixResults.HasFlag(MutationResults.Error) == false)
+                lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
+
+            return affixResults;
         }
     }
 
