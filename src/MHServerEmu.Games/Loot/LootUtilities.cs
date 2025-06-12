@@ -455,7 +455,53 @@ namespace MHServerEmu.Games.Loot
         private static bool GetCurrentAffixStats(IItemResolver resolver, DropFilterArguments args, ItemSpec itemSpec,
             List<AffixCountData> affixCounts, HashSet<ScopedAffixRef> affixSet)
         {
-            // TODO
+            affixSet.Clear();
+
+            if (itemSpec.AffixSpecs.Count == 0)
+                return true;
+
+            bool hasNoVisualsAffix = false;
+            bool hasVisualAffix = false;
+
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+
+            for (int i = 0; i < itemSpec.AffixSpecs.Count; i++)
+            {
+                AffixSpec affixSpecIt = itemSpec.AffixSpecs[i];
+                if (affixSpecIt.IsValid == false)
+                    return Logger.WarnReturn(false, $"GetCurrentAffixStats(): Invalid affix spec: affixSpec=[{affixSpecIt}] args=[{args}] itemSpec=[{itemSpec}]");
+
+                affixSet.Add(new(affixSpecIt.AffixProto.DataRef, affixSpecIt.ScopeProtoRef));
+
+                AffixPosition affixPos = affixSpecIt.AffixProto.Position;
+                int affixPosIndex = (int)affixPos;
+                if (affixPosIndex < 0 || affixPosIndex >= affixCounts.Count)
+                {
+                    Logger.Warn($"GetCurrentAffixStats(): Invalid affix position on item! itemSpec=[{itemSpec}]");
+                    continue;
+                }
+
+                switch (affixPos)
+                {
+                    case AffixPosition.Metadata:
+                        break;
+
+                    case AffixPosition.Visual:
+                        if (affixSpecIt.AffixProto.DataRef == globalsProto.ItemNoVisualsAffix)
+                            hasNoVisualsAffix = true;
+                        else
+                            hasVisualAffix = true;
+                        break;
+
+                    default:
+                        affixCounts[affixPosIndex] = affixCounts[affixPosIndex].IncrementCount();
+                        break;
+                }
+            }
+
+            if (hasVisualAffix && hasNoVisualsAffix)
+                return Logger.WarnReturn(false, $"GetCurrentAffixStats(): Item has both an externally applied visual affix and the no-visuals metadata affix! itemSpec: {itemSpec}");
+
             return true;
         }
 
@@ -574,6 +620,22 @@ namespace MHServerEmu.Games.Loot
         {
             public short AffixCount;
             public short AffixesNeeded;
+
+            public AffixCountData(short affixCount = 0, short affixesNeeded = 0)
+            {
+                AffixCount = affixCount;
+                AffixesNeeded = affixesNeeded;
+            }
+
+            public override string ToString()
+            {
+                return $"{AffixCount}/{AffixesNeeded}";
+            }
+
+            public AffixCountData IncrementCount()
+            {
+                return new((short)(AffixCount + 1), AffixesNeeded);
+            }
 
             public static void InitializeAffixCountList(List<AffixCountData> list)
             {
