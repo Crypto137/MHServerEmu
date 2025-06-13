@@ -161,6 +161,13 @@ namespace MHServerEmu.Games.Entities.Items
             StackCount = lootCloneRecord.StackCount;
         }
 
+        public void SetAffixes(IEnumerable<AffixSpec> affixSpecs)
+        {
+            // It's fine to use IEnumerable here because AddRange() has ICollection specific optimizations
+            _affixSpecList.Clear();
+            _affixSpecList.AddRange(affixSpecs);
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new();

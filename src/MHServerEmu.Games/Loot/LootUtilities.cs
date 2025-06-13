@@ -297,6 +297,20 @@ namespace MHServerEmu.Games.Loot
             }
         }
 
+        public static MutationResults DropAffixes(IItemResolver resolver, DropFilterArguments args,
+            ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
+        {
+            if (itemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "DropAffixes(): itemSpec.IsValid == false");
+
+            MutationResults result = DropAffixes(resolver, itemSpec, position, keywords, categories);
+            if (result.HasFlag(MutationResults.Error))
+                return result;
+
+            result |= UpdateAffixes(resolver, args, AffixCountBehavior.Keep, itemSpec, null);
+            
+            return result;
+        }
+
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
             int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
         {
@@ -450,6 +464,61 @@ namespace MHServerEmu.Games.Loot
 
             if (affixCountNeeded != affixCountAdded)
                 Logger.Warn($"ValidateAddAffixCount(): The pool of affixes is too small for these parameters! affixCountAdded={affixCountAdded}, affixCountNeeded={affixCountNeeded}");
+        }
+
+        private static MutationResults DropAffixes(IItemResolver resolver, ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
+        {
+            // NOTE: This is used by public DropAffixes() and ReplaceAffixes() functions.
+
+            MutationResults result = MutationResults.None;
+            
+            List<AffixSpec> filteredAffixSpecs = ListPool<AffixSpec>.Instance.Get();
+
+            bool hasKeywords = keywords.HasValue();
+            bool hasCategories = categories.HasValue();
+
+            IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
+            for (int i = 0; i < affixSpecs.Count; i++)
+            {
+                AffixSpec affixSpec = affixSpecs[i];
+                
+                if (affixSpec.IsValid == false)
+                {
+                    Logger.Warn($"DropAffixes(): Invalid affix prototype in item!\nItem: {itemSpec}\nResolver: {resolver}");
+                    result = MutationResults.Error;
+                    break;
+                }
+
+                bool passesFilter = true;
+
+                // Metadata affixes are never dropped
+                passesFilter &= affixSpec.AffixProto.Position == AffixPosition.Metadata;
+
+                // Check position
+                if (passesFilter)
+                    passesFilter &= position == AffixPosition.None || affixSpec.AffixProto.Position == position;
+
+                // Check keywords
+                if (passesFilter)
+                    passesFilter &= hasKeywords == false || affixSpec.AffixProto.HasKeywords(keywords, true);
+                
+                // Check categories
+                if (passesFilter)
+                    passesFilter &= hasCategories == false || affixSpec.AffixProto.HasAnyCategory(categories);
+
+                // Not adding the affix to the filtered list drops it
+                if (passesFilter)
+                    filteredAffixSpecs.Add(affixSpec);
+                else
+                    result |= MutationResults.AffixChange;
+            }
+
+            // Overwrite affixes with our filtered list if everything is okay
+            if (result.HasFlag(MutationResults.Error) == false)
+                itemSpec.SetAffixes(filteredAffixSpecs);
+
+            ListPool<AffixSpec>.Instance.Return(filteredAffixSpecs);
+            return result;
         }
 
         private static bool GetCurrentAffixStats(IItemResolver resolver, DropFilterArguments args, ItemSpec itemSpec,
