@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Games.Entities.Items;
+﻿using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -196,6 +198,13 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootMutateBuiltinSeedPrototype : LootMutationPrototype
     {
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            lootCloneRecord.Seed = resolver.Random.Next();
+            return MutationResults.PropertyChange;
+        }
     }
 
     public class LootMutateAffixSeedPrototype : LootMutationPrototype
@@ -203,6 +212,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] Keywords { get; protected set; }
         public AffixPosition Position { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            bool hasKeywords = Keywords.HasValue();
+            bool hasCategories = Categories.HasValue();
+
+            for (int i = 0; i < lootCloneRecord.AffixRecords.Count; i++)
+            {
+                AffixRecord affixRecord = lootCloneRecord.AffixRecords[i];
+
+                AffixPrototype affixProto = affixRecord.AffixProtoRef.As<AffixPrototype>();
+                if (affixProto == null) return Logger.WarnReturn(MutationResults.Error, "Mutate(): affixProto == null");
+
+                if (affixProto.Position == AffixPosition.Metadata)
+                    continue;
+
+                if (Position != AffixPosition.None && affixProto.Position != Position)
+                    continue;
+
+                if (hasKeywords && affixProto.HasKeywords(Keywords, false) == false)
+                    continue;
+
+                if (hasCategories && affixProto.HasAnyCategory(Categories) == false)
+                    continue;
+
+                lootCloneRecord.AffixRecords[i] = affixRecord.SetSeed(resolver.Random.Next() | 1);
+            }
+
+            return MutationResults.PropertyChange;
+        }
     }
 
     public class LootReplaceAffixesPrototype : LootMutationPrototype

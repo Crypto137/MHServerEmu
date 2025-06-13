@@ -148,9 +148,8 @@ namespace MHServerEmu.Games.Entities.Items
             _creditsAmount = 0;
 
             _affixSpecList.Clear();
-            for (int i = 0; i < lootCloneRecord.AffixRecords.Count; i++)
+            foreach (AffixRecord affixRecord in lootCloneRecord.AffixRecords)
             {
-                AffixRecord affixRecord = lootCloneRecord.AffixRecords[i];
                 AffixSpec affixSpec = new(affixRecord.AffixProtoRef.As<AffixPrototype>(), affixRecord.ScopeProtoRef, affixRecord.Seed);
                 _affixSpecList.Add(affixSpec);
             }

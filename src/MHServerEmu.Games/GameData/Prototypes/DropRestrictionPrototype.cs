@@ -217,10 +217,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionTestFlags)
         {
             // Check applied affixes
-            IReadOnlyList<AffixRecord> affixes = lootCloneRecord.AffixRecords;
-            for (int i = 0; i < affixes.Count; i++)
+            foreach (AffixRecord affixRecord in lootCloneRecord.AffixRecords)
             {
-                AffixPrototype affixProto = affixes[i].AffixProtoRef.As<AffixPrototype>();
+                AffixPrototype affixProto = affixRecord.AffixProtoRef.As<AffixPrototype>();
                 if (affixProto == null)
                 {
                     Logger.Warn("AllowAsCraftingInput(): affixProto == null");
@@ -280,11 +279,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
             bool hasNoVisualsAffix = false;
 
             // Check applied affixes
-            IReadOnlyList<AffixRecord> affixes = lootCloneRecord.AffixRecords;
-            for (int i = 0; i < affixes.Count; i++)
+            foreach (AffixRecord record in lootCloneRecord.AffixRecords)
             {
-                AffixRecord record = affixes[i];
-
                 if (record.AffixProtoRef == noVisualsAffix)
                 {
                     hasNoVisualsAffix = true;

@@ -12,9 +12,8 @@ namespace MHServerEmu.Games.Loot
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly List<AffixRecord> _affixRecordList = new();
-
-        public IReadOnlyList<AffixRecord> AffixRecords { get => _affixRecordList != null ? _affixRecordList : Array.Empty<AffixRecord>(); }
+        // Because LootCloneRecord is intended to be mutable, we expose the full List instead of just IReadOnlyList
+        public List<AffixRecord> AffixRecords { get; } = new();
 
         public int Seed { get; set; }
         public int StackCount { get; set; } = 1;
@@ -31,12 +30,12 @@ namespace MHServerEmu.Games.Loot
 
             DropFilterArguments.Initialize(args, proto, rollFor, itemSpec.ItemLevel, itemSpec.RarityProtoRef, 0, EquipmentInvUISlot.Invalid, lootContext);
 
-            args._affixRecordList.Clear();
+            args.AffixRecords.Clear();
             IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
             for (int i = 0; i < affixSpecs.Count; i++)
             {
                 AffixSpec affixSpec = affixSpecs[i];
-                args._affixRecordList.Add(new(affixSpec));
+                args.AffixRecords.Add(new(affixSpec));
             }
 
             args.Seed = itemSpec.Seed;
@@ -77,9 +76,8 @@ namespace MHServerEmu.Games.Loot
 
             DropFilterArguments.Initialize(args, other);
 
-            args._affixRecordList.Clear();
-            if (other._affixRecordList.Count > 0)
-                args._affixRecordList.AddRange(other._affixRecordList);
+            args.AffixRecords.Clear();
+            args.AffixRecords.AddRange(other.AffixRecords);
 
             args.Seed = other.Seed;
             args.StackCount = other.StackCount;
@@ -91,7 +89,7 @@ namespace MHServerEmu.Games.Loot
         {
             base.ResetForPool();
 
-            _affixRecordList.Clear();
+            AffixRecords.Clear();
 
             Seed = 0;
             StackCount = 1;
@@ -107,11 +105,11 @@ namespace MHServerEmu.Games.Loot
 
         public void SetAffixes(IReadOnlyList<AffixSpec> affixSpecs)
         {
-            _affixRecordList.Clear();
+            AffixRecords.Clear();
             for (int i = 0; i < affixSpecs.Count; i++)
             {
                 AffixSpec affixSpec = affixSpecs[i];
-                _affixRecordList.Add(new(affixSpec));
+                AffixRecords.Add(new(affixSpec));
             }
         }
 
