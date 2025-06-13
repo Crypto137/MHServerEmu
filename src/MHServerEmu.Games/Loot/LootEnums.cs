@@ -92,7 +92,7 @@ namespace MHServerEmu.Games.Loot
         None                    = 0,
         Error                   = 1 << 0,
         Changed                 = 1 << 1,
-        Result2                 = 1 << 2,
+        PropertyChange          = 1 << 2,
         AffixChange             = 1 << 3,   // ItemPrototype::UpdatePetTechAffixes()
         Result4                 = 1 << 4,
 

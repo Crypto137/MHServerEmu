@@ -63,6 +63,49 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootMutateBindingPrototype : LootMutationPrototype
     {
         public LootBindingType Binding { get; protected set; }
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            ItemSpec itemSpec = new(lootCloneRecord);
+
+            bool result = false;
+
+            switch (Binding)
+            {
+                case LootBindingType.None:
+                    if (itemSpec.SetBindingState(false))
+                    {
+                        lootCloneRecord.RestrictionFlags &= ~RestrictionTestFlags.UsableBy;
+                        result = true;
+                    }
+
+                    break;
+
+                case LootBindingType.TradeRestricted:
+                    result = itemSpec.SetTradeRestricted(true, false);
+                    break;
+
+                case LootBindingType.TradeRestrictedRemoveBinding:
+                    if (itemSpec.SetTradeRestricted(true, true))
+                    {
+                        lootCloneRecord.RestrictionFlags &= ~RestrictionTestFlags.UsableBy;
+                        result = true;
+                    }
+                    break;
+
+                case LootBindingType.Avatar:
+                    PrototypeId equippableBy = itemSpec.EquippableBy;
+                    PrototypeId avatarProtoRef = equippableBy != PrototypeId.Invalid ? equippableBy : lootCloneRecord.RollFor;
+                    result = itemSpec.SetBindingState(true, avatarProtoRef);                    
+                    break;
+            }
+
+            lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
+
+            return result ? MutationResults.PropertyChange : MutationResults.None;
+        }
     }
 
     public class LootClampLevelPrototype : LootMutationPrototype
