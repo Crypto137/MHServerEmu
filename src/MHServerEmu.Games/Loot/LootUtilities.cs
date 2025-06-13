@@ -489,28 +489,29 @@ namespace MHServerEmu.Games.Loot
                     break;
                 }
 
-                bool passesFilter = true;
+                bool shouldDrop = true;
 
                 // Metadata affixes are never dropped
-                passesFilter &= affixSpec.AffixProto.Position == AffixPosition.Metadata;
+                if (affixSpec.AffixProto.Position == AffixPosition.Metadata)
+                    shouldDrop = false;
 
                 // Check position
-                if (passesFilter)
-                    passesFilter &= position == AffixPosition.None || affixSpec.AffixProto.Position == position;
+                if (shouldDrop && position != AffixPosition.None && affixSpec.AffixProto.Position != position)
+                    shouldDrop = false;
 
                 // Check keywords
-                if (passesFilter)
-                    passesFilter &= hasKeywords == false || affixSpec.AffixProto.HasKeywords(keywords, true);
-                
+                if (shouldDrop && hasKeywords && affixSpec.AffixProto.HasKeywords(keywords, true) == false)
+                    shouldDrop = false;
+
                 // Check categories
-                if (passesFilter)
-                    passesFilter &= hasCategories == false || affixSpec.AffixProto.HasAnyCategory(categories);
+                if (shouldDrop && hasCategories && affixSpec.AffixProto.HasAnyCategory(categories) == false)
+                    shouldDrop = false;
 
                 // Not adding the affix to the filtered list drops it
-                if (passesFilter)
-                    filteredAffixSpecs.Add(affixSpec);
-                else
+                if (shouldDrop)
                     result |= MutationResults.AffixChange;
+                else
+                    filteredAffixSpecs.Add(affixSpec);
             }
 
             // Overwrite affixes with our filtered list if everything is okay
