@@ -378,7 +378,14 @@ namespace MHServerEmu.Games.Entities.Items
             if (affixSpec.IsValid == false)
                 return Logger.WarnReturn(false, $"AddAffixSpec(): Trying to add invalid AffixSpec to ItemSpec! ItemSpec: {this}");
 
-            _affixSpecList.Add(affixSpec);
+            // V52_HACK: Version 1.52 has a bug where Item::GetAffixIcons() does not look at all affixes to determine
+            // which set of rune icons to show in runeword tooltips, and the order of crafted rune affixes is random.
+            // If this is an affix that contains a runeword icon definition, insert it at the beginning to avoid this.
+            if (affixSpec.AffixProto is AffixRunewordPrototype)
+                _affixSpecList.Insert(0, affixSpec);
+            else
+                _affixSpecList.Add(affixSpec);
+            
             return true;
         }
 
