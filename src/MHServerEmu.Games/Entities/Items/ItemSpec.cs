@@ -372,6 +372,34 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public bool GetEquipEngineEffectsDisabled()
+        {
+            PrototypeId noVfxAffixRef = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
+            if (noVfxAffixRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DisableEquipEngineEffects(): noVfxAffixRef == PrototypeId.Invalid");
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                if (affixSpec.AffixProto.DataRef == noVfxAffixRef)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool DisableEquipEngineEffects()
+        {
+            if (GetEquipEngineEffectsDisabled())
+                return false;
+
+            PrototypeId noVfxAffixRef = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
+            if (noVfxAffixRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DisableEquipEngineEffects(): noVfxAffixRef == PrototypeId.Invalid");
+
+            AffixSpec affixSpec = new(noVfxAffixRef.As<AffixPrototype>(), PrototypeId.Invalid, 1);
+            _affixSpecList.Add(affixSpec);
+
+            return true;
+        }
+
         public bool AddAffixSpec(AffixSpec affixSpec)
         {
             if (affixSpec.IsValid == false)

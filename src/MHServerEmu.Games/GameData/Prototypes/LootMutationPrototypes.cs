@@ -60,6 +60,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootApplyNoVisualsOverridePrototype : LootMutationPrototype
     {
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            ItemSpec itemSpec = new(lootCloneRecord);
+
+            bool result = itemSpec.DisableEquipEngineEffects();
+
+            lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
+
+            return result ? MutationResults.PropertyChange : MutationResults.None;
+        }
     }
 
     public class LootMutateBindingPrototype : LootMutationPrototype
