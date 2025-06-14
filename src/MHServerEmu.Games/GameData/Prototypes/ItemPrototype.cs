@@ -186,6 +186,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return MutationResults.None;
         }
 
+        public static MutationResults CopyPetTechAffixes(ItemSpec sourceItemSpec, ItemSpec destItemSpec, AffixPosition position)
+        {
+            // TODO
+            return MutationResults.None;
+        }
+
         public TimeSpan GetExpirationTime(PrototypeId rarityProtoRef)
         {
             if (EvalExpirationTimeMS == null) return Logger.WarnReturn(TimeSpan.Zero, "GetExpirationTime(): EvalExpirationTimeMS == null");

@@ -165,6 +165,27 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AffixPosition Position { get; protected set; }
         public bool EnforceAffixLimits { get; protected set; }
         public PrototypeId[] Categories { get; protected set; }    // VectorPrototypeRefPtr AffixCategoryPrototype 
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+
+            if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
+                return MutationResults.Error;
+
+            ItemSpec sourceItemSpec = new(sourceRecord);
+            ItemSpec destItemSpec = new(lootCloneRecord);
+
+            MutationResults result = LootUtilities.CopyAffixes(resolver, lootCloneRecord, sourceItemSpec, destItemSpec, Position, Keywords, Categories, EnforceAffixLimits);
+            if (result.HasFlag(MutationResults.Error))
+                return MutationResults.Error;
+
+            lootCloneRecord.SetAffixes(destItemSpec.AffixSpecs);
+
+            return result;
+        }
     }
 
     public class LootCloneBuiltinAffixesPrototype : LootMutationPrototype

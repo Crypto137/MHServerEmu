@@ -416,6 +416,12 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public void AddAffixSpecs(IEnumerable<AffixSpec> affixSpecs)
+        {
+            // It's fine to use IEnumerable here because AddRange() has ICollection specific optimizations
+            _affixSpecList.AddRange(affixSpecs);
+        }
+
         public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)
         {
             MutationResults result = MutationResults.None;

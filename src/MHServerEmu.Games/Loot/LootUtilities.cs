@@ -245,7 +245,8 @@ namespace MHServerEmu.Games.Loot
 
             try
             {
-                AffixCountData.InitializeAffixCountList(affixCounts);
+                affixCounts.Fill(default, (int)AffixPosition.NumPositions);
+
                 if (GetCurrentAffixStats(resolver, args, itemSpec, affixCounts, affixSet) == false)
                     return MutationResults.Error | MutationResults.ErrorReasonAffixStats;
 
@@ -309,6 +310,46 @@ namespace MHServerEmu.Games.Loot
             result |= UpdateAffixes(resolver, args, AffixCountBehavior.Keep, itemSpec, null);
             
             return result;
+        }
+
+        public static MutationResults CopyAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
+            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
+        {
+            if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): destItemSpec.IsValid == false");
+            if (args.ItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): args.ItemProto == null");
+            if (destItemSpec.ItemProtoRef != args.ItemProto.DataRef) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): destItemSpec.ItemProtoRef != args.ItemProto.DataRef");
+
+            ItemPrototype itemProto = args.ItemProto as ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyAffixes(): itemProto == null");
+
+            if (itemProto.IsPetItem)
+                return ItemPrototype.CopyPetTechAffixes(sourceItemSpec, destItemSpec, position);
+
+            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+            List<AffixCountData> affixCounts = ListPool<AffixCountData>.Instance.Get();
+
+            try
+            {
+                affixCounts.Fill(default, (int)AffixPosition.NumPositions);
+
+                if (GetCurrentAffixStats(resolver, args, destItemSpec, affixCounts, affixSet) == false)
+                    return MutationResults.Error | MutationResults.ErrorReasonAffixStats;
+
+                AffixLimitsPrototype affixLimits = null;
+                if (enforceAffixLimits)
+                {
+                    affixLimits = itemProto.GetAffixLimits(args.Rarity, args.LootContext);
+                    if (affixLimits == null)
+                        return Logger.WarnReturn(MutationResults.Error, $"CopyAffixes(): Trying to EnforceAffixLimits where there is no affix limits available! args {args}");
+                }
+
+                return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
+            }
+            finally
+            {
+                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
+                ListPool<AffixCountData>.Instance.Return(affixCounts);
+            }
         }
 
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
@@ -522,6 +563,140 @@ namespace MHServerEmu.Games.Loot
             return result;
         }
 
+        private static MutationResults CopyAffixSpecs(IItemResolver resolver, ItemSpec sourceItemSpec, ItemSpec destItemSpec,
+            AffixLimitsPrototype affixLimits, PrototypeId rollFor, AssetId[] keywords, AffixPosition position, PrototypeId[] categories,
+            List<AffixCountData> affixCounts, HashSet<ScopedAffixRef> affixSet)
+        {
+            bool hasKeywords = keywords.HasValue();
+            bool hasCategories = categories.HasValue();
+
+            MutationResults result = MutationResults.None;
+
+            List<AffixSpec> affixSpecsToAdd = ListPool<AffixSpec>.Instance.Get();
+            List<int> addedPositionCounts = ListPool<int>.Instance.Get();
+            Dictionary<AffixCategoryPrototype, int> addedCategoryCounts = DictionaryPool<AffixCategoryPrototype, int>.Instance.Get();
+
+            addedPositionCounts.Fill(0, (int)AffixPosition.NumPositions);
+
+            IReadOnlyList<AffixSpec> sourceAffixSpecs = sourceItemSpec.AffixSpecs;
+            for (int i = 0; i < sourceAffixSpecs.Count; i++)
+            {
+                AffixSpec sourceAffixSpecIt = sourceAffixSpecs[i];
+                AffixPrototype affixProto = sourceAffixSpecIt.AffixProto;
+
+                if (affixProto == null)
+                {
+                    Logger.Warn("CopyAffixSpecs(): affixProto == null");
+                    result = MutationResults.Error;
+                    goto end;
+                }
+
+                // Filter affixes by provided position / keywords / categories
+                if (position != AffixPosition.None && affixProto.Position != position)
+                    continue;
+
+                if (hasKeywords && affixProto.HasKeywords(keywords, true) == false)
+                    continue;
+
+                AffixCategoryPrototype categoryProto = null;
+                if (hasCategories)
+                {
+                    categoryProto = affixProto.GetFirstCategoryMatch(categories);
+                    if (categoryProto == null)
+                        continue;
+                }
+
+                // Copy the affix
+                AffixSpec affixSpecCopy = new(sourceAffixSpecIt);
+                if (affixSpecCopy.SetScope(resolver.Random, rollFor, destItemSpec, affixSet, BehaviorOnPowerMatch.Ignore).HasFlag(MutationResults.Error))
+                {
+                    result |= MutationResults.Error;
+                    break;
+                }
+
+                // Check for duplicates
+                if (affixSet.Contains(new(affixProto.DataRef, affixSpecCopy.ScopeProtoRef)))
+                {
+                    switch (affixProto.DuplicateHandlingBehavior)
+                    {
+                        case DuplicateHandlingBehavior.Fail:
+                            result |= MutationResults.Error;
+                            break;
+
+                        case DuplicateHandlingBehavior.Ignore:
+                            break;
+
+                        case DuplicateHandlingBehavior.Overwrite:
+                        case DuplicateHandlingBehavior.Append:
+                            Logger.Warn($"CopyAffixSpecs(): Invalid DuplicateHandlingBehavior {affixProto.DuplicateHandlingBehavior} for {affixProto}");
+                            result |= MutationResults.Error;
+                            break;
+                    }
+
+                    if (result.HasFlag(MutationResults.Error))
+                        break;
+                }
+                else
+                {
+                    // Allow the affix to be copied
+                    affixSet.Add(new(affixSpecCopy.AffixProto.DataRef, affixSpecCopy.ScopeProtoRef));
+                    affixSpecsToAdd.Add(affixSpecCopy);
+
+                    if (categoryProto != null)
+                    {
+                        addedCategoryCounts.TryGetValue(categoryProto, out int count);
+                        addedCategoryCounts[categoryProto] = count + 1;
+                    }
+                    else
+                    {
+                        addedPositionCounts[(int)affixProto.Position]++;
+                    }
+                }
+            }
+
+            // Check limits if needed
+            if (affixLimits != null)
+            {
+                // Position limits
+                for (AffixPosition positionIt = 0; positionIt < AffixPosition.NumPositions; positionIt++)
+                {
+                    int i = (int)positionIt;
+
+                    if (addedPositionCounts[i] == 0)
+                        continue;
+
+                    if (affixCounts[i].AffixCount + addedPositionCounts[i] > affixLimits.GetMax(positionIt, null))
+                    {
+                        result |= MutationResults.Error;
+                        break;
+                    }
+                }
+
+                // Category limits
+                if (addedCategoryCounts.Count > 0)
+                {
+                    foreach (var kvp in addedCategoryCounts)
+                    {
+                        if (destItemSpec.NumAffixesOfCategory(kvp.Key) + kvp.Value > affixLimits.GetMax(kvp.Key, null))
+                        {
+                            result |= MutationResults.Error;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Add affix copies if there are no issues
+            if (result.HasFlag(MutationResults.Error) == false)
+                destItemSpec.AddAffixSpecs(affixSpecsToAdd);
+
+            end:
+            ListPool<AffixSpec>.Instance.Return(affixSpecsToAdd);
+            ListPool<int>.Instance.Return(addedPositionCounts);
+            DictionaryPool<AffixCategoryPrototype, int>.Instance.Return(addedCategoryCounts);
+            return result;
+        }
+
         private static bool GetCurrentAffixStats(IItemResolver resolver, DropFilterArguments args, ItemSpec itemSpec,
             List<AffixCountData> affixCounts, HashSet<ScopedAffixRef> affixSet)
         {
@@ -688,8 +863,8 @@ namespace MHServerEmu.Games.Loot
 
         private struct AffixCountData
         {
-            public short AffixCount;
-            public short AffixesNeeded;
+            public short AffixCount = 0;
+            public short AffixesNeeded = 0;
 
             public AffixCountData(short affixCount = 0, short affixesNeeded = 0)
             {
@@ -705,14 +880,6 @@ namespace MHServerEmu.Games.Loot
             public AffixCountData IncrementCount()
             {
                 return new((short)(AffixCount + 1), AffixesNeeded);
-            }
-
-            public static void InitializeAffixCountList(List<AffixCountData> list)
-            {
-                list.Clear();
-
-                for (AffixPosition position = 0; position < AffixPosition.NumPositions; position++)
-                    list.Add(new()); 
             }
         }
     }
