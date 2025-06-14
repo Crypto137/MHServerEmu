@@ -276,11 +276,38 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootMutateLevelPrototype : LootMutationPrototype
     {
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            int level = resolver.ResolveLevel(settings.Level, settings.UseLevelVerbatim);
+            if (lootCloneRecord.Level == level)
+                return MutationResults.None;
+
+            lootCloneRecord.Level = level;
+            lootCloneRecord.Rank = 0;
+
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+        }
     }
 
     public class OffsetLootLevelPrototype : LootMutationPrototype
     {
         public int LevelOffset { get; protected set; }
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            int level = resolver.ResolveLevel(lootCloneRecord.Level + LevelOffset, true);
+            if (lootCloneRecord.Level == level)
+                return MutationResults.None;
+
+            lootCloneRecord.Level = level;
+            lootCloneRecord.Rank = 0;
+
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+        }
     }
 
     public class LootMutateRankPrototype : LootMutationPrototype
