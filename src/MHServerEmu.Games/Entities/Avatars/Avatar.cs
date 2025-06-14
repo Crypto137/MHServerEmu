@@ -4084,6 +4084,9 @@ namespace MHServerEmu.Games.Entities.Avatars
                 EntityManager entityManager = game.EntityManager;
                 for (int i = 0; i < otherArtifactInvs.Count; i++)
                 {
+                    if (otherArtifactInvs[i].Count == 0)
+                        continue;
+
                     ulong otherArtifactId = otherArtifactInvs[i].GetEntityInSlot(0);
                     Item otherArtifact = entityManager.GetEntity<Item>(otherArtifactId);
                     if (otherArtifact == null) return Logger.WarnReturn(InventoryResult.Invalid, "ValidateEquipmentChange(): otherArtifact == null");
