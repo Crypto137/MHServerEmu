@@ -1,7 +1,9 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
 
 namespace MHServerEmu.Games.GameData.Prototypes
@@ -71,7 +73,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
 
-            return result ? MutationResults.PropertyChange : MutationResults.None;
+            return result ? MutationResults.Changed : MutationResults.None;
         }
     }
 
@@ -119,7 +121,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
             lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
 
-            return result ? MutationResults.PropertyChange : MutationResults.None;
+            return result ? MutationResults.Changed : MutationResults.None;
         }
     }
 
@@ -154,7 +156,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             lootCloneRecord.Level = level;
             lootCloneRecord.Rank = 0;
 
-            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.Changed;
         }
     }
 
@@ -237,7 +239,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             lootCloneRecord.Level = sourceRecord.Level;
             lootCloneRecord.Rank = 0;
 
-            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.Changed;
         }
     }
 
@@ -287,7 +289,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
             lootCloneRecord.Level = level;
             lootCloneRecord.Rank = 0;
 
-            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.Changed;
         }
     }
 
@@ -306,13 +308,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
             lootCloneRecord.Level = level;
             lootCloneRecord.Rank = 0;
 
-            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.Changed;
         }
     }
 
     public class LootMutateRankPrototype : LootMutationPrototype
     {
         public int Rank { get; protected set; }
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            if (Rank == 0)
+                return MutationResults.Error;
+
+            if (lootCloneRecord.Rank == Rank)
+                return MutationResults.None;
+
+            Picker<Prototype> concretePicker = new(resolver.Random);
+            Picker<Prototype> filteredPicker = new(resolver.Random);
+
+            if (lootCloneRecord.Slot != EquipmentInvUISlot.Invalid && lootCloneRecord.Slot != EquipmentInvUISlot.Costume)
+                LootUtilities.BuildInventoryLootPicker(concretePicker, lootCloneRecord.RollFor, lootCloneRecord.Slot);
+            else
+                GameDataTables.Instance.LootPickingTable.GetConcreteLootPicker(concretePicker, lootCloneRecord.ItemProto.DataRef, lootCloneRecord.RollFor.As<AgentPrototype>());
+
+            lootCloneRecord.Rank = Rank;
+
+            Prototype pickedProto = null;
+            while (concretePicker.PickRemove(out pickedProto))
+            {
+                const RestrictionTestFlags FilterFlags = RestrictionTestFlags.All & ~RestrictionTestFlags.Level;
+
+                lootCloneRecord.ItemProto = pickedProto;
+                if (pickedProto is ItemPrototype itemProto && itemProto.IsDroppableForRestrictions(lootCloneRecord, FilterFlags))
+                    filteredPicker.Add(pickedProto);
+            }
+
+            ItemPrototype pickedItemProto = pickedProto as ItemPrototype;
+
+            if (filteredPicker.Empty() || filteredPicker.Pick(out Prototype pickedFilteredProto) == false)
+                return MutationResults.Error;
+
+            lootCloneRecord.ItemProto = pickedFilteredProto;
+
+            // NOTE: This is checking the last prototype added to the filtered picker, and not the prototype that was picked after filtering.
+            // This does not look like it was intended, but this is how it is implemented in the client. Fix this if needed.
+            if (pickedItemProto?.MakeRestrictionsDroppable(lootCloneRecord, RestrictionTestFlags.Level, out _) == false)
+                return MutationResults.Error;
+
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.Changed | MutationResults.ItemPrototypeChange;
+        }
     }
 
     public class LootMutateRarityPrototype : LootMutationPrototype
@@ -332,7 +379,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
         {
             lootCloneRecord.Seed = resolver.Random.Next();
-            return MutationResults.PropertyChange;
+            return MutationResults.Changed;
         }
     }
 
@@ -373,7 +420,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 lootCloneRecord.AffixRecords[i] = affixRecord.SetSeed(resolver.Random.Next() | 1);
             }
 
-            return MutationResults.PropertyChange;
+            return MutationResults.Changed;
         }
     }
 
