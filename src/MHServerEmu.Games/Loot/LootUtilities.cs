@@ -352,6 +352,78 @@ namespace MHServerEmu.Games.Loot
             }
         }
 
+        public static MutationResults CopyBuiltinAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
+            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
+        {
+            if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemSpec.IsValid == false");
+            if (destItemSpec.ItemProtoRef != args.ItemProto.DataRef) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemSpec.ItemProtoRef != args.ItemProto.DataRef");
+
+            ItemPrototype destItemProto = args.ItemProto as ItemPrototype;
+            if (destItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): destItemProto == null");
+
+            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+            List<AffixCountData> affixCounts = ListPool<AffixCountData>.Instance.Get();
+            List<BuiltInAffixDetails> builtInAffixDetailsList = ListPool<BuiltInAffixDetails>.Instance.Get();
+            List<AffixSpec> builtInAffixSpecs = ListPool<AffixSpec>.Instance.Get();
+
+            try
+            {
+                affixCounts.Fill(default, (int)AffixPosition.NumPositions);
+
+                if (GetCurrentAffixStats(resolver, args, destItemSpec, affixCounts, affixSet) == false)
+                    return MutationResults.Error | MutationResults.ErrorReasonAffixStats;
+
+                ItemPrototype sourceItemProto = sourceItemSpec.ItemProtoRef.As<ItemPrototype>();
+                if (sourceItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyBuiltinAffixes(): sourceItemProto == null");
+
+                sourceItemProto.GenerateBuiltInAffixDetails(sourceItemSpec, builtInAffixDetailsList);
+
+                if (builtInAffixDetailsList.Count == 0)
+                    return MutationResults.None;
+
+                foreach (BuiltInAffixDetails builtInAffixDetails in builtInAffixDetailsList)
+                {
+                    AffixEntryPrototype affixEntryProto = builtInAffixDetails.AffixEntryProto;
+                    if (affixEntryProto == null)
+                    {
+                        Logger.Warn("CopyBuiltinAffixes(): affixEntryProto == null");
+                        continue;
+                    }
+
+                    AffixPrototype affixProto = affixEntryProto.Affix.As<AffixPrototype>();
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("CopyBuiltinAffixes(): affixProto == null");
+                        continue;
+                    }
+
+                    AffixSpec affixSpec = new(affixProto, affixEntryProto.Power, builtInAffixDetails.Seed);
+                    builtInAffixSpecs.Add(affixSpec);
+                }
+
+                // This will remove any externally applied affixes (which we don't care about here)
+                sourceItemSpec.SetAffixes(builtInAffixSpecs);
+
+                AffixLimitsPrototype affixLimits = null;
+                if (enforceAffixLimits)
+                {
+                    affixLimits = destItemProto.GetAffixLimits(args.Rarity, args.LootContext);
+                    if (affixLimits == null)
+                        return Logger.WarnReturn(MutationResults.Error, $"CopyBuiltinAffixes(): Trying to EnforceAffixLimits where there is no affix limits available! args {args}");
+
+                }
+
+                return CopyAffixSpecs(resolver, sourceItemSpec, destItemSpec, affixLimits, args.RollFor, keywords, position, categories, affixCounts, affixSet);
+            }
+            finally
+            {
+                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
+                ListPool<AffixCountData>.Instance.Return(affixCounts);
+                ListPool<BuiltInAffixDetails>.Instance.Return(builtInAffixDetailsList);
+                ListPool<AffixSpec>.Instance.Return(builtInAffixSpecs);
+            }
+        }
+
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
             int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
         {
