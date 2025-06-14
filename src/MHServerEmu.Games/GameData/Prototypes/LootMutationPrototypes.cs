@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Loot;
 
@@ -126,6 +127,35 @@ namespace MHServerEmu.Games.GameData.Prototypes
     {
         public int MaxLevel { get; protected set; }
         public int MinLevel { get; protected set; }
+
+        //---
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            MinLevel = Math.Max(0, MinLevel);
+
+            if (MaxLevel != 0)
+                MaxLevel = Math.Max(MinLevel, MaxLevel);
+        }
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            int level = lootCloneRecord.Level;
+
+            level = MaxLevel > 0
+                ? Math.Clamp(level, MinLevel, MaxLevel)
+                : Math.Max(level, MinLevel);
+
+            if (level == lootCloneRecord.Level)
+                return MutationResults.None;
+
+            lootCloneRecord.Level = level;
+            lootCloneRecord.Rank = 0;
+
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+        }
     }
 
     public class LootCloneAffixesPrototype : LootMutationPrototype
@@ -149,6 +179,24 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootCloneLevelPrototype : LootMutationPrototype
     {
         public int SourceIndex { get; protected set; }
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+
+            if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
+                return MutationResults.Error;
+
+            if (lootCloneRecord.Level == sourceRecord.Level)
+                return MutationResults.None;
+
+            lootCloneRecord.Level = sourceRecord.Level;
+            lootCloneRecord.Rank = 0;
+
+            return FinalizeMutation(resolver, lootCloneRecord) | MutationResults.PropertyChange;
+        }
     }
 
     public class LootDropAffixesPrototype : LootMutationPrototype
