@@ -436,6 +436,20 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootCloneSeedPrototype : LootMutationPrototype
     {
         public int SourceIndex { get; protected set; }
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            using LootCloneRecord sourceRecord = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+
+            if (SourceIndex < 0 || resolver.InitializeCloneRecordFromSource(SourceIndex, sourceRecord) == false)
+                return MutationResults.Error;
+
+            lootCloneRecord.Seed = sourceRecord.Seed;
+
+            return MutationResults.Changed;
+        }
     }
 
     public class LootAddAffixPrototype : LootMutationPrototype
