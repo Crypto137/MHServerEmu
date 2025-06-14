@@ -5,6 +5,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Tables;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Properties.Evals;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {
@@ -460,5 +461,32 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootEvalPrototype : LootMutationPrototype
     {
         public EvalPrototype Eval { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            if (Eval == null)
+                return MutationResults.None;
+
+            if (resolver.PushCraftingCallback(this) == LootRollResult.NoRoll)
+                return Logger.WarnReturn(MutationResults.Error, "Mutate(): resolver.PushCraftingCallback(this) == LootRollResult.NoRoll");
+
+            return MutationResults.EvalChange;
+        }
+
+        public override void OnItemCreated(Item item)
+        {
+            if (Eval == null)
+                return;
+
+            using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+            evalContext.SetVar_PropertyCollectionPtr(EvalContext.Default, item?.Properties);
+
+            if (Properties.Evals.Eval.RunBool(Eval, evalContext) == false)
+                Logger.Warn($"OnItemCreated(): The LootEvalPrototype Eval failed:\n: [{Eval.ExpressionString()}]");
+        }
     }
 }

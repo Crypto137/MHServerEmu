@@ -94,6 +94,7 @@ namespace MHServerEmu.Games.Loot
         Changed                 = 1 << 1,
         ItemPrototypeChange     = 1 << 2,
         AffixChange             = 1 << 3,   // ItemPrototype::UpdatePetTechAffixes()
+        EvalChange              = 1 << 4,
 
         // Additional flags for marking the reason for error (flag0)
         ErrorReasonAffixStats           = 1 << 8,
