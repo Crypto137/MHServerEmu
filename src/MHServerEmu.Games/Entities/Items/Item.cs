@@ -1176,8 +1176,23 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
         {
-            // TODO
-            return false;
+            InventoryPrototype containingInvProto = InventoryLocation.InventoryPrototype;
+            if (containingInvProto == null) return Logger.WarnReturn(false, "DoCraftingRecipeInteraction(): containingInvProto == null");
+
+            // This should have already been validated in PlayerCanUseCraftingRecipe()
+            if (containingInvProto.IsPlayerGeneralInventory == false)
+                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Player [{player}] attempting to use a crafting recipe from inventory {containingInvProto.ConvenienceLabel}");
+
+            if (player.HasLearnedCraftingRecipe(craftingRecipeProto.DataRef))
+                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Player [{player}] has already learned crafting recipe {craftingRecipeProto}");
+
+            Inventory learnedRecipeInv = player.GetInventory(InventoryConvenienceLabel.CraftingRecipesLearned);
+            if (learnedRecipeInv == null) return Logger.WarnReturn(false, "DoCraftingRecipeInteraction(): learnedRecipeInv == null");
+
+            if (ChangeInventoryLocation(learnedRecipeInv) != InventoryResult.Success)
+                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Recipe [{this}] failed to move to the learned recipe inventory for player [{player}]");
+
+            return true;
         }
 
         public bool OnUsePowerActivated()
@@ -2117,9 +2132,16 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUseCraftingRecipe(Player player)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUseCraftingRecipe()");
-            return InteractionValidateResult.UnknownFailure;
+            InventoryPrototype containingInvProto = InventoryLocation.InventoryPrototype;
+            if (containingInvProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseCraftingRecipe(): containingInvProto == null");
+
+            if (containingInvProto.IsPlayerGeneralInventory == false && containingInvProto.IsPlayerVendorInventory == false)
+                return InteractionValidateResult.ItemNotUsable;
+
+            if (player.HasLearnedCraftingRecipe(PrototypeDataRef))
+                return InteractionValidateResult.PlayerAlreadyHasCraftingRecipe;
+
+            return InteractionValidateResult.Success;
         }
 
         private InteractionValidateResult PlayerCanUsePrestigeMode(Avatar avatar)

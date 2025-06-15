@@ -343,12 +343,6 @@ namespace MHServerEmu.Games.Entities
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
-        public bool HasLearnedCraftingRecipe(PrototypeId craftingRecipeProtoRef)
-        {
-            // Assume all recipes are learned for now
-            return true;
-        }
-
         public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
         {
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();

@@ -124,6 +124,37 @@ namespace MHServerEmu.Games.Entities
             return CraftingResult.Success;
         }
 
+        public bool HasLearnedCraftingRecipe(PrototypeId recipeProtoRef)
+        {
+            if (recipeProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "HasLearnedCraftingReipe(): recipeProtoRef == PrototypeId.Invalid");
+
+            Inventory learnedRecipeInv = GetInventory(InventoryConvenienceLabel.CraftingRecipesLearned);
+            if (learnedRecipeInv == null) return Logger.WarnReturn(false, "HasLearnedCraftingReipe(): learnedRecipeInv == null");
+
+            EntityManager entityManager = Game.EntityManager;
+            foreach (var entry in learnedRecipeInv)
+            {
+                ulong recipeId = entry.Id;
+                if (recipeId == InvalidId)
+                {
+                    Logger.Warn("HasLearnedCraftingRecipe(): recipeId == InvalidId");
+                    continue;
+                }
+
+                Item recipe = entityManager.GetEntity<Item>(recipeId);
+                if (recipe == null)
+                {
+                    Logger.Warn("HasLearnedCraftingRecipe(): recipe == null");
+                    continue;
+                }
+
+                if (recipe.PrototypeDataRef == recipeProtoRef)
+                    return true;
+            }
+
+            return false;
+        }
+
         public int GetCraftingIngredientAvailableStackCount(PrototypeId craftingIngredientProtoRef)
         {
             int count = 0;
