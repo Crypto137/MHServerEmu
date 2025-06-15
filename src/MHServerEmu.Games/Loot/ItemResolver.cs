@@ -588,6 +588,7 @@ namespace MHServerEmu.Games.Loot
             {
                 LootResult = lootResult;
                 RollFor = PrototypeId.Invalid;
+                Mutations = null;
                 IsClone = false;
             }
 
@@ -595,6 +596,7 @@ namespace MHServerEmu.Games.Loot
             {
                 LootResult = lootResult;
                 RollFor = rollFor;
+                Mutations = mutations;
                 IsClone = isClone;
             }
         }
