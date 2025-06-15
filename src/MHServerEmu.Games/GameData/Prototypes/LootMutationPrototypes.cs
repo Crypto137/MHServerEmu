@@ -501,6 +501,43 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootMutateRarityPrototype : LootMutationPrototype
     {
         public bool RerollAffixCount { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            int level = resolver.ResolveLevel(lootCloneRecord.Level, true);
+            PrototypeId rarityProtoRef = resolver.ResolveRarity(settings.Rarities, level, null);
+
+            if (lootCloneRecord.Rarity == rarityProtoRef)
+                return MutationResults.None;
+
+            lootCloneRecord.Rarity = rarityProtoRef;
+
+            ItemPrototype itemProto = lootCloneRecord.ItemProto as ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(MutationResults.Error, "Mutate(): itemProto == null");
+
+            if (itemProto.IsDroppableForRestrictions(lootCloneRecord, RestrictionTestFlags.Level) == false)
+                itemProto.MakeRestrictionsDroppable(lootCloneRecord, RestrictionTestFlags.Level, out _);
+
+            MutationResults result = MutationResults.Changed;
+
+            if (RerollAffixCount)
+            {
+                ItemSpec itemSpec = new(lootCloneRecord);
+
+                result |= LootUtilities.UpdateAffixes(resolver, lootCloneRecord, AffixCountBehavior.Roll, itemSpec, null);
+
+                if (result.HasFlag(MutationResults.Error))
+                    return result;
+
+                lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
+            }
+
+            return FinalizeMutation(resolver, lootCloneRecord) | result;
+        }
     }
 
     public class LootMutateSlotPrototype : LootMutationPrototype
