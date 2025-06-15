@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿#pragma warning disable CS0169, CS0414
+using System.Runtime.InteropServices;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
