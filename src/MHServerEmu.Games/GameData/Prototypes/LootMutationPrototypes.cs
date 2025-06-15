@@ -334,6 +334,82 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
     public class LootMutateAvatarPrototype : LootMutationPrototype
     {
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            AvatarPrototype rollFor = resolver.ResolveAvatarPrototype(settings.UsableAvatar, settings.ForceUsable, settings.UsablePercent);
+            if (rollFor.DataRef == lootCloneRecord.RollFor)
+                return MutationResults.None;
+
+            lootCloneRecord.RollFor = rollFor.DataRef;
+
+            MutationResults result = MutationResults.None;
+
+            if (resolver.CheckItem(lootCloneRecord, RestrictionTestFlags.All, true) == false)
+            {
+                using LootCloneRecord lootCloneRecordCopy = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                LootCloneRecord.Initialize(lootCloneRecordCopy, lootCloneRecord);
+
+                result = CreateItemForAvatar(resolver, lootCloneRecordCopy.RollFor, lootCloneRecordCopy, lootCloneRecord);
+                if (result.HasFlag(MutationResults.Error) == false)
+                    result |= MutationResults.Changed;
+            }
+
+            return result;
+        }
+
+        private static MutationResults CreateItemForAvatar(IItemResolver resolver, PrototypeId rollFor, LootCloneRecord sourceItem, LootCloneRecord destItem)
+        {
+            MutationResults result = MutationResults.None;
+
+            // Pick new base type
+            Picker<Prototype> picker = new(resolver.Random);
+
+            if (sourceItem.Slot == EquipmentInvUISlot.Invalid)
+                GameDataTables.Instance.LootPickingTable.GetConcreteLootPicker(picker, sourceItem.ItemProto.DataRef, rollFor.As<AgentPrototype>());
+            else
+                LootUtilities.BuildInventoryLootPicker(picker, rollFor, sourceItem.Slot);
+
+            if (LootUtilities.PickValidItem(resolver, picker, null, sourceItem, out ItemPrototype itemProto) == false)
+                return MutationResults.Error;
+
+            destItem.ItemProto = itemProto;
+            destItem.EquippableBy = rollFor;
+            destItem.RollFor = rollFor;
+
+            if (itemProto != sourceItem.ItemProto)
+                result |= MutationResults.ItemPrototypeChange;
+
+            // Update affixes
+            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+
+            ItemSpec itemSpec = new(destItem);
+            for (int i = 0; i < itemSpec.AffixSpecs.Count; i++)
+            {
+                AffixSpec itAffixSpec = itemSpec.AffixSpecs[i];
+
+                if (itAffixSpec.AffixProto == null || itAffixSpec.Seed == 0)
+                {
+                    Logger.Warn($"CreateItemForAvatar(): Invalid affix spec: affixSpec=[{itAffixSpec}], args=[{destItem}], itemSpec=[{itemSpec}]");
+                    continue;
+                }
+
+                if (itAffixSpec.AffixProto.IsGemAffix)
+                    continue;
+
+                itAffixSpec.SetScope(resolver.Random, rollFor, itemSpec, affixSet, BehaviorOnPowerMatch.Cancel);
+            }
+
+            MutationResults affixResult = LootUtilities.UpdateAffixes(resolver, destItem, AffixCountBehavior.Keep, itemSpec, null);
+            if (affixResult != MutationResults.None && affixResult.HasFlag(MutationResults.Error) == false)
+                destItem.SetAffixes(itemSpec.AffixSpecs);
+
+            HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
+            return result | affixResult;
+        }
     }
 
     public class LootMutateLevelPrototype : LootMutationPrototype

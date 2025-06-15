@@ -73,6 +73,14 @@ namespace MHServerEmu.Games.Loot
             return pickedItemProto != null;
         }
 
+        public static bool PickValidItem(IItemResolver resolver, Picker<Prototype> basePicker, AgentPrototype teamUpProto, DropFilterArguments filterArgs,
+            out ItemPrototype pickedItemProto)
+        {
+            pickedItemProto = null;
+            PrototypeId? rarityProtoRef = null;
+            return PickValidItem(resolver, basePicker, teamUpProto, filterArgs, ref pickedItemProto, RestrictionTestFlags.All, ref rarityProtoRef);
+        }
+
         public static bool BuildInventoryLootPicker(Picker<Prototype> picker, PrototypeId avatarProtoRef, EquipmentInvUISlot slot)
         {
             AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
