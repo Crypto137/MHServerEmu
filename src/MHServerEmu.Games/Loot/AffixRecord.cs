@@ -26,6 +26,12 @@ namespace MHServerEmu.Games.Loot
             Seed = affixSpec.Seed;
         }
 
+        public override string ToString()
+        {
+            string scopeSuffix = ScopeProtoRef != PrototypeId.Invalid ? $"[{ScopeProtoRef.GetNameFormatted()}]" : string.Empty;
+            return $"{AffixProtoRef.GetNameFormatted()}{scopeSuffix} (seed={Seed})";
+        }
+
         /// <summary>
         /// Returns a new <see cref="AffixRecord"/> with the specified seed while retaining <see cref="AffixProtoRef"/> and <see cref="ScopeProtoRef"/>.
         /// </summary>

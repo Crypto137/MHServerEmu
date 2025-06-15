@@ -271,6 +271,65 @@ namespace MHServerEmu.Games.GameData.Prototypes
         public AssetId[] NewItemKeywords { get; protected set; }
         public AssetId[] OldItemKeywords { get; protected set; }
         public bool OnlyReplaceIfAllMatched { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            const uint PositionMask = (1u << (int)AffixPosition.Prefix) |
+                                      (1u << (int)AffixPosition.Suffix) |
+                                      (1u << (int)AffixPosition.Ultimate) |
+                                      (1u << (int)AffixPosition.Cosmic) |
+                                      (1u << (int)AffixPosition.Unique) |
+                                      (1u << (int)AffixPosition.TeamUp);
+                
+            AffixPickerTable pickerTable = new();
+            pickerTable.Initialize(PositionMask, resolver.Random);
+            LootUtilities.BuildAffixPickers(pickerTable, lootCloneRecord, NewItemKeywords, resolver.Region);
+
+            MutationResults result = MutationResults.None;
+            ItemSpec itemSpec = new(lootCloneRecord);
+            AffixSpec affixSpec = new();
+
+            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+
+            try
+            {
+                List<AffixRecord> affixRecords = lootCloneRecord.AffixRecords;
+                for (int i = 0; i < affixRecords.Count; i++)
+                {
+                    AffixPrototype affixProto = affixRecords[i].AffixProtoRef.As<AffixPrototype>();
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("Mutate(): affixProto == null");
+                        continue;
+                    }
+
+                    if (affixProto.HasKeywords(OldItemKeywords, OnlyReplaceIfAllMatched) == false)
+                        continue;
+
+                    Picker<AffixPrototype> picker = pickerTable.GetPicker(affixProto.Position);
+                    if (picker == null)
+                        continue;
+
+                    result |= affixSpec.RollAffix(resolver.Random, lootCloneRecord.RollFor, itemSpec, picker, affixSet);
+                    
+                    if (result.HasFlag(MutationResults.Error))
+                        return result;
+
+                    affixRecords[i] = new(affixSpec);
+                    result |= MutationResults.AffixChange;
+                }
+
+                return FinalizeMutation(resolver, lootCloneRecord) | result;
+            }
+            finally
+            {
+                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
+            }
+        }
     }
 
     public class LootMutateAvatarPrototype : LootMutationPrototype

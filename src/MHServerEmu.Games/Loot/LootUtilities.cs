@@ -424,6 +424,49 @@ namespace MHServerEmu.Games.Loot
             }
         }
 
+        public static uint BuildAffixPickers(AffixPickerTable pickerTable, DropFilterArguments args, AssetId[] keywords, Region region)
+        {
+            uint duplicateMask = 0;     // Cleared bit indicates that the position has an affix with DuplicateHandlingBehavior set to Append
+
+            for (AffixPosition position = AffixPosition.None + 1; position < AffixPosition.NumPositions; position++)
+            {
+                duplicateMask |= 1u << (int)position;
+
+                Picker<AffixPrototype> picker = pickerTable.GetPicker(position);
+                if (picker == null)
+                    continue;
+
+                IReadOnlyList<AffixPrototype> affixes = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(position);
+                if (affixes == null) return Logger.WarnReturn(0u, "BuildAffixPickers(): affixes == null");
+
+                for (int i = 0; i < affixes.Count; i++)
+                {
+                    AffixPrototype affixProtoIt = affixes[i];
+                    if (affixProtoIt == null)
+                    {
+                        Logger.Warn("BuildAffixPickers(): affixProtoIt == null");
+                        continue;
+                    }
+
+                    if (affixProtoIt.AllowAttachment(args) == false || affixProtoIt.HasKeywords(keywords, true) == false)
+                        continue;
+
+                    if (affixProtoIt is AffixRegionRestrictedPrototype regionAffixProto)
+                    {
+                        if (region == null || regionAffixProto.MatchesRegion(region) == false)
+                            continue;
+                    }
+
+                    if (affixProtoIt.DuplicateHandlingBehavior == DuplicateHandlingBehavior.Append)
+                        duplicateMask &= ~(1u << (int)position);
+
+                    picker.Add(affixProtoIt, affixProtoIt.Weight);
+                }
+            }
+
+            return duplicateMask;
+        }
+
         private static MutationResults AddCategorizedAffixesToItemSpec(IItemResolver resolver, DropFilterArguments args, AffixCategoryPrototype categoryProto, 
             int affixCountNeeded, ItemSpec itemSpec, HashSet<ScopedAffixRef> affixSet, AssetId[] keywords = null)
         {
