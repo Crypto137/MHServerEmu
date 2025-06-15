@@ -543,6 +543,39 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootMutateSlotPrototype : LootMutationPrototype
     {
         public EquipmentInvUISlot Slot { get; protected set; }
+
+        //---
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            if (lootCloneRecord.Slot == Slot)
+                return MutationResults.None;
+
+            if (lootCloneRecord.Slot == EquipmentInvUISlot.Invalid || lootCloneRecord.Slot == EquipmentInvUISlot.Costume)
+                return MutationResults.Error;
+
+            if (Slot == EquipmentInvUISlot.Invalid || Slot == EquipmentInvUISlot.Costume)
+                return MutationResults.Error;
+
+            MutationResults result = MutationResults.Changed;
+
+            lootCloneRecord.Slot = Slot;
+            lootCloneRecord.Rank = 0;
+
+            Picker<Prototype> picker = new(resolver.Random);
+            LootUtilities.BuildInventoryLootPicker(picker, lootCloneRecord.RollFor, Slot);
+
+            if (LootUtilities.PickValidItem(resolver, picker, null, lootCloneRecord, out ItemPrototype itemProto) == false)
+                return MutationResults.Error;
+
+            if (lootCloneRecord.ItemProto != itemProto)
+            {
+                lootCloneRecord.ItemProto = itemProto;
+                result |= MutationResults.ItemPrototypeChange;
+            }
+
+            return FinalizeMutation(resolver, lootCloneRecord) | result;
+        }
     }
 
     public class LootMutateBuiltinSeedPrototype : LootMutationPrototype
