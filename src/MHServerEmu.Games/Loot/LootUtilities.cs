@@ -306,6 +306,39 @@ namespace MHServerEmu.Games.Loot
             }
         }
 
+        public static MutationResults AddAffix(IItemResolver resolver, DropFilterArguments args, ItemSpec itemSpec, AffixPrototype affixProto)
+        {
+            HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+            List<AffixCountData> affixCounts = ListPool<AffixCountData>.Instance.Get();
+
+            try
+            {
+                affixCounts.Fill(default, (int)AffixPosition.NumPositions);
+
+                if (GetCurrentAffixStats(resolver, args, itemSpec, affixCounts, affixSet) == false)
+                    return MutationResults.Error;
+
+                Picker<AffixPrototype> picker = new(resolver.Random);
+                picker.Add(affixProto, 100);
+
+                AffixSpec affixSpec = new();
+                MutationResults result = affixSpec.RollAffix(resolver.Random, args.RollFor, itemSpec, picker, affixSet);
+                
+                if (result.HasFlag(MutationResults.Error))
+                    return result;
+
+                itemSpec.AddAffixSpec(affixSpec);
+                result |= itemSpec.OnAffixesRolled(resolver, args.RollFor);
+
+                return result;
+            }
+            finally
+            {
+                HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
+                ListPool<AffixCountData>.Instance.Return(affixCounts);
+            }
+        }
+
         public static MutationResults DropAffixes(IItemResolver resolver, DropFilterArguments args,
             ItemSpec itemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories)
         {

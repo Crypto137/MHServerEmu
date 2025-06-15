@@ -661,6 +661,29 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class LootAddAffixPrototype : LootMutationPrototype
     {
         public PrototypeId Affix { get; protected set; }
+
+        //---
+
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override MutationResults Mutate(LootRollSettings settings, IItemResolver resolver, LootCloneRecord lootCloneRecord)
+        {
+            if (Affix == PrototypeId.Invalid)
+                return MutationResults.None;
+
+            ItemSpec itemSpec = new(lootCloneRecord);
+
+            AffixPrototype affixProto = Affix.As<AffixPrototype>();
+            if (affixProto == null) return Logger.WarnReturn(MutationResults.Error, "Mutate(): affixProto == null");
+
+            MutationResults affixResult = LootUtilities.AddAffix(resolver, lootCloneRecord, itemSpec, affixProto);
+            if (affixResult.HasFlag(MutationResults.Error))
+                return affixResult;
+
+            lootCloneRecord.SetAffixes(itemSpec.AffixSpecs);
+
+            return MutationResults.AffixChange;
+        }
     }
 
     public class LootEvalPrototype : LootMutationPrototype
