@@ -22,13 +22,23 @@ namespace MHServerEmu.Games.Loot.Visitors
             if (_found)
                 return;
 
-            if (lootNodeProto is not LootDropClonePrototype cloneProto)
+            LootMutationPrototype[] mutations = null;
+
+            switch (lootNodeProto)
+            {
+                case LootDropItemPrototype itemProto:
+                    mutations = itemProto.Mutations;
+                    break;
+
+                case LootDropClonePrototype cloneProto:
+                    mutations = cloneProto.Mutations;
+                    break;
+            }
+
+            if (mutations.HasValue() == false)
                 return;
 
-            if (cloneProto.Mutations.IsNullOrEmpty())
-                return;
-
-            foreach (LootMutationPrototype mutationProto in cloneProto.Mutations)
+            foreach (LootMutationPrototype mutationProto in mutations)
             {
                 if (mutationProto is T)
                 {
