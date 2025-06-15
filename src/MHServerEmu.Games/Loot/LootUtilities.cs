@@ -465,6 +465,20 @@ namespace MHServerEmu.Games.Loot
             }
         }
 
+        public static MutationResults ReplaceAffixes(IItemResolver resolver, DropFilterArguments args, ItemSpec sourceItemSpec,
+            ItemSpec destItemSpec, AffixPosition position, AssetId[] keywords, PrototypeId[] categories, bool enforceAffixLimits)
+        {
+            if (destItemSpec.IsValid == false) return Logger.WarnReturn(MutationResults.Error, "ReplaceAffixes(): destItemSpec.IsValid == false");
+
+            MutationResults result = DropAffixes(resolver, destItemSpec, position, keywords, categories);
+            if (result.HasFlag(MutationResults.Error))
+                return result;
+
+            result |= CopyAffixes(resolver, args, sourceItemSpec, destItemSpec, position, keywords, categories, enforceAffixLimits);
+
+            return result;
+        }
+        
         public static uint BuildAffixPickers(AffixPickerTable pickerTable, DropFilterArguments args, AssetId[] keywords, Region region)
         {
             uint duplicateMask = 0;     // Cleared bit indicates that the position has an affix with DuplicateHandlingBehavior set to Append
