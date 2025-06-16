@@ -362,7 +362,24 @@ namespace MHServerEmu.Games.Entities.Items
                     break;
 
                 case PropertyEnum.PetItemDonationCount:
-                    // TODO
+                    if (IsPetItem == false)
+                    {
+                        Logger.Warn("OnPropertyChange(): IsPetItem == false");
+                        return;
+                    }
+
+                    if (ItemPrototype.IsPetTechAffixUnlocked(this, id))
+                    {
+                        Property.FromParam(id, 0, out int updatedAffixPos);
+                        AwardPetTechAffix((AffixPosition)updatedAffixPos);
+                    }
+                    else if (newValue == 0 && oldValue != 0)
+                    {
+                        Property.FromParam(id, 0, out int updatedAffixPos);
+                        if (RemovePetTechAffix((AffixPosition)updatedAffixPos) == false)
+                            Logger.Warn($"OnPropertyChange(): Failed to remove pet tech affix props!\n Item: {this}\n AffixPos: {(AffixPosition)updatedAffixPos}");
+                    }
+
                     break;
             }
         }
@@ -631,6 +648,38 @@ namespace MHServerEmu.Games.Entities.Items
             return CraftingResult.Success;
         }
 
+        public bool IsGear(AvatarPrototype avatarProto)
+        {
+            if (Prototype is not ArmorPrototype armorProto) return false;
+
+            return armorProto.GetInventorySlotForAgent(avatarProto) switch
+            {
+                EquipmentInvUISlot.Gear01
+                or EquipmentInvUISlot.Gear02
+                or EquipmentInvUISlot.Gear03
+                or EquipmentInvUISlot.Gear04
+                or EquipmentInvUISlot.Gear05 => true,
+                _ => false,
+            };
+        }
+
+        public bool HasAffixInPosition(AffixPosition affixPosition)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("HasAffixInPosition(): copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.AffixProto.Position == affixPosition)
+                    return true;
+            }
+
+            return false;
+        }
+
         public PrototypeId GetBoundAgentProtoRef()
         {
             _itemSpec.GetBindingState(out PrototypeId agentProtoRef);
@@ -857,6 +906,28 @@ namespace MHServerEmu.Games.Entities.Items
         {
             Properties[PropertyEnum.ItemRecentlyAddedGlint] = value;
             Properties[PropertyEnum.ItemRecentlyAddedToInventory] = value;
+        }
+
+        public void SetScenarioProperties(PropertyCollection properties)
+        {
+            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
+            properties.CopyPropertyRange(Properties, PropertyEnum.RegionAffix);
+            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
+
+            PrototypeId itemRarityRef = Properties[PropertyEnum.ItemRarity];
+            var itemRarityProto = itemRarityRef.As<RarityPrototype>();
+            if (itemRarityProto != null)
+                properties[PropertyEnum.ItemRarity] = itemRarityRef;
+
+            var affixLimits = ItemPrototype.GetAffixLimits(itemRarityRef, LootContext.Drop);
+            if (affixLimits != null)
+            {
+                properties[PropertyEnum.DifficultyIndex] = affixLimits.RegionDifficultyIndex;
+                properties[PropertyEnum.DamageRegionMobToPlayer] = affixLimits.DamageRegionMobToPlayer;
+                properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
+            }
+
+            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId;
         }
 
         private bool ApplyItemSpec(ItemSpec itemSpec)
@@ -1816,6 +1887,18 @@ namespace MHServerEmu.Games.Entities.Items
             }
         }
 
+        private bool AwardPetTechAffix(AffixPosition position)
+        {
+            // TODO
+            return false;
+        }
+
+        private bool RemovePetTechAffix(AffixPosition position)
+        {
+            // TODO
+            return false;
+        }
+
         private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
         {
             // This has similar overall structure to HasItemActionType()
@@ -2170,43 +2253,6 @@ namespace MHServerEmu.Games.Entities.Items
                 return InteractionValidateResult.CannotTriggerPower;
 
             return InteractionValidateResult.Success;
-        }
-
-        public void SetScenarioProperties(PropertyCollection properties)
-        {
-            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
-            properties.CopyPropertyRange(Properties, PropertyEnum.RegionAffix);
-            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
-
-            PrototypeId itemRarityRef = Properties[PropertyEnum.ItemRarity];
-            var itemRarityProto = itemRarityRef.As<RarityPrototype>();
-            if (itemRarityProto != null)
-                properties[PropertyEnum.ItemRarity] = itemRarityRef;
-
-            var affixLimits = ItemPrototype.GetAffixLimits(itemRarityRef, LootContext.Drop);
-            if (affixLimits != null)
-            {
-                properties[PropertyEnum.DifficultyIndex] = affixLimits.RegionDifficultyIndex;
-                properties[PropertyEnum.DamageRegionMobToPlayer] = affixLimits.DamageRegionMobToPlayer;
-                properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
-            }
-
-            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; 
-        }
-
-        public bool IsGear(AvatarPrototype avatarProto)
-        {
-            if (Prototype is not ArmorPrototype armorProto) return false;
-
-            return armorProto.GetInventorySlotForAgent(avatarProto) switch
-            {
-                EquipmentInvUISlot.Gear01 
-                or EquipmentInvUISlot.Gear02 
-                or EquipmentInvUISlot.Gear03 
-                or EquipmentInvUISlot.Gear04 
-                or EquipmentInvUISlot.Gear05 => true,
-                _ => false,
-            };
         }
     }
 }

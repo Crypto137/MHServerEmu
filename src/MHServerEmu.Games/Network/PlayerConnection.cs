@@ -497,6 +497,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;                // 140
                 case ClientToGameServerMessage.NetMessagePlayerTradeCancel:                 OnPlayerTradeCancel(message); break;                // 144
+                case ClientToGameServerMessage.NetMessageRequestPetTechDonate:              OnRequestPetTechDonate(message); break;             // 146
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
                 case ClientToGameServerMessage.NetMessageEnableTalentPower:                 OnEnableTalentPower(message); break;                // 151
@@ -1947,6 +1948,36 @@ namespace MHServerEmu.Games.Network
 
             Player?.CancelPlayerTrade();
             return true;
+        }
+
+        private bool OnRequestPetTechDonate(in MailboxMessage message) // 146
+        {
+            var requestPetTechDonate = message.As<NetMessageRequestPetTechDonate>();
+            if (requestPetTechDonate == null) return Logger.WarnReturn(false, $"OnRequestPetTechDonate(): Failed to retrieve message");
+
+            Item itemToDonate = Game.EntityManager.GetEntity<Item>(requestPetTechDonate.ItemId);
+            if (itemToDonate == null)
+                return true;
+
+            Player itemOwner = itemToDonate.GetOwnerOfType<Player>();
+            if (itemOwner != Player)
+                return Logger.WarnReturn(false, $"OnRequestPetTechDonate(): Player [{Player}] is attempting to donate item [{itemToDonate}] owned by player [{itemOwner}]");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(requestPetTechDonate.AvatarId);
+            if (avatar == null)
+                return false;
+            
+            Player avatarOwner = avatar.GetOwnerOfType<Player>();
+            if (avatarOwner != Player)
+                return Logger.WarnReturn(false, $"OnRequestPetTechDonate(): Player [{Player}] is attempting to donate item [{itemToDonate}] on avatar [{avatar}] owned by player [{avatarOwner}]");
+
+            Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
+            if (petItemInv == null) return Logger.WarnReturn(false, "OnRequestPetTechDonate(): petItemInv == null");
+
+            Item petTechItem = Game.EntityManager.GetEntity<Item>(petItemInv.GetEntityInSlot(0));
+            if (petTechItem == null) return Logger.WarnReturn(false, "OnRequestPetTechDonate(): petTechItem == null");
+
+            return ItemPrototype.DonateItemToPetTech(Player, petTechItem, itemToDonate.ItemSpec, itemToDonate);
         }
 
         private bool OnChangeCameraSettings(MailboxMessage message) // 148
