@@ -733,19 +733,64 @@ namespace MHServerEmu.Games.Events
             return true;
         }
 
-        private static bool GetPlayerFullyUpgradedPetTechCount(Player player, ref int count)
-        {
-            count = 0;
-            // todo
-
-            return true;
-        }
-
         public static int GetPlayerFullyUpgradedPetTechCount(Player player)
         {
             int count = 0;
-            GetPlayerFullyUpgradedPetTechCount(player, ref count);
+
+            EntityManager entityManager = player.Game.EntityManager;
+
+            // Count equipped pets
+            foreach (Avatar avatar in new AvatarIterator(player))
+            {
+                if (avatar == null)
+                    continue;
+
+                Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
+                if (petItemInv == null)
+                    continue;
+
+                ulong petTechItemId = petItemInv.GetEntityInSlot(0);
+                if (petTechItemId == Entity.InvalidId)
+                    continue;
+
+                Item petTechItem = entityManager.GetEntity<Item>(petTechItemId);
+                if (petTechItem == null)
+                    continue;
+
+                if (petTechItem.IsPetTechFullyUpgraded())
+                    count++;
+            }
+
+            // Count pets in general / stash inventories
+            const InventoryIterationFlags IterationFlags = InventoryIterationFlags.PlayerGeneral |
+                                                           InventoryIterationFlags.PlayerGeneralExtra |
+                                                           InventoryIterationFlags.PlayerStashAvatarSpecific |
+                                                           InventoryIterationFlags.PlayerStashGeneral;
+
+            foreach (Inventory inventory in new InventoryIterator(player, IterationFlags))
+            {
+                foreach (var entry in inventory)
+                {
+                    ItemPrototype itemProto = entry.ProtoRef.As<ItemPrototype>();
+                    if (itemProto == null || itemProto.IsPetItem == false)
+                        continue;
+
+                    Item petTechItem = entityManager.GetEntity<Item>(entry.Id);
+                    if (petTechItem == null)
+                        continue;
+
+                    if (petTechItem.IsPetTechFullyUpgraded())
+                        count++;
+                }
+            }
+
             return count;
+        }
+
+        private static bool GetPlayerFullyUpgradedPetTechCount(Player player, ref int count)
+        {
+            count = GetPlayerFullyUpgradedPetTechCount(player);
+            return true;
         }
 
         private static bool GetPlayerHoursPlayedCount(Player player, ref int count)
