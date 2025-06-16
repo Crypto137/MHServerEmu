@@ -269,7 +269,58 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static MutationResults CopyPetTechAffixes(ItemSpec sourceItemSpec, ItemSpec destItemSpec, AffixPosition position)
         {
-            // TODO
+            ItemPrototype destItemProto = destItemSpec.ItemProtoRef.As<ItemPrototype>();
+            if (destItemProto == null) return Logger.WarnReturn(MutationResults.Error, "CopyPetTechAffixes(): destItemProto == null");
+            if (destItemProto.IsPetItem == false) return Logger.WarnReturn(MutationResults.Error, "CopyPetTechAffixes(): destItemProto.IsPetItem == false");
+
+            if (position < AffixPosition.PetTech1 || position > AffixPosition.PetTech5) return Logger.WarnReturn(MutationResults.Error, "CopyPetTechAffixes(): position < AffixPosition.PetTech1 || position > AffixPosition.PetTech5");
+
+            IReadOnlyList<AffixSpec> sourceAffixSpecs = sourceItemSpec.AffixSpecs;
+            for (int i = 0; i < sourceAffixSpecs.Count; i++)
+            {
+                AffixSpec sourceAffixSpec = sourceAffixSpecs[i];
+                AffixPrototype sourceAffixProto = sourceAffixSpec.AffixProto;
+                if (sourceAffixProto == null)
+                {
+                    Logger.Warn("CopyPetTechAffixes(): sourceAffixProto == null");
+                    continue;
+                }
+
+                if (sourceAffixProto.Position != position)
+                    continue;
+
+                // See if we can replace an existing affix
+                bool replaced = false;
+
+                List<AffixSpec> destAffixSpecs = ListPool<AffixSpec>.Instance.Get(destItemSpec.AffixSpecs);
+                for (int j = 0; j < destAffixSpecs.Count; j++)
+                {
+                    AffixSpec destAffixSpec = destAffixSpecs[j];
+                    AffixPrototype destAffixProto = destAffixSpec.AffixProto;
+                    if (destAffixProto == null)
+                    {
+                        Logger.Warn("CopyPetTechAffixes(): destAffixProto == null");
+                        continue;
+                    }
+
+                    if (destAffixProto.Position != position)
+                        continue;
+
+                    destAffixSpecs[j] = new(sourceAffixSpec);
+                    replaced = true;
+                }
+
+                // If there is no existing affix in the specified slot, append it
+                if (replaced == false)
+                    destAffixSpecs.Add(new(sourceAffixSpec));
+
+                // Update affixes on the destination spec
+                destItemSpec.SetAffixes(destAffixSpecs);
+
+                ListPool<AffixSpec>.Instance.Return(destAffixSpecs);
+                return MutationResults.AffixChange;
+            }
+
             return MutationResults.None;
         }
 
