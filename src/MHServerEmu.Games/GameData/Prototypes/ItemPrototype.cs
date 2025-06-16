@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
@@ -102,7 +103,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         // ---
 
-        private const int TargetNumPetTechAffixes = 5;
+        private const int PetTechAffixPositions = 5;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -176,7 +177,7 @@ namespace MHServerEmu.Games.GameData.Prototypes
                     numPetTechAffixes++;
             }
 
-            if (numPetTechAffixes < TargetNumPetTechAffixes)
+            if (numPetTechAffixes < PetTechAffixPositions)
                 UpdatePetTechAffixes(item.Game.Random, item.GetBoundAgentProtoRef(), itemSpec);
 
             return true;
@@ -186,8 +187,84 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public static MutationResults UpdatePetTechAffixes(GRandom random, PrototypeId rollFor, ItemSpec itemSpec)
         {
-            //Logger.Debug($"UpdatePetTechAffixes(): {itemSpec.ItemProtoRef.GetName()}");
-            return MutationResults.None;
+            // *slaps function declaration* this bad boy can fit so much pooling in it
+            Dictionary<AffixPosition, AffixSpec> affixes = DictionaryPool<AffixPosition, AffixSpec>.Instance.Get();
+            List<Picker<AffixPrototype>> affixPickers = ListPool<Picker<AffixPrototype>>.Instance.Get(PetTechAffixPositions);
+
+            // Build pickers
+            for (int i = 0; i < PetTechAffixPositions; i++)
+            {
+                affixPickers.Add(new(random));
+
+                IReadOnlyList<AffixPrototype> affixPool = GameDataTables.Instance.LootPickingTable.GetAffixesByPosition(AffixPosition.PetTech1 + i);
+                for (int j = 0; j < affixPool.Count; j++)
+                {
+                    AffixPrototype affixProto = affixPool[j];
+                    affixPickers[i].Add(affixProto, affixProto.Weight);
+                }
+            }
+
+            // Roll affixes
+            MutationResults result = MutationResults.None;
+
+            for (int i = 0; i < PetTechAffixPositions; i++)
+            {
+                AffixPosition position = AffixPosition.PetTech1 + i;
+
+                bool hasAffix = false;
+
+                IReadOnlyList<AffixSpec> affixSpecs = itemSpec.AffixSpecs;
+                for (int j = 0; j < affixSpecs.Count; j++)
+                {
+                    AffixSpec affixIt = affixSpecs[j];
+                    AffixPrototype affixProto = affixIt.AffixProto;
+
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("UpdatePetTechAffixes(): affixProto == null");
+                        continue;
+                    }
+
+                    affixes[affixProto.Position] = affixIt;
+
+                    if (affixProto.Position == position)
+                    {
+                        hasAffix = true;
+                        break;
+                    }
+                }
+
+                if (hasAffix == false)
+                {
+                    AffixSpec affixSpec = new();
+                    affixes[position] = affixSpec;
+
+                    HashSet<ScopedAffixRef> affixSet = HashSetPool<ScopedAffixRef>.Instance.Get();
+                    result |= affixSpec.RollAffix(random, rollFor, itemSpec, affixPickers[i], affixSet);
+                    HashSetPool<ScopedAffixRef>.Instance.Return(affixSet);
+
+                    if (result.HasFlag(MutationResults.AffixChange) == false)
+                        Logger.Warn("UpdatePetTechAffixes(): result.HasFlag(MutationResults.AffixChange) == false");
+                }
+            }
+
+            // Overwrite affixes
+            List<AffixSpec> newAffixSpecs = ListPool<AffixSpec>.Instance.Get();
+            
+            for (int i = 0; i < PetTechAffixPositions; i++)
+                newAffixSpecs.Add(affixes[AffixPosition.PetTech1 + i]);
+
+            itemSpec.SetAffixes(newAffixSpecs);
+
+            ListPool<AffixSpec>.Instance.Return(newAffixSpecs);
+
+            // Add metadata
+            if (affixes.TryGetValue(AffixPosition.Metadata, out AffixSpec metadataAffix))
+                itemSpec.AddAffixSpec(metadataAffix);
+
+            DictionaryPool<AffixPosition, AffixSpec>.Instance.Return(affixes);
+            ListPool<Picker<AffixPrototype>>.Instance.Return(affixPickers);
+            return result;
         }
 
         public static MutationResults CopyPetTechAffixes(ItemSpec sourceItemSpec, ItemSpec destItemSpec, AffixPosition position)
@@ -196,10 +273,34 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return MutationResults.None;
         }
 
-        public static bool IsPetTechAffixUnlocked(Item item, PropertyId propertyId)
+        public static bool IsPetTechAffixUnlocked(Item petTechItem, AffixPosition affixPos)
         {
-            // TODO
-            return false;
+            if (petTechItem.IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechItem.IsPetItem == false");
+
+            AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
+
+            PetTechAffixInfoPrototype petTechAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(affixPos);
+            if (petTechAffixInfoProto == null) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechAffixInfoProto == null");
+
+            int donationCount = petTechItem.Properties[PropertyEnum.PetItemDonationCount, (int)affixPos];
+            return donationCount >= petTechAffixInfoProto.ItemsRequiredToUnlock;
+        }
+
+        public static bool IsPetTechAffixUnlocked(Item petTechItem, PropertyId propertyId)
+        {
+            if (petTechItem.IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechItem.IsPetItem == false");
+
+            AdvancementGlobalsPrototype advGlobalsProto = GameDatabase.AdvancementGlobalsPrototype;
+
+            Property.FromParam(propertyId, 0, out int affixPosValue);
+            AffixPosition affixPos = (AffixPosition)affixPosValue;
+            if (affixPos < AffixPosition.PetTech1 || affixPos > AffixPosition.PetTech5) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): affixPos < AffixPosition.PetTech1 || affixPos > AffixPosition.PetTech5");
+
+            PetTechAffixInfoPrototype petTechAffixInfoProto = advGlobalsProto.GetPetTechAffixInfoPrototype(affixPos);
+            if (petTechAffixInfoProto == null) return Logger.WarnReturn(false, "IsPetTechAffixUnlocked(): petTechAffixInfoProto == null");
+
+            int donationCount = petTechItem.Properties[PropertyEnum.PetItemDonationCount, (int)affixPos];
+            return donationCount >= petTechAffixInfoProto.ItemsRequiredToUnlock;
         }
 
         public static bool CanDonateItemToPetTech(Item petTechItem, ItemSpec itemSpecToDonate, Item itemToDonate, out AffixPosition availableAffixPosition)

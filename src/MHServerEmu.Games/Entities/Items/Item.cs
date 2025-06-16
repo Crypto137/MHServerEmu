@@ -184,7 +184,15 @@ namespace MHServerEmu.Games.Entities.Items
                     if (owner != null)
                         StartTicking(owner);
 
-                    // TODO: ScoringEventType.FullyUpgradedPetTech
+                    if (IsPetItem && IsPetTechFullyUpgraded())
+                    {
+                        Player player = GetOwnerOfType<Player>();
+                        if (player != null && player.IsInGame)
+                        {
+                            int count = ScoringEvents.GetPlayerFullyUpgradedPetTechCount(player);
+                            player.OnScoringEvent(new(ScoringEventType.FullyUpgradedPetTech, count));
+                        }
+                    }
 
                     // Update granted power
                     if (GetPowerGranted(out PrototypeId powerProtoRef))
@@ -243,7 +251,15 @@ namespace MHServerEmu.Games.Entities.Items
             if (prevOwner != null && inventoryProto.IsEquipmentInventory)
                 StopTicking(prevOwner);
 
-            // TODO: ScoringEventType.FullyUpgradedPetTech
+            if (IsPetItem && IsPetTechFullyUpgraded())
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player != null && player.IsInGame)
+                {
+                    int count = ScoringEvents.GetPlayerFullyUpgradedPetTechCount(player);
+                    player.OnScoringEvent(new(ScoringEventType.FullyUpgradedPetTech, count));
+                }
+            }
         }
 
         public bool ApplyTeamUpAffixesToAvatar(Avatar avatar)
@@ -678,6 +694,19 @@ namespace MHServerEmu.Games.Entities.Items
             }
 
             return false;
+        }
+
+        public bool IsPetTechFullyUpgraded()
+        {
+            if (IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechFullyUpgraded(): IsPetItem == false");
+
+            for (AffixPosition position = AffixPosition.PetTech1; position <= AffixPosition.PetTech5; position++)
+            {
+                if (ItemPrototype.IsPetTechAffixUnlocked(this, position) == false)
+                    return false;
+            }
+
+            return true;
         }
 
         public PrototypeId GetBoundAgentProtoRef()
@@ -1814,7 +1843,11 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (IsPetItem)
             {
-                Logger.Warn("OnAffixAdded(): Pet items are not yet not implemented");   // TODO
+                if (ItemPrototype.IsPetTechAffixUnlocked(this, affixProto.Position))
+                {
+                    if (Properties.AddChildCollection(affixEntry.Properties) == false)
+                        return Logger.WarnReturn(false, "OnAffixAdded(): Properties.AddChildCollection(affixEntry.Properties) == false");
+                }
             }
             else if (affixEntry.LevelRequirement <= Properties[PropertyEnum.ItemAffixLevel])
             {
@@ -1887,15 +1920,79 @@ namespace MHServerEmu.Games.Entities.Items
             }
         }
 
-        private bool AwardPetTechAffix(AffixPosition position)
+        private bool AwardPetTechAffix(AffixPosition affixPos)
         {
-            // TODO
-            return false;
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                AffixPrototype affixProto = copyEntry.AffixProto;
+                if (affixProto == null)
+                {
+                    Logger.Warn("AwardPetTechAffix(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position != affixPos)
+                    continue;
+
+                WorldEntity owner = GetOwnerOfType<WorldEntity>();
+                if (owner != null && IsEquipped)
+                {
+                    if (owner.UpdateProcEffectPowers(copyEntry.Properties, true) == false)
+                        Logger.Warn($"AwardPetTechAffix(): UpdateProcEffectPowers failed in awardPetTechAffix for affixPos=[{affixPos}] affix=[{affixProto}] item=[{this}] owner=[{owner}]");
+                }
+
+                if (Properties.AddChildCollection(copyEntry.Properties) == false)
+                {
+                    int donationCount = Properties[PropertyEnum.PetItemDonationCount, (int)affixPos];
+                    bool isUnlocked = ItemPrototype.IsPetTechAffixUnlocked(this, affixPos);
+                    bool hasChild = Properties.HasChildCollection(copyEntry.Properties);
+
+                    Logger.Warn($"AwardPetTechAffix(): Failed to AddChildCollection when awarding PetTech affix!\n Affix: {affixProto}\nItems Donated to this Affix: {donationCount}\n Item: [{this}]\nIsPetTechAffixUnlocked: {isUnlocked}\nItem Has Affix Prop Collection: {hasChild}");
+                }
+
+                break;
+            }
+
+            if (IsPetTechFullyUpgraded())
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player != null)
+                {
+                    int count = ScoringEvents.GetPlayerFullyUpgradedPetTechCount(player);
+                    player.OnScoringEvent(new(ScoringEventType.FullyUpgradedPetTech, count));
+                }
+            }
+
+            return true;
         }
 
-        private bool RemovePetTechAffix(AffixPosition position)
+        private bool RemovePetTechAffix(AffixPosition affixPos)
         {
-            // TODO
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                AffixPrototype affixProto = copyEntry.AffixProto;
+                if (affixProto == null)
+                {
+                    Logger.Warn("RemovePetTechAffix(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position != affixPos)
+                    continue;
+
+                if (copyEntry.Properties == null)
+                    continue;
+
+                if (copyEntry.Properties.RemoveFromParent(Properties) == false)
+                    return false;
+
+                WorldEntity owner = GetOwnerOfType<WorldEntity>();
+                if (owner != null && IsEquipped)
+                    owner.UpdateProcEffectPowers(copyEntry.Properties, false);
+
+                return true;
+            }
+
             return false;
         }
 

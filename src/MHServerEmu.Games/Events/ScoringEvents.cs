@@ -425,6 +425,7 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.ItemCollected => GetPlayerItemCollectedCount(player, playerContext, ref count),
                 ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, playerContext, ref count),
                 ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
+                ScoringEventType.FullyUpgradedPetTech => GetPlayerFullyUpgradedPetTechCount(player, ref count),
                 ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
                 ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, playerContext.AvatarProto, ref count),
                 ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, playerContext.AvatarProto, ref count),
@@ -730,6 +731,21 @@ namespace MHServerEmu.Games.Events
                 }
 
             return true;
+        }
+
+        private static bool GetPlayerFullyUpgradedPetTechCount(Player player, ref int count)
+        {
+            count = 0;
+            // todo
+
+            return true;
+        }
+
+        public static int GetPlayerFullyUpgradedPetTechCount(Player player)
+        {
+            int count = 0;
+            GetPlayerFullyUpgradedPetTechCount(player, ref count);
+            return count;
         }
 
         private static bool GetPlayerHoursPlayedCount(Player player, ref int count)
