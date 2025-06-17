@@ -75,23 +75,35 @@ namespace MHServerEmu.Games.Entities
             resolver.SetContext(LootContext.Crafting, this);
 
             // Prepare crafting ingredients
-            if (CraftPrepareIngredients(recipeProto, ingredientIds, resolver) == false)
-                return CraftingResult.InsufficientIngredients;
+            List<Item> ingredients = ListPool<Item>.Instance.Get();
+            Dictionary<Item, int> autoPopulatedIngredients = DictionaryPool<Item, int>.Instance.Get();
 
-            // Roll the crafting output
-            using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
-            settings.Player = this;
-            settings.UsableAvatar = avatar.AvatarPrototype;
-            settings.Level = avatar.CharacterLevel;
+            try
+            {
+                if (CraftPrepareIngredients(recipeProto, ingredientIds, resolver, ingredients, autoPopulatedIngredients) == false)
+                    return CraftingResult.InsufficientIngredients;
 
-            LootRollResult rollResult = recipeProto.RecipeOutput.RollLootTable(settings, resolver);
-            if (rollResult != LootRollResult.Success)
-                return CraftingResult.LootRollFailed;
+                // Roll the crafting output
+                using LootRollSettings settings = ObjectPoolManager.Instance.Get<LootRollSettings>();
+                settings.Player = this;
+                settings.UsableAvatar = avatar.AvatarPrototype;
+                settings.Level = avatar.CharacterLevel;
 
-            using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();
-            resolver.FillLootResultSummary(summary);
+                LootRollResult rollResult = recipeProto.RecipeOutput.RollLootTable(settings, resolver);
+                if (rollResult != LootRollResult.Success)
+                    return CraftingResult.LootRollFailed;
 
-            return Logger.DebugReturn(CraftingResult.CraftingFailed, $"Craft(): recipeItemId={recipeItemId}, ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}");
+                using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();
+                resolver.FillLootResultSummary(summary);
+
+                return Logger.DebugReturn(CraftingResult.CraftingFailed, $"Craft(): recipeItemId={recipeItemId}, ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}");
+
+            }
+            finally
+            {
+                ListPool<Item>.Instance.Return(ingredients);
+                DictionaryPool<Item, int>.Instance.Return(autoPopulatedIngredients);
+            }
         }
 
         public CraftingResult CanCraftRecipeWithVendor(int avatarIndex, Item recipeItem, WorldEntity vendor)
@@ -183,10 +195,6 @@ namespace MHServerEmu.Games.Entities
             if (Properties.HasProperty(propId) == false)
                 return;
 
-            // REMOVEME: debug
-            //int currentValue = Properties[propId];
-            //Logger.Debug($"AdjustCraftingIngredientAvailable(): {propId} = {currentValue} => {currentValue + delta}");
-
             Properties.AdjustProperty(delta, propId);
         }
 
@@ -218,10 +226,7 @@ namespace MHServerEmu.Games.Entities
 
             EntityManager entityManager = Game.EntityManager;
 
-            const InventoryIterationFlags flags = InventoryIterationFlags.PlayerGeneral | InventoryIterationFlags.PlayerGeneralExtra |
-                InventoryIterationFlags.PlayerStashAvatarSpecific | InventoryIterationFlags.PlayerStashGeneral;
-
-            foreach (Inventory inventory in new InventoryIterator(this, flags))
+            foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.CraftingIngredients))
             {
                 foreach (var entry in inventory)
                 {
@@ -238,39 +243,100 @@ namespace MHServerEmu.Games.Entities
                     Properties.AdjustProperty(item.CurrentStackSize, new(PropertyEnum.CraftingIngredientAvailable, entry.ProtoRef));
                 }
             }
-
-            // REMOVEME: debug
-            //foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.CraftingIngredientAvailable))
-            //    Logger.Debug($"UpdateCraftingIngredientAvailableStackCounts(): {kvp.Key} = {(int)kvp.Value}");
         }
 
-        private bool CraftPrepareIngredients(CraftingRecipePrototype recipeProto, List<ulong> ingredientIds, ItemResolver resolver)
+        private bool CraftPrepareIngredients(CraftingRecipePrototype recipeProto, List<ulong> ingredientIds, ItemResolver resolver,
+            List<Item> ingredients, Dictionary<Item, int> autoPopulatedIngredients)
         {
-            // TODO: This is just basic scaffolding to test loot mutations for now
+            CraftingInputPrototype[] recipeInputs = recipeProto?.RecipeInputs;
+            if (recipeInputs.IsNullOrEmpty()) return Logger.WarnReturn(false, "CraftPrepareIngredients(): recipeInputs.IsNullOrEmpty()");
+            if (recipeInputs.Length != ingredientIds.Count) return Logger.WarnReturn(false, "CraftPrepareIngredients(): recipeInputs.Length != ingredientIds.Count");
 
             EntityManager entityManager = Game.EntityManager;
 
-            for (int i = 0; i < ingredientIds.Count; i++)
+            Dictionary<PrototypeId, int> autoPopulatedIngredientCounts = DictionaryPool<PrototypeId, int>.Instance.Get();
+            
+            try
             {
-                ulong ingredientId = ingredientIds[i];
-
-                if (ingredientId != InvalidId)
+                for (int i = 0; i < ingredientIds.Count; i++)
                 {
-                    Item ingredient = entityManager.GetEntity<Item>(ingredientId);
-                    if (ingredient == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): ingredient == null");
+                    ulong ingredientId = ingredientIds[i];
 
-                    ItemSpec cloneSource = new(ingredient.ItemSpec);
-                    cloneSource.StackCount = ingredient.IsRelic ? ingredient.CurrentStackSize : 1;
+                    if (ingredientId != InvalidId)  // Explicitly specified ingredients
+                    {
+                        Item ingredient = entityManager.GetEntity<Item>(ingredientId);
+                        if (ingredient == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): ingredient == null");
 
-                    resolver.SetCloneSource(i, cloneSource);
+                        // Add the item reference to the list to consume it after crafting output is created
+                        ingredients.Add(ingredient);
+
+                        // Set clone source reference to allow mutations to reference this ingredient
+                        ItemSpec cloneSource = new(ingredient.ItemSpec);
+                        cloneSource.StackCount = ingredient.IsRelic ? ingredient.CurrentStackSize : 1;
+                        resolver.SetCloneSource(i, cloneSource);
+                    }
+                    else                            // AutoPopulated ingredients
+                    {
+                        AutoPopulatedInputPrototype inputProto = recipeInputs[i] as AutoPopulatedInputPrototype;
+                        if (inputProto == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): inputProto == null");
+
+                        ItemPrototype autoPopulatedIngredientProto = inputProto.AutoPopulatedIngredientPrototype;
+                        if (autoPopulatedIngredientProto == null) return Logger.WarnReturn(false, "CraftPrepareIngredients(): autoPopulatedIngredientProto == null");
+
+                        if (autoPopulatedIngredientCounts.ContainsKey(autoPopulatedIngredientProto.DataRef))
+                            return Logger.WarnReturn(false, $"CraftPrepareIngredients(): AutoPopulated ingredient {autoPopulatedIngredientProto} specified multiple times for recipe {recipeProto}");
+
+                        autoPopulatedIngredientCounts.Add(autoPopulatedIngredientProto.DataRef, inputProto.Quantity);
+                    }
                 }
-                else
+
+                // Find auto-populated items if any are required for this recipe
+                if (autoPopulatedIngredientCounts.Count == 0)
+                    return true;
+
+                foreach (Inventory inventory in new InventoryIterator(this, InventoryIterationFlags.CraftingIngredients))
                 {
-                    // TODO: auto populated ingredients
+                    foreach (var entry in inventory)
+                    {
+                        PrototypeId itemProtoRef = entry.ProtoRef;
+
+                        if (autoPopulatedIngredientCounts.TryGetValue(itemProtoRef, out int quantity) == false)
+                            continue;
+
+                        Item ingredient = entityManager.GetEntity<Item>(entry.Id);
+                        if (ingredient == null)
+                        {
+                            Logger.Warn("CraftPrepareIngredients(): ingredient == null");
+                            continue;
+                        }
+
+                        if (ingredient.IsScheduledToDestroy)
+                        {
+                            Logger.Warn("CraftPrepareIngredients(): ingredient.IsScheduledToDestroy");
+                            continue;
+                        }
+
+                        // Add the item reference to the dictionary to consume it after crafting output is created
+                        int quantityToConsume = Math.Min(quantity, ingredient.CurrentStackSize);
+                        autoPopulatedIngredients[ingredient] = quantityToConsume;
+                            
+                        quantity -= quantityToConsume;
+                        if (quantity > 0)
+                            autoPopulatedIngredientCounts[itemProtoRef] = quantity;
+                        else
+                            autoPopulatedIngredientCounts.Remove(itemProtoRef);
+
+                        if (autoPopulatedIngredientCounts.Count == 0)
+                            return true;
+                    }
                 }
+
+                return Logger.WarnReturn(false, $"CraftPrepareIngredients(): Failed to find auto-populated ingredients for recipe [{recipeProto}] crafted by player [{this}]");
             }
-
-            return true;
+            finally
+            {
+                DictionaryPool<PrototypeId, int>.Instance.Return(autoPopulatedIngredientCounts);
+            }
         }
     }
 }
