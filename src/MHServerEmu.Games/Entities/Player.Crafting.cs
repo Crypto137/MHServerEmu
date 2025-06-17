@@ -64,10 +64,22 @@ namespace MHServerEmu.Games.Entities
             using PropertyCollection currencyCost = ObjectPoolManager.Instance.Get<PropertyCollection>();
             recipeProto.GetCraftingCost(this, ingredientIds, out uint creditsCost, out uint legendaryMarksCost, currencyCost);
 
+            // Recraft uses current results as input for another crafting attempt.
             if (isRecraft)
             {
-                // TODO
-                return Logger.WarnReturn(CraftingResult.CraftingFailed, $"Craft(): Recraft is not yet implemented");
+                // Move the input from slot 0 so that the newly created output can occupy it
+                ulong recraftItemId = resultsInv.GetEntityInSlot(0);
+                if (recipeItemId == InvalidId) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftItemId == InvalidId");
+
+                Item recraftItem = Game.EntityManager.GetEntity<Item>(recraftItemId);
+                if (recraftItem == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftItem == null");
+
+                uint recraftFreeSlot = resultsInv.GetFreeSlot(recraftItem, false, false);
+                if (recraftFreeSlot == Inventory.InvalidSlot) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftFreeSlot = Inventory.InvalidSlot");
+
+                ulong? stackEntityId = null;    // do not allow stacking here
+                InventoryResult recraftItemMoveResult = recraftItem.ChangeInventoryLocation(resultsInv, recraftFreeSlot, ref stackEntityId, false);
+                if (recraftItemMoveResult != InventoryResult.Success) return Logger.WarnReturn(CraftingResult.CraftingFailed, "Craft(): recraftItemMoveResult != recraftItemMoveResult != InventoryResult.Success");
             }
 
             // Crafting is done through generating new items via the loot system
