@@ -437,6 +437,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGamepadMetric:                     OnGamepadMetric(message); break;                    // 31
                 case ClientToGameServerMessage.NetMessagePickupInteraction:                 OnPickupInteraction(message); break;                // 32
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;                 // 33
+                case ClientToGameServerMessage.NetMessageTryMoveCraftingResultsToGeneral:   OnTryMoveCraftingResultsToGeneral(message); break;  // 34
                 case ClientToGameServerMessage.NetMessageInventoryTrashItem:                OnInventoryTrashItem(message); break;               // 35
                 case ClientToGameServerMessage.NetMessageThrowInteraction:                  OnThrowInteraction(message); break;                 // 36
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:           OnPerformPreInteractPower(message); break;          // 37
@@ -1002,6 +1003,42 @@ namespace MHServerEmu.Games.Network
                 return Player.TryInventoryStackSplit(itemId, containerId, inventoryProtoRef, slot);
 
             return Player.TryInventoryMove(itemId, containerId, inventoryProtoRef, slot);
+        }
+
+        private bool OnTryMoveCraftingResultsToGeneral(in MailboxMessage message)   // 34
+        {
+            var tryMoveCraftingResultsToGeneral = message.As<NetMessageTryMoveCraftingResultsToGeneral>();
+            if (tryMoveCraftingResultsToGeneral == null) return Logger.WarnReturn(false, $"OnTryMoveCraftingResultsToGeneral(): Failed to retrieve message");
+
+            Inventory generalInv = Player.GetInventory(InventoryConvenienceLabel.General);
+            if (generalInv == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): generalInv == null");
+
+            Inventory resultsInv = Player.GetInventory(InventoryConvenienceLabel.CraftingResults);
+            if (resultsInv == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): resultsInv == null");
+
+            EntityManager entityManager = Game.EntityManager;
+            ulong playerId = Player.Id;
+
+            while (resultsInv.Count > 0)
+            {
+                ulong itemId = resultsInv.GetEntityInSlot(0);
+
+                Item item = entityManager.GetEntity<Item>(itemId);
+                if (item == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): item == null");
+
+                uint freeSlot = generalInv.GetFreeSlot(item, true, true);
+                if (freeSlot == Inventory.InvalidSlot || Player.TryInventoryMove(itemId, playerId, generalInv.PrototypeDataRef, freeSlot) == false)
+                {
+                    SendMessage(NetMessageInventoryFull.CreateBuilder()
+                        .SetPlayerID(playerId)
+                        .SetItemID(Entity.InvalidId)
+                        .Build());
+
+                    break;
+                }
+            }
+
+            return true;
         }
 
         private bool OnInventoryTrashItem(MailboxMessage message)   // 35
