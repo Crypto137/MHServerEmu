@@ -6,6 +6,7 @@ using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities
@@ -74,9 +75,13 @@ namespace MHServerEmu.Games.Entities
             resolver.Initialize(Game.Random);
             resolver.SetContext(LootContext.Crafting, this);
 
+            // Log this crafting attempt in case there is a memory leak or something
+            Logger.Debug($"Craft(): recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}\nplayer=[{this}]");
+
             // Prepare crafting ingredients
             List<Item> ingredients = ListPool<Item>.Instance.Get();
             Dictionary<Item, int> autoPopulatedIngredients = DictionaryPool<Item, int>.Instance.Get();
+            List<Item> outputItems = ListPool<Item>.Instance.Get();
 
             try
             {
@@ -96,13 +101,37 @@ namespace MHServerEmu.Games.Entities
                 using LootResultSummary summary = ObjectPoolManager.Instance.Get<LootResultSummary>();
                 resolver.FillLootResultSummary(summary);
 
-                return Logger.DebugReturn(CraftingResult.CraftingFailed, $"Craft(): recipeItemId={recipeItemId}, ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}");
+                const LootType LootTypeFilter = LootType.Item | LootType.LootMutation | LootType.VendorXP | LootType.CallbackNode;
+                if ((summary.Types & ~LootTypeFilter) != LootType.None)
+                    return Logger.WarnReturn(CraftingResult.LootRollFailed, $"Craft(): Unsupported loot types rolled! lootTypes=[{summary.Types}], recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}, player=[{this}]");
 
+                // Do the crafting: create output, consume ingredients, and pay costs
+                if (CraftCreateOutputItemsFromSummary(recipeProto, ingredients, summary, resultsInv, outputItems) == false)
+                {
+                    // Bail out if output creation failed for whatever reason.
+                    Logger.Error($"Craft(): Failed to create output items! recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}, player=[{this}]");
+
+                    // Since we haven't consumed any ingredients or paid any cost yet, we just need to clean up partially created items.
+                    foreach (Item item in outputItems)
+                        item?.Destroy();
+                    
+                    return CraftingResult.CraftingFailed;
+                }
+
+                // Point of no return from here
+                CraftConsumeIngredients(ingredients, autoPopulatedIngredients);
+
+                CraftPayCost(creditsCost, legendaryMarksCost, currencyCost);
+
+                CraftProcessVendorLoot(summary, vendor);
+
+                return CraftingResult.Success;
             }
             finally
             {
                 ListPool<Item>.Instance.Return(ingredients);
                 DictionaryPool<Item, int>.Instance.Return(autoPopulatedIngredients);
+                ListPool<Item>.Instance.Return(outputItems);
             }
         }
 
@@ -287,6 +316,9 @@ namespace MHServerEmu.Games.Entities
                             return Logger.WarnReturn(false, $"CraftPrepareIngredients(): AutoPopulated ingredient {autoPopulatedIngredientProto} specified multiple times for recipe {recipeProto}");
 
                         autoPopulatedIngredientCounts.Add(autoPopulatedIngredientProto.DataRef, inputProto.Quantity);
+
+                        // Add a null to the ingredient list to be able to look up explicit ingredients by index
+                        ingredients.Add(null);
                     }
                 }
 
@@ -336,6 +368,107 @@ namespace MHServerEmu.Games.Entities
             finally
             {
                 DictionaryPool<PrototypeId, int>.Instance.Return(autoPopulatedIngredientCounts);
+            }
+        }
+
+        private bool CraftCreateOutputItemsFromSummary(CraftingRecipePrototype recipeProto, List<Item> ingredients, LootResultSummary summary, Inventory resultsInv, List<Item> outputItems)
+        {
+            // Create items
+            EntityManager entityManager = Game.EntityManager;
+
+            // Crafting input needs to be created in the results inventory rather than moved there because it can be bound, which would prevent movement.
+            InventoryLocation invLoc = new(Id, resultsInv.PrototypeDataRef);
+
+            foreach (ItemSpec itemSpec in summary.ItemSpecs)
+            {
+                using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                settings.EntityRef = itemSpec.ItemProtoRef;
+                settings.ItemSpec = itemSpec;
+                settings.InventoryLocation = invLoc;
+                settings.OptionFlags |= EntitySettingsOptionFlags.DoNotAllowStackingOnCreate;
+
+                if (IsInGame == false)
+                    settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
+
+                using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
+                settings.Properties = properties;
+                properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
+
+                Entity entity = entityManager.CreateEntity(settings);
+                if (entity == null) return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): entity == null");
+
+                if (entity is not Item item)
+                {
+                    entity.Destroy();
+                    return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): entity is not Item");
+                }
+
+                outputItems.Add(item);
+            }
+
+            // Post-process created items
+
+            return true;
+        }
+
+        private void CraftConsumeIngredients(List<Item> ingredients, Dictionary<Item, int> autoPopulatedIngredients)
+        {
+            foreach (Item ingredient in ingredients)
+            {
+                // AutoPopulated ingredients will be null and are consumed separately
+                if (ingredient == null)
+                    continue;
+
+                // Relic stacks are treated as individual items
+                int quantity = ingredient.IsRelic ? ingredient.CurrentStackSize : 1;
+
+                ingredient.DecrementStack(quantity);
+            }
+
+            foreach (var kvp in autoPopulatedIngredients)
+                kvp.Key.DecrementStack(kvp.Value);
+        }
+
+        private void CraftPayCost(uint creditsCost, uint legendaryMarksCost, PropertyCollection currencyCosts)
+        {
+            CurrencyGlobalsPrototype currencyGlobalsProto = GameDatabase.CurrencyGlobalsPrototype;
+
+            if (creditsCost > 0)
+            {
+                int delta = -(int)creditsCost;
+                Properties.AdjustProperty(delta, new(PropertyEnum.Currency, currencyGlobalsProto.Credits));
+            }
+
+            if (legendaryMarksCost > 0)
+            {
+                int delta = -(int)legendaryMarksCost;
+                Properties.AdjustProperty(delta, new(PropertyEnum.Currency, currencyGlobalsProto.LegendaryMarks));
+            }
+
+            foreach (var kvp in currencyCosts.IteratePropertyRange(PropertyEnum.Currency))
+            {
+                int delta = -(int)kvp.Value;
+                Properties.AdjustProperty(delta, kvp.Key);
+            }
+        }
+
+        private void CraftProcessVendorLoot(LootResultSummary summary, WorldEntity vendor)
+        {
+            // Award vendor XP
+            if (summary.Types.HasFlag(LootType.VendorXP))
+            {
+                foreach (VendorXPSummary vendorXPSummary in summary.VendorXP)
+                {
+                    ulong xpVendorId = vendor.Properties[PropertyEnum.VendorType] == vendorXPSummary.VendorProtoRef ? vendor.Id : InvalidId;
+                    AwardVendorXP(vendorXPSummary.XPAmount, vendorXPSummary.VendorProtoRef, xpVendorId);
+                }
+            }
+
+            // Trigger callbacks
+            if (summary.Types.HasFlag(LootType.CallbackNode))
+            {
+                foreach (LootNodePrototype callbackNode in summary.CallbackNodes)
+                    callbackNode.OnResultsEvaluation(this, vendor);
             }
         }
     }
