@@ -3,11 +3,14 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
+using MHServerEmu.Games.Events;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Loot.Specs;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Properties.Evals;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -419,8 +422,112 @@ namespace MHServerEmu.Games.Entities
             }
 
             // Post-process created items
+            HashSet<Item> clonedItems = HashSetPool<Item>.Instance.Get();
 
-            return true;
+            try
+            {
+                // Clone post-processing
+                LootNodePrototype[] lootNodes = recipeProto.RecipeOutput.Choices;
+
+                bool isCloneRecipe = false;
+
+                foreach (LootNodePrototype lootNodeProto in lootNodes)
+                {
+                    if (lootNodeProto is LootDropClonePrototype)
+                    {
+                        isCloneRecipe = true;
+                        break;
+                    }
+                }
+
+                if (isCloneRecipe)
+                {
+                    if (lootNodes.Length != outputItems.Count)
+                        return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): lootNodes.Length != outputItems.Count");
+
+                    for (int i = 0; i < outputItems.Count; i++)
+                    {
+                        if (lootNodes[i] is not LootDropClonePrototype cloneProto)
+                            continue;
+
+                        Item outputItem = outputItems[i];
+                        if (outputItem == null)
+                        {
+                            Logger.Warn("CraftCreateOutputItemsFromSummary(): outputItem == null");
+                            continue;
+                        }
+
+                        clonedItems.Add(outputItem);
+
+                        // Copy additional properties from the source item
+                        int index = cloneProto.SourceIndex;
+                        if (index < 0 || index >= ingredients.Count) return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): index < 0 || index >= ingredients.Count");
+                        
+                        Item sourceItem = ingredients[index];
+                        if (sourceItem == null) return Logger.WarnReturn(false, "CraftCreateOutputItemsFromSummary(): sourceItem == null");
+
+                        outputItem.Properties.CopyProperty(sourceItem.Properties, PropertyEnum.ItemLimitedEdition);
+
+                        if (sourceItem.IsPetItem)
+                            outputItem.Properties.CopyPropertyRange(sourceItem.Properties, PropertyEnum.PetItemDonationCount);
+
+                        // Do mutation callbacks
+                        foreach (LootMutationPrototype lootMutationProto in summary.LootMutations)
+                            lootMutationProto.OnItemCreated(outputItem);
+                    }
+                }
+
+                // Run OnRecipeComplete eval
+                if (recipeProto.OnRecipeComplete != null)
+                {
+                    using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                    evalContext.Game = Game;
+
+                    for (int i = 0; i < outputItems.Count; i++)
+                    {
+                        EvalContext contextEnum = EvalContext.Var1 + i;
+                        evalContext.SetVar_PropertyCollectionPtr(contextEnum, outputItems[i]?.Properties);
+
+                        if (contextEnum == EvalContext.Var5)
+                            break;
+                    }
+
+                    Eval.RunBool(recipeProto.OnRecipeComplete, evalContext);
+                }
+
+                // Trigger events
+                if (outputItems.Count > 0)
+                {
+                    Region region = GetRegion();
+
+                    foreach (Item outputItem in outputItems)
+                    {
+                        if (outputItem == null)
+                            continue;
+
+                        RarityPrototype rarityProto = ((PrototypeId)outputItem.Properties[PropertyEnum.ItemRarity]).As<RarityPrototype>();
+                        int count = outputItem.CurrentStackSize;
+
+                        region?.PlayerCraftedItemEvent.Invoke(new(this, outputItem, recipeProto.DataRef, count));
+
+                        OnScoringEvent(new(ScoringEventType.ItemCrafted, recipeProto, rarityProto, count));
+
+                        // Only newly created items count for the ItemCollected event
+                        if (clonedItems.Contains(outputItem) == false)
+                            OnScoringEvent(new(ScoringEventType.ItemCollected, outputItem.ItemPrototype, rarityProto, count));
+                    }
+                }
+                else
+                {
+                    OnScoringEvent(new(ScoringEventType.ItemCrafted, recipeProto, 1));
+                }
+
+                return true;
+            }
+            finally
+            {
+                HashSetPool<Item>.Instance.Return(clonedItems);
+            }
         }
 
         private void CraftConsumeIngredients(List<Item> ingredients, Dictionary<Item, int> autoPopulatedIngredients)
