@@ -1021,7 +1021,7 @@ namespace MHServerEmu.Games.Network
 
             while (resultsInv.Count > 0)
             {
-                ulong itemId = resultsInv.GetEntityInSlot(0);
+                ulong itemId = resultsInv.GetAnyEntity();
 
                 Item item = entityManager.GetEntity<Item>(itemId);
                 if (item == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): item == null");
