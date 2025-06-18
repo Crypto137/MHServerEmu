@@ -2214,7 +2214,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (itemProto.EvalCanUse != null)
             {
-                EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, avatar);
                 evalContext.SetVar_Int(EvalContext.Var1, player.GetLevelCapForCharacter(avatar.PrototypeDataRef));
