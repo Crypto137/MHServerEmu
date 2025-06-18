@@ -368,20 +368,25 @@ namespace MHServerEmu.Games.GameData.Prototypes
                 if (itemToDonate.CurrentStackSize > 1)
                     return false;
 
-                if (itemToDonate.IsInWorld && itemToDonate.GetOwner() != null)
-                    return Logger.WarnReturn(false, "CanDonateItemToPetTech(): An item on the ground cannot be in any inventory!");
-
-                switch (itemToDonate.InventoryLocation.InventoryCategory)
+                if (itemToDonate.IsInWorld)
                 {
-                    // Only items in the player general inventory and stash can be donated
-                    case InventoryCategory.PlayerGeneral:
-                    case InventoryCategory.PlayerGeneralExtra:
-                    case InventoryCategory.PlayerStashAvatarSpecific:
-                    case InventoryCategory.PlayerStashGeneral:
-                        break;
+                    if (itemToDonate.GetOwner() != null)
+                        return Logger.WarnReturn(false, "CanDonateItemToPetTech(): An item on the ground cannot be in any inventory!");
+                }
+                else
+                {
+                    switch (itemToDonate.InventoryLocation.InventoryCategory)
+                    {
+                        // Only items in the player general inventory and stash can be donated
+                        case InventoryCategory.PlayerGeneral:
+                        case InventoryCategory.PlayerGeneralExtra:
+                        case InventoryCategory.PlayerStashAvatarSpecific:
+                        case InventoryCategory.PlayerStashGeneral:
+                            break;
 
-                    default:
-                        return false;
+                        default:
+                            return false;
+                    }
                 }
             }
 
