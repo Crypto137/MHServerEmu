@@ -78,6 +78,8 @@ namespace MHServerEmu.Games.Loot
                 if (avatarProtoRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                if (avatarProto.ShowInRosterIfLocked == false)
+                    continue;
                 _avatarPicker.Add(avatarProto);
             }
         }

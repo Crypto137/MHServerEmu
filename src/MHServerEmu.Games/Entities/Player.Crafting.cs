@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.Entities
             resolver.SetContext(LootContext.Crafting, this);
 
             // Log this crafting attempt in case there is a memory leak or something
-            Logger.Debug($"Craft(): recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft}\nplayer=[{this}]");
+            //Logger.Debug($"Craft(): recipeItem=[{recipeItem}], ingredientIds=[{string.Join(' ', ingredientIds)}], isRecraft={isRecraft} player=[{this}]");
 
             // Prepare crafting ingredients
             List<Item> ingredients = ListPool<Item>.Instance.Get();
@@ -109,7 +109,20 @@ namespace MHServerEmu.Games.Entities
                 settings.UsableAvatar = avatar.AvatarPrototype;
                 settings.Level = avatar.CharacterLevel;
 
-                LootRollResult rollResult = recipeProto.RecipeOutput.RollLootTable(settings, resolver);
+                // In version 1.52 some heroes don't have any valid costumes for the 3 to 1 recipe, so try the roll multiple times
+                const int MaxRollAttempts = 10;
+
+                LootRollResult rollResult = LootRollResult.NoRoll;
+                for (int i = 0; i < MaxRollAttempts; i++)
+                {
+                    rollResult = recipeProto.RecipeOutput.RollLootTable(settings, resolver);
+                    if (rollResult == LootRollResult.Success)
+                        break;
+
+                    Logger.Warn($"Craft(): Loot roll failed, attempt=[{i + 1}/{MaxRollAttempts}], recipeitem=[{recipeItem}], player=[{this}]");
+                    resolver.SetContext(LootContext.Crafting, this);    // reset partial results to prevent potential abuse
+                }
+
                 if (rollResult != LootRollResult.Success)
                     return CraftingResult.LootRollFailed;
 
