@@ -425,6 +425,7 @@ namespace MHServerEmu.Games.Events
                 ScoringEventType.ItemCollected => GetPlayerItemCollectedCount(player, playerContext, ref count),
                 ScoringEventType.CompleteMission => GetPlayerCompleteMissionCount(player, playerContext, ref count),
                 ScoringEventType.FullyUpgradedLegendaries => GetPlayerFullyUpgradedLegendariesCount(player, ref count),
+                ScoringEventType.FullyUpgradedPetTech => GetPlayerFullyUpgradedPetTechCount(player, ref count),
                 ScoringEventType.HoursPlayed => GetPlayerHoursPlayedCount(player, ref count),
                 ScoringEventType.HoursPlayedByAvatar => GetPlayerHoursPlayedByAvatarCount(player, playerContext.AvatarProto, ref count),
                 ScoringEventType.MinGearLevel => GetPlayerMinGearLevelCount(player, playerContext.AvatarProto, ref count),
@@ -729,6 +730,66 @@ namespace MHServerEmu.Games.Events
                         count++;
                 }
 
+            return true;
+        }
+
+        public static int GetPlayerFullyUpgradedPetTechCount(Player player)
+        {
+            int count = 0;
+
+            EntityManager entityManager = player.Game.EntityManager;
+
+            // Count equipped pets
+            foreach (Avatar avatar in new AvatarIterator(player))
+            {
+                if (avatar == null)
+                    continue;
+
+                Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
+                if (petItemInv == null)
+                    continue;
+
+                ulong petTechItemId = petItemInv.GetEntityInSlot(0);
+                if (petTechItemId == Entity.InvalidId)
+                    continue;
+
+                Item petTechItem = entityManager.GetEntity<Item>(petTechItemId);
+                if (petTechItem == null)
+                    continue;
+
+                if (petTechItem.IsPetTechFullyUpgraded())
+                    count++;
+            }
+
+            // Count pets in general / stash inventories
+            const InventoryIterationFlags IterationFlags = InventoryIterationFlags.PlayerGeneral |
+                                                           InventoryIterationFlags.PlayerGeneralExtra |
+                                                           InventoryIterationFlags.PlayerStashAvatarSpecific |
+                                                           InventoryIterationFlags.PlayerStashGeneral;
+
+            foreach (Inventory inventory in new InventoryIterator(player, IterationFlags))
+            {
+                foreach (var entry in inventory)
+                {
+                    ItemPrototype itemProto = entry.ProtoRef.As<ItemPrototype>();
+                    if (itemProto == null || itemProto.IsPetItem == false)
+                        continue;
+
+                    Item petTechItem = entityManager.GetEntity<Item>(entry.Id);
+                    if (petTechItem == null)
+                        continue;
+
+                    if (petTechItem.IsPetTechFullyUpgraded())
+                        count++;
+                }
+            }
+
+            return count;
+        }
+
+        private static bool GetPlayerFullyUpgradedPetTechCount(Player player, ref int count)
+        {
+            count = GetPlayerFullyUpgradedPetTechCount(player);
             return true;
         }
 

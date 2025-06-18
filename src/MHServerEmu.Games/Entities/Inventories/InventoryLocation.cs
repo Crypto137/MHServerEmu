@@ -27,6 +27,8 @@ namespace MHServerEmu.Games.Entities.Inventories
 
         public bool IsValid { get => ContainerId != Entity.InvalidId && InventoryRef != PrototypeId.Invalid && Slot != Inventory.InvalidSlot; }
 
+        public bool IsArtifactInventory { get => InventoryPrototype?.IsArtifactInventory == true; }
+
         /// <summary>
         /// Constructs a default <see cref="InventoryLocation"/>.
         /// </summary>

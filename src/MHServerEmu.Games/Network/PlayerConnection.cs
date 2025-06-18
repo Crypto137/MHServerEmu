@@ -13,6 +13,7 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Achievements;
 using MHServerEmu.Games.Common;
+using MHServerEmu.Games.Dialog;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Entities.Inventories;
@@ -436,10 +437,12 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageGamepadMetric:                     OnGamepadMetric(message); break;                    // 31
                 case ClientToGameServerMessage.NetMessagePickupInteraction:                 OnPickupInteraction(message); break;                // 32
                 case ClientToGameServerMessage.NetMessageTryInventoryMove:                  OnTryInventoryMove(message); break;                 // 33
+                case ClientToGameServerMessage.NetMessageTryMoveCraftingResultsToGeneral:   OnTryMoveCraftingResultsToGeneral(message); break;  // 34
                 case ClientToGameServerMessage.NetMessageInventoryTrashItem:                OnInventoryTrashItem(message); break;               // 35
                 case ClientToGameServerMessage.NetMessageThrowInteraction:                  OnThrowInteraction(message); break;                 // 36
                 case ClientToGameServerMessage.NetMessagePerformPreInteractPower:           OnPerformPreInteractPower(message); break;          // 37
                 case ClientToGameServerMessage.NetMessageUseInteractableObject:             OnUseInteractableObject(message); break;            // 38
+                case ClientToGameServerMessage.NetMessageTryCraft:                          OnTryCraft(message); break;                         // 39
                 case ClientToGameServerMessage.NetMessageUseWaypoint:                       OnUseWaypoint(message); break;                      // 40
                 case ClientToGameServerMessage.NetMessageSwitchAvatar:                      OnSwitchAvatar(message); break;                     // 42
                 case ClientToGameServerMessage.NetMessageChangeDifficulty:                  OnChangeDifficulty(message); break;                 // 43
@@ -495,6 +498,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAssignStolenPower:                 OnAssignStolenPower(message); break;                // 139
                 case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;                // 140
                 case ClientToGameServerMessage.NetMessagePlayerTradeCancel:                 OnPlayerTradeCancel(message); break;                // 144
+                case ClientToGameServerMessage.NetMessageRequestPetTechDonate:              OnRequestPetTechDonate(message); break;             // 146
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
                 case ClientToGameServerMessage.NetMessageEnableTalentPower:                 OnEnableTalentPower(message); break;                // 151
@@ -892,6 +896,11 @@ namespace MHServerEmu.Games.Network
             var pickupInteraction = message.As<NetMessagePickupInteraction>();
             if (pickupInteraction == null) return Logger.WarnReturn(false, $"OnPickupInteraction(): Failed to retrieve message");
 
+            // Make sure there is an avatar in play
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null)
+                return false;
+
             // Find item entity
             Item item = Game.EntityManager.GetEntity<Item>(pickupInteraction.IdTarget);
 
@@ -899,12 +908,22 @@ namespace MHServerEmu.Games.Network
             if (item == null || Player.Owns(item))
                 return true;
 
-            // TODO: Validate pickup range
+            // Validate pickup range
+            bool useInteractFallbackRange = pickupInteraction.HasUseInteractFallbackRange && pickupInteraction.UseInteractFallbackRange;
+            if (avatar.InInteractRange(item, InteractionMethod.PickUp, useInteractFallbackRange) == false)
+                return false;
+
+            // Validate ownership
+            if (item.IsRootOwner == false)
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player [{Player}] is attempting to pick up item [{item}] owned by another player [{item.GetOwnerOfType<Player>()}]");
+
+            if (item.IsBoundToAccount)
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player [{Player}] is attempting to pick up item [{item}] that is account bound");
 
             // Do not allow to pick up items belonging to other players
             ulong restrictedToPlayerGuid = item.Properties[PropertyEnum.RestrictedToPlayerGuid];
             if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != Player.DatabaseUniqueId)
-                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player {Player} is attempting to pick up item {item} restricted to player 0x{restrictedToPlayerGuid:X}");
+                return Logger.WarnReturn(false, $"OnPickupInteraction(): Player [{Player}] is attempting to pick up item [{item}] restricted to player 0x{restrictedToPlayerGuid:X}");
 
             // Try to pick up the item as currency
             if (Player.AcquireCurrencyItem(item))
@@ -932,7 +951,18 @@ namespace MHServerEmu.Games.Network
             InventoryResult result = item.ChangeInventoryLocation(inventory);
             if (result != InventoryResult.Success)
             {
-                Logger.Warn($"OnPickupInteraction(): Failed to add item {item} to inventory of player {Player}, reason: {result}");
+                if (result == InventoryResult.InventoryFull || result == InventoryResult.NoAvailableInventory)
+                {
+                    SendMessage(NetMessageInventoryFull.CreateBuilder()
+                        .SetPlayerID(Player.Id)
+                        .SetItemID(item.Id)
+                        .Build());
+                }
+                else
+                {
+                    Logger.Warn($"OnPickupInteraction(): Failed to add item [{item}] to inventory of player [{Player}], reason: {result}");
+                }
+
                 return false;
             }
 
@@ -963,27 +993,50 @@ namespace MHServerEmu.Games.Network
             var tryInventoryMove = message.As<NetMessageTryInventoryMove>();
             if (tryInventoryMove == null) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to retrieve message");
 
-            // TODO: Log inventory movements to a separate file
-            /*
-            Logger.Trace(string.Format("OnTryInventoryMove(): {0} to containerId={1}, inventoryRef={2}, slot={3}, isStackSplit={4}",
-                tryInventoryMove.ItemId,
-                tryInventoryMove.ToInventoryOwnerId,
-                GameDatabase.GetPrototypeName((PrototypeId)tryInventoryMove.ToInventoryPrototype),
-                tryInventoryMove.ToSlot,
-                tryInventoryMove.IsStackSplit));
-            */
+            ulong itemId = tryInventoryMove.ItemId;
+            ulong containerId = tryInventoryMove.ToInventoryOwnerId;
+            PrototypeId inventoryProtoRef = (PrototypeId)tryInventoryMove.ToInventoryPrototype;
+            uint slot = tryInventoryMove.ToSlot;
+            bool isStackSplit = tryInventoryMove.HasIsStackSplit && tryInventoryMove.IsStackSplit;
 
-            Entity entity = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ItemId);
-            if (entity == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): entity == null");
+            if (isStackSplit)
+                return Player.TryInventoryStackSplit(itemId, containerId, inventoryProtoRef, slot);
 
-            Entity container = Game.EntityManager.GetEntity<Entity>(tryInventoryMove.ToInventoryOwnerId);
-            if (container == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): container == null");
+            return Player.TryInventoryMove(itemId, containerId, inventoryProtoRef, slot);
+        }
 
-            Inventory inventory = container.GetInventoryByRef((PrototypeId)tryInventoryMove.ToInventoryPrototype);
-            if (inventory == null) return Logger.WarnReturn(false, "OnTryInventoryMove(): inventory == null");
+        private bool OnTryMoveCraftingResultsToGeneral(in MailboxMessage message)   // 34
+        {
+            var tryMoveCraftingResultsToGeneral = message.As<NetMessageTryMoveCraftingResultsToGeneral>();
+            if (tryMoveCraftingResultsToGeneral == null) return Logger.WarnReturn(false, $"OnTryMoveCraftingResultsToGeneral(): Failed to retrieve message");
 
-            InventoryResult result = entity.ChangeInventoryLocation(inventory, tryInventoryMove.ToSlot);
-            if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
+            Inventory generalInv = Player.GetInventory(InventoryConvenienceLabel.General);
+            if (generalInv == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): generalInv == null");
+
+            Inventory resultsInv = Player.GetInventory(InventoryConvenienceLabel.CraftingResults);
+            if (resultsInv == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): resultsInv == null");
+
+            EntityManager entityManager = Game.EntityManager;
+            ulong playerId = Player.Id;
+
+            while (resultsInv.Count > 0)
+            {
+                ulong itemId = resultsInv.GetAnyEntity();
+
+                Item item = entityManager.GetEntity<Item>(itemId);
+                if (item == null) return Logger.WarnReturn(false, "OnTryMoveCraftingResultsToGeneral(): item == null");
+
+                uint freeSlot = generalInv.GetFreeSlot(item, true, true);
+                if (freeSlot == Inventory.InvalidSlot || Player.TryInventoryMove(itemId, playerId, generalInv.PrototypeDataRef, freeSlot) == false)
+                {
+                    SendMessage(NetMessageInventoryFull.CreateBuilder()
+                        .SetPlayerID(playerId)
+                        .SetItemID(Entity.InvalidId)
+                        .Build());
+
+                    break;
+                }
+            }
 
             return true;
         }
@@ -1039,6 +1092,65 @@ namespace MHServerEmu.Games.Network
 
             avatar.UseInteractableObject(useInteractableObject.IdTarget, (PrototypeId)useInteractableObject.MissionPrototypeRef);
             return true;
+        }
+
+        private bool OnTryCraft(in MailboxMessage message) // 39
+        {
+            var tryCraft = message.As<NetMessageTryCraft>();
+            if (tryCraft == null) return Logger.WarnReturn(false, "OnTryCraft(): Failed to retrieve message");
+
+            EntityManager entityManager = Game.EntityManager;
+
+            // Validate recipe item
+            ulong recipeItemId = tryCraft.IdRecipe;
+
+            Item recipeItem = entityManager.GetEntity<Item>(recipeItemId);
+            if (recipeItem == null) return Logger.WarnReturn(false, "OnTryCraft(): recipeItem == null");
+
+            if (Player.Owns(recipeItem) == false)
+                return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use recipe item [{recipeItem}] that does not belong to them");
+
+            // Validate ingredients
+            List<ulong> ingredientIds = ListPool<ulong>.Instance.Get();
+
+            try     // Entering a try block here to ensure the ingredient list is returned to the pool
+            {
+                int numIngredientIds = tryCraft.IdIngredientsCount;
+                for (int i = 0; i < numIngredientIds; i++)
+                {
+                    ulong ingredientId = tryCraft.IdIngredientsList[i];
+
+                    // Invalid ingredient id indicates it needs to be picked by the server
+                    if (ingredientId != Entity.InvalidId)
+                    {
+                        Entity ingredient = entityManager.GetEntity<Entity>(ingredientId);
+                        if (ingredient == null) return Logger.WarnReturn(false, "OnTryCraft(): ingredient == null");
+
+                        if (Player.Owns(ingredient) == false)
+                            return Logger.WarnReturn(false, $"OnTryCraft(): Player [{Player}] is attempting to use ingredient [{ingredient}] that does not belong to them");
+                    }
+
+                    ingredientIds.Add(ingredientId);
+                }
+
+                CraftingResult craftingResult = Player.Craft(recipeItemId, tryCraft.IdVendor, ingredientIds, tryCraft.IsRecraft);
+
+                if (craftingResult != CraftingResult.Success)
+                {
+                    SendMessage(NetMessageCraftingFailure.CreateBuilder()
+                        .SetCraftingResult((uint)craftingResult)
+                        .Build());
+
+                    return false;
+                }
+
+                SendMessage(NetMessageCraftingSuccess.DefaultInstance);
+                return true;
+            }
+            finally
+            {
+                ListPool<ulong>.Instance.Return(ingredientIds);
+            }
         }
 
         private bool OnUseWaypoint(MailboxMessage message)  // 40
@@ -1524,7 +1636,7 @@ namespace MHServerEmu.Games.Network
 
                 InventoryResult result = item.ChangeInventoryLocation(generalInventory, freeSlot);
                 if (result != InventoryResult.Success)
-                    return Logger.WarnReturn(false, $"OnTryInventoryMove(): Failed to change inventory location ({result})");
+                    return Logger.WarnReturn(false, $"OnTryMoveInventoryContentsToGeneral(): Failed to change inventory location ({result})");
             }
 
             return true;
@@ -1873,6 +1985,36 @@ namespace MHServerEmu.Games.Network
 
             Player?.CancelPlayerTrade();
             return true;
+        }
+
+        private bool OnRequestPetTechDonate(in MailboxMessage message) // 146
+        {
+            var requestPetTechDonate = message.As<NetMessageRequestPetTechDonate>();
+            if (requestPetTechDonate == null) return Logger.WarnReturn(false, $"OnRequestPetTechDonate(): Failed to retrieve message");
+
+            Item itemToDonate = Game.EntityManager.GetEntity<Item>(requestPetTechDonate.ItemId);
+            if (itemToDonate == null)
+                return true;
+
+            Player itemOwner = itemToDonate.GetOwnerOfType<Player>();
+            if (itemOwner != Player)
+                return Logger.WarnReturn(false, $"OnRequestPetTechDonate(): Player [{Player}] is attempting to donate item [{itemToDonate}] owned by player [{itemOwner}]");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(requestPetTechDonate.AvatarId);
+            if (avatar == null)
+                return false;
+            
+            Player avatarOwner = avatar.GetOwnerOfType<Player>();
+            if (avatarOwner != Player)
+                return Logger.WarnReturn(false, $"OnRequestPetTechDonate(): Player [{Player}] is attempting to donate item [{itemToDonate}] on avatar [{avatar}] owned by player [{avatarOwner}]");
+
+            Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
+            if (petItemInv == null) return Logger.WarnReturn(false, "OnRequestPetTechDonate(): petItemInv == null");
+
+            Item petTechItem = Game.EntityManager.GetEntity<Item>(petItemInv.GetEntityInSlot(0));
+            if (petTechItem == null) return Logger.WarnReturn(false, "OnRequestPetTechDonate(): petTechItem == null");
+
+            return ItemPrototype.DonateItemToPetTech(Player, petTechItem, itemToDonate.ItemSpec, itemToDonate);
         }
 
         private bool OnChangeCameraSettings(MailboxMessage message) // 148

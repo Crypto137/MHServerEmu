@@ -1430,6 +1430,11 @@ namespace MHServerEmu.Games.Powers
             Region region = avatar.Region;
             if (region == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): region == null");
 
+            Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
+            if (petItemInv == null) return Logger.WarnReturn(false, "DoPowerEventActionPetItemDonate(): petItemInv == null");
+
+            Item petTechItem = Game.EntityManager.GetEntity<Item>(petItemInv.GetEntityInSlot(0));
+
             // Find items to vacuum
             Sphere vacuumVolume = new(avatar.RegionLocation.Position, itemDonateContext.Radius);
             DataDirectory dataDirectory = DataDirectory.Instance;
@@ -1471,10 +1476,13 @@ namespace MHServerEmu.Games.Powers
                     player.OnScoringEvent(new(ScoringEventType.ItemCollected, item.Prototype, rarityProtoRef.As<Prototype>()));
                 }
 
-                // TODO: PetTech donation
-                int sellPrice = Math.Max(MathHelper.RoundUpToInt(item.GetSellPrice(player) * (float)avatar.Properties[PropertyEnum.PetTechDonationMultiplier]), 1);
-                player.AcquireCredits(sellPrice);
-                item.Destroy();
+                // Try to donate to PetTech. Fall back to credits if it's not possible.
+                if (petTechItem == null || ItemPrototype.DonateItemToPetTech(player, petTechItem, item.ItemSpec, item) == false)
+                {
+                    int sellPrice = Math.Max(MathHelper.RoundUpToInt(item.GetSellPrice(player) * (float)avatar.Properties[PropertyEnum.PetTechDonationMultiplier]), 1);
+                    player.AcquireCredits(sellPrice);
+                    item.Destroy();
+                }
             }
 
             ListPool<Item>.Instance.Return(vacuumedItems);

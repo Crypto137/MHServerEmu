@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.Loot;
 
@@ -215,7 +216,40 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionTestFlags)
         {
-            // TODO
+            // Check applied affixes
+            foreach (AffixRecord affixRecord in lootCloneRecord.AffixRecords)
+            {
+                AffixPrototype affixProto = affixRecord.AffixProtoRef.As<AffixPrototype>();
+                if (affixProto == null)
+                {
+                    Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position == Position)
+                    return true;
+            }
+
+            // Check built-in affixes
+            ItemPrototype itemProto = lootCloneRecord.ItemProto as ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "AllowAsCraftingInput(): itemProto == null");
+
+            if (itemProto.AffixesBuiltIn.HasValue())
+            {
+                foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
+                {
+                    AffixPrototype affixProto = affixEntryProto.Affix.As<AffixPrototype>();
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                        continue;
+                    }
+
+                    if (affixProto.Position == Position)
+                        return true;
+                }
+            }
+
             return false;
         }
     }
@@ -236,7 +270,67 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override bool AllowAsCraftingInput(LootCloneRecord lootCloneRecord, RestrictionTestFlags restrictionTestFlags)
         {
-            // TODO
+            if (restrictionTestFlags.HasFlag(RestrictionTestFlags.VisualAffix) == false)
+                return true;
+
+            PrototypeId noVisualsAffix = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
+
+            bool hasVisualAffix = false;
+            bool hasNoVisualsAffix = false;
+
+            // Check applied affixes
+            foreach (AffixRecord record in lootCloneRecord.AffixRecords)
+            {
+                if (record.AffixProtoRef == noVisualsAffix)
+                {
+                    hasNoVisualsAffix = true;
+                }
+                else if (hasVisualAffix == false)
+                {
+                    AffixPrototype affixProto = record.AffixProtoRef.As<AffixPrototype>();
+                    if (affixProto == null)
+                    {
+                        Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                        continue;
+                    }
+
+                    if (affixProto.Position == AffixPosition.Visual)
+                        hasVisualAffix = true;
+                }
+            }
+
+            // Check built-in affixes if needed
+            if (hasVisualAffix == false && hasNoVisualsAffix == false)
+            {
+                ItemPrototype itemProto = lootCloneRecord.ItemProto as ItemPrototype;
+                if (itemProto == null) return Logger.WarnReturn(false, "AllowAsCraftingInput(): itemProto == null");
+
+                if (itemProto.AffixesBuiltIn.HasValue())
+                {
+                    foreach (AffixEntryPrototype affixEntryProto in itemProto.AffixesBuiltIn)
+                    {
+                        AffixPrototype affixProto = affixEntryProto.Affix.As<AffixPrototype>();
+                        if (affixProto == null)
+                        {
+                            Logger.Warn("AllowAsCraftingInput(): affixProto == null");
+                            continue;
+                        }
+
+                        if (affixProto.Position == AffixPosition.Visual)
+                        {
+                            hasVisualAffix = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (MustHaveVisualAffix)
+                return hasVisualAffix && hasNoVisualsAffix == false;
+
+            if (MustHaveNoVisualAffixes)
+                return hasVisualAffix == false || hasNoVisualsAffix;
+
             return false;
         }
     }

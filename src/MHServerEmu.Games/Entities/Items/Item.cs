@@ -74,6 +74,7 @@ namespace MHServerEmu.Games.Entities.Items
         public bool IsTradable { get => Properties[PropertyEnum.ItemIsTradable] && _itemSpec.GetTradeRestricted() == false; }
         public PrototypeId BoundAgentProtoRef { get => _itemSpec.GetBindingState(out PrototypeId agentProtoRef) ? agentProtoRef : PrototypeId.Invalid; }
         public bool WouldBeDestroyedOnDrop { get => IsBoundToAccount || GameDatabase.DebugGlobalsPrototype.TrashedItemsDropInWorld == false; }
+        public bool StacksCanBeSplit { get => ItemPrototype?.StackSettings?.StacksCanBeSplit == true; }
 
         public bool IsPetItem { get => ItemPrototype?.IsPetItem == true; }
         public bool IsCraftingRecipe { get => Prototype is CraftingRecipePrototype; }
@@ -183,7 +184,15 @@ namespace MHServerEmu.Games.Entities.Items
                     if (owner != null)
                         StartTicking(owner);
 
-                    // TODO: ScoringEventType.FullyUpgradedPetTech
+                    if (IsPetItem && IsPetTechFullyUpgraded())
+                    {
+                        Player player = GetOwnerOfType<Player>();
+                        if (player != null && player.IsInGame)
+                        {
+                            int count = ScoringEvents.GetPlayerFullyUpgradedPetTechCount(player);
+                            player.OnScoringEvent(new(ScoringEventType.FullyUpgradedPetTech, count));
+                        }
+                    }
 
                     // Update granted power
                     if (GetPowerGranted(out PrototypeId powerProtoRef))
@@ -242,7 +251,15 @@ namespace MHServerEmu.Games.Entities.Items
             if (prevOwner != null && inventoryProto.IsEquipmentInventory)
                 StopTicking(prevOwner);
 
-            // TODO: ScoringEventType.FullyUpgradedPetTech
+            if (IsPetItem && IsPetTechFullyUpgraded())
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player != null && player.IsInGame)
+                {
+                    int count = ScoringEvents.GetPlayerFullyUpgradedPetTechCount(player);
+                    player.OnScoringEvent(new(ScoringEventType.FullyUpgradedPetTech, count));
+                }
+            }
         }
 
         public bool ApplyTeamUpAffixesToAvatar(Avatar avatar)
@@ -329,39 +346,177 @@ namespace MHServerEmu.Games.Entities.Items
                     RefreshProcPowerIndexProperties();
 
                     int delta = (int)newValue - oldValue;
-                    if (delta == 0) return;
+                    if (delta == 0)
+                        return;
 
                     Player owner = GetOwnerOfType<Player>();
-                    if (owner == null) return;
+                    if (owner == null)
+                        return;
+
+                    Inventory ownerInventory = GetOwnerInventory();
+                    if (ownerInventory != null)
+                        owner.AdjustCraftingIngredientAvailable(PrototypeDataRef, delta, ownerInventory.Category);
+
+                    // TODO: trade-specific stuff
 
                     Region region = owner.GetRegion();
-                    if (region == null) return;
+                    if (region == null)
+                        return;
 
                     InventoryPrototype inventoryProto = InventoryLocation?.InventoryPrototype;
-                    if (inventoryProto == null) return;
-                    if (inventoryProto.IsPlayerGeneralInventory == false && inventoryProto.IsEquipmentInventory == false) return;
+                    if (inventoryProto == null)
+                        return;
+
+                    if (inventoryProto.IsPlayerGeneralInventory == false && inventoryProto.IsEquipmentInventory == false)
+                        return;
 
                     if (delta > 0)
-                    {
                         region.PlayerCollectedItemEvent.Invoke(new(owner, this, delta));
-                    }
                     else if (delta < 0)
-                    {
                         region.PlayerLostItemEvent.Invoke(new(owner, this, delta));
-                    }
 
                     break;
 
                 case PropertyEnum.PetItemDonationCount:
-                    // TODO
+                    if (IsPetItem == false)
+                    {
+                        Logger.Warn("OnPropertyChange(): IsPetItem == false");
+                        return;
+                    }
+
+                    if (ItemPrototype.IsPetTechAffixUnlocked(this, id))
+                    {
+                        Property.FromParam(id, 0, out int updatedAffixPos);
+                        AwardPetTechAffix((AffixPosition)updatedAffixPos);
+                    }
+                    else if (newValue == 0 && oldValue != 0)
+                    {
+                        Property.FromParam(id, 0, out int updatedAffixPos);
+                        if (RemovePetTechAffix((AffixPosition)updatedAffixPos) == false)
+                            Logger.Warn($"OnPropertyChange(): Failed to remove pet tech affix props!\n Item: {this}\n AffixPos: {(AffixPosition)updatedAffixPos}");
+                    }
+
                     break;
             }
         }
 
-        public bool CanUse(Agent agent, bool powerUse)
+        public override InventoryResult CanChangeInventoryLocation(Inventory destInventory, out PropertyEnum propertyRestriction)
         {
-            // TODO
-            return true;
+            InventoryResult baseResult = base.CanChangeInventoryLocation(destInventory, out propertyRestriction);
+            if (baseResult != InventoryResult.Success)
+                return baseResult;
+
+            // Check binding if needed (mirrors CItem::CanChangeInventoryLocation())
+            if (IsBoundToCharacter && TestStatus(EntityStatus.SkipItemBindingCheck) == false)
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): player == null");
+
+                Entity destInvOwner = Game.EntityManager.GetEntity<Entity>(destInventory.OwnerId);
+                if (destInvOwner == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): destInvOwner == null");
+
+                Player destInvOwnerAsPlayer = destInvOwner.GetSelfOrOwnerOfType<Player>();
+                if (destInvOwnerAsPlayer == null) return Logger.WarnReturn(InventoryResult.Invalid, "CanChangeInventoryLocation(): destInvOwnerAsPlayer == null");
+
+                if (player != destInvOwnerAsPlayer)
+                    return InventoryResult.InvalidBound;
+            }
+
+            return InventoryResult.Success;
+        }
+
+        public bool CanUse(Agent agent, bool checkPower = true, bool checkInventory = true)
+        {
+            if (agent is not Avatar avatar)
+                return false;
+
+            Player player = avatar.GetOwnerOfType<Player>();
+            if (player == null)
+                return false;
+
+            return PlayerCanUse(player, avatar, checkPower, checkInventory) == InteractionValidateResult.Success;
+        }
+
+        public bool PlayerCanMove(Player player, InventoryLocation destInvLoc, out InventoryResult result, out PropertyEnum resultProperty, out Item resultItem)
+        {
+            result = InventoryResult.Invalid;
+            resultProperty = PropertyEnum.Invalid;
+            resultItem = null;
+
+            // Validate ownership
+            if (player.Owns(this) == false) return Logger.WarnReturn(false, "PlayerCanMove(): player.Owns(this) == false");
+
+            // Validate inventories
+            InventoryLocation fromInvLoc = InventoryLocation;
+
+            if (fromInvLoc.IsValid == false)
+                return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a fromInvLoc that isn't valid (the pickup interaction should be used for that case!)\nItem: [{this}]");
+
+            if (destInvLoc.IsValid == false)
+                return Logger.WarnReturn(false, $"PlayerCanMove() is being called with a destInvLoc that isn't valid (RequestItemTrash() should be used for that case!)\nItem: [{this}]");
+
+            Entity fromInventoryOwner = Game.EntityManager.GetEntity<Entity>(fromInvLoc.ContainerId);
+            if (fromInventoryOwner == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Unable to get source owner sourceInvLoc=[{fromInvLoc}] when moving [{this}]");
+
+            Inventory fromInventory = fromInventoryOwner.GetInventoryByRef(fromInvLoc.InventoryRef);
+            if (fromInventory == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Invalid source inventory for sourceInvLoc=[{fromInvLoc}], sourceOwner=[{fromInventoryOwner}], when moving [{this}]");
+
+            Entity toInventoryOwner = Game.EntityManager.GetEntity<Entity>(destInvLoc.ContainerId);
+            if (toInventoryOwner == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Unable to get destination owner destInvLoc=[{destInvLoc}] when moving [{this}]");
+
+            Inventory toInventory = toInventoryOwner.GetInventoryByRef(destInvLoc.InventoryRef);
+            if (toInventory == null)
+                return Logger.WarnReturn(false, $"PlayerCanMove(): Invalid dest inventory [{destInvLoc}] on destOwner=[{toInventoryOwner}] when moving [{this}]");
+
+            // Check if this item can be moved to the requested destination
+            result = CanChangeInventoryLocation(toInventory, out resultProperty);
+            if (result != InventoryResult.Success)
+                return false;
+
+            result = Avatar.ValidateEquipmentChange(Game, this, fromInvLoc, destInvLoc, out resultItem);
+            if (result != InventoryResult.Success)
+                return false;
+
+            result = player.ValidatePlayerInventoryMoveConstraints(fromInvLoc, destInvLoc);
+            if (result != InventoryResult.Success)
+                return false;
+
+            // Check the destination slot
+            ulong entityIdInSlot = toInventory.GetEntityInSlot(destInvLoc.Slot);
+            if (entityIdInSlot == InvalidId)
+            {
+                // Make sure there is a free slot
+                if (toInventory.IsSlotFree(destInvLoc.Slot) == false)
+                {
+                    result = InventoryResult.SlotAlreadyOccupied;
+                    return false;
+                }
+            }
+            else
+            {
+                Item itemInSlot = Game.EntityManager.GetEntity<Item>(entityIdInSlot);
+                if (itemInSlot != null && CanStackOnto(itemInSlot) == false)
+                {
+                    // If two items can't stack, it means they needs to be swapped.
+                    // Check if the item in the destination slot can be swapped with this item's current location.
+                    result = itemInSlot.CanChangeInventoryLocation(fromInventory, out resultProperty);
+                    if (result != InventoryResult.Success)
+                        return false;
+
+                    result = Avatar.ValidateEquipmentChange(Game, itemInSlot, destInvLoc, fromInvLoc, out resultItem);
+                    if (result != InventoryResult.Success)
+                        return false;
+
+                    result = player.ValidatePlayerInventoryMoveConstraints(destInvLoc, fromInvLoc);
+                    if (result != InventoryResult.Success)
+                        return false;
+                }
+            }
+
+            return result == InventoryResult.Success;
         }
 
         public bool PlayerCanDestroy(Player player)
@@ -370,13 +525,186 @@ namespace MHServerEmu.Games.Entities.Items
                 return false;
 
             ItemPrototype itemProto = ItemPrototype;
-            if (itemProto == null)
-                return Logger.WarnReturn(false, "PlayerCanDestroy(): itemProto == null");
+            if (itemProto == null) return Logger.WarnReturn(false, "PlayerCanDestroy(): itemProto == null");
 
             if (itemProto.CanBeDestroyed == false)
                 return false;
 
-            // TODO: Avatar::ValidateEquipmentChange
+            if (Avatar.ValidateEquipmentChange(Game, this, InventoryLocation, InventoryLocation.Invalid, out _) != InventoryResult.Success)
+                return false;
+
+            return true;
+        }
+
+        public bool CanBeEquippedWithItem(Item otherItem)
+        {
+            ItemPrototype itemProto = ItemPrototype;
+            if (itemProto == null) return Logger.WarnReturn(false, "CanBeEquippedWithItem(): itemProto == null");
+
+            ItemPrototype otherItemProto = otherItem?.ItemPrototype;
+            if (otherItemProto == null) return Logger.WarnReturn(false, "CanBeEquippedWithItem(): otherItemProto == null");
+
+            return CanBeEquippedWithItemHelper(itemProto, otherItem) && CanBeEquippedWithItemHelper(otherItemProto, this);
+        }
+
+        private static bool CanBeEquippedWithItemHelper(ItemPrototype itemProto, Item otherItem)
+        {
+            if (itemProto.CannotEquipWithItemsOfKeyword.IsNullOrEmpty())
+                return true;
+
+            foreach (PrototypeId keywordProtoRef in itemProto.CannotEquipWithItemsOfKeyword)
+            {
+                if (otherItem.HasKeyword(keywordProtoRef))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public CraftingResult CanCraftRecipe(Player player, List<ulong> ingredientIds, WorldEntity vendor, bool isRecraft)
+        {
+            EntityManager entityManager = Game.EntityManager;
+
+            // If this isn't a recraft, the results inventory needs to be empty
+            if (isRecraft == false)
+            {
+                Inventory resultsInv = player.GetInventory(InventoryConvenienceLabel.CraftingResults);
+                if (resultsInv == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipe(): resultsInv == null");
+
+                if (resultsInv.Count > 0)
+                    return CraftingResult.CraftingFailed;
+            }
+
+            // Validate vendor
+            CraftingResult vendorResult = player.CanCraftRecipeWithVendor(0, this, vendor);
+            if (vendorResult != CraftingResult.Success)
+                return vendorResult;
+
+            // Validate ownership
+            if (player.Owns(this) == false)
+                return CraftingResult.CraftingFailed;
+
+            // Validate the recipe
+            if (ItemPrototype is not CraftingRecipePrototype craftingRecipeProto)
+                return CraftingResult.CraftingFailed;
+
+            if (craftingRecipeProto.IsLiveTuningEnabled() == false)
+                return CraftingResult.RecipeDisabledByLiveTuning;
+
+            PrototypeId vendorTypeProtoRef = vendor.Properties[PropertyEnum.VendorType];
+            VendorTypePrototype vendorTypeProto = vendorTypeProtoRef.As<VendorTypePrototype>();
+            if (vendorTypeProto == null) return Logger.WarnReturn(CraftingResult.CraftingFailed, "CanCraftRecipe(): vendorTypeProto == null");
+
+            bool isInRecipeLibrary = false;
+
+            List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Get();
+            if (vendorTypeProto.GetInventories(inventoryList))
+            {
+                foreach (PrototypeId crafterVendorInvProtoRef in inventoryList)
+                {
+                    Inventory crafterVendorInv = player.GetInventoryByRef(crafterVendorInvProtoRef);
+                    if (crafterVendorInv == null)
+                    {
+                        Logger.Warn("CanCraftRecipe(): crafterVendorInv == null");
+                        continue;
+                    }
+
+                    foreach (var entry in crafterVendorInv)
+                    {
+                        Item vendorRecipe = entityManager.GetEntity<Item>(entry.Id);
+                        if (vendorRecipe == null)
+                        {
+                            Logger.Warn("CanCraftRecipe(): vendorRecipe == null");
+                            continue;
+                        }
+
+                        if (vendorRecipe.PrototypeDataRef == PrototypeDataRef)
+                        {
+                            isInRecipeLibrary = true;
+                            break;
+                        }
+                    }
+
+                    if (isInRecipeLibrary)
+                        break;
+                }
+            }
+
+            ListPool<PrototypeId>.Instance.Return(inventoryList);
+
+            if (isInRecipeLibrary == false)
+                return CraftingResult.RecipeNotInRecipeLibrary;
+
+            // Validate ingredients
+            CraftingResult ingredientsResult = craftingRecipeProto.ValidateIngredients(player, ingredientIds);
+            if (ingredientsResult != CraftingResult.Success)
+                return ingredientsResult;
+
+            // Validate cost
+            CurrencyGlobalsPrototype currencyGlobals = GameDatabase.CurrencyGlobalsPrototype;
+
+            using PropertyCollection currencyCost = ObjectPoolManager.Instance.Get<PropertyCollection>();
+            if (craftingRecipeProto.GetCraftingCost(player, ingredientIds, out uint creditsCost, out uint legendaryMarksCost, currencyCost) == false)
+                return CraftingResult.InsufficientIngredients;
+
+            if (creditsCost > 0 && player.Properties[PropertyEnum.Currency, currencyGlobals.Credits] < creditsCost)
+                return CraftingResult.InsufficientCredits;
+
+            if (legendaryMarksCost > 0 && player.Properties[PropertyEnum.Currency, currencyGlobals.LegendaryMarks] < legendaryMarksCost)
+                return CraftingResult.InsufficientLegendaryMarks;
+
+            foreach (var kvp in currencyCost.IteratePropertyRange(PropertyEnum.Currency))
+            {
+                // Other currencies use a generic error
+                uint cost = kvp.Value;
+                if (player.Properties[kvp.Key] < cost)
+                    return CraftingResult.InsufficientIngredients;
+            }
+
+            return CraftingResult.Success;
+        }
+
+        public bool IsGear(AvatarPrototype avatarProto)
+        {
+            if (Prototype is not ArmorPrototype armorProto) return false;
+
+            return armorProto.GetInventorySlotForAgent(avatarProto) switch
+            {
+                EquipmentInvUISlot.Gear01
+                or EquipmentInvUISlot.Gear02
+                or EquipmentInvUISlot.Gear03
+                or EquipmentInvUISlot.Gear04
+                or EquipmentInvUISlot.Gear05 => true,
+                _ => false,
+            };
+        }
+
+        public bool HasAffixInPosition(AffixPosition affixPosition)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                if (copyEntry.AffixProto == null)
+                {
+                    Logger.Warn("HasAffixInPosition(): copyEntry.AffixProto == null");
+                    continue;
+                }
+
+                if (copyEntry.AffixProto.Position == affixPosition)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool IsPetTechFullyUpgraded()
+        {
+            if (IsPetItem == false) return Logger.WarnReturn(false, "IsPetTechFullyUpgraded(): IsPetItem == false");
+
+            for (AffixPosition position = AffixPosition.PetTech1; position <= AffixPosition.PetTech5; position++)
+            {
+                if (ItemPrototype.IsPetTechAffixUnlocked(this, position) == false)
+                    return false;
+            }
 
             return true;
         }
@@ -502,10 +830,133 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public InventoryResult SplitStack(InventoryLocation toInvLoc, int count)
+        {
+            // Some stacks are not splittable
+            if (StacksCanBeSplit == false)
+                return InventoryResult.StacksNotSplittable;
+
+            // Check if there is enough stuff in the stack for the requested split
+            if (CurrentStackSize < (count + 1))
+                return InventoryResult.SplitParamExceedsStackSize;
+
+            // Cannot split to the same slot
+            InventoryLocation fromInvLoc = InventoryLocation;
+            if (fromInvLoc.Equals(toInvLoc))
+                return InventoryResult.InvalidSlotParam;
+
+            // Check inventories
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(InventoryResult.PlayerOwnerNotFound, "SplitStack(): player == null");
+
+            Entity fromInventoryOwner = Game.EntityManager.GetEntity<Entity>(fromInvLoc.ContainerId);
+            if (fromInventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "SplitStack(): fromInventoryOwner == null");
+
+            Inventory fromInventory = fromInventoryOwner.GetInventoryByRef(fromInvLoc.InventoryRef);
+            if (fromInventory == null) return Logger.WarnReturn(InventoryResult.NoAvailableInventory, "SplitStack(): fromInventory == null");
+
+            Entity toInventoryOwner = Game.EntityManager.GetEntity<Entity>(toInvLoc.ContainerId);
+            if (toInventoryOwner == null) return Logger.WarnReturn(InventoryResult.InventoryHasNoOwner, "SplitStack(): toInventoryOwner == null");
+
+            Inventory toInventory = toInventoryOwner.GetInventoryByRef(toInvLoc.InventoryRef);
+            if (toInventory == null) return Logger.WarnReturn(InventoryResult.InvalidReceivingInventory, "SplitStack(): toInventory == null");
+
+            // Find a free slot if needed
+            if (toInvLoc.Slot == Inventory.InvalidSlot)
+            {
+                uint freeSlot = toInventory.GetFreeSlot(this, true);
+                if (freeSlot == Inventory.InvalidSlot)
+                    return InventoryResult.InventoryFull;
+
+                toInvLoc.Set(toInvLoc.ContainerId, toInvLoc.InventoryRef, freeSlot);
+            }
+
+            // Do move validation
+            if (PlayerCanMove(player, toInvLoc, out InventoryResult canMoveResult, out _, out _) == false)
+                return canMoveResult;
+
+            // Do the split
+            InventoryResult splitResult = DoStackSplit(toInvLoc, toInventory, count, out ulong newItemId);
+
+            if (splitResult != InventoryResult.Success)
+            {
+                Logger.Error($"SplitStack(): FAILED for item [{this}] belonging to player [{player}], reason=[{splitResult}]");
+
+                // Clean up the newly created item if something went wrong (hopefully this never ever happens)
+                Item newItem = Game.EntityManager.GetEntity<Item>(newItemId);
+                if (newItem != null)
+                {
+                    InventoryResult errorRecoveryResult = newItem.ChangeInventoryLocation(fromInventory, fromInvLoc.Slot);
+                    if (errorRecoveryResult != InventoryResult.Success)
+                    {
+                        Logger.Error($"SplitStack(): ERROR RECOVERY FAILED for item [{this}] belonging to player [{player}], reason=[{errorRecoveryResult}], something has gone REALLY wrong");
+                        newItem.Destroy();
+                    }
+                }
+            }
+
+            return splitResult;
+        }
+
+        private InventoryResult DoStackSplit(InventoryLocation toInvLoc, Inventory toInventory, int count, out ulong newItemId)
+        {
+            newItemId = InvalidId;
+
+            // Remove from the original stack
+            DecrementStack(count);
+
+            // Create a new stack
+            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+            settings.EntityRef = PrototypeDataRef;
+            settings.ItemSpec = new(ItemSpec);
+            settings.ItemSpec.StackCount = count;
+
+            Item newItem = Game.EntityManager.CreateEntity(settings) as Item;
+            if (newItem == null)
+                return InventoryResult.ErrorCreatingNewSplitEntity;
+
+            newItemId = newItem.Id;
+
+            // Move the created item to the destination, ignoring binding checks
+            newItem.SetStatus(EntityStatus.SkipItemBindingCheck, true);
+            
+            ulong? stackEntityId = 0;
+            InventoryResult moveResult = newItem.ChangeInventoryLocation(toInventory, toInvLoc.Slot, ref stackEntityId, true);
+            
+            newItem.SetStatus(EntityStatus.SkipItemBindingCheck, false);
+
+            if (stackEntityId == Id)
+                return Logger.WarnReturn(InventoryResult.UnknownFailure, $"DoStackSplit(): Splitting stack [{this}] resulted in the item being stacked with itself");
+
+            return moveResult; 
+        }
+
         public void SetRecentlyAdded(bool value)
         {
             Properties[PropertyEnum.ItemRecentlyAddedGlint] = value;
             Properties[PropertyEnum.ItemRecentlyAddedToInventory] = value;
+        }
+
+        public void SetScenarioProperties(PropertyCollection properties)
+        {
+            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
+            properties.CopyPropertyRange(Properties, PropertyEnum.RegionAffix);
+            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
+
+            PrototypeId itemRarityRef = Properties[PropertyEnum.ItemRarity];
+            var itemRarityProto = itemRarityRef.As<RarityPrototype>();
+            if (itemRarityProto != null)
+                properties[PropertyEnum.ItemRarity] = itemRarityRef;
+
+            var affixLimits = ItemPrototype.GetAffixLimits(itemRarityRef, LootContext.Drop);
+            if (affixLimits != null)
+            {
+                properties[PropertyEnum.DifficultyIndex] = affixLimits.RegionDifficultyIndex;
+                properties[PropertyEnum.DamageRegionMobToPlayer] = affixLimits.DamageRegionMobToPlayer;
+                properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
+            }
+
+            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId;
         }
 
         private bool ApplyItemSpec(ItemSpec itemSpec)
@@ -825,8 +1276,23 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
         {
-            // TODO
-            return false;
+            InventoryPrototype containingInvProto = InventoryLocation.InventoryPrototype;
+            if (containingInvProto == null) return Logger.WarnReturn(false, "DoCraftingRecipeInteraction(): containingInvProto == null");
+
+            // This should have already been validated in PlayerCanUseCraftingRecipe()
+            if (containingInvProto.IsPlayerGeneralInventory == false)
+                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Player [{player}] attempting to use a crafting recipe from inventory {containingInvProto.ConvenienceLabel}");
+
+            if (player.HasLearnedCraftingRecipe(craftingRecipeProto.DataRef))
+                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Player [{player}] has already learned crafting recipe {craftingRecipeProto}");
+
+            Inventory learnedRecipeInv = player.GetInventory(InventoryConvenienceLabel.CraftingRecipesLearned);
+            if (learnedRecipeInv == null) return Logger.WarnReturn(false, "DoCraftingRecipeInteraction(): learnedRecipeInv == null");
+
+            if (ChangeInventoryLocation(learnedRecipeInv) != InventoryResult.Success)
+                return Logger.WarnReturn(false, $"DoCraftingRecipeInteraction(): Recipe [{this}] failed to move to the learned recipe inventory for player [{player}]");
+
+            return true;
         }
 
         public bool OnUsePowerActivated()
@@ -1377,7 +1843,11 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (IsPetItem)
             {
-                Logger.Warn("OnAffixAdded(): Pet items are not yet not implemented");   // TODO
+                if (ItemPrototype.IsPetTechAffixUnlocked(this, affixProto.Position))
+                {
+                    if (Properties.AddChildCollection(affixEntry.Properties) == false)
+                        return Logger.WarnReturn(false, "OnAffixAdded(): Properties.AddChildCollection(affixEntry.Properties) == false");
+                }
             }
             else if (affixEntry.LevelRequirement <= Properties[PropertyEnum.ItemAffixLevel])
             {
@@ -1448,6 +1918,82 @@ namespace MHServerEmu.Games.Entities.Items
                 Properties[PropertyEnum.ProcPowerItemVariation, procPowerProtoRef] = itemVariation;
                 Properties[PropertyEnum.ProcPowerInvStackCount, procPowerProtoRef] = stackCount;
             }
+        }
+
+        private bool AwardPetTechAffix(AffixPosition affixPos)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                AffixPrototype affixProto = copyEntry.AffixProto;
+                if (affixProto == null)
+                {
+                    Logger.Warn("AwardPetTechAffix(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position != affixPos)
+                    continue;
+
+                WorldEntity owner = GetOwnerOfType<WorldEntity>();
+                if (owner != null && IsEquipped)
+                {
+                    if (owner.UpdateProcEffectPowers(copyEntry.Properties, true) == false)
+                        Logger.Warn($"AwardPetTechAffix(): UpdateProcEffectPowers failed in awardPetTechAffix for affixPos=[{affixPos}] affix=[{affixProto}] item=[{this}] owner=[{owner}]");
+                }
+
+                if (Properties.AddChildCollection(copyEntry.Properties) == false)
+                {
+                    int donationCount = Properties[PropertyEnum.PetItemDonationCount, (int)affixPos];
+                    bool isUnlocked = ItemPrototype.IsPetTechAffixUnlocked(this, affixPos);
+                    bool hasChild = Properties.HasChildCollection(copyEntry.Properties);
+
+                    Logger.Warn($"AwardPetTechAffix(): Failed to AddChildCollection when awarding PetTech affix!\n Affix: {affixProto}\nItems Donated to this Affix: {donationCount}\n Item: [{this}]\nIsPetTechAffixUnlocked: {isUnlocked}\nItem Has Affix Prop Collection: {hasChild}");
+                }
+
+                break;
+            }
+
+            if (IsPetTechFullyUpgraded())
+            {
+                Player player = GetOwnerOfType<Player>();
+                if (player != null)
+                {
+                    int count = ScoringEvents.GetPlayerFullyUpgradedPetTechCount(player);
+                    player.OnScoringEvent(new(ScoringEventType.FullyUpgradedPetTech, count));
+                }
+            }
+
+            return true;
+        }
+
+        private bool RemovePetTechAffix(AffixPosition affixPos)
+        {
+            foreach (AffixPropertiesCopyEntry copyEntry in _affixProperties)
+            {
+                AffixPrototype affixProto = copyEntry.AffixProto;
+                if (affixProto == null)
+                {
+                    Logger.Warn("RemovePetTechAffix(): affixProto == null");
+                    continue;
+                }
+
+                if (affixProto.Position != affixPos)
+                    continue;
+
+                if (copyEntry.Properties == null)
+                    continue;
+
+                if (copyEntry.Properties.RemoveFromParent(Properties) == false)
+                    return false;
+
+                WorldEntity owner = GetOwnerOfType<WorldEntity>();
+                if (owner != null && IsEquipped)
+                    owner.UpdateProcEffectPowers(copyEntry.Properties, false);
+
+                return true;
+            }
+
+            return false;
         }
 
         private PrototypeId GetTriggeredPower(ItemEventType eventType, ItemActionType actionType)
@@ -1668,7 +2214,7 @@ namespace MHServerEmu.Games.Entities.Items
 
             if (itemProto.EvalCanUse != null)
             {
-                EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
+                using EvalContextData evalContext = ObjectPoolManager.Instance.Get<EvalContextData>();
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Default, this);
                 evalContext.SetReadOnlyVar_EntityPtr(EvalContext.Entity, avatar);
                 evalContext.SetVar_Int(EvalContext.Var1, player.GetLevelCapForCharacter(avatar.PrototypeDataRef));
@@ -1766,9 +2312,16 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUseCraftingRecipe(Player player)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUseCraftingRecipe()");
-            return InteractionValidateResult.UnknownFailure;
+            InventoryPrototype containingInvProto = InventoryLocation.InventoryPrototype;
+            if (containingInvProto == null) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseCraftingRecipe(): containingInvProto == null");
+
+            if (containingInvProto.IsPlayerGeneralInventory == false && containingInvProto.IsPlayerVendorInventory == false)
+                return InteractionValidateResult.ItemNotUsable;
+
+            if (player.HasLearnedCraftingRecipe(PrototypeDataRef))
+                return InteractionValidateResult.PlayerAlreadyHasCraftingRecipe;
+
+            return InteractionValidateResult.Success;
         }
 
         private InteractionValidateResult PlayerCanUsePrestigeMode(Avatar avatar)
@@ -1797,43 +2350,6 @@ namespace MHServerEmu.Games.Entities.Items
                 return InteractionValidateResult.CannotTriggerPower;
 
             return InteractionValidateResult.Success;
-        }
-
-        public void SetScenarioProperties(PropertyCollection properties)
-        {
-            properties.CopyProperty(Properties, PropertyEnum.DifficultyTier);
-            properties.CopyPropertyRange(Properties, PropertyEnum.RegionAffix);
-            properties.CopyProperty(Properties, PropertyEnum.RegionAffixDifficulty);
-
-            PrototypeId itemRarityRef = Properties[PropertyEnum.ItemRarity];
-            var itemRarityProto = itemRarityRef.As<RarityPrototype>();
-            if (itemRarityProto != null)
-                properties[PropertyEnum.ItemRarity] = itemRarityRef;
-
-            var affixLimits = ItemPrototype.GetAffixLimits(itemRarityRef, LootContext.Drop);
-            if (affixLimits != null)
-            {
-                properties[PropertyEnum.DifficultyIndex] = affixLimits.RegionDifficultyIndex;
-                properties[PropertyEnum.DamageRegionMobToPlayer] = affixLimits.DamageRegionMobToPlayer;
-                properties[PropertyEnum.DamageRegionPlayerToMob] = affixLimits.DamageRegionPlayerToMob;
-            }
-
-            properties[PropertyEnum.DangerRoomScenarioItemDbGuid] = DatabaseUniqueId; 
-        }
-
-        public bool IsGear(AvatarPrototype avatarProto)
-        {
-            if (Prototype is not ArmorPrototype armorProto) return false;
-
-            return armorProto.GetInventorySlotForAgent(avatarProto) switch
-            {
-                EquipmentInvUISlot.Gear01 
-                or EquipmentInvUISlot.Gear02 
-                or EquipmentInvUISlot.Gear03 
-                or EquipmentInvUISlot.Gear04 
-                or EquipmentInvUISlot.Gear05 => true,
-                _ => false,
-            };
         }
     }
 }

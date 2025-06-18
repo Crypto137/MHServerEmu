@@ -28,6 +28,8 @@ namespace MHServerEmu.Games.Loot
         private readonly LootDropRealMoneyPrototype _realMoneyProto = default;
         [FieldOffset(8)]
         private readonly LootNodePrototype _callbackNodeProto = default;
+        [FieldOffset(8)]
+        private readonly LootMutationPrototype _lootMutationProto = default;
 
         // Vaporization flag
         [FieldOffset(16)]
@@ -52,6 +54,7 @@ namespace MHServerEmu.Games.Loot
         public ItemSpec ItemSpec { get => _type == LootType.Item ? _itemSpec : null; }
         public LootDropRealMoneyPrototype RealMoneyProto { get => _type == LootType.RealMoney ? _realMoneyProto : null; }
         public LootNodePrototype CallbackNodeProto { get => _type == LootType.CallbackNode ? _callbackNodeProto : null; }
+        public LootMutationPrototype LootMutationProto { get => _type == LootType.LootMutation ? _lootMutationProto : null; }
 
         public AgentSpec AgentSpec { get => _type == LootType.Agent ? _agentSpec : default; }
         public PrototypeId VanityTitleProtoRef { get => _type == LootType.VanityTitle ? _vanityTitleProtoRef : PrototypeId.Invalid; }
@@ -115,6 +118,12 @@ namespace MHServerEmu.Games.Loot
         {
             _type = LootType.CallbackNode;
             _callbackNodeProto = callbackNodeProto;
+        }
+
+        public LootResult(LootMutationPrototype lootMutationProto)
+        {
+            _type = LootType.LootMutation;
+            _lootMutationProto = lootMutationProto;
         }
 
         public LootResult(PrototypeId vanityTitleProtoRef)

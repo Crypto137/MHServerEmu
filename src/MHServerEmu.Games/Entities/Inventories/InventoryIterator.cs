@@ -17,7 +17,9 @@ namespace MHServerEmu.Games.Entities.Inventories
         PlayerStashGeneral          = 1 << 4,
         DeliveryBoxAndErrorRecovery = 1 << 5,
         Equipment                   = 1 << 6,
-        SortByPrototypeRef          = 1 << 7
+        SortByPrototypeRef          = 1 << 7,
+
+        CraftingIngredients         = PlayerGeneral | PlayerGeneralExtra | PlayerStashAvatarSpecific | PlayerStashGeneral,
     }
 
     /// <summary>

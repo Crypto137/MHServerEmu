@@ -1,4 +1,6 @@
-﻿namespace MHServerEmu.Core.Helpers
+﻿using MHServerEmu.Core.Collisions;
+
+namespace MHServerEmu.Core.Helpers
 {
     /// <summary>
     /// Provides various math functionality.
@@ -134,6 +136,11 @@
         public static bool IsAbove(long value, long maxValue, float thresholdPct)
         {
             return value > (maxValue * thresholdPct);
+        }
+
+        public static bool IsNearZero(float value)
+        {
+            return Segment.IsNearZero(value);
         }
 
         public static float Ratio(long value, long maxValue)

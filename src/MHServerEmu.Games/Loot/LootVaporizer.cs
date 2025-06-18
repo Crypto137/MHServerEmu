@@ -3,6 +3,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
 using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.Entities.Options;
 using MHServerEmu.Games.Events;
@@ -109,10 +110,17 @@ namespace MHServerEmu.Games.Loot
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): itemProto == null");
 
+            // Donate to PetTech if possible
+            Inventory petItemInv = avatar.GetInventory(InventoryConvenienceLabel.PetItem);
+            if (petItemInv == null) return Logger.WarnReturn(false, "VaporizeItemSpec(): petItemInv == null");
+
+            Item petTechItem = player.Game.EntityManager.GetEntity<Item>(petItemInv.GetEntityInSlot(0));
+            if (petTechItem != null)
+                return ItemPrototype.DonateItemToPetTech(player, petTechItem, itemSpec);
+
+            // Fall back to credits
             int sellPrice = itemProto.Cost.GetNoStackSellPriceInCredits(player, itemSpec, null) * itemSpec.StackCount;
             int vaporizeCredits = MathHelper.RoundUpToInt(sellPrice * (float)avatar.Properties[PropertyEnum.VaporizeSellPriceMultiplier]);
-
-            // TODO: PetTech donation
 
             // Vaporization appears to be giving more credits than vacuuming, is this intended? To compensate for the lack of affixes?
             vaporizeCredits += Math.Max(MathHelper.RoundUpToInt(sellPrice * (float)avatar.Properties[PropertyEnum.PetTechDonationMultiplier]), 1);

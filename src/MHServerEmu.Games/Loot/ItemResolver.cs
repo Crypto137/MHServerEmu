@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Random;
@@ -23,6 +24,8 @@ namespace MHServerEmu.Games.Loot
 
         private readonly int _itemLevelMin;
         private readonly int _itemLevelMax;
+
+        private readonly List<ItemSpec> _cloneSourceList = new();
 
         private readonly List<PendingItem> _pendingItemList = new();
         private readonly List<LootResult> _processedItemList = new();
@@ -75,12 +78,15 @@ namespace MHServerEmu.Games.Loot
                 if (avatarProtoRef == (PrototypeId)6044485448390219466) continue;   //zzzBrevikOLD.prototype
 
                 AvatarPrototype avatarProto = avatarProtoRef.As<AvatarPrototype>();
+                if (avatarProto.ShowInRosterIfLocked == false)
+                    continue;
                 _avatarPicker.Add(avatarProto);
             }
         }
 
         public void ResetForPool()
         {
+            _cloneSourceList.Clear();
             _context.Clear();
             _avatarPicker = default;
 
@@ -127,7 +133,7 @@ namespace MHServerEmu.Games.Loot
         // These functions are used to "push" intermediary data from rolling loot tables.
         // Order is the same as fields in NetStructLootResultSummary.
 
-        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, IEnumerable<LootMutationPrototype> mutations)
+        public LootRollResult PushItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, int stackCount, LootMutationPrototype[] mutations)
         {
             if (CheckItem(filterArgs, restrictionFlags, false, stackCount) == false)
                 return LootRollResult.Failure;
@@ -138,7 +144,19 @@ namespace MHServerEmu.Games.Loot
             itemSpec.StackCount = stackCount;
 
             LootResult lootResult = new(itemSpec);
-            PendingItem pendingItem = new(lootResult, filterArgs.RollFor);
+            PendingItem pendingItem = new(lootResult, filterArgs.RollFor, mutations, false);
+            _pendingItemList.Add(pendingItem);
+
+            return LootRollResult.Success;
+        }
+
+        public LootRollResult PushClone(LootCloneRecord lootCloneRecord)
+        {
+            if (CheckItem(lootCloneRecord, lootCloneRecord.RestrictionFlags) == false)
+                return LootRollResult.Failure;
+
+            LootResult lootResult = new(lootCloneRecord.ToItemSpec());
+            PendingItem pendingItem = new(lootResult, PrototypeId.Invalid, null, true);
             _pendingItemList.Add(pendingItem);
 
             return LootRollResult.Success;
@@ -234,9 +252,9 @@ namespace MHServerEmu.Games.Loot
 
         public LootRollResult PushCraftingCallback(LootMutationPrototype lootMutationProto)
         {
-            // TODO
-            Logger.Debug($"PushCraftingCallback()");
-            return LootRollResult.NoRoll;
+            LootResult lootResult = new(lootMutationProto);
+            _pendingItemList.Add(new(lootResult));
+            return LootRollResult.Success;
         }
 
         public LootRollResult PushVanityTitle(PrototypeId vanityTitleProtoRef)
@@ -374,7 +392,7 @@ namespace MHServerEmu.Games.Loot
             return _context.IsOnCooldown(dropProtoRef, count);
         }
 
-        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2, int stackCount = 1)
+        public bool CheckItem(DropFilterArguments filterArgs, RestrictionTestFlags restrictionFlags, bool arg2 = false, int stackCount = 1)
         {
             ItemPrototype itemProto = filterArgs.ItemProto as ItemPrototype;
             if (itemProto == null) return Logger.WarnReturn(false, $"CheckItem(): itemProto == null");
@@ -428,6 +446,31 @@ namespace MHServerEmu.Games.Loot
 
         #endregion
 
+        #region Clone Source Management
+
+        public bool InitializeCloneRecordFromSource(int index, LootCloneRecord lootCloneRecord)
+        {
+            if (index >= _cloneSourceList.Count)
+                return false;
+
+            ItemSpec cloneSource = _cloneSourceList[index];
+            if (cloneSource == null)    // If this check triggers, we probably need to replace nulls with dummy specs (see SetCloneSource() below)
+                return Logger.WarnReturn(false, "InitializeRecordFromCloneSource(): cloneSource == null");
+
+            LootCloneRecord.Initialize(lootCloneRecord, LootContext, cloneSource, PrototypeId.Invalid);
+            return true;
+        }
+
+        public void SetCloneSource(int index, ItemSpec itemSpec)
+        {
+            while (_cloneSourceList.Count <= index)
+                _cloneSourceList.Add(null); // null here represents auto populated slots
+
+            _cloneSourceList[index] = itemSpec;
+        }
+
+        #endregion
+
         #region Pending Item Processing
 
         public void ClearPending()
@@ -461,10 +504,35 @@ namespace MHServerEmu.Games.Loot
                                 using LootCloneRecord affixArgs = ObjectPoolManager.Instance.Get<LootCloneRecord>();
                                 LootCloneRecord.Initialize(affixArgs, context, itemSpec, pendingItem.RollFor);
 
-                                MutationResults result = LootUtilities.UpdateAffixes(this, affixArgs, AffixCountBehavior.Roll, itemSpec, settings);
+                                MutationResults affixResult = LootUtilities.UpdateAffixes(this, affixArgs, AffixCountBehavior.Roll, itemSpec, settings);
 
-                                if (result.HasFlag(MutationResults.Error))
-                                    Logger.Warn($"ProcessPending(): Error when rolling affixes, result={result}");
+                                if (affixResult.HasFlag(MutationResults.Error))
+                                    return Logger.WarnReturn(false, $"ProcessPending(): Error when rolling affixes, result={affixResult}");
+                            }
+
+                            // Apply mutations (if any)
+                            if (pendingItem.Mutations.HasValue())
+                            {
+                                using LootCloneRecord mutationArgs = ObjectPoolManager.Instance.Get<LootCloneRecord>();
+                                LootCloneRecord.Initialize(mutationArgs, LootContext, itemSpec, pendingItem.RollFor);
+
+                                MutationResults mutationResult = MutationResults.None;
+                                
+                                foreach (LootMutationPrototype lootMutationProto in pendingItem.Mutations)
+                                {
+                                    mutationResult |= lootMutationProto.Mutate(settings, this, mutationArgs);
+                                    if (mutationResult.HasFlag(MutationResults.Error))
+                                        return Logger.WarnReturn(false, $"ProcessPending(): Error when applying mutations, result={mutationResult}");
+                                }
+
+                                // Replace the item spec if any mutations were applied
+                                if (mutationResult != MutationResults.None)
+                                {
+                                    if (CheckItem(mutationArgs, mutationArgs.RestrictionFlags))
+                                        itemSpec.Set(mutationArgs);
+                                    else
+                                        return Logger.WarnReturn(false, "ProcessPending(): Mutations failed to pass CheckItem()");
+                                }
                             }
 
                             // Modify the item spec using output "restrictions" (OutputLevelPrototype, OutputRarityPrototype)
@@ -515,19 +583,22 @@ namespace MHServerEmu.Games.Loot
         {
             public readonly LootResult LootResult;
             public readonly PrototypeId RollFor;
+            public readonly LootMutationPrototype[] Mutations;
             public readonly bool IsClone;
 
             public PendingItem(in LootResult lootResult)
             {
                 LootResult = lootResult;
                 RollFor = PrototypeId.Invalid;
+                Mutations = null;
                 IsClone = false;
             }
 
-            public PendingItem(in LootResult lootResult, PrototypeId rollFor, bool isClone = false)
+            public PendingItem(in LootResult lootResult, PrototypeId rollFor, LootMutationPrototype[] mutations, bool isClone)
             {
                 LootResult = lootResult;
                 RollFor = rollFor;
+                Mutations = mutations;
                 IsClone = isClone;
             }
         }

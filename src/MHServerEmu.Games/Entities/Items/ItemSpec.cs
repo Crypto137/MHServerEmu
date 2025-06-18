@@ -43,7 +43,7 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec() { }
 
-        public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef, int itemLevel,
+        public ItemSpec(PrototypeId itemProtoRef, PrototypeId rarityProtoRef = PrototypeId.Invalid, int itemLevel = 1,
             int creditsAmount = 0, IEnumerable<AffixSpec> affixSpecs = null, int seed = 0, PrototypeId equippableBy = PrototypeId.Invalid)
         {
             _itemProtoRef = itemProtoRef;
@@ -76,18 +76,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         public ItemSpec(ItemSpec other)
         {
-            _itemProtoRef = other._itemProtoRef;
-            _rarityProtoRef = other._rarityProtoRef;
-            _itemLevel = other._itemLevel;
-            _creditsAmount = other._creditsAmount;
+            Set(other);
+        }
 
-            foreach (AffixSpec affixSpec in other._affixSpecList)
-                _affixSpecList.Add(new(affixSpec));
-
-            _seed = other._seed;
-            _equippableBy = other._equippableBy;
-
-            StackCount = other.StackCount;
+        public ItemSpec(LootCloneRecord lootCloneRecord)
+        {
+            Set(lootCloneRecord);
         }
 
         public bool Serialize(Archive archive)
@@ -127,19 +121,50 @@ namespace MHServerEmu.Games.Entities.Items
 
         public void Set(ItemSpec other)
         {
-            if (other == null) throw new ArgumentException("other == null");
-            if (ReferenceEquals(this, other)) return;
+            // This can be called with this ItemSpec itself as an argument when doing initialization after deserialization
+            if (ReferenceEquals(this, other))
+                return;
 
             _itemProtoRef = other._itemProtoRef;
             _rarityProtoRef = other._rarityProtoRef;
             _itemLevel = other._itemLevel;
             _creditsAmount = other._creditsAmount;
-            _seed = other._seed;
-            _equippableBy = other._equippableBy;
 
             _affixSpecList.Clear();
             foreach (AffixSpec otherAffixSpec in other._affixSpecList)
                 _affixSpecList.Add(new(otherAffixSpec));
+
+            _seed = other._seed;
+            _equippableBy = other._equippableBy;
+
+            StackCount = other.StackCount;
+        }
+
+        public void Set(LootCloneRecord lootCloneRecord)
+        {
+            _itemProtoRef = lootCloneRecord.ItemProto.DataRef;
+            _rarityProtoRef = lootCloneRecord.Rarity;
+            _itemLevel = lootCloneRecord.Level;
+            _creditsAmount = 0;
+
+            _affixSpecList.Clear();
+            foreach (AffixRecord affixRecord in lootCloneRecord.AffixRecords)
+            {
+                AffixSpec affixSpec = new(affixRecord.AffixProtoRef.As<AffixPrototype>(), affixRecord.ScopeProtoRef, affixRecord.Seed);
+                _affixSpecList.Add(affixSpec);
+            }
+
+            _seed = lootCloneRecord.Seed;
+            _equippableBy = lootCloneRecord.EquippableBy;
+
+            StackCount = lootCloneRecord.StackCount;
+        }
+
+        public void SetAffixes(IEnumerable<AffixSpec> affixSpecs)
+        {
+            // It's fine to use IEnumerable here because AddRange() has ICollection specific optimizations
+            _affixSpecList.Clear();
+            _affixSpecList.AddRange(affixSpecs);
         }
 
         public override string ToString()
@@ -347,13 +372,54 @@ namespace MHServerEmu.Games.Entities.Items
             return true;
         }
 
+        public bool GetEquipEngineEffectsDisabled()
+        {
+            PrototypeId noVfxAffixRef = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
+            if (noVfxAffixRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DisableEquipEngineEffects(): noVfxAffixRef == PrototypeId.Invalid");
+
+            foreach (AffixSpec affixSpec in _affixSpecList)
+            {
+                if (affixSpec.AffixProto.DataRef == noVfxAffixRef)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool DisableEquipEngineEffects()
+        {
+            if (GetEquipEngineEffectsDisabled())
+                return false;
+
+            PrototypeId noVfxAffixRef = GameDatabase.GlobalsPrototype.ItemNoVisualsAffix;
+            if (noVfxAffixRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DisableEquipEngineEffects(): noVfxAffixRef == PrototypeId.Invalid");
+
+            AffixSpec affixSpec = new(noVfxAffixRef.As<AffixPrototype>(), PrototypeId.Invalid, 1);
+            _affixSpecList.Add(affixSpec);
+
+            return true;
+        }
+
         public bool AddAffixSpec(AffixSpec affixSpec)
         {
             if (affixSpec.IsValid == false)
                 return Logger.WarnReturn(false, $"AddAffixSpec(): Trying to add invalid AffixSpec to ItemSpec! ItemSpec: {this}");
 
-            _affixSpecList.Add(affixSpec);
+            // V52_HACK: Version 1.52 has a bug where Item::GetAffixIcons() does not look at all affixes to determine
+            // which set of rune icons to show in runeword tooltips, and the order of crafted rune affixes is random.
+            // If this is an affix that contains a runeword icon definition, insert it at the beginning to avoid this.
+            if (affixSpec.AffixProto is AffixRunewordPrototype)
+                _affixSpecList.Insert(0, affixSpec);
+            else
+                _affixSpecList.Add(affixSpec);
+            
             return true;
+        }
+
+        public void AddAffixSpecs(IEnumerable<AffixSpec> affixSpecs)
+        {
+            // It's fine to use IEnumerable here because AddRange() has ICollection specific optimizations
+            _affixSpecList.AddRange(affixSpecs);
         }
 
         public MutationResults OnAffixesRolled(IItemResolver resolver, PrototypeId rollFor)

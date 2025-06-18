@@ -343,12 +343,6 @@ namespace MHServerEmu.Games.Entities
             return RefreshVendorInventoryInternal(vendorTypeProtoRef);
         }
 
-        public bool HasLearnedCraftingRecipe(PrototypeId craftingRecipeProtoRef)
-        {
-            // Assume all recipes are learned for now
-            return true;
-        }
-
         public PurchaseUnlockResult CanPurchaseUnlock(PrototypeId agentProtoRef)
         {
             AgentPrototype agentProto = agentProtoRef.As<AgentPrototype>();
@@ -695,8 +689,10 @@ namespace MHServerEmu.Games.Entities
             if (isInitializing && _initializedVendorTypeProtoRefs.Add(vendorTypeProtoRef) == false)
                 return true;
 
-            // Early return if there are no inventories to roll
             List<PrototypeId> inventoryList = ListPool<PrototypeId>.Instance.Get();
+            HashSet<PrototypeId> craftingIngredientSet = HashSetPool<PrototypeId>.Instance.Get();
+
+            // Early return if there are no inventories to roll
             if (vendorTypeProto.GetInventories(inventoryList) == false)
                 goto end;
 
@@ -838,22 +834,59 @@ namespace MHServerEmu.Games.Entities
 
                         item.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
 
-                        // TODO: Initialize crafting recipe
-                        if (vendorTypeProto.IsCrafter)
-                        {
-
-                        }
+                        // Add crafting ingredients if we are adding a recipe to a crafter
+                        if (vendorTypeProto.IsCrafter && item.Prototype is CraftingRecipePrototype recipeProto)
+                            InitializeCraftingIngredientAvailable(recipeProto, craftingIngredientSet);
                     }
                 }
 
-                // TODO: Add learned crafting recipes
+                // Add learned crafting recipes
                 if (vendorTypeProto.IsCrafter && vendorTypeProto.CraftingRecipeCategories.HasValue())
                 {
+                    Inventory learnedRecipeInv = GetInventory(InventoryConvenienceLabel.CraftingRecipesLearned);
+                    if (learnedRecipeInv != null)
+                    {
+                        foreach (var entry in learnedRecipeInv)
+                        {
+                            Item recipe = entityManager.GetEntity<Item>(entry.Id);
+                            if (recipe == null)
+                            {
+                                Logger.Warn("RollVendorInventory(): recipe == null");
+                                continue;
+                            }
 
+                            CraftingRecipePrototype recipeProto = recipe.ItemPrototype as CraftingRecipePrototype;
+                            if (recipeProto == null)
+                            {
+                                Logger.Warn("RollVendorInventory(): recipeProto == null");
+                                continue;
+                            }
+
+                            if (vendorTypeProto.ContainsCraftingRecipeCategory(recipeProto.RecipeCategory) == false)
+                                continue;
+
+                            using EntitySettings settings = ObjectPoolManager.Instance.Get<EntitySettings>();
+                            settings.EntityRef = recipe.PrototypeDataRef;
+                            settings.ItemSpec = new(recipe.ItemSpec);
+                            settings.InventoryLocation = new(Id, inventory.PrototypeDataRef);
+
+                            if (IsInGame == false)
+                                settings.OptionFlags &= ~EntitySettingsOptionFlags.EnterGame;
+
+                            Entity recipeClone = entityManager.CreateEntity(settings);
+                            if (recipeClone == null)
+                            {
+                                Logger.Warn("RollVendorInventory(): recipeClone == null");
+                                continue;
+                            }
+
+                            InitializeCraftingIngredientAvailable(recipeProto, craftingIngredientSet);
+                        }
+                    }
                 }
             }
 
-            // TODO: Set PropertyEnum.CraftingIngredientAvailable
+            UpdateCraftingIngredientAvailableStackCounts(craftingIngredientSet);
 
             // Notify the client if needed
             if (isInitializing == false)
@@ -861,6 +894,7 @@ namespace MHServerEmu.Games.Entities
 
             end:
             ListPool<PrototypeId>.Instance.Return(inventoryList);
+            HashSetPool<PrototypeId>.Instance.Return(craftingIngredientSet);
             return true;
         }
 
