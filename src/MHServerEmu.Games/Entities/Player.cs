@@ -951,6 +951,12 @@ namespace MHServerEmu.Games.Entities
             if (unpackedArchivedEntity == false)
                 AdjustCraftingIngredientAvailable(item.PrototypeDataRef, item.CurrentStackSize, category);
 
+            // Trigger item collection event
+            InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
+            int stackSize = item.CurrentStackSize;
+            if (stackSize > 0 && inventoryProto != null && (inventoryProto.IsPlayerGeneralInventory || inventoryProto.IsEquipmentInventory))
+                GetRegion()?.PlayerCollectedItemEvent.Invoke(new(this, item, stackSize));
+
             // Highlight items that get put into stash tabs different from the current one
             if (invLoc.InventoryRef != CurrentOpenStashPagePrototypeRef &&
                 (category == InventoryCategory.PlayerStashGeneral ||
@@ -994,6 +1000,12 @@ namespace MHServerEmu.Games.Entities
                     }
                 }
             }
+
+            // Trigger item loss event
+            InventoryPrototype inventoryProto = invLoc.InventoryPrototype;
+            int stackSize = item.CurrentStackSize;
+            if (stackSize > 0 && inventoryProto != null && (inventoryProto.IsPlayerGeneralInventory || inventoryProto.IsEquipmentInventory))
+                GetRegion()?.PlayerLostItemEvent.Invoke(new(this, item, -stackSize));
 
             // Adjust available ingredients for auto populated inputs
             AdjustCraftingIngredientAvailable(item.PrototypeDataRef, -item.CurrentStackSize, category);
