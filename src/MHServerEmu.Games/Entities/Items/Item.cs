@@ -2345,9 +2345,12 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUseAwardTeamUpXP(Player player, Avatar avatar)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUseAwardTeamUpXP(): {avatar}");
-            return InteractionValidateResult.UnknownFailure;
+            Agent teamUpAgent = avatar.CurrentTeamUpAgent;
+
+            if (teamUpAgent == null || teamUpAgent.IsAtLevelCap)
+                return InteractionValidateResult.ItemNotUsable;
+
+            return InteractionValidateResult.Success;
         }
 
         private InteractionValidateResult PlayerCanUsePowerAction(Player player, Avatar avatar)
