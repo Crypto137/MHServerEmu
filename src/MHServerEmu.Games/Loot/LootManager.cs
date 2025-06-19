@@ -677,7 +677,7 @@ namespace MHServerEmu.Games.Loot
         {
             AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
             if (agentProto == null)
-                return Logger.WarnReturn(bounds.Center, "FindDropPosition(): agentProto == null");
+                return Logger.WarnReturn(bounds.Center, $"FindDropPosition(): agentProto == null (agentProtoRef=[{agentSpec.AgentProtoRef.GetName()}])");
 
             return FindDropPosition(agentProto, recipient, bounds, recipientId);
         }
