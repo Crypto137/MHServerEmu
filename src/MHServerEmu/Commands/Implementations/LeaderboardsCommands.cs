@@ -19,7 +19,11 @@ namespace MHServerEmu.Commands.Implementations
         [CommandUsage("leaderboards reloadschedule")]
         public string ReloadSchedule(string[] @params, NetClient client)
         {
-            LeaderboardDatabase.Instance.ReloadAndReapplySchedule();
+            LeaderboardDatabase leaderboardDB = LeaderboardDatabase.Instance;
+            if (leaderboardDB.IsInitialized == false)
+                return "Leaderboard database is not available.";
+
+            leaderboardDB.ReloadAndReapplySchedule();
             return "Leaderboard schedule reloaded.";
         }
 
