@@ -1277,8 +1277,19 @@ namespace MHServerEmu.Games.Entities.Items
 
         private bool DoEmoteTokenInteraction(EmoteTokenPrototype emoteTokenProto, Player player)
         {
-            // TODO
-            return false;
+            PrototypeId avatarDataRef = emoteTokenProto.Avatar;
+            if (avatarDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoEmoteTokenInteraction(): avatarDataRef == PrototypeId.Invalid");
+
+            PrototypeId emotePowerDataRef = emoteTokenProto.EmotePower;
+            if (emotePowerDataRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoEmoteTokenInteraction(): emotePowerDataRef == PrototypeId.Invalid");
+
+            if (player.HasAvatarEmoteUnlocked(avatarDataRef, emotePowerDataRef))
+                return false;
+
+            if (player.UnlockAvatarEmote(avatarDataRef, emotePowerDataRef) == false)
+                return Logger.WarnReturn(false, $"DoEmoteTokenInteraction(): Failed to unlock emote! avatar=[{avatarDataRef.GetName()}], emote=[{emotePowerDataRef.GetName()}], item=[{this}], player=[{player}]");
+
+            return true;
         }
 
         private bool DoCraftingRecipeInteraction(CraftingRecipePrototype craftingRecipeProto, Player player)
@@ -2316,9 +2327,16 @@ namespace MHServerEmu.Games.Entities.Items
 
         private InteractionValidateResult PlayerCanUseEmoteToken(Player player, EmoteTokenPrototype emoteTokenProto)
         {
-            // TODO
-            Logger.Debug($"PlayerCanUseEmoteToken(): {emoteTokenProto}");
-            return InteractionValidateResult.UnknownFailure;
+            PrototypeId avatarDataRef = emoteTokenProto.Avatar;
+            if (avatarDataRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseEmoteToken(): avatarDataRef == PrototypeId.Invalid");
+
+            PrototypeId emotePowerDataRef = emoteTokenProto.EmotePower;
+            if (emotePowerDataRef == PrototypeId.Invalid) return Logger.WarnReturn(InteractionValidateResult.UnknownFailure, "PlayerCanUseEmoteToken(): emotePowerDataRef == PrototypeId.Invalid");
+
+            if (player.HasAvatarEmoteUnlocked(avatarDataRef, emotePowerDataRef))
+                return InteractionValidateResult.Error6;
+
+            return InteractionValidateResult.Success;
         }
 
         private InteractionValidateResult PlayerCanUseCraftingRecipe(Player player)
