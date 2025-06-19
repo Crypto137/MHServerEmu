@@ -896,6 +896,10 @@ namespace MHServerEmu.Games.GameData.Prototypes
     public class ItemActionOpenUIPanelPrototype : ItemActionPrototype
     {
         public AssetId PanelName { get; protected set; }
+
+        //---
+
+        public override ItemActionType ActionType { get => ItemActionType.OpenUIPanel; }
     }
 
     public class CategorizedAffixEntryPrototype : Prototype

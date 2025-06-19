@@ -2943,13 +2943,17 @@ namespace MHServerEmu.Games.Entities
             SendMessage(message);
         }
 
-        public void SendOpenUIPanel(AssetId panelNameId)
+        public bool SendOpenUIPanel(AssetId panelNameId)
         {
-            if (panelNameId == AssetId.Invalid) return;
+            if (panelNameId == AssetId.Invalid) return Logger.WarnReturn(false, "SendOpenUIPanel(): panelNameId == AssetId.Invalid");
+
             string panelName = GameDatabase.GetAssetName(panelNameId);
-            if (panelName == "Unknown") return;
-            var message = NetMessageOpenUIPanel.CreateBuilder().SetPanelName(panelName).Build();
+            if (panelName == "Unknown") return Logger.WarnReturn(false, "SendOpenUIPanel(): panelName == Unknown");
+
+            NetMessageOpenUIPanel message = NetMessageOpenUIPanel.CreateBuilder().SetPanelName(panelName).Build();
             SendMessage(message);
+
+            return true;
         }
 
         public void SendWaypointNotification(PrototypeId waypointRef, bool show = true)
