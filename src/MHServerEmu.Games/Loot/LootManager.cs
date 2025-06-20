@@ -631,7 +631,9 @@ namespace MHServerEmu.Games.Loot
             if (agentSpec.CreditsAmount > 0)
                 settings.Properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
 
-            Agent agent = Game.EntityManager.CreateEntity(settings) as Agent;
+            // NOTE: Some loot tables (e.g. InanimateObjectsCh03GarbageBags) spawn destructible props. They are not agents,
+            // but they still go through here, which means we have to use WorldEntity instead of Agent.
+            WorldEntity agent = Game.EntityManager.CreateEntity(settings) as WorldEntity;
 
             // Clean up properties (even if we failed to create the agent for some reason)
             settings.Properties.RemoveProperty(PropertyEnum.CharacterLevel);
@@ -675,9 +677,11 @@ namespace MHServerEmu.Games.Loot
 
         private Vector3 FindDropPosition(in AgentSpec agentSpec, WorldEntity recipient, Bounds bounds, int recipientId)
         {
-            AgentPrototype agentProto = agentSpec.AgentProtoRef.As<AgentPrototype>();
+            // NOTE: Some loot tables (e.g. InanimateObjectsCh03GarbageBags) spawn destructible props. They are not agents,
+            // but they still go through here, which means we have to use WorldEntityPrototype instead of AgentPrototype.
+            WorldEntityPrototype agentProto = agentSpec.AgentProtoRef.As<WorldEntityPrototype>();
             if (agentProto == null)
-                return Logger.WarnReturn(bounds.Center, $"FindDropPosition(): agentProto == null (agentProtoRef=[{agentSpec.AgentProtoRef.GetName()}])");
+                return Logger.WarnReturn(bounds.Center, $"FindDropPosition(): Failed to retrieve prototype for AgentSpec [{agentSpec}]");
 
             return FindDropPosition(agentProto, recipient, bounds, recipientId);
         }
