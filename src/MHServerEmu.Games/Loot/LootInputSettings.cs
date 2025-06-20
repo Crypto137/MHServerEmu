@@ -42,6 +42,10 @@ namespace MHServerEmu.Games.Loot
             LootRollSettings.Level = level;
             LootRollSettings.LevelForRequirementCheck = level;
 
+            // Do not apply the timezone offset here because where our server is actually located
+            // may not match the time zone defined in the globals prototype like the original game.
+            LootRollSettings.UsableWeekday = LootUtilities.GetCurrentWeekday(false);    
+
             if (avatar != null && avatar.CurrentTeamUpAgent != null)
                 LootRollSettings.UsableTeamUp = avatar.CurrentTeamUpAgent.AgentPrototype;
 
