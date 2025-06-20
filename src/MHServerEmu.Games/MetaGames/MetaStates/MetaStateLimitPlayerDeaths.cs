@@ -122,11 +122,10 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             if (limitHit)
             {
+                region.PlayerDeathLimitHitEvent.Invoke(new(null, PrototypeDataRef));
+
                 if (_proto.StayInModeOnFail == false)
-                {
-                    region.PlayerDeathLimitHitEvent.Invoke(new(null, PrototypeDataRef));
                     MetaGame.ScheduleActivateGameMode(_proto.FailMode);
-                }
 
                 mode.SendUINotification(_proto.DeathLimitUINotification);
             }
