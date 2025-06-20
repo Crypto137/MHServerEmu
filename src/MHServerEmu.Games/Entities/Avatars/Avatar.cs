@@ -52,6 +52,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
         private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
         private readonly EventPointer<UnassignMappedPowersForRespecEvent> _unassignMappedPowersForRespec = new();
+        private readonly EventPointer<RegionTeleportEvent> _regionTeleportEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -554,6 +555,30 @@ namespace MHServerEmu.Games.Entities.Avatars
                 .Build();
 
             Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
+        }
+
+        #endregion
+
+        #region Teleports
+
+        public void ScheduleRegionTeleport(PrototypeId targetProtoRef, TimeSpan delay)
+        {
+            if (_regionTeleportEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_regionTeleportEvent);
+
+            if (IsDead)
+                Resurrect();
+
+            ScheduleEntityEvent(_regionTeleportEvent, delay, targetProtoRef);
+        }
+
+        private bool DoRegionTeleport(PrototypeId targetProtoRef)
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoRegionTeleport(): player == null");
+
+            Transition.TeleportToTarget(player, targetProtoRef);
+            return true;
         }
 
         #endregion
@@ -6327,6 +6352,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class UnassignMappedPowersForRespecEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).UnassignMappedPowersForRespec();
+        }
+
+        private class RegionTeleportEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoRegionTeleport(p1);
         }
 
         #endregion

@@ -239,6 +239,23 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        public static bool TeleportToTarget(Player player, PrototypeId targetProtoRef)
+        {
+            var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetProto == null");
+
+            Region region = player.GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "TeleportToTarget(): region == null");
+
+            RegionPrototype targetRegionProto = targetRegionProto = targetProto.Region.As<RegionPrototype>();
+            if (targetRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetRegionProto == null");
+
+            if (RegionPrototype.Equivalent(targetRegionProto, region.Prototype))
+                return TeleportToLocalTarget(player, targetProtoRef);
+            else
+                return TeleportToRemoteTarget(player, targetProtoRef);
+        }
+
         public static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
         {
             Logger.Trace($"TeleportToRemoteTarget(): targetProtoRef={targetProtoRef.GetNameFormatted()}");

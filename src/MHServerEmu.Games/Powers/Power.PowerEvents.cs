@@ -671,13 +671,16 @@ namespace MHServerEmu.Games.Powers
             Player player = Owner.GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): player == null");
 
+            Avatar avatar = player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): avatar == null");
+
             var bodySliderTargetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
             var region = player.GetRegion();
             if (region != null && region.Prototype.BodySliderOneWay)
                 if (region.Prototype.BodySliderTarget != PrototypeId.Invalid)
                     bodySliderTargetRef = region.Prototype.BodySliderTarget;
 
-            player.PlayerConnection.MoveToTarget(bodySliderTargetRef);
+            avatar.ScheduleRegionTeleport(bodySliderTargetRef, TimeSpan.Zero);
             return true;
         }
 
@@ -881,7 +884,7 @@ namespace MHServerEmu.Games.Powers
         // 9
         private bool DoPowerEventActionRestoreThrowable(ref PowerActivationSettings settings)
         {
-            Logger.Trace($"DoPowerEventActionRestoreThrowable()");
+            //Logger.Trace($"DoPowerEventActionRestoreThrowable()");
 
             if (Owner is not Agent agentOwner)
                 return Logger.WarnReturn(false, $"DoPowerEventActionRestoreThrowable(): Owner cannot throw");
@@ -1394,9 +1397,19 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 29
-        private void DoPowerEventActionTeleportRegion(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionTeleportRegion(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionTeleportRegion(): Not implemented");
+            if (triggeredPowerEvent.PowerEventContext is not PowerEventContextTeleportRegionPrototype regionTeleportContext)
+                return Logger.WarnReturn(false, "DoPowerEventActionTeleportRegion(): Incompatible power event context type");
+
+            PrototypeId targetProtoRef = regionTeleportContext.Destination;
+            if (targetProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoPowerEventActionTeleportRegion(): targetProtoRef == PrototypeId.Invalid");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(settings.TargetEntityId);
+            if (avatar == null) return Logger.WarnReturn(false, "DoPowerEventActionTeleportRegion(): avatar == null");
+
+            avatar.ScheduleRegionTeleport(targetProtoRef, TimeSpan.Zero);
+            return true;
         }
 
         // 30
