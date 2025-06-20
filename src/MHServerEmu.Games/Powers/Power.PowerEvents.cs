@@ -789,9 +789,34 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 5
-        private void DoPowerEventActionDespawnTarget(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
+        private bool DoPowerEventActionDespawnTarget(PowerEventActionPrototype triggeredPowerEvent, ref PowerActivationSettings settings)
         {
-            Logger.Warn($"DoPowerEventActionDespawnTarget(): Not implemented");
+            WorldEntity target = Game.EntityManager.GetEntity<WorldEntity>(settings.TargetEntityId);
+            if (target == null || target.IsInWorld == false)
+                return true;
+
+            if (target is Avatar || target.IsTeamUpAgent)
+                return Logger.WarnReturn(false, "DoPowerEventActionDespawnTarget(): target is Avatar || target.IsTeamUpAgent");
+
+            if (target == Owner)
+            {
+                // Delay owner destruction
+                float delay = triggeredPowerEvent.GetEventParam(Properties, Owner);
+                if (delay < 0f)
+                {
+                    Logger.Warn("DoPowerEventActionDespawnTarget(): delay < 0f");
+                    delay = 0f;
+                }
+
+                target.ScheduleDestroyEvent(TimeSpan.FromSeconds(delay));
+            }
+            else
+            {
+                // Destroy other targets instantly
+                target.Destroy();
+            }
+
+            return true;
         }
 
         // 6
