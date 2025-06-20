@@ -128,10 +128,14 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
 
             if (_stateRef != PrototypeId.Invalid)
             {
-                MetaGame.Properties[PropertyEnum.MetaStateWaveForce, PrototypeDataRef] = _stateRef;
-                var stateProto = GameDatabase.GetPrototype<MetaStateMissionActivatePrototype>(_stateRef);
+                // Current state will be reset by failing the mission, so we need to save it to a property
+                PrototypeId currentState = _stateRef;
+                MetaGame.Properties[PropertyEnum.MetaStateWaveForce, PrototypeDataRef] = currentState;
+
+                var stateProto = GameDatabase.GetPrototype<MetaStateMissionActivatePrototype>(currentState);
                 if (stateProto == null) return;
 
+                // Fail the mission, this will clear _stateRef
                 var mission = manager.FindMissionByDataRef(stateProto.Mission);
                 if (mission != null)
                 {
@@ -140,8 +144,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                         mission.SetState(MissionState.Failed);
                 }
 
-                // clear State
-                MetaGame.RemoveState(_stateRef);
+                // Clear the current state
+                MetaGame.RemoveState(currentState);
                 _stateRef = PrototypeId.Invalid;
                 _lastStateRef = PrototypeId.Invalid;
             }
@@ -190,29 +194,31 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             var region = Region;
             if (region == null) return;
 
-            var stateRef = PrototypeId.Invalid;
+            var nextStateRef = PrototypeId.Invalid;
 
-            var forsePropId = new PropertyId(PropertyEnum.MetaStateWaveForce, PrototypeDataRef);
-            if (MetaGame.Properties.HasProperty(forsePropId))
+            // Check for state override (e.g. resetting the same state when hitting the death limit)
+            var forcePropId = new PropertyId(PropertyEnum.MetaStateWaveForce, PrototypeDataRef);
+            if (MetaGame.Properties.HasProperty(forcePropId))
             {
-                stateRef = MetaGame.Properties[forsePropId];
-                MetaGame.Properties.RemoveProperty(forsePropId);
+                nextStateRef = MetaGame.Properties[forcePropId];
+                MetaGame.Properties.RemoveProperty(forcePropId);
             }
 
-            if (stateRef == PrototypeId.Invalid)
-                stateRef = _proto.NextState(_lastStateRef);
+            if (nextStateRef == PrototypeId.Invalid)
+                nextStateRef = _proto.NextState(_lastStateRef);
 
-            if (stateRef != PrototypeId.Invalid)
+            if (nextStateRef != PrototypeId.Invalid)
             {
-                if (MetaGame.ApplyMetaState(_stateRef))
+                if (MetaGame.ApplyMetaState(nextStateRef, true))
                 {
-                    _lastStateRef = stateRef;
-                    _stateRef = stateRef;
+                    _lastStateRef = nextStateRef;
+                    _stateRef = nextStateRef;
                 }
                 else
                 {
-                    _lastStateRef = PrototypeId.Invalid;
-                    _stateRef = stateRef;
+                    // Skip the state if failed to set it for whatever reason
+                    _lastStateRef = nextStateRef;
+                    _stateRef = PrototypeId.Invalid;
                     ScheduleStateInterval(TimeSpan.FromMilliseconds(_proto.BetweenStatesIntervalMS));
                 }
             }
