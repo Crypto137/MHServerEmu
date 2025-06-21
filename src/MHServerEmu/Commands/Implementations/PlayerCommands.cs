@@ -7,6 +7,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 
@@ -125,6 +126,28 @@ namespace MHServerEmu.Commands.Implementations
             }
 
             return $"Cleared {count} persistent conditions.";
+        }
+
+        [Command("die")]
+        [CommandDescription("Kills the current avatar.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string Die(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
+
+            if (avatar.IsDead)
+                return "You are already dead.";
+
+            PowerResults powerResults = new();
+            powerResults.Init(avatar.Id, avatar.Id, avatar.Id, avatar.RegionLocation.Position, null, default, true);
+            powerResults.SetFlag(PowerResultFlags.InstantKill, true);
+            avatar.ApplyDamageTransferPowerResults(powerResults);
+
+            return $"You are now dead. Thank you for using Stop-and-Drop.";
         }
     }
 }

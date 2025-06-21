@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.06.10 07:13:32 UTC` using server version `0.7.0`.
+This list was automatically generated on `2025.06.21 13:56:50 UTC` using server version `0.7.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -175,6 +175,7 @@ Commands for managing player data for the invoker's account.
 | ------------------------------------ | ------------------------------------------------------- | ---------- | ------------  |
 | !player clearconditions              | Clears persistent conditions.                           | Any        | Client        |
 | !player costume [name/reset/default] | Changes costume for the current avatar.                 | Any        | Client        |
+| !player die                          | Kills the current avatar.                               | Any        | Client        |
 | !player givecurrency [amount]        | Gives all currencies.                                   | Admin      | Client        |
 | !player wipe [playerName]            | Wipes all progress associated with the current account. | Any        | Client        |
 
