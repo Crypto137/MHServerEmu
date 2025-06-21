@@ -181,8 +181,6 @@ namespace MHServerEmu.Games.Entities
 
                     TransitionDestination destination = _destinationList[0];
 
-                    Logger.Trace($"Transition Destination Entity: {destination.EntityRef.GetName()}");
-
                     PrototypeId targetRegionProtoRef = destination.RegionRef;
 
                     // Check if our target is outside of the current region and we need to do a remote teleport
@@ -258,7 +256,6 @@ namespace MHServerEmu.Games.Entities
 
         public static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
         {
-            Logger.Trace($"TeleportToRemoteTarget(): targetProtoRef={targetProtoRef.GetNameFormatted()}");
             player.PlayerConnection.MoveToTarget(targetProtoRef);
             return true;
         }
@@ -314,7 +311,6 @@ namespace MHServerEmu.Games.Entities
         public static bool TeleportToLastTown(Player player)
         {
             // TODO: Teleport to the last saved hub
-            Logger.Trace($"TeleportToLastTown(): Destination LastTown");
             player.PlayerConnection.MoveToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
             return true;
         }

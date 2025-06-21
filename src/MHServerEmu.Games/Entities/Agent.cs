@@ -1194,9 +1194,6 @@ namespace MHServerEmu.Games.Entities
         {
             if (this is not Avatar && IsTeamUpAgent == false) return Logger.WarnReturn(false, "UpdatePowerBoost(): this is not Avatar && IsTeamUpAgent == false");
 
-            // This probably shouldn't be happening in 1.52
-            Logger.Debug($"UpdatePowerBoost(): {boostParamProtoRef.GetName()} for [{this}]");
-
             Prototype boostParamProto = boostParamProtoRef.As<Prototype>();
 
             bool isBoostToAll = boostParamProtoRef == PrototypeId.Invalid;

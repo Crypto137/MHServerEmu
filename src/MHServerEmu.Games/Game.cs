@@ -357,7 +357,7 @@ namespace MHServerEmu.Games
             // Track catch-up frames
             if (timesUpdated > 1)
             {
-                Logger.Trace($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
+                //Logger.Trace($"UpdateFixedTime(): Simulated {timesUpdated} frames in a single fixed update to catch up");
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.CatchUpFrames, timesUpdated - 1);
             }
 
@@ -365,7 +365,7 @@ namespace MHServerEmu.Games
             TimeSpan timeSkip = RealGameTime - _currentGameTime;
             if (timeSkip != TimeSpan.Zero)
             {
-                Logger.Trace($"UpdateFixedTime(): Taking too long to catch up, skipping {timeSkip.TotalMilliseconds} ms");
+                //Logger.Trace($"UpdateFixedTime(): Taking too long to catch up, skipping {timeSkip.TotalMilliseconds} ms");
                 MetricsManager.Instance.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.TimeSkip, timeSkip);
             }
 
