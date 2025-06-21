@@ -1158,7 +1158,16 @@ namespace MHServerEmu.Games.Network
             var useWaypoint = message.As<NetMessageUseWaypoint>();
             if (useWaypoint == null) return Logger.WarnReturn(false, $"OnUseWaypoint(): Failed to retrieve message");
 
-            // TODO: Do the usual interaction validation
+            Avatar avatar = Player.GetActiveAvatarByIndex(useWaypoint.AvatarIndex);
+            if (avatar == null) return Logger.WarnReturn(false, "OnUseWaypoint(): avatar == null");
+
+            if (avatar.IsAliveInWorld == false) return Logger.WarnReturn(false, "OnUseWaypoint(): avatar.IsAliveInWorld == false");
+
+            Transition waypoint = Game.EntityManager.GetEntity<Transition>(useWaypoint.IdTransitionEntity);
+            if (waypoint == null) return Logger.WarnReturn(false, "OnUseWaypoint(): waypoint == null");
+
+            if (avatar.InInteractRange(waypoint, InteractionMethod.Use) == false)
+                return Logger.WarnReturn(false, $"OnUseWaypoint(): Avatar [{avatar}] is not in interact range of waypoint [{waypoint}]");
 
             MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef, (PrototypeId)useWaypoint.RegionProtoId);
             return true;
