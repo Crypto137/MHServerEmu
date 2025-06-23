@@ -153,6 +153,10 @@ namespace MHServerEmu.Billing
             if (entry == null || entry.GuidItems.Length == 0)
                 return result;
 
+            // Bundles don't work properly yet, so disable them for now
+            if (entry.Type?.Name == "Bundle")
+                return result;
+
             if (entry.LocalizedEntries.IsNullOrEmpty())
                 return result;
 
