@@ -552,6 +552,8 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         public override void PostProcess()
         {
+            PreCheck();
+
             if (EventTypes.HasValue())
             {
                 var needBrainEventTypes =

@@ -330,6 +330,15 @@ namespace MHServerEmu.Games.GameData
             if (hasPatch) PrototypePatchManager.Instance.PostOverride(prototype);
         }
 
+        /// <summary>
+        /// PreCheck data of prototype for patch.
+        /// </summary>
+        public void PreCheck(Prototype prototype)
+        {
+            bool hasPatch = PrototypePatchManager.Instance.PreCheck(prototype.DataRef);
+            if (hasPatch) PrototypePatchManager.Instance.PostOverride(prototype);
+        }
+
         private CachedPrototypeField[] GetPostProcessablePrototypeFields(Type type)
         {
             // Cache post-processable fields for reuse
