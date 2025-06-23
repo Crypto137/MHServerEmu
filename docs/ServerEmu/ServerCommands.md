@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.06.21 13:56:50 UTC` using server version `0.7.0`.
+This list was automatically generated on `2025.06.23 01:11:09 UTC` using server version `0.7.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -222,11 +222,10 @@ Commands for interacting with the in-game store.
 ## Unlock
 Commands for unlocking various things.
 
-| Command                | Description                                          | User Level | Invoker Type  |
-| ---------------------- | ---------------------------------------------------- | ---------- | ------------  |
-| !unlock chapters       | Unlocks all chapters.                                | Admin      | Client        |
-| !unlock hero [pattern] | Unlocks the specified hero using Eternity Splinters. | Any        | Client        |
-| !unlock waypoints      | Unlocks all waypoints.                               | Admin      | Client        |
+| Command           | Description            | User Level | Invoker Type  |
+| ----------------- | ---------------------- | ---------- | ------------  |
+| !unlock chapters  | Unlocks all chapters.  | Admin      | Client        |
+| !unlock waypoints | Unlocks all waypoints. | Admin      | Client        |
 
 ## Misc
 

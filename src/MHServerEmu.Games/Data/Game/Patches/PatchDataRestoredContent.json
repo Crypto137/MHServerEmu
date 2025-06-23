@@ -1,42 +1,66 @@
 [
   {
     "Enabled": true,
-    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenMrFantastic.prototype",
-    "Path": "TokenType",
-    "Description": "Fix Mr Fantastic's character unlock token",
-    "ValueType": "Enum",
-    "Value": "UnlockCharOrUpgradeUlt"
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia022.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of Mister Fantastic to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
   },
   {
     "Enabled": true,
-    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenInvisibleWoman.prototype",
-    "Path": "TokenType",
-    "Description": "Fix Invisible Woman's character unlock token",
-    "ValueType": "Enum",
-    "Value": "UnlockCharOrUpgradeUlt"
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia024.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of Invisible Woman to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
   },
   {
     "Enabled": true,
-    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenHumanTorch.prototype",
-    "Path": "TokenType",
-    "Description": "Fix Human Torch's character unlock token",
-    "ValueType": "Enum",
-    "Value": "UnlockCharOrUpgradeUlt"
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia028.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of the Thing to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
   },
   {
     "Enabled": true,
-    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenThing.prototype",
-    "Path": "TokenType",
-    "Description": "Fix Thing's character unlock token",
-    "ValueType": "Enum",
-    "Value": "UnlockCharOrUpgradeUlt"
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia030.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of She-Hulk to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
   },
   {
     "Enabled": true,
-    "Prototype": "Entity/Items/CharacterTokens/Prototypes/Shipping/TokenSilverSurfer.prototype",
-    "Path": "TokenType",
-    "Description": "Fix Silver Surfer's character unlock token",
-    "ValueType": "Enum",
-    "Value": "UnlockCharOrUpgradeUlt"
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia031.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of HERBIE to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia032.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of Crystal to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia033.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of Frankie Raye to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Entity/Items/Insignias/Prototypes/Insignia034.prototype",
+    "Path": "LootDropWeightMultiplier",
+    "Description": "Allow Insignia of Medusa to drop.",
+    "ValueType": "Float",
+    "Value": 1.0
   }
 ]
