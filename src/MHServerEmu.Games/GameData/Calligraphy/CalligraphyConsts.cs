@@ -75,6 +75,7 @@
         public const BlueprintId LootTable                  = (BlueprintId)5508985158461163528;     // Loot/Table.blueprint
         public const BlueprintId Region                     = (BlueprintId)1677652504589371837;     // Regions/Region.blueprint
         public const BlueprintId Agent                      = (BlueprintId)13439488624722906428;    // Entity/Characters/Agent.blueprint
+        public const BlueprintId Selector                   = (BlueprintId)8623625140757141920;     // Populations/Blueprints/EntitySelector/EntitySelector.blueprint 
     }
 
     #endregion
