@@ -65,6 +65,14 @@ namespace MHServerEmu.Games.GameData.Prototypes
             // Prototypes override this to post-process data
         }
 
+        /// <summary>
+        /// PreCheck data contained in this <see cref="Prototype"/>.
+        /// </summary>
+        public void PreCheck()
+        {
+            GameDatabase.PrototypeClassManager.PreCheck(this);
+        }
+
         // These dynamic field management methods are part of the PrototypeClassManager in the client, but it doesn't really make sense so we moved them here.
         // They work only with reference types, but we use them only for list mixins, so it's fine.
 

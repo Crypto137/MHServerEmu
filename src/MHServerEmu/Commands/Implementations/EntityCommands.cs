@@ -6,10 +6,12 @@ using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.PowerCollections;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
+using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
@@ -230,10 +232,80 @@ namespace MHServerEmu.Commands.Implementations
 
             for (int i = 0; i < count; i++)
             {
-                if (EntityHelper.GetSpawnPositionNearAvatar(avatar, region, agentProto.Bounds, 250, out Vector3 positon) == false)
+                if (EntityHelper.GetSpawnPositionNearAvatar(avatar, region, agentProto.Bounds, 250, out Vector3 position) == false)
                     return "No space found to spawn the entity";
-                var orientation = Orientation.FromDeltaVector(avatar.RegionLocation.Position - positon);
-                EntityHelper.CreateAgent(agentProto, avatar, positon, orientation);
+                var orientation = Orientation.FromDeltaVector(avatar.RegionLocation.Position - position);
+                EntityHelper.CreateAgent(agentProto, avatar, position, orientation);
+            }
+
+            return $"Created!";
+        }
+
+        [Command("selector")]
+        [CommandDescription("Create row entities near the avatar based on selector pattern (ignore the case).")]
+        [CommandUsage("entity selector [pattern]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandParamCount(1)]
+        public string Selector(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Game game = playerConnection.Game;
+
+            if (game == null)
+                return "Game not found.";
+
+            Avatar avatar = playerConnection.Player.CurrentAvatar;
+            if (avatar == null || avatar.IsInWorld == false)
+                return "Avatar not found.";
+
+            Region region = avatar.Region;
+            if (region == null) return "No region found.";
+
+            PrototypeId selectorRef = CommandHelper.FindPrototype(HardcodedBlueprints.Selector, @params[0], client);
+            if (selectorRef == PrototypeId.Invalid) return string.Empty;
+
+            var selectorProto = GameDatabase.GetPrototype<EntitySelectorPrototype>(selectorRef);
+            int rows = selectorProto.Entities.Length;
+            if (rows == 0) return "Entities not found";
+
+            if (selectorProto.EntitySelectorActions.Length == 0) return "Actions not found";
+            var action = selectorProto.EntitySelectorActions[0];
+            int cols = action.AIOverrides.Length;
+            if (cols == 0) return "AIOverrides not found";
+
+            float r = 100;
+            var orientation = Orientation.Zero;
+            var pos = avatar.RegionLocation.Position;
+            float posX = pos.X - cols * r / 2;
+            float posY = pos.Y - rows * r / 2;
+            float startY = posY;
+
+            for (int col = 0; col < cols; col++) 
+            {
+                var overrideRef = action.AIOverrides[col];
+                var overrideProto = GameDatabase.GetPrototype<EntityActionAIOverridePrototype>(overrideRef);
+                var powerRef = overrideProto.Power;
+                posY = startY;
+                for (int row = 0; row < rows; row++)
+                {
+                    var agentRef = selectorProto.Entities[row];
+                    var agentProto = GameDatabase.GetPrototype<AgentPrototype>(agentRef);
+
+                    var position = new Vector3(posX, posY, pos.Z);                    
+                    var agent = EntityHelper.CreateAgent(agentProto, avatar, position, orientation);
+                    if (agent != null)
+                    {
+                        PowerIndexProperties indexProps = new(0, agent.CharacterLevel, agent.CombatLevel);
+                        agent.AssignPower(powerRef, indexProps);
+                        PowerActivationSettings powerSettings = new(agent.Id, Vector3.Zero, agent.RegionLocation.Position);
+                        powerSettings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+                        agent.ActivatePower(powerRef, ref powerSettings);
+                    }
+
+                    posY += r;
+                }
+                posX += r;
             }
 
             return $"Created!";

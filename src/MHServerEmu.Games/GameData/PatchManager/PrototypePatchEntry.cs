@@ -21,7 +21,9 @@ namespace MHServerEmu.Games.GameData.PatchManager
         [JsonIgnore]
         public string FieldName { get; }
         [JsonIgnore]
-        public bool InsertValue { get; }
+        public bool ArrayValue { get; }
+        [JsonIgnore]
+        public int ArrayIndex { get; }
         [JsonIgnore]
         public bool Patched { get; set; }
 
@@ -46,11 +48,21 @@ namespace MHServerEmu.Games.GameData.PatchManager
                 FieldName = path[(lastDotIndex + 1)..];
             }
 
-            InsertValue = false;
+            ArrayIndex = -1;
+            ArrayValue = false;
             int index = FieldName.LastIndexOf('[');
             if (index != -1)
             {
-                InsertValue = true;
+                ArrayValue = true;
+
+                int endIndex = FieldName.LastIndexOf(']');
+                if (endIndex > index)
+                {
+                    string indexStr = FieldName.Substring(index + 1, endIndex - index - 1);
+                    if (int.TryParse(indexStr, out int parsedIndex))
+                        ArrayIndex = parsedIndex;
+                }
+
                 FieldName = FieldName[..index];
             }
 
