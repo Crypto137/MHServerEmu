@@ -86,5 +86,21 @@
         "Description": "Add Mole Man Power for Moloid Crawler",
         "ValueType": "PrototypeId",
         "Value": 10167535038344338060
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActGenericVendor.prototype",
+        "Path": "AIOverrides[0]",
+        "Description": "Fix T-Pose Replace AIAmbientHawkingWares to AIAmbientHawkingWaresV04",
+        "ValueType": "PrototypeId",
+        "Value": 13070352796777912918
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Populations/Clusters/Generic/SelectAct/SelectActGenericWorking.prototype",
+        "Path": "AIOverrides[0]",
+        "Description": "Fix T-Pose Replace AIAmbientWorkingOnHigh to AIAmbientUnloadingCratesV02",
+        "ValueType": "PrototypeId",
+        "Value": 3362272330190363532
     }
 ]
