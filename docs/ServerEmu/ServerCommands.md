@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.06.23 01:11:09 UTC` using server version `0.7.0`.
+This list was automatically generated on `2025.06.24 20:56:10 UTC` using server version `0.7.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -85,6 +85,7 @@ Entity management commands.
 | !entity isblocked [EntityId1] [EntityId2] | No description available.                                                                                             | Any        | Client        |
 | !entity marker [MarkerId]                 | Displays information about the specified marker.                                                                      | Any        | Client        |
 | !entity near [radius]                     | Displays all entities in a radius (default is 100).                                                                   | Any        | Client        |
+| !entity selector [pattern]                | Create row entities near the avatar based on selector pattern (ignore the case).                                      | Admin      | Client        |
 | !entity tp [pattern]                      | Teleports to the first entity present in the region which prototype name contains the string given (ignore the case). | Admin      | Client        |
 
 ## Instance
@@ -171,13 +172,14 @@ Commands related to the mission system.
 ## Player
 Commands for managing player data for the invoker's account.
 
-| Command                              | Description                                             | User Level | Invoker Type  |
-| ------------------------------------ | ------------------------------------------------------- | ---------- | ------------  |
-| !player clearconditions              | Clears persistent conditions.                           | Any        | Client        |
-| !player costume [name/reset/default] | Changes costume for the current avatar.                 | Any        | Client        |
-| !player die                          | Kills the current avatar.                               | Any        | Client        |
-| !player givecurrency [amount]        | Gives all currencies.                                   | Admin      | Client        |
-| !player wipe [playerName]            | Wipes all progress associated with the current account. | Any        | Client        |
+| Command                       | Description                                                                               | User Level | Invoker Type  |
+| ----------------------------- | ----------------------------------------------------------------------------------------- | ---------- | ------------  |
+| !player clearconditions       | Clears persistent conditions.                                                             | Any        | Client        |
+| !player costume [name/reset]  | Changes costume for the current avatar.                                                   | Admin      | Client        |
+| !player die                   | Kills the current avatar.                                                                 | Any        | Client        |
+| !player disablevu             | Forces the fallback costume for the current hero, reverting visual updates in some cases. | Any        | Client        |
+| !player givecurrency [amount] | Gives all currencies.                                                                     | Admin      | Client        |
+| !player wipe [playerName]     | Wipes all progress associated with the current account.                                   | Any        | Client        |
 
 ## Power
 Commands related to the power system.

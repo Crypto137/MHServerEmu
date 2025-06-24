@@ -3,6 +3,8 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
+using MHServerEmu.Games.Entities.Inventories;
+using MHServerEmu.Games.Entities.Items;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -19,7 +21,8 @@ namespace MHServerEmu.Commands.Implementations
     {
         [Command("costume")]
         [CommandDescription("Changes costume for the current avatar.")]
-        [CommandUsage("player costume [name|reset|default]")]
+        [CommandUsage("player costume [name|reset]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         [CommandInvokerType(CommandInvokerType.Client)]
         [CommandParamCount(1)]
         public string Costume(string[] @params, NetClient client)
@@ -30,10 +33,6 @@ namespace MHServerEmu.Commands.Implementations
             {
                 case "reset":
                     costumeProtoRef = PrototypeId.Invalid;
-                    break;
-
-                case "default": // This undoes visual updates for most heroes
-                    costumeProtoRef = (PrototypeId)HardcodedBlueprints.Costume;
                     break;
 
                 default:
@@ -63,6 +62,45 @@ namespace MHServerEmu.Commands.Implementations
                 return "Resetting costume.";
 
             return $"Changing costume to {GameDatabase.GetPrototypeName(costumeProtoRef)}.";
+        }
+
+        [Command("disablevu")]
+        [CommandDescription("Forces the fallback costume for the current hero, reverting visual updates in some cases.")]
+        [CommandInvokerType(CommandInvokerType.Client)]
+        public string DisableVU(string[] @params, NetClient client)
+        {
+            PlayerConnection playerConnection = (PlayerConnection)client;
+            Player player = playerConnection.Player;
+            Avatar avatar = player.CurrentAvatar;
+
+            if (avatar == null)
+                return "Avatar is not available.";
+
+            PrototypeId costumeProtoRef = PrototypeId.Invalid;
+            string result;
+
+            if (avatar.EquippedCostumeRef != (PrototypeId)HardcodedBlueprints.Costume)
+            {
+                // Apply fallback costume override
+                costumeProtoRef = (PrototypeId)HardcodedBlueprints.Costume;
+                result = "Applied fallback costume override.";
+            }
+            else
+            {
+                // Revert fallback costume override if it is currently applied
+                Inventory costumeInv = avatar.GetInventory(InventoryConvenienceLabel.Costume);
+                if (costumeInv != null && costumeInv.Count > 0)
+                {
+                    Item costume = avatar.Game.EntityManager.GetEntity<Item>(costumeInv.GetAnyEntity());
+                    if (costume != null)
+                        costumeProtoRef = costume.PrototypeDataRef;
+                }
+
+                result = "Reverted fallback costume override.";
+            }
+
+            avatar.ChangeCostume(costumeProtoRef);
+            return result;
         }
 
         [Command("wipe")]
