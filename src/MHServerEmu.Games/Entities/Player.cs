@@ -1959,6 +1959,23 @@ namespace MHServerEmu.Games.Entities
             return HasAvatarAsStarter(avatar.PrototypeDataRef) && avatar.CharacterLevel >= Avatar.GetStarterAvatarLevelCap();
         }
 
+        public bool UnlockPowerSpecIndex(int index)
+        {
+            if (index < 0)
+                return false;
+
+            if (index > GameDatabase.AdvancementGlobalsPrototype.MaxPowerSpecIndexForAvatars)
+                return false;
+
+            // NOTE: Power specs are unlocked in order even though the client specifies spec prototypes in its requests
+            int nextSpecIndex = PowerSpecIndexUnlocked + 1;
+            if (nextSpecIndex != index)
+                return false;
+
+            Properties[PropertyEnum.PowerSpecIndexUnlocked] = nextSpecIndex;
+            return true;
+        }
+
         public bool HasAvatarEmoteUnlocked(PrototypeId avatarProtoRef, PrototypeId emoteProtoRef)
         {
             return Properties.HasProperty(new PropertyId(PropertyEnum.AvatarEmoteUnlocked, avatarProtoRef, emoteProtoRef));

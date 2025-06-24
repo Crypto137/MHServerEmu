@@ -202,6 +202,11 @@ namespace MHServerEmu.Billing
                         result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
                     break;
 
+                case PowerSpecPrototype powerSpecProto:
+                    if (player.UnlockPowerSpecIndex(powerSpecProto.Index))
+                        result = BuyItemResultErrorCodes.BUY_RESULT_ERROR_SUCCESS;
+                    break;
+
                 default:
                     // Return error for unhandled SKU types
                     Logger.Warn($"OnBuyItemFromCatalog(): Unimplemented catalog item type {catalogItemProto.GetType().Name} for {catalogItemProto}", LogCategory.MTXStore);
