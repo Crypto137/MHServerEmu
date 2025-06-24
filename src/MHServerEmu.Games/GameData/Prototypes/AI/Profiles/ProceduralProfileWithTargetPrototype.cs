@@ -642,6 +642,18 @@ namespace MHServerEmu.Games.GameData.Prototypes
             {
                 TuningTable tuningTable = orbProto.IgnoreRegionDifficultyForXPCalc == false ? agent.Region?.TuningTable : null;
                 xp = avatar.ApplyXPModifiers(xp, false, tuningTable);
+
+                // Set xp to 1 if this is not the avatar this was intended for
+                if (orbProto.XPAwardRestrictedToAvatar)
+                {
+                    ulong requiredDbGuid = agent.Properties[PropertyEnum.XPAwardRequiredDbGuid, avatar.PrototypeDataRef];
+                    if (avatar.OwnerPlayerDbId != requiredDbGuid)
+                    {
+                        xp = 1;
+                        minXP = 1;
+                    }
+                }
+
                 avatar.AwardXP(xp, minXP, agent.Properties[PropertyEnum.ShowXPRewardText]);
             }
 

@@ -180,12 +180,9 @@ namespace MHServerEmu.Games.Loot
                 return true;
 
             // Spawn what's left
-            // Instance the loot if instanced loot is not disabled by server config (TODO: fix non-instanced loot for orbs)
-            ulong restrictedToPlayerGuid = Game.CustomGameOptions.DisableInstancedLoot == false ? player.DatabaseUniqueId : 0;
 
             // Temp property collection for transfering properties
             using PropertyCollection properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
-            properties[PropertyEnum.RestrictedToPlayerGuid] = restrictedToPlayerGuid;
 
             if (inputSettings.MissionProtoRef != PrototypeId.Invalid)
                 properties[PropertyEnum.MissionPrototype] = inputSettings.MissionProtoRef;
@@ -216,14 +213,14 @@ namespace MHServerEmu.Games.Loot
             if (lootTypes.HasFlag(LootType.Item))
             {
                 foreach (ItemSpec itemSpec in lootResultSummary.ItemSpecs)
-                    SpawnItemInternal(itemSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
+                    SpawnItemInternal(itemSpec, player, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
             }
 
             // Spawn agents (orbs)
             if (lootTypes.HasFlag(LootType.Agent))
             {
                 foreach (AgentSpec agentSpec in lootResultSummary.AgentSpecs)
-                    SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
+                    SpawnAgentInternal(agentSpec, player, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
             }
 
             // Spawn credits
@@ -232,7 +229,7 @@ namespace MHServerEmu.Games.Loot
                 foreach (int creditsAmount in lootResultSummary.Credits)
                 {
                     AgentSpec agentSpec = new(_creditsItemProto.DataRef, 1, creditsAmount);
-                    SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
+                    SpawnAgentInternal(agentSpec, player, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                 }
             }
 
@@ -247,12 +244,12 @@ namespace MHServerEmu.Games.Loot
                     {
                         // LootUtilities::FillItemSpecFromCurrencySpec()
                         ItemSpec itemSpec = new(currencySpec.AgentOrItemProtoRef, GameDatabase.LootGlobalsPrototype.RarityDefault, 1);
-                        SpawnItemInternal(itemSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
+                        SpawnItemInternal(itemSpec, player, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                     }
                     else if (currencySpec.IsAgent)
                     {
                         AgentSpec agentSpec = new(currencySpec.AgentOrItemProtoRef, 1, 0);
-                        SpawnAgentInternal(agentSpec, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
+                        SpawnAgentInternal(agentSpec, player, regionId, dropPositions[i++], sourceEntityId, sourcePosition, properties);
                     }
                     else
                     {
@@ -541,7 +538,7 @@ namespace MHServerEmu.Games.Loot
         /// <summary>
         /// Spawns an <see cref="Item"/> in the game world.
         /// </summary>
-        private bool SpawnItemInternal(ItemSpec itemSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
+        private bool SpawnItemInternal(ItemSpec itemSpec, Player player, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
         {
             ItemPrototype itemProto = itemSpec.ItemProtoRef.As<ItemPrototype>();
             if (itemProto == null) return Logger.WarnReturn(false, "SpawnItemInternal(): itemProto == null");
@@ -557,7 +554,10 @@ namespace MHServerEmu.Games.Loot
             settings.SourceEntityId = sourceEntityId;
             settings.SourcePosition = sourcePosition;
             settings.Properties = properties;
-            settings.Properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
+            properties[PropertyEnum.InventoryStackCount] = itemSpec.StackCount;
+
+            if (itemProto.Properties[PropertyEnum.RestrictedToPlayer] && Game.CustomGameOptions.DisableInstancedLoot == false)
+                properties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
 
             settings.ItemSpec = itemSpec;
             settings.Lifespan = itemProto.GetExpirationTime(itemSpec.RarityProtoRef);
@@ -565,7 +565,8 @@ namespace MHServerEmu.Games.Loot
             Item item = Game.EntityManager.CreateEntity(settings) as Item;
 
             // Clean up properties (even if we failed to create the item for some reason)
-            settings.Properties.RemoveProperty(PropertyEnum.InventoryStackCount);
+            properties.RemoveProperty(PropertyEnum.InventoryStackCount);
+            properties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
 
             if (item == null) return Logger.WarnReturn(false, "SpawnItemInternal(): item == null");
 
@@ -592,21 +593,13 @@ namespace MHServerEmu.Games.Loot
             Region region = avatar.Region;
             if (region == null) return Logger.WarnReturn(false, "SpawnAgentForPlayer(): region == null");
 
-            if (agentProto.Properties != null && agentProto.Properties[PropertyEnum.RestrictedToPlayer])
-                agentProperties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
-
             _lootSpawnGrid.SetContext(region, avatar.RegionLocation.Position, null);
             Vector3 dropPosition = FindDropPosition(agentProto, avatar, avatar.Bounds, 1);
 
-            bool success = SpawnAgentInternal(agentSpec, region.Id, dropPosition, avatar.Id, avatar.RegionLocation.Position, agentProperties);
-
-            // Clean up instancing
-            agentProperties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
-
-            return success;
+            return SpawnAgentInternal(agentSpec, player, region.Id, dropPosition, avatar.Id, avatar.RegionLocation.Position, agentProperties);
         }
 
-        private bool SpawnAgentInternal(in AgentSpec agentSpec, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties)
+        private bool SpawnAgentInternal(in AgentSpec agentSpec, Player player, ulong regionId, Vector3 position, ulong sourceEntityId, Vector3 sourcePosition, PropertyCollection properties, ulong avatarId = 0)
         {
             // TODO: figure out a way to move functionality shared with SpawnItemInternal to a separate method?
 
@@ -625,20 +618,32 @@ namespace MHServerEmu.Games.Loot
             settings.SourcePosition = sourcePosition;
 
             settings.Properties = properties;
-            settings.Properties[PropertyEnum.CharacterLevel] = agentSpec.AgentLevel;
-            settings.Properties[PropertyEnum.CombatLevel] = agentSpec.AgentLevel;
+            properties[PropertyEnum.CharacterLevel] = agentSpec.AgentLevel;
+            properties[PropertyEnum.CombatLevel] = agentSpec.AgentLevel;
 
             if (agentSpec.CreditsAmount > 0)
-                settings.Properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
+                properties[PropertyEnum.ItemCurrency, GameDatabase.CurrencyGlobalsPrototype.Credits] = agentSpec.CreditsAmount;
+
+            if (agentProto.Properties[PropertyEnum.RestrictedToPlayer])
+                properties[PropertyEnum.RestrictedToPlayerGuid] = player.DatabaseUniqueId;
+
+            if (agentProto is OrbPrototype orbProto && orbProto.XPAwardRestrictedToAvatar)
+            {
+                Avatar avatar = player.CurrentAvatar;
+                if (avatar != null)
+                    properties[PropertyEnum.XPAwardRequiredDbGuid, avatar.PrototypeDataRef] = player.DatabaseUniqueId;
+            }
 
             // NOTE: Some loot tables (e.g. InanimateObjectsCh03GarbageBags) spawn destructible props. They are not agents,
             // but they still go through here, which means we have to use WorldEntity instead of Agent.
             WorldEntity agent = Game.EntityManager.CreateEntity(settings) as WorldEntity;
 
             // Clean up properties (even if we failed to create the agent for some reason)
-            settings.Properties.RemoveProperty(PropertyEnum.CharacterLevel);
-            settings.Properties.RemoveProperty(PropertyEnum.CombatLevel);
-            settings.Properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
+            properties.RemoveProperty(PropertyEnum.CharacterLevel);
+            properties.RemoveProperty(PropertyEnum.CombatLevel);
+            properties.RemovePropertyRange(PropertyEnum.ItemCurrency);
+            properties.RemoveProperty(PropertyEnum.RestrictedToPlayerGuid);
+            properties.RemovePropertyRange(PropertyEnum.XPAwardRequiredDbGuid);
 
             if (agent == null) return Logger.WarnReturn(false, "SpawnAgentInternal(): agent == null");
 
