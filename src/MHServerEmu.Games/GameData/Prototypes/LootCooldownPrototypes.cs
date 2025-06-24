@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Extensions;
+﻿using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
@@ -188,6 +189,22 @@ namespace MHServerEmu.Games.GameData.Prototypes
         //---
 
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        public override void PostProcess()
+        {
+            base.PostProcess();
+
+            // Apply Eternity Splinter cooldown override if needed
+            if (DataRef == (PrototypeId)16132487603695459127)   // Loot/Cooldowns/Channels/LootCooldownChannelEternitySplin.prototype
+            {
+                CustomGameOptionsConfig config = ConfigManager.Instance.GetConfig<CustomGameOptionsConfig>();
+                if (config.ESCooldownOverrideMinutes >= 0f)
+                {
+                    DurationMinutes = config.ESCooldownOverrideMinutes;
+                    Logger.Info($"Applied Eternity Splinter cooldown override - {DurationMinutes} minutes");
+                }
+            }
+        }
 
         public override bool IsOnCooldown(Game game, PropertyCollection properties)
         {

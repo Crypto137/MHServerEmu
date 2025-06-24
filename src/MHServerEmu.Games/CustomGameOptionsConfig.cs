@@ -4,6 +4,7 @@ namespace MHServerEmu.Games
 {
     public class CustomGameOptionsConfig : ConfigContainer
     {
+        public float ESCooldownOverrideMinutes { get; private set; } = -1f;
         public bool AutoUnlockAvatars { get; private set; } = true;
         public bool AutoUnlockTeamUps { get; private set; } = true;
         public int RegionCleanupIntervalMS { get; private set; } = 1000 * 60 * 5;       // 5 minutes
