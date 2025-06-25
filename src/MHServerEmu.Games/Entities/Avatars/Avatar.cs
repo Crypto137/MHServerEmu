@@ -1900,6 +1900,48 @@ namespace MHServerEmu.Games.Entities.Avatars
             return player.PowerSpecIndexUnlocked;
         }
 
+        public bool SetActivePowerSpec(int newSpecIndex)
+        {
+            if (newSpecIndex < 0) return Logger.WarnReturn(false, "SetActivePowerSpec(): specIndex < 0");
+
+            int currentSpecIndex = GetPowerSpecIndexActive();
+            if (newSpecIndex == currentSpecIndex)
+                return true;
+
+            if (newSpecIndex > GetPowerSpecIndexUnlocked())
+                return false;
+
+            if (Properties.HasProperty(PropertyEnum.IsInCombat))
+                return false;
+
+            // Unassign talents
+            List<PrototypeId> talentPowerList = ListPool<PrototypeId>.Instance.Get();
+            GetTalentPowersForSpec(currentSpecIndex, talentPowerList);
+
+            foreach (PrototypeId talentPowerRef in talentPowerList)
+                UnassignTalentPower(talentPowerRef, currentSpecIndex, true);
+
+            ListPool<PrototypeId>.Instance.Return(talentPowerList);
+
+            // Clear mapped powers
+            if (CanStealPowers() == false)
+                UnassignAllMappedPowers();
+
+            // Change spec
+            Properties[PropertyEnum.PowerSpecIndexActive] = newSpecIndex;
+
+            // Refresh powers
+            if (IsInWorld)
+            {
+                UpdateTalentPowers();
+                UpdatePowerProgressionPowers(true);
+            }
+
+            RefreshAbilityKeyMapping(false); // false because the client will do it on its own when it handles the change in PowerSpecIndexActive
+
+            return false;
+        }
+
         public override bool RespecPowerSpec(int specIndex, PowersRespecReason reason, bool skipValidation = false, PrototypeId powerProtoRef = PrototypeId.Invalid)
         {
             // Schedule deferred removal of mapped powers after respec finishes doing its thing

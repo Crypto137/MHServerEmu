@@ -499,6 +499,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageVanityTitleSelect:                 OnVanityTitleSelect(message); break;                // 140
                 case ClientToGameServerMessage.NetMessagePlayerTradeCancel:                 OnPlayerTradeCancel(message); break;                // 144
                 case ClientToGameServerMessage.NetMessageRequestPetTechDonate:              OnRequestPetTechDonate(message); break;             // 146
+                case ClientToGameServerMessage.NetMessageSetActivePowerSpec:                OnSetActivePowerSpec(message); break;               // 147
                 case ClientToGameServerMessage.NetMessageChangeCameraSettings:              OnChangeCameraSettings(message); break;             // 148
                 case ClientToGameServerMessage.NetMessageUISystemLockState:                 OnUISystemLockState(message); break;                // 150
                 case ClientToGameServerMessage.NetMessageEnableTalentPower:                 OnEnableTalentPower(message); break;                // 151
@@ -2016,6 +2017,21 @@ namespace MHServerEmu.Games.Network
             if (petTechItem == null) return Logger.WarnReturn(false, "OnRequestPetTechDonate(): petTechItem == null");
 
             return ItemPrototype.DonateItemToPetTech(Player, petTechItem, itemToDonate.ItemSpec, itemToDonate);
+        }
+
+        private bool OnSetActivePowerSpec(in MailboxMessage message)    // 147
+        {
+            var setActivePowerSpec = message.As<NetMessageSetActivePowerSpec>();
+            if (setActivePowerSpec == null) return Logger.WarnReturn(false, $"OnSetActivePowerSpec(): Failed to retrieve message");
+
+            Avatar avatar = Game.EntityManager.GetEntity<Avatar>(setActivePowerSpec.AvatarId);
+            if (avatar == null) return Logger.WarnReturn(false, "OnSetActivePowerSpec(): avatar == null");
+
+            Player avatarOwner = avatar.GetOwnerOfType<Player>();
+            if (avatarOwner != Player)
+                return Logger.WarnReturn(false, $"OnSetActivePowerSpec(): Player [{Player}] is attempting to set power spec on avatar [{avatar}] owned by player [{avatarOwner}]");
+
+            return avatar.SetActivePowerSpec((int)setActivePowerSpec.ActiveSpec);
         }
 
         private bool OnChangeCameraSettings(MailboxMessage message) // 148
