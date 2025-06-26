@@ -102,5 +102,13 @@
         "Description": "Fix T-Pose Replace AIAmbientWorkingOnHigh to AIAmbientUnloadingCratesV02",
         "ValueType": "PrototypeId",
         "Value": 3362272330190363532
+    },
+    {
+        "Enabled": true,
+        "Prototype": "Loot/Tables/MysteryChest/RandomFortuneCardTable.prototype",
+        "Path": "PickMethod",
+        "Description": "Fix reward for ICPPhaseMissionDay1-7.",
+        "ValueType": "Enum",
+        "Value": "PickWeightTryAll"
     }
 ]
