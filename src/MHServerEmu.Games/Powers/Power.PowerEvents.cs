@@ -670,13 +670,9 @@ namespace MHServerEmu.Games.Powers
             Avatar avatar = player.CurrentAvatar;
             if (avatar == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): avatar == null");
 
-            var bodySliderTargetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-            var region = player.GetRegion();
-            if (region != null && region.Prototype.BodySliderOneWay)
-                if (region.Prototype.BodySliderTarget != PrototypeId.Invalid)
-                    bodySliderTargetRef = region.Prototype.BodySliderTarget;
+            PrototypeId bodyslideTargetRef = Bodyslider.GetBodyslideTargetRef(player);
 
-            avatar.ScheduleRegionTeleport(bodySliderTargetRef, TimeSpan.Zero);
+            avatar.ScheduleRegionTeleport(bodyslideTargetRef, TimeSpan.Zero);
             return true;
         }
 

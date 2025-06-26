@@ -290,6 +290,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
         [DoNotCopy]
         public PopulationGlobalsPrototype PopulationGlobalsPrototype { get; protected set; }
 
+        [DoNotCopy]
+        public PrototypeId PrestigeRegionProtoRef { get => DefaultStartTargetPrestigeRegion.As<RegionConnectionTargetPrototype>().Region; }
+
         public override void PostProcess()
         {
             base.PostProcess();

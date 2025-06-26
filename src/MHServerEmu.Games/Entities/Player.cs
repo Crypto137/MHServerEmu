@@ -24,9 +24,10 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.GameData.Tables;
+using MHServerEmu.Games.Leaderboards;
 using MHServerEmu.Games.Loot;
+using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Missions;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
@@ -595,6 +596,27 @@ namespace MHServerEmu.Games.Entities
         public bool ViewedRegion(ulong regionId)
         {
             return PlayerConnection.WorldView.ContainsRegionInstanceId(regionId);
+        }
+
+        public MetaGameTeam GetPvPTeam()
+        {
+            Region region = GetRegion();
+            if (region == null)
+                return null;
+
+            EntityManager entityManager = Game.EntityManager;
+            foreach (ulong metaGameId in region.MetaGames)
+            {
+                PvP pvp = entityManager.GetEntity<PvP>(metaGameId);
+                if (pvp == null)
+                    continue;
+
+                MetaGameTeam team = pvp.GetTeamByPlayer(this);
+                if (team != null)
+                    return team;
+            }
+
+            return null;
         }
 
         #endregion

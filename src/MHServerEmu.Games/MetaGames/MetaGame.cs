@@ -493,7 +493,7 @@ namespace MHServerEmu.Games.MetaGames
             return false;
         }
 
-        private MetaGameTeam GetTeamByPlayer(Player player)
+        public MetaGameTeam GetTeamByPlayer(Player player)
         {
             foreach (var team in Teams)
                 if (team.Contains(player)) return team;

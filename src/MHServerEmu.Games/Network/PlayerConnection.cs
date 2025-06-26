@@ -368,6 +368,9 @@ namespace MHServerEmu.Games.Network
 
             Player.SendFullscreenMovieSync();
 
+            if (region.CanBeLastTown)
+                Player.CurrentAvatar?.SetLastTownRegion(region.PrototypeDataRef);
+
             Player.ScheduleCommunityBroadcast();
         }
 

@@ -310,8 +310,19 @@ namespace MHServerEmu.Games.Entities
 
         public static bool TeleportToLastTown(Player player)
         {
-            // TODO: Teleport to the last saved hub
-            player.PlayerConnection.MoveToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
+            // Check last town
+            PrototypeId targetProtoRef = PrototypeId.Invalid;
+
+            PrototypeId regionProtoRef = player.Properties[PropertyEnum.LastTownRegionForAccount];
+            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+            if (regionProto != null)
+                targetProtoRef = regionProto.StartTarget;
+
+            // Use the fallback if no saved last town
+            if (targetProtoRef == PrototypeId.Invalid)
+                targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+
+            player.PlayerConnection.MoveToTarget(targetProtoRef);
             return true;
         }
     }

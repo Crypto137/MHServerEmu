@@ -561,6 +561,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         #region Teleports
 
+        public void SetLastTownRegion(PrototypeId regionProtoRef)
+        {
+            Properties[PropertyEnum.LastTownRegion] = regionProtoRef;
+
+            Player player = GetOwnerOfType<Player>();
+            if (player != null)
+                player.Properties[PropertyEnum.LastTownRegionForAccount] = regionProtoRef;
+        }
+
         public void ScheduleRegionTeleport(PrototypeId targetProtoRef, TimeSpan delay)
         {
             if (_regionTeleportEvent.IsValid)
