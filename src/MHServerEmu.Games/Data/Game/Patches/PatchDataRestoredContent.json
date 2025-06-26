@@ -62,5 +62,13 @@
     "Description": "Allow Insignia of Medusa to drop.",
     "ValueType": "Float",
     "Value": 1.0
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/ItemType/SpecialsArtifactsRespec.prototype",
+    "Path": "Choices[0].NoDropPercent",
+    "Description": "Revert the 99.9% artifact drop rate reduction added with SHIELD Supply Drops.",
+    "ValueType": "Float",
+    "Value": 0.0
   }
 ]
