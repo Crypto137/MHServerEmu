@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private bool UpdateDBAccount()
+        private bool UpdateDBAccount(bool isLoggingOut)
         {
             if (_doNotUpdateDBAccount)
                 return true;
@@ -239,8 +239,32 @@ namespace MHServerEmu.Games.Network
                     _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
-                _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
-                _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+                // TODO: Clean this up
+                if (isLoggingOut == false)
+                {
+                    _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
+                    _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+                }
+                else
+                {
+                    PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
+                    if (lastTownProtoRef != PrototypeId.Invalid)
+                    {
+                        RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
+                        _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
+                    }
+                    else
+                    {
+                        Region region = Player.GetRegion();
+                        if (region != null && region.PrototypeDataRef == (PrototypeId)13422564811632352998) // TimesSquareTutorialRegion
+                            _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
+                        else
+                            _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+                    }
+
+                    _dbAccount.Player.StartTargetRegionOverride = 0;
+                }
+
                 _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
                 PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
@@ -257,7 +281,7 @@ namespace MHServerEmu.Games.Network
         public override void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
-            UpdateDBAccount();
+            UpdateDBAccount(true);
 
             AOI.SetRegion(0, true);
 
@@ -385,7 +409,7 @@ namespace MHServerEmu.Games.Network
 
             // We need to save data after we exit the game to include data that gets
             // saved when the current avatar exits world (e.g. mission progress).
-            UpdateDBAccount();
+            UpdateDBAccount(false);
 
             // Destroy
             Player.Destroy();
