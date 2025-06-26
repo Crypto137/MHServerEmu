@@ -350,10 +350,12 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private LootRollResult PickWeightTryAll(LootRollSettings settings, IItemResolver resolver)
         {
-            // Create a picker of possible nodes
+            // Create a picker of possible nodes.
+            // NOTE: Same as the client, we use the Weight prototype field instead of the GetWeight() method.
+            // Because of this, PickWeightTryAll is not affected by live tuning.
             Picker<LootNodePrototype> nodePicker = new(resolver.Random);
             foreach (LootNodePrototype proto in Choices)
-                nodePicker.Add(proto);
+                nodePicker.Add(proto, Weight);
 
             int numPicks = NumMin == NumMax ? NumMin : resolver.Random.Next(NumMin, NumMax + 1);
 
