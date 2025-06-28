@@ -1,0 +1,10 @@
+﻿[
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/SplinterBoostTable.prototype",
+    "Path": "Modifiers[0].Choices",
+    "Description": "Disable boost condition requirement for the SplinterBoost loot table.",
+    "ValueType": "PrototypeId[]",
+    "Value": []
+  }
+]
