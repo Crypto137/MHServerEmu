@@ -236,6 +236,13 @@ namespace MHServerEmu.Games.Loot
             // Spawn other currencies (items or orbs)
             if (lootTypes.HasFlag(LootType.Currency))
             {
+                // Combine Eternity Splinter stacks if needed
+                if (Game.CustomGameOptions.CombineESStacks)
+                {
+                    const PrototypeId EternitySplinterItem = (PrototypeId)11087194553833821680;
+                    lootResultSummary.CombineCurrencyStacks(EternitySplinterItem, GameDatabase.CurrencyGlobalsPrototype.EternitySplinters);
+                }
+
                 foreach (CurrencySpec currencySpec in lootResultSummary.Currencies)
                 {
                     currencySpec.ApplyCurrency(properties);

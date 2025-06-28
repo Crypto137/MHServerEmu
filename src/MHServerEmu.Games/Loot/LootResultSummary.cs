@@ -130,6 +130,31 @@ namespace MHServerEmu.Games.Loot
             }
         }
 
+        public void CombineCurrencyStacks(PrototypeId itemOrAgentProtoRef, PrototypeId currencyRef)
+        {
+            if (Currencies.Count == 0)
+                return;
+
+            int totalAmount = 0;
+
+            // Iterate from the end to be able to remove currency specs as we calculate the total amount
+            for (int i = Currencies.Count - 1; i >= 0; i--)
+            {
+                CurrencySpec currencySpec = Currencies[i];
+
+                if (currencySpec.AgentOrItemProtoRef != itemOrAgentProtoRef || currencySpec.CurrencyRef != currencyRef)
+                    continue;
+
+                totalAmount += currencySpec.Amount;
+                Currencies.RemoveAt(i);
+            }
+
+            if (totalAmount == 0)
+                return;
+
+            Currencies.Add(new(itemOrAgentProtoRef, currencyRef, totalAmount));
+        }
+
         public NetStructLootResultSummary ToProtobuf()
         {
             var builder = NetStructLootResultSummary.CreateBuilder();
