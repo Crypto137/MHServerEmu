@@ -6,5 +6,13 @@
     "Description": "Disable boost condition requirement for the SplinterBoost loot table.",
     "ValueType": "PrototypeId[]",
     "Value": []
+  },
+  {
+    "Enabled": true,
+    "Prototype": "Loot/Tables/ItemType/ESDropNormalDropTable.prototype",
+    "Path": "Modifiers[0].Choices",
+    "Description": "Allow ESDropNormalDropTable drops when the boost condition is applied.",
+    "ValueType": "PrototypeId[]",
+    "Value": []
   }
 ]
