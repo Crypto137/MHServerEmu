@@ -629,6 +629,13 @@ namespace MHServerEmu.Games.Entities
             PrototypeId throwablePowerRef = throwableEntity.Properties[PropertyEnum.ThrowablePower];
             AssignPower(throwablePowerRef, indexProps);
 
+            // Invoke event if needed
+            if (this is Avatar && throwableEntity.IsInWorld)
+            {
+                Player player = GetOwnerOfType<Player>();
+                throwableEntity.Region.ThrowablePickedUpEvent.Invoke(new(player, throwableEntity));
+            }
+
             // Remove the entity we are throwing from the world
             throwableEntity.ExitWorld();
             throwableEntity.ConditionCollection?.RemoveAllConditions(true);
