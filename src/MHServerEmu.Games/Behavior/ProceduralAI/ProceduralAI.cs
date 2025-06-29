@@ -359,6 +359,34 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                         _owningController.ResetCurrentTargetState();
                     break;
 
+                case PropertyEnum.Feared:
+                    if (newValue > 0 && oldValue <= 0)
+                    {
+                        Property.FromParam(PropertyEnum.Feared, 0, id.GetParam(0), out PrototypeId fearRef);
+                        if (fearRef == PrototypeId.Invalid) return;
+                        var profile = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(fearRef);
+                        if (profile == null) return;
+                        SetOverride(profile, OverrideType.Full);
+                    }
+                    else
+                        ClearOverrideBehavior(OverrideType.Full);
+
+                    break;
+
+                case PropertyEnum.AIIsLeashing:
+                    if (newValue > 0 && oldValue <= 0)
+                    {
+                        PrototypeId leashRef = GameDatabase.AIGlobalsPrototype.LeashingProceduralProfile;
+                        if (leashRef == PrototypeId.Invalid) return;
+                        var profile = GameDatabase.GetPrototype<ProceduralAIProfilePrototype>(leashRef);
+                        if (profile == null) return;
+                        SetOverride(profile, OverrideType.Full);
+                    }
+                    else
+                        ClearOverrideBehavior(OverrideType.Full);
+
+                    break;
+
                 case PropertyEnum.AIFullOverride:
                 case PropertyEnum.AIPartialOverride:
 
@@ -374,6 +402,7 @@ namespace MHServerEmu.Games.Behavior.ProceduralAI
                         ClearOverrideBehavior(overrideType);
 
                     break;
+
                 case PropertyEnum.AIMasterAvatarDbGuid:
                     ulong masterAvatarDbGuid = newValue;
                     if (masterAvatarDbGuid != 0)
