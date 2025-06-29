@@ -108,6 +108,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             PrototypeId creditsProtoRef = GameDatabase.CurrencyGlobalsPrototype.Credits;
             player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, creditsProtoRef));
 
+            if (price > 0)
+                player.OnScoringEvent(new(ScoringEventType.CurrencySpent, creditsProtoRef.As<Prototype>(), price));
+
             return true;
         }
 
@@ -188,6 +191,9 @@ namespace MHServerEmu.Games.GameData.Prototypes
             int price = GetCount(player, item);
             PrototypeId legendaryMarksProtoRef = GameDatabase.CurrencyGlobalsPrototype.LegendaryMarks;
             player.Properties.AdjustProperty(-price, new(PropertyEnum.Currency, legendaryMarksProtoRef));
+
+            if (price > 0)
+                player.OnScoringEvent(new(ScoringEventType.CurrencySpent, legendaryMarksProtoRef.As<Prototype>(), price));
 
             return true;
         }
