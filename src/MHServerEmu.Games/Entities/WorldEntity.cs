@@ -3506,6 +3506,10 @@ namespace MHServerEmu.Games.Entities
                     if (IsHotspot)
                         SetFlag(EntityFlags.IsReflectingHotspot, newValue);
                     break;
+
+                case PropertyEnum.ImmuneToPower:
+                    SetFlag(EntityFlags.ImmuneToPower, newValue);
+                    break;
             }
         }
 
