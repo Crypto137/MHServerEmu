@@ -720,6 +720,11 @@ namespace MHServerEmu.Games.Entities
             RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnPowerUsePostFunc, powerProto);
         }
 
+        public void RemoveCancelOnIntraRegionTeleportConditions()
+        {
+            RemoveConditionsFiltered(ConditionFilter.IsConditionCancelOnIntraRegionTeleportFunc);
+        }
+
         public void RemoveCancelOnProcTriggerConditions(ProcTriggerType triggerType)
         {
             if (_cancelOnProcTriggerCache.TryGetValue(triggerType, out HashSet<ulong> conditionIds) == false)

@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         public static Func<PrototypeId> IsConditionWithPrototypeFunc { get; } = IsConditionWithPrototype;
         public static Func<PowerPrototype> IsConditionCancelOnPowerUseFunc { get; } = IsConditionCancelOnPowerUse;
         public static Func<PowerPrototype> IsConditionCancelOnPowerUsePostFunc { get; } = IsConditionCancelOnPowerUsePost;
+        public static Func IsConditionCancelOnIntraRegionTeleportFunc { get; } = IsConditionCancelOnIntraRegionTeleport;
 
         /// <summary>
         /// Returns <see langword="true"/> if the provided <see cref="Condition"/> was created by the specified <see cref="Power"/>.
@@ -73,6 +74,11 @@ namespace MHServerEmu.Games.Powers.Conditions
 
             return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnPowerUse) &&
                 (conditionProto.CancelOnPowerUseKeyword == PrototypeId.Invalid || powerProto.HasKeyword(conditionProto.CancelOnPowerUseKeyword.As<KeywordPrototype>()));
+        }
+
+        private static bool IsConditionCancelOnIntraRegionTeleport(Condition condition)
+        {
+            return condition.CancelOnFlags.HasFlag(ConditionCancelOnFlags.OnIntraRegionTeleport);
         }
 
         private static bool IsConditionCancelOnPowerUsePost(Condition condition, PowerPrototype powerProto)

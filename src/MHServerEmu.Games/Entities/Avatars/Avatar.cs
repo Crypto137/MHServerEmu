@@ -377,6 +377,7 @@ namespace MHServerEmu.Games.Entities.Avatars
                     return Logger.WarnReturn(ChangePositionResult.InvalidPosition, $"ChangeRegionPosition(): Invalid position {position.Value}");
 
                 player.BeginTeleport(RegionLocation.RegionId, position.Value, orientation != null ? orientation.Value : Orientation.Zero);
+                ConditionCollection.RemoveCancelOnIntraRegionTeleportConditions();
                 ExitWorld();
                 player.AOI.Update(position.Value);
                 result = ChangePositionResult.Teleport;
