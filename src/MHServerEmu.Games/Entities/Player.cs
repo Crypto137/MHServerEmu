@@ -115,6 +115,7 @@ namespace MHServerEmu.Games.Entities
 
         // TODO: Serialize on migration
         private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
+        private MapDiscoveryData _lastAccessedMapDiscoveryData = null;
 
         private uint _loginCount;
         private TimeSpan _loginRewardCooldownTimeStart;
@@ -458,6 +459,8 @@ namespace MHServerEmu.Games.Entities
 
         public override void EnterGame(EntitySettings settings = null)
         {
+            CheckMapDiscoveryDataExpiration();
+
             SendMessage(NetMessageMarkFirstGameFrame.CreateBuilder()
                 .SetCurrentservergametime((ulong)Game.CurrentTime.TotalMilliseconds)
                 .SetCurrentservergameid(Game.Id)
@@ -2524,22 +2527,47 @@ namespace MHServerEmu.Games.Entities
 
         public MapDiscoveryData GetMapDiscoveryData(ulong regionId)
         {
-            var manager = Game.RegionManager;
-            Region region = manager.GetRegion(regionId);
+            Region region = Game.RegionManager.GetRegion(regionId);
             if (region == null) return Logger.WarnReturn<MapDiscoveryData>(null, "GetMapDiscoveryData(): region == null");
 
+            // MapDiscoveryData for the current region is frequently accessed when avatars move around, so we cache it
+            if (_lastAccessedMapDiscoveryData != null && _lastAccessedMapDiscoveryData.RegionId == regionId)
+            {
+                _lastAccessedMapDiscoveryData.UpdateAccessTimestamp();
+                return _lastAccessedMapDiscoveryData;
+            }
+
+            // Retrieve or create the MapDiscoveryData for the specified region
             if (_mapDiscoveryDict.TryGetValue(regionId, out MapDiscoveryData mapDiscoveryData) == false)
             {
+                // Remove the oldest saved map if capped
+                const int MaxDiscoveredMaps = 25;
+                if (_mapDiscoveryDict.Count >= MaxDiscoveredMaps)
+                {
+                    ulong oldestRegionId = 0;
+                    TimeSpan oldestAccessTimestamp = TimeSpan.MaxValue;
+                    
+                    foreach (var kvp in _mapDiscoveryDict)
+                    {
+                        TimeSpan accessTimestamp = kvp.Value.AccessTimestamp;
+                        if (accessTimestamp >= oldestAccessTimestamp)
+                            continue;
+
+                        oldestRegionId = kvp.Key;
+                        oldestAccessTimestamp = accessTimestamp;
+                    }
+
+                    _mapDiscoveryDict.Remove(oldestRegionId);
+                }
+
+                // Allocate new MapDiscoveryData
                 mapDiscoveryData = new(region);
                 _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
             }
 
-            // clear old regions if limit is reached
-            if (_mapDiscoveryDict.Count > 25)
-                foreach (var kvp in _mapDiscoveryDict)
-                    if (manager.GetRegion(kvp.Key) == null)
-                        _mapDiscoveryDict.Remove(kvp.Key);
-
+            // Refresh timestamp and cache the data
+            mapDiscoveryData.UpdateAccessTimestamp();
+            _lastAccessedMapDiscoveryData = mapDiscoveryData;
             return mapDiscoveryData;
         }
 
@@ -2597,6 +2625,24 @@ namespace MHServerEmu.Games.Entities
             // TODO party reveal
 
             return reveal;
+        }
+
+        private void CheckMapDiscoveryDataExpiration()
+        {
+            // Reset map discovery after 8 hours of not being accessed.
+            const int MapDiscoveryLifespanHours = 8;
+
+            TimeSpan threshold = TimeSpan.FromHours(MapDiscoveryLifespanHours);
+            TimeSpan currentTime = Game.Current.CurrentTime;
+
+            foreach (var kvp in _mapDiscoveryDict)
+            {
+                TimeSpan lifetime = currentTime - kvp.Value.AccessTimestamp;
+                if (lifetime < threshold)
+                    continue;
+
+                _mapDiscoveryDict.Remove(kvp.Key);
+            }
         }
 
         #endregion

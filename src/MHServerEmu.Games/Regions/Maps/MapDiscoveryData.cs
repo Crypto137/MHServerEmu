@@ -19,10 +19,17 @@ namespace MHServerEmu.Games.Regions.Maps
         public ulong RegionId { get; }
         public LowResMap LowResMap { get; }
 
+        public TimeSpan AccessTimestamp { get; private set; }
+
         public MapDiscoveryData(Region region)
         {
             RegionId = region.Id;
             LowResMap = new(region); // InitIfNecessary
+        }
+
+        public void UpdateAccessTimestamp()
+        {
+            AccessTimestamp = Game.Current.CurrentTime;
         }
 
         public bool DiscoverEntity(WorldEntity worldEntity)
