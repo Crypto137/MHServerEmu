@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Network;
@@ -13,8 +14,6 @@ namespace MHServerEmu.Games.Regions.Maps
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _discoveredEntities = new();
-        private readonly HashSet<Area> _areas = new();
-        private readonly HashSet<Cell> _cells = new();
 
         public ulong RegionId { get; }
         public LowResMap LowResMap { get; }
@@ -68,7 +67,7 @@ namespace MHServerEmu.Games.Regions.Maps
             return LowResMapUpdate(player);
         }
 
-        public bool LowResMapUpdate(Player player, Vector3? position = default)
+        public bool LowResMapUpdate(Player player, Vector3? position = null)
         {
             var aoi = player.AOI;
             if (aoi == null) return Logger.WarnReturn(false, $"LowResMapUpdate(): AOI == null");
@@ -82,10 +81,13 @@ namespace MHServerEmu.Games.Regions.Maps
             bool regenNavi = false;
             bool update = false;
 
+            HashSet<Area> areas = HashSetPool<Area>.Instance.Get();
+            HashSet<Cell> cells = HashSetPool<Cell>.Instance.Get();
+
             if (position.HasValue)
             {
                 var volume = region.GetLowResVolume(position.Value);
-                aoi.AddCellsFromVolume(volume, _areas, _cells, ref regenNavi);
+                aoi.AddCellsFromVolume(volume, areas, cells, ref regenNavi);
             }
             else
             {
@@ -99,7 +101,7 @@ namespace MHServerEmu.Games.Regions.Maps
                     {
                         if (LowResMap.Translate(index, ref posAtIndex) == false) continue;
                         var volume = region.GetLowResVolume(posAtIndex);
-                        aoi.AddCellsFromVolume(volume, _areas, _cells, ref regenNavi);
+                        aoi.AddCellsFromVolume(volume, areas, cells, ref regenNavi);
                     }
 
                 update = true;
@@ -108,11 +110,11 @@ namespace MHServerEmu.Games.Regions.Maps
             if (regenNavi) aoi.RegenerateClientNavi();
             if (update) SendMiniMapUpdate(player);
 
-            if (aoi.RemoveCells(_areas, _cells)) 
+            if (aoi.RemoveCells(areas, cells)) 
                 aoi.RegenerateClientNavi();
 
-            _areas.Clear();
-            _cells.Clear();
+            HashSetPool<Area>.Instance.Return(areas);
+            HashSetPool<Cell>.Instance.Return(cells);
 
             return true;
         }
