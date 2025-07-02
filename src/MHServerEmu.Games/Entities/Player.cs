@@ -2561,11 +2561,12 @@ namespace MHServerEmu.Games.Entities
                 }
 
                 // Allocate new MapDiscoveryData
-                mapDiscoveryData = new(region);
+                mapDiscoveryData = new(region.Id);
                 _mapDiscoveryDict.Add(regionId, mapDiscoveryData);
             }
 
-            // Refresh timestamp and cache the data
+            // Refresh and cache the data
+            mapDiscoveryData.InitIfNecessary(region);
             mapDiscoveryData.UpdateAccessTimestamp();
             _lastAccessedMapDiscoveryData = mapDiscoveryData;
             return mapDiscoveryData;

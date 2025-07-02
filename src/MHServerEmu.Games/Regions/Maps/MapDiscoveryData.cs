@@ -15,15 +15,22 @@ namespace MHServerEmu.Games.Regions.Maps
 
         private readonly HashSet<ulong> _discoveredEntities = new();
 
-        public ulong RegionId { get; }
-        public LowResMap LowResMap { get; }
+        public LowResMap LowResMap { get; } = new();
 
+        public ulong RegionId { get; private set; }
         public TimeSpan AccessTimestamp { get; private set; }
 
-        public MapDiscoveryData(Region region)
+        public MapDiscoveryData(ulong regionId = 0)
         {
-            RegionId = region.Id;
-            LowResMap = new(region); // InitIfNecessary
+            RegionId = regionId;
+        }
+
+        public void InitIfNecessary(Region region)
+        {
+            LowResMap.InitIfNecessary(region);
+
+            if (region?.Prototype?.AlwaysRevealFullMap == true)
+                LowResMap.RevealAll();
         }
 
         public void UpdateAccessTimestamp()

@@ -238,5 +238,10 @@ namespace MHServerEmu.Core.Collections
         {
             return Xor(left, right);
         }
+
+        public static int GetArraySizeIfUsed(int numBits)
+        {
+            return ((numBits + BitsPerWord - 1) / BitsPerWord) * BitsPerWord;
+        }
     }
 }

@@ -1,5 +1,5 @@
-﻿using System.Text;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -8,48 +8,55 @@ namespace MHServerEmu.Games.Regions.Maps
 {
     public class LowResMap : ISerialize
     {
-        private bool _isRevealAll;
-        private GBitArray _map;
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Region Region { get; }
+        private GBitArray _map = new();
+        private bool _isRevealAll = false;
+
+        private Region _region = null;
+
+        public GBitArray Map { get => _map; }
         public bool IsRevealAll { get => _isRevealAll; }
-        public GBitArray Map { get => _map; } 
 
         public LowResMap() { }
 
-        public LowResMap(Region region)
+        public void InitIfNecessary(Region initRegion)
         {
-            _map = new();
+            if (_region == null && initRegion != null && _map.Size != 0)
+            {
+                // This is where region reference is assigned after deserialization
+                _region = initRegion;
 
-            Region = region; // SetRegion
-            int size = region.CalcLowResSize();
-            _map.Resize(size);
-
-            _isRevealAll = region.Prototype.AlwaysRevealFullMap;
+                // Reset if there is a size mismatch
+                if (_map.Size != GBitArray.GetArraySizeIfUsed(initRegion.CalcLowResSize()))
+                {
+                    Clear();
+                    SetRegion(initRegion);
+                }
+            }
+            else if (initRegion == null || _region != initRegion)
+            {
+                Clear();
+                SetRegion(initRegion);
+            }
         }
 
         public bool Serialize(Archive archive)
         {
             bool success = true;
+
             success &= Serializer.Transfer(archive, ref _isRevealAll);
 
-            if (_isRevealAll) return success;
+            if (_isRevealAll == false)
+                success &= Serializer.Transfer(archive, ref _map);
 
-            success &= Serializer.Transfer(archive, ref _map);
             return success;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new();
-            sb.AppendLine($"{nameof(_isRevealAll)}: {_isRevealAll}");
-            // sb.AppendLine($"{nameof(_map)}: {_map.ToHexString()}");
-            return sb.ToString();
         }
 
         public bool RevealPosition(in Vector3 position)
         {
-            if (_isRevealAll) return false;
+            if (_isRevealAll)
+                return false;
 
             int index = 0;
             if (Translate(position, ref index) && _map[index] == false)
@@ -61,16 +68,40 @@ namespace MHServerEmu.Games.Regions.Maps
             return false;
         }
 
+        public void RevealAll()
+        {
+            _isRevealAll = true;
+        }
+
         public bool Translate(in Vector3 position, ref int index)
         {
-            if (Region == null) return false;
-            return Region.TranslateLowResMap(position, ref index) && index < _map.Size;
+            if (_region == null) return Logger.WarnReturn(false, "Translate(): _region == null");
+            return _region.TranslateLowResMap(position, ref index) && index < _map.Size;
         }
 
         public bool Translate(int index, ref Vector3 position)
         {
-            if (Region == null) return false;
-            return Region.TranslateLowResMap(index, ref position);
+            if (_region == null) return Logger.WarnReturn(false, "Translate(): _region == null");
+            return _region.TranslateLowResMap(index, ref position);
+        }
+
+        private void Clear()
+        {
+            _region = null;
+            _isRevealAll = false;
+            _map.Clear();
+        }
+
+        private void SetRegion(Region region)
+        {
+            if (region == null)
+                return;
+
+            _region = region;
+
+            _map.Clear();
+            int size = region.CalcLowResSize();
+            _map.Resize(size);
         }
     }
 }
