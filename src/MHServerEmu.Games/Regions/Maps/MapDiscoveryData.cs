@@ -1,6 +1,8 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Network;
 
@@ -9,20 +11,36 @@ namespace MHServerEmu.Games.Regions.Maps
     /// <summary>
     /// Keeps track of minimap sections and entities discovered by a player in a specific region instance.
     /// </summary>
-    public class MapDiscoveryData
+    public class MapDiscoveryData : ISerialize
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly HashSet<ulong> _discoveredEntities = new();
+        private ulong _regionId;
+        private TimeSpan _accessTimestamp;
+        private HashSet<ulong> _discoveredEntities = new();
 
         public LowResMap LowResMap { get; } = new();
 
-        public ulong RegionId { get; private set; }
-        public TimeSpan AccessTimestamp { get; private set; }
+        public ulong RegionId { get => _regionId; }
+        public TimeSpan AccessTimestamp { get => _accessTimestamp; }
 
-        public MapDiscoveryData(ulong regionId = 0)
+        public MapDiscoveryData() { }
+
+        public MapDiscoveryData(ulong regionId)
         {
-            RegionId = regionId;
+            _regionId = regionId;
+        }
+
+        public bool Serialize(Archive archive)
+        {
+            bool success = true;
+
+            success &= Serializer.Transfer(archive, ref _regionId);
+            success &= Serializer.Transfer(archive, ref _accessTimestamp);
+            success &= Serializer.Transfer(archive, ref _discoveredEntities);
+            success &= Serializer.Transfer(archive, LowResMap);
+
+            return success;
         }
 
         public void InitIfNecessary(Region region)
@@ -35,7 +53,7 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public void UpdateAccessTimestamp()
         {
-            AccessTimestamp = Game.Current.CurrentTime;
+            _accessTimestamp = Game.Current.CurrentTime;
         }
 
         public bool DiscoverEntity(WorldEntity worldEntity)

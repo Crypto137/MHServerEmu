@@ -756,8 +756,19 @@ namespace MHServerEmu.Games.Common
 
         #endregion
 
-        // Sets
+        #region Sets
+
         public static bool Transfer(Archive archive, ref SortedSet<ulong> ioData)
+        {
+            return Transfer(archive, ioData);
+        }
+
+        public static bool Transfer(Archive archive, ref HashSet<ulong> ioData)
+        {
+            return Transfer(archive, ioData);
+        }
+
+        public static bool Transfer(Archive archive, ISet<ulong> ioData)
         {
             bool success = true;
 
@@ -789,6 +800,7 @@ namespace MHServerEmu.Games.Common
             return success;
         }
 
+        #endregion
 
         // Class-specific
         public static bool Transfer(Archive archive, ref SortedVector<AvailableBadges> ioData)

@@ -113,7 +113,6 @@ namespace MHServerEmu.Games.Entities
         private Queue<PrototypeId> _kismetSeqQueue = new();
         private Dictionary<PrototypeId, StashTabOptions> _stashTabOptionsDict = new();
 
-        // TODO: Serialize on migration
         private Dictionary<ulong, MapDiscoveryData> _mapDiscoveryDict = new();
         private MapDiscoveryData _lastAccessedMapDiscoveryData = null;
 
@@ -366,8 +365,6 @@ namespace MHServerEmu.Games.Entities
 
             bool success = base.Serialize(archive);
 
-            if (archive.IsReplication == false) PlayerConnection.MigrationData.TransferMap(_mapDiscoveryDict, archive.IsPacking);
-
             if (archive.Version >= ArchiveVersion.AddedMissions)
                 success &= Serializer.Transfer(archive, MissionManager);
 
@@ -420,7 +417,8 @@ namespace MHServerEmu.Games.Entities
 
             if (archive.InvolvesClient == false)
             {
-                // TODO: Serialize map discovery data
+                if (archive.Version >= ArchiveVersion.ImplementedMapDiscoveryDataPersistence)
+                    success &= Serializer.Transfer(archive, ref _mapDiscoveryDict);
 
                 if (archive.Version >= ArchiveVersion.AddedVendorPurchaseData)
                 {

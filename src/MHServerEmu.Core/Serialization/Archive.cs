@@ -30,9 +30,10 @@ namespace MHServerEmu.Core.Serialization
         AddedVendorPurchaseData = 3,
         ImplementedConditionPersistence = 4,
         ImplementedLoginRewards = 5,
+        ImplementedMapDiscoveryDataPersistence = 6,
 
         // Update the current version if you add any    <---------
-        Current = ImplementedLoginRewards
+        Current = ImplementedMapDiscoveryDataPersistence
     }
 
     /// <summary>
