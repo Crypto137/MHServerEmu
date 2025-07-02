@@ -283,14 +283,16 @@ namespace MHServerEmu.Games.GameData.PatchManager
         public void SetPath(Prototype parent, Prototype child, string fieldName)
         {
             string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
-            if (parent.DataRef != PrototypeId.Invalid) parentPath = string.Empty;
+            if (parent.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(parent.DataRef)) 
+                parentPath = string.Empty;
             _pathDict[child] = $"{parentPath}.{fieldName}";
         }
 
         public void SetPathIndex(Prototype parent, Prototype child, string fieldName, int index)
         {
             string parentPath = _pathDict.TryGetValue(parent, out var path) ? path : string.Empty;
-            if (parent.DataRef != PrototypeId.Invalid) parentPath = string.Empty;
+            if (parent.DataRef != PrototypeId.Invalid && _patchDict.ContainsKey(parent.DataRef)) 
+                parentPath = string.Empty;
             _pathDict[child] = $"{parentPath}.{fieldName}[{index}]";
         }
     }
