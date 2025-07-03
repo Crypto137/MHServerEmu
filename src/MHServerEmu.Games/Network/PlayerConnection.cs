@@ -300,9 +300,8 @@ namespace MHServerEmu.Games.Network
                 region.RequestShutdown();
             }
 
-            // Remove game id to let the player manager know that it is now safe to write to the database.
-            // TODO: Replace this with a player manager message.
-            _frontendClient.GameId = 0;
+            // Let the player manager know that it is now safe to write to the database.
+            Game.GameManager.OnClientRemoved(Game, _frontendClient);
 
             Logger.Info($"Removed frontend client [{_frontendClient}] from game [{Game}]");
         }

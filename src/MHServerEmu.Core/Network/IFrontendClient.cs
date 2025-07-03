@@ -8,8 +8,7 @@ namespace MHServerEmu.Core.Network
     public interface IFrontendClient
     {
         public bool IsConnected { get; }
-
-        public ulong GameId { get; set; }   // REMOVEME: Replace this with a service message
+        public ulong DbId { get; }
 
         /// <summary>
         /// Disconnects this <see cref="IFrontendClient"/> from the remote client.

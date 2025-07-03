@@ -37,7 +37,7 @@ namespace MHServerEmu.Frontend
         public ulong GameId { get => Interlocked.Read(ref _gameId); set => Interlocked.Exchange(ref _gameId, value); }
 
         public bool IsConnected { get => Connection.Connected; }
-        public bool IsInGame { get => GameId != 0; }
+        public ulong DbId { get => Account != null ? (ulong)Account.Id : 0; }
 
         /// <summary>
         /// Constructs a new <see cref="FrontendClient"/> instance for the provided <see cref="TcpClientConnection"/>.

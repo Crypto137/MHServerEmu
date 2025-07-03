@@ -29,7 +29,7 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly SessionManager _sessionManager;
-        private readonly GameManager _gameManager;
+        //private readonly GameManager _gameManager;
         private readonly Dictionary<ulong, FrontendClient> _playerDict = new();
         private readonly Dictionary<ulong, Task> _pendingSaveDict = new();
 
@@ -44,7 +44,7 @@ namespace MHServerEmu.PlayerManagement
         public PlayerManagerService()
         {
             _sessionManager = new(this);
-            _gameManager = new();
+            //_gameManager = new();
 
             // Get frontend information for AuthTickets
             var frontendConfig = ConfigManager.Instance.GetConfig<FrontendConfig>();
@@ -58,12 +58,14 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
-            _gameManager.InitializeGames(Config.GameInstanceCount, Config.PlayerCountDivisor);
+            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameServiceProtocol.GameInstanceOp.OpType.Create, 1);
+            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
+            //_gameManager.InitializeGames(Config.GameInstanceCount, Config.PlayerCountDivisor);
         }
 
         public void Shutdown()
         {
-            _gameManager.ShutdownAllGames();
+            //_gameManager.ShutdownAllGames();
 
             // Wait for all data to be saved
             bool waitingForSave;
@@ -96,16 +98,6 @@ namespace MHServerEmu.PlayerManagement
                     OnRouteMessage(routeMessage);
                     break;
 
-                case GameServiceProtocol.LeaderboardStateChange leaderboardStateChange:
-                    // REMOVEME: This should be handled by the GameInstanceService on its own
-                    _gameManager.BroadcastServiceMessage(leaderboardStateChange);
-                    break;
-
-                case GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
-                    // REMOVEME: This should be handled by the GameInstanceService on its own
-                    OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
-                    break;
-
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
@@ -114,8 +106,13 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
+            return "Running";
+
+            /*
+
             lock (_pendingSaveDict)
                 return $"Games: {_gameManager.GameCount} | Sessions: {_sessionManager.ActiveSessionCount} [{_sessionManager.PendingSessionCount}] | Pending Saves: {_pendingSaveDict.Count}";
+            */
         }
 
         private void OnAddClient(in GameServiceProtocol.AddClient addClient)
@@ -139,16 +136,8 @@ namespace MHServerEmu.PlayerManagement
                 case ClientToGameServerMessage.NetMessageReadyForGameJoin:  OnReadyForGameJoin(client, messageBuffer); break;
 
                 default:
-                    // Route the rest of messages to the game the player is currently in
-                    Game game = GetGameByPlayer(client);
-
-                    if (game == null)
-                    {
-                        Logger.Warn($"Handle(): Cannot route {(ClientToGameServerMessage)messageBuffer.MessageId}, the player {client.Session.Account} is not in a game");
-                        return;
-                    }
-
-                    game.ReceiveMessageBuffer(client, messageBuffer);
+                    // Route the rest of messages to the GIS
+                    ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, routeMessageBuffer);
                     break;
             }
         }
@@ -164,23 +153,6 @@ namespace MHServerEmu.PlayerManagement
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
-        {
-            // REMOVEME: This should be handled by the GameInstanceService on its own
-            ulong gameId = 0;
-            lock (_playerDict)
-            {
-                if (_playerDict.TryGetValue(leaderboardRewardRequestResponse.ParticipantId, out FrontendClient client))
-                    gameId = client.GameId;
-            }
-
-            Game game = _gameManager.GetGameById(gameId);
-            if (game == null) return Logger.WarnReturn(false, "OnLeaderboardRewardRequestResponse(): game == null");
-
-            game.ReceiveServiceMessage(leaderboardRewardRequestResponse);
-            return true;
         }
 
         #endregion
@@ -221,7 +193,11 @@ namespace MHServerEmu.PlayerManagement
 
             // Remove the player in reverse (Game -> Session -> PlayerManager)
             // This is to make sure the player is removed from the game even if there is some issue with their session.
-            GetGameByPlayer(client)?.RemoveClient(client);
+            //GetGameByPlayer(client)?.RemoveClient(client);
+
+            GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Remove, client, 1);
+            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
+
             _sessionManager.RemoveActiveSession(client.Session.Id);
 
             ulong playerDbId = (ulong)client.Session.Account.Id;
@@ -233,6 +209,7 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Account data is saved asynchronously as a task because it takes some time for a player to leave a game
+            /*
             lock (_pendingSaveDict)
             {
                 if (_pendingSaveDict.ContainsKey(playerDbId))
@@ -249,6 +226,7 @@ namespace MHServerEmu.PlayerManagement
                     _pendingSaveDict.Add(playerDbId, Task.Run(async () => await SavePlayerDataAsync(client)));
                 }
             }
+            */
 
             TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
             Logger.Info($"Removed client [{client}] (SessionLength={sessionLength:hh\\:mm\\:ss})");
@@ -270,15 +248,6 @@ namespace MHServerEmu.PlayerManagement
         public bool TryGetClient(ulong sessionId, out FrontendClient client) => _sessionManager.TryGetClient(sessionId, out client);
 
         /// <summary>
-        /// Retrieves the <see cref="Game"/> instance that the provided <see cref="FrontendClient"/> is in. Returns <see langword="null"/> if not found.
-        /// </summary>
-        public Game GetGameByPlayer(FrontendClient client)
-        {
-            // TODO: Keep track of this inside PlayerManagerService rather than relying on a client property
-            return _gameManager.GetGameById(client.GameId);
-        }
-
-        /// <summary>
         /// Sends an <see cref="IMessage"/> to all connected <see cref="FrontendClient"/> instances.
         /// </summary>
         public void BroadcastMessage(IMessage message)
@@ -295,6 +264,12 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private async Task AddPlayerToGameAsync(FrontendClient client)
         {
+            AccountManager.LoadPlayerDataForAccount(client.Session.Account);
+
+            GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Add, client, 1);
+            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
+
+            /*
             ulong playerDbId = (ulong)client.Session.Account.Id;
 
             bool hasSavePending = false;
@@ -349,6 +324,8 @@ namespace MHServerEmu.PlayerManagement
 
             Logger.Warn($"AddPlayerToGameAsync(): Timed out trying to add client [{client}] to a game after {numAttempts} attempts, disconnecting");
             client.Disconnect();
+
+            */
         }
 
         /// <summary>
@@ -356,6 +333,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private async Task SavePlayerDataAsync(FrontendClient client)
         {
+            /*
             // Wait for the player to leave the game while checking in short bursts.
             // [check x10] - [wait 10 sec] - [check x10] - [wait 10 sec], and so on.
 
@@ -391,6 +369,7 @@ namespace MHServerEmu.PlayerManagement
             // Timeout, just save whatever data was there and move on.
             Logger.Warn($"SavePlayerDataAsync(): Timed out waiting for client [{client}] to leave game 0x{client.GameId:X} after {numAttempts} attempts");
             DoSavePlayerData(client);
+            */
         }
 
         private void DoSavePlayerData(FrontendClient client)

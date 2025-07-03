@@ -5,6 +5,7 @@ using MHServerEmu.Games;
 
 namespace MHServerEmu.PlayerManagement
 {
+    /*
     /// <summary>
     /// Manages <see cref="Game"/> instances.
     /// </summary>
@@ -144,4 +145,5 @@ namespace MHServerEmu.PlayerManagement
             return resultGame;
         }
     }
+    */
 }
