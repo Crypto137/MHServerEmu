@@ -15,6 +15,7 @@ using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using MHServerEmu.PlayerManagement;
@@ -210,6 +211,7 @@ namespace MHServerEmu
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.Instance.Initialize()
+                && CatalogManager.Instance.Initialize()
                 && IDBManager.Instance.Initialize()
                 && AccountManager.Initialize();
         }

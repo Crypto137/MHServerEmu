@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Gazillion;
 
-namespace MHServerEmu.Billing.Catalogs
+namespace MHServerEmu.Games.MTXStore.Catalogs
 {
     public class CatalogEntryType
     {

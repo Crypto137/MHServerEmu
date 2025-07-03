@@ -2,7 +2,7 @@
 using Google.ProtocolBuffers;
 using Gazillion;
 
-namespace MHServerEmu.Billing.Catalogs
+namespace MHServerEmu.Games.MTXStore.Catalogs
 {
     public class LocalizedCatalogEntryUrlOrData
     {
