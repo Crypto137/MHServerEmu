@@ -68,6 +68,8 @@ Information about how the client functions.
 
 - [Client Launch Parameters](./Client/ClientLaunchParameters.md) - a list of various launch parameters that you can use when running the client (such as enabling verbose logging).
 
+- [Client INI Files](./Client/ClientIniFiles.md) - information on Unreal Engine INI configuration files used by the client.
+
 - [ClientConfig](./Client/ClientConfig.md) - ClientConfig.xml file structure.
 
 - [Client Chat Commands](./Client/ClientChatCommands.md) - a list of chat commands available in the client.
