@@ -28,16 +28,11 @@ namespace MHServerEmu.Frontend
         private MuxChannel _muxChannel1;
         private MuxChannel _muxChannel2;
 
-        private ulong _gameId;
-
         public IFrontendSession Session { get; private set; } = null;
-        public DBAccount Account { get => Session?.Account; }
-
-        // Access game id atomically using Interlocked because this is used by multiple threads to determine whether the client is in a game.
-        public ulong GameId { get => Interlocked.Read(ref _gameId); set => Interlocked.Exchange(ref _gameId, value); }
+        public DBAccount Account { get => (DBAccount)Session?.Account; }
 
         public bool IsConnected { get => Connection.Connected; }
-        public ulong DbId { get => Account != null ? (ulong)Account.Id : 0; }
+        public ulong DbId { get => Session != null ? (ulong)Account.Id : 0; }
 
         /// <summary>
         /// Constructs a new <see cref="FrontendClient"/> instance for the provided <see cref="TcpClientConnection"/>.
@@ -63,6 +58,19 @@ namespace MHServerEmu.Frontend
         public void Disconnect()
         {
             Connection.Disconnect();
+        }
+
+        public bool AssignSession(IFrontendSession session)
+        {
+            if (Session != null)
+                return Logger.WarnReturn(false, $"AssignSession(): Failed to assign {session} to a client: already assigned {Session}");
+
+            Session = session;
+
+            _muxChannel1.FinishAuth();
+            _muxChannel2.FinishAuth();
+
+            return true;
         }
 
         public bool HandleIncomingMessageBuffer(ushort muxId, in MessageBuffer messageBuffer)
@@ -130,22 +138,6 @@ namespace MHServerEmu.Frontend
             }
 
             _muxReader.HandleIncomingData(buffer, length);
-        }
-
-        /// <summary>
-        /// Assigns an <see cref="IFrontendSession"/> to this <see cref="FrontendClient"/>.
-        /// </summary>
-        public bool AssignSession(IFrontendSession session)
-        {
-            if (Session != null)
-                return Logger.WarnReturn(false, $"AssignSession(): Failed to assign {session} to a client: already assigned {Session}");
-
-            Session = session;
-
-            _muxChannel1.FinishAuth();
-            _muxChannel2.FinishAuth();
-
-            return true;
         }
 
         public void OnDisconnected()

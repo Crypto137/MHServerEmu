@@ -18,6 +18,9 @@ namespace MHServerEmu.Frontend
         {
             var config = ConfigManager.Instance.GetConfig<FrontendConfig>();
 
+            IFrontendClient.FrontendAddress = config.PublicAddress;
+            IFrontendClient.FrontendPort = config.Port;
+
             // -1 indicates infinite duration for both Task.Delay() and Socket.SendTimeout
             _receiveTimeoutMS = config.ReceiveTimeoutMS > 0 ? config.ReceiveTimeoutMS : -1;
             _sendTimeoutMS = config.SendTimeoutMS > 0 ? config.SendTimeoutMS : -1;

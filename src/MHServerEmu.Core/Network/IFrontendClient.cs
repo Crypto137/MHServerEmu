@@ -7,13 +7,23 @@ namespace MHServerEmu.Core.Network
     /// </summary>
     public interface IFrontendClient
     {
+        // TODO: Figure out a more elegant way to communicate this from the Frontend to the PlayerManager
+        public static string FrontendAddress { get; set; } = string.Empty;
+        public static string FrontendPort { get; set; } = string.Empty;
+
         public bool IsConnected { get; }
+        public IFrontendSession Session { get; }
         public ulong DbId { get; }
 
         /// <summary>
         /// Disconnects this <see cref="IFrontendClient"/> from the remote client.
         /// </summary>
         public void Disconnect();
+
+        /// <summary>
+        /// Assigns an <see cref="IFrontendSession"/> to this <see cref="IFrontendClient"/>.
+        /// </summary>
+        public bool AssignSession(IFrontendSession session);
 
         /// <summary>
         /// Handles a <see cref="MessageBuffer"/> received from the remote client over the specified mux channel.

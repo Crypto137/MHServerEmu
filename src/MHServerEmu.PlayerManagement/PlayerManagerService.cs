@@ -3,7 +3,6 @@ using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 using MHServerEmu.PlayerManagement.Handles;
 
@@ -23,9 +22,6 @@ namespace MHServerEmu.PlayerManagement
         private readonly GameHandleManager _gameHandleManager = new();
         private readonly PlayerHandleManager _playerHandleManager = new();
 
-        private readonly string _frontendAddress;
-        private readonly string _frontendPort;
-
         public PlayerManagerConfig Config { get; }
 
         /// <summary>
@@ -34,11 +30,6 @@ namespace MHServerEmu.PlayerManagement
         public PlayerManagerService()
         {
             _sessionManager = new(this);
-
-            // Get frontend information for AuthTickets
-            var frontendConfig = ConfigManager.Instance.GetConfig<FrontendConfig>();
-            _frontendAddress = frontendConfig.PublicAddress;
-            _frontendPort = frontendConfig.Port;
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
@@ -96,17 +87,17 @@ namespace MHServerEmu.PlayerManagement
 
         private void OnAddClient(in GameServiceProtocol.AddClient addClient)
         {
-            AddClient((FrontendClient)addClient.Client);
+            AddClient(addClient.Client);
         }
 
         private void OnRemoveClient(in GameServiceProtocol.RemoveClient removeClient)
         {
-            RemoveClient((FrontendClient)removeClient.Client);
+            RemoveClient(removeClient.Client);
         }
 
         private void OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
         {
-            FrontendClient client = (FrontendClient)routeMessageBuffer.Client;
+            IFrontendClient client = routeMessageBuffer.Client;
             MessageBuffer messageBuffer = routeMessageBuffer.MessageBuffer;
 
             // Self-handle or route messages
@@ -190,7 +181,7 @@ namespace MHServerEmu.PlayerManagement
 
         #region Client Management
 
-        public bool AddClient(FrontendClient client)
+        public bool AddClient(IFrontendClient client)
         {
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"AddClient(): Client [{client}] has no valid session assigned");
@@ -209,7 +200,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool RemoveClient(FrontendClient client)
+        public bool RemoveClient(IFrontendClient client)
         {
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] has no valid session assigned");
@@ -270,8 +261,8 @@ namespace MHServerEmu.PlayerManagement
                     .SetSessionKey(ByteString.Unsafe.FromBytes(session.Key))
                     .SetSessionToken(ByteString.Unsafe.FromBytes(session.Token))
                     .SetSessionId(session.Id)
-                    .SetFrontendServer(_frontendAddress)
-                    .SetFrontendPort(_frontendPort)
+                    .SetFrontendServer(IFrontendClient.FrontendAddress)
+                    .SetFrontendPort(IFrontendClient.FrontendPort)
                     .SetPlatformTicket("")
                     .SetHasnews(Config.ShowNewsOnLogin)
                     .SetNewsurl(Config.NewsUrl)
@@ -290,8 +281,6 @@ namespace MHServerEmu.PlayerManagement
             var clientCredentials = message.As<ClientCredentials>();
             if (clientCredentials == null) return Logger.WarnReturn(false, "OnClientCredentials(): clientCredentials == null");
 
-            FrontendClient frontendClient = (FrontendClient)client;
-
             if (Config.SimulateQueue)
             {
                 Logger.Debug("Responding with LoginQueueStatus message");
@@ -303,9 +292,9 @@ namespace MHServerEmu.PlayerManagement
                 return false;
             }
 
-            if (_sessionManager.VerifyClientCredentials(frontendClient, clientCredentials) == false)
+            if (_sessionManager.VerifyClientCredentials(client, clientCredentials) == false)
             {
-                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{frontendClient}]");
+                Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
                 client.Disconnect();
                 return false;
             }

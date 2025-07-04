@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 
 namespace MHServerEmu.PlayerManagement.Handles
 {
@@ -22,6 +22,8 @@ namespace MHServerEmu.PlayerManagement.Handles
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public IFrontendClient Client { get; }
+        public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
+
         public PlayerHandleState State { get; private set; }
         public GameHandle Game { get; private set; }
 
@@ -30,6 +32,10 @@ namespace MHServerEmu.PlayerManagement.Handles
         public PlayerHandle(IFrontendClient client)
         {
             ArgumentNullException.ThrowIfNull(client);
+
+            // Ideally this check should be done at compile time, but making PlayerHandle generic would probably overcomplicate things too much.
+            if (client is not IDBAccountOwner)
+                throw new Exception("Client does not implement IDBAccountOwner.");
 
             Client = client;
             State = PlayerHandleState.Created;
@@ -45,8 +51,7 @@ namespace MHServerEmu.PlayerManagement.Handles
 
         public bool LoadPlayerData()
         {
-            // TODO: Decouple this from the frontend implementation
-            DBAccount account = ((FrontendClient)Client).Account;
+            DBAccount account = Account;
 
             lock (account)
             {
@@ -68,8 +73,7 @@ namespace MHServerEmu.PlayerManagement.Handles
             if (State == PlayerHandleState.Created)
                 return Logger.WarnReturn(false, $"SavePlayerData(): Invalid state {State} for player [{this}]");
 
-            // TODO: Decouple this from the frontend implementation
-            DBAccount account = ((FrontendClient)Client).Account;
+            DBAccount account = Account;
 
             lock (account)
             {

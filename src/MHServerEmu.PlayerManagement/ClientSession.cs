@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -23,7 +23,7 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public ulong Id { get; set; }
-        public DBAccount Account { get; private set; }
+        public object Account { get; private set; }
 
         public ClientDownloader Downloader { get; private set; }
         public string Locale { get; private set; }
