@@ -93,10 +93,24 @@ namespace MHServerEmu.PlayerManagement
 
             State = PlayerHandleState.PendingAddToGame;
             Game = game;
-            Logger.Trace($"Requesting to add player [{this}] requesting game [{game}]");
+            Logger.Trace($"Requesting to add player [{this}] to game [{game}]");
 
             GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Add, Client, game.Id);
             ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
+
+            return true;
+        }
+
+        public bool FinishAddToGame(ulong gameId)
+        {
+            if (State != PlayerHandleState.PendingAddToGame)
+                return Logger.WarnReturn(false, $"FinishAddToGame(): Invalid state {State} for player [{this}]");
+
+            if (Game.Id != gameId)
+                Logger.Warn($"FinishAddToGame(): GameId mismatch (expected 0x{Game.Id:X}, got 0x{gameId:X})");
+
+            State = PlayerHandleState.InGame;
+            Logger.Trace($"Player added to game [{Game}]");
 
             return true;
         }
@@ -107,7 +121,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"BeginRemoveFromGame(): Invalid state {State} for handle [{this}]");
 
             if (game != Game)
-                return Logger.WarnReturn(false, $"BeginRemoveFromGame(): Game mismatch (expected [{Game}], got [{game}])");
+                Logger.Warn($"BeginRemoveFromGame(): Game mismatch (expected [{Game}], got [{game}])");
 
             State = PlayerHandleState.PendingRemoveFromGame;
             Logger.Trace($"Requesting to remove player [{this}] from game {game}");
@@ -118,24 +132,20 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool FinalizePendingState()
+        public bool FinishRemoveFromGame(ulong gameId)
         {
-            Logger.Trace($"Handle [{this}] finalizing pending state {State}");
+            if (State != PlayerHandleState.PendingRemoveFromGame)
+                return Logger.WarnReturn(false, $"FinishRemoveFromGame(): Invalid state {State} for player [{this}]");
 
-            switch (State)
-            {
-                case PlayerHandleState.PendingAddToGame:
-                    State = PlayerHandleState.InGame;
-                    break;
+            if (Game.Id != gameId)
+                Logger.Warn($"FinishRemoveFromGame(): GameId mismatch (expected 0x{Game.Id:X}, got 0x{gameId:X})");
 
-                case PlayerHandleState.PendingRemoveFromGame:
-                    State = PlayerHandleState.Idle;
-                    Game = null;
-                    break;
+            State = PlayerHandleState.Idle;
+            Game = null;
 
-                default:
-                    return Logger.WarnReturn(false, $"FinalizePendingState(): Handle [{this}] is not in a pending state");
-            }
+            Logger.Trace($"Player [{this}] removed from game 0x{gameId:X}");
+
+            SavePlayerData();
 
             return true;
         }

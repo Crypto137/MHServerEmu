@@ -24,6 +24,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void Update()
         {
+            // Process service messages
             lock (_messageLock)
                 (_pendingMessageQueue, _messageQueue) = (_messageQueue, _pendingMessageQueue);
 
@@ -48,6 +49,23 @@ namespace MHServerEmu.PlayerManagement
                     default:
                         Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                         break;
+                }
+            }
+
+            // Remove disconnected clients
+            lock (_playerDict)
+            {
+                foreach (PlayerHandle player in _playerDict.Values)
+                {
+                    if (player.State != PlayerHandleState.Idle)
+                        continue;
+
+                    IFrontendClient client = player.Client;
+
+                    if (client.IsConnected)
+                        continue;
+
+                    RemovePlayer(client);
                 }
             }
         }
@@ -134,8 +152,6 @@ namespace MHServerEmu.PlayerManagement
 
             player.BeginRemoveFromGame(player.Game);
 
-            RemovePlayer(client);
-
             TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
             Logger.Info($"Removed client [{client}] (SessionLength={sessionLength:hh\\:mm\\:ss})");
             return true;
@@ -152,11 +168,11 @@ namespace MHServerEmu.PlayerManagement
             switch (gameInstanceClientOp.Type)
             {
                 case GameServiceProtocol.GameInstanceClientOp.OpType.AddAck:
-                    player.FinalizePendingState();
+                    player.FinishAddToGame(gameId);
                     break;
 
                 case GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck:
-                    player.FinalizePendingState();
+                    player.FinishRemoveFromGame(gameId);
                     break;
 
                 default:
