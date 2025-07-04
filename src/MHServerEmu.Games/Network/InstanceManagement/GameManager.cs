@@ -11,7 +11,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, Game> _gameDict = new();                     // GameId -> Game
-        private readonly Dictionary<IFrontendClient, Game> _gameByClientDict = new();   // Client -> Game
         private readonly Dictionary<ulong, Game> _gameByPlayerDbIdDict = new();         // PlayerDbId -> Game
 
         public int GameCount { get => _gameDict.Count; }
@@ -20,17 +19,20 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public bool TryGetGameById(ulong gameId, out Game game)
         {
-            return _gameDict.TryGetValue(gameId, out game);
+            lock (_gameDict)
+                return _gameDict.TryGetValue(gameId, out game);
         }
 
         public bool TryGetGameForClient(IFrontendClient client, out Game game)
         {
-            return _gameByClientDict.TryGetValue(client, out game);
+            lock (_gameByPlayerDbIdDict)
+                return _gameByPlayerDbIdDict.TryGetValue(client.DbId, out game);
         }
 
         public bool TryGetGameForPlayerDbId(ulong playerDbId, out Game game)
         {
-            return _gameByPlayerDbIdDict.TryGetValue(playerDbId, out game);
+            lock (_gameByPlayerDbIdDict)
+                return _gameByPlayerDbIdDict.TryGetValue(playerDbId, out game);
         }
 
         public Dictionary<ulong, Game>.ValueCollection.Enumerator GetEnumerator()
@@ -44,9 +46,14 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 return Logger.WarnReturn(false, $"CreateGame(): GameId 0x{gameId:X} is already in use by another game");
 
             Game game = new(gameId, this);
-            _gameDict.Add(gameId, game);
+
+            lock (_gameDict)
+                _gameDict.Add(gameId, game);
             
             game.Run();
+
+            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.CreateAck, game.Id);
+            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
 
             return true;
         }
@@ -57,6 +64,13 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 return Logger.WarnReturn(false, $"ShutdownGame(): GameId 0x{gameId:X} not found");
 
             game.Shutdown(GameShutdownReason.ServerShuttingDown);
+
+            lock (_gameDict)
+                _gameDict.Remove(gameId);
+
+            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
+            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
+
             return true;
         }
 
@@ -69,8 +83,11 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 return Logger.WarnReturn(false, $"AddClientToGame(): Attempting to add client [{client}] to game 0x{gameId:X}, but no game with this id exists");
 
             game.AddClient(client);
-            _gameByClientDict.Add(client, game);
-            _gameByPlayerDbIdDict.Add(client.DbId, game);
+
+            lock (_gameByPlayerDbIdDict)
+                _gameByPlayerDbIdDict.Add(client.DbId, game);
+
+            // Clients are added on the next game tick, so don't send the Ack message to the player manager yet
 
             return true;
         }
@@ -84,25 +101,25 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 return Logger.WarnReturn(false, $"RemoveClientFromGame(): Attempting to remove client [{client}] from game 0x{gameId:X}, but the client is in game 0x{game.Id:X}");
 
             game.RemoveClient(client);
-            _gameByClientDict.Remove(client);
-            _gameByPlayerDbIdDict.Remove(client.DbId);
+
+            lock (_gameByPlayerDbIdDict)
+                _gameByPlayerDbIdDict.Remove(client.DbId);
+
+            // Clients are removed on the next game tick, so don't send the Ack message to the player manager yet
 
             return true;
         }
 
+        public void BroadcastServiceMessageToGames<T>(in T message) where T : struct, IGameServiceMessage
+        {
+            lock (_gameDict)
+            {
+                foreach (Game game in _gameDict.Values)
+                    game.ReceiveServiceMessage(message);
+            }
+        }
+
         #region Game Event Handling
-
-        public void OnGameCreated(Game game)
-        {
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.CreateAck, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
-        }
-
-        public void OnGameShutdown(Game game)
-        {
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
-        }
 
         public void OnClientAdded(Game game, IFrontendClient client)
         {

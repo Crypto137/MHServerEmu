@@ -162,8 +162,6 @@ namespace MHServerEmu.Games
             _gameThread.Start();
 
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
-
-            GameManager.OnGameCreated(this);
         }
 
         public void Shutdown(GameShutdownReason reason)
@@ -188,8 +186,6 @@ namespace MHServerEmu.Games
 
             // Mark this game as shut down for the player manager
             HasBeenShutDown = true;
-
-            GameManager.OnGameShutdown(this);
         }
 
         public void RequestShutdown()

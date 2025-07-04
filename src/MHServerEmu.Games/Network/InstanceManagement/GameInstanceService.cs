@@ -65,12 +65,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         #endregion
 
-        private void BroadcastServiceMessageToGames<T>(in T message) where T : struct, IGameServiceMessage
-        {
-            foreach (Game game in _gameManager)
-                game.ReceiveServiceMessage(message);
-        }
-
         #region Message Handling
 
         private bool OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
@@ -95,7 +89,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     return _gameManager.ShutdownGame(gameInstanceOp.GameId);
 
                 default:
-                    return Logger.WarnReturn(false, $"OnGameInstanceOp(): Unexpected operation type {gameInstanceOp.Type}");
+                    return Logger.WarnReturn(false, $"OnGameInstanceOp(): Unhandled operation type {gameInstanceOp.Type}");
             }
         }
 
@@ -110,14 +104,14 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     return _gameManager.RemoveClientFromGame(gameInstanceClientOp.Client, gameInstanceClientOp.GameId);
 
                 default:
-                    return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unexpected operation type {gameInstanceClientOp.Type}");
+                    return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
             }
         }
 
         private bool OnLeaderboardStateChange(in GameServiceProtocol.LeaderboardStateChange leaderboardStateChange)
         {
             LeaderboardInfoCache.Instance.UpdateLeaderboardInstance(leaderboardStateChange);
-            BroadcastServiceMessageToGames(leaderboardStateChange);
+            _gameManager.BroadcastServiceMessageToGames(leaderboardStateChange);
             return true;
         }
 
