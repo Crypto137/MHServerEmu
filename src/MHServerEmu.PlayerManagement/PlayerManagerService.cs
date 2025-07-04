@@ -17,10 +17,11 @@ namespace MHServerEmu.PlayerManagement
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly SessionManager _sessionManager;
-        
-        private readonly GameHandleManager _gameHandleManager = new();
-        private readonly PlayerHandleManager _playerHandleManager = new();
+        private bool _isRunning = true;
+
+        internal SessionManager SessionManager { get; }
+        internal GameHandleManager GameHandleManager { get; }
+        internal ClientManager ClientManager { get; }
 
         public PlayerManagerConfig Config { get; }
 
@@ -29,7 +30,9 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public PlayerManagerService()
         {
-            _sessionManager = new(this);
+            SessionManager = new(this);
+            GameHandleManager = new();
+            ClientManager = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
@@ -38,11 +41,19 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
-            _gameHandleManager.InitializeGames(Config.GameInstanceCount, Config.PlayerCountDivisor);
+            GameHandleManager.InitializeGames(Config.GameInstanceCount, Config.PlayerCountDivisor);
+
+            while (_isRunning)
+            {
+                ClientManager.Update();  // Add / remove clients
+
+                Thread.Sleep(1);
+            }
         }
 
         public void Shutdown()
         {
+            _isRunning = false;
             //_gameManager.ShutdownAllGames();
         }
 
@@ -50,15 +61,8 @@ namespace MHServerEmu.PlayerManagement
         {
             switch (message)
             {
-                case GameServiceProtocol.AddClient addClient:
-                    OnAddClient(addClient);
-                    break;
-
-                case GameServiceProtocol.RemoveClient removeClient:
-                    OnRemoveClient(removeClient);
-                    break;
-
                 case GameServiceProtocol.RouteMessageBuffer routeMessagePackage:
+                    // Message buffers are routed asynchronously rather than in ticks to have the lowest latency possible.
                     OnRouteMessageBuffer(routeMessagePackage);
                     break;
 
@@ -69,9 +73,12 @@ namespace MHServerEmu.PlayerManagement
                 case GameServiceProtocol.GameInstanceOp gameInstanceOp:
                     OnGameInstanceOp(gameInstanceOp);
                     break;
-
-                case GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp:
-                    OnGameInstanceClientOp(gameInstanceClientOp);
+                
+                // Client messages are handled in ticks by the ClientManager
+                case GameServiceProtocol.AddClient:
+                case GameServiceProtocol.RemoveClient:
+                case GameServiceProtocol.GameInstanceClientOp:
+                    ClientManager.EnqueueMessage(message);
                     break;
 
                 default:
@@ -82,17 +89,7 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
-            return $"Games: {_gameHandleManager.GameCount} | Sessions: {_sessionManager.ActiveSessionCount} [{_sessionManager.PendingSessionCount}]";
-        }
-
-        private void OnAddClient(in GameServiceProtocol.AddClient addClient)
-        {
-            AddClient(addClient.Client);
-        }
-
-        private void OnRemoveClient(in GameServiceProtocol.RemoveClient removeClient)
-        {
-            RemoveClient(removeClient.Client);
+            return $"Games: {GameHandleManager.GameCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
         }
 
         private void OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
@@ -129,7 +126,7 @@ namespace MHServerEmu.PlayerManagement
         {
             ulong gameId = gameInstanceOp.GameId;
 
-            if (_gameHandleManager.TryGetGameById(gameId, out GameHandle game) == false)
+            if (GameHandleManager.TryGetGameById(gameId, out GameHandle game) == false)
                 return Logger.WarnReturn(false, $"OnGameInstanceOp(): No handle found for gameId 0x{gameId:X}");
 
             switch (gameInstanceOp.Type)
@@ -149,78 +146,6 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        private bool OnGameInstanceClientOp(in GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp)
-        {
-            IFrontendClient client = gameInstanceClientOp.Client;
-            ulong gameId = gameInstanceClientOp.GameId;
-
-            if (_playerHandleManager.TryGetPlayer(client, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): No handle found for client [{client}]");
-
-            if (_gameHandleManager.TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): No handle found for gameId 0x{gameId:X}");
-
-            switch (gameInstanceClientOp.Type)
-            {
-                case GameServiceProtocol.GameInstanceClientOp.OpType.AddAck:
-                    player.FinalizePendingState();
-                    break;
-
-                case GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck:
-                    player.FinalizePendingState();
-                    break;
-
-                default:
-                    return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
-            }
-
-            return true;
-        }
-
-        #endregion
-
-        #region Client Management
-
-        public bool AddClient(IFrontendClient client)
-        {
-            if (client.Session == null || client.Session.Account == null)
-                return Logger.WarnReturn(false, $"AddClient(): Client [{client}] has no valid session assigned");
-
-            ulong playerDbId = client.DbId;
-
-            if (_playerHandleManager.AddPlayer(client, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"AddClient(): Failed to get or create player handle for client [{client}]");
-
-            player.LoadPlayerData();
-
-            GameHandle game = _gameHandleManager.GetAvailableGame();
-
-            game.AddPlayer(player);
-            
-            return true;
-        }
-
-        public bool RemoveClient(IFrontendClient client)
-        {
-            if (client.Session == null || client.Session.Account == null)
-                return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] has no valid session assigned");
-
-            _sessionManager.RemoveActiveSession(client.Session.Id);
-
-            ulong playerDbId = client.DbId;
-
-            if (_playerHandleManager.TryGetPlayer(client, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"RemoveClient(): Failed to get player handle for client [{client}]");
-
-            player.BeginRemoveFromGame(player.Game);
-
-            _playerHandleManager.RemovePlayer(client);
-
-            TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
-            Logger.Info($"Removed client [{client}] (SessionLength={sessionLength:hh\\:mm\\:ss})");
-            return true;
-        }
-
         #endregion
 
         #region Player Management
@@ -230,7 +155,7 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public bool TryGetSession(ulong sessionId, out ClientSession session)
         {
-            return _sessionManager.TryGetActiveSession(sessionId, out session);
+            return SessionManager.TryGetActiveSession(sessionId, out session);
         }
 
         /// <summary>
@@ -252,7 +177,7 @@ namespace MHServerEmu.PlayerManagement
         {
             authTicket = AuthTicket.DefaultInstance;
 
-            var statusCode = _sessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
+            var statusCode = SessionManager.TryCreateSessionFromLoginDataPB(loginDataPB, out ClientSession session);
 
             if (statusCode == AuthStatusCode.Success)
             {
@@ -292,7 +217,7 @@ namespace MHServerEmu.PlayerManagement
                 return false;
             }
 
-            if (_sessionManager.VerifyClientCredentials(client, clientCredentials) == false)
+            if (SessionManager.VerifyClientCredentials(client, clientCredentials) == false)
             {
                 Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
                 client.Disconnect();
