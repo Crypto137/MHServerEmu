@@ -31,6 +31,7 @@ namespace MHServerEmu.Games
 {
     public enum GameShutdownReason
     {
+        ShutdownRequested,
         ServerShuttingDown,
         GameInstanceCrash
     }

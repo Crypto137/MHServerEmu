@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public void Shutdown()
         {
+            _gameManager.ShutdownAllGames();
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
@@ -60,7 +61,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public string GetStatus()
         {
-            return "Running";
+            return $"Games: {_gameManager.GameCount} | Players: {_gameManager.PlayerCount}";
         }
 
         #endregion
@@ -69,13 +70,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         private bool OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
         {
-            IFrontendClient client = routeMessageBuffer.Client;
-
-            if (_gameManager.TryGetGameForClient(client, out Game game) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Client [{client}] is not in a game");
-
-            game.ReceiveMessageBuffer(client, routeMessageBuffer.MessageBuffer);
-            return true;
+            return _gameManager.RouteMessageBuffer(routeMessageBuffer.Client, routeMessageBuffer.MessageBuffer);
         }
 
         private bool OnGameInstanceOp(in GameServiceProtocol.GameInstanceOp gameInstanceOp)
@@ -86,7 +81,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     return _gameManager.CreateGame(gameInstanceOp.GameId);
 
                 case GameServiceProtocol.GameInstanceOp.OpType.Shutdown:
-                    return _gameManager.ShutdownGame(gameInstanceOp.GameId);
+                    return _gameManager.ShutdownGame(gameInstanceOp.GameId, GameShutdownReason.ShutdownRequested);
 
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceOp(): Unhandled operation type {gameInstanceOp.Type}");
@@ -95,13 +90,23 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         private bool OnGameInstanceClientOp(in GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp)
         {
+            IFrontendClient client = gameInstanceClientOp.Client;
+            ulong gameId = gameInstanceClientOp.GameId;
+
             switch (gameInstanceClientOp.Type)
             {
                 case GameServiceProtocol.GameInstanceClientOp.OpType.Add:
-                    return _gameManager.AddClientToGame(gameInstanceClientOp.Client, gameInstanceClientOp.GameId);
+                    if (_gameManager.AddClientToGame(client, gameId) == false)
+                    {
+                        // Disconnect the client so that it doesn't get stuck waiting to be added to a game
+                        client.Disconnect();
+                        return false;
+                    }
+
+                    return true;
 
                 case GameServiceProtocol.GameInstanceClientOp.OpType.Remove:
-                    return _gameManager.RemoveClientFromGame(gameInstanceClientOp.Client, gameInstanceClientOp.GameId);
+                    return _gameManager.RemoveClientFromGame(client, gameId);
 
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
@@ -123,13 +128,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
         {
-            ulong participantId = leaderboardRewardRequestResponse.ParticipantId;
-
-            if (_gameManager.TryGetGameForPlayerDbId(participantId, out Game game) == false)
-                return Logger.WarnReturn(false, $"OnLeaderboardRewardRequestResponse(): Participant 0x{participantId:X} is not in a game");
-
-            game.ReceiveServiceMessage(leaderboardRewardRequestResponse);
-            return true;
+            ulong playerDbId = leaderboardRewardRequestResponse.ParticipantId;
+            return _gameManager.RouteServiceMessageToPlayer(playerDbId, leaderboardRewardRequestResponse);
         }
 
         #endregion

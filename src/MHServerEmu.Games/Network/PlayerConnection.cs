@@ -300,7 +300,7 @@ namespace MHServerEmu.Games.Network
                 region.RequestShutdown();
             }
 
-            // Let the player manager know that it is now safe to write to the database.
+            // Notify the player manager
             Game.GameManager.OnClientRemoved(Game, _frontendClient);
 
             Logger.Info($"Removed frontend client [{_frontendClient}] from game [{Game}]");
