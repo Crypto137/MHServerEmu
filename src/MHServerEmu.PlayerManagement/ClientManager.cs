@@ -24,7 +24,21 @@ namespace MHServerEmu.PlayerManagement
 
         public void Update()
         {
-            // Process service messages
+            ProcessMessageQueue();
+
+            ProcessIdlePlayers();
+        }
+
+        public void EnqueueMessage<T>(in T message) where T: struct, IGameServiceMessage
+        {
+            lock (_messageLock)
+                _pendingMessageQueue.Enqueue(message);
+        }
+
+        #region Ticking
+
+        private void ProcessMessageQueue()
+        {
             lock (_messageLock)
                 (_pendingMessageQueue, _messageQueue) = (_messageQueue, _pendingMessageQueue);
 
@@ -51,8 +65,10 @@ namespace MHServerEmu.PlayerManagement
                         break;
                 }
             }
+        }
 
-            // Remove disconnected clients
+        private void ProcessIdlePlayers()
+        {
             lock (_playerDict)
             {
                 foreach (PlayerHandle player in _playerDict.Values)
@@ -63,18 +79,21 @@ namespace MHServerEmu.PlayerManagement
                     IFrontendClient client = player.Client;
 
                     if (client.IsConnected)
-                        continue;
-
-                    RemovePlayer(client);
+                    {
+                        GameHandle game = _playerManagerService.GameHandleManager.GetAvailableGame();
+                        game.AddPlayer(player);
+                    }
+                    else
+                    {
+                        RemovePlayer(client);
+                    }
                 }
             }
         }
 
-        public void EnqueueMessage<T>(in T message) where T: struct, IGameServiceMessage
-        {
-            lock (_messageLock)
-                _pendingMessageQueue.Enqueue(message);
-        }
+        #endregion
+
+        #region PlayerHandle Management
 
         public bool TryGetPlayer(IFrontendClient client, out PlayerHandle player)
         {
@@ -82,9 +101,7 @@ namespace MHServerEmu.PlayerManagement
                 return _playerDict.TryGetValue(client.DbId, out player);
         }
 
-        #region PlayerHandle Management
-
-        public bool AddPlayer(IFrontendClient client, out PlayerHandle player)
+        private bool AddPlayer(IFrontendClient client, out PlayerHandle player)
         {
             player = null;
             ulong playerDbId = client.DbId;
@@ -105,7 +122,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool RemovePlayer(IFrontendClient client)
+        private bool RemovePlayer(IFrontendClient client)
         {
             ulong playerDbId = client.DbId;
 
@@ -130,10 +147,6 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"AddClient(): Failed to get or create player handle for client [{client}]");
 
             player.LoadPlayerData();
-
-            GameHandle game = _playerManagerService.GameHandleManager.GetAvailableGame();
-
-            game.AddPlayer(player);
 
             return true;
         }
