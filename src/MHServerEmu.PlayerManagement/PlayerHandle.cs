@@ -3,7 +3,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 
-namespace MHServerEmu.PlayerManagement.Handles
+namespace MHServerEmu.PlayerManagement
 {
     public enum PlayerHandleState
     {

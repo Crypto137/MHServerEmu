@@ -4,7 +4,6 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
-using MHServerEmu.PlayerManagement.Handles;
 
 namespace MHServerEmu.PlayerManagement
 {

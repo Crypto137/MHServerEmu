@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.System;
 
-namespace MHServerEmu.PlayerManagement.Handles
+namespace MHServerEmu.PlayerManagement
 {
     /// <summary>
     /// Manages <see cref="GameHandle"/> instances.

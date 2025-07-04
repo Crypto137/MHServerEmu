@@ -1,7 +1,7 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
-namespace MHServerEmu.PlayerManagement.Handles
+namespace MHServerEmu.PlayerManagement
 {
     public enum GameHandleState
     {
