@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.PlayerManagement
@@ -11,9 +12,7 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly Dictionary<ulong, PlayerHandle> _playerDict = new();
 
-        private readonly object _messageLock = new();
-        private Queue<IGameServiceMessage> _pendingMessageQueue = new();
-        private Queue<IGameServiceMessage> _messageQueue = new();
+        private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
 
         private readonly PlayerManagerService _playerManagerService;
 
@@ -33,18 +32,16 @@ namespace MHServerEmu.PlayerManagement
 
         public void EnqueueMessage<T>(in T message) where T: struct, IGameServiceMessage
         {
-            lock (_messageLock)
-                _pendingMessageQueue.Enqueue(message);
+            _messageQueue.Enqueue(message);
         }
 
         #region Ticking
 
         private void ProcessMessageQueue(bool allowNewClients)
         {
-            lock (_messageLock)
-                (_pendingMessageQueue, _messageQueue) = (_messageQueue, _pendingMessageQueue);
+            _messageQueue.Swap();
 
-            while (_messageQueue.Count > 0)
+            while (_messageQueue.CurrentCount > 0)
             {
                 IGameServiceMessage message = _messageQueue.Dequeue();
 
