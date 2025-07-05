@@ -23,7 +23,7 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public ulong Id { get; set; }
-        public object Account { get; private set; }
+        public object Account { get; set; }
 
         public ClientDownloader Downloader { get; private set; }
         public string Locale { get; private set; }

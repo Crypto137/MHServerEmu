@@ -21,13 +21,16 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public IFrontendClient Client { get; }
+        private static ulong _nextHandleId = 1;
+
+        public ulong HandleId { get; }
+
+        public IFrontendClient Client { get; private set; }
+        public ulong PlayerDbId { get => Client.DbId; }
         public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
 
         public PlayerHandleState State { get; private set; }
         public GameHandle Game { get; private set; }
-
-        public ulong Id { get => Client.DbId; }
 
         public PlayerHandle(IFrontendClient client)
         {
@@ -37,13 +40,28 @@ namespace MHServerEmu.PlayerManagement
             if (client is not IDBAccountOwner)
                 throw new Exception("Client does not implement IDBAccountOwner.");
 
+            HandleId = _nextHandleId++;
             Client = client;
             State = PlayerHandleState.Created;
         }
 
         public override string ToString()
         {
-            return Client.ToString();
+            return $"HandleId={HandleId}, Client=[{Client}]";
+        }
+
+        public void MigrateSession(IFrontendClient newClient)
+        {
+            Logger.Info($"Migrating handle [{this}] to session [{newClient.Session}]");
+
+            RemoveFromCurrentGame();
+            Client.Disconnect();
+
+            ClientSession oldSession = (ClientSession)Client.Session;
+            ClientSession newSession = (ClientSession)newClient.Session;
+            newSession.Account = oldSession.Account;
+
+            Client = newClient;
         }
 
         // NOTE: We are locking on the account instance to prevent account data from being modified while
@@ -113,6 +131,14 @@ namespace MHServerEmu.PlayerManagement
             Logger.Trace($"Player added to game [{Game}]");
 
             return true;
+        }
+
+        public void RemoveFromCurrentGame()
+        {
+            if (State != PlayerHandleState.InGame)
+                return;
+
+            Game.RemovePlayer(this);
         }
 
         public bool BeginRemoveFromGame(GameHandle game)

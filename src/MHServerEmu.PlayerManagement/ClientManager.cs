@@ -85,7 +85,7 @@ namespace MHServerEmu.PlayerManagement
                     }
                     else
                     {
-                        RemovePlayer(client);
+                        RemovePlayerHandle(client);
                     }
                 }
             }
@@ -95,13 +95,13 @@ namespace MHServerEmu.PlayerManagement
 
         #region PlayerHandle Management
 
-        public bool TryGetPlayer(IFrontendClient client, out PlayerHandle player)
+        public bool TryGetPlayerHandle(ulong playerDbId, out PlayerHandle player)
         {
             lock (_playerDict)
-                return _playerDict.TryGetValue(client.DbId, out player);
+                return _playerDict.TryGetValue(playerDbId, out player);
         }
 
-        private bool AddPlayer(IFrontendClient client, out PlayerHandle player)
+        private bool CreatePlayerHandle(IFrontendClient client, out PlayerHandle player)
         {
             player = null;
             ulong playerDbId = client.DbId;
@@ -110,19 +110,19 @@ namespace MHServerEmu.PlayerManagement
             {
                 player = new(client);
                 _playerDict.Add(playerDbId, player);
+
+                player.LoadPlayerData();
             }
             else
             {
-                // TODO: Transfer handle between clients
-                client.Disconnect();
-                player = null;
-                return Logger.ErrorReturn(false, $"AddPlayer(): PlayerDbId 0x{playerDbId:X} is already in use by another client");
+                Logger.Info($"Existing handle found for player [{player}]");
+                player.MigrateSession(client);
             }
 
             return true;
         }
 
-        private bool RemovePlayer(IFrontendClient client)
+        private bool RemovePlayerHandle(IFrontendClient client)
         {
             ulong playerDbId = client.DbId;
 
@@ -143,10 +143,10 @@ namespace MHServerEmu.PlayerManagement
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"AddClient(): Client [{client}] has no valid session assigned");
 
-            if (AddPlayer(client, out PlayerHandle player) == false)
+            if (CreatePlayerHandle(client, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"AddClient(): Failed to get or create player handle for client [{client}]");
 
-            player.LoadPlayerData();
+            Logger.Info($"Added client [{client}]");
 
             return true;
         }
@@ -156,14 +156,17 @@ namespace MHServerEmu.PlayerManagement
             IFrontendClient client = removeClient.Client;
 
             if (client.Session == null || client.Session.Account == null)
-                return Logger.WarnReturn(false, $"RemoveFrontendClient(): Client [{client}] has no valid session assigned");
+                return Logger.WarnReturn(false, $"OnRemoveClient(): Client [{client}] has no valid session assigned");
 
             _playerManagerService.SessionManager.RemoveActiveSession(client.Session.Id);
 
-            if (TryGetPlayer(client, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"RemoveClient(): Failed to get player handle for client [{client}]");
+            if (TryGetPlayerHandle(client.DbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnRemoveClient(): Failed to get player handle for client [{client}]");
 
-            player.BeginRemoveFromGame(player.Game);
+            // When we are handling duplicate logins this handle may already have a different client,
+            // in which case removal from game will be handled by the migration process.
+            if (client == player.Client)
+                player.RemoveFromCurrentGame();
 
             TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
             Logger.Info($"Removed client [{client}] (SessionLength={sessionLength:hh\\:mm\\:ss})");
@@ -175,7 +178,7 @@ namespace MHServerEmu.PlayerManagement
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;
 
-            if (TryGetPlayer(client, out PlayerHandle player) == false)
+            if (TryGetPlayerHandle(client.DbId, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): No handle found for client [{client}]");
 
             switch (gameInstanceClientOp.Type)
