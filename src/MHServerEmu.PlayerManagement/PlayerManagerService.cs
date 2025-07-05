@@ -19,6 +19,7 @@ namespace MHServerEmu.PlayerManagement
         private bool _isRunning = true;
 
         internal SessionManager SessionManager { get; }
+        internal LoginQueueManager LoginQueueManager { get; }
         internal GameHandleManager GameHandleManager { get; }
         internal ClientManager ClientManager { get; }
 
@@ -30,6 +31,7 @@ namespace MHServerEmu.PlayerManagement
         public PlayerManagerService()
         {
             SessionManager = new(this);
+            LoginQueueManager = new(this);
             GameHandleManager = new();
             ClientManager = new(this);
 
@@ -45,6 +47,7 @@ namespace MHServerEmu.PlayerManagement
             // Normal ticks
             while (_isRunning)
             {
+                LoginQueueManager.Update();
                 GameHandleManager.Update();
                 ClientManager.Update(true);
                 Thread.Sleep(1);
@@ -194,17 +197,6 @@ namespace MHServerEmu.PlayerManagement
             var clientCredentials = message.As<ClientCredentials>();
             if (clientCredentials == null) return Logger.WarnReturn(false, "OnClientCredentials(): clientCredentials == null");
 
-            if (Config.SimulateQueue)
-            {
-                Logger.Debug("Responding with LoginQueueStatus message");
-                client.SendMessage(MuxChannel, LoginQueueStatus.CreateBuilder()
-                    .SetPlaceInLine(Config.QueuePlaceInLine)
-                    .SetNumberOfPlayersInLine(Config.QueueNumberOfPlayersInLine)
-                    .Build());
-
-                return false;
-            }
-
             if (SessionManager.VerifyClientCredentials(client, clientCredentials) == false)
             {
                 Logger.Warn($"OnClientCredentials(): Failed to verify client credentials, disconnecting client [{client}]");
@@ -214,10 +206,7 @@ namespace MHServerEmu.PlayerManagement
 
             // Success!
             Logger.Info($"Successful auth for client [{client}]");
-            client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
-                .SetRandomNumberIndex(0)
-                .SetEncryptedRandomNumber(ByteString.Empty)
-                .Build());
+            LoginQueueManager.AcceptClient(client);
 
             return true;
         }
