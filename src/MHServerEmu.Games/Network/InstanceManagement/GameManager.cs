@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public bool CreateGame(ulong gameId)
         {
-            Logger.Trace($"Received creation request for gameId=0x{gameId:X}");
+            Logger.Info($"Received creation request for gameId=0x{gameId:X}");
 
             if (TryGetGameById(gameId, out _))
                 return Logger.WarnReturn(false, $"CreateGame(): GameId 0x{gameId:X} is already in use by another game");
@@ -65,7 +65,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public bool ShutdownGame(ulong gameId, GameShutdownReason reason)
         {
-            Logger.Trace($"Received shutdown request for gameId=0x{gameId:X}");
+            Logger.Info($"Received shutdown request for gameId=0x{gameId:X}");
 
             if (TryGetGameById(gameId, out Game game) == false)
                 return Logger.WarnReturn(false, $"ShutdownGame(): GameId 0x{gameId:X} not found");
@@ -80,7 +80,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public bool AddClientToGame(IFrontendClient client, ulong gameId)
         {
-            Logger.Trace($"Received add client request for client=[{client}] gameId=0x{gameId:X}");
+            Logger.Info($"Received add client request for client=[{client}] gameId=0x{gameId:X}");
 
             if (TryGetGameForClient(client, out Game game))
                 return Logger.WarnReturn(false, $"AddClientToGame(): Attempting to add client [{client}] to game 0x{gameId:X}, but the client is already in game 0x{game.Id:X}");
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public bool RemoveClientFromGame(IFrontendClient client, ulong gameId)
         {
-            Logger.Trace($"Received remove request for client=[{client}] gameId=0x{gameId:X}");
+            Logger.Info($"Received remove request for client=[{client}] gameId=0x{gameId:X}");
 
             if (TryGetGameForClient(client, out Game game) == false)
                 return Logger.WarnReturn(false, $"RemoveClientFromGame(): Attempting to remove client [{client}] from game 0x{gameId:X}, but the client is not in a game");

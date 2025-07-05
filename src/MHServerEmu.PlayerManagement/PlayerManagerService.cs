@@ -40,12 +40,13 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
-            GameHandleManager.InitializeGames(Config.GameInstanceCount, Config.PlayerCountDivisor);
+            GameHandleManager.Initialize(Config.GameInstanceCount, Config.PlayerCountDivisor);
 
             // Normal ticks
             while (_isRunning)
             {
-                ClientManager.Update(true);  // Add / remove clients
+                GameHandleManager.Update();
+                ClientManager.Update(true);
                 Thread.Sleep(1);
             }
 
@@ -71,8 +72,8 @@ namespace MHServerEmu.PlayerManagement
         {
             switch (message)
             {
+                // Message buffers are routed asynchronously rather than in ticks to have the lowest latency possible.
                 case GameServiceProtocol.RouteMessageBuffer routeMessagePackage:
-                    // Message buffers are routed asynchronously rather than in ticks to have the lowest latency possible.
                     OnRouteMessageBuffer(routeMessagePackage);
                     break;
 
@@ -80,15 +81,16 @@ namespace MHServerEmu.PlayerManagement
                     OnRouteMessage(routeMessage);
                     break;
 
+                // Game instance operation messages are handled in ticks by the GameHandleManager
                 case GameServiceProtocol.GameInstanceOp gameInstanceOp:
-                    OnGameInstanceOp(gameInstanceOp);
+                    GameHandleManager.ReceiveMessage(gameInstanceOp);
                     break;
                 
                 // Client messages are handled in ticks by the ClientManager
                 case GameServiceProtocol.AddClient:
                 case GameServiceProtocol.RemoveClient:
                 case GameServiceProtocol.GameInstanceClientOp:
-                    ClientManager.EnqueueMessage(message);
+                    ClientManager.ReceiveMessage(message);
                     break;
 
                 default:
@@ -130,30 +132,6 @@ namespace MHServerEmu.PlayerManagement
 
                 default: Logger.Warn($"Handle(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        private bool OnGameInstanceOp(in GameServiceProtocol.GameInstanceOp gameInstanceOp)
-        {
-            ulong gameId = gameInstanceOp.GameId;
-
-            if (GameHandleManager.TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceOp(): No handle found for gameId 0x{gameId:X}");
-
-            switch (gameInstanceOp.Type)
-            {
-                case GameServiceProtocol.GameInstanceOp.OpType.CreateAck:
-                    game.OnInstanceCreationAck();
-                    break;
-
-                case GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck:
-                    game.OnInstanceShutdownAck();
-                    break;
-
-                default:
-                    return Logger.WarnReturn(false, $"OnGameInstanceOp(): Unhandled operation type {gameInstanceOp.Type}");
-            }
-
-            return true;
         }
 
         #endregion

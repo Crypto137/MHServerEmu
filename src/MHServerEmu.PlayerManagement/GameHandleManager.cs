@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Collections;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 
 namespace MHServerEmu.PlayerManagement
@@ -13,6 +15,8 @@ namespace MHServerEmu.PlayerManagement
         private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
         private readonly Dictionary<ulong, GameHandle> _gameDict = new();
 
+        private readonly DoubleBufferQueue<GameServiceProtocol.GameInstanceOp> _messageQueue = new();
+
         private int _targetGameInstanceCount = -1;
         private int _playerCountDivisor = 1;
 
@@ -20,7 +24,18 @@ namespace MHServerEmu.PlayerManagement
 
         public GameHandleManager() { }
 
-        public void InitializeGames(int gameInstanceCount, int playerCountDivisor)
+        public void Update()
+        {
+            ProcessMessageQueue();
+            RefreshGames();
+        }
+
+        public void ReceiveMessage(in GameServiceProtocol.GameInstanceOp message)
+        {
+            _messageQueue.Enqueue(message);
+        }
+
+        public void Initialize(int gameInstanceCount, int playerCountDivisor)
         {
             // Should always have at least 1 game instance
             gameInstanceCount = Math.Max(gameInstanceCount, 1);
@@ -38,6 +53,8 @@ namespace MHServerEmu.PlayerManagement
 
             GameHandle game = new(gameId);
             _gameDict.Add(gameId, game);
+
+            Logger.Info($"Created game handle [{game}]");
 
             game.RequestInstanceCreation();
 
@@ -63,20 +80,6 @@ namespace MHServerEmu.PlayerManagement
             if (_gameDict.Count == 0)
                 return Logger.WarnReturn<GameHandle>(null, $"GetAvailableGame(): No games are available");
 
-            RefreshGames();
-
-            return FindAvailableGame();
-        }
-
-        private void RefreshGames()
-        {
-            // Create replacement game instances if needed
-            while (GameCount < _targetGameInstanceCount)
-                CreateGame();
-        }
-
-        private GameHandle FindAvailableGame()
-        {
             // If there is only one game instance, just return it
             if (GameCount == 1)
             {
@@ -90,6 +93,9 @@ namespace MHServerEmu.PlayerManagement
 
             foreach (GameHandle game in _gameDict.Values)
             {
+                if (game.State != GameHandleState.Running)
+                    continue;
+
                 // Divide player count to make sure:
                 // - Instances are not underpopulated at lower player counts
                 // - Players logging in at the same time are more likely to be put into the same instance
@@ -103,5 +109,75 @@ namespace MHServerEmu.PlayerManagement
 
             return resultGame;
         }
+
+        #region Ticking
+
+        private void ProcessMessageQueue()
+        {
+            _messageQueue.Swap();
+
+            while (_messageQueue.CurrentCount > 0)
+            {
+                GameServiceProtocol.GameInstanceOp gameInstanceOp = _messageQueue.Dequeue();
+
+                switch (gameInstanceOp.Type)
+                {
+                    case GameServiceProtocol.GameInstanceOp.OpType.CreateAck:
+                        OnCreateAck(gameInstanceOp.GameId);
+                        break;
+
+                    case GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck:
+                        OnShutdownAck(gameInstanceOp.GameId);
+                        break;
+
+                    default:
+                        Logger.Warn($"OnGameInstanceOp(): Unhandled operation type {gameInstanceOp.Type}");
+                        break;
+                }
+            }
+        }
+
+        private void RefreshGames()
+        {
+            // Remove handles for games that were shut down
+            foreach (var kvp in _gameDict)
+            {
+                if (kvp.Value.State == GameHandleState.Shutdown)
+                {
+                    Logger.Info($"Removing handle for shutdown game [{kvp.Value}]");
+                    _gameDict.Remove(kvp.Key);
+                }
+            }
+
+            // Create replacement game instances if needed
+            while (GameCount < _targetGameInstanceCount)
+                CreateGame();
+        }
+
+        #endregion
+
+        #region Message Handling
+
+        private bool OnCreateAck(ulong gameId)
+        {
+            if (TryGetGameById(gameId, out GameHandle game) == false)
+                return Logger.WarnReturn(false, $"OnCreateAck(): No handle found for gameId 0x{gameId:X}");
+
+            game.OnInstanceCreationAck();
+
+            return true;
+        }
+
+        private bool OnShutdownAck(ulong gameId)
+        {
+            if (TryGetGameById(gameId, out GameHandle game) == false)
+                return Logger.WarnReturn(false, $"OnShutdownAck(): No handle found for gameId 0x{gameId:X}");
+
+            game.OnInstanceShutdownAck();
+
+            return true;
+        }
+
+        #endregion
     }
 }

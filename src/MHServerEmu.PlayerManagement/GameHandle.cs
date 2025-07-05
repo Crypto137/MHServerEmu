@@ -49,7 +49,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"RequestInstanceCreation(): Invalid state {State} for game [{this}]");
 
             State = GameHandleState.PendingInstanceCreation;
-            Logger.Trace($"Requesting instance creation for game [{this}]");
+            Logger.Info($"Requesting instance creation for game [{this}]");
 
             GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameServiceProtocol.GameInstanceOp.OpType.Create, Id);
             ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
@@ -66,7 +66,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"OnInstanceCreationAck(): Invalid state {State} for game [{this}]");
 
             State = GameHandleState.Running;
-            Logger.Trace($"Received instance creation confirmation for game [{this}]");
+            Logger.Info($"Received instance creation confirmation for game [{this}]");
 
             return true;
         }
@@ -80,7 +80,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"RequestInstanceShutdown(): Invalid state {State} for game [{this}]");
 
             State = GameHandleState.PendingShutdown;
-            Logger.Trace($"Requesting instance shutdown for game [{this}]");
+            Logger.Info($"Requesting instance shutdown for game [{this}]");
 
             GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameServiceProtocol.GameInstanceOp.OpType.Shutdown, Id);
             ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
@@ -102,7 +102,7 @@ namespace MHServerEmu.PlayerManagement
             }
 
             State = GameHandleState.Shutdown;
-            Logger.Trace($"Received instance shutdown confirmation for game [{this}]");
+            Logger.Info($"Received instance shutdown confirmation for game [{this}]");
 
             foreach (PlayerHandle player in _players)
                 player.Disconnect();

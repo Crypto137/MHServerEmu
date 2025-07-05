@@ -82,7 +82,7 @@ namespace MHServerEmu.PlayerManagement
                     return Logger.WarnReturn(false, $"LoadPlayerData(): Failed to load player data for account [{account}] from the database");
             }
 
-            Logger.Trace($"Loaded player data for account [{account}] from the database");
+            Logger.Info($"Loaded player data for account [{account}] from the database");
 
             // If this is the initial load switch the state to allow this player to be added to a game
             if (State == PlayerHandleState.Created)
@@ -104,7 +104,7 @@ namespace MHServerEmu.PlayerManagement
                     return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
             }
 
-            Logger.Trace($"Saved player data for account [{account}] to the database");
+            Logger.Info($"Saved player data for account [{account}] to the database");
 
             return true;
         }
@@ -116,7 +116,7 @@ namespace MHServerEmu.PlayerManagement
 
             State = PlayerHandleState.PendingAddToGame;
             Game = game;
-            Logger.Trace($"Requesting to add player [{this}] to game [{game}]");
+            Logger.Info($"Requesting to add player [{this}] to game [{game}]");
 
             GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Add, Client, game.Id);
             ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
@@ -133,7 +133,7 @@ namespace MHServerEmu.PlayerManagement
                 Logger.Warn($"FinishAddToGame(): GameId mismatch (expected 0x{Game.Id:X}, got 0x{gameId:X})");
 
             State = PlayerHandleState.InGame;
-            Logger.Trace($"Player added to game [{Game}]");
+            Logger.Info($"Player [{this}] added to game [{Game}]");
 
             return true;
         }
@@ -155,7 +155,7 @@ namespace MHServerEmu.PlayerManagement
                 Logger.Warn($"BeginRemoveFromGame(): Game mismatch (expected [{Game}], got [{game}])");
 
             State = PlayerHandleState.PendingRemoveFromGame;
-            Logger.Trace($"Requesting to remove player [{this}] from game {game}");
+            Logger.Info($"Requesting to remove player [{this}] from game {game}");
 
             GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Remove, Client, game.Id);
             ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, gameInstanceOp);
@@ -174,7 +174,7 @@ namespace MHServerEmu.PlayerManagement
             State = PlayerHandleState.Idle;
             Game = null;
 
-            Logger.Trace($"Player [{this}] removed from game 0x{gameId:X}");
+            Logger.Info($"Player [{this}] removed from game 0x{gameId:X}");
 
             SavePlayerData();
 

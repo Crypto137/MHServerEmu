@@ -30,7 +30,7 @@ namespace MHServerEmu.PlayerManagement
             ProcessIdlePlayers();
         }
 
-        public void EnqueueMessage<T>(in T message) where T: struct, IGameServiceMessage
+        public void ReceiveMessage<T>(in T message) where T: struct, IGameServiceMessage
         {
             _messageQueue.Enqueue(message);
         }
