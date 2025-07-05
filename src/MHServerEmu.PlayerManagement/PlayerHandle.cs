@@ -64,6 +64,11 @@ namespace MHServerEmu.PlayerManagement
             Client = newClient;
         }
 
+        public void Disconnect()
+        {
+            Client.Disconnect();
+        }
+
         // NOTE: We are locking on the account instance to prevent account data from being modified while
         // it is being written to the database. This could potentially cause deadlocks if not used correctly.
 

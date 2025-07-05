@@ -29,6 +29,8 @@ namespace MHServerEmu.Core.Network
         private SpinLock _addClientLock = new(false);
         private SpinLock _removeClientLock = new(false);
 
+        public int Count { get => _netClientDict.Count; }
+
         public NetworkManager()
         {
         }

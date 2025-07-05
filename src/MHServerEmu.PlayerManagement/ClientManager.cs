@@ -17,14 +17,16 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly PlayerManagerService _playerManagerService;
 
+        public int PlayerCount { get => _playerDict.Count; }
+
         public ClientManager(PlayerManagerService playerManagerService) 
         {
             _playerManagerService = playerManagerService;
         }
 
-        public void Update()
+        public void Update(bool allowNewClients)
         {
-            ProcessMessageQueue();
+            ProcessMessageQueue(allowNewClients);
 
             ProcessIdlePlayers();
         }
@@ -37,7 +39,7 @@ namespace MHServerEmu.PlayerManagement
 
         #region Ticking
 
-        private void ProcessMessageQueue()
+        private void ProcessMessageQueue(bool allowNewClients)
         {
             lock (_messageLock)
                 (_pendingMessageQueue, _messageQueue) = (_messageQueue, _pendingMessageQueue);
@@ -49,7 +51,7 @@ namespace MHServerEmu.PlayerManagement
                 switch (message)
                 {
                     case GameServiceProtocol.AddClient addClient:
-                        OnAddClient(addClient);
+                        OnAddClient(addClient, allowNewClients);
                         break;
 
                     case GameServiceProtocol.RemoveClient removeClient:
@@ -110,12 +112,13 @@ namespace MHServerEmu.PlayerManagement
             {
                 player = new(client);
                 _playerDict.Add(playerDbId, player);
+                Logger.Info($"Created new PlayerHandle: [{player}]");
 
                 player.LoadPlayerData();
             }
             else
             {
-                Logger.Info($"Existing handle found for player [{player}]");
+                Logger.Info($"Reusing existing PlayerHandle: [{player}]");
                 player.MigrateSession(client);
             }
 
@@ -127,7 +130,9 @@ namespace MHServerEmu.PlayerManagement
             ulong playerDbId = client.DbId;
 
             if (_playerDict.Remove(playerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"RemovePlayer(): Client [{client}] is not bound to a player");
+                return Logger.WarnReturn(false, $"RemovePlayer(): Client [{client}] is not bound to a PlayerHandle");
+
+            Logger.Info($"Removed PlayerHandle [{player}]");
 
             return true;
         }
@@ -136,9 +141,16 @@ namespace MHServerEmu.PlayerManagement
 
         #region Service Message Handling
 
-        private bool OnAddClient(in GameServiceProtocol.AddClient addClient)
+        private bool OnAddClient(in GameServiceProtocol.AddClient addClient, bool allowNewClients)
         {
             IFrontendClient client = addClient.Client;
+
+            if (allowNewClients == false)
+            {
+                Logger.Warn($"Client [{client}] is not allowed to connect");
+                client.Disconnect();
+                return false;
+            }
 
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"AddClient(): Client [{client}] has no valid session assigned");

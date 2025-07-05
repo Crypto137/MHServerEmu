@@ -22,7 +22,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public void Shutdown()
         {
-            _gameManager.ShutdownAllGames();
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage

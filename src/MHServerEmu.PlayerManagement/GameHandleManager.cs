@@ -44,7 +44,11 @@ namespace MHServerEmu.PlayerManagement
             return game;
         }
 
-        // TODO: Shutdown
+        public void ShutDownAllGames()
+        {
+            foreach (GameHandle game in _gameDict.Values)
+                game.RequestInstanceShutdown();
+        }
 
         public bool TryGetGameById(ulong gameId, out GameHandle game)
         {

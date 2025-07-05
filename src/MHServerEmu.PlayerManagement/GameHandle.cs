@@ -104,6 +104,9 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.Shutdown;
             Logger.Trace($"Received instance shutdown confirmation for game [{this}]");
 
+            foreach (PlayerHandle player in _players)
+                player.Disconnect();
+
             return true;
         }
 

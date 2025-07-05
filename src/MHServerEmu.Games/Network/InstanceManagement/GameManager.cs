@@ -70,24 +70,12 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             if (TryGetGameById(gameId, out Game game) == false)
                 return Logger.WarnReturn(false, $"ShutdownGame(): GameId 0x{gameId:X} not found");
 
-            game.Shutdown(GameShutdownReason.ShutdownRequested);
+            game.RequestShutdown();
 
             lock (_gameDict)
                 _gameDict.Remove(gameId);
 
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
-
             return true;
-        }
-
-        public void ShutdownAllGames()
-        {
-            lock (_gameDict)
-            {
-                foreach (Game game in _gameDict.Values)
-                    ShutdownGame(game.Id, GameShutdownReason.ServerShuttingDown);
-            }
         }
 
         public bool AddClientToGame(IFrontendClient client, ulong gameId)
@@ -171,6 +159,12 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         #endregion
 
         #region Game Event Handling
+
+        public void OnGameShutdown(Game game)
+        {
+            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
+            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
+        }
 
         public void OnClientAdded(Game game, IFrontendClient client)
         {

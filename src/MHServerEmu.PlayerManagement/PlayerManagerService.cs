@@ -42,18 +42,29 @@ namespace MHServerEmu.PlayerManagement
         {
             GameHandleManager.InitializeGames(Config.GameInstanceCount, Config.PlayerCountDivisor);
 
+            // Normal ticks
             while (_isRunning)
             {
-                ClientManager.Update();  // Add / remove clients
-
+                ClientManager.Update(true);  // Add / remove clients
                 Thread.Sleep(1);
             }
+
+            // Shutdown
+            GameHandleManager.ShutDownAllGames();
+
+            // Shutting down the frontend will disconnect all clients, here we just wait for everything to be cleaned up and saved
+            while (ClientManager.PlayerCount > 0)
+            {
+                ClientManager.Update(false);
+                Thread.Sleep(1);
+            }
+
+            Logger.Info("Shutdown finished");
         }
 
         public void Shutdown()
         {
             _isRunning = false;
-            //_gameManager.ShutdownAllGames();
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage

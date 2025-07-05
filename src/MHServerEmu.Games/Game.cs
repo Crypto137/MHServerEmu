@@ -32,7 +32,6 @@ namespace MHServerEmu.Games
     public enum GameShutdownReason
     {
         ShutdownRequested,
-        ServerShuttingDown,
         GameInstanceCrash
     }
 
@@ -92,8 +91,6 @@ namespace MHServerEmu.Games
         public bool AchievementsEnabled { get; set; }
         public bool LeaderboardsEnabled { get; set; }
         public bool InfinitySystemEnabled { get => GameOptions.InfinitySystemEnabled; }
-
-        public int PlayerCount { get => EntityManager.PlayerCount; }
 
         public override string ToString() => $"serverGameId=0x{Id:X}";
 
@@ -171,12 +168,15 @@ namespace MHServerEmu.Games
                 return;
 
             Logger.Info($"Game shutdown requested. Game={this}, Reason={reason}");
-
-            // Clean up network manager
             NetworkManager.SendAllPendingMessages();
-            foreach (PlayerConnection playerConnection in NetworkManager)
-                playerConnection.Disconnect();
-            NetworkManager.Update();        // We need this to process player saves (for now)
+            GameManager.OnGameShutdown(this);   // This will notify the PlayerManager and disconnect all players
+
+            // Wait for all players to leave the game
+            while (NetworkManager.Count > 0)
+            {
+                NetworkManager.Update();
+                Thread.Sleep(1);
+            }
 
             // Clean up entities
             EntityManager.DestroyAllEntities();
@@ -185,7 +185,7 @@ namespace MHServerEmu.Games
             // Clean up regions
             RegionManager.DestroyAllRegions();
 
-            // Mark this game as shut down for the player manager
+            // Mark this game as shut down
             HasBeenShutDown = true;
         }
 
@@ -291,7 +291,7 @@ namespace MHServerEmu.Games
                     Update();
                 }
 
-                Shutdown(GameShutdownReason.ServerShuttingDown);
+                Shutdown(GameShutdownReason.ShutdownRequested);
             }
             catch (Exception e)
             {
