@@ -48,7 +48,8 @@ namespace MHServerEmu.PlayerManagement
                 switch (message)
                 {
                     case GameServiceProtocol.AddClient addClient:
-                        OnAddClient(addClient, allowNewClients);
+                        if (OnAddClient(addClient, allowNewClients) == false)
+                            addClient.Client.Disconnect();
                         break;
 
                     case GameServiceProtocol.RemoveClient removeClient:
@@ -143,14 +144,14 @@ namespace MHServerEmu.PlayerManagement
             IFrontendClient client = addClient.Client;
 
             if (allowNewClients == false)
-            {
-                Logger.Warn($"Client [{client}] is not allowed to connect");
-                client.Disconnect();
-                return false;
-            }
+                return Logger.WarnReturn(false, $"AddClient(): Client [{client}] is not allowed to connect because the server is shutting down");
 
-            if (client.Session == null || client.Session.Account == null)
+            ClientSession session = (ClientSession)client.Session;
+            if (session == null || session.Account == null)
                 return Logger.WarnReturn(false, $"AddClient(): Client [{client}] has no valid session assigned");
+
+            if (session.LoginQueuePassed == false)
+                return Logger.WarnReturn(false, $"AddClient(): Client [{client}] is attempting to log in without passing the login queue");
 
             if (CreatePlayerHandle(client, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"AddClient(): Failed to get or create player handle for client [{client}]");

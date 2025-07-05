@@ -34,6 +34,10 @@ namespace MHServerEmu.PlayerManagement
                     .Build());
                 */
 
+                // Under normal circumstances the client should not be trying to proceed without receiving SessionEncryptionChanged.
+                // However, if a malicious user modifies their client, it may try to skip ahead, so we need to verify this.
+                ((ClientSession)client.Session).LoginQueuePassed = true;
+
                 client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
                     .SetRandomNumberIndex(0)
                     .SetEncryptedRandomNumber(ByteString.Empty)
