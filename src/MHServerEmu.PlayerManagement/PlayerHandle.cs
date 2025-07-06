@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Google.ProtocolBuffers;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
@@ -19,6 +20,8 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class PlayerHandle
     {
+        private const ushort MuxChannel = 1;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private static ulong _nextHandleId = 1;
@@ -53,7 +56,7 @@ namespace MHServerEmu.PlayerManagement
         public bool MigrateSession(IFrontendClient newClient)
         {
             // Trying to migrate sessions while in the middle of adding/removing from a game instance is just asking for trouble,
-            // so simply deny the new client and have it try again later. This shouldn't really outside of duplicate logins unless
+            // so deny the new client and have it try again later. This shouldn't really happen outside of duplicate logins unless
             // something else breaks and the handle is stuck in a pending state.
             if (State != PlayerHandleState.InGame && State != PlayerHandleState.Idle)
                 return Logger.WarnReturn(false, $"MigrateSession(): Unable to migrate handle [{this}] while in state {State}");
@@ -75,6 +78,11 @@ namespace MHServerEmu.PlayerManagement
         public void Disconnect()
         {
             Client.Disconnect();
+        }
+
+        public void SendMessage(IMessage message)
+        {
+            Client.SendMessage(MuxChannel, message);
         }
 
         // NOTE: We are locking on the account instance to prevent account data from being modified while

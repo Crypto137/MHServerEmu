@@ -12,8 +12,6 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class PlayerManagerService : IGameService, IMessageBroadcaster
     {
-        private const ushort MuxChannel = 1;   // All messages come to and from PlayerManager over mux channel 1
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private bool _isRunning = true;
@@ -220,11 +218,9 @@ namespace MHServerEmu.PlayerManagement
             var readyForGameJoin = messageBuffer.DeserializeReadyForGameJoin();
             if (readyForGameJoin == null) return Logger.WarnReturn(false, "OnReadyForGameJoin(): readyForGameJoin == null");
 
-            Logger.Info($"Received NetMessageReadyForGameJoin from client [{client}], logging in");
-            //Logger.Trace(readyForGameJoin.ToString());
-
-            // Log the player in
-            client.SendMessage(MuxChannel, NetMessageReadyAndLoggedIn.DefaultInstance); // add report defect (bug) config here
+            // ReadyForGameJoin is sent right after InitialClientHandshake, and we currently don't use any data from it.
+            // TODO: PlayerManager shouldn't try to put clients into games until it receives this message.
+            Logger.Trace($"Received NetMessageReadyForGameJoin from client [{client}]");
 
             return true;
         }

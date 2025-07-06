@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
@@ -163,6 +164,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"AddClient(): Failed to get or create player handle for client [{client}]");
 
             Logger.Info($"Added client [{client}]");
+            player.SendMessage(NetMessageReadyAndLoggedIn.DefaultInstance);
 
             return true;
         }
