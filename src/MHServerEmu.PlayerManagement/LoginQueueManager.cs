@@ -38,7 +38,7 @@ namespace MHServerEmu.PlayerManagement
         }
 
         /// <summary>
-        /// Accepts asynchronously added clients to a login queue.
+        /// Accepts asynchronously added clients to the login queue.
         /// </summary>
         private void AcceptNewClients()
         {
@@ -50,10 +50,12 @@ namespace MHServerEmu.PlayerManagement
 
                 if (client.IsConnected == false)
                 {
-                    Logger.Warn($"AcceptNewClients(): Client [{client}] disconnected before being accepted to a login queue");
+                    Logger.Warn($"AcceptNewClients(): Client [{client}] disconnected before being accepted to the login queue");
                     continue;
                 }
 
+                // The client doesn't send any pings while it's waiting in the login queue, so we need to suspend receive timeouts here
+                client.SuspendReceiveTimeout();
                 _loginQueue.Enqueue(client);
 
                 Logger.Info($"Accepted client [{client}] into the login queue");

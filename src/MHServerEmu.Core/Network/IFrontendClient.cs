@@ -21,6 +21,11 @@ namespace MHServerEmu.Core.Network
         public void Disconnect();
 
         /// <summary>
+        /// Suspend receive timeout until data is received.
+        /// </summary>
+        public void SuspendReceiveTimeout();
+
+        /// <summary>
         /// Assigns an <see cref="IFrontendSession"/> to this <see cref="IFrontendClient"/>.
         /// </summary>
         public bool AssignSession(IFrontendSession session);

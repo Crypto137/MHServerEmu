@@ -24,6 +24,7 @@ namespace MHServerEmu.Core.Network.Tcp
         public IPEndPoint RemoteEndPoint { get => (IPEndPoint)Socket.RemoteEndPoint; }
 
         public TcpClient Client { get; set; }
+        public bool IsReceiveTimeoutSuspended { get; set; }
 
         /// <summary>
         /// Constructs a new client connection instance.

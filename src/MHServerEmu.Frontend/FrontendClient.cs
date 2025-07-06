@@ -60,6 +60,11 @@ namespace MHServerEmu.Frontend
             Connection.Disconnect();
         }
 
+        public void SuspendReceiveTimeout()
+        {
+            Connection.IsReceiveTimeoutSuspended = true;
+        }
+
         public bool AssignSession(IFrontendSession session)
         {
             if (Session != null)
