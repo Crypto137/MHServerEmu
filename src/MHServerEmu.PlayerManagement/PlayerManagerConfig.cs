@@ -13,6 +13,6 @@ namespace MHServerEmu.PlayerManagement
         public string NewsUrl { get; private set; } = "http://localhost/";
         public int GameInstanceCount { get; private set; } = 1;
         public int PlayerCountDivisor { get; private set; } = 50;
-        public ulong ServerCapacity { get; private set; } = 0;
+        public int ServerCapacity { get; private set; } = 0;
     }
 }

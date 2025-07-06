@@ -206,7 +206,7 @@ namespace MHServerEmu.PlayerManagement
 
             // Success!
             Logger.Info($"Successful auth for client [{client}]");
-            LoginQueueManager.AcceptClient(client);
+            LoginQueueManager.EnqueueNewClient(client);
 
             return true;
         }
