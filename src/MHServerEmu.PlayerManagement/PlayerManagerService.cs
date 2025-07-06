@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using System.Diagnostics;
+using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
@@ -12,8 +13,11 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class PlayerManagerService : IGameService, IMessageBroadcaster
     {
+        private const int TickRateMS = 250;
+
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
         private bool _isRunning = true;
 
         internal SessionManager SessionManager { get; }
@@ -45,10 +49,16 @@ namespace MHServerEmu.PlayerManagement
             // Normal ticks
             while (_isRunning)
             {
+                TimeSpan referenceTime = _stopwatch.Elapsed;
+
                 LoginQueueManager.Update();
                 GameHandleManager.Update();
                 ClientManager.Update(true);
-                Thread.Sleep(1);
+
+                double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
+                int sleepTimeMS = (int)Math.Max(TickRateMS - tickTimeMS, 0);
+
+                Thread.Sleep(sleepTimeMS);
             }
 
             // Shutdown
