@@ -117,7 +117,13 @@ namespace MHServerEmu.PlayerManagement
             else
             {
                 Logger.Info($"Reusing existing PlayerHandle: [{player}]");
-                player.MigrateSession(client);
+                if (player.MigrateSession(client) == false)
+                {
+                    Logger.Warn($"CreatePlayerHandle(): Failed to migrate existing session to client [{client}], disconnecting");
+                    client.Disconnect();
+                    player = null;
+                    return false;
+                }
             }
 
             return true;

@@ -50,8 +50,14 @@ namespace MHServerEmu.PlayerManagement
             return $"HandleId={HandleId}, Client=[{Client}]";
         }
 
-        public void MigrateSession(IFrontendClient newClient)
+        public bool MigrateSession(IFrontendClient newClient)
         {
+            // Trying to migrate sessions while in the middle of adding/removing from a game instance is just asking for trouble,
+            // so simply deny the new client and have it try again later. This shouldn't really outside of duplicate logins unless
+            // something else breaks and the handle is stuck in a pending state.
+            if (State != PlayerHandleState.InGame && State != PlayerHandleState.Idle)
+                return Logger.WarnReturn(false, $"MigrateSession(): Unable to migrate handle [{this}] while in state {State}");
+
             Logger.Info($"Migrating handle [{this}] to session [{newClient.Session}]");
 
             RemoveFromCurrentGame();
@@ -62,6 +68,8 @@ namespace MHServerEmu.PlayerManagement
             newSession.Account = oldSession.Account;
 
             Client = newClient;
+
+            return true;
         }
 
         public void Disconnect()
