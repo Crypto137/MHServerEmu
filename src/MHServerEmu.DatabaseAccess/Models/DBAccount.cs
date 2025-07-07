@@ -20,6 +20,7 @@ namespace MHServerEmu.DatabaseAccess.Models
         IsArchived              = 1 << 1,
         IsPasswordExpired       = 1 << 2,
         DEPRECATEDLinuxCompatibilityMode    = 1 << 3,   // This flag used to disable session token verification, but it is no longer needed for Linux users
+        IsWhitelisted           = 1 << 4,
     }
 
     /// <summary>

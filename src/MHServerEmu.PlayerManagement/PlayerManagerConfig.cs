@@ -9,6 +9,7 @@ namespace MHServerEmu.PlayerManagement
     {
         public bool UseJsonDBManager { get; private set; } = false;
         public bool AllowClientVersionMismatch { get; private set; } = false;
+        public bool UseWhitelist { get; private set; } = false;
         public bool ShowNewsOnLogin { get; private set; } = false;
         public string NewsUrl { get; private set; } = "http://localhost/";
         public int GameInstanceCount { get; private set; } = 1;
