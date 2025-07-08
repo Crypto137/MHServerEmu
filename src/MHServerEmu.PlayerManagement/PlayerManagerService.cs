@@ -27,6 +27,8 @@ namespace MHServerEmu.PlayerManagement
 
         public PlayerManagerConfig Config { get; }
 
+        public GameServiceState State { get; private set; } = GameServiceState.Created;
+
         /// <summary>
         /// Constructs a new <see cref="PlayerManagerService"/> instance.
         /// </summary>
@@ -44,10 +46,14 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
+            State = GameServiceState.Starting;
+
             GameHandleManager.Initialize(Config.GameInstanceCount, Config.PlayerCountDivisor);
 
+            State = GameServiceState.Running;
+
             // Normal ticks
-            while (_isRunning)
+            while (State == GameServiceState.Running)
             {
                 TimeSpan referenceTime = _stopwatch.Elapsed;
 
@@ -62,7 +68,6 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Shutdown
-            GameHandleManager.ShutDownAllGames();
 
             // Shutting down the frontend will disconnect all clients, here we just wait for everything to be cleaned up and saved
             while (ClientManager.PlayerCount > 0)
@@ -71,12 +76,20 @@ namespace MHServerEmu.PlayerManagement
                 Thread.Sleep(1);
             }
 
-            Logger.Info("Shutdown finished");
+            GameHandleManager.IsShuttingDown = true;
+            GameHandleManager.ShutDownAllGames();
+            while (GameHandleManager.GameCount > 0)
+            {
+                GameHandleManager.Update();
+                Thread.Sleep(1);
+            }
+
+            State = GameServiceState.Shutdown;
         }
 
         public void Shutdown()
         {
-            _isRunning = false;
+            State = GameServiceState.ShuttingDown;
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
@@ -127,7 +140,7 @@ namespace MHServerEmu.PlayerManagement
 
                 default:
                     // Route the rest of messages to the GIS
-                    ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, routeMessageBuffer);
+                    ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, routeMessageBuffer);
                     break;
             }
         }

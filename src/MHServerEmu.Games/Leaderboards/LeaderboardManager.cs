@@ -219,7 +219,7 @@ namespace MHServerEmu.Games.Leaderboards
         public void RequestRewards()
         {
             GameServiceProtocol.LeaderboardRewardRequest rewardRequest = new(Owner.DatabaseUniqueId);
-            ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, rewardRequest);
+            ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, rewardRequest);
         }
 
         public void AddPendingRewards(GameServiceProtocol.LeaderboardRewardEntry[] rewards)
@@ -241,7 +241,7 @@ namespace MHServerEmu.Games.Leaderboards
                 updateBatch[i++] = new((ulong)key.LeaderboardGuid, key.PlayerGuid, (ulong)key.AvatarGuid, (ulong)key.RuleGuid, (ulong)count);
             }
 
-            ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, updateBatch);
+            ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, updateBatch);
 
             _ruleEvents.Clear();
         }
@@ -280,7 +280,7 @@ namespace MHServerEmu.Games.Leaderboards
 
                         // Send reward confirmation to the leaderboard service
                         GameServiceProtocol.LeaderboardRewardConfirmation confirmation = new(entry.LeaderboardId, entry.InstanceId, entry.ParticipantId);
-                        ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, confirmation);
+                        ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, confirmation);
                     }
                 }
             }

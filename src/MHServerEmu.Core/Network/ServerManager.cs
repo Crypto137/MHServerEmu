@@ -6,16 +6,26 @@ using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.Core.Network
 {
-    public enum ServerType
+    // Services start in this order and are shut down in reverse order.
+    public enum GameServiceType
     {
-        FrontendServer,
-        AuthServer,
+        GameInstance,
+        Leaderboard,
         PlayerManager,
         GroupingManager,
-        GameInstanceServer,
         Billing,
-        Leaderboard,
-        NumServerTypes
+        Frontend,
+        Auth,
+        NumServiceTypes
+    }
+
+    public enum GameServiceState
+    {
+        Created,
+        Starting,
+        Running,
+        ShuttingDown,
+        Shutdown,
     }
 
     /// <summary>
@@ -25,8 +35,8 @@ namespace MHServerEmu.Core.Network
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly IGameService[] _services = new IGameService[(int)ServerType.NumServerTypes];
-        private readonly Thread[] _serviceThreads = new Thread[(int)ServerType.NumServerTypes];
+        private readonly IGameService[] _services = new IGameService[(int)GameServiceType.NumServiceTypes];
+        private readonly Thread[] _serviceThreads = new Thread[(int)GameServiceType.NumServiceTypes];
 
         public static ServerManager Instance { get; } = new();
 
@@ -43,71 +53,86 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// Registers an <see cref="IGameService"/> for the specified <see cref="ServerType"/>. Returns <see langword="true"/> if successful.
+        /// Registers an <see cref="IGameService"/> for the specified <see cref="GameServiceType"/>.
         /// </summary>
-        public bool RegisterGameService(IGameService gameService, ServerType serverType)
+        public void RegisterGameService(IGameService service, GameServiceType serviceType)
         {
-            int index = (int)serverType;
+            ArgumentNullException.ThrowIfNull(service);
+
+            int index = (int)serviceType;
 
             if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"RegisterGameService(): Invalid server type {serverType}");
+                throw new ArgumentOutOfRangeException($"Invalid service type [{serviceType}].");
 
             if (_services[index] != null)
-                return Logger.WarnReturn(false, $"RegisterGameService(): Service type {serverType} is already registered");
+                throw new InvalidOperationException($"Service for type [{serviceType}] is already registered.");
 
-            if (gameService == null)
-                return Logger.WarnReturn(false, $"RegisterGameService(): gameService == null");
+            _services[index] = service;
 
-            _services[index] = gameService;
-            Logger.Info($"Registered game service for server type {serverType}");
-            return true;
+            Logger.Info($"Registered service for type [{serviceType}]");
         }
 
         /// <summary>
-        /// Unregisters the current <see cref="IGameService"/> for the specified <see cref="ServerType"/>. Returns <see langword="true"/> if successful.
+        /// Unregisters the current <see cref="IGameService"/> for the specified <see cref="GameServiceType"/>.
         /// </summary>
-        public bool UnregisterGameService(ServerType serverType)
+        public void UnregisterGameService(GameServiceType serviceType)
         {
-            int index = (int)serverType;
+            int index = (int)serviceType;
 
             if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"UnregisterGameService(): Invalid server type {serverType}");
+                throw new ArgumentOutOfRangeException($"Invalid service type [{serviceType}].");
 
             if (_services[index] == null)
-                return Logger.WarnReturn(false, $"UnregisterGameService(): No registered service for server type {serverType}");
+                throw new InvalidOperationException($"No registered service for type [{serviceType}].");
 
             _services[index] = null;
-            Logger.Info($"Unregistered server type {serverType}");
-            return true;
+
+            Logger.Info($"Unregistered service for type {serviceType}");
         }
 
         /// <summary>
-        /// Returns the registered <see cref="IGameService"/> for the specified <see cref="ServerType"/>. Returns <see langword="null"/> if not registered.
+        /// Returns the registered <see cref="IGameService"/> for the specified <see cref="GameServiceType"/>. Returns <see langword="null"/> if not registered.
         /// </summary>
-        public IGameService GetGameService(ServerType serverType)
+        public IGameService GetGameService(GameServiceType serviceType)
         {
-            int index = (int)serverType;
+            int index = (int)serviceType;
 
             if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn<IGameService>(null, $"GetGameService(): Invalid server type {serverType}");
+                throw new ArgumentOutOfRangeException($"Invalid service type [{serviceType}].");
 
             return _services[index];
         }
 
         /// <summary>
-        /// Routes the provided <typeparamref name="T"/> instance to the <see cref="IGameService"/> registered for the specified <see cref="ServerType"/>.
+        /// Routes the provided <typeparamref name="T"/> instance to the <see cref="IGameService"/> registered for the specified <see cref="GameServiceType"/>.
         /// </summary>
-        public bool SendMessageToService<T>(ServerType serverType, in T message) where T: struct, IGameServiceMessage
+        public bool SendMessageToService<T>(GameServiceType serviceType, in T message) where T: struct, IGameServiceMessage
         {
-            int index = (int)serverType;
+            int index = (int)serviceType;
 
             if (index < 0 || index >= _services.Length)
-                return Logger.WarnReturn(false, $"RouteMessage(): Invalid server type {serverType}");
+                throw new ArgumentOutOfRangeException($"Invalid service type [{serviceType}].");
 
-            if (_services[index] == null)
-                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for server type {serverType}");
+            IGameService service = _services[index];
 
-            _services[index].ReceiveServiceMessage(message);
+            if (service == null)
+                return Logger.WarnReturn(false, $"RouteMessage(): No service is registered for type [{serviceType}]");
+
+            switch (service.State)
+            {
+                // Treat Starting and ShuttingDown same as Running because services can exchange confirmations during startup / shutdown.
+                case GameServiceState.Starting:
+                case GameServiceState.Running:
+                case GameServiceState.ShuttingDown:
+                    break;
+
+                default:
+                    Logger.Warn($"Unexpected state [{service.State}] for type [{serviceType}] when sending [{typeof(T).Name}]");
+                    break;
+            }
+
+            service.ReceiveServiceMessage(message);
+
             return true;
         }
 
@@ -118,29 +143,66 @@ namespace MHServerEmu.Core.Network
         {
             for (int i = 0; i < _services.Length; i++)
             {
-                if (_services[i] == null) continue;
+                GameServiceType serviceType = (GameServiceType)i;
+
+                IGameService service = _services[i];
+                if (service == null)
+                    continue;
+
+                if (service.State != GameServiceState.Created)
+                    throw new InvalidOperationException($"Invalid service state [{service.State}] for type [{serviceType}].");
 
                 if (_serviceThreads[i] != null)
-                    Logger.Warn($"RunServices(): {(ServerType)i} service is already running");
+                    throw new InvalidOperationException($"Service thread already created for type [{serviceType}].");
 
-                _serviceThreads[i] = new(_services[i].Run) { Name = $"Service [{(ServerType)i}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
+                Logger.Info($"Starting service for type [{serviceType}]...");
+
+                _serviceThreads[i] = new(_services[i].Run) { Name = $"Service [{serviceType}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
                 _serviceThreads[i].Start();
+
+                while (service.State != GameServiceState.Running)
+                    Thread.Sleep(1);
+
+                Logger.Info($"Service for type [{serviceType}] started");                
             }
         }
 
         /// <summary>
-        /// Shuts down all registered <see cref="IGameService"/> instances.
+        /// Shuts down all running <see cref="IGameService"/> instances.
         /// </summary>
         public void ShutdownServices()
         {
-            for (int i = 0; i < _services.Length; i++)
+            // Shut down services in reverse
+            for (int i = _services.Length - 1; i >= 0; i--)
             {
-                if (_services[i] == null) continue;
-                Logger.Info($"Shutting down {(ServerType)i}...");
+                GameServiceType serviceType = (GameServiceType)i;
+
+                IGameService service = _services[i];
+                if (service == null)
+                    continue;
+
+                if (service.State == GameServiceState.Shutdown)
+                    continue;
+
+                if (service.State != GameServiceState.Running)
+                {
+                    Logger.Warn($"ShutdownServices(): Unexpected service state [{service.State}] for type [{serviceType}]");
+                    continue;
+                }
+
+                Logger.Info($"Shutting down service for type [{serviceType}]...");
+
                 _services[i].Shutdown();
+
+                while (service.State != GameServiceState.Shutdown)
+                    Thread.Sleep(1);
+
                 _serviceThreads[i] = null;
+
+                Logger.Info($"Service for type [{serviceType}] shut down");
             }
-            Logger.Info("Shutdown finished");
+
+            Logger.Info("All services shut down");
         }
 
         /// <summary>
@@ -157,7 +219,7 @@ namespace MHServerEmu.Core.Network
             for (int i = 0; i < _services.Length; i++)
             {
                 if (_services[i] == null) continue;
-                sb.Append($"[{(ServerType)i}] ");
+                sb.Append($"[{(GameServiceType)i}] ");
 
                 if (_serviceThreads[i] != null)
                     sb.AppendLine($"{_services[i].GetStatus()}");

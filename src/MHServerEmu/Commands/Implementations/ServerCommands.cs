@@ -41,7 +41,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Broadcast(string[] @params, NetClient client)
         {
-            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as IMessageBroadcaster;
+            var groupingManager = ServerManager.Instance.GetGameService(GameServiceType.GroupingManager) as IMessageBroadcaster;
             if (groupingManager == null) return "Failed to connect to the grouping manager.";
 
             string message = string.Join(' ', @params);

@@ -2167,7 +2167,7 @@ namespace MHServerEmu.Games.Network
         {
             // Leaderboard details are not cached in games, so route this request to the leaderboard service.
             GameServiceProtocol.RouteMessage routeMessage = new(_frontendClient, typeof(ClientToGameServerMessage), message);
-            ServerManager.Instance.SendMessageToService(ServerType.Leaderboard, routeMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, routeMessage);
             return true;
         }
 

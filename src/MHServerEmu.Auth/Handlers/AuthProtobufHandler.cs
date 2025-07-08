@@ -61,7 +61,7 @@ namespace MHServerEmu.Auth.Handlers
 #endif
 
             // Try to create a new session from the data we received
-            PlayerManagerService playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            PlayerManagerService playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
             if (playerManager == null)
                 return Logger.ErrorReturn(false, $"OnLoginDataPB(): Failed to connect to the player manager");
 

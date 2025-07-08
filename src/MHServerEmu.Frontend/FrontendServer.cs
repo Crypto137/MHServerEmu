@@ -12,6 +12,8 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
+        public GameServiceState State { get; private set; } = GameServiceState.Created;
+
         #region IGameService Implementation
 
         public override void Run()
@@ -29,9 +31,14 @@ namespace MHServerEmu.Frontend
                 return;
             
             Logger.Info($"FrontendServer is listening on {config.BindIP}:{config.Port}...");
+            State = GameServiceState.Running;
         }
 
-        // Shutdown implemented by TcpServer
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            State = GameServiceState.Shutdown;
+        }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {

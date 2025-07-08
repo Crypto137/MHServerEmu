@@ -173,7 +173,7 @@ namespace MHServerEmu.Frontend
             private readonly ushort _muxId;
 
             private MuxChannelState _state;
-            private ServerType _service;
+            private GameServiceType _service;
 
             public MuxChannel(FrontendClient client, ushort muxId)
             {
@@ -181,7 +181,7 @@ namespace MHServerEmu.Frontend
                 _muxId = muxId;
 
                 _state = MuxChannelState.Auth;
-                _service = ServerType.FrontendServer;
+                _service = GameServiceType.Frontend;
             }
 
             public override string ToString()
@@ -241,7 +241,7 @@ namespace MHServerEmu.Frontend
                 // Routing this message should authenticate the client if the credentials are successfully verified
                 MailboxMessage mailboxMessage = new(messageBuffer.MessageId, clientCredentials);
                 GameServiceProtocol.RouteMessage routeMessage = new(_client, typeof(FrontendProtocolMessage), mailboxMessage);
-                ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, routeMessage);
+                ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, routeMessage);
 
                 return true;
             }
@@ -261,14 +261,14 @@ namespace MHServerEmu.Frontend
                         if (_muxId != 1)
                             goto default;
 
-                        _service = ServerType.PlayerManager;
+                        _service = GameServiceType.PlayerManager;
                         break;
 
                     case PubSubServerTypes.GROUPING_MANAGER_FRONTEND:
                         if (_muxId != 2)
                             goto default;
 
-                        _service = ServerType.GroupingManager;
+                        _service = GameServiceType.GroupingManager;
                         break;
 
                     default:

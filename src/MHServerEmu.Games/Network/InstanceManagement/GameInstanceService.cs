@@ -10,6 +10,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         private readonly GameManager _gameManager = new();
 
+        public GameServiceState State { get; private set; } = GameServiceState.Created;
+
         public GameInstanceService()
         {
         }
@@ -18,10 +20,17 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public void Run()
         {
+            State = GameServiceState.Running;
         }
 
         public void Shutdown()
         {
+            // All game instances should be shut down by the PlayerManager before we get here
+            int gameCount = _gameManager.GameCount;
+            if (gameCount > 0)
+                Logger.Warn($"Shutdown(): {gameCount} games are still running");
+
+            State = GameServiceState.Shutdown;
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage

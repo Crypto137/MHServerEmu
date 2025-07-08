@@ -83,13 +83,13 @@ namespace MHServerEmu
             ServerManager serverManager = ServerManager.Instance;
             serverManager.Initialize();
 
-            serverManager.RegisterGameService(new FrontendServer(), ServerType.FrontendServer);
-            serverManager.RegisterGameService(new AuthServer(), ServerType.AuthServer);
-            serverManager.RegisterGameService(new PlayerManagerService(), ServerType.PlayerManager);
-            serverManager.RegisterGameService(new GroupingManagerService(), ServerType.GroupingManager);
-            serverManager.RegisterGameService(new GameInstanceService(), ServerType.GameInstanceServer);
-            serverManager.RegisterGameService(new BillingService(), ServerType.Billing);
-            serverManager.RegisterGameService(new LeaderboardService(), ServerType.Leaderboard);
+            serverManager.RegisterGameService(new GameInstanceService(), GameServiceType.GameInstance);
+            serverManager.RegisterGameService(new LeaderboardService(), GameServiceType.Leaderboard);
+            serverManager.RegisterGameService(new PlayerManagerService(), GameServiceType.PlayerManager);
+            serverManager.RegisterGameService(new GroupingManagerService(), GameServiceType.GroupingManager);
+            serverManager.RegisterGameService(new BillingService(), GameServiceType.Billing);
+            serverManager.RegisterGameService(new FrontendServer(), GameServiceType.Frontend);
+            serverManager.RegisterGameService(new AuthServer(), GameServiceType.Auth);
 
             serverManager.RunServices();
 

@@ -313,7 +313,7 @@ namespace MHServerEmu.Leaderboards
                 leaderboard.GetInstanceInfos(instances);
 
             GameServiceProtocol.LeaderboardStateChangeList message = new(instances);
-            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
         /// <summary>

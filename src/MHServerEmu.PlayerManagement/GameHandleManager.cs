@@ -21,6 +21,7 @@ namespace MHServerEmu.PlayerManagement
         private int _playerCountDivisor = 1;
 
         public int GameCount { get => _gameDict.Count; }
+        public bool IsShuttingDown { get; set; }
 
         public GameHandleManager() { }
 
@@ -150,8 +151,11 @@ namespace MHServerEmu.PlayerManagement
             }
 
             // Create replacement game instances if needed
-            while (GameCount < _targetGameInstanceCount)
-                CreateGame();
+            if (IsShuttingDown == false)
+            {
+                while (GameCount < _targetGameInstanceCount)
+                    CreateGame();
+            }
         }
 
         #endregion

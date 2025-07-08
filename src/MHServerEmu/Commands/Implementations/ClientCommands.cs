@@ -24,7 +24,7 @@ namespace MHServerEmu.Commands.Implementations
             if (ulong.TryParse(@params[0].TrimStart(HexPrefix), NumberStyles.HexNumber, null, out ulong sessionId) == false)
                 return $"Failed to parse sessionId {@params[0]}";
 
-            var playerManager = ServerManager.Instance.GetGameService(ServerType.PlayerManager) as PlayerManagerService;
+            var playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
             if (playerManager == null)
                 return "Failed to connect to the player manager.";
 
@@ -41,7 +41,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Kick(string[] @params, NetClient client)
         {
-            var groupingManager = ServerManager.Instance.GetGameService(ServerType.GroupingManager) as GroupingManagerService;
+            var groupingManager = ServerManager.Instance.GetGameService(GameServiceType.GroupingManager) as GroupingManagerService;
             if (groupingManager == null)
                 return "Failed to connect to the grouping manager.";
 

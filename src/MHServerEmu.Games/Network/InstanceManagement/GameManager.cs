@@ -58,7 +58,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             game.Run();
 
             GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.CreateAck, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
 
             return true;
         }
@@ -163,19 +163,19 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         public void OnGameShutdown(Game game)
         {
             GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void OnClientAdded(Game game, IFrontendClient client)
         {
             GameServiceProtocol.GameInstanceClientOp message = new(GameServiceProtocol.GameInstanceClientOp.OpType.AddAck, client, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void OnClientRemoved(Game game, IFrontendClient client)
         {
             GameServiceProtocol.GameInstanceClientOp message = new(GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck, client, game.Id);
-            ServerManager.Instance.SendMessageToService(ServerType.PlayerManager, message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         #endregion

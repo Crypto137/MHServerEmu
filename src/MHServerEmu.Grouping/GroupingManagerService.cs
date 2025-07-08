@@ -17,15 +17,23 @@ namespace MHServerEmu.Grouping
         private readonly Dictionary<ulong, IFrontendClient> _playerDbIdDict = new();
         private readonly Dictionary<string, IFrontendClient> _playerNameDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
 
+        public GameServiceState State { get; private set; } = GameServiceState.Created;
+
         public GroupingManagerService()
         {
         }
 
         #region IGameService Implementation
 
-        public void Run() { }
+        public void Run()
+        {
+            State = GameServiceState.Running;
+        }
 
-        public void Shutdown() { }
+        public void Shutdown()
+        {
+            State = GameServiceState.Shutdown;
+        }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {

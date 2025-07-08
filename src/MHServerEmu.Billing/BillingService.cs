@@ -10,13 +10,21 @@ namespace MHServerEmu.Billing
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        public GameServiceState State { get; private set; } = GameServiceState.Created;
+
         public BillingService() { }
 
         #region IGameService Implementation
 
-        public void Run() { }
+        public void Run()
+        {
+            State = GameServiceState.Running;
+        }
 
-        public void Shutdown() { }
+        public void Shutdown()
+        {
+            State = GameServiceState.Shutdown;
+        }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage
         {

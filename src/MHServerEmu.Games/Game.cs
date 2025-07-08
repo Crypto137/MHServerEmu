@@ -164,7 +164,7 @@ namespace MHServerEmu.Games
 
         public void Shutdown(GameShutdownReason reason)
         {
-            if (IsRunning == false || HasBeenShutDown)
+            if (HasBeenShutDown)
                 return;
 
             Logger.Info($"Game shutdown requested. Game={this}, Reason={reason}");
