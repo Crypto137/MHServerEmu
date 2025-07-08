@@ -125,7 +125,7 @@ namespace MHServerEmu.PlayerManagement
 
         public string GetStatus()
         {
-            return $"Games: {GameHandleManager.GameCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
+            return $"Games: {GameHandleManager.GameCount} | Players: {ClientManager.PlayerCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
         }
 
         private void OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
