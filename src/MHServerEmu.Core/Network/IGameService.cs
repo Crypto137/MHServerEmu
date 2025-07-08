@@ -5,6 +5,8 @@
     /// </summary>
     public interface IGameService
     {
+        public GameServiceState State { get; }
+
         /// <summary>
         /// Starts this <see cref="IGameService"/> instance.
         /// </summary>

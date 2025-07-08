@@ -2,7 +2,7 @@
 using Gazillion;
 using MHServerEmu.Games.GameData;
 
-namespace MHServerEmu.Billing.Catalogs
+namespace MHServerEmu.Games.MTXStore.Catalogs
 {
     public class CatalogGuidEntry
     {

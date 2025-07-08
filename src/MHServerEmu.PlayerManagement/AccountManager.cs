@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -15,6 +16,8 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static bool _useWhitelist;
+
         public static IDBManager DBManager { get; private set; }
 
         /// <summary>
@@ -23,6 +26,10 @@ namespace MHServerEmu.PlayerManagement
         public static bool Initialize()
         {
             DBManager = IDBManager.Instance;
+
+            PlayerManagerConfig config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
+            _useWhitelist = config.UseWhitelist;
+
             return true;
         }
 
@@ -53,6 +60,9 @@ namespace MHServerEmu.PlayerManagement
                 
                 if (accountToCheck.Flags.HasFlag(AccountFlags.IsPasswordExpired))
                     return AuthStatusCode.PasswordExpired;
+
+                if (_useWhitelist && accountToCheck.Flags.HasFlag(AccountFlags.IsWhitelisted) == false)
+                    return AuthStatusCode.EmailNotVerified;
             }
 
             // Output the account and return success if everything is okay

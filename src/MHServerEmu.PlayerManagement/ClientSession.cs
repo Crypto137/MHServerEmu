@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -23,7 +23,7 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public ulong Id { get; set; }
-        public DBAccount Account { get; private set; }
+        public object Account { get; set; }
 
         public ClientDownloader Downloader { get; private set; }
         public string Locale { get; private set; }
@@ -31,6 +31,8 @@ namespace MHServerEmu.PlayerManagement
         public byte[] Key { get; set; }
         public byte[] Token { get; }
         public TimeSpan CreationTime { get; }
+
+        public bool LoginQueuePassed { get; set; }
 
         public TimeSpan SessionLength { get => Clock.UnixTime - CreationTime; }
 
@@ -48,6 +50,8 @@ namespace MHServerEmu.PlayerManagement
             Key = CryptographyHelper.GenerateAesKey();
             Token = CryptographyHelper.GenerateToken();
             CreationTime = Clock.UnixTime;
+
+            LoginQueuePassed = false;
         }
 
         public override string ToString()

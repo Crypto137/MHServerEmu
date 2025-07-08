@@ -238,8 +238,8 @@ namespace MHServerEmu.Games.Network
             if (RegisterNetClient(playerConnection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{frontendClient}]");
 
-            // TODO: Replace this with a message to PlayerManager
-            frontendClient.GameId = _game.Id;
+            // Notify the player manager
+            _game.GameManager.OnClientAdded(_game, frontendClient);
 
             // Send time sync straight away for the client to be able to initialize its EventScheduler (needed for loading screens).
             // This will also make the client start sending pings, so it needs to be done after we assign game id.

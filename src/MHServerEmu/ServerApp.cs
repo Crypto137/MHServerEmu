@@ -11,10 +11,11 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Json;
 using MHServerEmu.DatabaseAccess.SQLite;
 using MHServerEmu.Frontend;
-using MHServerEmu.Games;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.LiveTuning;
+using MHServerEmu.Games.MTXStore;
+using MHServerEmu.Games.Network.InstanceManagement;
 using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using MHServerEmu.PlayerManagement;
@@ -82,13 +83,13 @@ namespace MHServerEmu
             ServerManager serverManager = ServerManager.Instance;
             serverManager.Initialize();
 
-            serverManager.RegisterGameService(new FrontendServer(), ServerType.FrontendServer);
-            serverManager.RegisterGameService(new AuthServer(), ServerType.AuthServer);
-            serverManager.RegisterGameService(new PlayerManagerService(), ServerType.PlayerManager);
-            serverManager.RegisterGameService(new GroupingManagerService(), ServerType.GroupingManager);
-            serverManager.RegisterGameService(new GameInstanceService(), ServerType.GameInstanceServer);
-            serverManager.RegisterGameService(new BillingService(), ServerType.Billing);
-            serverManager.RegisterGameService(new LeaderboardService(), ServerType.Leaderboard);
+            serverManager.RegisterGameService(new GameInstanceService(), GameServiceType.GameInstance);
+            serverManager.RegisterGameService(new LeaderboardService(), GameServiceType.Leaderboard);
+            serverManager.RegisterGameService(new PlayerManagerService(), GameServiceType.PlayerManager);
+            serverManager.RegisterGameService(new GroupingManagerService(), GameServiceType.GroupingManager);
+            serverManager.RegisterGameService(new BillingService(), GameServiceType.Billing);
+            serverManager.RegisterGameService(new FrontendServer(), GameServiceType.Frontend);
+            serverManager.RegisterGameService(new AuthServer(), GameServiceType.Auth);
 
             serverManager.RunServices();
 
@@ -210,6 +211,7 @@ namespace MHServerEmu
                 && ProtocolDispatchTable.Instance.Initialize()
                 && GameDatabase.IsInitialized
                 && LiveTuningManager.Instance.Initialize()
+                && CatalogManager.Instance.Initialize()
                 && IDBManager.Instance.Initialize()
                 && AccountManager.Initialize();
         }

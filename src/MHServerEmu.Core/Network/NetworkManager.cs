@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Network
@@ -20,14 +21,10 @@ namespace MHServerEmu.Core.Network
         private readonly CoreNetworkMailbox<TProtocol> _mailbox = new();
         private readonly MessageList _messagesToProcessList = new();
 
-        // We swap queues with a lock when handling async client connect / disconnect events
-        private Queue<IFrontendClient> _asyncAddClientQueue = new();
-        private Queue<IFrontendClient> _asyncRemoveClientQueue = new();
-        private Queue<IFrontendClient> _addClientQueue = new();
-        private Queue<IFrontendClient> _removeClientQueue = new();
+        private readonly DoubleBufferQueue<IFrontendClient> _addClientQueue = new();
+        private readonly DoubleBufferQueue<IFrontendClient> _removeClientQueue = new();
 
-        private SpinLock _addClientLock = new(false);
-        private SpinLock _removeClientLock = new(false);
+        public int Count { get => _netClientDict.Count; }
 
         public NetworkManager()
         {
@@ -65,17 +62,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void AsyncAddClient(IFrontendClient client)
         {
-            bool lockTaken = false;
-            try
-            {
-                _addClientLock.Enter(ref lockTaken);
-                _asyncAddClientQueue.Enqueue(client);
-            }
-            finally
-            {
-                if (lockTaken)
-                    _addClientLock.Exit(false);
-            }
+            _addClientQueue.Enqueue(client);
         }
 
         /// <summary>
@@ -83,17 +70,7 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public void AsyncRemoveClient(IFrontendClient client)
         {
-            bool lockTaken = false;
-            try
-            {
-                _removeClientLock.Enter(ref lockTaken);
-                _asyncRemoveClientQueue.Enqueue(client);
-            }
-            finally
-            {
-                if (lockTaken)
-                    _removeClientLock.Exit(false);
-            }
+            _removeClientQueue.Enqueue(client);
         }
 
         /// <summary>
@@ -153,20 +130,9 @@ namespace MHServerEmu.Core.Network
 
         private void ProcessAsyncAddedClients()
         {
-            // Swap queues so that we can continue queueing clients while we process
-            bool lockTaken = false;
-            try
-            {
-                _addClientLock.Enter(ref lockTaken);
-                (_asyncAddClientQueue, _addClientQueue) = (_addClientQueue, _asyncAddClientQueue);
-            }
-            finally
-            {
-                if (lockTaken)
-                    _addClientLock.Exit(false);
-            }                
+            _addClientQueue.Swap();       
 
-            while (_addClientQueue.Count > 0)
+            while (_addClientQueue.CurrentCount > 0)
             {
                 IFrontendClient frontendClient = _addClientQueue.Dequeue();
                 AcceptAndRegisterNewClient(frontendClient);
@@ -175,20 +141,9 @@ namespace MHServerEmu.Core.Network
 
         private void RemoveDisconnectedClients()
         {
-            // Swap queues so that we can continue queueing clients while we process
-            bool lockTaken = false;
-            try
-            {
-                _removeClientLock.Enter(ref lockTaken);
-                (_asyncRemoveClientQueue, _removeClientQueue) = (_removeClientQueue, _asyncRemoveClientQueue);
-            }
-            finally
-            {
-                if (lockTaken)
-                    _removeClientLock.Exit(false);
-            }
+            _removeClientQueue.Swap();
 
-            while (_removeClientQueue.Count > 0)
+            while (_removeClientQueue.CurrentCount > 0)
             {
                 IFrontendClient frontendClient = _removeClientQueue.Dequeue();
 

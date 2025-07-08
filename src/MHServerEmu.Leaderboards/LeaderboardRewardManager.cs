@@ -109,7 +109,7 @@ namespace MHServerEmu.Leaderboards
             }
 
             GameServiceProtocol.LeaderboardRewardRequestResponse requestResponse = new(participantId, rewardEntries);
-            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, requestResponse);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, requestResponse);
 
             return true;
         }

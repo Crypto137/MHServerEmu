@@ -280,7 +280,7 @@ namespace MHServerEmu.Leaderboards
                 return;
 
             var changeMessage = instance.BuildLeaderboardStateChange(state);
-            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, changeMessage);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, changeMessage);
         }
 
         /// <summary>

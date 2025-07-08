@@ -20,6 +20,8 @@ namespace MHServerEmu.Auth
         private CancellationTokenSource _cts;
         private HttpListener _listener;
 
+        public GameServiceState State { get; private set; } = GameServiceState.Created;
+
         /// <summary>
         /// Constructs a new <see cref="AuthServer"/> instance.
         /// </summary>
@@ -51,6 +53,7 @@ namespace MHServerEmu.Auth
             _listener.Start();
 
             Logger.Info($"AuthServer is listening on {_url}...");
+            State = GameServiceState.Running;
 
             while (true)
             {
@@ -83,6 +86,8 @@ namespace MHServerEmu.Auth
             // Close the listener
             _listener.Close();
             _listener = null;
+
+            State = GameServiceState.Shutdown;
         }
 
         public void ReceiveServiceMessage<T>(in T message) where T : struct, IGameServiceMessage

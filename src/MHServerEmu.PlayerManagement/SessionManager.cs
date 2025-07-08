@@ -2,9 +2,9 @@
 using Gazillion;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Frontend;
 using MHServerEmu.Games;
 
 namespace MHServerEmu.PlayerManagement
@@ -23,7 +23,7 @@ namespace MHServerEmu.PlayerManagement
         // TODO: Periodically purge pending sessions
         private readonly Dictionary<ulong, ClientSession> _pendingSessionDict = new();
         private readonly Dictionary<ulong, ClientSession> _activeSessionDict = new();
-        private readonly Dictionary<ulong, FrontendClient> _clientDict = new();
+        private readonly Dictionary<ulong, IFrontendClient> _clientDict = new();
 
         public int PendingSessionCount { get => _pendingSessionDict.Count; }
         public int ActiveSessionCount { get => _activeSessionDict.Count; }
@@ -91,10 +91,10 @@ namespace MHServerEmu.PlayerManagement
 
         /// <summary>
         /// Verifies the provided <see cref="ClientCredentials"/> and assigns the appropriate <see cref="ClientSession"/>
-        /// to the specified <see cref="FrontendClient"/> if they are valid. Returns <see langword="true"/> if the credentials
+        /// to the specified <see cref="IFrontendClient"/> if they are valid. Returns <see langword="true"/> if the credentials
         /// are valid.
         /// </summary>
-        public bool VerifyClientCredentials(FrontendClient client, ClientCredentials credentials)
+        public bool VerifyClientCredentials(IFrontendClient client, ClientCredentials credentials)
         {
             // Check if a pending session for these credentials exists
             ClientSession session;
@@ -165,7 +165,7 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Retrieves the <see cref="FrontendClient"/> for the specified session id. Returns <see langword="true"/> if successful.
         /// </summary>
-        public bool TryGetClient(ulong sessionId, out FrontendClient client)
+        public bool TryGetClient(ulong sessionId, out IFrontendClient client)
         {
             return _clientDict.TryGetValue(sessionId, out client);
         }

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
@@ -26,14 +27,12 @@ namespace MHServerEmu.Leaderboards
         private static readonly string LeaderboardsDirectory = Path.Combine(FileHelper.DataDirectory, "Leaderboards");
 
         private readonly object _leaderboardLock = new();
-        private readonly object _scoreUpdateLock = new();
 
         private readonly Dictionary<PrototypeGuid, Leaderboard> _leaderboards = new();
         private readonly Dictionary<PrototypeGuid, Leaderboard> _metaLeaderboards = new();
         private readonly Dictionary<ulong, string> _playerNames = new();
 
-        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _pendingScoreUpdateQueue = new();
-        private Queue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _scoreUpdateQueue = new();
+        private readonly DoubleBufferQueue<GameServiceProtocol.LeaderboardScoreUpdateBatch> _scoreUpdateQueue = new();
 
         public bool IsInitialized { get; private set; }
         public SQLiteLeaderboardDBManager DBManager { get; private set; }
@@ -314,7 +313,7 @@ namespace MHServerEmu.Leaderboards
                 leaderboard.GetInstanceInfos(instances);
 
             GameServiceProtocol.LeaderboardStateChangeList message = new(instances);
-            ServerManager.Instance.SendMessageToService(ServerType.GameInstanceServer, message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
         /// <summary>
@@ -573,9 +572,7 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void EnqueueLeaderboardScoreUpdate(in GameServiceProtocol.LeaderboardScoreUpdateBatch leaderboardScoreUpdateBatch)
         {
-            // We could probably potentially use a SpinLock here, but I'm not sure if it's worth it
-            lock (_scoreUpdateLock)
-                _pendingScoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
+            _scoreUpdateQueue.Enqueue(leaderboardScoreUpdateBatch);
         }
 
         /// <summary>
@@ -583,10 +580,9 @@ namespace MHServerEmu.Leaderboards
         /// </summary>
         public void ProcessLeaderboardScoreUpdateQueue()
         {
-            lock (_scoreUpdateLock)
-                (_pendingScoreUpdateQueue, _scoreUpdateQueue) = (_scoreUpdateQueue, _pendingScoreUpdateQueue);
+            _scoreUpdateQueue.Swap();
 
-            while (_scoreUpdateQueue.Count > 0)
+            while (_scoreUpdateQueue.CurrentCount > 0)
             {
                 GameServiceProtocol.LeaderboardScoreUpdateBatch batch = _scoreUpdateQueue.Dequeue();
                 for (int i = 0; i < batch.Count; i++)

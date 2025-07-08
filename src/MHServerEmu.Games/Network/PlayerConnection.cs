@@ -300,9 +300,8 @@ namespace MHServerEmu.Games.Network
                 region.RequestShutdown();
             }
 
-            // Remove game id to let the player manager know that it is now safe to write to the database.
-            // TODO: Replace this with a player manager message.
-            _frontendClient.GameId = 0;
+            // Notify the player manager
+            Game.GameManager.OnClientRemoved(Game, _frontendClient);
 
             Logger.Info($"Removed frontend client [{_frontendClient}] from game [{Game}]");
         }
@@ -486,6 +485,9 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageTell:                              OnTell(message); break;                             // 65
                 case ClientToGameServerMessage.NetMessageReportPlayer:                      OnReportPlayer(message); break;                     // 66
                 case ClientToGameServerMessage.NetMessageChatBanVote:                       OnChatBanVote(message); break;                      // 67
+                case ClientToGameServerMessage.NetMessageGetCatalog:                        OnGetCatalog(message); break;                       // 68
+                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:                OnGetCurrencyBalance(message); break;               // 69
+                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                OnBuyItemFromCatalog(message); break;               // 70
                 case ClientToGameServerMessage.NetMessagePurchaseUnlock:                    OnPurchaseUnlock(message); break;                   // 72
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieStarted:      OnNotifyFullscreenMovieStarted(message); break;     // 84
                 case ClientToGameServerMessage.NetMessageNotifyFullscreenMovieFinished:     OnNotifyFullscreenMovieFinished(message); break;    // 85
@@ -538,23 +540,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:           OnMissionTrackerFiltersUpdate(message); break;              // 166
                 case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;    // 167
 
-                // Billing
-                case ClientToGameServerMessage.NetMessageGetCatalog:                                                                            // 68
-                case ClientToGameServerMessage.NetMessageGetCurrencyBalance:                                                                    // 69
-                case ClientToGameServerMessage.NetMessageBuyItemFromCatalog:                                                                    // 70
-                case ClientToGameServerMessage.NetMessageBuyGiftForOtherPlayer:                                                                 // 71
-                case ClientToGameServerMessage.NetMessageGetGiftHistory:                                                                        // 73
-                    RouteMessageToService(ServerType.Billing, message);
-                    break;
-
                 default: Logger.Warn($"ReceiveMessage(): Unhandled {(ClientToGameServerMessage)message.Id} [{message.Id}]"); break;
             }
-        }
-
-        private void RouteMessageToService(ServerType serverType, in MailboxMessage mailboxMessage)
-        {
-            GameServiceProtocol.RouteMessage routeMessage = new(_frontendClient, typeof(ClientToGameServerMessage), mailboxMessage);
-            ServerManager.Instance.SendMessageToService(serverType, routeMessage);
         }
 
         private bool OnPlayerSystemMetrics(MailboxMessage message)  // 1
@@ -1442,6 +1429,30 @@ namespace MHServerEmu.Games.Network
             return true;
         }
 
+        private bool OnGetCatalog(in MailboxMessage message)    // 68
+        {
+            var getCatalog = message.As<NetMessageGetCatalog>();
+            if (getCatalog == null) return Logger.WarnReturn(false, $"OnGetCatalog(): Failed to retrieve message");
+
+            return CatalogManager.Instance.OnGetCatalog(Player, getCatalog);
+        }
+
+        private bool OnGetCurrencyBalance(in MailboxMessage message)    // 69
+        {
+            var getCurrencyBalance = message.As<NetMessageGetCurrencyBalance>();
+            if (getCurrencyBalance == null) return Logger.WarnReturn(false, $"OnGetCurrencyBalance(): Failed to retrieve message");
+
+            return CatalogManager.Instance.OnGetCurrencyBalance(Player);
+        }
+
+        private bool OnBuyItemFromCatalog(in MailboxMessage message)    // 70
+        {
+            var buyItemFromCatalog = message.As<NetMessageBuyItemFromCatalog>();
+            if (buyItemFromCatalog == null) return Logger.WarnReturn(false, $"OnBuyItemFromCatalog(): Failed to retrieve message");
+
+            return CatalogManager.Instance.OnBuyItemFromCatalog(Player, buyItemFromCatalog);
+        }
+
         private bool OnPurchaseUnlock(MailboxMessage message)   // 72
         {
             var purchaseUnlock = message.As<NetMessagePurchaseUnlock>();
@@ -2155,7 +2166,8 @@ namespace MHServerEmu.Games.Network
         private bool OnLeaderboardRequest(MailboxMessage message)   // 157
         {
             // Leaderboard details are not cached in games, so route this request to the leaderboard service.
-            RouteMessageToService(ServerType.Leaderboard, message);
+            GameServiceProtocol.RouteMessage routeMessage = new(_frontendClient, typeof(ClientToGameServerMessage), message);
+            ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, routeMessage);
             return true;
         }
 

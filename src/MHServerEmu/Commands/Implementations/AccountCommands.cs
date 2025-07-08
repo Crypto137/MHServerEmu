@@ -114,6 +114,28 @@ namespace MHServerEmu.Commands.Implementations
             return message;
         }
 
+        [Command("whitelist")]
+        [CommandDescription("Whitelists the specified account.")]
+        [CommandUsage("account whitelist [email]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(1)]
+        public string Whitelist(string[] @params, NetClient client)
+        {
+            (_, string message) = AccountManager.SetFlag(@params[0].ToLower(), AccountFlags.IsWhitelisted);
+            return message;
+        }
+
+        [Command("unwhitelist")]
+        [CommandDescription("Removes the specified account from the whitelist.")]
+        [CommandUsage("account unwhitelist [email]")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        [CommandParamCount(1)]
+        public string Unwhitelist(string[] @params, NetClient client)
+        {
+            (_, string message) = AccountManager.ClearFlag(@params[0].ToLower(), AccountFlags.IsWhitelisted);
+            return message;
+        }
+
         [Command("info")]
         [CommandDescription("Shows information for the logged in account.")]
         [CommandUsage("account info")]
