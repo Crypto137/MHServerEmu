@@ -13,7 +13,7 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class PlayerManagerService : IGameService, IMessageBroadcaster
     {
-        private const int TickRateMS = 250;
+        public const int TargetTickTimeMS = 150;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -62,7 +62,7 @@ namespace MHServerEmu.PlayerManagement
                 ClientManager.Update(true);
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
-                int sleepTimeMS = (int)Math.Max(TickRateMS - tickTimeMS, 0);
+                int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);
 
                 Thread.Sleep(sleepTimeMS);
             }

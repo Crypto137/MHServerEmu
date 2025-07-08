@@ -14,7 +14,7 @@ namespace MHServerEmu.PlayerManagement
         private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly TimeSpan MinProcessInterval = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan MinProcessInterval = TimeSpan.FromMilliseconds(PlayerManagerService.TargetTickTimeMS * 2);
 
         private readonly DoubleBufferQueue<IFrontendClient> _newClientQueue = new();
         private readonly Queue<IFrontendClient> _loginQueue = new();
