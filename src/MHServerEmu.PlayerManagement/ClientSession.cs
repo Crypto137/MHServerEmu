@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using MHServerEmu.Core.Helpers;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess.Models;
@@ -20,8 +19,6 @@ namespace MHServerEmu.PlayerManagement
     /// </summary>
     public class ClientSession : IFrontendSession
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         public ulong Id { get; set; }
         public object Account { get; set; }
 
@@ -34,7 +31,7 @@ namespace MHServerEmu.PlayerManagement
 
         public bool LoginQueuePassed { get; set; }
 
-        public TimeSpan SessionLength { get => Clock.UnixTime - CreationTime; }
+        public TimeSpan Length { get => Clock.UnixTime - CreationTime; }
 
         /// <summary>
         /// Constructs a new <see cref="ClientSession"/> with the provided data.
@@ -66,7 +63,7 @@ namespace MHServerEmu.PlayerManagement
             sb.AppendLine($"Account: {Account}");
             sb.AppendLine($"Downloader: {Downloader}");
             sb.AppendLine($"Locale: {Locale}");
-            sb.AppendLine($"Session Length: {SessionLength:hh\\:mm\\:ss}");
+            sb.AppendLine($"Length: {Length:hh\\:mm\\:ss}");
             return sb.ToString();
         }
     }

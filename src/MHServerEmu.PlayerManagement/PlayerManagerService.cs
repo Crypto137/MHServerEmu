@@ -57,6 +57,7 @@ namespace MHServerEmu.PlayerManagement
             {
                 TimeSpan referenceTime = _stopwatch.Elapsed;
 
+                SessionManager.Update();
                 LoginQueueManager.Update();
                 GameHandleManager.Update();
                 ClientManager.Update(true);

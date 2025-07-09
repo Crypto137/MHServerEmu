@@ -186,7 +186,7 @@ namespace MHServerEmu.PlayerManagement
             if (client == player.Client)
                 player.RemoveFromCurrentGame();
 
-            TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).SessionLength : TimeSpan.Zero;
+            TimeSpan sessionLength = client.Session != null ? ((ClientSession)client.Session).Length : TimeSpan.Zero;
             Logger.Info($"Removed client [{client}] (SessionLength={sessionLength:hh\\:mm\\:ss})");
             return true;
         }
