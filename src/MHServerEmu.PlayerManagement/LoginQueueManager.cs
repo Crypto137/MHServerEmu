@@ -22,7 +22,7 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly PlayerManagerService _playerManagerService;
 
-        private TimeSpan _lastProcessTime = Clock.UnixTime;
+        private CooldownTimer _processTimer = new(MinProcessInterval);
 
         public LoginQueueManager(PlayerManagerService playerManagerService)
         {
@@ -75,7 +75,8 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private void ProcessLoginQueue()
         {
-            if (CheckLoginQueueProcessInterval() == false)
+            // Take short pauses between processing the login queue to avoid sending too many updates give the player manager time to register new clients
+            if (_processTimer.Check() == false)
                 return;
 
             int totalCapacity = _playerManagerService.Config.ServerCapacity;
@@ -118,18 +119,6 @@ namespace MHServerEmu.PlayerManagement
             // Add more cases as needed
 
             return false;
-        }
-
-        private bool CheckLoginQueueProcessInterval()
-        {
-            // Take short pauses between processing the login queue to avoid sending too many updates give the player manager time to register new clients
-            TimeSpan now = Clock.UnixTime;
-
-            if ((now - _lastProcessTime) < MinProcessInterval)
-                return false;
-
-            _lastProcessTime = now;
-            return true;
         }
 
         private static bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity)
