@@ -4,7 +4,7 @@ namespace MHServerEmu.Games.MTXStore
 {
     public class BillingConfig : ConfigContainer
     {
-        public long GazillioniteBalanceForNewAccounts { get; private set; } = 5000;
+        public long GazillioniteBalanceForNewAccounts { get; private set; } = 10000;
         public float ESToGazillioniteConversionRatio { get; private set; } = 2.25f;
         public bool ApplyCatalogPatch { get; private set; } = true;
         public bool OverrideStoreUrls { get; private set; } = true;
