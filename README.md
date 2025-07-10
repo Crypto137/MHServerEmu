@@ -34,33 +34,19 @@ You can always upgrade from stable to nightly simply by downloading the latest n
 
 ## Features
 
-MHServerEmu is in active development. Overall the game is in a very playable state.
+MHServerEmu is feature-complete as a single player experience with limited multiplayer support. We are actively working on getting the remaining social features up and running, including:
 
-- All heroes with the vast majority of their powers are playable.
+- Parties
 
-- The story mode is fully playable from beginning to end, including all main and secondary missions and region events.
+- Friends
 
-- Most of the endgame modes (Midtown Patrol, X-Defense, etc.) are playable.
+- Supergroups
 
-- Procedural generation of regions and loot is fully functional.
-
-- Enemies and AI-controlled allies (team-ups, pets, etc.) are fully working.
-
-- Multiplayer is supported in a limited fashion.
-
-## Known Issues
-
-Some features are still being worked on, including, but not limited to:
-
-- Talents
-
-- Crafting
-
-- Prestige
-
-- Social features (parties, matchmaking, leaderboards, etc.)
+- Matchmaking
 
 - PvP
+
+- Trade Window
 
 You can find up to date information on what we are working on in [our roadmap](https://github.com/users/Crypto137/projects/5).
 
