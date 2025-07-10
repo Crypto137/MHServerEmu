@@ -18,7 +18,6 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
-        private bool _isRunning = true;
 
         internal SessionManager SessionManager { get; }
         internal LoginQueueManager LoginQueueManager { get; }
@@ -172,11 +171,11 @@ namespace MHServerEmu.PlayerManagement
         }
 
         /// <summary>
-        /// Sends an <see cref="IMessage"/> to all connected <see cref="FrontendClient"/> instances.
+        /// Sends an <see cref="IMessage"/> to all connected <see cref="IFrontendClient"/> instances.
         /// </summary>
         public void BroadcastMessage(IMessage message)
         {
-            throw new NotImplementedException();    // TODO
+            ClientManager.BroadcastMessage(message);
         }
 
         #endregion

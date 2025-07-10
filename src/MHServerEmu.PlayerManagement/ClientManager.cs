@@ -1,4 +1,5 @@
-﻿using Gazillion;
+﻿using Google.ProtocolBuffers;
+using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -100,6 +101,15 @@ namespace MHServerEmu.PlayerManagement
         {
             lock (_playerDict)
                 return _playerDict.TryGetValue(playerDbId, out player);
+        }
+
+        public void BroadcastMessage(IMessage message)
+        {
+            lock (_playerDict)
+            {
+                foreach (PlayerHandle player in _playerDict.Values)
+                    player.SendMessage(message);
+            }
         }
 
         private bool CreatePlayerHandle(IFrontendClient client, out PlayerHandle player)
