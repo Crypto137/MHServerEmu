@@ -19,8 +19,7 @@ namespace MHServerEmu.DatabaseAccess.Json
         private JsonSerializerOptions _jsonOptions;
 
         private int _maxBackupNumber;
-        private TimeSpan _backupInterval;
-        private TimeSpan _lastBackupTime;
+        private CooldownTimer _backupTimer;
 
         public static JsonDBManager Instance { get; } = new();
 
@@ -60,8 +59,7 @@ namespace MHServerEmu.DatabaseAccess.Json
             }
 
             _maxBackupNumber = config.MaxBackupNumber;
-            _backupInterval = TimeSpan.FromMinutes(config.BackupIntervalMinutes);
-            _lastBackupTime = Clock.GameTime;
+            _backupTimer = new(TimeSpan.FromMinutes(config.BackupIntervalMinutes));
 
             return _account != null;
         }
@@ -122,15 +120,11 @@ namespace MHServerEmu.DatabaseAccess.Json
         /// </summary>
         private void TryCreateBackup()
         {
-            TimeSpan now = Clock.GameTime;
-
-            if ((now - _lastBackupTime) < _backupInterval)
+            if (_backupTimer.Check() == false)
                 return;
 
             if (FileHelper.CreateFileBackup(_accountFilePath, _maxBackupNumber))
                 Logger.Info("Created account file backup");
-
-            _lastBackupTime = now;
         }
     }
 }

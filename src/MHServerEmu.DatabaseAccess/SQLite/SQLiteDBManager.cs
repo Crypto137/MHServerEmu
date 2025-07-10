@@ -25,8 +25,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private string _connectionString;
 
         private int _maxBackupNumber;
-        private TimeSpan _backupInterval;
-        private TimeSpan _lastBackupTime;
+        private CooldownTimer _backupTimer;
 
         public static SQLiteDBManager Instance { get; } = new();
 
@@ -53,8 +52,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
 
             _maxBackupNumber = config.MaxBackupNumber;
-            _backupInterval = TimeSpan.FromMinutes(config.BackupIntervalMinutes);
-            _lastBackupTime = Clock.GameTime;
+            _backupTimer = new(TimeSpan.FromMinutes(config.BackupIntervalMinutes));
             
             Logger.Info($"Using database file {FileHelper.GetRelativePath(_dbFilePath)}");
             return true;
@@ -358,16 +356,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         /// </summary>
         private void TryCreateBackup()
         {
-            // TODO: Use SQLite backup functionality for this
-            TimeSpan now = Clock.GameTime;
-
-            if ((now - _lastBackupTime) < _backupInterval)
+            if (_backupTimer.Check() == false)
                 return;
 
+            // TODO: Use SQLite backup functionality for this
             if (FileHelper.CreateFileBackup(_dbFilePath, _maxBackupNumber))
                 Logger.Info("Created database file backup");
-
-            _lastBackupTime = now;
         }
 
         /// <summary>
