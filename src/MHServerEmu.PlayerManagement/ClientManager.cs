@@ -16,13 +16,13 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
 
-        private readonly PlayerManagerService _playerManagerService;
+        private readonly PlayerManagerService _playerManager;
 
         public int PlayerCount { get => _playerDict.Count; }
 
-        public ClientManager(PlayerManagerService playerManagerService) 
+        public ClientManager(PlayerManagerService playerManager) 
         {
-            _playerManagerService = playerManagerService;
+            _playerManager = playerManager;
         }
 
         public void Update(bool allowNewClients)
@@ -82,7 +82,7 @@ namespace MHServerEmu.PlayerManagement
 
                     if (client.IsConnected)
                     {
-                        GameHandle game = _playerManagerService.GameHandleManager.GetAvailableGame();
+                        GameHandle game = _playerManager.GameHandleManager.GetAvailableGame();
                         game.AddPlayer(player);
                     }
                     else
@@ -167,7 +167,7 @@ namespace MHServerEmu.PlayerManagement
             if (session == null || session.Account == null)
                 return Logger.WarnReturn(false, $"AddClient(): Client [{client}] has no valid session assigned");
 
-            if (session.LoginQueuePassed == false)
+            if (_playerManager.LoginQueueManager.RemovePendingClient(client) == false)
                 return Logger.WarnReturn(false, $"AddClient(): Client [{client}] is attempting to log in without passing the login queue");
 
             if (CreatePlayerHandle(client, out PlayerHandle player) == false)
@@ -186,7 +186,7 @@ namespace MHServerEmu.PlayerManagement
             if (client.Session == null || client.Session.Account == null)
                 return Logger.WarnReturn(false, $"OnRemoveClient(): Client [{client}] has no valid session assigned");
 
-            _playerManagerService.SessionManager.RemoveActiveSession(client.Session.Id);
+            _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
 
             if (TryGetPlayerHandle(client.DbId, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"OnRemoveClient(): Failed to get player handle for client [{client}]");

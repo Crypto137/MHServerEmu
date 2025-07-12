@@ -29,8 +29,6 @@ namespace MHServerEmu.PlayerManagement
         public byte[] Token { get; }
         public TimeSpan CreationTime { get; }
 
-        public bool LoginQueuePassed { get; set; }
-
         public TimeSpan Length { get => Clock.UnixTime - CreationTime; }
 
         /// <summary>
@@ -47,8 +45,6 @@ namespace MHServerEmu.PlayerManagement
             Key = CryptographyHelper.GenerateAesKey();
             Token = CryptographyHelper.GenerateToken();
             CreationTime = Clock.UnixTime;
-
-            LoginQueuePassed = false;
         }
 
         public override string ToString()

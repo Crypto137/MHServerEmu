@@ -14,23 +14,25 @@ namespace MHServerEmu.PlayerManagement
         private const ushort MuxChannel = 1;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private static readonly TimeSpan MinProcessInterval = TimeSpan.FromMilliseconds(PlayerManagerService.TargetTickTimeMS * 2);
+        private static readonly TimeSpan PendingClientTimeout = TimeSpan.FromSeconds(15);
 
         private readonly DoubleBufferQueue<IFrontendClient> _newClientQueue = new();
         private readonly Queue<IFrontendClient> _loginQueue = new();
         private readonly Queue<IFrontendClient> _highPriorityLoginQueue = new();
 
-        private readonly PlayerManagerService _playerManagerService;
+        // Pending clients are clients that have successfully passed the login queue
+        private readonly Dictionary<IFrontendClient, TimeSpan> _pendingClients = new();
 
-        private CooldownTimer _processTimer = new(MinProcessInterval);
+        private readonly PlayerManagerService _playerManager;
 
-        public LoginQueueManager(PlayerManagerService playerManagerService)
+        public LoginQueueManager(PlayerManagerService playerManager)
         {
-            _playerManagerService = playerManagerService;
+            _playerManager = playerManager;
         }
 
         public void Update()
         {
+            TimeOutPendingClients();
             AcceptNewClients();
             ProcessLoginQueue();
         }
@@ -38,6 +40,35 @@ namespace MHServerEmu.PlayerManagement
         public void EnqueueNewClient(IFrontendClient client)
         {
             _newClientQueue.Enqueue(client);
+        }
+        
+        public bool RemovePendingClient(IFrontendClient client)
+        {
+            if (_pendingClients.Remove(client) == false)
+                return Logger.WarnReturn(false, $"RemovePendingClient(): Client [{client}] is not in the pending client collection");
+
+            return true;
+        }
+
+        /// <summary>
+        /// Disconnects clients that have successfully passed the login queue, but are not responding.
+        /// </summary>
+        private void TimeOutPendingClients()
+        {
+            TimeSpan now = Clock.UnixTime;
+
+            foreach (var kvp in _pendingClients)
+            {
+                if ((now - kvp.Value) <= PendingClientTimeout)
+                    continue;
+
+                IFrontendClient client = kvp.Key;
+
+                Logger.Warn($"Client [{client}] timed out after passing the login queue");
+
+                client.Disconnect();
+                _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
+            }
         }
 
         /// <summary>
@@ -54,6 +85,7 @@ namespace MHServerEmu.PlayerManagement
                 if (client.IsConnected == false)
                 {
                     Logger.Warn($"AcceptNewClients(): Client [{client}] disconnected before being accepted to the login queue");
+                    _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
                     continue;
                 }
 
@@ -75,12 +107,8 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private void ProcessLoginQueue()
         {
-            // Take short pauses between processing the login queue to avoid sending too many updates give the player manager time to register new clients
-            if (_processTimer.Check() == false)
-                return;
-
-            int totalCapacity = _playerManagerService.Config.ServerCapacity;
-            int availableCapacity = totalCapacity - _playerManagerService.ClientManager.PlayerCount;
+            int totalCapacity = _playerManager.Config.ServerCapacity;
+            int availableCapacity = totalCapacity - _playerManager.ClientManager.PlayerCount - _pendingClients.Count;
 
             // Let clients from the high priority queue in first ignoring capacity
             while (_highPriorityLoginQueue.Count > 0)
@@ -121,14 +149,18 @@ namespace MHServerEmu.PlayerManagement
             return false;
         }
 
-        private static bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity)
+        private bool ProcessQueuedClient(IFrontendClient client, ref int availableCapacity)
         {
             if (client.IsConnected == false)
-                return Logger.WarnReturn(false, $"ProcessQueuedClient(): Client [{client}] disconnected while waiting in the login queue");
+            {
+                Logger.Warn($"ProcessQueuedClient(): Client [{client}] disconnected while waiting in the login queue");
+                _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
+                return false;
+            }
 
             // Under normal circumstances the client should not be trying to proceed without receiving SessionEncryptionChanged.
             // However, if a malicious user modifies their client, it may try to skip ahead, so we need to verify this.
-            ((ClientSession)client.Session).LoginQueuePassed = true;
+            _pendingClients.Add(client, Clock.UnixTime);
 
             client.SendMessage(MuxChannel, SessionEncryptionChanged.CreateBuilder()
                 .SetRandomNumberIndex(0)
