@@ -23,6 +23,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Network.InstanceManagement;
 using MHServerEmu.Games.Powers;
+using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
 using MHServerEmu.Games.UI;
@@ -79,6 +80,8 @@ namespace MHServerEmu.Games
         public GameDialogManager GameDialogManager { get; }
         public ChatManager ChatManager { get; }
         public LiveTuningData LiveTuningData { get; private set; } = new();
+
+        public ConditionPool ConditionPool { get; } = new();
 
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
         public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }

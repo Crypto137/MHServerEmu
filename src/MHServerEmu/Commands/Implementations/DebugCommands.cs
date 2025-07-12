@@ -198,7 +198,7 @@ namespace MHServerEmu.Commands.Implementations
             playerConnection.SendMessage(NetMessageAdminCommandResponse.CreateBuilder()
                 .SetResponse($"Saved condition list for the current game to {filePath}")
                 .SetFilerelativepath(filePath)
-                .SetFilecontents(ConditionPool.Instance.GetConditionList())
+                .SetFilecontents(playerConnection.Game.ConditionPool.GetConditionList())
                 .Build());
 
             return string.Empty;

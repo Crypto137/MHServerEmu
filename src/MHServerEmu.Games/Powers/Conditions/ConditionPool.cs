@@ -9,13 +9,9 @@ namespace MHServerEmu.Games.Powers.Conditions
         // Allocate conditions in chunks of 256 instances, which should more than enough for one player.
         // Cap the maximum number of chunks at 128, which should be enough for how many players a single game can handle.
         private const int ChunkSize = 256;
-        private const int MaxChunkCount = 256;  // temp increased to 256 until we fix the leak
+        private const int MaxChunkCount = 128;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-
-        [ThreadStatic]
-        private static ConditionPool ThreadInstance;
-        public static ConditionPool Instance { get { ThreadInstance ??= new(); return ThreadInstance; } }
 
         private readonly Stack<Condition> _conditionStack = new();
         private readonly HashSet<Condition> _activeConditions = new();  // Track all active conditions to prevent returning multiple times
@@ -23,7 +19,7 @@ namespace MHServerEmu.Games.Powers.Conditions
         private int _chunkCount = 0;
         private int _allocatedCount = 0;
 
-        private ConditionPool() { }
+        public ConditionPool() { }
 
         public override string ToString()
         {
