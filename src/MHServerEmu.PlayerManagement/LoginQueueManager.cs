@@ -67,7 +67,7 @@ namespace MHServerEmu.PlayerManagement
                 Logger.Warn($"Client [{client}] timed out after passing the login queue");
 
                 client.Disconnect();
-                _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
+                RemoveClientSession(client);
             }
         }
 
@@ -76,6 +76,8 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         private void AcceptNewClients()
         {
+            int maxLoginQueueClients = _playerManager.Config.MaxLoginQueueClients;
+
             _newClientQueue.Swap();
 
             while (_newClientQueue.CurrentCount > 0)
@@ -85,7 +87,7 @@ namespace MHServerEmu.PlayerManagement
                 if (client.IsConnected == false)
                 {
                     Logger.Warn($"AcceptNewClients(): Client [{client}] disconnected before being accepted to the login queue");
-                    _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
+                    RemoveClientSession(client);
                     continue;
                 }
 
@@ -94,9 +96,22 @@ namespace MHServerEmu.PlayerManagement
 
                 // High priority queue always ignores server capacity
                 if (IsClientHighPriority(client))
+                {
                     _highPriorityLoginQueue.Enqueue(client);
+                }
                 else
+                {
+                    if (_loginQueue.Count >= maxLoginQueueClients)
+                    {
+                        Logger.Warn($"AcceptNewClients(): Unable to accept client [{client}], the queue already has {maxLoginQueueClients} clients, which is the maximum number allowed by the current server configuration");
+                        client.Disconnect();
+                        RemoveClientSession(client);
+                        continue;
+                    }
+
                     _loginQueue.Enqueue(client);
+                }
+
 
                 Logger.Info($"Accepted client [{client}] into the login queue");
             }
@@ -154,7 +169,7 @@ namespace MHServerEmu.PlayerManagement
             if (client.IsConnected == false)
             {
                 Logger.Warn($"ProcessQueuedClient(): Client [{client}] disconnected while waiting in the login queue");
-                _playerManager.SessionManager.RemoveActiveSession(client.Session.Id);
+                RemoveClientSession(client);
                 return false;
             }
 
@@ -172,6 +187,12 @@ namespace MHServerEmu.PlayerManagement
             availableCapacity--;
 
             return true;
+        }
+
+        private void RemoveClientSession(IFrontendClient client)
+        {
+            ulong sessionId = client.Session.Id;
+            _playerManager.SessionManager.RemoveActiveSession(sessionId);
         }
     }
 }
