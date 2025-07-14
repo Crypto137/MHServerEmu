@@ -41,7 +41,7 @@ namespace MHServerEmu.Games
         GameInstanceCrash
     }
 
-    public partial class Game
+    public class Game
     {
         public const string Version = "1.52.0.1700";
 
@@ -62,7 +62,7 @@ namespace MHServerEmu.Games
         private TimeSpan _fixedTimeUpdateProcessTimeLogThreshold;
         private long _frameCount;
 
-        private int _liveTuningChangeNum;
+        private int _liveTuningChangeNum = -1;
 
         private ulong _currentRepId;
 
@@ -83,7 +83,7 @@ namespace MHServerEmu.Games
         public LootManager LootManager { get; }
         public GameDialogManager GameDialogManager { get; }
         public ChatManager ChatManager { get; }
-        public LiveTuningData LiveTuningData { get; private set; } = new();
+        public LiveTuningData LiveTuningData { get => LiveTuningData.Current; }
 
         public ConditionPool ConditionPool { get; } = new();
 
@@ -150,10 +150,6 @@ namespace MHServerEmu.Games
             success &= EntityManager.Initialize();
 
             OmegaMissionsEnabled = true;
-
-            LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);
-            LiveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
-            _liveTuningChangeNum = LiveTuningData.ChangeNum;
 
             State = GameState.Running;
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
@@ -403,13 +399,14 @@ namespace MHServerEmu.Games
 
         private void UpdateLiveTuning()
         {
-            // This won't do anything unless this game's live tuning data is out of date
-            LiveTuningManager.Instance.CopyLiveTuningData(LiveTuningData);  
+            LiveTuningData liveTuningData = LiveTuningData;
 
-            if (_liveTuningChangeNum != LiveTuningData.ChangeNum)
+            LiveTuningManager.Instance.CopyLiveTuningData(liveTuningData);  
+
+            if (_liveTuningChangeNum != liveTuningData.ChangeNum)
             {
-                NetworkManager.BroadcastMessage(LiveTuningData.GetLiveTuningUpdate());
-                _liveTuningChangeNum = LiveTuningData.ChangeNum;
+                NetworkManager.BroadcastMessage(liveTuningData.GetLiveTuningUpdate());
+                _liveTuningChangeNum = liveTuningData.ChangeNum;
             }
         }
     }

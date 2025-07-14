@@ -3,6 +3,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Network.InstanceManagement
@@ -89,51 +90,91 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             if (State != GameThreadState.Starting)
                 throw new InvalidOperationException($"Invalid state [{State}] for GameThread [{this}].");
 
-            // Set up this thread
-            CollectionPoolSettings.UseThreadLocalStorage = true;
-            ObjectPoolManager.UseThreadLocalStorage = true;
+            InitializeThreadLocalStorage();
 
             State = GameThreadState.Running;
 
             Logger.Info($"Worker thread [{this}] started");
 
             while (State == GameThreadState.Running)
-            {
-                Game game = _threadManager.GetGameToUpdate();
-
-                try
-                {
-                    if (game != null)
-                    {
-                        Game.Current = game;
-                        game.Update();
-                    }
-                    else
-                    {
-                        // No game to process, wait until there is work to do
-                        Thread.Sleep(1);
-                    }
-                }
-                catch (Exception e)
-                {
-                    game.Shutdown(GameShutdownReason.GameInstanceCrash);
-                    HandleGameInstanceCrash(game, e);
-                }
-
-                // Enqueue the game instance for the next update if it's still running
-                if (game != null)
-                {
-                    if (game.State == GameState.Running || game.State == GameState.ShuttingDown)
-                        _threadManager.EnqueueGameToUpdate(game);
-                    else
-                        Logger.Info($"Game [{game}] is no longer running");
-                }
-            }
+                UpdateGame();
 
             State = GameThreadState.Stopped;
             _thread = null;
 
             Logger.Info($"Worker thread [{this}] stopped");
+        }
+
+        /// <summary>
+        /// Initializes thread-local storage used by this <see cref="GameThread"/>.
+        /// </summary>
+        /// <remarks>
+        /// This needs to be called from the underlying managed <see cref="Thread"/>.
+        /// </remarks>
+        private void InitializeThreadLocalStorage()
+        {
+            CollectionPoolSettings.UseThreadLocalStorage = true;
+            ObjectPoolManager.UseThreadLocalStorage = true;
+
+            InitializeLiveTuning();
+        }
+
+        /// <summary>
+        /// Initializes <see cref="LiveTuningData"/> for this <see cref="GameThread"/>.
+        /// </summary>
+        private bool InitializeLiveTuning()
+        {
+            LiveTuningData liveTuningData = LiveTuningData.Current;
+            if (liveTuningData != null)
+                return false;
+
+            liveTuningData = new();
+            LiveTuningManager.Instance.CopyLiveTuningData(liveTuningData);
+            liveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
+
+            LiveTuningData.Current = liveTuningData;
+
+            Logger.Info($"Initialized LiveTuningData for worker thread [{this}]");
+            return true;
+        }
+
+        /// <summary>
+        /// Updates the <see cref="Game"/> instance with the highest priority. Sleeps if no instances need to be updated.
+        /// </summary>
+        private void UpdateGame()
+        {
+            Game game = _threadManager.GetGameToUpdate();
+
+            try
+            {
+                if (game != null)
+                {
+                    Game.Current = game;
+
+                    game.Update();
+
+                    Game.Current = null;
+                }
+                else
+                {
+                    // No game to process, wait until there is work to do
+                    Thread.Sleep(1);
+                }
+            }
+            catch (Exception e)
+            {
+                game.Shutdown(GameShutdownReason.GameInstanceCrash);
+                HandleGameInstanceCrash(game, e);
+            }
+
+            // Enqueue the game instance for the next update if it's still running
+            if (game != null)
+            {
+                if (game.State == GameState.Running || game.State == GameState.ShuttingDown)
+                    _threadManager.EnqueueGameToUpdate(game);
+                else
+                    Logger.Info($"Game [{game}] is no longer running");
+            }
         }
 
         /// <summary>

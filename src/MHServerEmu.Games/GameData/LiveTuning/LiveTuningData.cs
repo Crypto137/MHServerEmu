@@ -29,6 +29,10 @@ namespace MHServerEmu.Games.GameData.LiveTuning
         private NetMessageLiveTuningUpdate _updateProtobuf = NetMessageLiveTuningUpdate.DefaultInstance;
         private bool _updateProtobufOutOfDate = false;
 
+        // Store LiveTuningData used by game instances per thread to reduce memory usage.
+        [ThreadStatic]
+        internal static LiveTuningData Current;
+
         public int ChangeNum { get; set; } = 0;
 
         public LiveTuningData()
