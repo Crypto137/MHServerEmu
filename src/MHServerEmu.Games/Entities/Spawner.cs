@@ -275,6 +275,7 @@ namespace MHServerEmu.Games.Entities
 
         public void OnKilledDefeatSpawner(WorldEntity entity, WorldEntity killer)
         {
+            if (entity == null) return;
             if (entity.IsOwnedBy(Id) == false) return;
             if (DefeatSpawnerOnKilled(entity)) SpawnerDefeat(killer);
         }
