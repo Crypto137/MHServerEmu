@@ -66,6 +66,7 @@ namespace MHServerEmu.PlayerManagement
 
                 Logger.Warn($"Client [{client}] timed out after passing the login queue");
 
+                _pendingClients.Remove(client);
                 client.Disconnect();
                 RemoveClientSession(client);
             }
