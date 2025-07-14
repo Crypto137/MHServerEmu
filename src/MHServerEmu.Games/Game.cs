@@ -1,11 +1,8 @@
 ﻿using System.Diagnostics;
-using System.Globalization;
 using Gazillion;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Random;
@@ -30,6 +27,14 @@ using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games
 {
+    public enum GameState
+    {
+        Created,
+        Running,
+        ShuttingDown,
+        Shutdown
+    }
+
     public enum GameShutdownReason
     {
         ShutdownRequested,
@@ -59,15 +64,14 @@ namespace MHServerEmu.Games
 
         private int _liveTuningChangeNum;
 
-        private Thread _gameThread;
-
         private ulong _currentRepId;
+
+        private GameShutdownReason? _shutdownReason;
 
         public ulong Id { get; }
         public GameManager GameManager { get; }
 
-        public bool IsRunning { get; private set; } = false;
-        public bool HasBeenShutDown { get; private set; } = false;
+        public GameState State { get; private set; } = GameState.Created;
 
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
@@ -86,6 +90,7 @@ namespace MHServerEmu.Games
         public TimeSpan FixedTimeBetweenUpdates { get; } = TimeSpan.FromMilliseconds(1000f / TargetFrameRate);
         public TimeSpan RealGameTime { get => (TimeSpan)_realGameTime; }
         public TimeSpan CurrentTime { get => GameEventScheduler != null ? GameEventScheduler.CurrentTime : _currentGameTime; }
+        public TimeSpan NextUpdateTime { get; private set; } = Clock.GameTime;
         public ulong NumQuantumFixedTimeUpdates { get => (ulong)CurrentTime.CalcNumTimeQuantums(FixedTimeBetweenUpdates); }
 
         public ulong CurrentRepId { get => ++_currentRepId; }
@@ -133,6 +138,8 @@ namespace MHServerEmu.Games
         {
             bool success = true;
 
+            _gameTimer.Start();
+
             _realGameTime.SetQuantumSize(FixedTimeBetweenUpdates);
             _realGameTime.UpdateToNow();
             _currentGameTime = RealGameTime;
@@ -148,56 +155,52 @@ namespace MHServerEmu.Games
             LiveTuningData.GetLiveTuningUpdate();   // pre-generate update protobuf
             _liveTuningChangeNum = LiveTuningData.ChangeNum;
 
-            return success;
-        }
-
-        public void Run()
-        {
-            // NOTE: This is now separate from the constructor so that we can have
-            // a dummy game with no simulation running that we use to parse messages.
-            if (IsRunning) throw new InvalidOperationException();
-            IsRunning = true;
-
-            // Initialize and start game thread
-            _gameThread = new(GameLoop) { Name = $"Game [{this}]", IsBackground = true, CurrentCulture = CultureInfo.InvariantCulture };
-            _gameThread.Start();
-
+            State = GameState.Running;
             Logger.Info($"Game 0x{Id:X} started, initial replication id: {_currentRepId}");
+
+            return success;
         }
 
         public void Shutdown(GameShutdownReason reason)
         {
-            if (HasBeenShutDown)
+            if (State != GameState.Running)
                 return;
 
-            Logger.Info($"Game shutdown requested. Game={this}, Reason={reason}");
-            NetworkManager.SendAllPendingMessages();
-            GameManager.OnGameShutdown(this);   // This will notify the PlayerManager and disconnect all players
+            Logger.Info($"Game [{this}] received shutdown request, reason={reason}");
 
-            // Wait for all players to leave the game
-            while (NetworkManager.Count > 0)
-            {
-                NetworkManager.Update();
-                Thread.Sleep(1);
-            }
-
-            // Clean up entities
-            EntityManager.DestroyAllEntities();
-            EntityManager.ProcessDeferredLists();
-
-            // Clean up regions
-            RegionManager.DestroyAllRegions();
-
-            // Mark this game as shut down
-            HasBeenShutDown = true;
+            _shutdownReason = reason;
+            State = GameState.ShuttingDown;
         }
 
-        public void RequestShutdown()
+        public void Update()
         {
-            if (IsRunning == false || HasBeenShutDown)
+            if (State == GameState.ShuttingDown)
+            {
+                DoShutdown();
                 return;
+            }
 
-            IsRunning = false;
+            TimeSpan startTime = Clock.GameTime;
+
+            // NOTE: We process input in NetworkManager.ReceiveAllPendingMessages() outside of UpdateFixedTime(), same as the client.
+
+            NetworkManager.Update();                            // Add / remove clients
+            NetworkManager.ReceiveAllPendingMessages();         // Process input
+            NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
+
+            RegionManager.Update();                             // Clean up old regions
+
+            UpdateLiveTuning();                                 // Check if live tuning data is out of date
+
+            UpdateFixedTime();                                  // Update simulation state
+
+            // Schedule the next update
+            TimeSpan endTime = Clock.GameTime;
+
+            if ((endTime - startTime) > FixedTimeBetweenUpdates)
+                NextUpdateTime = endTime + FixedTimeBetweenUpdates;
+            else
+                NextUpdateTime = startTime + FixedTimeBetweenUpdates;
         }
 
         public void AddClient(IFrontendClient client)
@@ -278,45 +281,6 @@ namespace MHServerEmu.Games
 
         public static long GetTimeFromStart(TimeSpan gameTime) => (long)(gameTime - StartTime).TotalMilliseconds;
         public static TimeSpan GetTimeFromDelta(long delta) => StartTime.Add(TimeSpan.FromMilliseconds(delta));
-
-        private void GameLoop()
-        {
-            Current = this;
-            _gameTimer.Start();
-
-            CollectionPoolSettings.UseThreadLocalStorage = true;
-            ObjectPoolManager.UseThreadLocalStorage = true;
-
-            try
-            {
-                while (IsRunning)
-                {
-                    Update();
-                }
-
-                Shutdown(GameShutdownReason.ShutdownRequested);
-            }
-            catch (Exception e)
-            {
-                HandleGameInstanceCrash(e);
-                Shutdown(GameShutdownReason.GameInstanceCrash);
-            }
-        }
-
-        private void Update()
-        {
-            // NOTE: We process input in NetworkManager.ReceiveAllPendingMessages() outside of UpdateFixedTime(), same as the client.
-
-            NetworkManager.Update();                            // Add / remove clients
-            NetworkManager.ReceiveAllPendingMessages();         // Process input
-            NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
-
-            RegionManager.Update();                             // Clean up old regions
-
-            UpdateLiveTuning();                                 // Check if live tuning data is out of date
-
-            UpdateFixedTime();                                  // Update simulation state
-        }
 
         private void UpdateFixedTime()
         {
@@ -408,6 +372,35 @@ namespace MHServerEmu.Games
             metrics.RecordGamePerformanceMetric(Id, GamePerformanceMetricEnum.FrameSendAllPendingMessagesTime, _gameTimer.Elapsed - referenceTime);
         }
 
+        private void DoShutdown()
+        {
+            if (State != GameState.ShuttingDown)
+                return;
+
+            Logger.Info($"Game shutdown requested. Game={this}, Reason={_shutdownReason}");
+            NetworkManager.SendAllPendingMessages();
+            GameManager.OnGameShutdown(this);   // This will notify the PlayerManager and disconnect all players
+
+            // Wait for all players to leave the game (TODO?: let the thread do other work while we wait?)
+            while (NetworkManager.Count > 0)
+            {
+                NetworkManager.Update();
+                Thread.Sleep(1);
+            }
+
+            // Clean up entities
+            EntityManager.DestroyAllEntities();
+            EntityManager.ProcessDeferredLists();
+
+            // Clean up regions
+            RegionManager.DestroyAllRegions();
+
+            // Mark this game as shut down
+            State = GameState.Shutdown;
+
+            Logger.Info($"Game [{this}] finished shutting down");
+        }
+
         private void UpdateLiveTuning()
         {
             // This won't do anything unless this game's live tuning data is out of date
@@ -418,50 +411,6 @@ namespace MHServerEmu.Games
                 NetworkManager.BroadcastMessage(LiveTuningData.GetLiveTuningUpdate());
                 _liveTuningChangeNum = LiveTuningData.ChangeNum;
             }
-        }
-
-        private void HandleGameInstanceCrash(Exception exception)
-        {
-#if DEBUG
-            const string buildConfiguration = "Debug";
-#elif RELEASE
-            const string buildConfiguration = "Release";
-#endif
-
-            DateTime now = DateTime.Now;
-
-            string crashReportDir = Path.Combine(FileHelper.ServerRoot, "CrashReports");
-            if (Directory.Exists(crashReportDir) == false)
-                Directory.CreateDirectory(crashReportDir);
-
-            string crashReportFilePath = Path.Combine(crashReportDir, $"GameInstanceCrash_{now.ToString(FileHelper.FileNameDateFormat)}.txt");
-
-            using (StreamWriter writer = new(crashReportFilePath))
-            {
-                writer.WriteLine(string.Format("Assembly Version: {0} | {1} UTC | {2}\n",
-                    AssemblyHelper.GetAssemblyInformationalVersion(),
-                    AssemblyHelper.ParseAssemblyBuildTime().ToString("yyyy.MM.dd HH:mm:ss"),
-                    buildConfiguration));
-
-                writer.WriteLine($"Local Server Time: {now:yyyy.MM.dd HH:mm:ss.fff}\n");
-
-                writer.WriteLine($"Game: {this}\n");
-
-                writer.WriteLine($"Exception:\n{exception}\n");
-
-                writer.WriteLine("Active Regions:");
-                foreach (Region region in RegionManager)
-                    writer.WriteLine(region.ToString());
-                writer.WriteLine();
-
-                writer.WriteLine("Scheduled Event Pool:");
-                writer.Write(GameEventScheduler.GetPoolReportString());
-                writer.WriteLine();
-
-                writer.WriteLine($"Server Status:\n{ServerManager.Instance.GetServerStatus(true)}\n");
-            }
-
-            Logger.ErrorException(exception, $"Game instance crashed, report saved to {crashReportFilePath}");
         }
     }
 }

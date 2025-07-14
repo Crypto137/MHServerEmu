@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Config;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Leaderboards;
 
@@ -8,25 +9,34 @@ namespace MHServerEmu.Games.Network.InstanceManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly GameManager _gameManager = new();
+        internal GameManager GameManager { get; }
+        internal GameThreadManager GameThreadManager { get; }
+
+        public GameInstanceConfig Config { get; }
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
 
         public GameInstanceService()
         {
+            GameManager = new(this);
+            GameThreadManager = new(this);
+
+            Config = ConfigManager.Instance.GetConfig<GameInstanceConfig>();
         }
 
         #region IGameService
 
         public void Run()
         {
+            GameThreadManager.Initialize();
+
             State = GameServiceState.Running;
         }
 
         public void Shutdown()
         {
             // All game instances should be shut down by the PlayerManager before we get here
-            int gameCount = _gameManager.GameCount;
+            int gameCount = GameManager.GameCount;
             if (gameCount > 0)
                 Logger.Warn($"Shutdown(): {gameCount} games are still running");
 
@@ -69,7 +79,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public string GetStatus()
         {
-            return $"Games: {_gameManager.GameCount} | Players: {_gameManager.PlayerCount}";
+            return $"Games: {GameManager.GameCount} | Players: {GameManager.PlayerCount}";
         }
 
         #endregion
@@ -78,7 +88,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         private bool OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
         {
-            return _gameManager.RouteMessageBuffer(routeMessageBuffer.Client, routeMessageBuffer.MessageBuffer);
+            return GameManager.RouteMessageBuffer(routeMessageBuffer.Client, routeMessageBuffer.MessageBuffer);
         }
 
         private bool OnGameInstanceOp(in GameServiceProtocol.GameInstanceOp gameInstanceOp)
@@ -86,10 +96,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             switch (gameInstanceOp.Type)
             {
                 case GameServiceProtocol.GameInstanceOp.OpType.Create:
-                    return _gameManager.CreateGame(gameInstanceOp.GameId);
+                    return GameManager.CreateGame(gameInstanceOp.GameId);
 
                 case GameServiceProtocol.GameInstanceOp.OpType.Shutdown:
-                    return _gameManager.ShutdownGame(gameInstanceOp.GameId, GameShutdownReason.ShutdownRequested);
+                    return GameManager.ShutdownGame(gameInstanceOp.GameId, GameShutdownReason.ShutdownRequested);
 
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceOp(): Unhandled operation type {gameInstanceOp.Type}");
@@ -104,7 +114,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             switch (gameInstanceClientOp.Type)
             {
                 case GameServiceProtocol.GameInstanceClientOp.OpType.Add:
-                    if (_gameManager.AddClientToGame(client, gameId) == false)
+                    if (GameManager.AddClientToGame(client, gameId) == false)
                     {
                         // Disconnect the client so that it doesn't get stuck waiting to be added to a game
                         client.Disconnect();
@@ -114,7 +124,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     return true;
 
                 case GameServiceProtocol.GameInstanceClientOp.OpType.Remove:
-                    return _gameManager.RemoveClientFromGame(client, gameId);
+                    return GameManager.RemoveClientFromGame(client, gameId);
 
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
@@ -124,7 +134,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         private bool OnLeaderboardStateChange(in GameServiceProtocol.LeaderboardStateChange leaderboardStateChange)
         {
             LeaderboardInfoCache.Instance.UpdateLeaderboardInstance(leaderboardStateChange);
-            _gameManager.BroadcastServiceMessageToGames(leaderboardStateChange);
+            GameManager.BroadcastServiceMessageToGames(leaderboardStateChange);
             return true;
         }
 
@@ -137,7 +147,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
         {
             ulong playerDbId = leaderboardRewardRequestResponse.ParticipantId;
-            return _gameManager.RouteServiceMessageToPlayer(playerDbId, leaderboardRewardRequestResponse);
+            return GameManager.RouteServiceMessageToPlayer(playerDbId, leaderboardRewardRequestResponse);
         }
 
         #endregion

@@ -20,10 +20,15 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         private readonly Dictionary<IFrontendClient, Game> _gameByClientDict = new();   // Client -> Game
         private readonly Dictionary<ulong, Game> _gameByPlayerDbIdDict = new();         // PlayerDbId -> Game
 
+        private readonly GameInstanceService _gis;
+
         public int GameCount { get => _gameDict.Count; }
         public int PlayerCount { get => _gameByClientDict.Count; }
 
-        public GameManager() { }
+        public GameManager(GameInstanceService gis)
+        {
+            _gis = gis;
+        }
 
         public bool TryGetGameById(ulong gameId, out Game game)
         {
@@ -54,8 +59,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
             lock (_gameDict)
                 _gameDict.Add(gameId, game);
-            
-            game.Run();
+
+            _gis.GameThreadManager.EnqueueGameToUpdate(game);
 
             GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.CreateAck, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
@@ -70,7 +75,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             if (TryGetGameById(gameId, out Game game) == false)
                 return Logger.WarnReturn(false, $"ShutdownGame(): GameId 0x{gameId:X} not found");
 
-            game.RequestShutdown();
+            game.Shutdown(reason);
 
             lock (_gameDict)
                 _gameDict.Remove(gameId);
