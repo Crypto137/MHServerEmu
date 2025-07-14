@@ -94,6 +94,9 @@ namespace MHServerEmu.Games.GameData.LiveTuning
             }
         }
 
+        /// <summary>
+        /// Updates the provided <see cref="LiveTuningData"/> if needed. Returns <see langword="true"/> if data was updated.
+        /// </summary>
         public bool CopyLiveTuningData(LiveTuningData output)
         {
             if (output.ChangeNum == _lastUpdateChangeNum)
