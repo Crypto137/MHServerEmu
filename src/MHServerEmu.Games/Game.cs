@@ -194,7 +194,7 @@ namespace MHServerEmu.Games
             TimeSpan endTime = Clock.GameTime;
 
             if ((endTime - startTime) > FixedTimeBetweenUpdates)
-                NextUpdateTime = endTime + FixedTimeBetweenUpdates;
+                NextUpdateTime = endTime/* + FixedTimeBetweenUpdates*/;   // Give games that are lagging higher priority until we have proper load balancing
             else
                 NextUpdateTime = startTime + FixedTimeBetweenUpdates;
         }
