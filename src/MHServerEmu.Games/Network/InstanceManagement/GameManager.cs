@@ -109,7 +109,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             return true;
         }
 
-        public bool RemoveClientFromGame(IFrontendClient client, ulong gameId)
+        public bool RemoveClientFromGame(IFrontendClient client, ulong gameId, bool isGameOriginatingRequest = false)
         {
             Logger.Info($"Received remove request for client=[{client}] gameId=0x{gameId:X}");
 
@@ -119,7 +119,9 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             if (game.Id != gameId)
                 return Logger.WarnReturn(false, $"RemoveClientFromGame(): Attempting to remove client [{client}] from game 0x{gameId:X}, but the client is in game 0x{game.Id:X}");
 
-            game.RemoveClient(client);
+            // This request may be originating from a game instance that failed to add a client (e.g. if it disconnected while pending)
+            if (isGameOriginatingRequest == false)
+                game.RemoveClient(client);
 
             lock (_clientLock)
             {

@@ -216,9 +216,16 @@ namespace MHServerEmu.Games.Network
 
         protected override bool AcceptAndRegisterNewClient(IFrontendClient frontendClient)
         {
-            // Make sure this client is still connected (it may not be if we are lagging hard)
+            // Make sure this client is still connected (it may not be, e.g. if we are lagging hard)
             if (frontendClient.IsConnected == false)
-                return Logger.WarnReturn(false, $"AcceptAndRegisterNewClient(): Client [{frontendClient}] is no longer connected");
+            {
+                Logger.Warn($"AcceptAndRegisterNewClient(): Client [{frontendClient}] is no longer connected");
+
+                // Self-initiate a removal request
+                _game.GameManager.RemoveClientFromGame(frontendClient, _game.Id, true);
+                _game.GameManager.OnClientRemoved(_game, frontendClient);
+                return false;
+            }
 
             // Construct a new PlayerConnection bound to this IFrontendClient
             PlayerConnection playerConnection = new(_game, frontendClient);

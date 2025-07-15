@@ -26,6 +26,8 @@ namespace MHServerEmu.PlayerManagement
 
         private static ulong _nextHandleId = 1;
 
+        private bool _saveNeeded = false;   // Dirty flag for player data
+
         public ulong HandleId { get; }
 
         public IFrontendClient Client { get; private set; }
@@ -151,6 +153,9 @@ namespace MHServerEmu.PlayerManagement
             State = PlayerHandleState.InGame;
             Logger.Info($"Player [{this}] added to game [{Game}]");
 
+            // If this player has successfully gotten into a game, their data will need to be saved once they get out.
+            _saveNeeded = true;
+
             return true;
         }
 
@@ -181,7 +186,8 @@ namespace MHServerEmu.PlayerManagement
 
         public bool FinishRemoveFromGame(ulong gameId)
         {
-            if (State != PlayerHandleState.PendingRemoveFromGame)
+            // Include PendingAddToGame because we can also get here when GIS fails to add a client to a game for whatever reason.
+            if (State != PlayerHandleState.PendingAddToGame && State != PlayerHandleState.PendingRemoveFromGame)
                 return Logger.WarnReturn(false, $"FinishRemoveFromGame(): Invalid state {State} for player [{this}]");
 
             if (Game.Id != gameId)
@@ -192,7 +198,11 @@ namespace MHServerEmu.PlayerManagement
 
             Logger.Info($"Player [{this}] removed from game 0x{gameId:X}");
 
-            SavePlayerData();
+            if (_saveNeeded)
+            {
+                SavePlayerData();
+                _saveNeeded = false;
+            }
 
             return true;
         }
