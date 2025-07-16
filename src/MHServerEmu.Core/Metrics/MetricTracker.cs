@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using System.Text;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 
 namespace MHServerEmu.Core.Metrics
 {
@@ -8,6 +10,7 @@ namespace MHServerEmu.Core.Metrics
     /// </summary>
     public class MetricTracker
     {
+        private readonly string _name;
         private readonly CircularBuffer<float> _buffer;
         private float _min = float.MaxValue;
         private float _max = float.MinValue;
@@ -16,9 +19,15 @@ namespace MHServerEmu.Core.Metrics
         /// <summary>
         /// Constructs a new <see cref="MetricTracker"/> with the specified buffer size.
         /// </summary>
-        public MetricTracker(int bufferSize)
+        public MetricTracker(string name, int bufferSize)
         {
+            _name = name;
             _buffer = new(bufferSize);
+        }
+
+        public override string ToString()
+        {
+            return _name;
         }
 
         /// <summary>
@@ -51,8 +60,9 @@ namespace MHServerEmu.Core.Metrics
         /// <summary>
         /// A snapshot of the state of a <see cref="MetricTracker"/>.
         /// </summary>
-        public readonly struct ReportEntry
+        public readonly struct ReportEntry : IHtmlDataStructure
         {
+            public string Name { get; }
             public float Min { get; }
             public float Max { get; }
             public float Average { get; }
@@ -61,6 +71,7 @@ namespace MHServerEmu.Core.Metrics
 
             public ReportEntry(MetricTracker tracker)
             {
+                Name = tracker._name;
                 Min = tracker._min;
                 Max = tracker._max;
                 Average = tracker._buffer.ToAverage();
@@ -71,6 +82,17 @@ namespace MHServerEmu.Core.Metrics
             public override string ToString()
             {
                 return $"min={Min}, max={Max}, avg={Average}, mdn={Median}, last={Last}";
+            }
+
+            public void BuildHtml(StringBuilder sb)
+            {
+                HtmlBuilder.AppendTableRow(sb,
+                    Name,
+                    Min != float.MaxValue ? Min.ToString("0.00") : "0.00",
+                    Max != float.MinValue ? Max.ToString("0.00") : "0.00",
+                    Average.ToString("0.00"),
+                    Median.ToString("0.00"),
+                    Last.ToString("0.00"));
             }
         }
     }

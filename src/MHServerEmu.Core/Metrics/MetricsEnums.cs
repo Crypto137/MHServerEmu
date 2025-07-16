@@ -3,7 +3,8 @@
     public enum MetricsReportFormat
     {
         PlainText,
-        Json
+        Json,
+        Html,
     }
 
     public enum GamePerformanceMetricEnum

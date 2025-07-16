@@ -156,7 +156,7 @@ namespace MHServerEmu.Auth.Handlers
         {
             if (outputFormat == AuthWebApiOutputFormat.Html)
             {
-                string report = MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.PlainText);
+                string report = MetricsManager.Instance.GeneratePerformanceReport(MetricsReportFormat.Html);
                 await SendResponseAsync(new(true, "Performance Report", report), httpResponse, outputFormat);
             }
             else if (outputFormat == AuthWebApiOutputFormat.Json)

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 
 namespace MHServerEmu.Core.Metrics.Categories
@@ -38,7 +39,7 @@ namespace MHServerEmu.Core.Metrics.Categories
 
             _trackers = new MetricTracker[(int)GamePerformanceMetricEnum.NumGameMetrics];
             for (GamePerformanceMetricEnum metric = 0; metric < GamePerformanceMetricEnum.NumGameMetrics; metric++)
-                _trackers[(int)metric] = new(NumSamples);
+                _trackers[(int)metric] = new(metric.ToString(), NumSamples);
         }
 
         public bool Update(in GamePerformanceMetricValue gameMetricValue)
@@ -87,7 +88,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             return _trackers[(int)metric].AsReportEntry();
         }
 
-        public readonly struct Report
+        public readonly struct Report : IHtmlDataStructure
         {
             // TODO: Clean this up
             public MetricTracker.ReportEntry FrameTime { get; }
@@ -141,6 +142,30 @@ namespace MHServerEmu.Core.Metrics.Categories
                 sb.AppendLine($"{nameof(EntityCount)}: {EntityCount}");
                 sb.AppendLine($"{nameof(PlayerCount)}: {PlayerCount}");
                 return sb.ToString();
+            }
+
+            public void BuildHtml(StringBuilder sb)
+            {
+                HtmlBuilder.BeginTable(sb);
+
+                HtmlBuilder.AppendTableRow(sb, "Metric", "Min", "Max", "Avg", "Mdn", "Last");
+
+                HtmlBuilder.AppendDataStructure(sb, FrameTime);
+                HtmlBuilder.AppendDataStructure(sb, FrameProcessServiceMessagesTime);
+                HtmlBuilder.AppendDataStructure(sb, FrameTriggerEventsTime);
+                HtmlBuilder.AppendDataStructure(sb, FrameLocomoteEntitiesTime);
+                HtmlBuilder.AppendDataStructure(sb, FramePhysicsResolveEntitiesTime);
+                HtmlBuilder.AppendDataStructure(sb, FrameProcessDeferredListsTime);
+                HtmlBuilder.AppendDataStructure(sb, FrameSendAllPendingMessagesTime);
+                HtmlBuilder.AppendDataStructure(sb, CatchUpFrames);
+                HtmlBuilder.AppendDataStructure(sb, TimeSkip);
+                HtmlBuilder.AppendDataStructure(sb, ScheduledEventsPerUpdate);
+                HtmlBuilder.AppendDataStructure(sb, EventSchedulerFramesPerUpdate);
+                HtmlBuilder.AppendDataStructure(sb, RemainingScheduledEvents);
+                HtmlBuilder.AppendDataStructure(sb, EntityCount);
+                HtmlBuilder.AppendDataStructure(sb, PlayerCount);
+
+                HtmlBuilder.EndTable(sb);
             }
         }
     }
