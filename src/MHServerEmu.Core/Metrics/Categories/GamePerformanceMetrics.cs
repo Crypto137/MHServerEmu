@@ -148,7 +148,7 @@ namespace MHServerEmu.Core.Metrics.Categories
             {
                 HtmlBuilder.BeginTable(sb);
 
-                HtmlBuilder.AppendTableRow(sb, "Metric", "Min", "Max", "Avg", "Mdn", "Last");
+                HtmlBuilder.AppendTableRow(sb, "Metric", "Avg", "Mdn", "Last", "Min", "Max");
 
                 HtmlBuilder.AppendDataStructure(sb, FrameTime);
                 HtmlBuilder.AppendDataStructure(sb, FrameProcessServiceMessagesTime);

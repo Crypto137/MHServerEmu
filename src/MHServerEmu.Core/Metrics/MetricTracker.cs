@@ -12,9 +12,9 @@ namespace MHServerEmu.Core.Metrics
     {
         private readonly string _name;
         private readonly CircularBuffer<float> _buffer;
+        private float _last = 0f;
         private float _min = float.MaxValue;
         private float _max = float.MinValue;
-        private float _last = 0f;
 
         /// <summary>
         /// Constructs a new <see cref="MetricTracker"/> with the specified buffer size.
@@ -36,9 +36,9 @@ namespace MHServerEmu.Core.Metrics
         public void Track(float value)
         {
             _buffer.Add(value);
+            _last = value;
             _min = MathF.Min(_min, value);
             _max = MathF.Max(_max, value);
-            _last = value;
         }
 
         /// <summary>
@@ -63,36 +63,36 @@ namespace MHServerEmu.Core.Metrics
         public readonly struct ReportEntry : IHtmlDataStructure
         {
             public string Name { get; }
-            public float Min { get; }
-            public float Max { get; }
             public float Average { get; }
             public float Median { get; }
             public float Last { get; }
+            public float Min { get; }
+            public float Max { get; }
 
             public ReportEntry(MetricTracker tracker)
             {
                 Name = tracker._name;
-                Min = tracker._min;
-                Max = tracker._max;
                 Average = tracker._buffer.ToAverage();
                 Median = tracker._buffer.ToMedian();
                 Last = tracker._last;
+                Min = tracker._min;
+                Max = tracker._max;
             }
 
             public override string ToString()
             {
-                return $"min={Min}, max={Max}, avg={Average}, mdn={Median}, last={Last}";
+                return $"avg={Average}, mdn={Median}, last={Last}, min={Min}, max={Max}";
             }
 
             public void BuildHtml(StringBuilder sb)
             {
                 HtmlBuilder.AppendTableRow(sb,
                     Name,
-                    Min != float.MaxValue ? Min.ToString("0.00") : "0.00",
-                    Max != float.MinValue ? Max.ToString("0.00") : "0.00",
                     Average.ToString("0.00"),
                     Median.ToString("0.00"),
-                    Last.ToString("0.00"));
+                    Last.ToString("0.00"),
+                    Min != float.MaxValue ? Min.ToString("0.00") : "0.00",
+                    Max != float.MinValue ? Max.ToString("0.00") : "0.00");
             }
         }
     }
