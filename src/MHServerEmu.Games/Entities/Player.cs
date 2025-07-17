@@ -2482,8 +2482,15 @@ namespace MHServerEmu.Games.Entities
         public void TEMP_ScheduleMoveToTarget(PrototypeId targetProtoRef, TimeSpan delay)
         {
             // REMOVEME: Get rid of this when we overhaul the teleport system
+            // This is used to simulate a game transfer delay when doing a story warp.
             EventPointer<MoveToTargetEvent> moveToTargetEvent = new();
             ScheduleEntityEvent(moveToTargetEvent, delay, targetProtoRef);
+        }
+
+        private void TEMP_MoveToTargetCallback(PrototypeId targetProtoRef)
+        {
+            Teleporter teleporter = new(this, TeleportContextEnum.TeleportContext_StoryWarp);
+            teleporter.TeleportToTarget(targetProtoRef);
         }
 
         public void OnCellLoaded(uint cellId, ulong regionId)
@@ -3480,7 +3487,7 @@ namespace MHServerEmu.Games.Entities
 
         private class MoveToTargetEvent : CallMethodEventParam1<Entity, PrototypeId>
         {
-            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).PlayerConnection.MoveToTarget(p1);
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).TEMP_MoveToTargetCallback(p1);
         }
 
         private class CommunityBroadcastEvent : CallMethodEvent<Entity>

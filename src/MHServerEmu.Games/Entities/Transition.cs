@@ -222,7 +222,11 @@ namespace MHServerEmu.Games.Entities
                     return true;
 
                 case RegionTransitionType.ReturnToLastTown:
-                    return TeleportToLastTown(player);
+                    {
+                        Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Transition);
+                        teleporter.TransitionEntity = this;
+                        return teleporter.TeleportToLastTown();
+                    }
 
                 case RegionTransitionType.TransitionDirectReturn:
                     if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
@@ -256,12 +260,13 @@ namespace MHServerEmu.Games.Entities
 
         public static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
         {
-            player.PlayerConnection.MoveToTarget(targetProtoRef);
-            return true;
+            Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Transition);
+            return teleporter.TeleportToTarget(targetProtoRef);
         }
 
         public static bool TeleportToLocalTarget(Player player, PrototypeId targetProtoRef)
         {
+            // TODO: Move this into teleporter
             var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): targetProto == null");
 
@@ -306,24 +311,6 @@ namespace MHServerEmu.Games.Entities
 
             ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
-        }
-
-        public static bool TeleportToLastTown(Player player)
-        {
-            // Check last town
-            PrototypeId targetProtoRef = PrototypeId.Invalid;
-
-            PrototypeId regionProtoRef = player.Properties[PropertyEnum.LastTownRegionForAccount];
-            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
-            if (regionProto != null)
-                targetProtoRef = regionProto.StartTarget;
-
-            // Use the fallback if no saved last town
-            if (targetProtoRef == PrototypeId.Invalid)
-                targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-
-            player.PlayerConnection.MoveToTarget(targetProtoRef);
-            return true;
         }
     }
 }

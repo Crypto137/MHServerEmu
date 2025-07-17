@@ -1182,7 +1182,14 @@ namespace MHServerEmu.Games.Network
             if (avatar.InInteractRange(waypoint, InteractionMethod.Use) == false)
                 return Logger.WarnReturn(false, $"OnUseWaypoint(): Avatar [{avatar}] is not in interact range of waypoint [{waypoint}]");
 
-            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef, (PrototypeId)useWaypoint.RegionProtoId);
+            PrototypeId waypointProtoRef = (PrototypeId)useWaypoint.WaypointDataRef;
+            PrototypeId regionProtoRefOverride = (PrototypeId)useWaypoint.RegionProtoId;
+            PrototypeId difficultyProtoRef = (PrototypeId)useWaypoint.DifficultyProtoId;
+
+            Teleporter teleporter = new(Player, TeleportContextEnum.TeleportContext_Waypoint);
+            teleporter.TransitionEntity = waypoint;
+            teleporter.TeleportToWaypoint(waypointProtoRef, regionProtoRefOverride, difficultyProtoRef);
+
             return true;
         }
 

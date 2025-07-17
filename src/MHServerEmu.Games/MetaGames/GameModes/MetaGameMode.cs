@@ -141,8 +141,11 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public void TeleportPlayersToTarget(PrototypeId targetRef)
         {
             var players = MetaGame.Players;
-            foreach (var player in players.ToArray())
-                player.PlayerConnection.MoveToTarget(targetRef);
+            foreach (var player in players.ToArray())   // FIXME: use a pooled list here
+            {
+                Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_MetaGame);
+                teleporter.TeleportToTarget(targetRef);
+            }
         }
 
         public void ResetStates()
