@@ -463,20 +463,18 @@ namespace MHServerEmu.Games.Entities.Avatars
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
-                        Transition.TeleportToLocalTarget(owner, deathReleaseTarget);
+                        Player player = GetOwnerOfType<Player>();
+                        Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Resurrect);
+                        return teleporter.TeleportToTarget(deathReleaseTarget);
                     }
                     else 
                     {
                         return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {avatarOnKilledInfo.DeathReleaseBehavior}");
                     }
 
-                    break;
-
                 default:
                     return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented request type {requestType}");
             }
-
-            return true;
         }
 
         private PrototypeId FindDeathReleaseTarget()
@@ -587,8 +585,9 @@ namespace MHServerEmu.Games.Entities.Avatars
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoRegionTeleport(): player == null");
 
-            Transition.TeleportToTarget(player, targetProtoRef);
-            return true;
+            // TODO: Bodyslider context and return data
+            Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Power);
+            return teleporter.TeleportToTarget(targetProtoRef);
         }
 
         #endregion
