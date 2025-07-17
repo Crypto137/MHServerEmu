@@ -53,7 +53,7 @@ namespace MHServerEmu.Games.Network
         public Game Game { get; }
 
         public AreaOfInterest AOI { get; }
-        public WorldView WorldView { get; }
+        public WorldViewCache WorldView { get; }
         public TransferParams TransferParams { get; }
         public RegionContext RegionContext { get; }
 

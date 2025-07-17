@@ -5,17 +5,9 @@ using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class WorldView : IEnumerable<KeyValuePair<PrototypeId, ulong>>
+    public class WorldViewCache : IEnumerable<KeyValuePair<PrototypeId, ulong>>
     {
-        // NOTE: This is based on the PlayerMgrToGameServer protocol extracted from 1.53 builds.
-
-        // WorldView is a class that represents a collection of region instances (both public and private)
-        // bound to a player. This is what allows a player to access their private instances, as well as
-        // consistently return to the same public instances. When in party, everyone should use the world view
-        // of the leader.
-
-        // TODO: Implement some method of short-term persistence between sessions (e.g. so your world view doesn't reset when you relog).
-        // TODO: PlayerManager should keep track of this as well.
+        // TODO: PlayerManager should have the authoritative copy of this data. This is just a cache for local lookups.
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -24,7 +16,7 @@ namespace MHServerEmu.Games.Regions
 
         public PlayerConnection Owner { get; }
 
-        public WorldView(PlayerConnection owner)
+        public WorldViewCache(PlayerConnection owner)
         {
             Owner = owner;
         }
