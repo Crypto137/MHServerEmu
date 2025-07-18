@@ -497,9 +497,9 @@ namespace MHServerEmu.Games.Regions
                 MetaGames.Remove(metaGameId);
             }
 
-            if (Settings.PortalId != 0) // Destroy Portal with region
+            if (Settings.PortalEntityDbId != 0) // Destroy Portal with region
             {
-                var portal = entityManager.GetEntity<Entity>(Settings.PortalId);
+                var portal = entityManager.GetEntity<Entity>(Settings.PortalEntityDbId);    // FIXME: This is DatabaseUniqueId, not EntityId
                 portal?.Destroy();
             }
 
@@ -1861,7 +1861,7 @@ namespace MHServerEmu.Games.Regions
         public bool InOwnerParty(Player player)
         {
             ulong playerGuid = player.DatabaseUniqueId;
-            if (Settings.PlayerGuidParty == playerGuid) return true;
+            if (Settings.OwnerPlayerDbId == playerGuid) return true;    // FIXME: This doesn't look right
 
             // TODO check owner is in party
 

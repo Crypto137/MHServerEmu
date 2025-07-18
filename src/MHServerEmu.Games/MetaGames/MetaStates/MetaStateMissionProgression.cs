@@ -1,5 +1,5 @@
 using MHServerEmu.Core.Extensions;
-using MHServerEmu.Games.Entities;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
@@ -176,7 +176,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                 var startTarget = Region.GetStartTarget(player);
                 if (startTarget != PrototypeId.Invalid)
                 {
-                    Teleporter teleporter = new(player, Gazillion.TeleportContextEnum.TeleportContext_Mission);
+                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    teleporter.Initialize(player, Gazillion.TeleportContextEnum.TeleportContext_Mission);
                     teleporter.TeleportToTarget(startTarget);
                 }
             }

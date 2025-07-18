@@ -464,7 +464,8 @@ namespace MHServerEmu.Games.Entities.Avatars
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
                         Player player = GetOwnerOfType<Player>();
-                        Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Resurrect);
+                        using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                        teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
                         return teleporter.TeleportToTarget(deathReleaseTarget);
                     }
                     else 
@@ -586,7 +587,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (player == null) return Logger.WarnReturn(false, "DoRegionTeleport(): player == null");
 
             // TODO: Bodyslider context and return data
-            Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Power);
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Power);
             return teleporter.TeleportToTarget(targetProtoRef);
         }
 

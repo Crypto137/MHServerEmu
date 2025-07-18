@@ -1186,7 +1186,8 @@ namespace MHServerEmu.Games.Network
             PrototypeId regionProtoRefOverride = (PrototypeId)useWaypoint.RegionProtoId;
             PrototypeId difficultyProtoRef = (PrototypeId)useWaypoint.DifficultyProtoId;
 
-            Teleporter teleporter = new(Player, TeleportContextEnum.TeleportContext_Waypoint);
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(Player, TeleportContextEnum.TeleportContext_Waypoint);
             teleporter.TransitionEntity = waypoint;
             teleporter.TeleportToWaypoint(waypointProtoRef, regionProtoRefOverride, difficultyProtoRef);
 

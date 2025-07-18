@@ -1,4 +1,5 @@
 using Gazillion;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
@@ -228,7 +229,8 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             {
                 if (status == PlayerState.Fallback)
                 {
-                    Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_MetaGame);
+                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
                     teleporter.TeleportToLastTown();
                 }
                 else
@@ -236,12 +238,13 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     var region = Region;
                     if (targetRef == PrototypeId.Invalid || region == null) return;
 
-                    Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_MetaGame);
+                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
 
                     RegionPrototype regionProto;
                     if (_proto.TeleportIsEndlessDown)
                     {
-                        teleporter.SetEndlessRegionData(region);
+                        teleporter.CopyEndlessRegionData(region, true);
                         regionProto = region.Prototype;
                     }
                     else

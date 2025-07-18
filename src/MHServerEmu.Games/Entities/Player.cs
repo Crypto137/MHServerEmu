@@ -2489,7 +2489,8 @@ namespace MHServerEmu.Games.Entities
 
         private void TEMP_MoveToTargetCallback(PrototypeId targetProtoRef)
         {
-            Teleporter teleporter = new(this, TeleportContextEnum.TeleportContext_StoryWarp);
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(this, TeleportContextEnum.TeleportContext_StoryWarp);
             teleporter.TeleportToTarget(targetProtoRef);
         }
 

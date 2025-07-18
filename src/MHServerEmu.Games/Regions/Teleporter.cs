@@ -1,9 +1,13 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Regions
@@ -15,27 +19,179 @@ namespace MHServerEmu.Games.Regions
     /// <summary>
     /// Provides API for initiating teleports from gameplay code.
     /// </summary>
-    public struct Teleporter
+    public class Teleporter : IPoolable, IDisposable
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        public Player Player { get; }
-        public TeleportContextEnum Context { get; }
+        public Player Player { get; private set; }
+        public TeleportContextEnum Context { get; private set; }
 
         public Transition TransitionEntity { get; set; }
-        public int PlayerDeaths { get; set; } = 0;
 
-        public Teleporter(Player player, TeleportContextEnum context)
+        // Additional region creation data (see NetStructCreateRegionParams), used primarily for Danger Room and bonus level (Cow/Doop) regions
+        public int Level { get; set; }
+        public bool Cheat { get; set; }
+        public PrototypeId DifficultyTierRef { get; set; }
+        public int EndlessLevel { get; set; }
+        public int Seed { get; set; }
+        public ulong ParentRegionId { get; set; }
+        public PrototypeId RequiredItemProtoRef { get; set; }
+        public ulong RequiredItemEntityId { get; set; }
+        public NetStructPortalInstance AccessPortal { get; set; }
+        public List<PrototypeId> Affixes { get; set; }
+        public int PlayerDeaths { get; set; }
+        public ulong DangerRoomScenarioItemDbGuid { get; set; }
+        public PrototypeId ItemRarity { get; set; }
+        public PropertyCollection Properties { get; set; }
+        public PrototypeId DangerRoomScenarioRef { get; set; }
+
+        public bool IsInPool { get; set; }
+
+        public Teleporter() { }     // Use pooling instead of this constructor
+
+        public void ResetForPool()
+        {
+            Player = default;
+            Context = default;
+
+            TransitionEntity = default;
+
+            Level = default;
+            Cheat = default;
+            DifficultyTierRef = default;
+            EndlessLevel = default;
+            Seed = default;
+            ParentRegionId = default;
+            RequiredItemProtoRef = default;
+            RequiredItemEntityId = default;
+            AccessPortal = default;
+            Affixes = default;
+            PlayerDeaths = default;
+            DangerRoomScenarioItemDbGuid = default;
+            ItemRarity = default;
+            Properties = default;
+            DangerRoomScenarioRef = default;
+        }
+
+        public void Dispose()
+        {
+            ObjectPoolManager pool = ObjectPoolManager.Instance;
+
+            if (Affixes != null)
+                ListPool<PrototypeId>.Instance.Return(Affixes);
+            else
+                Logger.Warn("Dispose(): Affixes == null");
+
+            if (Properties != null)
+                pool.Return(Properties);
+            else
+                Logger.Warn("Dispose(): Properties == null");
+
+            pool.Return(this);
+        }
+
+        public void Initialize(Player player, TeleportContextEnum context)
         {
             Player = player;
             Context = context;
+
+            Affixes = ListPool<PrototypeId>.Instance.Get();
+            Properties = ObjectPoolManager.Instance.Get<PropertyCollection>();
         }
 
-        public void SetEndlessRegionData(Region region)
+        public bool SetAccessPortal(Transition accessPortalEntity)
         {
-            // TODO: Clean up the whole RegionContext thing
-            var regionContext = Player.PlayerConnection.RegionContext;
-            regionContext.FromRegion(region);
+            if (accessPortalEntity == null) return Logger.WarnReturn(false, "SetAccessPortal(): accessPortalEntity == null");
+            if (accessPortalEntity.IsInWorld == false) return Logger.WarnReturn(false, "SetAccessPortal(): accessPortalEntity.IsInWorld == false");
+
+            ParentRegionId = accessPortalEntity.Region.Id;
+
+            var portalInstanceBuilder = NetStructPortalInstance.CreateBuilder()
+                .SetEntityDbId(accessPortalEntity.DatabaseUniqueId)
+                .SetLocation(accessPortalEntity.RegionLocation.ToProtobuf());
+
+            ulong ownerDbId = accessPortalEntity.Properties[PropertyEnum.RestrictedToPlayerGuidParty];
+            if (ownerDbId != 0)
+                portalInstanceBuilder.SetOwnerPlayerDbId(ownerDbId).SetBoundToOwner(true);
+
+            AccessPortal = portalInstanceBuilder.Build();
+            return true;
+        }
+
+        public bool CopyEndlessRegionData(Region region, bool incrementEndlessLevel)
+        {
+            RegionPrototype regionProto = region.Prototype;
+            if (regionProto == null) return Logger.WarnReturn(false, "CopyEndlessRegionData(): regionProto == null");
+
+            if (regionProto.HasEndlessTheme() == false)
+                return Logger.WarnReturn(false, $"CopyEndlessRegionData(): Region [{regionProto}] is not an endless region");
+
+            RegionSettings settings = region.Settings;
+
+            DifficultyTierRef = settings.DifficultyTierRef;
+            EndlessLevel = settings.EndlessLevel;
+            if (incrementEndlessLevel)
+                EndlessLevel++;
+
+            Seed = settings.Seed;
+            ParentRegionId = settings.ParentRegionId;
+
+            if (settings.AccessPortal != null)
+                AccessPortal = NetStructPortalInstance.CreateBuilder().MergeFrom(settings.AccessPortal).Build();
+
+            Affixes.Set(settings.Affixes);
+            ItemRarity = settings.ItemRarity;
+            DangerRoomScenarioItemDbGuid = settings.DangerRoomScenarioItemDbGuid;
+
+            if (settings.Properties != null)
+                Properties.FlattenCopyFrom(settings.Properties, true);
+            
+            Properties.CopyPropertyRange(region.Properties, PropertyEnum.ScoringEventTimerAccumTimeMS);
+
+            DangerRoomScenarioRef = settings.DangerRoomScenarioRef;
+
+            return true;
+        }
+
+        public NetStructCreateRegionParams BuildCreateRegionParams()
+        {
+            var builder = NetStructCreateRegionParams.CreateBuilder()
+                .SetLevel((uint)Level)
+                // origin
+                .SetCheat(Cheat)
+                .SetDifficultyTierProtoId((ulong)DifficultyTierRef)
+                .SetEndlessLevel((uint)EndlessLevel)
+                // gameStateId
+                // matchNumber
+                .SetSeed((uint)Seed)
+                .SetParentRegionId(ParentRegionId)
+                .SetRequiredItemProtoId((ulong)RequiredItemProtoRef)
+                .SetRequiredItemEntityId(RequiredItemEntityId)
+                // accessPortal
+                // affixes
+                .SetPlayerDeaths((uint)PlayerDeaths)
+                .SetDangerRoomScenarioItemDbGuid(DangerRoomScenarioItemDbGuid)
+                .SetItemRarity((ulong)ItemRarity)
+                // propertyBuffer
+                .SetDangerRoomScenarioR((ulong)DangerRoomScenarioRef);
+
+            if (AccessPortal != null)
+                builder.SetAccessPortal(AccessPortal);
+
+            if (Affixes != null)
+            {
+                foreach (PrototypeId affix in Affixes)
+                    builder.AddAffixes((ulong)affix);
+            }
+
+            if (Properties != null && Properties.IsEmpty == false)
+            {
+                using Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels);
+                Properties.Serialize(archive);
+                builder.SetPropertyBuffer(archive.ToByteString());
+            }
+
+            return builder.Build();
         }
 
         public bool TeleportToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
@@ -46,11 +202,19 @@ namespace MHServerEmu.Games.Regions
             Region region = Player.GetRegion();
             if (region == null) return Logger.WarnReturn(false, "TeleportToTarget(): region == null");
 
-            RegionPrototype targetRegionProto = targetRegionProto = targetProto.Region.As<RegionPrototype>();
-            if (targetRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetRegionProto == null");
+            RegionPrototype destinationRegionProto = targetProto.Region.As<RegionPrototype>();
+            if (destinationRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): destinationRegionProto == null");
 
-            // TODO: Check difficulty and other equivalency things
-            if (RegionPrototype.Equivalent(targetRegionProto, region.Prototype))
+            // Fix endless data if needed
+            if (destinationRegionProto.HasEndlessTheme() && EndlessLevel <= 0)
+            {
+                if (region.PrototypeDataRef == destinationRegionProto.DataRef)
+                    CopyEndlessRegionData(region, false);
+                else
+                    EndlessLevel = 1;
+            }
+
+            if (IsLocalTeleport(region, destinationRegionProto))
                 return TeleportToLocalTarget(targetProtoRef);
             else
                 return TeleportToRemoteTarget(targetProtoRef, regionProtoRefOverride);
@@ -63,6 +227,8 @@ namespace MHServerEmu.Games.Regions
 
             RegionConnectionTargetPrototype targetProto = waypointProto.Destination.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToWaypoint(): targetProto == null");
+
+            DifficultyTierRef = difficultyProtoRef;
 
             // TODO: Use data from targetProto here directly
 
@@ -100,17 +266,11 @@ namespace MHServerEmu.Games.Regions
             Orientation targetRot = transition.RegionLocation.Orientation;
             targetPos += transitionProto.CalcSpawnOffset(targetRot);
 
-            //uint cellId = transition.Properties[PropertyEnum.MapCellId];
-            //uint areaId = transition.Properties[PropertyEnum.MapAreaId];
-            //Logger.Debug($"TeleportToTransition(): targetPos={targetPos}, areaId={areaId}, cellId={cellId}");
-
             ChangePositionResult result = Player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        // TODO: Make Local/Remote teleport methods private once the whole DR data thing is cleaned up
-
-        public bool TeleportToLocalTarget(PrototypeId targetProtoRef)
+        private bool TeleportToLocalTarget(PrototypeId targetProtoRef)
         {
             var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): targetProto == null");
@@ -136,17 +296,56 @@ namespace MHServerEmu.Games.Regions
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        public bool TeleportToRemoteTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride)
+        private bool TeleportToRemoteTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride)
         {
-            Player.PlayerConnection.RegionContext.PlayerDeaths = PlayerDeaths;
-            Player.PlayerConnection.MoveToTarget(targetProtoRef, regionProtoRefOverride);
+            PlayerConnection playerConnection = Player.PlayerConnection;
+
+            // FIXME: Get rid of RegionContext and use NetStructCreateRegionParams to get or create region
+            RegionContext regionContext = playerConnection.RegionContext;
+            NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
+            Logger.Debug($"TeleportToRemoteTarget(): {createRegionParams}");
+
+            regionContext.CreateRegionParams = createRegionParams;
+
+            playerConnection.MoveToTarget(targetProtoRef, regionProtoRefOverride);
             return true;
         }
 
         public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef)
         {
-            Teleporter teleporter = new(player, TeleportContextEnum.TeleportContext_Debug);
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Debug);
             teleporter.TeleportToTarget(targetProtoRef);
+        }
+
+        private bool IsLocalTeleport(Region currentRegion, RegionPrototype destinationRegionProto)
+        {
+            if (currentRegion == null)
+                return false;
+
+            RegionPrototype currentRegionProto = currentRegion.Prototype;
+
+            // RegionPrototype
+            if (RegionPrototype.Equivalent(destinationRegionProto, currentRegionProto) == false)
+                return false;
+
+            // DifficultyTier
+            if (DifficultyTierRef != PrototypeId.Invalid && currentRegion.DifficultyTierRef != DifficultyTierRef)
+                return false;
+
+            // EndlessLevel
+            if (destinationRegionProto.HasEndlessTheme() && currentRegionProto.HasEndlessTheme() && EndlessLevel != currentRegion.Settings.EndlessLevel)
+                return false;
+
+            // Seed
+            if (Seed != 0 && currentRegion.RandomSeed != Seed)
+                return false;
+
+            // AccessPortal
+            if (AccessPortal != null && currentRegion.Settings.AccessPortal.OwnerPlayerDbId != AccessPortal.OwnerPlayerDbId)
+                return false;
+
+            return true;
         }
     }
 }
