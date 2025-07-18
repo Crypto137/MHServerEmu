@@ -1,6 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
-using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -47,27 +46,6 @@ namespace MHServerEmu.Games.Network
             if (targetProto == null) return Logger.WarnReturn(false, "SetTarget(): targetProto == null");
 
             return SetTarget(targetProto.Region, targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity);
-        }
-
-        public bool SetTarget(MigrationData migrationData)
-        {
-            if (migrationData.DestTargetRegionProtoId == 0)
-                return false;
-
-            PrototypeId regionProtoRef = (PrototypeId)migrationData.DestTargetRegionProtoId;
-            PrototypeId areaProtoRef = (PrototypeId)migrationData.DestTargetAreaProtoId;
-            PrototypeId cellProtoRef = (PrototypeId)migrationData.DestTargetCellProtoId;
-            PrototypeId entityProtoRef = (PrototypeId)migrationData.DestTargetEntityProtoId;
-
-            return SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
-        }
-
-        public void SaveTargetForMigration(MigrationData migrationData)
-        {
-            migrationData.DestTargetRegionProtoId = (ulong)DestTargetRegionProtoRef;
-            migrationData.DestTargetAreaProtoId = (ulong)DestTargetAreaProtoRef;
-            migrationData.DestTargetCellProtoId = (ulong)DestTargetCellProtoRef;
-            migrationData.DestTargetEntityProtoId = (ulong)DestTargetEntityProtoRef;
         }
         
         public bool FindStartLocation(out Vector3 position, out Orientation orientation)

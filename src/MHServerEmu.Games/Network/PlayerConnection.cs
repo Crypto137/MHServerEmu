@@ -48,7 +48,6 @@ namespace MHServerEmu.Games.Network
 
         private bool _waitingForRegionIsAvailableResponse = false;
         private bool _doNotUpdateDBAccount = false;
-        private bool _isFirstLoad = true;
 
         public Game Game { get; }
 
@@ -128,10 +127,11 @@ namespace MHServerEmu.Games.Network
 
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
             EntityManager entityManager = Game.EntityManager;
+            MigrationData migrationData = _dbAccount.MigrationData;
 
             // Initialize transfer params, prioritize migration data if we have it
-            if (_dbAccount.MigrationData.HasDestTarget)
-                TransferParams.SetTarget(_dbAccount.MigrationData);
+            if (migrationData.HasDestTarget)
+                MigrationUtility.RestoreTransferParams(migrationData, TransferParams);
             else
                 TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget);
 
@@ -168,6 +168,9 @@ namespace MHServerEmu.Games.Network
             // something must have gone terribly terribly wrong, and we need to bail out.
             if (Player == null)
                 throw new($"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
+
+            // Restore bodyslide data
+            MigrationUtility.RestoreBodyslideProperties(_dbAccount.MigrationData, Player);
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)
@@ -261,13 +264,16 @@ namespace MHServerEmu.Games.Network
                 PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
 
                 // Update migration data unless requested not to
-                if (_dbAccount.MigrationData.SkipNextUpdate == false)
+                MigrationData migrationData = _dbAccount.MigrationData;
+                
+                if (migrationData.SkipNextUpdate == false)
                 {
-                    TransferParams.SaveTargetForMigration(_dbAccount.MigrationData);
+                    MigrationUtility.StoreTransferParams(migrationData, TransferParams);
+                    MigrationUtility.StoreBodyslideProperties(migrationData, Player);
                 }
                 else
                 {
-                    _dbAccount.MigrationData.SkipNextUpdate = false;
+                    migrationData.SkipNextUpdate = false;
                 }
             }
 

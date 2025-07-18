@@ -52,7 +52,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
         private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
         private readonly EventPointer<UnassignMappedPowersForRespecEvent> _unassignMappedPowersForRespec = new();
-        private readonly EventPointer<RegionTeleportEvent> _regionTeleportEvent = new();
+        private readonly EventPointer<BodyslideTeleportToTownEvent> _bodyslideTeleportToTownEvent = new();
+        private readonly EventPointer<BodyslideTeleportFromTownEvent> _bodyslideTeleportFromTownEvent = new();
+        private readonly EventPointer<PowerTeleportEvent> _powerTeleportEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -570,23 +572,95 @@ namespace MHServerEmu.Games.Entities.Avatars
                 player.Properties[PropertyEnum.LastTownRegionForAccount] = regionProtoRef;
         }
 
-        public void ScheduleRegionTeleport(PrototypeId targetProtoRef, TimeSpan delay)
+        public bool ScheduleBodyslideTeleport()
         {
-            if (_regionTeleportEvent.IsValid)
-                Game.GameEventScheduler.CancelEvent(_regionTeleportEvent);
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): player == null");
+
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): region == null");
+
+            Area area = Area;
+            if (area == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): area == null");
+
+            RegionPrototype regionProto = region.Prototype;
+            if (regionProto == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): regionProto == null");
+
+            if (regionProto.Behavior != RegionBehavior.Town)    // -> To Town
+            {
+                if (regionProto.BodySliderOneWay == false)
+                {
+                    // Set bodyslider properties to be able to return to where we left
+                    player.Properties[PropertyEnum.BodySliderRegionId] = region.Id;
+                    player.Properties[PropertyEnum.BodySliderRegionRef] = region.PrototypeDataRef;
+                    player.Properties[PropertyEnum.BodySliderDifficultyRef] = region.DifficultyTierRef;
+                    player.Properties[PropertyEnum.BodySliderRegionSeed] = region.RandomSeed;
+                    player.Properties[PropertyEnum.BodySliderAreaRef] = area.PrototypeDataRef;
+                    player.Properties[PropertyEnum.BodySliderRegionPos] = RegionLocation.Position;
+                }
+                else
+                {
+                    // No return here
+                    player.RemoveBodysliderProperties();
+                }
+
+                ScheduleEntityEvent(_bodyslideTeleportToTownEvent, TimeSpan.Zero);
+            }
+            else if (player.HasBodysliderProperties())          // <- From Town
+            {
+                // From town
+                ScheduleEntityEvent(_bodyslideTeleportFromTownEvent, TimeSpan.Zero);
+            }
+
+            return true;
+        }
+
+        public void SchedulePowerTeleport(PrototypeId targetProtoRef, TimeSpan delay)
+        {
+            if (_powerTeleportEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_powerTeleportEvent);
 
             if (IsDead)
                 Resurrect();
 
-            ScheduleEntityEvent(_regionTeleportEvent, delay, targetProtoRef);
+            ScheduleEntityEvent(_powerTeleportEvent, delay, targetProtoRef);
         }
 
-        private bool DoRegionTeleport(PrototypeId targetProtoRef)
+        private bool DoBodyslideTeleportToTown()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoBodyslideTeleportToTown(): player == null");
+
+            PrototypeId bodyslideTargetRef = Bodyslider.GetBodyslideTargetRef(player);
+            if (bodyslideTargetRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoBodyslideTeleportToTown(): bodyslideTargetRef == PrototypeId.Invalid");
+
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
+            return teleporter.TeleportToTarget(bodyslideTargetRef);
+        }
+
+        private bool DoBodyslideTeleportFromTown()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoBodyslideTeleportFromTown(): player == null");
+
+            ulong regionId = player.Properties[PropertyEnum.BodySliderRegionId];
+            Vector3 position = player.Properties[PropertyEnum.BodySliderRegionPos];
+            player.RemoveBodysliderProperties();
+            // FIXME: We should probably remove bodyslider properties only if we successfully teleport,
+            // but currently teleporter calls immediately remove the player entity from the game.
+            // Move this below TeleportToRegionLocation() when this is no longer the case.
+
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
+            return teleporter.TeleportToRegionLocation(regionId, position);
+        }
+
+        private bool DoPowerTeleport(PrototypeId targetProtoRef)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoRegionTeleport(): player == null");
 
-            // TODO: Bodyslider context and return data
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Power);
             return teleporter.TeleportToTarget(targetProtoRef);
@@ -5443,8 +5517,8 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             Properties.RemoveProperty(PropertyEnum.LastTownRegion);
-            foreach (PropertyEnum bodysliderProp in Property.BodysliderProperties)
-                Properties.RemoveProperty(bodysliderProp);
+
+            player.RemoveBodysliderProperties();
 
             bool success = missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true);
 
@@ -6413,9 +6487,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).UnassignMappedPowersForRespec();
         }
 
-        private class RegionTeleportEvent : CallMethodEventParam1<Entity, PrototypeId>
+        private class BodyslideTeleportToTownEvent : CallMethodEvent<Entity>
         {
-            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoRegionTeleport(p1);
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DoBodyslideTeleportToTown();
+        }
+
+        private class BodyslideTeleportFromTownEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DoBodyslideTeleportFromTown();
+        }
+
+        private class PowerTeleportEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoPowerTeleport(p1);
         }
 
         #endregion

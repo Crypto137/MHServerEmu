@@ -1789,6 +1789,15 @@ namespace MHServerEmu.Games.Entities
 
             IsSwitchingAvatar = false;
 
+            // Remove bodyslider properties for regions that are supposed to be limited to individual avatars
+            if (HasBodysliderProperties())
+            {
+                PrototypeId bodysliderRegionProtoRef = Properties[PropertyEnum.BodySliderRegionRef];
+                RegionPrototype regionProto = bodysliderRegionProtoRef.As<RegionPrototype>();
+                if (regionProto != null && regionProto.Behavior == RegionBehavior.PrivateStory)
+                    RemoveBodysliderProperties();
+            }
+
             ScheduleCommunityBroadcast();
 
             GetRegion()?.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
@@ -2477,6 +2486,19 @@ namespace MHServerEmu.Games.Entities
         {
             _teleportData.Set(regionId, position, orientation);
             QueueLoadingScreen(regionId);
+        }
+
+        public bool HasBodysliderProperties()
+        {
+            return Properties[PropertyEnum.BodySliderRegionId] != 0ul &&
+                   Properties[PropertyEnum.BodySliderRegionRef] != PrototypeId.Invalid &&
+                   Properties[PropertyEnum.BodySliderDifficultyRef] != PrototypeId.Invalid;
+        }
+
+        public void RemoveBodysliderProperties()
+        {
+            foreach (PropertyEnum prop in Property.BodysliderProperties)
+                Properties.RemoveProperty(prop);
         }
 
         public void TEMP_ScheduleMoveToTarget(PrototypeId targetProtoRef, TimeSpan delay)

@@ -225,6 +225,11 @@ namespace MHServerEmu.Games.Regions
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
         }
 
+        public bool TeleportToRegionLocation(ulong regionId, Vector3 position)
+        {
+            return Logger.WarnReturn(false, "TeleportToRegionLocation(): not yet implemented");
+        }
+
         public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef, PrototypeId difficultyProtoRef)
         {
             WaypointPrototype waypointProto = waypointProtoRef.As<WaypointPrototype>();
