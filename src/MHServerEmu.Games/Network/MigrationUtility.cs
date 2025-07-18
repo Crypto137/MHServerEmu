@@ -1,6 +1,6 @@
 ﻿using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Network
@@ -27,24 +27,36 @@ namespace MHServerEmu.Games.Network
             transferParams.SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
         }
 
-        public static void StoreBodyslideProperties(MigrationData migrationData, Player player)
+        public static void StoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
         {
-            migrationData.BodySliderRegionId = player.Properties[PropertyEnum.BodySliderRegionId];
-            migrationData.BodySliderRegionRef = player.Properties[PropertyEnum.BodySliderRegionRef];
-            migrationData.BodySliderDifficultyRef = player.Properties[PropertyEnum.BodySliderDifficultyRef];
-            migrationData.BodySliderRegionSeed = player.Properties[PropertyEnum.BodySliderRegionSeed];
-            migrationData.BodySliderAreaRef = player.Properties[PropertyEnum.BodySliderAreaRef];
-            migrationData.BodySliderRegionPos = player.Properties[PropertyEnum.BodySliderRegionPos];
+            migrationDataList.Clear();
+
+            PropertyEnum prevProperty = PropertyEnum.Invalid;
+            PropertyInfoPrototype propInfoProto = null;
+            foreach (var kvp in properties)
+            {
+                PropertyEnum propertyEnum = kvp.Key.Enum;
+                if (propertyEnum != prevProperty)
+                {
+                    PropertyInfo propInfo = GameDatabase.PropertyInfoTable.LookupPropertyInfo(propertyEnum);
+                    propInfoProto = propInfo.Prototype;
+                    prevProperty = propertyEnum;
+                }
+
+                // Migrate properties that are not saved to the database, but are supposed to be replicated for transfer
+                if (propInfoProto.ReplicateToDatabase == DatabasePolicy.None && propInfoProto.ReplicateForTransfer)
+                    migrationDataList.Add(new(kvp.Key.Raw, kvp.Value));
+            }
         }
 
-        public static void RestoreBodyslideProperties(MigrationData migrationData, Player player)
+        public static void RestoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
         {
-            player.Properties[PropertyEnum.BodySliderRegionId] = migrationData.BodySliderRegionId;
-            player.Properties[PropertyEnum.BodySliderRegionRef] = migrationData.BodySliderRegionRef;
-            player.Properties[PropertyEnum.BodySliderDifficultyRef] = migrationData.BodySliderDifficultyRef;
-            player.Properties[PropertyEnum.BodySliderRegionSeed] = migrationData.BodySliderRegionSeed;
-            player.Properties[PropertyEnum.BodySliderAreaRef] = migrationData.BodySliderAreaRef;
-            player.Properties[PropertyEnum.BodySliderRegionPos] = migrationData.BodySliderRegionPos;
+            foreach (var kvp in migrationDataList)
+            {
+                PropertyId propertyId = new(kvp.Key);
+                PropertyValue propertyValue = kvp.Value;
+                properties[propertyId] = propertyValue;
+            }
         }
     }
 }
