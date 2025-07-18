@@ -194,15 +194,20 @@ namespace MHServerEmu.Games.Regions
             return builder.Build();
         }
 
-        public bool TeleportToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
+        public bool TeleportToTarget(PrototypeId targetProtoRef)
         {
             var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetProto == null");
 
+            return TeleportToTarget(targetProto.Region, targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity);
+        }
+
+        public bool TeleportToTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
+        {
             Region region = Player.GetRegion();
             if (region == null) return Logger.WarnReturn(false, "TeleportToTarget(): region == null");
 
-            RegionPrototype destinationRegionProto = targetProto.Region.As<RegionPrototype>();
+            RegionPrototype destinationRegionProto = regionProtoRef.As<RegionPrototype>();
             if (destinationRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): destinationRegionProto == null");
 
             // Fix endless data if needed
@@ -215,9 +220,9 @@ namespace MHServerEmu.Games.Regions
             }
 
             if (IsLocalTeleport(region, destinationRegionProto))
-                return TeleportToLocalTarget(targetProtoRef);
+                return TeleportToLocalTarget(areaProtoRef, cellProtoRef, entityProtoRef);
             else
-                return TeleportToRemoteTarget(targetProtoRef, regionProtoRefOverride);
+                return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
         }
 
         public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef, PrototypeId difficultyProtoRef)
@@ -230,10 +235,12 @@ namespace MHServerEmu.Games.Regions
 
             DifficultyTierRef = difficultyProtoRef;
 
-            // TODO: Use data from targetProto here directly
+            PrototypeId regionProtoRef = regionOverrideProtoRef != PrototypeId.Invalid ? regionOverrideProtoRef : targetProto.Region;
+            PrototypeId areaProtoRef = targetProto.Area;
+            PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
+            PrototypeId entityProtoRef = targetProto.Entity;
 
-            TeleportToTarget(targetProto.DataRef, regionOverrideProtoRef);
-            return true;
+            return TeleportToTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
         }
 
         public bool TeleportToLastTown()
@@ -270,25 +277,26 @@ namespace MHServerEmu.Games.Regions
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        private bool TeleportToLocalTarget(PrototypeId targetProtoRef)
+        public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef)
         {
-            var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): targetProto == null");
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Debug);
+            teleporter.TeleportToTarget(targetProtoRef);
+        }
 
+        private bool TeleportToLocalTarget(PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
+        {
             Region region = Player.GetRegion();
             if (region == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): region == null");
 
             Vector3 position = Vector3.Zero;
             Orientation orientation = Orientation.Zero;
 
-            if (region.FindTargetLocation(ref position, ref orientation,
-                targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity) == false)
-            {
-                return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find target location for target {targetProtoRef.GetName()}");
-            }
+            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef) == false)
+                return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find location for local target [area={areaProtoRef.GetName()}, cell={cellProtoRef.GetName()}, entity={entityProtoRef.GetName()}] in region [{region}]");
 
-            if (Player.CurrentAvatar.Area?.PrototypeDataRef != targetProto.Area)
-                region.PlayerBeginTravelToAreaEvent.Invoke(new(Player, targetProto.Area));
+            if (Player.CurrentAvatar.Area?.PrototypeDataRef != areaProtoRef)
+                region.PlayerBeginTravelToAreaEvent.Invoke(new(Player, areaProtoRef));
 
             Player.SendMessage(NetMessageOneTimeSnapCamera.DefaultInstance);    // Disables camera interpolation for movement
 
@@ -296,7 +304,7 @@ namespace MHServerEmu.Games.Regions
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
-        private bool TeleportToRemoteTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride)
+        private bool TeleportToRemoteTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
             PlayerConnection playerConnection = Player.PlayerConnection;
 
@@ -307,15 +315,9 @@ namespace MHServerEmu.Games.Regions
 
             regionContext.CreateRegionParams = createRegionParams;
 
-            playerConnection.MoveToTarget(targetProtoRef, regionProtoRefOverride);
+            playerConnection.TransferParams.SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
+            playerConnection.BeginRemoteTeleport();
             return true;
-        }
-
-        public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef)
-        {
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
-            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Debug);
-            teleporter.TeleportToTarget(targetProtoRef);
         }
 
         private bool IsLocalTeleport(Region currentRegion, RegionPrototype destinationRegionProto)
@@ -342,7 +344,7 @@ namespace MHServerEmu.Games.Regions
                 return false;
 
             // AccessPortal
-            if (AccessPortal != null && currentRegion.Settings.AccessPortal.OwnerPlayerDbId != AccessPortal.OwnerPlayerDbId)
+            if (AccessPortal != null && currentRegion.Settings.OwnerPlayerDbId != AccessPortal.OwnerPlayerDbId)
                 return false;
 
             return true;

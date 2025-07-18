@@ -5,7 +5,7 @@
         public long DbGuid { get; set; }
         public byte[] ArchiveData { get; set; }
         public long StartTarget { get; set; }
-        public long StartTargetRegionOverride { get; set; }
+        public long StartTargetRegionOverride { get; set; }     // REMOVEME: we no longer use this, need to get rid of it
         public int AOIVolume { get; set; }
         public long GazillioniteBalance { get; set; } = -1;     // -1 indicates that Gs need to be restored to the default value for new accounts when the player logs in
 

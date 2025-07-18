@@ -129,10 +129,11 @@ namespace MHServerEmu.Games.Network
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
             EntityManager entityManager = Game.EntityManager;
 
-            // Initialize transfer params
-            // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
-            // We should get rid of saving waypoint refs and just use connection targets.
-            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget, (PrototypeId)_dbAccount.Player.StartTargetRegionOverride);
+            // Initialize transfer params, prioritize migration data if we have it
+            if (_dbAccount.MigrationData.HasDestTarget)
+                TransferParams.SetTarget(_dbAccount.MigrationData);
+            else
+                TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
@@ -219,7 +220,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private bool UpdateDBAccount(bool isLoggingOut)
+        private bool UpdateDBAccount()
         {
             if (_doNotUpdateDBAccount)
                 return true;
@@ -237,35 +238,37 @@ namespace MHServerEmu.Games.Network
                     _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
-                // TODO: Clean this up
-                if (isLoggingOut == false)
+                // Save last town as a separate database field to be able to access it without deserializing the player entity
+                PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
+                if (lastTownProtoRef != PrototypeId.Invalid)
                 {
-                    _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
-                    _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+                    RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
+                    _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
                 }
                 else
                 {
-                    PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
-                    if (lastTownProtoRef != PrototypeId.Invalid)
-                    {
-                        RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
-                        _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
-                    }
+                    Region region = Player.GetRegion();
+                    if (region != null && region.PrototypeDataRef == (PrototypeId)13422564811632352998) // TimesSquareTutorialRegion
+                        _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
                     else
-                    {
-                        Region region = Player.GetRegion();
-                        if (region != null && region.PrototypeDataRef == (PrototypeId)13422564811632352998) // TimesSquareTutorialRegion
-                            _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
-                        else
-                            _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                    }
-
-                    _dbAccount.Player.StartTargetRegionOverride = 0;
+                        _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
                 }
+
+                _dbAccount.Player.StartTargetRegionOverride = 0;    // this is deprecated, just zero it out until we remove the field from the database
 
                 _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
                 PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
+
+                // Update migration data unless requested not to
+                if (_dbAccount.MigrationData.SkipNextUpdate == false)
+                {
+                    TransferParams.SaveTargetForMigration(_dbAccount.MigrationData);
+                }
+                else
+                {
+                    _dbAccount.MigrationData.SkipNextUpdate = false;
+                }
             }
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");
@@ -279,7 +282,7 @@ namespace MHServerEmu.Games.Network
         public override void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
-            UpdateDBAccount(true);
+            UpdateDBAccount();
 
             AOI.SetRegion(0, true);
 
@@ -310,12 +313,9 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
 
-        public void MoveToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
+        public void BeginRemoteTeleport()
         {
             var oldRegion = AOI.Region;
-
-            // Update our target
-            TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
 
             oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestTargetRegionProtoRef));
 
@@ -338,7 +338,7 @@ namespace MHServerEmu.Games.Network
 
             Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
-            if (_isFirstLoad)
+            if (_dbAccount.MigrationData.IsFirstLoad)
             {
                 // Recount and update achievements
                 Player.AchievementManager.RecountAchievements();
@@ -352,7 +352,7 @@ namespace MHServerEmu.Games.Network
 
                 Player.CheckDailyLogin();
 
-                _isFirstLoad = false;
+                _dbAccount.MigrationData.IsFirstLoad = false;
             }
 
             // Clear region interest by setting it to invalid region, we still keep our owned entities
@@ -406,7 +406,7 @@ namespace MHServerEmu.Games.Network
 
             // We need to save data after we exit the game to include data that gets
             // saved when the current avatar exits world (e.g. mission progress).
-            UpdateDBAccount(false);
+            UpdateDBAccount();
 
             // Destroy
             Player.Destroy();

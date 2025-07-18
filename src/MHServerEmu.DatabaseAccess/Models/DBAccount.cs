@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Helpers;
+﻿using System.Text.Json.Serialization;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.System;
 
 namespace MHServerEmu.DatabaseAccess.Models
@@ -45,6 +46,10 @@ namespace MHServerEmu.DatabaseAccess.Models
         public DBEntityCollection TeamUps { get; init; } = new();
         public DBEntityCollection Items { get; init; } = new();
         public DBEntityCollection ControlledEntities { get; init; } = new();
+
+        // MigrationData is explicitly not saved and exists only as long as the current session does
+        [JsonIgnore]
+        public MigrationData MigrationData { get; } = new();
 
         /// <summary>
         /// Constructs an empty <see cref="DBAccount"/> instance.

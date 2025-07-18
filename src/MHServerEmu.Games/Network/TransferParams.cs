@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -18,8 +19,6 @@ namespace MHServerEmu.Games.Network
 
         public ulong DestRegionId { get; set; }
 
-        public PrototypeId DestTargetProtoRef { get; private set; }     // region connection target or waypoint (TODO: get rid of waypoint refs here)
-
         public PrototypeId DestTargetRegionProtoRef { get; private set; }
         public PrototypeId DestTargetAreaProtoRef { get; private set; }
         public PrototypeId DestTargetCellProtoRef { get; private set; }
@@ -32,34 +31,43 @@ namespace MHServerEmu.Games.Network
             PlayerConnection = playerConnection;
         }
 
-        public bool SetTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
+        public bool SetTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            // REMOVEME: Convert invalid / waypoint refs to connection target refs
-            FindRegionConnectionTarget(ref targetProtoRef);
-            
-            var targetProto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetProtoRef);
-            if (targetProto == null) return Logger.WarnReturn(false, "SetTarget(): targetProto == null");
-
-            DestTargetProtoRef = targetProtoRef;    // we keep this to save to the database
-
-            DestTargetRegionProtoRef = regionProtoRefOverride != PrototypeId.Invalid ? regionProtoRefOverride : targetProto.Region;
-            DestTargetAreaProtoRef = targetProto.Area;
-            DestTargetCellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
-            DestTargetEntityProtoRef = targetProto.Entity;
+            DestTargetRegionProtoRef = regionProtoRef;
+            DestTargetAreaProtoRef = areaProtoRef;
+            DestTargetCellProtoRef = cellProtoRef;
+            DestTargetEntityProtoRef = entityProtoRef;
 
             return true;
         }
 
-        // TODO: Manually specify target data (e.g. from a transition destination)
-
-        public void ClearTarget()
+        public bool SetTarget(PrototypeId targetProtoRef)
         {
-            DestTargetProtoRef = PrototypeId.Invalid;
+            var targetProto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetProtoRef);
+            if (targetProto == null) return Logger.WarnReturn(false, "SetTarget(): targetProto == null");
 
-            DestTargetRegionProtoRef = PrototypeId.Invalid;
-            DestTargetAreaProtoRef = PrototypeId.Invalid;
-            DestTargetCellProtoRef = PrototypeId.Invalid;
-            DestTargetEntityProtoRef = PrototypeId.Invalid;
+            return SetTarget(targetProto.Region, targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity);
+        }
+
+        public bool SetTarget(MigrationData migrationData)
+        {
+            if (migrationData.DestTargetRegionProtoId == 0)
+                return false;
+
+            PrototypeId regionProtoRef = (PrototypeId)migrationData.DestTargetRegionProtoId;
+            PrototypeId areaProtoRef = (PrototypeId)migrationData.DestTargetAreaProtoId;
+            PrototypeId cellProtoRef = (PrototypeId)migrationData.DestTargetCellProtoId;
+            PrototypeId entityProtoRef = (PrototypeId)migrationData.DestTargetEntityProtoId;
+
+            return SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
+        }
+
+        public void SaveTargetForMigration(MigrationData migrationData)
+        {
+            migrationData.DestTargetRegionProtoId = (ulong)DestTargetRegionProtoRef;
+            migrationData.DestTargetAreaProtoId = (ulong)DestTargetAreaProtoRef;
+            migrationData.DestTargetCellProtoId = (ulong)DestTargetCellProtoRef;
+            migrationData.DestTargetEntityProtoId = (ulong)DestTargetEntityProtoRef;
         }
         
         public bool FindStartLocation(out Vector3 position, out Orientation orientation)
@@ -91,10 +99,11 @@ namespace MHServerEmu.Games.Network
             }
 
             // Fall back to default start target for the region if we don't have one
-            if (DestTargetProtoRef == PrototypeId.Invalid)
+            if (DestTargetRegionProtoRef == PrototypeId.Invalid)
             {
-                SetTarget(region.Prototype.StartTarget);
-                Logger.Warn($"FindStartPosition(): No target specified, falling back to {DestTargetProtoRef.GetName()}");
+                PrototypeId regionDefaultStartTarget = region.Prototype.StartTarget;
+                SetTarget(regionDefaultStartTarget);
+                Logger.Warn($"FindStartPosition(): No target specified, falling back to {regionDefaultStartTarget.GetName()}");
             }
 
             if (region.FindTargetLocation(ref position, ref orientation, DestTargetAreaProtoRef, DestTargetCellProtoRef, DestTargetEntityProtoRef))
@@ -104,31 +113,6 @@ namespace MHServerEmu.Games.Network
             position = startArea.Cells.First().Value.RegionBounds.Center;
             Logger.Warn($"FindStartPosition(): Failed to find target location, falling back to {position} as the last resort!");
             return true;
-        }
-
-        private static void FindRegionConnectionTarget(ref PrototypeId targetProtoRef)
-        {
-            // REMOVEME: Get rid of this once we remove all code that initiates transfer by waypoint prototype ref
-
-            Prototype proto = GameDatabase.GetPrototype<Prototype>(targetProtoRef);
-
-            if (proto != null)
-            {
-                // No need to do anything if we already have a connection target
-                if (proto is RegionConnectionTargetPrototype)
-                    return;
-
-                // Get connection target from the waypoint
-                if (proto is WaypointPrototype waypointProto && waypointProto.Destination != PrototypeId.Invalid)
-                {
-                    targetProtoRef = waypointProto.Destination;
-                    return;
-                }
-            }
-
-            // Fall back to the default start target
-            targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-            Logger.Warn($"FindRegionConnectionTarget(): Invalid target data ref specified, falling back to {targetProtoRef.GetName()}");
         }
     }
 }
