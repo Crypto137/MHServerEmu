@@ -1046,6 +1046,26 @@ namespace MHServerEmu.Games.Regions
             return found;
         }
 
+        public PrototypeId GetBodysliderPowerRef()
+        {
+            foreach (ulong metaGameId in MetaGames)
+            {
+                MetaGame metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);
+                if (metaGame == null)
+                    continue;
+
+                MetaGamePrototype metaGameProto = metaGame.MetaGamePrototype;
+                if (metaGameProto != null && metaGameProto.BodysliderOverride != PrototypeId.Invalid)
+                    return metaGameProto.BodysliderOverride;
+            }
+
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+            if (Behavior == RegionBehavior.Town)
+                return globalsProto.ReturnToFieldPower;
+            else
+                return globalsProto.ReturnToHubPower;
+        }
+
         public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
         {
             if (entity != null)

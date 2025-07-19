@@ -1347,15 +1347,15 @@ namespace MHServerEmu.Games.Network
             Region region = avatar.Region;
             if (region == null) return Logger.WarnReturn(false, "OnReturnToHub(): region == null");
 
-            // TODO: Use region.GetBodysliderPowerRef()
+            if (region.Behavior == RegionBehavior.Town && Player.HasBodysliderProperties() == false)
+                return Logger.WarnReturn(false, $"OnReturnToHub(): Player [{Player}] is attempting to bodyslide from town without a saved return location");
 
-            if (region.Prototype.Behavior == RegionBehavior.Town)
-                return Logger.WarnReturn(false, $"OnReturnToHub(): Returning from hubs via bodysliding is not yet implemented");
+            PrototypeId bodysliderPowerRef = region.GetBodysliderPowerRef();
+            if (bodysliderPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnReturnToHub(): bodysliderPowerRef == PrototypeId.Invalid");
 
-            PrototypeId bodysliderPowerRef = GameDatabase.GlobalsPrototype.ReturnToHubPower;
             PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
-
             avatar.ActivatePower(bodysliderPowerRef, ref settings);
+
             return true;
         }
 
