@@ -1,17 +1,13 @@
-﻿namespace MHServerEmu.DatabaseAccess.Models
+﻿using Gazillion;
+
+namespace MHServerEmu.DatabaseAccess.Models
 {
     public class MigrationData
     {
         public bool SkipNextUpdate { get; set; }
 
         public bool IsFirstLoad { get; set; } = true;
-
-        // TransferParams (TODO: change this to PlayerManager <-> GIS messages)
-        public ulong DestTargetRegionProtoId { get; set; }
-        public ulong DestTargetAreaProtoId { get; set; }
-        public ulong DestTargetCellProtoId { get; set; }
-        public ulong DestTargetEntityProtoId { get; set; }
-        public bool HasDestTarget { get => DestTargetRegionProtoId != 0; }
+        public NetStructTransferParams TransferParams { get; set; }     // TODO: change this to PlayerManager <-> GIS messages?
 
         // Store everything here as ulong, PropertyCollection will sort it out game-side
         public List<KeyValuePair<ulong, ulong>> PlayerProperties { get; } = new(256);
@@ -25,12 +21,7 @@
             SkipNextUpdate = false;
 
             IsFirstLoad = true;
-
-            DestTargetRegionProtoId = 0;
-            DestTargetAreaProtoId = 0;
-            DestTargetCellProtoId = 0;
-            DestTargetEntityProtoId = 0;
-
+            TransferParams = null;
             PlayerProperties.Clear();
         }
     }

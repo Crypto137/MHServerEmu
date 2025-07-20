@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -17,27 +19,89 @@ namespace MHServerEmu.Games.Network
         public PlayerConnection PlayerConnection { get; }
 
         public ulong DestRegionId { get; set; }
+        public PrototypeId DestRegionProtoRef { get; set; }
 
-        public PrototypeId DestTargetRegionProtoRef { get; private set; }
-        public PrototypeId DestTargetAreaProtoRef { get; private set; }
-        public PrototypeId DestTargetCellProtoRef { get; private set; }
-        public PrototypeId DestTargetEntityProtoRef { get; private set; }
-
+        public NetStructRegionLocation DestLocation { get; private set; }
+        public NetStructRegionTarget DestTarget { get; private set; }
         public ulong DestEntityDbId { get; set; }     // TODO: Teleport directly to another player
+
+        // TODO
+        // int32 DestTeamIndex
+        // bool HasInvite
+        // NetStructRegionOrigin Origin
 
         public TransferParams(PlayerConnection playerConnection)
         {
             PlayerConnection = playerConnection;
         }
 
+        public void FromProtobuf(NetStructTransferParams transferParams)
+        {
+            DestRegionId = transferParams.DestRegionId;
+            DestRegionProtoRef = (PrototypeId)transferParams.DestRegionProtoId;
+
+            DestLocation = transferParams.HasDestLocation ? transferParams.DestLocation : null;
+            DestTarget = transferParams.HasDestTarget ? transferParams.DestTarget : null;
+            DestEntityDbId = transferParams.HasDestEntityDbId ? transferParams.DestEntityDbId : 0;
+        }
+
+        public NetStructTransferParams ToProtobuf()
+        {
+            NetStructTransferParams.Builder transferParams = NetStructTransferParams.CreateBuilder()
+                .SetTransferId(0)   // TODO
+                .SetDestRegionId(DestRegionId)
+                .SetDestRegionProtoId((ulong)DestRegionProtoRef);
+
+            if (DestLocation != null)
+                transferParams.SetDestLocation(DestLocation);
+
+            if (DestTarget != null)
+                transferParams.SetDestTarget(DestTarget);
+
+            if (DestEntityDbId != 0)
+                transferParams.SetDestEntityDbId(DestEntityDbId);
+
+            return transferParams.Build();
+        }
+
+        public bool SetLocation(NetStructRegionLocation destLocation)
+        {
+            DestLocation = destLocation;
+            DestTarget = null;
+            DestEntityDbId = 0;
+            return true;
+        }
+
+        public bool SetLocation(ulong regionId, Vector3 position)
+        {
+            NetStructRegionLocation destLocation = NetStructRegionLocation.CreateBuilder()
+                .SetRegionId(regionId)
+                .SetPosition(position.ToNetStructPoint3())
+                .Build();
+
+            return SetLocation(destLocation);
+        }
+
+        public bool SetTarget(NetStructRegionTarget destTarget)
+        {
+            DestRegionProtoRef = (PrototypeId)destTarget.RegionProtoId;
+
+            DestLocation = null;
+            DestTarget = destTarget;
+            DestEntityDbId = 0;
+            return true;
+        }
+
         public bool SetTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            DestTargetRegionProtoRef = regionProtoRef;
-            DestTargetAreaProtoRef = areaProtoRef;
-            DestTargetCellProtoRef = cellProtoRef;
-            DestTargetEntityProtoRef = entityProtoRef;
+            NetStructRegionTarget destTarget = NetStructRegionTarget.CreateBuilder()
+                .SetRegionProtoId((ulong)regionProtoRef)
+                .SetAreaProtoId((ulong)areaProtoRef)
+                .SetCellProtoId((ulong)cellProtoRef)
+                .SetEntityProtoId((ulong)entityProtoRef)
+                .Build();
 
-            return true;
+            return SetTarget(destTarget);
         }
 
         public bool SetTarget(PrototypeId targetProtoRef)
@@ -61,12 +125,6 @@ namespace MHServerEmu.Games.Network
             Area startArea = region.GetStartArea();
             if (startArea == null) return Logger.WarnReturn(false, "FindStartLocation(): startArea == null");
 
-            // TODO: Teleport to another player by DbId
-            if (DestEntityDbId != 0)
-            {
-                Logger.Warn("FindStartLocation(): Teleport by EntityDbId is not yet implemented");
-            }
-
             // Get start target from match region
             if (region.Prototype.Behavior == RegionBehavior.MatchPlay)
             {
@@ -76,20 +134,60 @@ namespace MHServerEmu.Games.Network
                     SetTarget(startTarget);
             }
 
-            // Fall back to default start target for the region if we don't have one
-            if (DestTargetRegionProtoRef == PrototypeId.Invalid)
+            // TODO: Teleport to another player by DbId
+            if (DestEntityDbId != 0)
             {
-                PrototypeId regionDefaultStartTarget = region.Prototype.StartTarget;
-                SetTarget(regionDefaultStartTarget);
-                Logger.Warn($"FindStartPosition(): No target specified, falling back to {regionDefaultStartTarget.GetName()}");
+                Logger.Warn("FindStartLocation(): Teleport by EntityDbId is not yet implemented");
             }
 
-            if (region.FindTargetLocation(ref position, ref orientation, DestTargetAreaProtoRef, DestTargetCellProtoRef, DestTargetEntityProtoRef))
+            // Try specific location
+            if (DestLocation != null)
+            {
+                ulong regionId = DestLocation.RegionId;
+                Vector3 destPosition = new(DestLocation.Position);
+
+                if (regionId == region.Id && Vector3.IsNearZero(destPosition) == false)
+                {
+                    if (FindValidPositionAt(region, ref destPosition))
+                    {
+                        position = destPosition;
+                        return true;
+                    }
+                }
+                else
+                {
+                    Logger.Warn($"FindStartLocation(): Invalid location provided\n{DestLocation}");
+                }
+            }
+
+            // Use the provided target
+            if (DestTarget == null)
+            {
+                PrototypeId regionDefaultStartTarget = region.Prototype.StartTarget;
+                Logger.Warn($"FindStartPosition(): No target specified, falling back to {regionDefaultStartTarget.GetName()}");
+                SetTarget(regionDefaultStartTarget);
+            }
+
+            PrototypeId regionProtoRef = (PrototypeId)DestTarget.RegionProtoId;
+            PrototypeId areaProtoRef = (PrototypeId)DestTarget.AreaProtoId;
+            PrototypeId cellProtoRef = (PrototypeId)DestTarget.CellProtoId;
+            PrototypeId entityProtoRef = (PrototypeId)DestTarget.EntityProtoId;
+
+            if (RegionPrototype.Equivalent(regionProtoRef.As<RegionPrototype>(), region.Prototype) == false)
+                Logger.Warn($"FindStartPosition(): Target region mismatch, expected {region.PrototypeDataRef.GetName()}, got {regionProtoRef.GetName()}");
+
+            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef))
                 return true;
 
-            // Fall back to the center of the first cell in the start area if all else fails
+            // Fall back to the center of the first cell in the start area if all else fails (this is very bad and should never really happen)
             position = startArea.Cells.First().Value.RegionBounds.Center;
             Logger.Warn($"FindStartPosition(): Failed to find target location, falling back to {position} as the last resort!");
+            return true;
+        }
+
+        private bool FindValidPositionAt(Region region, ref Vector3 position)
+        {
+            // TODO: Check collisions
             return true;
         }
     }

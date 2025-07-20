@@ -227,7 +227,28 @@ namespace MHServerEmu.Games.Regions
 
         public bool TeleportToRegionLocation(ulong regionId, Vector3 position)
         {
-            return Logger.WarnReturn(false, "TeleportToRegionLocation(): not yet implemented");
+            // Check if we still have the region available
+            Region region = Player.Game.RegionManager.GetRegion(regionId, true);
+            if (region == null)
+            {
+                Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_BodyslideRegionUnavailable);
+                return false;
+            }
+
+            PlayerConnection playerConnection = Player.PlayerConnection;
+
+            // FIXME: Get rid of RegionContext and use NetStructCreateRegionParams to get or create region
+            RegionContext regionContext = playerConnection.RegionContext;
+            NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
+            Logger.Debug($"TeleportToRegionLocation(): {createRegionParams}");
+
+            regionContext.CreateRegionParams = createRegionParams;
+
+            playerConnection.TransferParams.DestRegionId = regionId;
+            playerConnection.TransferParams.DestRegionProtoRef = region.PrototypeDataRef;
+            playerConnection.TransferParams.SetLocation(regionId, position);
+            playerConnection.BeginRemoteTeleport();
+            return true;
         }
 
         public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef, PrototypeId difficultyProtoRef)
@@ -320,6 +341,8 @@ namespace MHServerEmu.Games.Regions
 
             regionContext.CreateRegionParams = createRegionParams;
 
+            playerConnection.TransferParams.DestRegionId = 0;
+            playerConnection.TransferParams.DestRegionProtoRef = regionProtoRef;
             playerConnection.TransferParams.SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
             playerConnection.BeginRemoteTeleport();
             return true;

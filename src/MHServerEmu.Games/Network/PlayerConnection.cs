@@ -98,7 +98,7 @@ namespace MHServerEmu.Games.Network
             // Query if our initial loading region is available (has assets) on the client.
             // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
             SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
-                .SetRegionPrototype((ulong)TransferParams.DestTargetRegionProtoRef)
+                .SetRegionPrototype((ulong)TransferParams.DestRegionProtoRef)
                 .Build());
 
             _waitingForRegionIsAvailableResponse = true;
@@ -130,7 +130,7 @@ namespace MHServerEmu.Games.Network
             MigrationData migrationData = _dbAccount.MigrationData;
 
             // Initialize transfer params, prioritize migration data if we have it
-            if (migrationData.HasDestTarget)
+            if (migrationData.TransferParams != null)
                 MigrationUtility.RestoreTransferParams(migrationData, TransferParams);
             else
                 TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget);
@@ -323,11 +323,11 @@ namespace MHServerEmu.Games.Network
         {
             var oldRegion = AOI.Region;
 
-            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestTargetRegionProtoRef));
+            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestRegionProtoRef));
 
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
-            Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
+            Player.QueueLoadingScreen(TransferParams.DestRegionProtoRef);
 
             oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
 
@@ -364,12 +364,19 @@ namespace MHServerEmu.Games.Network
             // Clear region interest by setting it to invalid region, we still keep our owned entities
             AOI.SetRegion(0, false, null, null);
 
-            PrototypeId regionProtoRef = TransferParams.DestTargetRegionProtoRef;
+            PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
 
             Player.QueueLoadingScreen(regionProtoRef);
 
             RegionContext.RegionDataRef = regionProtoRef;
-            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
+
+            Region region = null;
+
+            if (TransferParams.DestRegionId != 0)
+                region = Game.RegionManager.GetRegion(TransferParams.DestRegionId, true);
+            else
+                region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
+
             if (region == null)
             {
                 Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
@@ -605,12 +612,12 @@ namespace MHServerEmu.Games.Network
             if (_waitingForRegionIsAvailableResponse == false)
                 return Logger.WarnReturn(false, "OnIsRegionAvailable(): Received RegionIsAvailable when we are not waiting for a response");
 
-            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestTargetRegionProtoRef)
-                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestTargetRegionProtoRef.GetName()}");
+            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestRegionProtoRef)
+                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestRegionProtoRef.GetName()}");
 
             if (isRegionAvailable.IsAvailable == false)
             {
-                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestTargetRegionProtoRef.GetName()} is not available, resetting start target");
+                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestRegionProtoRef.GetName()} is not available, resetting start target");
                 TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
             }
 

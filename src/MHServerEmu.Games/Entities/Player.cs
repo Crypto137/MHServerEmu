@@ -2501,6 +2501,13 @@ namespace MHServerEmu.Games.Entities
                 Properties.RemoveProperty(prop);
         }
 
+        public void SendRegionTransferFailure(RegionTransferFailure reason)
+        {
+            SendMessage(NetMessageUnableToChangeRegion.CreateBuilder()
+                .SetChangeFailed(ChangeRegionFailed.CreateBuilder().SetReason(reason))
+                .Build());
+        }
+
         public void TEMP_ScheduleMoveToTarget(PrototypeId targetProtoRef, TimeSpan delay)
         {
             // REMOVEME: Get rid of this when we overhaul the teleport system

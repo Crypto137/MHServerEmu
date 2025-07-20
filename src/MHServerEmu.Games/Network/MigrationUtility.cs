@@ -11,20 +11,12 @@ namespace MHServerEmu.Games.Network
 
         public static void StoreTransferParams(MigrationData migrationData, TransferParams transferParams)
         {
-            migrationData.DestTargetRegionProtoId = (ulong)transferParams.DestTargetRegionProtoRef;
-            migrationData.DestTargetAreaProtoId = (ulong)transferParams.DestTargetAreaProtoRef;
-            migrationData.DestTargetCellProtoId = (ulong)transferParams.DestTargetCellProtoRef;
-            migrationData.DestTargetEntityProtoId = (ulong)transferParams.DestTargetEntityProtoRef;
+            migrationData.TransferParams = transferParams.ToProtobuf();
         }
 
         public static void RestoreTransferParams(MigrationData migrationData, TransferParams transferParams)
         {
-            PrototypeId regionProtoRef = (PrototypeId)migrationData.DestTargetRegionProtoId;
-            PrototypeId areaProtoRef = (PrototypeId)migrationData.DestTargetAreaProtoId;
-            PrototypeId cellProtoRef = (PrototypeId)migrationData.DestTargetCellProtoId;
-            PrototypeId entityProtoRef = (PrototypeId)migrationData.DestTargetEntityProtoId;
-
-            transferParams.SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
+            transferParams.FromProtobuf(migrationData.TransferParams);
         }
 
         public static void StoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)

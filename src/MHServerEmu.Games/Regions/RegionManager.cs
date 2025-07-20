@@ -155,12 +155,16 @@ namespace MHServerEmu.Games.Regions
                 DestroyRegion(kvp.Key);
         }
 
-        public Region GetRegion(ulong id)
+        public Region GetRegion(ulong id, bool refreshVisitTime = false)
         {
             if (id == 0) return null;
 
             if (_allRegions.TryGetValue(id, out Region region))
+            {
+                if (refreshVisitTime)
+                    region.UpdateLastVisitedTime();
                 return region;
+            }
 
             return null;
         }
