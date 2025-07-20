@@ -557,7 +557,9 @@ namespace MHServerEmu.Games.Powers
 
         public bool HasKeyword(KeywordPrototype keywordProto)
         {
-            return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
+            // We may not have a _keywordsMask here because this can be called from Owner.OnPowerAssigned() before Power.OnAssign().
+            // See PowerCollection.FinishAssignPower() for context.
+            return _keywordsMask != null && keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
 
         public static void AccumulateKeywordProperties(ref float value, PowerPrototype powerProto, PropertyCollection properties1,
