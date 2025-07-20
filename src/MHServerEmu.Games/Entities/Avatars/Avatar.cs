@@ -2018,6 +2018,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (CanStealPowers() == false)
                 UnassignAllMappedPowers();
 
+            // "Unequip" powers for the spec we are disabling
+            if (IsInWorld)
+                UnequipPowersForCurrentSpec();
+
             // Change spec
             Properties[PropertyEnum.PowerSpecIndexActive] = newSpecIndex;
 
@@ -2029,6 +2033,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             RefreshAbilityKeyMapping(false); // false because the client will do it on its own when it handles the change in PowerSpecIndexActive
+            
+            // "Equip" powers for the spec we enabled
+            if (IsInWorld)
+                EquipPowersForCurrentSpec();
 
             return false;
         }
@@ -3187,6 +3195,30 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             return true;
+        }
+
+        private void UnequipPowersForCurrentSpec()
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return;
+
+            for (AbilitySlot slot = AbilitySlot.PrimaryAction; slot < AbilitySlot.NumActions; slot++)
+            {
+                Power power = GetPowerInSlot(slot);
+                power?.OnUnequipped();
+            }
+        }
+
+        private void EquipPowersForCurrentSpec()
+        {
+            AbilityKeyMapping keyMapping = _currentAbilityKeyMapping;
+            if (keyMapping == null) return;
+
+            for (AbilitySlot slot = AbilitySlot.PrimaryAction; slot < AbilitySlot.NumActions; slot++)
+            {
+                Power power = GetPowerInSlot(slot);
+                power?.OnEquipped();
+            }
         }
 
         private AbilityKeyMapping GetOrCreateAbilityKeyMapping(int powerSpecIndex, PrototypeId transformModeProtoRef)
