@@ -559,6 +559,34 @@ namespace MHServerEmu.Games.Entities.Avatars
             Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
         }
 
+        /// <summary>
+        /// Checks if the provided position is valid to use as a start location. Chooses a random position nearby if it's not.
+        /// Returns <see langword="true"/> if the position is valid or was successfully adjusted.
+        /// </summary>c
+        public static bool AdjustStartPositionIfNeeded(Region region, ref Vector3 position, bool checkOtherAvatars = false, float boundsRadius = 64f)
+        {
+            Bounds bounds = new();
+            bounds.InitializeCapsule(boundsRadius, boundsRadius * 2f, BoundsCollisionType.Blocking, BoundsFlags.None);
+            bounds.Center = position;
+
+            PositionCheckFlags posFlags = PositionCheckFlags.CanBeBlockedEntity;
+            if (checkOtherAvatars)
+                posFlags |= PositionCheckFlags.CanBeBlockedAvatar;
+
+            BlockingCheckFlags blockFlags = BlockingCheckFlags.CheckGroundMovementPowers | BlockingCheckFlags.CheckLanding | BlockingCheckFlags.CheckSpawns;
+
+            // Do not modify the position if it's valid as is.
+            if (region.IsLocationClear(bounds, Navi.PathFlags.Walk, posFlags, blockFlags))
+                return true;
+
+            // Try to pick a replacement position.
+            if (region.ChooseRandomPositionNearPoint(bounds, Navi.PathFlags.Walk, posFlags, blockFlags & ~BlockingCheckFlags.CheckSpawns, 0f, 64f, out Vector3 newPosition, null, null, 50) == false)
+                return false;
+
+            position = newPosition;
+            return true;
+        }
+
         #endregion
 
         #region Teleports

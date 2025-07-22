@@ -1,7 +1,8 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
+using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Regions;
@@ -125,46 +126,85 @@ namespace MHServerEmu.Games.Network
             Area startArea = region.GetStartArea();
             if (startArea == null) return Logger.WarnReturn(false, "FindStartLocation(): startArea == null");
 
-            // Get start target from match region
-            if (region.Prototype.Behavior == RegionBehavior.MatchPlay)
-            {
-                var player = PlayerConnection.Player;
-                var startTarget = region.GetStartTarget(player);
-                if (startTarget != PrototypeId.Invalid)
-                    SetTarget(startTarget);
-            }
+            // Check if there is a region-specific override (e.g. divided start targets)
+            if (FindStartLocationFromRegionOverride(region, ref position, ref orientation))
+                return true;
 
-            // TODO: Teleport to another player by DbId
-            if (DestEntityDbId != 0)
-            {
-                Logger.Warn("FindStartLocation(): Teleport by EntityDbId is not yet implemented");
-            }
+            // Check if we have an entity to teleport to (e.g. another player)
+            if (FindStartLocationFromEntityDbId(region, ref position, ref orientation))
+                return true;
 
-            // Try specific location
-            if (DestLocation != null)
-            {
-                ulong regionId = DestLocation.RegionId;
-                Vector3 destPosition = new(DestLocation.Position);
-
-                if (regionId == region.Id && Vector3.IsNearZero(destPosition) == false)
-                {
-                    if (FindValidPositionAt(region, ref destPosition))
-                    {
-                        position = destPosition;
-                        return true;
-                    }
-                }
-                else
-                {
-                    Logger.Warn($"FindStartLocation(): Invalid location provided\n{DestLocation}");
-                }
-            }
+            // Try specific location (e.g. returning from town using bodyslider)
+            if (FindStartLocationFromSpecificLocation(region, ref position, ref orientation))
+                return true;
 
             // Use the provided target
+            if (FindStartLocationFromTarget(region, ref position, ref orientation))
+                return true;
+
+            // Fall back to the center of the first cell in the start area if all else fails (this is very bad and should never really happen!)
+            position = startArea.Cells.First().Value.RegionBounds.Center;
+            Logger.Error($"FindStartPosition(): Failed to find target location, falling back to {position} as the last resort!");
+            return true;
+        }
+
+        private bool FindStartLocationFromRegionOverride(Region region, ref Vector3 position, ref Orientation orientation)
+        {
+            if (region.Prototype.Behavior != RegionBehavior.MatchPlay)
+                return false;
+
+            Player player = PlayerConnection.Player;
+            PrototypeId startTarget = region.GetStartTarget(player);
+            if (startTarget == PrototypeId.Invalid)
+                return false;
+
+            RegionConnectionTargetPrototype targetProto = startTarget.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null) return Logger.WarnReturn(false, "FindStartLocationFromRegionOverride(): targetProto == null");
+
+            if (RegionPrototype.Equivalent(targetProto.Region.As<RegionPrototype>(), region.Prototype) == false)
+                return Logger.WarnReturn(false, $"FindStartLocationFromRegionOverride(): Target region mismatch, expected {region.PrototypeDataRef.GetName()}, got {targetProto.Region.GetName()}");
+
+            PrototypeId areaProtoRef = targetProto.Area;
+            PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
+            PrototypeId entityProtoRef = targetProto.Entity;
+
+            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef) == false)
+                return Logger.WarnReturn(false, $"FindStartLocationFromRegionOverride(): Failed to find location for target {targetProto}");
+
+            return true;
+        }
+
+        private bool FindStartLocationFromEntityDbId(Region region, ref Vector3 position, ref Orientation orientation)
+        {
+            if (DestEntityDbId == 0)
+                return false;
+
+            // TODO: Teleport to another player by DbId
+            return Logger.WarnReturn(false, "FindStartLocation(): Teleport by EntityDbId is not yet implemented");
+        }
+
+        private bool FindStartLocationFromSpecificLocation(Region region, ref Vector3 position, ref Orientation orientation)
+        {
+            if (DestLocation == null)
+                return false;
+
+            ulong regionId = DestLocation.RegionId;
+            Vector3 destPosition = new(DestLocation.Position);
+
+            if (regionId != region.Id || Vector3.IsNearZero(destPosition))
+                return Logger.WarnReturn(false, $"FindStartLocation(): Invalid location provided\n{DestLocation}");
+
+            Avatar.AdjustStartPositionIfNeeded(region, ref destPosition);
+            position = destPosition;
+            return true;
+        }
+
+        private bool FindStartLocationFromTarget(Region region, ref Vector3 position, ref Orientation orientation)
+        {
             if (DestTarget == null)
             {
                 PrototypeId regionDefaultStartTarget = region.Prototype.StartTarget;
-                Logger.Warn($"FindStartPosition(): No target specified, falling back to {regionDefaultStartTarget.GetName()}");
+                Logger.Warn($"FindStartLocationFromTarget(): No target specified, falling back to {regionDefaultStartTarget.GetName()}");
                 SetTarget(regionDefaultStartTarget);
             }
 
@@ -174,20 +214,13 @@ namespace MHServerEmu.Games.Network
             PrototypeId entityProtoRef = (PrototypeId)DestTarget.EntityProtoId;
 
             if (RegionPrototype.Equivalent(regionProtoRef.As<RegionPrototype>(), region.Prototype) == false)
-                Logger.Warn($"FindStartPosition(): Target region mismatch, expected {region.PrototypeDataRef.GetName()}, got {regionProtoRef.GetName()}");
+                return Logger.WarnReturn(false, $"FindStartLocationFromTarget(): Target region mismatch, expected {region.PrototypeDataRef.GetName()}, got {regionProtoRef.GetName()}");
 
-            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef))
-                return true;
+            if (region.FindTargetLocation(ref position, ref orientation, areaProtoRef, cellProtoRef, entityProtoRef) == false)
+                return false;
 
-            // Fall back to the center of the first cell in the start area if all else fails (this is very bad and should never really happen)
-            position = startArea.Cells.First().Value.RegionBounds.Center;
-            Logger.Warn($"FindStartPosition(): Failed to find target location, falling back to {position} as the last resort!");
-            return true;
-        }
-
-        private bool FindValidPositionAt(Region region, ref Vector3 position)
-        {
-            // TODO: Check collisions
+            // Check for collisions and try to adjust position so that avatars don't overlap in one point.
+            Avatar.AdjustStartPositionIfNeeded(region, ref position, true);
             return true;
         }
     }

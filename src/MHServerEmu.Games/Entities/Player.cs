@@ -1755,25 +1755,42 @@ namespace MHServerEmu.Games.Entities
 
             if (avatarProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "SwitchAvatar(): Failed to find pending avatar switch");
 
+            Region region = GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "SwitchAvatar(): region == null");
+
             // Get information about the previous avatar
-            ulong lastCurrentAvatarId = CurrentAvatar != null ? CurrentAvatar.Id : InvalidId;
-            ulong prevRegionId = CurrentAvatar.RegionLocation.RegionId;
-            Vector3 prevPosition = CurrentAvatar.RegionLocation.Position;
-            Orientation prevOrientation = CurrentAvatar.RegionLocation.Orientation;
+            Avatar currentAvatar = CurrentAvatar;
+
+            ulong lastCurrentAvatarId = currentAvatar.Id;
+            ulong prevRegionId = currentAvatar.RegionLocation.RegionId;
+            Vector3 avatarPosition = currentAvatar.RegionLocation.Position;
+            Orientation avatarOrientation = currentAvatar.RegionLocation.Orientation;
 
             // Find the avatar to switch to
             Inventory avatarLibrary = GetInventory(InventoryConvenienceLabel.AvatarLibrary);
             Inventory avatarInPlay = GetInventory(InventoryConvenienceLabel.AvatarInPlay);
 
-            if (avatarLibrary.GetMatchingEntity(avatarProtoRef) is not Avatar avatar)
+            if (avatarLibrary.GetMatchingEntity(avatarProtoRef) is not Avatar nextAvatar)
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to find avatar entity for avatarProtoRef {GameDatabase.GetPrototypeName(avatarProtoRef)}");
 
+            // Adjust entrance position if needed
+            if (nextAvatar.AvatarPrototype.Bounds is not CapsuleBoundsPrototype boundsProto)
+                return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to get avatar bounds for avatar [{nextAvatar}]");
+
+            // Disable collisions for the check
+            currentAvatar.Properties[PropertyEnum.NoEntityCollide] = true;
+            bool isPositionValid = Avatar.AdjustStartPositionIfNeeded(region, ref avatarPosition, false, boundsProto.Radius);
+            currentAvatar.Properties[PropertyEnum.NoEntityCollide] = false;
+
+            if (isPositionValid == false)
+                return false;
+
             // Remove non-persistent conditions from the current avatar
-            ConditionCollection previousConditions = CurrentAvatar?.ConditionCollection;
+            ConditionCollection previousConditions = currentAvatar.ConditionCollection;
             previousConditions?.RemoveAllConditions(false);
 
             // Do the switch
-            InventoryResult result = avatar.ChangeInventoryLocation(avatarInPlay, 0);
+            InventoryResult result = nextAvatar.ChangeInventoryLocation(avatarInPlay, 0);
 
             if (result != InventoryResult.Success)
                 return Logger.WarnReturn(false, $"SwitchAvatar(): Failed to change library avatar's inventory location ({result})");
@@ -1785,7 +1802,7 @@ namespace MHServerEmu.Games.Entities
             if (previousConditions != null && currentConditions != null)
                 currentConditions.TransferConditionsFrom(previousConditions);
 
-            EnableCurrentAvatar(true, lastCurrentAvatarId, prevRegionId, prevPosition, prevOrientation);
+            EnableCurrentAvatar(true, lastCurrentAvatarId, prevRegionId, avatarPosition, avatarOrientation);
 
             IsSwitchingAvatar = false;
 
@@ -1800,7 +1817,7 @@ namespace MHServerEmu.Games.Entities
 
             ScheduleCommunityBroadcast();
 
-            GetRegion()?.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
+            region.PlayerSwitchedToAvatarEvent.Invoke(new(this, avatarProtoRef));
 
             return true;
         }
