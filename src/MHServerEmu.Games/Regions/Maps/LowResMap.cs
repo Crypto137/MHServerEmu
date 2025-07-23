@@ -70,7 +70,8 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public void RevealAll()
         {
-            _isRevealAll = true;
+            // Disabled for now because RevealAll is buggy client-side when transferring between regions in the same game instance.
+            //_isRevealAll = true;
         }
 
         public bool Translate(in Vector3 position, ref int index)

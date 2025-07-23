@@ -223,7 +223,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private bool UpdateDBAccount()
+        private bool UpdateDBAccount(bool updateMigrationData)
         {
             if (_doNotUpdateDBAccount)
                 return true;
@@ -268,8 +268,11 @@ namespace MHServerEmu.Games.Network
                 
                 if (migrationData.SkipNextUpdate == false)
                 {
-                    MigrationUtility.StoreTransferParams(migrationData, TransferParams);
-                    MigrationUtility.StoreProperties(migrationData.PlayerProperties, Player.Properties);
+                    if (updateMigrationData)
+                    {
+                        MigrationUtility.StoreTransferParams(migrationData, TransferParams);
+                        MigrationUtility.StoreProperties(migrationData.PlayerProperties, Player.Properties);
+                    }
                 }
                 else
                 {
@@ -288,7 +291,7 @@ namespace MHServerEmu.Games.Network
         public override void OnDisconnect()
         {
             // Post-disconnection cleanup (save data, remove entities, etc).
-            UpdateDBAccount();
+            UpdateDBAccount(true);
 
             AOI.SetRegion(0, true);
 
@@ -331,8 +334,16 @@ namespace MHServerEmu.Games.Network
 
             oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
 
-            // Simulate exiting and re-entering the game on a real GIS
-            ExitGame();
+            // Exit world and save
+            Player.CurrentAvatar.ExitWorld();
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            UpdateDBAccount(false);
+
+            stopwatch.Stop();
+            if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
+                Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
 
             Game.NetworkManager.SetPlayerConnectionPending(this);
         }
@@ -342,7 +353,8 @@ namespace MHServerEmu.Games.Network
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
             // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
 
-            Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
+            if (Player.IsInGame == false)
+                Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
             if (_dbAccount.MigrationData.IsFirstLoad)
             {
@@ -406,31 +418,6 @@ namespace MHServerEmu.Games.Network
                 Player.CurrentAvatar?.SetLastTownRegion(region.PrototypeDataRef);
 
             Player.ScheduleCommunityBroadcast();
-        }
-
-        public void ExitGame()
-        {
-            // We need to recreate the player entity when we transfer between regions because client UI breaks
-            // when we reuse the same player entity id (e.g. inventory grid stops updating).
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            
-            // Player entity exiting the game removes it from its AOI and also removes the current avatar from the world.
-            Player.ExitGame();
-
-            // We need to save data after we exit the game to include data that gets
-            // saved when the current avatar exits world (e.g. mission progress).
-            UpdateDBAccount();
-
-            // Destroy
-            Player.Destroy();
-            Game.EntityManager.ProcessDeferredLists();
-
-            // Recreate player
-            LoadFromDBAccount();
-
-            stopwatch.Stop();
-            if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
-                Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
         }
 
         #endregion
