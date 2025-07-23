@@ -45,7 +45,8 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public void InitIfNecessary(Region region)
         {
-            LowResMap.InitIfNecessary(region);
+            if (LowResMap.InitIfNecessary(region) == false)
+                return;
 
             if (region?.Prototype?.AlwaysRevealFullMap == true)
                 LowResMap.RevealAll();
