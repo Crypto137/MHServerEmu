@@ -62,7 +62,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             {
                 Name = $"GameThread {Id}",  // We don't have a managed id until we create the thread
                 IsBackground = true,
-                CurrentCulture = CultureInfo.InvariantCulture
+                CurrentCulture = CultureInfo.InvariantCulture,
+                Priority = ThreadPriority.AboveNormal,
             };
 
             _thread.Start();
