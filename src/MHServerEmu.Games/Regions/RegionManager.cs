@@ -22,6 +22,7 @@ namespace MHServerEmu.Games.Regions
         private readonly Dictionary<ulong, Region> _matches = new();
 
         private readonly Dictionary<(PrototypeId, PrototypeId), Region> _publicRegionDict = new();
+        private readonly Dictionary<ulong, ulong> _portalRegions = new();   // portal id -> region id
 
         private uint _areaId = 1;
         private uint _cellId = 1;
@@ -141,6 +142,11 @@ namespace MHServerEmu.Games.Regions
             _allRegions.Remove(regionId);
             _regionsPendingShutdown.Remove(regionId);
 
+            // REMOVEME: This should be handled by the PlayerManager
+            ulong portalId = region.Settings.PortalEntityDbId;
+            if (portalId != 0)
+                _portalRegions.Remove(portalId);
+
             return true;
         }
 
@@ -177,13 +183,9 @@ namespace MHServerEmu.Games.Regions
             if (regionProto == null)
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): {regionProtoRef} is not a valid region prototype ref");
 
-            PrototypeId difficultyTierProtoRef = regionContext.DifficultyTierRef;
+            PrototypeId difficultyTierProtoRef = playerConnection.Player.GetDifficultyTierForRegion(regionProtoRef, regionContext.DifficultyTierRef);
             if (difficultyTierProtoRef == PrototypeId.Invalid)
-            {
-                difficultyTierProtoRef = playerConnection.Player.GetDifficultyTierForRegion(regionProtoRef, regionContext.DifficultyTierRef);
-                if (difficultyTierProtoRef == PrototypeId.Invalid)
-                    return Logger.WarnReturn<Region>(null, $"GetRegion(): Failed to get difficulty tier for region {regionProto}");
-            }
+                return Logger.WarnReturn<Region>(null, $"GetRegion(): Failed to get difficulty tier for region {regionProto}");
 
             if (regionProto.HasEndlessTheme() && (regionContext.CreateRegionParams.HasEndlessLevel == false || regionContext.CreateRegionParams.EndlessLevel == 0))
                 return Logger.WarnReturn<Region>(null, $"GetRegion(): DangerRoom {regionProtoRef} with EndlessLevel = 0");
@@ -207,13 +209,17 @@ namespace MHServerEmu.Games.Regions
                 // There can be multiple instances of private regions, one for each world view.
                 // Currently each player connection has a world view, and in the future they
                 // will also be sharable for party members by party leaders.
-                ulong regionId = playerConnection.WorldView.GetRegionInstanceId(regionProtoRef);
+                ulong regionId;
+                ulong portalId = regionContext.PortalEntityDbId;
+                if (portalId != 0)
+                    _portalRegions.TryGetValue(portalId, out regionId);
+                else
+                    regionId = playerConnection.WorldView.GetRegionInstanceId(regionProtoRef);                    
 
                 if (regionId == 0 
                     || _allRegions.TryGetValue(regionId, out region) == false 
-                    || region.DifficultyTierRef != regionContext.DifficultyTierRef 
-                    || region.Settings.EndlessLevel != regionContext.EndlessLevel // Danger Room next level
-                    || region.Settings.PortalEntityDbId != regionContext.PortalEntityDbId) // TODO remake portal for Party
+                    || (portalId == 0 && region.DifficultyTierRef != regionContext.DifficultyTierRef)
+                    || region.Settings.EndlessLevel != regionContext.EndlessLevel) // Danger Room next level
                 {
                     // MetaStateShutdown will shutdown old region
                     if (region != null && region.Settings.EndlessLevel == regionContext.EndlessLevel)
@@ -226,6 +232,9 @@ namespace MHServerEmu.Games.Regions
                     region = GenerateAndInitRegion(regionContext, difficultyTierProtoRef);
                     if (region != null)
                         playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
+
+                    if (portalId != 0)
+                        _portalRegions[portalId] = region.Id;
                 }
             }
 

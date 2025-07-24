@@ -218,12 +218,7 @@ namespace MHServerEmu.Games.Entities
 
             // TODO: Also check destination type?
             if (transitionProto.Type == RegionTransitionType.TransitionDirect)
-            {
                 teleporter.SetAccessPortal(this);
-
-                // FIXME: Portal destruction should be initiated by the player manager
-                ResetLifespan(TimeSpan.FromMinutes(2));
-            }
 
             teleporter.DangerRoomScenarioItemDbGuid = Properties[PropertyEnum.DangerRoomScenarioItemDbGuid];
             teleporter.ItemRarity = Properties[PropertyEnum.ItemRarity];

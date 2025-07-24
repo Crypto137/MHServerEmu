@@ -497,9 +497,11 @@ namespace MHServerEmu.Games.Regions
                 MetaGames.Remove(metaGameId);
             }
 
-            if (Settings.PortalEntityDbId != 0) // Destroy Portal with region
+            // Destroy entrance portal
+            // REMOVEME: This should be handled by the PlayerManager
+            if (Settings.PortalEntityDbId != 0)
             {
-                var portal = entityManager.GetEntity<Entity>(Settings.PortalEntityDbId);    // FIXME: This is DatabaseUniqueId, not EntityId
+                var portal = entityManager.GetEntityByDbGuid<Entity>(Settings.PortalEntityDbId);
                 portal?.Destroy();
             }
 
