@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Runtime.InteropServices;
 using MHServerEmu.Auth;
 using MHServerEmu.Billing;
 using MHServerEmu.Commands;
@@ -22,8 +23,32 @@ using MHServerEmu.PlayerManagement;
 
 namespace MHServerEmu
 {
+#if OS_WINDOWS
+    // Default precision for thread sleep timing on Windows is 1000/64=15.625 ms.
+    // This is not precise enough for our needs, so we request higher resolution timing.
+    // According to MS docs, this should be per-process as of Windows 10 2004.
+    // https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod
+    // Also see this for more context:
+    // https://randomascii.wordpress.com/2020/10/04/windows-timer-resolution-the-great-rule-change/
+    internal static class WinMM
+    {
+        [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+        public static extern int TimeBeginPeriod(int uPeriod);
+
+        [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+        public static extern int TimeEndPeriod(int uPeriod);
+    }
+#endif
+
     public class ServerApp
     {
+        private enum State
+        {
+            Created,
+            Running,
+            Shutdown,
+        }
+
 #if DEBUG
         public const string BuildConfiguration = "Debug";
 #elif RELEASE
@@ -33,7 +58,7 @@ namespace MHServerEmu
         public static readonly string VersionInfo = $"Version {AssemblyHelper.GetAssemblyInformationalVersion()} | {AssemblyHelper.ParseAssemblyBuildTime():yyyy.MM.dd HH:mm:ss} UTC | {BuildConfiguration}";
 
         private static readonly Logger Logger = LogManager.CreateLogger();
-        private bool _isRunning = false;
+        private State _state = State.Created;
 
         public static ServerApp Instance { get; } = new();
         public DateTime StartupTime { get; private set; }
@@ -43,8 +68,13 @@ namespace MHServerEmu
         public void Run()
         {
             // Prevent duplicate runs
-            if (_isRunning) throw new InvalidOperationException();
-            _isRunning = true;
+            if (_state != State.Created)
+                throw new InvalidOperationException();
+            _state = State.Running;
+
+#if OS_WINDOWS
+            WinMM.TimeBeginPeriod(1);
+#endif
 
             StartupTime = DateTime.Now;
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
@@ -95,11 +125,19 @@ namespace MHServerEmu
 
             // Begin processing console input
             Logger.Info("Type '!commands' for a list of available commands");
-            while (true)
+            while (_state == State.Running)
             {
                 string input = Console.ReadLine();
+                if (_state != State.Running)
+                    break;
+
                 CommandManager.Instance.TryParse(input);
             }
+
+#if OS_WINDOWS
+            // Technically this isn't really needed, but MS docs say we should call it.
+            WinMM.TimeEndPeriod(1);
+#endif
         }
 
         /// <summary>
@@ -108,8 +146,7 @@ namespace MHServerEmu
         public void Shutdown()
         {
             ServerManager.Instance.ShutdownServices();
-            Console.ReadLine();
-            Environment.Exit(0);
+            _state = State.Shutdown;
         }
 
         /// <summary>
