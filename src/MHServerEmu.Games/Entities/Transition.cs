@@ -33,7 +33,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            var destination = TransitionDestination.FindDestination(settings.Cell, TransitionPrototype);
+            var destination = TransitionDestination.Find(settings.Cell, TransitionPrototype);
 
             if (destination != null)
                 _destinationList.Add(destination);
@@ -79,19 +79,19 @@ namespace MHServerEmu.Games.Entities
                             var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
                             if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
                             if (instance.OriginEntity != entityRef) continue;
-                            destination = TransitionDestination.DestinationFromTarget(instance.Target, region, transProto);
+                            destination = TransitionDestination.FromTarget(instance.Target, region, transProto);
                             if (destination == null) continue;
                             _destinationList.Add(destination);
                             noDest = false;
                         }
 
+                    // Try constructing a return to region origin 
                     if (noDest)
                     {
-                        // TODO destination from region origin target
-                        var targets = region.Targets;
-                        if (targets.Count == 1)
+                        NetStructRegionOrigin origin = region.Settings.Origin;
+                        if (origin != null)
                         {
-                            destination = TransitionDestination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
+                            destination = TransitionDestination.FromRegionOrigin(origin);
                             if (destination != null)
                             {
                                 _destinationList.Add(destination);
@@ -100,11 +100,11 @@ namespace MHServerEmu.Games.Entities
                         }
                     }
 
-                    // Get default region
+                    // Fall back to the default region
                     if (noDest)
                     {
                         targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                        destination = TransitionDestination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                        destination = TransitionDestination.FromTarget(targetRef, region, TransitionPrototype);
                         if (destination != null) _destinationList.Add(destination);
                     }
                     break;
@@ -117,7 +117,7 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
 
                     targetRef = transProto.DirectTarget;
-                    destination = TransitionDestination.DestinationFromTargetRef(targetRef);
+                    destination = TransitionDestination.FromTargetRef(targetRef);
                     if (destination != null) _destinationList.Add(destination);
                     break;
             }
@@ -293,15 +293,19 @@ namespace MHServerEmu.Games.Entities
 
         private bool UseTransitionDirectReturn(Player player)
         {
-            if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
-            if (_destinationList.Count > 1) Logger.Debug("UseTransition(): _destinationList.Count > 1");
+            if (_destinationList.Count == 0)
+                return Logger.WarnReturn(false, $"UseTransitionDirectReturn(): No available destinations for [{this}]");
+            
+            if (_destinationList.Count > 1)
+                return Logger.WarnReturn(false, $"UseTransitionDirectReturn(): More than one return destination for [{this}]");
 
             TransitionDestination destination = _destinationList[0];
-            // TODO teleport to Position in region
+
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
             teleporter.TransitionEntity = this;
-            return teleporter.TeleportToTarget(destination.TargetRef);
+
+            return teleporter.TeleportToRegionLocation(destination.RegionId, destination.Position);
         }
 
         private bool UseTransitionReturnToLastTown(Player player)

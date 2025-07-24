@@ -5,6 +5,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
@@ -190,6 +191,26 @@ namespace MHServerEmu.Games.Regions
                 Properties.Serialize(archive);
                 builder.SetPropertyBuffer(archive.ToByteString());
             }
+
+            NetStructRegionOrigin.Builder origin = NetStructRegionOrigin.CreateBuilder();
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar != null && avatar.IsInWorld)
+                origin.SetLocation(avatar.RegionLocation.ToProtobuf());
+
+            WorldEntity returnTarget = TransitionEntity;
+            if (returnTarget != null && returnTarget.IsInWorld)
+            {
+                origin.SetTarget(NetStructRegionTarget.CreateBuilder()
+                    .SetRegionProtoId((ulong)returnTarget.Region.PrototypeDataRef)
+                    .SetAreaProtoId((ulong)returnTarget.Area.PrototypeDataRef)
+                    .SetCellProtoId((ulong)returnTarget.Cell.PrototypeDataRef)
+                    .SetEntityProtoId((ulong)returnTarget.PrototypeDataRef));
+
+                origin.SetTransitionDbId(returnTarget.DatabaseUniqueId);
+            }
+
+            builder.SetOrigin(origin);
 
             return builder.Build();
         }
