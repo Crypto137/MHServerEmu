@@ -2525,21 +2525,6 @@ namespace MHServerEmu.Games.Entities
                 .Build());
         }
 
-        public void TEMP_ScheduleMoveToTarget(PrototypeId targetProtoRef, TimeSpan delay)
-        {
-            // REMOVEME: Get rid of this when we overhaul the teleport system
-            // This is used to simulate a game transfer delay when doing a story warp.
-            EventPointer<MoveToTargetEvent> moveToTargetEvent = new();
-            ScheduleEntityEvent(moveToTargetEvent, delay, targetProtoRef);
-        }
-
-        private void TEMP_MoveToTargetCallback(PrototypeId targetProtoRef)
-        {
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
-            teleporter.Initialize(this, TeleportContextEnum.TeleportContext_StoryWarp);
-            teleporter.TeleportToTarget(targetProtoRef);
-        }
-
         public void OnCellLoaded(uint cellId, ulong regionId)
         {
             AOI.OnCellLoaded(cellId, regionId);
@@ -2678,6 +2663,39 @@ namespace MHServerEmu.Games.Entities
             // TODO party reveal
 
             return reveal;
+        }
+
+        public void ResetMapDiscoveryForStoryWarp()
+        {
+            PrototypeId chapterProtoRef = ActiveChapter;
+            if (chapterProtoRef == PrototypeId.Invalid)
+                return;
+
+            ChapterPrototype chapterProto = chapterProtoRef.As<ChapterPrototype>();
+            if (chapterProto == null)
+                return;
+
+            int chapterNumber = chapterProto.ChapterNumber;
+
+            foreach (var kvp in _mapDiscoveryDict)
+            {
+                PrototypeId regionProtoRef = kvp.Value.RegionProtoRef;
+                if (regionProtoRef == PrototypeId.Invalid)
+                    continue;
+
+                RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+                if (regionProto == null)
+                    continue;
+
+                ChapterPrototype regionChapterProto = regionProto.Chapter.As<ChapterPrototype>();
+                if (regionChapterProto == null)
+                    continue;
+
+                if (regionChapterProto.ChapterNumber >= chapterNumber)
+                    _mapDiscoveryDict.Remove(kvp.Key);
+            }
+
+            _lastAccessedMapDiscoveryData = null;
         }
 
         private void CheckMapDiscoveryDataExpiration()
@@ -3530,11 +3548,6 @@ namespace MHServerEmu.Games.Entities
         private class CheckHoursPlayedEvent : CallMethodEvent<Player>
         {
             protected override CallbackDelegate GetCallback() => (player) => player.CheckHoursPlayed();
-        }
-
-        private class MoveToTargetEvent : CallMethodEventParam1<Entity, PrototypeId>
-        {
-            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).TEMP_MoveToTargetCallback(p1);
         }
 
         private class CommunityBroadcastEvent : CallMethodEvent<Entity>

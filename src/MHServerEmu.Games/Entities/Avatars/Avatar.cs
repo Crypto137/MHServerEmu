@@ -675,9 +675,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             ulong regionId = player.Properties[PropertyEnum.BodySliderRegionId];
             Vector3 position = player.Properties[PropertyEnum.BodySliderRegionPos];
             player.RemoveBodysliderProperties();
-            // FIXME: We should probably remove bodyslider properties only if we successfully teleport,
-            // but currently teleporter calls immediately remove the player entity from the game.
-            // Move this below TeleportToRegionLocation() when this is no longer the case.
 
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
             teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
@@ -5580,16 +5577,15 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             player.RemoveBodysliderProperties();
 
-            bool success = missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true);
-
-            if (success == false)
+            if (missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true) == false)
                 Logger.Warn($"ResetMissions(): Failed to reset missions for avatar [{this}]");
 
-            // TODO: Fix this when we overhaul the teleport system
-            player.TEMP_ScheduleMoveToTarget(targetProto.DataRef, TimeSpan.FromMilliseconds(500));
-            // TODO: Reset map discovery data
+            player.ResetMapDiscoveryForStoryWarp();
 
-            return success;
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.DifficultyTierRef = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_StoryWarp);
+            return teleporter.TeleportToTarget(targetProto.DataRef);
         }
 
         public bool ActivatePrestigeMode()
