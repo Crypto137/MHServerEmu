@@ -250,11 +250,7 @@ namespace MHServerEmu.Games.Network
                 }
                 else
                 {
-                    Region region = Player.GetRegion();
-                    if (region != null && region.PrototypeDataRef == (PrototypeId)13422564811632352998) // TimesSquareTutorialRegion
-                        _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
-                    else
-                        _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
+                    _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
                 }
 
                 _dbAccount.Player.StartTargetRegionOverride = 0;    // this is deprecated, just zero it out until we remove the field from the database
