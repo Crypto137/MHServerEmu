@@ -1,18 +1,23 @@
 ﻿using System.Collections;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions
 {
-    public class WorldViewCache : IEnumerable<KeyValuePair<PrototypeId, ulong>>
+    /// <summary>
+    /// Game-local cache for a player's WorldView. PlayerManager holds the authoritative copy of this data.
+    /// </summary>
+    /// <remarks>
+    /// WorldView represents a collection of region instances that are bound to a specific player.
+    /// </remarks>
+    public class WorldViewCache : IEnumerable<(PrototypeId, ulong)>
     {
-        // TODO: PlayerManager should have the authoritative copy of this data. This is just a cache for local lookups.
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<ulong> _regionIds = new();
-        private readonly Dictionary<PrototypeId, ulong> _regionInstanceDict = new();
+        private readonly SortedVector<(PrototypeId, ulong)> _regionIdsByProto = new();
 
         public PlayerConnection Owner { get; }
 
@@ -21,63 +26,109 @@ namespace MHServerEmu.Games.Regions
             Owner = owner;
         }
 
-        public bool AddRegion(PrototypeId regionProtoRef, ulong regionId)
+        public List<(PrototypeId, ulong)>.Enumerator GetEnumerator()
         {
-            if (regionProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AddRegion(): regionProtoRef == PrototypeId.Invalid");
+            return _regionIdsByProto.GetEnumerator();
+        }
+
+        IEnumerator<(PrototypeId, ulong)> IEnumerable<(PrototypeId, ulong)>.GetEnumerator()
+        {
+            return _regionIdsByProto.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _regionIdsByProto.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Adds a region to this <see cref="WorldViewCache"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool AddRegion(ulong regionId, PrototypeId regionProtoRef)
+        {
             if (regionId == 0) return Logger.WarnReturn(false, "AddRegion(): regionId == 0");
+            if (regionProtoRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "AddRegion(): regionProtoRef == PrototypeId.Invalid");
 
             if (_regionIds.Contains(regionId))
                 return Logger.WarnReturn(false, $"AddRegion(): World view for {Owner} already contains region 0x{regionId:X} ({regionProtoRef.GetName()})");
 
             _regionIds.Add(regionId);
-            _regionInstanceDict[regionProtoRef] = regionId;
+            _regionIdsByProto.SortedInsert((regionProtoRef, regionId));
             return true;
         }
 
-        public bool RemoveRegion(PrototypeId regionProtoRef)
+        /// <summary>
+        /// Removes the specified region from this <see cref="WorldViewCache"/>. Returns <see langword="true"/> if successful.
+        /// </summary>
+        public bool RemoveRegion(ulong regionId)
         {
-            if (_regionInstanceDict.TryGetValue(regionProtoRef, out ulong regionId) == false)
-                return false;
-
             if (_regionIds.Remove(regionId) == false)
-                Logger.Warn($"RemoveRegion(): 0x{regionId:X} not found");
+                return Logger.WarnReturn(false, $"RemoveRegion(): 0x{regionId:X} not found");
 
-            _regionInstanceDict.Remove(regionProtoRef);
+            for (int i = 0; i < _regionIdsByProto.Count; i++)
+            {
+                (_, ulong itRegionId) = _regionIdsByProto[i];
+                if (itRegionId == regionId)
+                {
+                    _regionIdsByProto.RemoveAt(i);
+                    break;
+                }
+            }
+
             return true;
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="WorldViewCache"/> contains the specified region.
+        /// </summary>
         public bool ContainsRegionInstanceId(ulong regionId)
         {
             return _regionIds.Contains(regionId);
         }
 
-        public ulong GetRegionInstanceId(PrototypeId regionProtoRef)
+        /// <summary>
+        /// Returns the instance ids of regions with the specified prototype in this <see cref="WorldViewCache"/>.
+        /// </summary>
+        public bool GetRegionInstanceIds(PrototypeId regionProtoRef, List<ulong> regionIds)
         {
-            if (_regionInstanceDict.TryGetValue(regionProtoRef, out ulong regionId) == false)
-                return 0;
+            for (int i = 0; i < _regionIdsByProto.Count; i++)
+            {
+                (PrototypeId itRegionProtoRef, ulong itRegionId) = _regionIdsByProto[i];
+                if (itRegionProtoRef == regionProtoRef)
+                    regionIds.Add(itRegionId);
 
-            return regionId;
+                if (itRegionProtoRef > regionProtoRef)
+                    break;
+            }
+
+            return regionIds.Count > 0;
         }
 
+        /// <summary>
+        /// Returns the first instance id with the specified prototype in this <see cref="WorldViewCache"/>. Returns 0 if not found.
+        /// </summary>
+        public ulong GetRegionInstanceId(PrototypeId regionProtoRef)
+        {
+            for (int i = 0; i < _regionIdsByProto.Count; i++)
+            {
+                (PrototypeId itRegionProtoRef, ulong itRegionId) = _regionIdsByProto[i];
+                if (itRegionProtoRef == regionProtoRef)
+                    return itRegionId;
+
+                if (itRegionProtoRef > regionProtoRef)
+                    break;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Removes all regions from this <see cref="WorldViewCache"/>.
+        /// </summary>
         public void Clear()
         {
             _regionIds.Clear();
-            _regionInstanceDict.Clear();
-        }
-
-        public Dictionary<PrototypeId, ulong>.Enumerator GetEnumerator()
-        {
-            return _regionInstanceDict.GetEnumerator();
-        }
-
-        IEnumerator<KeyValuePair<PrototypeId, ulong>> IEnumerable<KeyValuePair<PrototypeId, ulong>>.GetEnumerator()
-        {
-            return _regionInstanceDict.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _regionInstanceDict.GetEnumerator();
+            _regionIdsByProto.Clear();
         }
     }
 }

@@ -225,13 +225,13 @@ namespace MHServerEmu.Games.Regions
                     if (region != null && region.Settings.EndlessLevel == regionContext.EndlessLevel)
                     {
                         // Destroy existing private instance if it does not match the player's difficulty preference 
-                        playerConnection.WorldView.RemoveRegion(region.PrototypeDataRef);
+                        playerConnection.WorldView.RemoveRegion(region.Id);
                         DestroyRegion(regionId);
                     }
 
                     region = GenerateAndInitRegion(regionContext, difficultyTierProtoRef);
                     if (region != null)
-                        playerConnection.WorldView.AddRegion(regionProtoRef, region.Id);
+                        playerConnection.WorldView.AddRegion(region.Id, regionProtoRef);
 
                     if (portalId != 0)
                         _portalRegions[portalId] = region.Id;

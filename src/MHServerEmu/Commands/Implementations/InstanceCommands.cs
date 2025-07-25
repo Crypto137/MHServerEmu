@@ -1,5 +1,6 @@
 ﻿using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
@@ -26,15 +27,15 @@ namespace MHServerEmu.Commands.Implementations
 
             CommandHelper.SendMessage(client, "Active Private Instances:");
 
-            foreach (var kvp in playerConnection.WorldView)
+            foreach ((PrototypeId regionProtoRef, ulong regionId) in playerConnection.WorldView)
             {
                 // The region tracked in the world view may have already expired
-                Region region = regionManager.GetRegion(kvp.Value);
+                Region region = regionManager.GetRegion(regionId);
                 if (region == null) continue;
 
                 TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
 
-                CommandHelper.SendMessage(client, $"{kvp.Key.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
+                CommandHelper.SendMessage(client, $"{regionProtoRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
             }
 
             return string.Empty;
@@ -71,10 +72,11 @@ namespace MHServerEmu.Commands.Implementations
 
             RegionManager regionManager = playerConnection.Game.RegionManager;
 
-            int numReset = 0;
-            foreach (var kvp in playerConnection.WorldView)
+            List<Region> regionsToShutDown = ListPool<Region>.Instance.Get();
+
+            foreach ((_, ulong regionId) in playerConnection.WorldView)
             {
-                Region region = regionManager.GetRegion(kvp.Value);
+                Region region = regionManager.GetRegion(regionId);
                 if (region == null) continue;
 
                 // Do no reset the region the player is currently in
@@ -88,10 +90,17 @@ namespace MHServerEmu.Commands.Implementations
                     continue;
                 }
 
-                region.RequestShutdown();
-                playerConnection.WorldView.RemoveRegion(kvp.Key);
-                numReset++;
+                regionsToShutDown.Add(region);
             }
+
+            foreach (Region region in regionsToShutDown)
+            {
+                region.RequestShutdown();
+                playerConnection.WorldView.RemoveRegion(region.Id);
+            }
+
+            int numReset = regionsToShutDown.Count;
+            ListPool<Region>.Instance.Return(regionsToShutDown);
 
             return $"Reset {numReset} private instance(s).";
         }

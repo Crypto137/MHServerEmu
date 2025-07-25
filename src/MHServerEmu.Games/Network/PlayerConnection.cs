@@ -298,9 +298,9 @@ namespace MHServerEmu.Games.Network
             Player?.Destroy();
 
             // Destroy all private region instances in the world view since they are not persistent anyway
-            foreach (var kvp in WorldView)
+            foreach ((_, ulong regionId) in WorldView)
             {
-                Region region = Game.RegionManager.GetRegion(kvp.Value);
+                Region region = Game.RegionManager.GetRegion(regionId);
                 if (region == null) continue;
 
                 if (region.IsPublic)
