@@ -202,8 +202,7 @@ namespace MHServerEmu.Games.Entities.Items
         private bool DoItemActionReplaceSelfLootTable(LootTablePrototype lootTableProto, bool useAvatarLevel, Player player, Avatar avatar)
         {
             using LootInputSettings inputSettings = ObjectPoolManager.Instance.Get<LootInputSettings>();
-            inputSettings.Initialize(LootContext.MysteryChest, player, null);
-            inputSettings.LootRollSettings.Level = useAvatarLevel ? avatar.CharacterLevel : Properties[PropertyEnum.ItemLevel];
+            inputSettings.Initialize(LootContext.MysteryChest, player, null, useAvatarLevel ? avatar.CharacterLevel : Properties[PropertyEnum.ItemLevel]);
 
             using ItemResolver resolver = ObjectPoolManager.Instance.Get<ItemResolver>();
             resolver.Initialize(Game.Random);
