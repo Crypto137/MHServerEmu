@@ -261,7 +261,6 @@ namespace MHServerEmu.Games.Regions
             // FIXME: Get rid of RegionContext and use NetStructCreateRegionParams to get or create region
             RegionContext regionContext = playerConnection.RegionContext;
             NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
-            Logger.Debug($"TeleportToRegionLocation(): {createRegionParams}");
 
             regionContext.CreateRegionParams = createRegionParams;
 
@@ -358,7 +357,6 @@ namespace MHServerEmu.Games.Regions
             // FIXME: Get rid of RegionContext and use NetStructCreateRegionParams to get or create region
             RegionContext regionContext = playerConnection.RegionContext;
             NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
-            Logger.Debug($"TeleportToRemoteTarget(): {createRegionParams}");
 
             regionContext.CreateRegionParams = createRegionParams;
 
