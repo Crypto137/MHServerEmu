@@ -1,10 +1,10 @@
 using Gazillion;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Events;
 using MHServerEmu.Games.Events.Templates;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
-using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.UI;
 using MHServerEmu.Games.UI.Widgets;
@@ -229,19 +229,22 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
             {
                 if (status == PlayerState.Fallback)
                 {
-                    player.PlayerConnection.MoveToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
+                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
+                    teleporter.TeleportToLastTown();
                 }
                 else
                 {
                     var region = Region;
                     if (targetRef == PrototypeId.Invalid || region == null) return;
 
-                    var regionContext = player.PlayerConnection.RegionContext;
+                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
 
                     RegionPrototype regionProto;
                     if (_proto.TeleportIsEndlessDown)
                     {
-                        regionContext.FromRegion(region);
+                        teleporter.CopyEndlessRegionData(region, true);
                         regionProto = region.Prototype;
                     }
                     else
@@ -251,9 +254,9 @@ namespace MHServerEmu.Games.MetaGames.MetaStates
                     }
 
                     if (regionProto.UsePrevRegionPlayerDeathCount)
-                        regionContext.PlayerDeaths = region.PlayerDeaths;
+                        teleporter.PlayerDeaths = region.PlayerDeaths;
 
-                    player.PlayerConnection.MoveToTarget(targetRef);
+                    teleporter.TeleportToTarget(targetRef);
                 }
 
                 _pendingPlayers.Remove(playerGuid);

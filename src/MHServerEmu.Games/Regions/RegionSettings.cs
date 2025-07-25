@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Collisions;
+﻿using Gazillion;
+using MHServerEmu.Core.Collisions;
+using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Properties;
 
@@ -9,138 +11,119 @@ namespace MHServerEmu.Games.Regions
         public ulong InstanceAddress { get; set; }  // region id
         public PrototypeId RegionDataRef { get; set; }
         public Aabb Bounds { get; set; }
-        public int Level { get; set; }
-        public PrototypeId DifficultyTierRef { get; set; }
-        public int EndlessLevel { get; set; }
-        public ulong MatchNumber { get; set; }
-        public int Seed { get; set; }
-        public List<PrototypeId> Affixes { get; set; }
-        public int PlayerDeaths { get; set; }
-        public PropertyCollection Properties { get; set; }
-        public ulong PlayerGuidParty { get; set; }
 
         public bool ApplyLevelOverride { get; set; }
         public bool GenerateLog { get; set; }
         public bool GenerateEntities { get; set; }
         public bool GenerateAreas { get; set; }
+
+        // CreateRegionParams
+        public int Level { get; set; }
+        public NetStructRegionOrigin Origin { get; set; }
+        public PrototypeId DifficultyTierRef { get; set; }
+        public int EndlessLevel { get; set; }
         public PrototypeId GameStateId { get; set; }
+        public ulong MatchNumber { get; set; }
+        public int Seed { get; set; }
+        public ulong ParentRegionId { get; set; }
+        public PrototypeId RequiredItemProtoRef { get; set; }
+        public ulong RequiredItemEntityId { get; set; }
+        public NetStructPortalInstance AccessPortal { get; set; }
+        public List<PrototypeId> Affixes { get; set; } = new();
+        public int PlayerDeaths { get; set; }
+        public ulong DangerRoomScenarioItemDbGuid { get; set; }
+        public PropertyCollection Properties { get; set; }
         public PrototypeId ItemRarity { get; set; }
-        public ulong PortalId { get; set; }
+        public PrototypeId DangerRoomScenarioRef { get; set; }
+
+        public ulong PortalEntityDbId { get => AccessPortal != null ? AccessPortal.EntityDbId : 0; }
+        public ulong OwnerPlayerDbId { get => AccessPortal != null && AccessPortal.HasOwnerPlayerDbId ? AccessPortal.OwnerPlayerDbId : 0; }
 
         public RegionSettings() { }
 
-        public RegionSettings(RegionContext regionContext)
+        public RegionSettings(NetStructCreateRegionParams createRegionParams)
         {
-            RegionDataRef = regionContext.RegionDataRef;
-
-            if (regionContext.Level != 0)
+            if (createRegionParams.Level != 0)
             {
+                Level = (int)createRegionParams.Level;
                 ApplyLevelOverride = true;
-                Level = regionContext.Level;
             }
 
-            DifficultyTierRef = regionContext.DifficultyTierRef;
-            Seed = regionContext.Seed;
-            Affixes = new(regionContext.Affixes);
-            ItemRarity = regionContext.ItemRarity;
-            EndlessLevel = regionContext.EndlessLevel;
-            PlayerDeaths = regionContext.PlayerDeaths;
-            PlayerGuidParty = regionContext.PlayerGuidParty;
-            PortalId = regionContext.PortalId;
+            if (createRegionParams.HasOrigin)
+                Origin = createRegionParams.Origin;
 
-            if (regionContext.Properties.IsEmpty == false)
+            if (createRegionParams.HasDifficultyTierProtoId)
+                DifficultyTierRef = (PrototypeId)createRegionParams.DifficultyTierProtoId;
+
+            if (createRegionParams.HasEndlessLevel)
+                EndlessLevel = (int)createRegionParams.EndlessLevel;
+
+            if (createRegionParams.HasGameStateId)
+                GameStateId = (PrototypeId)createRegionParams.GameStateId;
+
+            if (createRegionParams.HasMatchNumber)
+                MatchNumber = createRegionParams.MatchNumber;
+
+            if (createRegionParams.HasSeed)
+                Seed = (int)createRegionParams.Seed;
+
+            if (createRegionParams.HasParentRegionId)
+                ParentRegionId = createRegionParams.ParentRegionId;
+
+            if (createRegionParams.HasRequiredItemProtoId)
+                RequiredItemProtoRef = (PrototypeId)createRegionParams.RequiredItemProtoId;
+
+            if (createRegionParams.HasRequiredItemEntityId)
+                RequiredItemEntityId = createRegionParams.RequiredItemEntityId;
+
+            if (createRegionParams.HasAccessPortal)
+                AccessPortal = createRegionParams.AccessPortal;
+
+            int affixCount = createRegionParams.AffixesCount;
+            if (affixCount > 0)
+            {
+                Affixes.EnsureCapacity(affixCount);
+                for (int i = 0; i < affixCount; i++)
+                    Affixes.Add((PrototypeId)createRegionParams.AffixesList[i]);
+            }
+
+            if (createRegionParams.HasPlayerDeaths)
+                PlayerDeaths = (int)createRegionParams.PlayerDeaths;
+
+            if (createRegionParams.HasDangerRoomScenarioItemDbGuid)
+                DangerRoomScenarioItemDbGuid = createRegionParams.DangerRoomScenarioItemDbGuid;
+
+            if (createRegionParams.HasItemRarity)
+                ItemRarity = (PrototypeId)createRegionParams.ItemRarity;
+
+            if (createRegionParams.HasPropertyBuffer)
             {
                 Properties = new();
-                Properties.FlattenCopyFrom(regionContext.Properties, false);
+                using Archive archive = new(ArchiveSerializeType.Replication, createRegionParams.PropertyBuffer);
+                Properties.Serialize(archive);
             }
+
+            if (createRegionParams.HasDangerRoomScenarioR)
+                DangerRoomScenarioRef = (PrototypeId)createRegionParams.DangerRoomScenarioR;
         }
     }
 
     public class RegionContext
     {
-        public PrototypeId RegionDataRef;
-        public PrototypeId DifficultyTierRef;
-        public List<PrototypeId> Affixes;
-        public PropertyCollection Properties;
-        public int EndlessLevel;
-        public int Level;
-        public ulong PlayerGuidParty;
-        public int Seed;
-        public int PlayerDeaths;
-        public PrototypeId ItemRarity;
-        public ulong PortalId;
+        private static readonly NetStructCreateRegionParams DefaultCreateParams = NetStructCreateRegionParams.CreateBuilder().SetLevel(0).Build();
 
-        public RegionContext() : this(PrototypeId.Invalid, PrototypeId.Invalid) { }
+        public PrototypeId RegionDataRef { get; set; }
+        public NetStructCreateRegionParams CreateRegionParams { get; set; } = DefaultCreateParams;
 
-        public RegionContext(PrototypeId regionDataRef, PrototypeId difficultyTierRef)
-        {
-            RegionDataRef = regionDataRef;
-            DifficultyTierRef = difficultyTierRef;
-            Affixes = new();
-            Properties = new();
-            EndlessLevel = 0;
-            Level = 0;
-            PlayerGuidParty = 0;
-            PortalId = 0;
-        }
+        public PrototypeId DifficultyTierRef { get => CreateRegionParams.HasDifficultyTierProtoId ? (PrototypeId)CreateRegionParams.DifficultyTierProtoId : PrototypeId.Invalid; }
+        public int EndlessLevel { get => CreateRegionParams.HasEndlessLevel ? (int)CreateRegionParams.EndlessLevel : 0; }
+        public ulong PortalEntityDbId { get => CreateRegionParams.HasAccessPortal ? CreateRegionParams.AccessPortal.EntityDbId : 0; }
+
+        public RegionContext() { }
 
         public override string ToString()
         {
-            return $"{RegionDataRef.GetNameFormatted()} (Level={Level} Difficulty={DifficultyTierRef.GetNameFormatted()})";
-        }
-
-        public void FromRegion(Region region)
-        {
-            var settings = region.Settings;
-            if (settings.Properties != null) Properties.FlattenCopyFrom(settings.Properties, true);
-            Properties.CopyPropertyRange(region.Properties, PropertyEnum.ScoringEventTimerAccumTimeMS);
-            DifficultyTierRef = settings.DifficultyTierRef;
-            PlayerGuidParty = settings.PlayerGuidParty;
-            PortalId = settings.PortalId;
-            EndlessLevel = settings.EndlessLevel + 1;
-            ItemRarity = settings.ItemRarity;
-            Affixes = new(settings.Affixes);
-            Seed = settings.Seed;
-        }
-
-        public void ResetEndless()
-        {
-            DifficultyTierRef = PrototypeId.Invalid;
-            Seed = 0;
-            EndlessLevel = 0;
-            Affixes.Clear();
-            Properties.Clear();
-        }
-
-        public void ResetRegionSettings()
-        {
-            PortalId = 0;
-            PlayerDeaths = 0;
-            PlayerGuidParty = 0;
-        }
-
-        public void CopyScenarioProperties(PropertyCollection properties)
-        {
-            Properties.Clear();
-
-            Properties.CopyProperty(properties, PropertyEnum.DangerRoomScenarioItemDbGuid);
-            Properties.CopyProperty(properties, PropertyEnum.DifficultyIndex);
-            Properties.CopyProperty(properties, PropertyEnum.DamageRegionMobToPlayer);
-            Properties.CopyProperty(properties, PropertyEnum.DamageRegionPlayerToMob);
-
-            DifficultyTierRef = properties[PropertyEnum.DifficultyTier];
-            ItemRarity = properties[PropertyEnum.ItemRarity];
-            PlayerGuidParty = properties[PropertyEnum.RestrictedToPlayerGuidParty];
-
-            if (properties.HasProperty(PropertyEnum.RegionAffix))
-            {
-                Affixes.Clear();
-                foreach (var kvp in properties.IteratePropertyRange(PropertyEnum.RegionAffix))
-                {
-                    Property.FromParam(kvp.Key, 0, out PrototypeId affixRef);
-                    Affixes.Add(affixRef);
-                }
-            }
+            return $"{RegionDataRef.GetNameFormatted()}";
         }
     }
 }

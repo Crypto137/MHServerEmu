@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.Events;
@@ -141,8 +142,12 @@ namespace MHServerEmu.Games.MetaGames.GameModes
         public void TeleportPlayersToTarget(PrototypeId targetRef)
         {
             var players = MetaGame.Players;
-            foreach (var player in players.ToArray())
-                player.PlayerConnection.MoveToTarget(targetRef);
+            foreach (var player in players.ToArray())   // FIXME: use a pooled list here
+            {
+                using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                teleporter.Initialize(player, TeleportContextEnum.TeleportContext_MetaGame);
+                teleporter.TeleportToTarget(targetRef);
+            }
         }
 
         public void ResetStates()

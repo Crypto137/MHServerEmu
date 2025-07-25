@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Gazillion;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
@@ -91,7 +92,7 @@ namespace MHServerEmu.Games.Entities
             return sb.ToString();
         }
 
-        public static TransitionDestination FindDestination(Cell cell, TransitionPrototype transitionProto)
+        public static TransitionDestination Find(Cell cell, TransitionPrototype transitionProto)
         {
             if (cell == null) return null;
 
@@ -105,10 +106,10 @@ namespace MHServerEmu.Games.Entities
             TargetObject node = RegionTransition.GetTargetNode(region.Targets, area, cell.PrototypeDataRef, entityGuid);
             if (node == null) return null;
 
-            return DestinationFromTarget(node.TargetId, region, transitionProto);
+            return FromTarget(node.TargetId, region, transitionProto);
         }
 
-        public static TransitionDestination DestinationFromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
+        public static TransitionDestination FromTarget(PrototypeId targetRef, Region region, TransitionPrototype transitionProto)
         {
             var regionConnectionTarget = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
 
@@ -135,7 +136,7 @@ namespace MHServerEmu.Games.Entities
             return destination;
         }
 
-        public static TransitionDestination DestinationFromTargetRef(PrototypeId targetRef)
+        public static TransitionDestination FromTargetRef(PrototypeId targetRef)
         {
             var proto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetRef);
             AssetId cellAssetId = proto.Cell;
@@ -150,6 +151,27 @@ namespace MHServerEmu.Games.Entities
                 _entityRef = proto.Entity,
                 _nameId = proto.Name,
                 _targetRef = targetRef
+            };
+
+            return destination;
+        }
+
+        public static TransitionDestination FromRegionOrigin(NetStructRegionOrigin origin)
+        {
+            NetStructRegionTarget target = origin.Target;
+            NetStructRegionLocation location = origin.Location;
+
+            TransitionDestination destination = new()
+            {
+                _type = RegionTransitionType.TransitionDirectReturn,
+
+                RegionRef = (PrototypeId)target.RegionProtoId,
+                AreaRef = (PrototypeId)target.AreaProtoId,
+                CellRef = (PrototypeId)target.CellProtoId,
+                EntityRef = (PrototypeId)target.EntityProtoId,
+
+                RegionId = location.RegionId,
+                Position = new(location.Position),
             };
 
             return destination;

@@ -497,9 +497,11 @@ namespace MHServerEmu.Games.Regions
                 MetaGames.Remove(metaGameId);
             }
 
-            if (Settings.PortalId != 0) // Destroy Portal with region
+            // Destroy entrance portal
+            // REMOVEME: This should be handled by the PlayerManager
+            if (Settings.PortalEntityDbId != 0)
             {
-                var portal = entityManager.GetEntity<Entity>(Settings.PortalId);
+                var portal = entityManager.GetEntityByDbGuid<Entity>(Settings.PortalEntityDbId);
                 portal?.Destroy();
             }
 
@@ -1044,6 +1046,26 @@ namespace MHServerEmu.Games.Regions
             }
 
             return found;
+        }
+
+        public PrototypeId GetBodysliderPowerRef()
+        {
+            foreach (ulong metaGameId in MetaGames)
+            {
+                MetaGame metaGame = Game.EntityManager.GetEntity<MetaGame>(metaGameId);
+                if (metaGame == null)
+                    continue;
+
+                MetaGamePrototype metaGameProto = metaGame.MetaGamePrototype;
+                if (metaGameProto != null && metaGameProto.BodysliderOverride != PrototypeId.Invalid)
+                    return metaGameProto.BodysliderOverride;
+            }
+
+            GlobalsPrototype globalsProto = GameDatabase.GlobalsPrototype;
+            if (Behavior == RegionBehavior.Town)
+                return globalsProto.ReturnToFieldPower;
+            else
+                return globalsProto.ReturnToHubPower;
         }
 
         public static bool IsBoundsBlockedByEntity(Bounds bounds, WorldEntity entity, BlockingCheckFlags blockFlags)
@@ -1861,7 +1883,7 @@ namespace MHServerEmu.Games.Regions
         public bool InOwnerParty(Player player)
         {
             ulong playerGuid = player.DatabaseUniqueId;
-            if (Settings.PlayerGuidParty == playerGuid) return true;
+            if (Settings.OwnerPlayerDbId == playerGuid) return true;    // FIXME: This doesn't look right
 
             // TODO check owner is in party
 

@@ -3,7 +3,6 @@ using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
-using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
@@ -34,7 +33,7 @@ namespace MHServerEmu.Games.Entities
             base.Initialize(settings);
 
             // old
-            var destination = TransitionDestination.FindDestination(settings.Cell, TransitionPrototype);
+            var destination = TransitionDestination.Find(settings.Cell, TransitionPrototype);
 
             if (destination != null)
                 _destinationList.Add(destination);
@@ -80,19 +79,19 @@ namespace MHServerEmu.Games.Entities
                             var instanceCell = GameDatabase.GetDataRefByAsset(instance.OriginCell);
                             if (instanceCell == PrototypeId.Invalid || cellRef != instanceCell) continue;
                             if (instance.OriginEntity != entityRef) continue;
-                            destination = TransitionDestination.DestinationFromTarget(instance.Target, region, transProto);
+                            destination = TransitionDestination.FromTarget(instance.Target, region, transProto);
                             if (destination == null) continue;
                             _destinationList.Add(destination);
                             noDest = false;
                         }
 
+                    // Try constructing a return to region origin 
                     if (noDest)
                     {
-                        // TODO destination from region origin target
-                        var targets = region.Targets;
-                        if (targets.Count == 1)
+                        NetStructRegionOrigin origin = region.Settings.Origin;
+                        if (origin != null)
                         {
-                            destination = TransitionDestination.DestinationFromTarget(targets[0].TargetId, region, TransitionPrototype);
+                            destination = TransitionDestination.FromRegionOrigin(origin);
                             if (destination != null)
                             {
                                 _destinationList.Add(destination);
@@ -101,11 +100,11 @@ namespace MHServerEmu.Games.Entities
                         }
                     }
 
-                    // Get default region
+                    // Fall back to the default region
                     if (noDest)
                     {
                         targetRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                        destination = TransitionDestination.DestinationFromTarget(targetRef, region, TransitionPrototype);
+                        destination = TransitionDestination.FromTarget(targetRef, region, TransitionPrototype);
                         if (destination != null) _destinationList.Add(destination);
                     }
                     break;
@@ -118,7 +117,7 @@ namespace MHServerEmu.Games.Entities
                     Properties[PropertyEnum.RestrictedToPlayerGuidParty] = player.DatabaseUniqueId;
 
                     targetRef = transProto.DirectTarget;
-                    destination = TransitionDestination.DestinationFromTargetRef(targetRef);
+                    destination = TransitionDestination.FromTargetRef(targetRef);
                     if (destination != null) _destinationList.Add(destination);
                     break;
             }
@@ -167,163 +166,149 @@ namespace MHServerEmu.Games.Entities
 
         public bool UseTransition(Player player)
         {
-            // TODO: Separate teleport logic from Transition
-
             switch (TransitionPrototype.Type)
             {
-                case RegionTransitionType.TransitionDirect:
                 case RegionTransitionType.Transition:
-                    Region region = player.GetRegion();
-                    if (region == null) return Logger.WarnReturn(false, "UseTransition(): region == null");
+                case RegionTransitionType.TransitionDirect:
+                    return UseTransitionDefault(player);
 
-                    if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
-                    if (_destinationList.Count > 1) Logger.Debug("UseTransition(): _destinationList.Count > 1");
-
-                    TransitionDestination destination = _destinationList[0];
-
-                    PrototypeId targetRegionProtoRef = destination.RegionRef;
-
-                    // Check if our target is outside of the current region and we need to do a remote teleport
-                    // TODO: Additional checks if we need to transfer (e.g. when transferring to another instance of the same region proto).
-                    if (targetRegionProtoRef != PrototypeId.Invalid && region.PrototypeDataRef != targetRegionProtoRef)
-                    {
-                        var regionContext = player.PlayerConnection.RegionContext;
-                        regionContext.ResetRegionSettings();
-
-                        if (TransitionPrototype.Type == RegionTransitionType.TransitionDirect)
-                        {
-                            var regionProto = GameDatabase.GetPrototype<RegionPrototype>(targetRegionProtoRef);
-
-                            if (regionProto.HasEndless())
-                                regionContext.EndlessLevel = 1;
-
-                            regionContext.CopyScenarioProperties(Properties);
-
-                            if (regionProto.UsePrevRegionPlayerDeathCount)
-                                regionContext.PlayerDeaths = region.PlayerDeaths;
-
-                            // Lifespan for destory Teleport
-                            ResetLifespan(TimeSpan.FromMinutes(2));
-                            regionContext.PortalId = Id;
-                        }
-
-                        return TeleportToRemoteTarget(player, destination.TargetRef);
-                    }
-
-                    // No need to transfer if we are already in the target region
-                    return TeleportToLocalTarget(player, destination.TargetRef);
+                case RegionTransitionType.Waypoint:
+                    return UseTransitionWaypoint(player);
 
                 case RegionTransitionType.TowerUp:
                 case RegionTransitionType.TowerDown:
-                    return TeleportToTransition(player, _destinationList[0].EntityId);
-
-                case RegionTransitionType.Waypoint:
-                    // TODO: Unlock waypoint
-                    return true;
-
-                case RegionTransitionType.ReturnToLastTown:
-                    return TeleportToLastTown(player);
+                    return UseTransitionTower(player);
 
                 case RegionTransitionType.TransitionDirectReturn:
-                    if (_destinationList.Count == 0) return Logger.WarnReturn(false, "UseTransition(): No available destinations!");
-                    if (_destinationList.Count > 1) Logger.Debug("UseTransition(): _destinationList.Count > 1");
+                    return UseTransitionDirectReturn(player);
 
-                    destination = _destinationList[0];
-                    // TODO teleport to Position in region
-                    return TeleportToRemoteTarget(player, destination.TargetRef);
+                case RegionTransitionType.ReturnToLastTown:
+                    return UseTransitionReturnToLastTown(player);
 
                 default:
                     return Logger.WarnReturn(false, $"UseTransition(): Unimplemented region transition type {TransitionPrototype.Type}");
             }
         }
 
-        public static bool TeleportToTarget(Player player, PrototypeId targetProtoRef)
+        private bool UseTransitionDefault(Player player)
         {
-            var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetProto == null");
+            TransitionPrototype transitionProto = TransitionPrototype;
 
-            Region region = player.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "TeleportToTarget(): region == null");
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "UseTransitionDefault(): region == null");
 
-            RegionPrototype targetRegionProto = targetRegionProto = targetProto.Region.As<RegionPrototype>();
-            if (targetRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetRegionProto == null");
+            if (_destinationList.Count == 0)
+                return Logger.WarnReturn(false, "UseTransitionDefault(): No available destinations!");
 
-            if (RegionPrototype.Equivalent(targetRegionProto, region.Prototype))
-                return TeleportToLocalTarget(player, targetProtoRef);
-            else
-                return TeleportToRemoteTarget(player, targetProtoRef);
-        }
+            if (_destinationList.Count > 1)
+                Logger.Debug("UseTransitionDefault(): _destinationList.Count > 1");
 
-        public static bool TeleportToRemoteTarget(Player player, PrototypeId targetProtoRef)
-        {
-            player.PlayerConnection.MoveToTarget(targetProtoRef);
-            return true;
-        }
+            TransitionDestination destination = _destinationList[0];
 
-        public static bool TeleportToLocalTarget(Player player, PrototypeId targetProtoRef)
-        {
-            var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
-            if (targetProto == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): targetProto == null");
+            PrototypeId destinationRegionRef = destination.RegionRef;
+            if (destinationRegionRef == PrototypeId.Invalid)
+                return false;
 
-            Region region = player.GetRegion();
-            if (region == null) return Logger.WarnReturn(false, "TeleportToLocalTarget(): region == null");
+            RegionPrototype destinationRegionProto = destinationRegionRef.As<RegionPrototype>();
+            if (destinationRegionProto == null) return Logger.WarnReturn(false, "UseTransitionDefault(): destinationRegionProto == null");
 
-            Vector3 position = Vector3.Zero;
-            Orientation orientation = Orientation.Zero;
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
+            teleporter.TransitionEntity = this;
 
-            if (region.FindTargetLocation(ref position, ref orientation,
-                targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity) == false)
+            // TODO: Also check destination type?
+            if (transitionProto.Type == RegionTransitionType.TransitionDirect)
+                teleporter.SetAccessPortal(this);
+
+            teleporter.DangerRoomScenarioItemDbGuid = Properties[PropertyEnum.DangerRoomScenarioItemDbGuid];
+            teleporter.ItemRarity = Properties[PropertyEnum.ItemRarity];
+            teleporter.DangerRoomScenarioRef = Properties[PropertyEnum.CreatorPowerPrototype];
+
+            teleporter.Properties.CopyProperty(Properties, PropertyEnum.DifficultyIndex);
+            teleporter.Properties.CopyProperty(Properties, PropertyEnum.DamageRegionMobToPlayer);
+            teleporter.Properties.CopyProperty(Properties, PropertyEnum.DamageRegionPlayerToMob);
+
+            if (Properties.HasProperty(PropertyEnum.RegionAffix))
             {
-                return Logger.WarnReturn(false, $"TeleportToLocalTarget(): Failed to find target location for target {targetProtoRef.GetName()}");
+                foreach (var kvp in Properties.IteratePropertyRange(PropertyEnum.RegionAffix))
+                {
+                    Property.FromParam(kvp.Key, 0, out PrototypeId affixProtoRef);
+                    teleporter.Affixes.Add(affixProtoRef);
+                }
             }
 
-            if (player.CurrentAvatar.Area?.PrototypeDataRef != targetProto.Area)
-                region.PlayerBeginTravelToAreaEvent.Invoke(new(player, targetProto.Area));
+            // Copy data from the current region
+            if (destinationRegionProto.HasEndlessTheme())
+            {
+                RegionPrototype currentRegionProto = region.Prototype;
 
-            player.SendMessage(NetMessageOneTimeSnapCamera.DefaultInstance);    // Disables camera interpolation for movement
+                if (currentRegionProto.HasEndlessTheme() && currentRegionProto.DataRef == destinationRegionProto.DataRef)
+                {
+                    // This is a local teleport within the same endless region, copy the data without changing it
+                    teleporter.CopyEndlessRegionData(region, false);
+                }
+                else
+                {
+                    // Initialize new endless region data 
+                    teleporter.EndlessLevel = 1;
 
-            ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(position, orientation, ChangePositionFlags.Teleport);
-            return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
-        }
+                    PrototypeId difficultyTierRef = Properties[PropertyEnum.DifficultyTier];
+                    if (difficultyTierRef != PrototypeId.Invalid)
+                        teleporter.DifficultyTierRef = difficultyTierRef;
+                }
+            }
+            else
+            {
+                // Keep difficulty tier consistent outside of towns
+                if (region.Behavior != RegionBehavior.Town)
+                    teleporter.DifficultyTierRef = region.DifficultyTierRef;
+            }
 
-        public static bool TeleportToTransition(Player player, ulong transitionEntityId)
-        {
-            // This looks quite similar to TeleportToLocalTarget(), maybe we should merge them
+            if (destinationRegionProto.UsePrevRegionPlayerDeathCount)
+                teleporter.PlayerDeaths = region.PlayerDeaths;
 
-            Transition transition = player.Game.EntityManager.GetEntity<Transition>(transitionEntityId);
-            if (transition == null) return Logger.WarnReturn(false, "TeleportToTransition(): transition == null");
+            if (teleporter.TeleportToTarget(destination.TargetRef) == false)
+                return false;
 
-            TransitionPrototype transitionProto = transition.TransitionPrototype;
-            if (transitionProto == null) return Logger.WarnReturn(false, "TeleportToTransition(): transitionProto == null");
-
-            Vector3 targetPos = transition.RegionLocation.Position;
-            Orientation targetRot = transition.RegionLocation.Orientation;
-            targetPos += transitionProto.CalcSpawnOffset(targetRot);
-
-            //uint cellId = transition.Properties[PropertyEnum.MapCellId];
-            //uint areaId = transition.Properties[PropertyEnum.MapAreaId];
-            //Logger.Debug($"TeleportToTransition(): targetPos={targetPos}, areaId={areaId}, cellId={cellId}");
-
-            ChangePositionResult result = player.CurrentAvatar.ChangeRegionPosition(targetPos, targetRot, ChangePositionFlags.Teleport);
-            return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
-        }
-
-        public static bool TeleportToLastTown(Player player)
-        {
-            // Check last town
-            PrototypeId targetProtoRef = PrototypeId.Invalid;
-
-            PrototypeId regionProtoRef = player.Properties[PropertyEnum.LastTownRegionForAccount];
-            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
-            if (regionProto != null)
-                targetProtoRef = regionProto.StartTarget;
-
-            // Use the fallback if no saved last town
-            if (targetProtoRef == PrototypeId.Invalid)
-                targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-
-            player.PlayerConnection.MoveToTarget(targetProtoRef);
             return true;
+        }
+
+        private bool UseTransitionWaypoint(Player player)
+        {
+            // TODO: Unlock waypoint
+            return true;
+        }
+
+        private bool UseTransitionTower(Player player)
+        {
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
+            return teleporter.TeleportToTransition(_destinationList[0].EntityId);
+        }
+
+        private bool UseTransitionDirectReturn(Player player)
+        {
+            if (_destinationList.Count == 0)
+                return Logger.WarnReturn(false, $"UseTransitionDirectReturn(): No available destinations for [{this}]");
+            
+            if (_destinationList.Count > 1)
+                return Logger.WarnReturn(false, $"UseTransitionDirectReturn(): More than one return destination for [{this}]");
+
+            TransitionDestination destination = _destinationList[0];
+
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
+            teleporter.TransitionEntity = this;
+
+            return teleporter.TeleportToRegionLocation(destination.RegionId, destination.Position);
+        }
+
+        private bool UseTransitionReturnToLastTown(Player player)
+        {
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Transition);
+            teleporter.TransitionEntity = this;
+            return teleporter.TeleportToLastTown();
         }
     }
 }

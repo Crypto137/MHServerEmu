@@ -1,7 +1,9 @@
+using Gazillion;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Missions.Actions
 {
@@ -22,10 +24,13 @@ namespace MHServerEmu.Games.Missions.Actions
                 bool hasTarget = _proto.TeleportRegionTarget != PrototypeId.Invalid;
                 foreach (Player player in players)
                 {
+                    using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                    teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Mission);
+
                     if (hasTarget)
-                        Transition.TeleportToTarget(player, _proto.TeleportRegionTarget);
+                        teleporter.TeleportToTarget(_proto.TeleportRegionTarget);
                     else
-                        Transition.TeleportToLastTown(player);
+                        teleporter.TeleportToLastTown();
                 }
             }
             ListPool<Player>.Instance.Return(players);

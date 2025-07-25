@@ -48,12 +48,11 @@ namespace MHServerEmu.Games.Network
 
         private bool _waitingForRegionIsAvailableResponse = false;
         private bool _doNotUpdateDBAccount = false;
-        private bool _isFirstLoad = true;
 
         public Game Game { get; }
 
         public AreaOfInterest AOI { get; }
-        public WorldView WorldView { get; }
+        public WorldViewCache WorldView { get; }
         public TransferParams TransferParams { get; }
         public RegionContext RegionContext { get; }
 
@@ -99,7 +98,7 @@ namespace MHServerEmu.Games.Network
             // Query if our initial loading region is available (has assets) on the client.
             // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
             SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
-                .SetRegionPrototype((ulong)TransferParams.DestTargetRegionProtoRef)
+                .SetRegionPrototype((ulong)TransferParams.DestRegionProtoRef)
                 .Build());
 
             _waitingForRegionIsAvailableResponse = true;
@@ -128,11 +127,13 @@ namespace MHServerEmu.Games.Network
 
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
             EntityManager entityManager = Game.EntityManager;
+            MigrationData migrationData = _dbAccount.MigrationData;
 
-            // Initialize transfer params
-            // FIXME: RawWaypoint should be either a region connection target or a waypoint proto ref that we get our connection target from
-            // We should get rid of saving waypoint refs and just use connection targets.
-            TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget, (PrototypeId)_dbAccount.Player.StartTargetRegionOverride);
+            // Initialize transfer params, prioritize migration data if we have it
+            if (migrationData.TransferParams != null)
+                MigrationUtility.RestoreTransferParams(migrationData, TransferParams);
+            else
+                TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
@@ -167,6 +168,9 @@ namespace MHServerEmu.Games.Network
             // something must have gone terribly terribly wrong, and we need to bail out.
             if (Player == null)
                 throw new($"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
+
+            // Restore migrated properties
+            MigrationUtility.RestoreProperties(migrationData.PlayerProperties, Player.Properties);
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)
@@ -219,7 +223,7 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Updates the <see cref="DBAccount"/> instance bound to this <see cref="PlayerConnection"/>.
         /// </summary>
-        private bool UpdateDBAccount(bool isLoggingOut)
+        private bool UpdateDBAccount(bool updateMigrationData)
         {
             if (_doNotUpdateDBAccount)
                 return true;
@@ -237,35 +241,43 @@ namespace MHServerEmu.Games.Network
                     _dbAccount.Player.ArchiveData = archive.AccessAutoBuffer().ToArray();
                 }
 
-                // TODO: Clean this up
-                if (isLoggingOut == false)
+                // Save last town as a separate database field to be able to access it without deserializing the player entity
+                PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
+                if (lastTownProtoRef != PrototypeId.Invalid)
                 {
-                    _dbAccount.Player.StartTarget = (long)TransferParams.DestTargetProtoRef;
-                    _dbAccount.Player.StartTargetRegionOverride = (long)TransferParams.DestTargetRegionProtoRef;    // Sometimes connection target region is overriden (e.g. banded regions)
+                    RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
+                    _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
                 }
                 else
                 {
-                    PrototypeId lastTownProtoRef = Player.Properties[PropertyEnum.LastTownRegionForAccount];
-                    if (lastTownProtoRef != PrototypeId.Invalid)
-                    {
-                        RegionPrototype lastTownProto = lastTownProtoRef.As<RegionPrototype>();
-                        _dbAccount.Player.StartTarget = (long)lastTownProto.StartTarget;
-                    }
+                    Region region = Player.GetRegion();
+                    if (region != null && region.PrototypeDataRef == (PrototypeId)13422564811632352998) // TimesSquareTutorialRegion
+                        _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
                     else
-                    {
-                        Region region = Player.GetRegion();
-                        if (region != null && region.PrototypeDataRef == (PrototypeId)13422564811632352998) // TimesSquareTutorialRegion
-                            _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
-                        else
-                            _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
-                    }
-
-                    _dbAccount.Player.StartTargetRegionOverride = 0;
+                        _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion;
                 }
+
+                _dbAccount.Player.StartTargetRegionOverride = 0;    // this is deprecated, just zero it out until we remove the field from the database
 
                 _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
                 PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
+
+                // Update migration data unless requested not to
+                MigrationData migrationData = _dbAccount.MigrationData;
+                
+                if (migrationData.SkipNextUpdate == false)
+                {
+                    if (updateMigrationData)
+                    {
+                        MigrationUtility.StoreTransferParams(migrationData, TransferParams);
+                        MigrationUtility.StoreProperties(migrationData.PlayerProperties, Player.Properties);
+                    }
+                }
+                else
+                {
+                    migrationData.SkipNextUpdate = false;
+                }
             }
 
             Logger.Trace($"Updated DBAccount {_dbAccount}");
@@ -286,9 +298,9 @@ namespace MHServerEmu.Games.Network
             Player?.Destroy();
 
             // Destroy all private region instances in the world view since they are not persistent anyway
-            foreach (var kvp in WorldView)
+            foreach ((_, ulong regionId) in WorldView)
             {
-                Region region = Game.RegionManager.GetRegion(kvp.Value);
+                Region region = Game.RegionManager.GetRegion(regionId);
                 if (region == null) continue;
 
                 if (region.IsPublic)
@@ -310,23 +322,28 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
 
-        public void MoveToTarget(PrototypeId targetProtoRef, PrototypeId regionProtoRefOverride = PrototypeId.Invalid)
+        public void BeginRemoteTeleport()
         {
             var oldRegion = AOI.Region;
 
-            // Update our target
-            TransferParams.SetTarget(targetProtoRef, regionProtoRefOverride);
-
-            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestTargetRegionProtoRef));
+            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestRegionProtoRef));
 
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
-            Player.QueueLoadingScreen(TransferParams.DestTargetRegionProtoRef);
+            Player.QueueLoadingScreen(TransferParams.DestRegionProtoRef);
 
             oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
 
-            // Simulate exiting and re-entering the game on a real GIS
-            ExitGame();
+            // Exit world and save
+            Player.CurrentAvatar.ExitWorld();
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            UpdateDBAccount(false);
+
+            stopwatch.Stop();
+            if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
+                Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
 
             Game.NetworkManager.SetPlayerConnectionPending(this);
         }
@@ -336,9 +353,10 @@ namespace MHServerEmu.Games.Network
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
             // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
 
-            Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
+            if (Player.IsInGame == false)
+                Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
 
-            if (_isFirstLoad)
+            if (_dbAccount.MigrationData.IsFirstLoad)
             {
                 // Recount and update achievements
                 Player.AchievementManager.RecountAchievements();
@@ -352,18 +370,25 @@ namespace MHServerEmu.Games.Network
 
                 Player.CheckDailyLogin();
 
-                _isFirstLoad = false;
+                _dbAccount.MigrationData.IsFirstLoad = false;
             }
 
             // Clear region interest by setting it to invalid region, we still keep our owned entities
             AOI.SetRegion(0, false, null, null);
 
-            PrototypeId regionProtoRef = TransferParams.DestTargetRegionProtoRef;
+            PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
 
             Player.QueueLoadingScreen(regionProtoRef);
 
             RegionContext.RegionDataRef = regionProtoRef;
-            Region region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
+
+            Region region = null;
+
+            if (TransferParams.DestRegionId != 0)
+                region = Game.RegionManager.GetRegion(TransferParams.DestRegionId, true);
+            else
+                region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
+
             if (region == null)
             {
                 Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
@@ -393,31 +418,6 @@ namespace MHServerEmu.Games.Network
                 Player.CurrentAvatar?.SetLastTownRegion(region.PrototypeDataRef);
 
             Player.ScheduleCommunityBroadcast();
-        }
-
-        public void ExitGame()
-        {
-            // We need to recreate the player entity when we transfer between regions because client UI breaks
-            // when we reuse the same player entity id (e.g. inventory grid stops updating).
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            
-            // Player entity exiting the game removes it from its AOI and also removes the current avatar from the world.
-            Player.ExitGame();
-
-            // We need to save data after we exit the game to include data that gets
-            // saved when the current avatar exits world (e.g. mission progress).
-            UpdateDBAccount(false);
-
-            // Destroy
-            Player.Destroy();
-            Game.EntityManager.ProcessDeferredLists();
-
-            // Recreate player
-            LoadFromDBAccount();
-
-            stopwatch.Stop();
-            if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
-                Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
         }
 
         #endregion
@@ -599,12 +599,12 @@ namespace MHServerEmu.Games.Network
             if (_waitingForRegionIsAvailableResponse == false)
                 return Logger.WarnReturn(false, "OnIsRegionAvailable(): Received RegionIsAvailable when we are not waiting for a response");
 
-            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestTargetRegionProtoRef)
-                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestTargetRegionProtoRef.GetName()}");
+            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestRegionProtoRef)
+                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestRegionProtoRef.GetName()}");
 
             if (isRegionAvailable.IsAvailable == false)
             {
-                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestTargetRegionProtoRef.GetName()} is not available, resetting start target");
+                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestRegionProtoRef.GetName()} is not available, resetting start target");
                 TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
             }
 
@@ -1182,7 +1182,15 @@ namespace MHServerEmu.Games.Network
             if (avatar.InInteractRange(waypoint, InteractionMethod.Use) == false)
                 return Logger.WarnReturn(false, $"OnUseWaypoint(): Avatar [{avatar}] is not in interact range of waypoint [{waypoint}]");
 
-            MoveToTarget((PrototypeId)useWaypoint.WaypointDataRef, (PrototypeId)useWaypoint.RegionProtoId);
+            PrototypeId waypointProtoRef = (PrototypeId)useWaypoint.WaypointDataRef;
+            PrototypeId regionProtoRefOverride = (PrototypeId)useWaypoint.RegionProtoId;
+            PrototypeId difficultyProtoRef = (PrototypeId)useWaypoint.DifficultyProtoId;
+
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(Player, TeleportContextEnum.TeleportContext_Waypoint);
+            teleporter.TransitionEntity = waypoint;
+            teleporter.TeleportToWaypoint(waypointProtoRef, regionProtoRefOverride, difficultyProtoRef);
+
             return true;
         }
 
@@ -1333,15 +1341,15 @@ namespace MHServerEmu.Games.Network
             Region region = avatar.Region;
             if (region == null) return Logger.WarnReturn(false, "OnReturnToHub(): region == null");
 
-            // TODO: Use region.GetBodysliderPowerRef()
+            if (region.Behavior == RegionBehavior.Town && Player.HasBodysliderProperties() == false)
+                return Logger.WarnReturn(false, $"OnReturnToHub(): Player [{Player}] is attempting to bodyslide from town without a saved return location");
 
-            if (region.Prototype.Behavior == RegionBehavior.Town)
-                return Logger.WarnReturn(false, $"OnReturnToHub(): Returning from hubs via bodysliding is not yet implemented");
+            PrototypeId bodysliderPowerRef = region.GetBodysliderPowerRef();
+            if (bodysliderPowerRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "OnReturnToHub(): bodysliderPowerRef == PrototypeId.Invalid");
 
-            PrototypeId bodysliderPowerRef = GameDatabase.GlobalsPrototype.ReturnToHubPower;
             PowerActivationSettings settings = new(avatar.Id, avatar.RegionLocation.Position, avatar.RegionLocation.Position);
-
             avatar.ActivatePower(bodysliderPowerRef, ref settings);
+
             return true;
         }
 

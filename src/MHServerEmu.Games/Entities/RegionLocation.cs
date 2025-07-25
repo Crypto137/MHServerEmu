@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.VectorMath;
@@ -63,6 +64,23 @@ namespace MHServerEmu.Games.Entities
             _orientation = other._orientation;
             _region = other._region;
             Cell = other.Cell;
+        }
+
+        public NetStructRegionLocation ToProtobuf()
+        {
+            ulong regionId = 0;
+            Vector3 position = Vector3.Zero;
+
+            if (Region != null)
+            {
+                regionId = Region.Id;
+                position = Position;
+            }
+
+            return NetStructRegionLocation.CreateBuilder()
+                .SetRegionId(regionId)
+                .SetPosition(position.ToNetStructPoint3())
+                .Build();
         }
 
         public static Vector3 ProjectToFloor(Cell cell, in Vector3 regionPos)

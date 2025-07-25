@@ -664,15 +664,10 @@ namespace MHServerEmu.Games.Powers
         // 1
         private bool DoPowerEventActionBodyslide()
         {
-            Player player = Owner.GetOwnerOfType<Player>();
-            if (player == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): player == null");
+            Avatar avatar = Owner as Avatar;
+            if (avatar == null) return Logger.WarnReturn(false, "DoPowerEventActionBodyslide(): avatar == null");
 
-            Avatar avatar = player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, $"DoPowerEventActionBodyslide(): avatar == null");
-
-            PrototypeId bodyslideTargetRef = Bodyslider.GetBodyslideTargetRef(player);
-
-            avatar.ScheduleRegionTeleport(bodyslideTargetRef, TimeSpan.Zero);
+            avatar.ScheduleBodyslideTeleport();
             return true;
         }
 
@@ -1386,7 +1381,7 @@ namespace MHServerEmu.Games.Powers
             Avatar avatar = Game.EntityManager.GetEntity<Avatar>(settings.TargetEntityId);
             if (avatar == null) return Logger.WarnReturn(false, "DoPowerEventActionTeleportRegion(): avatar == null");
 
-            avatar.ScheduleRegionTeleport(targetProtoRef, TimeSpan.Zero);
+            avatar.SchedulePowerTeleport(targetProtoRef, TimeSpan.Zero);
             return true;
         }
 

@@ -72,6 +72,12 @@ namespace MHServerEmu.PlayerManagement
             ClientSession newSession = (ClientSession)newClient.Session;
             newSession.Account = oldSession.Account;
 
+            // Reset migration data to prevent abuse.
+            // At this stage the player is still in a game and will try to update MigrationDate on exit. We set the SkipNextUpdate flag here to avoid this.
+            MigrationData migrationData = ((DBAccount)newSession.Account).MigrationData;
+            migrationData.Reset();
+            migrationData.SkipNextUpdate = true;
+
             Client = newClient;
 
             return true;

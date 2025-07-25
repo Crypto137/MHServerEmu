@@ -5,6 +5,7 @@ using MHServerEmu.Core.Collisions;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
@@ -43,7 +44,7 @@ namespace MHServerEmu.Games.Network
         private readonly Game _game;
 
         private ulong _currentFrame = 0;
-        private Vector3 _lastUpdatePosition = new();
+        private Vector3? _lastUpdatePosition = null;
 
         private float _viewOffset = 600.0f;
         private float _aoiVolume = AOIVolumeDefault;
@@ -107,7 +108,7 @@ namespace MHServerEmu.Games.Network
 
             // Unless forceUpdate is set, we update only when we move far enough from the last update position.
             // NOTE: We use DistanceSquared2D() instead of Distance2D() to avoid calculating the square root of distance and speed this check up.
-            if (forceUpdate == false && Vector3.DistanceSquared2D(_lastUpdatePosition, position) < UpdateDistanceSquared)
+            if (forceUpdate == false && _lastUpdatePosition != null && Vector3.DistanceSquared2D(_lastUpdatePosition.Value, position) < UpdateDistanceSquared)
                 return;
 
             CalcVolumes(position);
@@ -244,7 +245,8 @@ namespace MHServerEmu.Games.Network
                 RemoveCell(cell, false);
             }
 
-            if (_trackedCells.Count > 0) Logger.Warn("SetRegion(): _trackedCells.Count > 0");
+            if (_trackedCells.Count > 0)
+                Logger.Warn("SetRegion(): _trackedCells.Count > 0");
 
             foreach (var kvp in _trackedAreas)
             {
@@ -260,44 +262,34 @@ namespace MHServerEmu.Games.Network
                 RemoveArea(area, false);
             }
 
-            if (_trackedAreas.Count > 0) Logger.Warn("SetRegion(): _trackedAreas.Count > 0");
+            if (_trackedAreas.Count > 0)
+                Logger.Warn("SetRegion(): _trackedAreas.Count > 0");
 
-            // Clear entities if requested
-            if (clearingAllInterest)
-            {
-                EntityManager entityManager = _playerConnection.Game.EntityManager;
-
-                foreach (var kvp in _trackedEntities)
-                {
-                    Entity entity = entityManager.GetEntity<Entity>(kvp.Key);
-                    if (entity != null)
-                        SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
-                }
-
-                if (_trackedEntities.Count > 0) Logger.Warn("SetRegion(): _trackedEntities.Count > 0");
-            }
-
-            // Change to the new region
+            // Change to the new region (this needs to be done before we clean up entities)
             Region = newRegion;
+            _lastUpdatePosition = null;
+
+            List<ulong> removedEntities = ListPool<ulong>.Instance.Get();
+            RemoveEntitiesOnRegionChange(removedEntities, clearingAllInterest);
 
             // Fill in required region change message fields
             var regionChangeBuilder = NetMessageRegionChange.CreateBuilder()
                 .SetRegionId(regionId)
-                .SetServerGameId(_game.Id)
-                .SetClearingAllInterest(clearingAllInterest);
+                .SetServerGameId(0)     // This will be set to something valid below if we actually have a region
+                .SetClearingAllInterest(clearingAllInterest)
+                .AddRangeEntitiestodestroy(removedEntities);
 
             // Add additional region metadata if we have a valid region
             if (newRegion != null)
             {
-                regionChangeBuilder.SetRegionPrototypeId((ulong)newRegion.PrototypeDataRef)
+                regionChangeBuilder.SetServerGameId(_game.Id)
+                    .SetRegionPrototypeId((ulong)newRegion.PrototypeDataRef)
                     .SetRegionRandomSeed(newRegion.RandomSeed)
                     .SetRegionMin(newRegion.Aabb.Min.ToNetStructPoint3())
                     .SetRegionMax(newRegion.Aabb.Max.ToNetStructPoint3())
                     .SetCreateRegionParams(NetStructCreateRegionParams.CreateBuilder()
                         .SetLevel((uint)newRegion.RegionLevel)
                         .SetDifficultyTierProtoId((ulong)newRegion.DifficultyTierRef));
-
-                // Can add EntitiesToDestroy here
 
                 using (Archive archive = new(ArchiveSerializeType.Replication, (ulong)AOINetworkPolicyValues.AllChannels))
                 {
@@ -309,6 +301,7 @@ namespace MHServerEmu.Games.Network
             }
 
             SendMessage(regionChangeBuilder.Build());
+            ListPool<ulong>.Instance.Return(removedEntities);
 
             // TODO?: Prefetch other regions
 
@@ -592,6 +585,58 @@ namespace MHServerEmu.Games.Network
                     else
                         _entityUpdateStackPostEnvironment.Push(modifyUpdate);
                 }
+            }
+        }
+
+        private void RemoveEntitiesOnRegionChange(List<ulong> removedEntities, bool clearingAllInterest)
+        {
+            EntityManager entityManager = _game.EntityManager;
+
+            // Clear entities if requested
+            if (clearingAllInterest)
+            {
+                foreach (var kvp in _trackedEntities)
+                {
+                    Entity entity = entityManager.GetEntity<Entity>(kvp.Key);
+                    if (entity != null)
+                        SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
+                }
+
+                if (_trackedEntities.Count > 0)
+                    Logger.Warn("RemovePreviousRegionEntities(): _trackedEntities.Count > 0");
+
+                return;
+            }
+
+            // Find and remove individual entities we are no longer interested in
+            foreach (var kvp in _trackedEntities)
+            {
+                bool isInterested = false;
+
+                Entity entity = entityManager.GetEntity<Entity>(kvp.Key);
+                if (entity != null)
+                {
+                    AOINetworkPolicyValues interestPolicies = GetNewInterestPolicies(entity);
+                    isInterested = interestPolicies != AOINetworkPolicyValues.AOIChannelNone;
+
+                    if (isInterested && interestPolicies != GetCurrentInterestPolicies(entity.Id))
+                        ModifyEntity(entity, interestPolicies);
+                }
+
+                if (isInterested == false)
+                    removedEntities.Add(kvp.Key);
+            }
+
+            foreach (ulong entityId in removedEntities)
+            {
+                if (InterestedInEntity(entityId) == false)
+                    continue;
+
+                Entity entity = entityManager.GetEntity<Entity>(entityId);
+                if (entity == null)
+                    continue;
+
+                SetEntityInterestPolicies(entity, InterestTrackOperation.Remove);
             }
         }
 
@@ -928,15 +973,18 @@ namespace MHServerEmu.Games.Network
                 // Make sure this world entity is in the same region as our interest
                 bool isInRegion = worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false && worldEntity.Region == Region;
 
-                // Make sure this world entity is within our interest volume
-                if (isInRegion && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                if (_lastUpdatePosition != null)
                 {
-                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
-                }
-                else if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
-                {
-                    // Transfer proximity channel from owner in proximity
-                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
+                    // Make sure this world entity is within our interest volume
+                    if (isInRegion && _visibleVolume.IntersectsXY(worldEntity.RegionLocation.Position) && InterestedInCell(worldEntity.Cell.Id))
+                    {
+                        newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
+                    }
+                    else if (inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelProximity))
+                    {
+                        // Transfer proximity channel from owner in proximity
+                        newInterestPolicies |= AOINetworkPolicyValues.AOIChannelProximity;
+                    }
                 }
 
                 // Discovery - we should not replicate discovered entities not in our region (e.g. saved discoveries from another region or equipped items on nearby avatars)

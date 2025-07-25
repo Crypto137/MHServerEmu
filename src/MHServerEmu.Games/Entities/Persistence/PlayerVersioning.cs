@@ -77,9 +77,7 @@ namespace MHServerEmu.Games.Entities.Persistence
             // Move to the default starting region
             PrototypeId startingRegionTargetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
             TransferParams transferParams = player.PlayerConnection.TransferParams;
-
-            if (transferParams.DestTargetProtoRef != startingRegionTargetProtoRef)
-                transferParams.SetTarget(startingRegionTargetProtoRef);
+            transferParams.SetTarget(startingRegionTargetProtoRef);
 
             return true;
         }

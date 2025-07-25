@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public LowResMap() { }
 
-        public void InitIfNecessary(Region initRegion)
+        public bool InitIfNecessary(Region initRegion)
         {
             if (_region == null && initRegion != null && _map.Size != 0)
             {
@@ -32,13 +32,17 @@ namespace MHServerEmu.Games.Regions.Maps
                 {
                     Clear();
                     SetRegion(initRegion);
+                    return true;
                 }
             }
             else if (initRegion == null || _region != initRegion)
             {
                 Clear();
                 SetRegion(initRegion);
+                return true;
             }
+
+            return false;
         }
 
         public bool Serialize(Archive archive)
@@ -70,7 +74,12 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public void RevealAll()
         {
-            _isRevealAll = true;
+            // RevealAll is buggy client side when transferring between regions in the same game instance.
+            //_isRevealAll = true;
+
+            // As a workaround, set all bits instead of actually using the flag as intended.
+            for (int i = 0; i < _map.Size; i++)
+                _map[i] = true;
         }
 
         public bool Translate(in Vector3 position, ref int index)

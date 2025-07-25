@@ -52,7 +52,9 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<TransformModeChangeEvent> _transformModeChangeEvent = new();
         private readonly EventPointer<TransformModeExitPowerEvent> _transformModeExitPowerEvent = new();
         private readonly EventPointer<UnassignMappedPowersForRespecEvent> _unassignMappedPowersForRespec = new();
-        private readonly EventPointer<RegionTeleportEvent> _regionTeleportEvent = new();
+        private readonly EventPointer<BodyslideTeleportToTownEvent> _bodyslideTeleportToTownEvent = new();
+        private readonly EventPointer<BodyslideTeleportFromTownEvent> _bodyslideTeleportFromTownEvent = new();
+        private readonly EventPointer<PowerTeleportEvent> _powerTeleportEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -463,20 +465,19 @@ namespace MHServerEmu.Games.Entities.Avatars
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
-                        Transition.TeleportToLocalTarget(owner, deathReleaseTarget);
+                        Player player = GetOwnerOfType<Player>();
+                        using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+                        teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
+                        return teleporter.TeleportToTarget(deathReleaseTarget);
                     }
                     else 
                     {
                         return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {avatarOnKilledInfo.DeathReleaseBehavior}");
                     }
 
-                    break;
-
                 default:
                     return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented request type {requestType}");
             }
-
-            return true;
         }
 
         private PrototypeId FindDeathReleaseTarget()
@@ -558,6 +559,34 @@ namespace MHServerEmu.Games.Entities.Avatars
             Game.NetworkManager.SendMessageToInterested(message, this, AOINetworkPolicyValues.AOIChannelProximity | AOINetworkPolicyValues.AOIChannelOwner);
         }
 
+        /// <summary>
+        /// Checks if the provided position is valid to use as a start location. Chooses a random position nearby if it's not.
+        /// Returns <see langword="true"/> if the position is valid or was successfully adjusted.
+        /// </summary>c
+        public static bool AdjustStartPositionIfNeeded(Region region, ref Vector3 position, bool checkOtherAvatars = false, float boundsRadius = 64f)
+        {
+            Bounds bounds = new();
+            bounds.InitializeCapsule(boundsRadius, boundsRadius * 2f, BoundsCollisionType.Blocking, BoundsFlags.None);
+            bounds.Center = position;
+
+            PositionCheckFlags posFlags = PositionCheckFlags.CanBeBlockedEntity;
+            if (checkOtherAvatars)
+                posFlags |= PositionCheckFlags.CanBeBlockedAvatar;
+
+            BlockingCheckFlags blockFlags = BlockingCheckFlags.CheckGroundMovementPowers | BlockingCheckFlags.CheckLanding | BlockingCheckFlags.CheckSpawns;
+
+            // Do not modify the position if it's valid as is.
+            if (region.IsLocationClear(bounds, Navi.PathFlags.Walk, posFlags, blockFlags))
+                return true;
+
+            // Try to pick a replacement position.
+            if (region.ChooseRandomPositionNearPoint(bounds, Navi.PathFlags.Walk, posFlags, blockFlags & ~BlockingCheckFlags.CheckSpawns, 0f, 64f, out Vector3 newPosition, null, null, 50) == false)
+                return false;
+
+            position = newPosition;
+            return true;
+        }
+
         #endregion
 
         #region Teleports
@@ -571,24 +600,95 @@ namespace MHServerEmu.Games.Entities.Avatars
                 player.Properties[PropertyEnum.LastTownRegionForAccount] = regionProtoRef;
         }
 
-        public void ScheduleRegionTeleport(PrototypeId targetProtoRef, TimeSpan delay)
+        public bool ScheduleBodyslideTeleport()
         {
-            if (_regionTeleportEvent.IsValid)
-                Game.GameEventScheduler.CancelEvent(_regionTeleportEvent);
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): player == null");
+
+            Region region = Region;
+            if (region == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): region == null");
+
+            Area area = Area;
+            if (area == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): area == null");
+
+            RegionPrototype regionProto = region.Prototype;
+            if (regionProto == null) return Logger.WarnReturn(false, "ScheduleBodyslideTeleport(): regionProto == null");
+
+            if (regionProto.Behavior != RegionBehavior.Town)    // -> To Town
+            {
+                if (regionProto.BodySliderOneWay == false)
+                {
+                    // Set bodyslider properties to be able to return to where we left
+                    player.Properties[PropertyEnum.BodySliderRegionId] = region.Id;
+                    player.Properties[PropertyEnum.BodySliderRegionRef] = region.PrototypeDataRef;
+                    player.Properties[PropertyEnum.BodySliderDifficultyRef] = region.DifficultyTierRef;
+                    player.Properties[PropertyEnum.BodySliderRegionSeed] = region.RandomSeed;
+                    player.Properties[PropertyEnum.BodySliderAreaRef] = area.PrototypeDataRef;
+                    player.Properties[PropertyEnum.BodySliderRegionPos] = RegionLocation.Position;
+                }
+                else
+                {
+                    // No return here
+                    player.RemoveBodysliderProperties();
+                }
+
+                ScheduleEntityEvent(_bodyslideTeleportToTownEvent, TimeSpan.Zero);
+            }
+            else if (player.HasBodysliderProperties())          // <- From Town
+            {
+                // From town
+                ScheduleEntityEvent(_bodyslideTeleportFromTownEvent, TimeSpan.Zero);
+            }
+
+            return true;
+        }
+
+        public void SchedulePowerTeleport(PrototypeId targetProtoRef, TimeSpan delay)
+        {
+            if (_powerTeleportEvent.IsValid)
+                Game.GameEventScheduler.CancelEvent(_powerTeleportEvent);
 
             if (IsDead)
                 Resurrect();
 
-            ScheduleEntityEvent(_regionTeleportEvent, delay, targetProtoRef);
+            ScheduleEntityEvent(_powerTeleportEvent, delay, targetProtoRef);
         }
 
-        private bool DoRegionTeleport(PrototypeId targetProtoRef)
+        private bool DoBodyslideTeleportToTown()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoBodyslideTeleportToTown(): player == null");
+
+            PrototypeId bodyslideTargetRef = Bodyslider.GetBodyslideTargetRef(player);
+            if (bodyslideTargetRef == PrototypeId.Invalid) return Logger.WarnReturn(false, "DoBodyslideTeleportToTown(): bodyslideTargetRef == PrototypeId.Invalid");
+
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
+            return teleporter.TeleportToTarget(bodyslideTargetRef);
+        }
+
+        private bool DoBodyslideTeleportFromTown()
+        {
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoBodyslideTeleportFromTown(): player == null");
+
+            ulong regionId = player.Properties[PropertyEnum.BodySliderRegionId];
+            Vector3 position = player.Properties[PropertyEnum.BodySliderRegionPos];
+            player.RemoveBodysliderProperties();
+
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Bodyslide);
+            return teleporter.TeleportToRegionLocation(regionId, position);
+        }
+
+        private bool DoPowerTeleport(PrototypeId targetProtoRef)
         {
             Player player = GetOwnerOfType<Player>();
             if (player == null) return Logger.WarnReturn(false, "DoRegionTeleport(): player == null");
 
-            Transition.TeleportToTarget(player, targetProtoRef);
-            return true;
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Power);
+            return teleporter.TeleportToTarget(targetProtoRef);
         }
 
         #endregion
@@ -5474,19 +5574,18 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
 
             Properties.RemoveProperty(PropertyEnum.LastTownRegion);
-            foreach (PropertyEnum bodysliderProp in Property.BodysliderProperties)
-                Properties.RemoveProperty(bodysliderProp);
 
-            bool success = missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true);
+            player.RemoveBodysliderProperties();
 
-            if (success == false)
+            if (missionManager.ResetAvatarMissionsForStoryWarp(chapterProtoRef, true) == false)
                 Logger.Warn($"ResetMissions(): Failed to reset missions for avatar [{this}]");
 
-            // TODO: Fix this when we overhaul the teleport system
-            player.TEMP_ScheduleMoveToTarget(targetProto.DataRef, TimeSpan.FromMilliseconds(500));
-            // TODO: Reset map discovery data
+            player.ResetMapDiscoveryForStoryWarp();
 
-            return success;
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.DifficultyTierRef = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_StoryWarp);
+            return teleporter.TeleportToTarget(targetProto.DataRef);
         }
 
         public bool ActivatePrestigeMode()
@@ -6444,9 +6543,19 @@ namespace MHServerEmu.Games.Entities.Avatars
             protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).UnassignMappedPowersForRespec();
         }
 
-        private class RegionTeleportEvent : CallMethodEventParam1<Entity, PrototypeId>
+        private class BodyslideTeleportToTownEvent : CallMethodEvent<Entity>
         {
-            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoRegionTeleport(p1);
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DoBodyslideTeleportToTown();
+        }
+
+        private class BodyslideTeleportFromTownEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DoBodyslideTeleportFromTown();
+        }
+
+        private class PowerTeleportEvent : CallMethodEventParam1<Entity, PrototypeId>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoPowerTeleport(p1);
         }
 
         #endregion

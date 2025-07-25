@@ -3,6 +3,7 @@ using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Calligraphy;
 using MHServerEmu.Games.GameData.Prototypes;
@@ -37,8 +38,9 @@ namespace MHServerEmu.Commands.Implementations
             if (allowUnsafe == false && Enum.GetValues<RegionPrototypeId>().Contains((RegionPrototypeId)regionProtoRef) == false)
                 return $"Unsafe warp destination: {regionName}.";
 
-            PlayerConnection playerConnection = (PlayerConnection)client;
-            playerConnection.MoveToTarget(regionProto.StartTarget);
+            Player player = ((PlayerConnection)client).Player;
+            Teleporter.DebugTeleportToTarget(player, regionProto.StartTarget);
+
             return $"Warping to {regionName}.";
         }
 
@@ -49,11 +51,13 @@ namespace MHServerEmu.Commands.Implementations
         [CommandInvokerType(CommandInvokerType.Client)]
         public string Reload(string[] @params, NetClient client)
         {
-            PlayerConnection playerConnection = (PlayerConnection)client;
+            Player player = ((PlayerConnection)client).Player;
+            RegionPrototype regionProto = player.GetRegion()?.Prototype;
+            Teleporter.DebugTeleportToTarget(player, regionProto.StartTarget);
 
-            playerConnection.MoveToTarget(playerConnection.TransferParams.DestTargetProtoRef);
+            // TODO: Fix this for endless regions
 
-            return $"Reloading region {playerConnection.TransferParams.DestTargetRegionProtoRef.GetName()}.";
+            return $"Reloading region {regionProto}.";
         }
 
         [Command("generateallsafe")]

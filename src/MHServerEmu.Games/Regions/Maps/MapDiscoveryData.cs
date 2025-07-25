@@ -4,6 +4,8 @@ using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 
 namespace MHServerEmu.Games.Regions.Maps
@@ -16,12 +18,14 @@ namespace MHServerEmu.Games.Regions.Maps
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private ulong _regionId;
+        private PrototypeId _regionProtoRef;    // Needed to reset discovery for region instances in other games.
         private TimeSpan _accessTimestamp;
         private HashSet<ulong> _discoveredEntities = new();
 
         public LowResMap LowResMap { get; } = new();
 
         public ulong RegionId { get => _regionId; }
+        public PrototypeId RegionProtoRef { get => _regionProtoRef; }
         public TimeSpan AccessTimestamp { get => _accessTimestamp; }
 
         public MapDiscoveryData() { }
@@ -36,6 +40,10 @@ namespace MHServerEmu.Games.Regions.Maps
             bool success = true;
 
             success &= Serializer.Transfer(archive, ref _regionId);
+
+            if (archive.Version >= ArchiveVersion.AddedRegionProtoRefToMapDiscoveryData)
+                success &= Serializer.Transfer(archive, ref _regionProtoRef);
+
             success &= Serializer.Transfer(archive, ref _accessTimestamp);
             success &= Serializer.Transfer(archive, ref _discoveredEntities);
             success &= Serializer.Transfer(archive, LowResMap);
@@ -45,9 +53,13 @@ namespace MHServerEmu.Games.Regions.Maps
 
         public void InitIfNecessary(Region region)
         {
-            LowResMap.InitIfNecessary(region);
+            if (LowResMap.InitIfNecessary(region) == false)
+                return;
 
-            if (region?.Prototype?.AlwaysRevealFullMap == true)
+            RegionPrototype regionProto = region.Prototype;
+            _regionProtoRef = regionProto.DataRef;
+
+            if (regionProto.AlwaysRevealFullMap)
                 LowResMap.RevealAll();
         }
 

@@ -283,14 +283,6 @@ namespace MHServerEmu.Games
             // First we make sure enough time has passed to do another fixed time update
             _realGameTime.UpdateToNow();
 
-            if (_currentGameTime + FixedTimeBetweenUpdates > RealGameTime)
-            {
-                // Thread.Sleep() can sleep for longer than specified, so rather than sleeping
-                // for the entire time window between fixed updates, we do it in 1 ms intervals.
-                Thread.Sleep(1);
-                return;
-            }
-
             int timesUpdated = 0;
 
             TimeSpan updateStartTime = _gameTimer.Elapsed;
