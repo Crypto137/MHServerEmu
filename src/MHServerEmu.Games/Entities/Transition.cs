@@ -267,7 +267,7 @@ namespace MHServerEmu.Games.Entities
             if (destinationRegionProto.UsePrevRegionPlayerDeathCount)
                 teleporter.PlayerDeaths = region.PlayerDeaths;
 
-            if (teleporter.TeleportToTarget(destination.TargetRef) == false)
+            if (teleporter.TeleportToTarget(destination.RegionRef, destination.AreaRef, destination.CellRef, destination.EntityRef) == false)
                 return false;
 
             return true;
