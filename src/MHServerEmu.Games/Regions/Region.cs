@@ -1036,7 +1036,7 @@ namespace MHServerEmu.Games.Regions
             // FIXME: Figure out why we fail to find the target in Upper East Side as well.
             if (found == false)
             {
-                Logger.Warn($"FindTargetLocation(): Target {entityProtoRef.GetName()} not found in the cell {cellProtoRef.GetName()}, falling back to searching all cells");
+                //Logger.Warn($"FindTargetLocation(): Target {entityProtoRef.GetName()} not found in the cell {cellProtoRef.GetName()}, falling back to searching all cells");
 
                 foreach (Cell cell in Cells)
                 {

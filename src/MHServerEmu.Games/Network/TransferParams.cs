@@ -138,7 +138,13 @@ namespace MHServerEmu.Games.Network
             if (FindStartLocationFromSpecificLocation(region, ref position, ref orientation))
                 return true;
 
-            // Use the provided target
+            // Try to use the provided target
+            if (FindStartLocationFromTarget(region, ref position, ref orientation))
+                return true;
+
+            // Fall back to the start target for the region
+            Logger.Debug($"FindStartLocation(): Falling back to {region.Prototype.StartTarget.GetName()}");
+            SetTarget(region.Prototype.StartTarget);
             if (FindStartLocationFromTarget(region, ref position, ref orientation))
                 return true;
 
@@ -202,11 +208,7 @@ namespace MHServerEmu.Games.Network
         private bool FindStartLocationFromTarget(Region region, ref Vector3 position, ref Orientation orientation)
         {
             if (DestTarget == null)
-            {
-                PrototypeId regionDefaultStartTarget = region.Prototype.StartTarget;
-                Logger.Warn($"FindStartLocationFromTarget(): No target specified, falling back to {regionDefaultStartTarget.GetName()}");
-                SetTarget(regionDefaultStartTarget);
-            }
+                return false;
 
             PrototypeId regionProtoRef = (PrototypeId)DestTarget.RegionProtoId;
             PrototypeId areaProtoRef = (PrototypeId)DestTarget.AreaProtoId;
