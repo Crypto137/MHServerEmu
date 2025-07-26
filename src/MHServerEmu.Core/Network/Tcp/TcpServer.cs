@@ -217,13 +217,11 @@ namespace MHServerEmu.Core.Network.Tcp
                 try
                 {
                     // Wait for a connection
-                    Logger.Trace("Listening for connections...");
                     Socket socket = await _listener.AcceptAsync().WaitAsync(_cts.Token);
                     socket.SendTimeout = _sendTimeoutMS;
                     socket.SendBufferSize = SendBufferSize;
 
                     // Establish a new client connection
-                    Logger.Trace("Accepting connection...");
                     TcpClientConnection connection = new(this, socket);
 
                     lock (_connectionDict)
