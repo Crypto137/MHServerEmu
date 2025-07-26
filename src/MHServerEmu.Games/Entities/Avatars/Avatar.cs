@@ -460,15 +460,23 @@ namespace MHServerEmu.Games.Entities.Avatars
                     if (avatarOnKilledInfo.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
                     {
                         // Find the target for our respawn teleport
-                        PrototypeId deathReleaseTarget = FindDeathReleaseTarget();
-                        Logger.Trace($"DoDeathRelease(): {deathReleaseTarget.GetName()}");
+                        PrototypeId deathReleaseTarget = FindDeathReleaseTarget(out PrototypeId regionProtoRefOverride);
                         if (deathReleaseTarget == PrototypeId.Invalid)
                             return Logger.WarnReturn(false, "DoDeathRelease(): Failed to find a target to move to");
 
+                        RegionConnectionTargetPrototype targetProto = deathReleaseTarget.As<RegionConnectionTargetPrototype>();
+                        if (targetProto == null) return Logger.WarnReturn(false, "DoDeathRelease(): targetProto == null");
+
+                        PrototypeId regionProtoRef = regionProtoRefOverride != PrototypeId.Invalid ? regionProtoRefOverride : targetProto.Region;
+                        PrototypeId areaProtoRef = targetProto.Area;
+                        PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
+                        PrototypeId entityProtoRef = targetProto.Entity;
+
                         Player player = GetOwnerOfType<Player>();
+
                         using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
                         teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Resurrect);
-                        return teleporter.TeleportToTarget(deathReleaseTarget);
+                        return teleporter.TeleportToTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
                     }
                     else 
                     {
@@ -480,8 +488,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
-        private PrototypeId FindDeathReleaseTarget()
+        private PrototypeId FindDeathReleaseTarget(out PrototypeId regionProtoRefOverride)
         {
+            regionProtoRefOverride = PrototypeId.Invalid;
+
             Region region = Region;
             if (region == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): region == null");
 
@@ -491,7 +501,11 @@ namespace MHServerEmu.Games.Entities.Avatars
             Cell cell = Cell;
             if (cell == null) return Logger.WarnReturn(PrototypeId.Invalid, "FindDeathReleaseTarget(): cell == null");
 
-            var player = GetOwnerOfType<Player>();
+            Player player = GetOwnerOfType<Player>();
+
+            // Apply region overrides to terminal targets
+            if (region.Prototype.DailyCheckpointStartTarget)
+                regionProtoRefOverride = region.PrototypeDataRef;
 
             // Check if there is a hotspot override
             if (player != null)
