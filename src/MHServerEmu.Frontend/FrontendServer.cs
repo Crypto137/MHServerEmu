@@ -12,6 +12,8 @@ namespace MHServerEmu.Frontend
     {
         private new static readonly Logger Logger = LogManager.CreateLogger();  // Hide the Server.Logger so that this logger can show the actual server as log source.
 
+        private readonly HashSet<FrontendClient> _clients = new();
+
         public GameServiceState State { get; private set; } = GameServiceState.Created;
 
         #region IGameService Implementation
@@ -52,7 +54,7 @@ namespace MHServerEmu.Frontend
 
         public string GetStatus()
         {
-            return $"Connections: {ConnectionCount}";
+            return $"Connections: {ConnectionCount} | Clients: {_clients.Count}";
         }
 
         #endregion
@@ -62,7 +64,8 @@ namespace MHServerEmu.Frontend
         protected override void OnClientConnected(TcpClientConnection connection)
         {
             Logger.Info($"Client connected from {connection}");
-            connection.Client = new FrontendClient(connection);
+
+            _clients.Add(new FrontendClient(connection));
         }
 
         protected override void OnClientDisconnected(TcpClientConnection connection)
@@ -71,6 +74,8 @@ namespace MHServerEmu.Frontend
             Logger.Info($"Client [{client}] disconnected");
 
             client.OnDisconnected();
+
+            _clients.Remove(client);
         }
 
         protected override void OnDataReceived(TcpClientConnection connection, byte[] buffer, int length)

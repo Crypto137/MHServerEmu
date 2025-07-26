@@ -23,7 +23,7 @@ namespace MHServerEmu.Core.Network.Tcp
         public bool Connected { get => Socket.Connected; }
         public IPEndPoint RemoteEndPoint { get => (IPEndPoint)Socket.RemoteEndPoint; }
 
-        public TcpClient Client { get; set; }
+        public TcpClient Client { get; internal set; }
         public bool IsReceiveTimeoutSuspended { get; set; }
 
         /// <summary>

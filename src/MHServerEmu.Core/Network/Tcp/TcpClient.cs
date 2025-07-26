@@ -10,6 +10,7 @@
         public TcpClient(TcpClientConnection connection)
         {
             Connection = connection;
+            Connection.Client = this;
         }
     }
 }
