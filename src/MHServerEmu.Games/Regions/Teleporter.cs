@@ -7,6 +7,7 @@ using MHServerEmu.Core.VectorMath;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
@@ -240,10 +241,20 @@ namespace MHServerEmu.Games.Regions
                     EndlessLevel = 1;
             }
 
+            // Clamp target region's difficulty to the available range
+            DifficultyTierRef = Player.GetDifficultyTierForRegion(regionProtoRef, DifficultyTierRef);
+
             if (IsLocalTeleport(region, destinationRegionProto))
+            {
                 return TeleportToLocalTarget(areaProtoRef, cellProtoRef, entityProtoRef);
+            }
             else
+            {
+                if (ValidateTargetRegion(regionProtoRef) == false)
+                    return false;
+
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
+            }
         }
 
         public bool TeleportToRegionLocation(ulong regionId, Vector3 position)
@@ -393,6 +404,31 @@ namespace MHServerEmu.Games.Regions
             // AccessPortal
             if (AccessPortal != null && currentRegion.Settings.OwnerPlayerDbId != AccessPortal.OwnerPlayerDbId)
                 return false;
+
+            return true;
+        }
+
+        private bool ValidateTargetRegion(PrototypeId regionProtoRef)
+        {
+            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "ValidateTargetRegion(): regionProto == null");
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "ValidateTargetRegion(): avatar == null");
+
+            // TODO: Add more checks
+
+            if (LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRTV_Enabled) == 0f)
+            {
+                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail.As<BannerMessagePrototype>());
+                return false;
+            }
+
+            if (regionProto.RunEvalAccessRestriction(Player, avatar, DifficultyTierRef) == false)
+            {
+                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
+                return false;
+            }
 
             return true;
         }
