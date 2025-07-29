@@ -221,7 +221,23 @@ namespace MHServerEmu.Games.Regions
             var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetProto == null");
 
-            return TeleportToTarget(targetProto.Region, targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity);
+            // V52_NOTE: The data for 1.52 doesn't specify the correct difficulty tiers in SurturRaidRegionBand,
+            // which causes the cosmic difficulty to be clamped to red. Resolve the target region here to avoid this.
+            RegionPrototype currentRegionProto = Player.GetRegion()?.Prototype;
+            if (currentRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): currentRegionProto == null");
+
+            RegionPrototype destRegionProto = targetProto.Region.As<RegionPrototype>();
+            if (destRegionProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): destRegionProto == null");
+
+            PrototypeId regionProtoRef = RegionPrototype.Equivalent(destRegionProto, currentRegionProto)
+                ? currentRegionProto.DataRef
+                : destRegionProto.DataRef;
+
+            PrototypeId areaProtoRef = targetProto.Area;
+            PrototypeId cellProtoRef = GameDatabase.GetDataRefByAsset(targetProto.Cell);
+            PrototypeId entityProtoRef = targetProto.Entity;
+
+            return TeleportToTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
         }
 
         public bool TeleportToTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
