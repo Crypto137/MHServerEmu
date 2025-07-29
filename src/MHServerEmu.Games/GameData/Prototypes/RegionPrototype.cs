@@ -185,7 +185,15 @@ namespace MHServerEmu.Games.GameData.Prototypes
 
         private bool HasAltRegion(PrototypeId dataRef)
         {
-            if (AltRegions != null) return AltRegions.Contains(dataRef);
+            if (AltRegions.IsNullOrEmpty())
+                return false;
+
+            foreach (PrototypeId altRegionProtoRef in AltRegions)
+            {
+                if (altRegionProtoRef == dataRef)
+                    return true;
+            }
+
             return false;
         }
 
