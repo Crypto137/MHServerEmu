@@ -231,10 +231,12 @@ namespace MHServerEmu.Games.Regions
 
                     region = GenerateAndInitRegion(regionContext, difficultyTierProtoRef);
                     if (region != null)
+                    {
                         playerConnection.WorldView.AddRegion(region.Id, regionProtoRef);
 
-                    if (portalId != 0)
-                        _portalRegions[portalId] = region.Id;
+                        if (portalId != 0)
+                            _portalRegions[portalId] = region.Id;
+                    }
                 }
             }
 
