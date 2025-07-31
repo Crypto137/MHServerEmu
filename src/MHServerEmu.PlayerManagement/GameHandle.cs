@@ -51,7 +51,7 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.PendingInstanceCreation;
             Logger.Info($"Requesting instance creation for game [{this}]");
 
-            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Create, Id);
+            ServiceMessage.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Create, Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
 
             return true;
@@ -82,7 +82,7 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.PendingShutdown;
             Logger.Info($"Requesting instance shutdown for game [{this}]");
 
-            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Shutdown, Id);
+            ServiceMessage.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Shutdown, Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
 
             return true;

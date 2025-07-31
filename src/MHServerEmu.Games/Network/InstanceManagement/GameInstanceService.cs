@@ -47,27 +47,27 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         {
             switch (message)
             {
-                case GameServiceProtocol.RouteMessageBuffer routeMessageBuffer:
+                case ServiceMessage.RouteMessageBuffer routeMessageBuffer:
                     OnRouteMessageBuffer(routeMessageBuffer);
                     break;
 
-                case GameServiceProtocol.GameInstanceOp gameInstanceOp:
+                case ServiceMessage.GameInstanceOp gameInstanceOp:
                     OnGameInstanceOp(gameInstanceOp);
                     break;
 
-                case GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp:
+                case ServiceMessage.GameInstanceClientOp gameInstanceClientOp:
                     OnGameInstanceClientOp(gameInstanceClientOp);
                     break;
 
-                case GameServiceProtocol.LeaderboardStateChange leaderboardStateChange:
+                case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
 
-                case GameServiceProtocol.LeaderboardStateChangeList leaderboardStateChangeList:
+                case ServiceMessage.LeaderboardStateChangeList leaderboardStateChangeList:
                     OnLeaderboardStateChangeList(leaderboardStateChangeList);
                     break;
 
-                case GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
+                case ServiceMessage.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
                     OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
                     break;
 
@@ -86,12 +86,12 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         #region Message Handling
 
-        private bool OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
+        private bool OnRouteMessageBuffer(in ServiceMessage.RouteMessageBuffer routeMessageBuffer)
         {
             return GameManager.RouteMessageBuffer(routeMessageBuffer.Client, routeMessageBuffer.MessageBuffer);
         }
 
-        private bool OnGameInstanceOp(in GameServiceProtocol.GameInstanceOp gameInstanceOp)
+        private bool OnGameInstanceOp(in ServiceMessage.GameInstanceOp gameInstanceOp)
         {
             switch (gameInstanceOp.Type)
             {
@@ -106,7 +106,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             }
         }
 
-        private bool OnGameInstanceClientOp(in GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp)
+        private bool OnGameInstanceClientOp(in ServiceMessage.GameInstanceClientOp gameInstanceClientOp)
         {
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;
@@ -131,20 +131,20 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             }
         }
 
-        private bool OnLeaderboardStateChange(in GameServiceProtocol.LeaderboardStateChange leaderboardStateChange)
+        private bool OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
         {
             LeaderboardInfoCache.Instance.UpdateLeaderboardInstance(leaderboardStateChange);
             GameManager.BroadcastServiceMessageToGames(leaderboardStateChange);
             return true;
         }
 
-        private bool OnLeaderboardStateChangeList(in GameServiceProtocol.LeaderboardStateChangeList leaderboardStateChangeList)
+        private bool OnLeaderboardStateChangeList(in ServiceMessage.LeaderboardStateChangeList leaderboardStateChangeList)
         {
             LeaderboardInfoCache.Instance.UpdateLeaderboardInstances(leaderboardStateChangeList);
             return true;
         }
 
-        private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
+        private bool OnLeaderboardRewardRequestResponse(in ServiceMessage.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
         {
             ulong playerDbId = leaderboardRewardRequestResponse.ParticipantId;
             return GameManager.RouteServiceMessageToPlayer(playerDbId, leaderboardRewardRequestResponse);

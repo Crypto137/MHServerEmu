@@ -24,7 +24,7 @@ namespace MHServerEmu.Leaderboards
             dbEntry.GetRuleStates(RuleStates);
         }
 
-        public LeaderboardEntry(ref GameServiceProtocol.LeaderboardScoreUpdate update)
+        public LeaderboardEntry(ref ServiceMessage.LeaderboardScoreUpdate update)
         {
             ParticipantId = update.ParticipantId;
             Name = LeaderboardDatabase.Instance.GetPlayerNameById(ParticipantId);
@@ -70,7 +70,7 @@ namespace MHServerEmu.Leaderboards
             return entryBuilder.Build();
         }
 
-        public void UpdateScore(ref GameServiceProtocol.LeaderboardScoreUpdate update, LeaderboardPrototype leaderboardProto)
+        public void UpdateScore(ref ServiceMessage.LeaderboardScoreUpdate update, LeaderboardPrototype leaderboardProto)
         {
             ulong ruleId = update.RuleId;
             LeaderboardRuleState ruleState = GetOrCreateRuleState(ruleId);

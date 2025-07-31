@@ -15,7 +15,7 @@ namespace MHServerEmu.PlayerManagement
         private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
         private readonly Dictionary<ulong, GameHandle> _gameDict = new();
 
-        private readonly DoubleBufferQueue<GameServiceProtocol.GameInstanceOp> _messageQueue = new();
+        private readonly DoubleBufferQueue<ServiceMessage.GameInstanceOp> _messageQueue = new();
 
         private int _targetGameInstanceCount = -1;
         private int _playerCountDivisor = 1;
@@ -31,7 +31,7 @@ namespace MHServerEmu.PlayerManagement
             RefreshGames();
         }
 
-        public void ReceiveMessage(in GameServiceProtocol.GameInstanceOp message)
+        public void ReceiveMessage(in ServiceMessage.GameInstanceOp message)
         {
             _messageQueue.Enqueue(message);
         }
@@ -119,7 +119,7 @@ namespace MHServerEmu.PlayerManagement
 
             while (_messageQueue.CurrentCount > 0)
             {
-                GameServiceProtocol.GameInstanceOp gameInstanceOp = _messageQueue.Dequeue();
+                ServiceMessage.GameInstanceOp gameInstanceOp = _messageQueue.Dequeue();
 
                 switch (gameInstanceOp.Type)
                 {

@@ -143,7 +143,7 @@ namespace MHServerEmu.Leaderboards
         /// <summary>
         /// Updates the score of the active <see cref="LeaderboardInstance"/>.
         /// </summary>
-        public void OnScoreUpdate(ref GameServiceProtocol.LeaderboardScoreUpdate update)
+        public void OnScoreUpdate(ref ServiceMessage.LeaderboardScoreUpdate update)
         {
             if (IsActive)
                 ActiveInstance.OnScoreUpdate(ref update);
@@ -284,9 +284,9 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Builds <see cref="GameServiceProtocol.LeaderboardStateChange"/> messages for all loaded <see cref="LeaderboardInstance">LeaderboardInstances</see>
+        /// Builds <see cref="ServiceMessage.LeaderboardStateChange"/> messages for all loaded <see cref="LeaderboardInstance">LeaderboardInstances</see>
         /// and adds them to the provided <see cref="List{T}"/>.</summary>
-        public void GetInstanceInfos(List<GameServiceProtocol.LeaderboardStateChange> changeList)
+        public void GetInstanceInfos(List<ServiceMessage.LeaderboardStateChange> changeList)
         {
             int maxInstances = Prototype.MaxArchivedInstances;
             foreach (LeaderboardInstance instance in Instances)

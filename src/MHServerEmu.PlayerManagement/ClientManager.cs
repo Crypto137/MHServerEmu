@@ -49,16 +49,16 @@ namespace MHServerEmu.PlayerManagement
 
                 switch (message)
                 {
-                    case GameServiceProtocol.AddClient addClient:
+                    case ServiceMessage.AddClient addClient:
                         if (OnAddClient(addClient, allowNewClients) == false)
                             addClient.Client.Disconnect();
                         break;
 
-                    case GameServiceProtocol.RemoveClient removeClient:
+                    case ServiceMessage.RemoveClient removeClient:
                         OnRemoveClient(removeClient);
                         break;
 
-                    case GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp:
+                    case ServiceMessage.GameInstanceClientOp gameInstanceClientOp:
                         OnGameInstanceClientOp(gameInstanceClientOp);
                         break;
 
@@ -156,7 +156,7 @@ namespace MHServerEmu.PlayerManagement
 
         #region Service Message Handling
 
-        private bool OnAddClient(in GameServiceProtocol.AddClient addClient, bool allowNewClients)
+        private bool OnAddClient(in ServiceMessage.AddClient addClient, bool allowNewClients)
         {
             IFrontendClient client = addClient.Client;
 
@@ -179,7 +179,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        private bool OnRemoveClient(in GameServiceProtocol.RemoveClient removeClient)
+        private bool OnRemoveClient(in ServiceMessage.RemoveClient removeClient)
         {
             IFrontendClient client = removeClient.Client;
 
@@ -201,7 +201,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        private bool OnGameInstanceClientOp(in GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp)
+        private bool OnGameInstanceClientOp(in ServiceMessage.GameInstanceClientOp gameInstanceClientOp)
         {
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;

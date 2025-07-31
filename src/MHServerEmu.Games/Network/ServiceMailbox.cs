@@ -72,11 +72,11 @@ namespace MHServerEmu.Games.Network
         {
             switch (message)
             {
-                case GameServiceProtocol.LeaderboardStateChange leaderboardStateChange:
+                case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
 
-                case GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
+                case ServiceMessage.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
                     OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
                     break;
             }
@@ -84,7 +84,7 @@ namespace MHServerEmu.Games.Network
 
         #region Leaderboard Messages
 
-        private void OnLeaderboardStateChange(in GameServiceProtocol.LeaderboardStateChange leaderboardStateChange)
+        private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
         {
             LeaderboardState state = leaderboardStateChange.State;
             bool rewarded = state == LeaderboardState.eLBS_Rewarded;
@@ -112,7 +112,7 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        private bool OnLeaderboardRewardRequestResponse(in GameServiceProtocol.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
+        private bool OnLeaderboardRewardRequestResponse(in ServiceMessage.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse)
         {
             ulong playerId = leaderboardRewardRequestResponse.ParticipantId;
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(leaderboardRewardRequestResponse.ParticipantId);

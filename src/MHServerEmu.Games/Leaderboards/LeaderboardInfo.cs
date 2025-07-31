@@ -35,7 +35,7 @@ namespace MHServerEmu.Games.Leaderboards
         public DateTime ExpirationTime { get; private set; }
         public bool Visible { get; private set; }
 
-        public LeaderboardInstanceInfo(in GameServiceProtocol.LeaderboardStateChange instanceInfo)
+        public LeaderboardInstanceInfo(in ServiceMessage.LeaderboardStateChange instanceInfo)
         {
             LeaderboardId = (PrototypeGuid)instanceInfo.LeaderboardId;
             InstanceId = instanceInfo.InstanceId;
@@ -45,7 +45,7 @@ namespace MHServerEmu.Games.Leaderboards
             Visible = instanceInfo.Visible;
         }
 
-        public void Update(in GameServiceProtocol.LeaderboardStateChange updateInstance)
+        public void Update(in ServiceMessage.LeaderboardStateChange updateInstance)
         {
             if (State != updateInstance.State 
                 || ActivationTime != updateInstance.ActivationTime 

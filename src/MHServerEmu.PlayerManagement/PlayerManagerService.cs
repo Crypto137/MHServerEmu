@@ -97,23 +97,23 @@ namespace MHServerEmu.PlayerManagement
             switch (message)
             {
                 // Message buffers are routed asynchronously rather than in ticks to have the lowest latency possible.
-                case GameServiceProtocol.RouteMessageBuffer routeMessagePackage:
+                case ServiceMessage.RouteMessageBuffer routeMessagePackage:
                     OnRouteMessageBuffer(routeMessagePackage);
                     break;
 
-                case GameServiceProtocol.RouteMessage routeMessage:
+                case ServiceMessage.RouteMessage routeMessage:
                     OnRouteMessage(routeMessage);
                     break;
 
                 // Game instance operation messages are handled in ticks by the GameHandleManager
-                case GameServiceProtocol.GameInstanceOp gameInstanceOp:
+                case ServiceMessage.GameInstanceOp gameInstanceOp:
                     GameHandleManager.ReceiveMessage(gameInstanceOp);
                     break;
                 
                 // Client messages are handled in ticks by the ClientManager
-                case GameServiceProtocol.AddClient:
-                case GameServiceProtocol.RemoveClient:
-                case GameServiceProtocol.GameInstanceClientOp:
+                case ServiceMessage.AddClient:
+                case ServiceMessage.RemoveClient:
+                case ServiceMessage.GameInstanceClientOp:
                     ClientManager.ReceiveMessage(message);
                     break;
 
@@ -128,7 +128,7 @@ namespace MHServerEmu.PlayerManagement
             return $"Games: {GameHandleManager.GameCount} | Players: {ClientManager.PlayerCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
         }
 
-        private void OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
+        private void OnRouteMessageBuffer(in ServiceMessage.RouteMessageBuffer routeMessageBuffer)
         {
             IFrontendClient client = routeMessageBuffer.Client;
             MessageBuffer messageBuffer = routeMessageBuffer.MessageBuffer;
@@ -145,7 +145,7 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        private void OnRouteMessage(in GameServiceProtocol.RouteMessage routeMessage)
+        private void OnRouteMessage(in ServiceMessage.RouteMessage routeMessage)
         {
             IFrontendClient client = routeMessage.Client;
             MailboxMessage message = routeMessage.Message;

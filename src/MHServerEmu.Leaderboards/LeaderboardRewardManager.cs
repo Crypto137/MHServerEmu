@@ -16,10 +16,10 @@ namespace MHServerEmu.Leaderboards
 
         private readonly Dictionary<ulong, RewardQueryResult> _pendingRewards = new();
 
-        private Queue<GameServiceProtocol.LeaderboardRewardRequest> _requestQueue = new();
-        private Queue<GameServiceProtocol.LeaderboardRewardRequest> _processRequestQueue = new();
-        private Queue<GameServiceProtocol.LeaderboardRewardConfirmation> _confirmationQueue = new();
-        private Queue<GameServiceProtocol.LeaderboardRewardConfirmation> _processConfirmationQueue = new();
+        private Queue<ServiceMessage.LeaderboardRewardRequest> _requestQueue = new();
+        private Queue<ServiceMessage.LeaderboardRewardRequest> _processRequestQueue = new();
+        private Queue<ServiceMessage.LeaderboardRewardConfirmation> _confirmationQueue = new();
+        private Queue<ServiceMessage.LeaderboardRewardConfirmation> _processConfirmationQueue = new();
 
         private readonly object _queueLock = new();
 
@@ -28,18 +28,18 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Enqueues a <see cref="GameServiceProtocol.LeaderboardRewardRequest"/> to be processed during the next update.
+        /// Enqueues a <see cref="ServiceMessage.LeaderboardRewardRequest"/> to be processed during the next update.
         /// </summary>
-        public void OnLeaderboardRewardRequest(in GameServiceProtocol.LeaderboardRewardRequest request)
+        public void OnLeaderboardRewardRequest(in ServiceMessage.LeaderboardRewardRequest request)
         {
             lock (_queueLock)
                 _requestQueue.Enqueue(request);
         }
 
         /// <summary>
-        /// Enqueues a <see cref="GameServiceProtocol.LeaderboardRewardConfirmation"/> to be processed during the next update.
+        /// Enqueues a <see cref="ServiceMessage.LeaderboardRewardConfirmation"/> to be processed during the next update.
         /// </summary>
-        public void OnLeaderboardRewardConfirmation(in GameServiceProtocol.LeaderboardRewardConfirmation confirmation)
+        public void OnLeaderboardRewardConfirmation(in ServiceMessage.LeaderboardRewardConfirmation confirmation)
         {
             lock (_queueLock)
                 _confirmationQueue.Enqueue(confirmation);
@@ -60,14 +60,14 @@ namespace MHServerEmu.Leaderboards
             // Process confirmations first
             while (_processConfirmationQueue.Count > 0)
             {
-                GameServiceProtocol.LeaderboardRewardConfirmation confirmation = _processConfirmationQueue.Dequeue();
+                ServiceMessage.LeaderboardRewardConfirmation confirmation = _processConfirmationQueue.Dequeue();
                 FinalizeReward((long)confirmation.LeaderboardId, (long)confirmation.InstanceId, confirmation.ParticipantId);
             }
 
             // Now initiate new requests
             while (_processRequestQueue.Count > 0)
             {
-                GameServiceProtocol.LeaderboardRewardRequest request = _processRequestQueue.Dequeue();
+                ServiceMessage.LeaderboardRewardRequest request = _processRequestQueue.Dequeue();
                 QueryRewards(request.ParticipantId);
             }
 
@@ -100,7 +100,7 @@ namespace MHServerEmu.Leaderboards
             _pendingRewards.Add(participantId, new(dbRewards));
 
             // Send reward information to game
-            GameServiceProtocol.LeaderboardRewardEntry[]  rewardEntries = new GameServiceProtocol.LeaderboardRewardEntry[dbRewards.Count];
+            ServiceMessage.LeaderboardRewardEntry[]  rewardEntries = new ServiceMessage.LeaderboardRewardEntry[dbRewards.Count];
             for (int i = 0; i < dbRewards.Count; i++)
             {
                 DBRewardEntry dbReward = dbRewards[i];
@@ -108,7 +108,7 @@ namespace MHServerEmu.Leaderboards
                 rewardEntries[i] = new((ulong)dbReward.LeaderboardId, (ulong)dbReward.InstanceId, (ulong)dbReward.ParticipantId, (ulong)dbReward.RewardId, dbReward.Rank);
             }
 
-            GameServiceProtocol.LeaderboardRewardRequestResponse requestResponse = new(participantId, rewardEntries);
+            ServiceMessage.LeaderboardRewardRequestResponse requestResponse = new(participantId, rewardEntries);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, requestResponse);
 
             return true;
