@@ -62,7 +62,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
             _gis.GameThreadManager.EnqueueGameToUpdate(game);
 
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.CreateAck, game.Id);
+            GameServiceProtocol.GameInstanceOp message = new(GameInstanceOpType.CreateResponse, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
 
             return true;
@@ -169,19 +169,19 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public void OnGameShutdown(Game game)
         {
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
+            GameServiceProtocol.GameInstanceOp message = new(GameInstanceOpType.ShutdownNotice, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void OnClientAdded(Game game, IFrontendClient client)
         {
-            GameServiceProtocol.GameInstanceClientOp message = new(GameServiceProtocol.GameInstanceClientOp.OpType.AddAck, client, game.Id);
+            GameServiceProtocol.GameInstanceClientOp message = new(GameInstanceClientOpType.AddResponse, client, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void OnClientRemoved(Game game, IFrontendClient client)
         {
-            GameServiceProtocol.GameInstanceClientOp message = new(GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck, client, game.Id);
+            GameServiceProtocol.GameInstanceClientOp message = new(GameInstanceClientOpType.RemoveResponse, client, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 

@@ -142,7 +142,7 @@ namespace MHServerEmu.PlayerManagement
             Game = game;
             Logger.Info($"Requesting to add player [{this}] to game [{game}]");
 
-            GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Add, Client, game.Id);
+            GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameInstanceClientOpType.Add, Client, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
 
             return true;
@@ -184,7 +184,7 @@ namespace MHServerEmu.PlayerManagement
             State = PlayerHandleState.PendingRemoveFromGame;
             Logger.Info($"Requesting to remove player [{this}] from game {game}");
 
-            GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameServiceProtocol.GameInstanceClientOp.OpType.Remove, Client, game.Id);
+            GameServiceProtocol.GameInstanceClientOp gameInstanceOp = new(GameInstanceClientOpType.Remove, Client, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
 
             return true;

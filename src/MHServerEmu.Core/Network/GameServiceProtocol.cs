@@ -11,6 +11,34 @@ namespace MHServerEmu.Core.Network
     {
     }
 
+    #region Enums
+
+    public enum GameInstanceOpType
+    {
+        Create,
+        CreateResponse,
+        Shutdown,
+        ShutdownNotice,     // This is called a notice because game instances can shut down due to a crash.
+    }
+
+    public enum GameInstanceClientOpType
+    {
+        Add,
+        AddResponse,
+        Remove,
+        RemoveResponse,
+    }
+
+    public enum GameInstanceRegionOpType
+    {
+        Create,
+        CreateResponse,
+        Shutdown,
+        ShutdownResponse,
+    }
+
+    #endregion
+
     public static class GameServiceProtocol
     {
         // NOTE: Although we are currently using readonly structs here, unfortunately it seems
@@ -18,23 +46,27 @@ namespace MHServerEmu.Core.Network
         // out a more performant way to send messages without overcomplicating everything
         // (e.g. using the visitor pattern here would probably work, but it may be too cumbersome).
 
-        public readonly struct AddClient(IFrontendClient client) : IGameServiceMessage
+        public readonly struct AddClient(IFrontendClient client)
+            : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
         }
 
-        public readonly struct RemoveClient(IFrontendClient client) : IGameServiceMessage
+        public readonly struct RemoveClient(IFrontendClient client)
+            : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
         }
 
-        public readonly struct RouteMessageBuffer(IFrontendClient client, MessageBuffer messageBuffer) : IGameServiceMessage
+        public readonly struct RouteMessageBuffer(IFrontendClient client, MessageBuffer messageBuffer)
+            : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly MessageBuffer MessageBuffer = messageBuffer;
         }
 
-        public readonly struct RouteMessage(IFrontendClient client, Type protocol, MailboxMessage message) : IGameServiceMessage
+        public readonly struct RouteMessage(IFrontendClient client, Type protocol, MailboxMessage message)
+            : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly Type Protocol = protocol;
@@ -43,40 +75,36 @@ namespace MHServerEmu.Core.Network
 
         #region Game Instances
 
-        public readonly struct GameInstanceOp(GameInstanceOp.OpType type, ulong gameId) : IGameServiceMessage
+        public readonly struct GameInstanceOp(GameInstanceOpType type, ulong gameId)
+            : IGameServiceMessage
         {
-            public enum OpType
-            {
-                Create,
-                CreateAck,
-                Shutdown,
-                ShutdownAck,
-            }
-
-            public readonly OpType Type = type;
+            public readonly GameInstanceOpType Type = type;
             public readonly ulong GameId = gameId;
         }
 
-        public readonly struct GameInstanceClientOp(GameInstanceClientOp.OpType type, IFrontendClient client, ulong gameId) : IGameServiceMessage
+        public readonly struct GameInstanceClientOp(GameInstanceClientOpType type, IFrontendClient client, ulong gameId)
+            : IGameServiceMessage
         {
-            public enum OpType
-            {
-                Add,
-                AddAck,
-                Remove,
-                RemoveAck,
-            }
-
-            public readonly OpType Type = type;
+            public readonly GameInstanceClientOpType Type = type;
             public readonly IFrontendClient Client = client;
             public readonly ulong GameId = gameId;
+        }
+
+        public readonly struct GameInstanceRegionOp(GameInstanceRegionOpType type, ulong regionId, ulong regionProtoRef = 0, NetStructCreateRegionParams createParams = null)
+            : IGameServiceMessage
+        {
+            public readonly GameInstanceRegionOpType Type = type;
+            public readonly ulong RegionId = regionId;
+            public readonly ulong RegionProtoRef = regionProtoRef;
+            public readonly NetStructCreateRegionParams CreateParams = createParams;
         }
 
         #endregion
 
         #region Grouping Manager
 
-        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter) : IGameServiceMessage
+        public readonly struct GroupingManagerChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
+            : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly NetMessageChat Chat = chat;
@@ -84,7 +112,8 @@ namespace MHServerEmu.Core.Network
             public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
-        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell) : IGameServiceMessage
+        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell)
+            : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly NetMessageTell Tell = tell;
@@ -97,7 +126,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> LeaderboardService] Communicates a change of state of a specific leaderboard rule.
         /// </summary>
-        public readonly struct LeaderboardScoreUpdate(ulong leaderboardId, ulong participantId, ulong avatarId, ulong ruleId, ulong count) : IGameServiceMessage
+        public readonly struct LeaderboardScoreUpdate(ulong leaderboardId, ulong participantId, ulong avatarId, ulong ruleId, ulong count)
+            : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong ParticipantId = participantId;
@@ -109,7 +139,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> LeaderboardService] Container for a batch of <see cref="LeaderboardScoreUpdate"/> instances.
         /// </summary>
-        public readonly struct LeaderboardScoreUpdateBatch(int count) : IGameServiceMessage
+        public readonly struct LeaderboardScoreUpdateBatch(int count)
+            : IGameServiceMessage
         {
             private static readonly ArrayPool<LeaderboardScoreUpdate> Pool = ArrayPool<LeaderboardScoreUpdate>.Create();
 
@@ -133,8 +164,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [LeaderboardService -> Game] Communicates a change of state of a specific leaderboard.
         /// </summary>
-        public readonly struct LeaderboardStateChange(ulong leaderboardId, ulong instanceId, LeaderboardState state, 
-            DateTime activationTime, DateTime expirationTime, bool visible) : IGameServiceMessage
+        public readonly struct LeaderboardStateChange(ulong leaderboardId, ulong instanceId, LeaderboardState state, DateTime activationTime, DateTime expirationTime, bool visible)
+            : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong InstanceId = instanceId;
@@ -159,7 +190,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [LeaderboardService -> Game] Container for a batch of <see cref="LeaderboardStateChange"/> instances.
         /// </summary>
-        public readonly struct LeaderboardStateChangeList(List<LeaderboardStateChange> list) : IGameServiceMessage
+        public readonly struct LeaderboardStateChangeList(List<LeaderboardStateChange> list)
+            : IGameServiceMessage
         {
             // This is currently used only during server initialization, so it's okay not to pool this.
             public readonly IReadOnlyList<LeaderboardStateChange> List = list;
@@ -173,7 +205,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> LeaderboardService] Requests for a list of <see cref="LeaderboardRewardEntry"/> instances for the specified participant.
         /// </summary>
-        public readonly struct LeaderboardRewardRequest(ulong participantId) : IGameServiceMessage
+        public readonly struct LeaderboardRewardRequest(ulong participantId)
+            : IGameServiceMessage
         {
             public readonly ulong ParticipantId = participantId;
         }
@@ -181,7 +214,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [LeaderboardService -> Game] Communicates a reward for the specified participant.
         /// </summary>
-        public readonly struct LeaderboardRewardEntry(ulong leaderboardId, ulong instanceId, ulong participantId, ulong rewardId, int rank) : IGameServiceMessage
+        public readonly struct LeaderboardRewardEntry(ulong leaderboardId, ulong instanceId, ulong participantId, ulong rewardId, int rank)
+            : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong InstanceId = instanceId;
@@ -193,7 +227,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [LeaderboardService -> Game] Container for a batch of <see cref="LeaderboardRewardEntry"/> instances.
         /// </summary>
-        public readonly struct LeaderboardRewardRequestResponse(ulong participantId, LeaderboardRewardEntry[] entries) : IGameServiceMessage
+        public readonly struct LeaderboardRewardRequestResponse(ulong participantId, LeaderboardRewardEntry[] entries)
+            : IGameServiceMessage
         {
             // This probably doesn't happen frequently enough to pool
             public readonly ulong ParticipantId = participantId;
@@ -203,7 +238,8 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> LeaderboardService] Communicates that a reward has been distributed to the specified participant.
         /// </summary>
-        public readonly struct LeaderboardRewardConfirmation(ulong leaderboardId, ulong instanceId, ulong participantId) : IGameServiceMessage
+        public readonly struct LeaderboardRewardConfirmation(ulong leaderboardId, ulong instanceId, ulong participantId)
+            : IGameServiceMessage
         {
             public readonly ulong LeaderboardId = leaderboardId;
             public readonly ulong InstanceId = instanceId;

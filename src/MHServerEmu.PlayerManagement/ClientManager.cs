@@ -211,11 +211,11 @@ namespace MHServerEmu.PlayerManagement
 
             switch (gameInstanceClientOp.Type)
             {
-                case GameServiceProtocol.GameInstanceClientOp.OpType.AddAck:
+                case GameInstanceClientOpType.AddResponse:
                     player.FinishAddToGame(gameId);
                     break;
 
-                case GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck:
+                case GameInstanceClientOpType.RemoveResponse:
                     player.FinishRemoveFromGame(gameId);
                     break;
 

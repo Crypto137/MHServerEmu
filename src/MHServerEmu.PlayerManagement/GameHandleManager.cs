@@ -123,12 +123,12 @@ namespace MHServerEmu.PlayerManagement
 
                 switch (gameInstanceOp.Type)
                 {
-                    case GameServiceProtocol.GameInstanceOp.OpType.CreateAck:
-                        OnCreateAck(gameInstanceOp.GameId);
+                    case GameInstanceOpType.CreateResponse:
+                        OnCreateResponse(gameInstanceOp.GameId);
                         break;
 
-                    case GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck:
-                        OnShutdownAck(gameInstanceOp.GameId);
+                    case GameInstanceOpType.ShutdownNotice:
+                        OnShutdownNotice(gameInstanceOp.GameId);
                         break;
 
                     default:
@@ -162,22 +162,22 @@ namespace MHServerEmu.PlayerManagement
 
         #region Message Handling
 
-        private bool OnCreateAck(ulong gameId)
+        private bool OnCreateResponse(ulong gameId)
         {
             if (TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnCreateAck(): No handle found for gameId 0x{gameId:X}");
+                return Logger.WarnReturn(false, $"OnCreateResponse(): No handle found for gameId 0x{gameId:X}");
 
-            game.OnInstanceCreationAck();
+            game.OnInstanceCreateResponse();
 
             return true;
         }
 
-        private bool OnShutdownAck(ulong gameId)
+        private bool OnShutdownNotice(ulong gameId)
         {
             if (TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnShutdownAck(): No handle found for gameId 0x{gameId:X}");
+                return Logger.WarnReturn(false, $"OnShutdownNotice(): No handle found for gameId 0x{gameId:X}");
 
-            game.OnInstanceShutdownAck();
+            game.OnInstanceShutdownNotice();
 
             return true;
         }

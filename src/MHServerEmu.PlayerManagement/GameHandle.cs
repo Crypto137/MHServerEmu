@@ -51,7 +51,7 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.PendingInstanceCreation;
             Logger.Info($"Requesting instance creation for game [{this}]");
 
-            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameServiceProtocol.GameInstanceOp.OpType.Create, Id);
+            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Create, Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
 
             return true;
@@ -60,10 +60,10 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Switches this <see cref="GameHandle"/> to the Running state.
         /// </summary>
-        public bool OnInstanceCreationAck()
+        public bool OnInstanceCreateResponse()
         {
             if (State != GameHandleState.PendingInstanceCreation)
-                return Logger.WarnReturn(false, $"OnInstanceCreationAck(): Invalid state {State} for game [{this}]");
+                return Logger.WarnReturn(false, $"OnInstanceCreateResponse(): Invalid state {State} for game [{this}]");
 
             State = GameHandleState.Running;
             Logger.Info($"Received instance creation confirmation for game [{this}]");
@@ -82,7 +82,7 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.PendingShutdown;
             Logger.Info($"Requesting instance shutdown for game [{this}]");
 
-            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameServiceProtocol.GameInstanceOp.OpType.Shutdown, Id);
+            GameServiceProtocol.GameInstanceOp gameInstanceOp = new(GameInstanceOpType.Shutdown, Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, gameInstanceOp);
 
             return true;
@@ -91,18 +91,18 @@ namespace MHServerEmu.PlayerManagement
         /// <summary>
         /// Swithces this <see cref="GameHandle"/> to the Shutdown state.
         /// </summary>
-        public bool OnInstanceShutdownAck()
+        public bool OnInstanceShutdownNotice()
         {
             if (State != GameHandleState.PendingShutdown)
             {
                 if (State == GameHandleState.Running)
-                    Logger.Warn($"OnInstanceShutdownAck(): Game [{this}] was shut down without a request");
+                    Logger.Warn($"OnInstanceShutdownNotice(): Game [{this}] was shut down without a request");
                 else
-                    return Logger.WarnReturn(false, $"OnInstanceShutdownAck(): Invalid state {State} for game [{this}]");
+                    return Logger.WarnReturn(false, $"OnInstanceShutdownNotice(): Invalid state {State} for game [{this}]");
             }
 
             State = GameHandleState.Shutdown;
-            Logger.Info($"Received instance shutdown confirmation for game [{this}]");
+            Logger.Info($"Received instance shutdown notification for game [{this}]");
 
             foreach (PlayerHandle player in _players)
                 player.Disconnect();

@@ -95,10 +95,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         {
             switch (gameInstanceOp.Type)
             {
-                case GameServiceProtocol.GameInstanceOp.OpType.Create:
+                case GameInstanceOpType.Create:
                     return GameManager.CreateGame(gameInstanceOp.GameId);
 
-                case GameServiceProtocol.GameInstanceOp.OpType.Shutdown:
+                case GameInstanceOpType.Shutdown:
                     return GameManager.ShutdownGame(gameInstanceOp.GameId, GameShutdownReason.ShutdownRequested);
 
                 default:
@@ -113,7 +113,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
             switch (gameInstanceClientOp.Type)
             {
-                case GameServiceProtocol.GameInstanceClientOp.OpType.Add:
+                case GameInstanceClientOpType.Add:
                     if (GameManager.AddClientToGame(client, gameId) == false)
                     {
                         // Disconnect the client so that it doesn't get stuck waiting to be added to a game
@@ -123,7 +123,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
                     return true;
 
-                case GameServiceProtocol.GameInstanceClientOp.OpType.Remove:
+                case GameInstanceClientOpType.Remove:
                     return GameManager.RemoveClientFromGame(client, gameId);
 
                 default:
