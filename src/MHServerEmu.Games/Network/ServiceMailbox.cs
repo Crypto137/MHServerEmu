@@ -1,8 +1,8 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.Leaderboards;
 
 namespace MHServerEmu.Games.Network
 {
@@ -15,10 +15,7 @@ namespace MHServerEmu.Games.Network
 
         // IGameServiceMessage are boxed anyway when doing pattern matching, so it should probably be fine.
         // If we encounter performance issues here, replace this with a specialized data structure.
-        private Queue<IGameServiceMessage> _pendingQueue = new();
-        private Queue<IGameServiceMessage> _processQueue = new();
-
-        private SpinLock _lock = new(false);
+        private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
 
         public Game Game { get; }
 
@@ -32,39 +29,18 @@ namespace MHServerEmu.Games.Network
         /// </summary>
         public void PostMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
-            // Explicitly box beforehand to minimize time spent in spinlock
-            IGameServiceMessage boxedMessage = message;
-
-            bool lockTaken = false;
-            try
-            {
-                _lock.Enter(ref lockTaken);
-                _pendingQueue.Enqueue(boxedMessage);
-            }
-            finally
-            {
-                if (lockTaken)
-                    _lock.Exit(false);
-            }
+            _messageQueue.Enqueue(message);
         }
 
         public void ProcessMessages()
         {
-            // Swap queues so that we can continue queueing messages while we process
-            bool lockTaken = false;
-            try
-            {
-                _lock.Enter(ref lockTaken);
-                (_pendingQueue, _processQueue) = (_processQueue, _pendingQueue);
-            }
-            finally
-            {
-                if (lockTaken)
-                    _lock.Exit(false);
-            }
+            _messageQueue.Swap();
 
-            while (_processQueue.Count > 0)
-                HandleServiceMessage(_processQueue.Dequeue());
+            while (_messageQueue.CurrentCount > 0)
+            {
+                IGameServiceMessage serviceMessage = _messageQueue.Dequeue();
+                HandleServiceMessage(serviceMessage);
+            }
 
         }
 
