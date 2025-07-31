@@ -5,6 +5,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -22,6 +23,7 @@ namespace MHServerEmu.PlayerManagement
         internal SessionManager SessionManager { get; }
         internal LoginQueueManager LoginQueueManager { get; }
         internal GameHandleManager GameHandleManager { get; }
+        internal WorldManager WorldManager { get; }
         internal ClientManager ClientManager { get; }
 
         public PlayerManagerConfig Config { get; }
@@ -35,7 +37,8 @@ namespace MHServerEmu.PlayerManagement
         {
             SessionManager = new(this);
             LoginQueueManager = new(this);
-            GameHandleManager = new();
+            GameHandleManager = new(this);
+            WorldManager = new(this);
             ClientManager = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
@@ -47,7 +50,7 @@ namespace MHServerEmu.PlayerManagement
         {
             State = GameServiceState.Starting;
 
-            GameHandleManager.Initialize(Config.GameInstanceCount, Config.PlayerCountDivisor);
+            GameHandleManager.Initialize();
 
             State = GameServiceState.Running;
 

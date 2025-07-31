@@ -21,20 +21,20 @@ namespace MHServerEmu.Core.Network
         ShutdownNotice,     // This is called a notice because game instances can shut down due to a crash.
     }
 
-    public enum GameInstanceClientOpType
-    {
-        Add,
-        AddResponse,
-        Remove,
-        RemoveResponse,
-    }
-
     public enum GameInstanceRegionOpType
     {
         Create,
         CreateResponse,
         Shutdown,
         ShutdownResponse,
+    }
+
+    public enum GameInstanceClientOpType
+    {
+        Add,
+        AddResponse,
+        Remove,
+        RemoveResponse,
     }
 
     #endregion
@@ -82,21 +82,22 @@ namespace MHServerEmu.Core.Network
             public readonly ulong GameId = gameId;
         }
 
+        public readonly struct GameInstanceRegionOp(GameInstanceRegionOpType type, ulong gameId, ulong regionId, ulong regionProtoRef = 0, NetStructCreateRegionParams createParams = null)
+            : IGameServiceMessage
+        {
+            public readonly GameInstanceRegionOpType Type = type;
+            public readonly ulong GameId = gameId;
+            public readonly ulong RegionId = regionId;
+            public readonly ulong RegionProtoRef = regionProtoRef;
+            public readonly NetStructCreateRegionParams CreateParams = createParams;
+        }
+
         public readonly struct GameInstanceClientOp(GameInstanceClientOpType type, IFrontendClient client, ulong gameId)
             : IGameServiceMessage
         {
             public readonly GameInstanceClientOpType Type = type;
             public readonly IFrontendClient Client = client;
             public readonly ulong GameId = gameId;
-        }
-
-        public readonly struct GameInstanceRegionOp(GameInstanceRegionOpType type, ulong regionId, ulong regionProtoRef = 0, NetStructCreateRegionParams createParams = null)
-            : IGameServiceMessage
-        {
-            public readonly GameInstanceRegionOpType Type = type;
-            public readonly ulong RegionId = regionId;
-            public readonly ulong RegionProtoRef = regionProtoRef;
-            public readonly NetStructCreateRegionParams CreateParams = createParams;
         }
 
         #endregion

@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
@@ -17,18 +18,19 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly DoubleBufferQueue<ServiceMessage.GameInstanceOp> _messageQueue = new();
 
-        private int _targetGameInstanceCount = -1;
-        private int _playerCountDivisor = 1;
+        private readonly PlayerManagerService _playerManager;
 
         public int GameCount { get => _gameDict.Count; }
         public bool IsShuttingDown { get; set; }
 
-        public GameHandleManager() { }
+        public GameHandleManager(PlayerManagerService playerManager)
+        {
+            _playerManager = playerManager;
+        }
 
         public void Update()
         {
             ProcessMessageQueue();
-            RefreshGames();
         }
 
         public void ReceiveMessage(in ServiceMessage.GameInstanceOp message)
@@ -36,16 +38,16 @@ namespace MHServerEmu.PlayerManagement
             _messageQueue.Enqueue(message);
         }
 
-        public void Initialize(int gameInstanceCount, int playerCountDivisor)
+        public void Initialize()
         {
-            // Should always have at least 1 game instance
-            gameInstanceCount = Math.Max(gameInstanceCount, 1);
+            // Just a single game instance for testing now
+            GameHandle game = CreateGame();
 
-            for (int i = 0; i < gameInstanceCount; i++)
-                CreateGame();
+            ulong regionId = _playerManager.WorldManager.NextRegionId;
+            ulong regionProtoRef = 9142075282174842340;
+            NetStructCreateRegionParams createParams = NetStructCreateRegionParams.CreateBuilder().SetLevel(0).Build();
 
-            _targetGameInstanceCount = gameInstanceCount;
-            _playerCountDivisor = Math.Max(playerCountDivisor, 1);
+            game.CreateRegion(regionId, regionProtoRef, createParams);
         }
 
         public GameHandle CreateGame()
@@ -78,37 +80,8 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public GameHandle GetAvailableGame()
         {
-            if (_gameDict.Count == 0)
-                return Logger.WarnReturn<GameHandle>(null, $"GetAvailableGame(): No games are available");
-
-            // If there is only one game instance, just return it
-            if (GameCount == 1)
-            {
-                foreach (GameHandle game in _gameDict.Values)
-                    return game;
-            }
-
-            // Do very basic load balancing based on player count
-            GameHandle resultGame = null;
-            int lowestPlayerCount = int.MaxValue;
-
-            foreach (GameHandle game in _gameDict.Values)
-            {
-                if (game.State != GameHandleState.Running)
-                    continue;
-
-                // Divide player count to make sure:
-                // - Instances are not underpopulated at lower player counts
-                // - Players logging in at the same time are more likely to be put into the same instance
-                int playerCount = game.PlayerCount / _playerCountDivisor;
-                if (playerCount < lowestPlayerCount)
-                {
-                    resultGame = game;
-                    lowestPlayerCount = playerCount;
-                }
-            }
-
-            return resultGame;
+            // REMOVEME
+            return _gameDict.Values.First();
         }
 
         #region Ticking
@@ -135,26 +108,6 @@ namespace MHServerEmu.PlayerManagement
                         Logger.Warn($"OnGameInstanceOp(): Unhandled operation type {gameInstanceOp.Type}");
                         break;
                 }
-            }
-        }
-
-        private void RefreshGames()
-        {
-            // Remove handles for games that were shut down
-            foreach (var kvp in _gameDict)
-            {
-                if (kvp.Value.State == GameHandleState.Shutdown)
-                {
-                    Logger.Info($"Removing handle for shutdown game [{kvp.Value}]");
-                    _gameDict.Remove(kvp.Key);
-                }
-            }
-
-            // Create replacement game instances if needed
-            if (IsShuttingDown == false)
-            {
-                while (GameCount < _targetGameInstanceCount)
-                    CreateGame();
             }
         }
 

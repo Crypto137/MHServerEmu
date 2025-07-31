@@ -1,5 +1,7 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -19,6 +21,7 @@ namespace MHServerEmu.PlayerManagement
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly Dictionary<ulong, RegionHandle> _regions = new();
         private readonly HashSet<PlayerHandle> _players = new();
 
         public ulong Id { get; }
@@ -68,6 +71,10 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.Running;
             Logger.Info($"Received instance creation confirmation for game [{this}]");
 
+            // Now that we are running we can create region instances.
+            foreach (RegionHandle region in _regions.Values)
+                region.RequestInstanceCreation();
+
             return true;
         }
 
@@ -89,7 +96,7 @@ namespace MHServerEmu.PlayerManagement
         }
         
         /// <summary>
-        /// Swithces this <see cref="GameHandle"/> to the Shutdown state.
+        /// Switches this <see cref="GameHandle"/> to the Shutdown state.
         /// </summary>
         public bool OnInstanceShutdownNotice()
         {
@@ -108,6 +115,35 @@ namespace MHServerEmu.PlayerManagement
                 player.Disconnect();
 
             return true;
+        }
+
+        #endregion
+
+        #region Region Management
+
+        public bool CreateRegion(ulong regionId, ulong regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        {
+            if (State == GameHandleState.PendingShutdown || State == GameHandleState.Shutdown)
+                return Logger.WarnReturn(false, $"CreateRegion(): Invalid state {State} for game [{this}]");
+
+            if (createRegionParams == null)
+                return Logger.WarnReturn(false, $"CreateRegion(): No params to create region 0x{regionId:X}");
+
+            RegionHandle region = new(this, regionId, regionProtoRef, createRegionParams);
+            _regions.Add(regionId, region);
+
+            // If this game is already running, request region instance creation immediately.
+            // If it doesn't, this will be requested as soon as we receive the confirmation that it's running.
+            if (State == GameHandleState.Running)
+                region.RequestInstanceCreation();
+
+            return true;
+        }
+
+        public bool ShutdownRegion(ulong regionId)
+        {
+            // TODO
+            return false;
         }
 
         #endregion

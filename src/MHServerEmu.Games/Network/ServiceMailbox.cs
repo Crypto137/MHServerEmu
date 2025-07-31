@@ -79,6 +79,10 @@ namespace MHServerEmu.Games.Network
                 case ServiceMessage.LeaderboardRewardRequestResponse leaderboardRewardRequestResponse:
                     OnLeaderboardRewardRequestResponse(leaderboardRewardRequestResponse);
                     break;
+
+                default:
+                    Logger.Warn($"Unhandled service message type {message.GetType().Name}");
+                    break;
             }
         }
 
