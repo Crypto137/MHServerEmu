@@ -82,14 +82,34 @@ namespace MHServerEmu.Core.Network
             public readonly ulong GameId = gameId;
         }
 
-        public readonly struct GameInstanceRegionOp(GameInstanceRegionOpType type, ulong gameId, ulong regionId, ulong regionProtoRef = 0, NetStructCreateRegionParams createParams = null)
+        public readonly struct GameInstanceCreateRegion(ulong gameId, ulong regionId, ulong regionProtoRef, NetStructCreateRegionParams createParams = null)
             : IGameServiceMessage
         {
-            public readonly GameInstanceRegionOpType Type = type;
             public readonly ulong GameId = gameId;
             public readonly ulong RegionId = regionId;
             public readonly ulong RegionProtoRef = regionProtoRef;
             public readonly NetStructCreateRegionParams CreateParams = createParams;
+        }
+
+        public readonly struct GameInstanceCreateRegionResponse(ulong regionId, bool success)
+            : IGameServiceMessage
+        {
+            public readonly ulong RegionId = regionId;
+            public readonly bool Success = success;
+        }
+
+        public readonly struct GameInstanceShutdownRegion(ulong gameId, ulong regionId)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong RegionId = regionId;
+        }
+
+        public readonly struct GameInstanceShutdownRegionResponse(ulong gameId, ulong regionId)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong RegionId = regionId;
         }
 
         public readonly struct GameInstanceClientOp(GameInstanceClientOpType type, IFrontendClient client, ulong gameId)

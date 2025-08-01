@@ -55,8 +55,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     OnGameInstanceOp(gameInstanceOp);
                     break;
 
-                case ServiceMessage.GameInstanceRegionOp gameInstanceRegionOp:
-                    OnGameInstanceRegionOp(gameInstanceRegionOp);
+                case ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion:
+                    OnGameInstanceCreateRegion(gameInstanceCreateRegion);
                     break;
 
                 case ServiceMessage.GameInstanceClientOp gameInstanceClientOp:
@@ -110,12 +110,12 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             }
         }
 
-        private bool OnGameInstanceRegionOp(in ServiceMessage.GameInstanceRegionOp gameInstanceRegionOp)
+        private bool OnGameInstanceCreateRegion(in ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion)
         {
-            if (GameManager.TryGetGameById(gameInstanceRegionOp.GameId, out Game game) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceRegionOp(): Game 0x{gameInstanceRegionOp.GameId:X} not found");
+            if (GameManager.TryGetGameById(gameInstanceCreateRegion.GameId, out Game game) == false)
+                return Logger.WarnReturn(false, $"OnGameInstanceRegionOp(): Game 0x{gameInstanceCreateRegion.GameId:X} not found");
 
-            game.ReceiveServiceMessage(gameInstanceRegionOp);
+            game.ReceiveServiceMessage(gameInstanceCreateRegion);
             return true;
         }
 

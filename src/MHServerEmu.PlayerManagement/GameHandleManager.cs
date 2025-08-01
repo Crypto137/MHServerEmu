@@ -45,7 +45,7 @@ namespace MHServerEmu.PlayerManagement
 
             ulong regionId = _playerManager.WorldManager.NextRegionId;
             ulong regionProtoRef = 9142075282174842340;
-            NetStructCreateRegionParams createParams = NetStructCreateRegionParams.CreateBuilder().SetLevel(0).Build();
+            NetStructCreateRegionParams createParams = NetStructCreateRegionParams.CreateBuilder().SetLevel(0).SetDifficultyTierProtoId(18016845980090109785).Build();
 
             game.CreateRegion(regionId, regionProtoRef, createParams);
         }

@@ -3,6 +3,8 @@ using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Network
 {
@@ -48,6 +50,10 @@ namespace MHServerEmu.Games.Network
         {
             switch (message)
             {
+                case ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion:
+                    OnGameInstanceCreateRegion(gameInstanceCreateRegion);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -62,7 +68,19 @@ namespace MHServerEmu.Games.Network
             }
         }
 
-        #region Leaderboard Messages
+        #region Message Handling
+
+        private void OnGameInstanceCreateRegion(in ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion)
+        {
+            ulong regionId = gameInstanceCreateRegion.RegionId;
+            PrototypeId regionProtoRef = (PrototypeId)gameInstanceCreateRegion.RegionProtoRef;
+            NetStructCreateRegionParams createParams = gameInstanceCreateRegion.CreateParams;
+
+            Region region = Game.RegionManager.GenerateRegion(regionId, regionProtoRef, createParams);
+
+            ServiceMessage.GameInstanceCreateRegionResponse response = new(regionId, region != null);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
+        }
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
         {

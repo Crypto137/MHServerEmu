@@ -6,6 +6,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -451,8 +452,14 @@ namespace MHServerEmu.Games.Regions
             else _statusFlag ^= status;
         }
 
-        public void Shutdown()
+        public void Shutdown(bool logLifetime)
         {
+            if (logLifetime)
+            {
+                TimeSpan lifetime = Clock.UnixTime - CreatedTime;
+                Logger.Info($"Shutdown(): Region = {this}, Lifetime = {(int)lifetime.TotalMinutes} min {lifetime:ss} sec");
+            }
+
             SetStatus(RegionStatus.Shutdown, true);
 
             /* int tries = 100;
@@ -529,7 +536,9 @@ namespace MHServerEmu.Games.Regions
             if (ShutdownRequested)
                 return;
 
-            Game.RegionManager.RequestRegionShutdown(Id);
+            ServiceMessage.GameInstanceShutdownRegion message = new(Game.Id, Id);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
             ShutdownRequested = true;
             Logger.Trace($"Shutdown requested for region [{this}]");
         }

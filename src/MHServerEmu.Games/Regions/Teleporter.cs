@@ -276,7 +276,7 @@ namespace MHServerEmu.Games.Regions
         public bool TeleportToRegionLocation(ulong regionId, Vector3 position)
         {
             // Check if we still have the region available
-            Region region = Player.Game.RegionManager.GetRegion(regionId, true);
+            Region region = Player.Game.RegionManager.GetRegion(regionId);
             if (region == null)
             {
                 Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_BodyslideRegionUnavailable);
@@ -285,11 +285,9 @@ namespace MHServerEmu.Games.Regions
 
             PlayerConnection playerConnection = Player.PlayerConnection;
 
-            // FIXME: Get rid of RegionContext and use NetStructCreateRegionParams to get or create region
-            RegionContext regionContext = playerConnection.RegionContext;
-            NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
-
-            regionContext.CreateRegionParams = createRegionParams;
+            // TODO: Send NetStructCreateRegionParams to the player manager
+            Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_DestinationInaccessible);
+            return true;
 
             playerConnection.TransferParams.DestRegionId = regionId;
             playerConnection.TransferParams.DestRegionProtoRef = region.PrototypeDataRef;
@@ -381,11 +379,9 @@ namespace MHServerEmu.Games.Regions
         {
             PlayerConnection playerConnection = Player.PlayerConnection;
 
-            // FIXME: Get rid of RegionContext and use NetStructCreateRegionParams to get or create region
-            RegionContext regionContext = playerConnection.RegionContext;
-            NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
-
-            regionContext.CreateRegionParams = createRegionParams;
+            // TODO: Send NetStructCreateRegionParams to the player manager
+            Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_DestinationInaccessible);
+            return true;
 
             playerConnection.TransferParams.DestRegionId = 0;
             playerConnection.TransferParams.DestRegionProtoRef = regionProtoRef;

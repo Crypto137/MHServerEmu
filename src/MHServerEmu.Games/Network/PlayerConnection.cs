@@ -54,7 +54,6 @@ namespace MHServerEmu.Games.Network
         public AreaOfInterest AOI { get; }
         public WorldViewCache WorldView { get; }
         public TransferParams TransferParams { get; }
-        public RegionContext RegionContext { get; }
 
         public Player Player { get; private set; }
 
@@ -75,7 +74,6 @@ namespace MHServerEmu.Games.Network
             AOI = new(this);
             WorldView = new(this);
             TransferParams = new(this);
-            RegionContext = new();
         }
 
         public override string ToString()
@@ -376,24 +374,24 @@ namespace MHServerEmu.Games.Network
 
             Player.QueueLoadingScreen(regionProtoRef);
 
-            RegionContext.RegionDataRef = regionProtoRef;
+            Region region = Game.RegionManager.GetRegion(TransferParams.DestRegionId);
 
-            Region region = null;
-
-            if (TransferParams.DestRegionId != 0)
-                region = Game.RegionManager.GetRegion(TransferParams.DestRegionId, true);
-            else
-                region = Game.RegionManager.GetOrGenerateRegionForPlayer(RegionContext, this);
+            // REMOVEME: quick hack until everything is working
+            foreach (Region regionIt in Game.RegionManager)
+            {
+                region = regionIt;
+                TransferParams.DestRegionId = region.Id;
+                TransferParams.DestRegionProtoRef = region.PrototypeDataRef;
+                break;
+            }
 
             if (region == null)
             {
-                Logger.Error($"EnterGame(): Failed to get or generate region {regionProtoRef.GetName()}");
+                Logger.Error($"EnterGame(): Region 0x{TransferParams.DestRegionId:X} not found");
                 TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);  // Reset transfer target so that the player can recover on relog
                 Disconnect();
                 return;
             }
-
-            TransferParams.DestRegionId = region.Id;
 
             if (TransferParams.FindStartLocation(out Vector3 startPosition, out Orientation startOrientation) == false)
             {

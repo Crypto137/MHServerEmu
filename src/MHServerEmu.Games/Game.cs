@@ -184,8 +184,6 @@ namespace MHServerEmu.Games
             NetworkManager.ReceiveAllPendingMessages();         // Process input
             NetworkManager.ProcessPendingPlayerConnections();   // Load pending players
 
-            RegionManager.Update();                             // Clean up old regions
-
             UpdateLiveTuning();                                 // Check if live tuning data is out of date
 
             UpdateFixedTime();                                  // Update simulation state

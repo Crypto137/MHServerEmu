@@ -33,7 +33,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public bool RequestInstanceCreation()
         {
             Logger.Info($"Requesting instance creation for region [{this}]");
-            ServiceMessage.GameInstanceRegionOp message = new(GameInstanceRegionOpType.Create, Game.Id, Id, (ulong)RegionProtoRef, CreateParams);
+            ServiceMessage.GameInstanceCreateRegion message = new(Game.Id, Id, (ulong)RegionProtoRef, CreateParams);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             return true;
         }

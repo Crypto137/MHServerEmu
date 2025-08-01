@@ -60,7 +60,6 @@ namespace MHServerEmu.Games.Entities
 
         private ulong _nextEntityId = 1;
         private ulong GetNextEntityId() { return _nextEntityId++; }
-        public ulong PeekNextEntityId() { return _nextEntityId; }
 
         public int EntityCount { get => _entityDict.Count; }
         public int PlayerCount { get => Players.Count; }
