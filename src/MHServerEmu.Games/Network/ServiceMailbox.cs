@@ -43,7 +43,6 @@ namespace MHServerEmu.Games.Network
                 IGameServiceMessage serviceMessage = _messageQueue.Dequeue();
                 HandleServiceMessage(serviceMessage);
             }
-
         }
 
         private void HandleServiceMessage(IGameServiceMessage message)
@@ -52,6 +51,10 @@ namespace MHServerEmu.Games.Network
             {
                 case ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion:
                     OnGameInstanceCreateRegion(gameInstanceCreateRegion);
+                    break;
+
+                case ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer:
+                    OnGameAndRegionForPlayer(gameAndRegionForPlayer);
                     break;
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
@@ -80,6 +83,16 @@ namespace MHServerEmu.Games.Network
 
             ServiceMessage.GameInstanceCreateRegionResponse response = new(regionId, region != null);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
+        }
+
+        private bool OnGameAndRegionForPlayer(in ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(gameAndRegionForPlayer.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnGameAndRegionForPlayer(): player == null");
+
+            PlayerConnection playerConnection = player.PlayerConnection;
+            playerConnection.ReceiveTransferParams(gameAndRegionForPlayer.TransferParams);
+            return true;
         }
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)

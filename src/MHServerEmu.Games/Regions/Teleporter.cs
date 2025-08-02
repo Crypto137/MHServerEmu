@@ -276,12 +276,14 @@ namespace MHServerEmu.Games.Regions
         public bool TeleportToRegionLocation(ulong regionId, Vector3 position)
         {
             // Check if we still have the region available
+            /* The player manager should do this
             Region region = Player.Game.RegionManager.GetRegion(regionId);
             if (region == null)
             {
                 Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_BodyslideRegionUnavailable);
                 return false;
             }
+            */
 
             PlayerConnection playerConnection = Player.PlayerConnection;
 
@@ -289,11 +291,10 @@ namespace MHServerEmu.Games.Regions
             Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_DestinationInaccessible);
             return true;
 
-            playerConnection.TransferParams.DestRegionId = regionId;
-            playerConnection.TransferParams.DestRegionProtoRef = region.PrototypeDataRef;
-            playerConnection.TransferParams.SetLocation(regionId, position);
-            playerConnection.BeginRemoteTeleport();
-            return true;
+            // TODO: Send ChangeRegionRequest to the player manager
+
+            //playerConnection.BeginRemoteTeleport(regionProtoRef);
+            //return true;
         }
 
         public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef, PrototypeId difficultyProtoRef)
@@ -379,15 +380,13 @@ namespace MHServerEmu.Games.Regions
         {
             PlayerConnection playerConnection = Player.PlayerConnection;
 
-            // TODO: Send NetStructCreateRegionParams to the player manager
             Player.SendRegionTransferFailure(RegionTransferFailure.eRTF_DestinationInaccessible);
             return true;
 
-            playerConnection.TransferParams.DestRegionId = 0;
-            playerConnection.TransferParams.DestRegionProtoRef = regionProtoRef;
-            playerConnection.TransferParams.SetTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
-            playerConnection.BeginRemoteTeleport();
-            return true;
+            // TODO: Send ChangeRegionRequest to the player manager
+
+            //playerConnection.BeginRemoteTeleport(regionProtoRef);
+            //return true;
         }
 
         private bool IsLocalTeleport(Region currentRegion, RegionPrototype destinationRegionProto)

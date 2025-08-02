@@ -1,8 +1,11 @@
-﻿using Google.ProtocolBuffers;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -161,6 +164,22 @@ namespace MHServerEmu.PlayerManagement
 
             // If this player has successfully gotten into a game, their data will need to be saved once they get out.
             _saveNeeded = true;
+
+            // HACK/REMOVEME: send transfer params
+            RegionHandle region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion((PrototypeId)9142075282174842340);
+            NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
+                .SetTransferId(0)
+                .SetDestRegionId(region.Id)
+                .SetDestRegionProtoId(9142075282174842340)
+                .SetDestTarget(NetStructRegionTarget.CreateBuilder()
+                    .SetRegionProtoId(9142075282174842340)
+                    .SetAreaProtoId(0)
+                    .SetCellProtoId(0)
+                    .SetEntityProtoId(0))
+                .Build();
+
+            ServiceMessage.GameAndRegionForPlayer message = new(gameId, PlayerDbId, transferParams);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;
         }

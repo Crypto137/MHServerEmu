@@ -20,6 +20,8 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 
+        internal static PlayerManagerService Instance { get; private set; }     // Naughty singleton-like access without being an actual singleton
+
         internal SessionManager SessionManager { get; }
         internal LoginQueueManager LoginQueueManager { get; }
         internal GameHandleManager GameHandleManager { get; }
@@ -48,6 +50,8 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
+            Instance = this;
+
             State = GameServiceState.Starting;
 
             GameHandleManager.Initialize();

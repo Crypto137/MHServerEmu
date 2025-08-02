@@ -63,6 +63,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     OnGameInstanceClientOp(gameInstanceClientOp);
                     break;
 
+                case ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer:
+                    OnGameAndRegionForPlayer(gameAndRegionForPlayer);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -142,6 +146,15 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
             }
+        }
+
+        private bool OnGameAndRegionForPlayer(in ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer)
+        {
+            if (GameManager.TryGetGameById(gameAndRegionForPlayer.GameId, out Game game) == false)
+                return Logger.WarnReturn(false, $"OnGameInstanceRegionOp(): Game 0x{gameAndRegionForPlayer.GameId:X} not found");
+
+            game.ReceiveServiceMessage(gameAndRegionForPlayer);
+            return true;
         }
 
         private bool OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)

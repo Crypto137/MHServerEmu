@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.PlayerManagement.Regions
 {
@@ -35,6 +36,18 @@ namespace MHServerEmu.PlayerManagement.Regions
         public void ReceiveMessage<T>(in T message) where T : struct, IGameServiceMessage
         {
             _messageQueue.Enqueue(message);
+        }
+
+        public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef)
+        {
+            // temp hack just to get things rolling for now
+            foreach (RegionHandle region in _allRegions.Values)
+            {
+                if (region.RegionProtoRef == regionProtoRef)
+                    return region;
+            }
+
+            return null;
         }
 
         public RegionHandle GetRegion(ulong regionId)

@@ -57,6 +57,8 @@ namespace MHServerEmu.Games.Network
 
         public Player Player { get; private set; }
 
+        public bool HasPendingRemoteTeleport { get; private set; }
+
         public ulong PlayerDbId { get => (ulong)_dbAccount.Id; }
         public long GazillioniteBalance { get => _dbAccount.Player.GazillioniteBalance; set => _dbAccount.Player.GazillioniteBalance = value; }
 
@@ -90,16 +92,10 @@ namespace MHServerEmu.Games.Network
                 return Logger.WarnReturn(false, $"Initialize(): Failed to load player data from DBAccount {_dbAccount}");
             }
 
-            // Send achievement database
-            SendMessage(AchievementDatabase.Instance.GetDump());
+            // Send the achievement database if this is not a transfer from another game.
+            if (_dbAccount.MigrationData.IsFirstLoad)
+                SendMessage(AchievementDatabase.Instance.GetDump());
 
-            // Query if our initial loading region is available (has assets) on the client.
-            // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
-            SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
-                .SetRegionPrototype((ulong)TransferParams.DestRegionProtoRef)
-                .Build());
-
-            _waitingForRegionIsAvailableResponse = true;
             return true;
         }
 
@@ -126,12 +122,6 @@ namespace MHServerEmu.Games.Network
             DataDirectory dataDirectory = GameDatabase.DataDirectory;
             EntityManager entityManager = Game.EntityManager;
             MigrationData migrationData = _dbAccount.MigrationData;
-
-            // Initialize transfer params, prioritize migration data if we have it
-            if (migrationData.TransferParams != null)
-                MigrationUtility.RestoreTransferParams(migrationData, TransferParams);
-            else
-                TransferParams.SetTarget((PrototypeId)_dbAccount.Player.StartTarget);
 
             // Initialize AOI
             AOI.AOIVolume = _dbAccount.Player.AOIVolume;
@@ -180,7 +170,6 @@ namespace MHServerEmu.Games.Network
             // TODO: Improve new player detection
             if (_dbAccount.Player.ArchiveData.IsNullOrEmpty())
             {
-                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion);
                 Player.InitializeMissionTrackerFilters();
                 Logger.Trace($"Initialized default mission filters for {Player}");
 
@@ -264,7 +253,6 @@ namespace MHServerEmu.Games.Network
                 {
                     if (updateMigrationData)
                     {
-                        MigrationUtility.StoreTransferParams(migrationData, TransferParams);
                         MigrationUtility.StoreProperties(migrationData.PlayerProperties, Player.Properties);
                     }
                 }
@@ -316,15 +304,28 @@ namespace MHServerEmu.Games.Network
 
         #region Loading and Exiting
 
-        public void BeginRemoteTeleport()
+        public void ReceiveTransferParams(NetStructTransferParams transferParams)
+        {
+            TransferParams.SetFromProtobuf(transferParams);
+
+            // Query if our transfer region is available (has assets) on the client.
+            // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
+            SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
+                .SetRegionPrototype((ulong)TransferParams.DestRegionProtoRef)
+                .Build());
+
+            _waitingForRegionIsAvailableResponse = true;
+        }
+
+        public void BeginRemoteTeleport(PrototypeId remoteRegionProtoRef)
         {
             var oldRegion = AOI.Region;
 
-            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, TransferParams.DestRegionProtoRef));
+            oldRegion?.PlayerBeginTravelToRegionEvent.Invoke(new(Player, remoteRegionProtoRef));
 
             // The message for the loading screen we are queueing here will be flushed to the client
             // as soon as we set the connection as pending to keep things nice and responsive.
-            Player.QueueLoadingScreen(TransferParams.DestRegionProtoRef);
+            Player.QueueLoadingScreen(remoteRegionProtoRef);
 
             oldRegion?.PlayerLeftRegionEvent.Invoke(new(Player, oldRegion.PrototypeDataRef));
 
@@ -339,13 +340,14 @@ namespace MHServerEmu.Games.Network
             if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
                 Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
 
-            Game.NetworkManager.SetPlayerConnectionPending(this);
+            HasPendingRemoteTeleport = true;
         }
 
         public void EnterGame()
         {
             // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
             // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
+            HasPendingRemoteTeleport = false;
 
             if (Player.IsInGame == false)
                 Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
@@ -369,26 +371,12 @@ namespace MHServerEmu.Games.Network
 
             // Clear region interest by setting it to invalid region, we still keep our owned entities
             AOI.SetRegion(0, false, null, null);
-
-            PrototypeId regionProtoRef = TransferParams.DestRegionProtoRef;
-
-            Player.QueueLoadingScreen(regionProtoRef);
+            Player.QueueLoadingScreen(TransferParams.DestRegionProtoRef);
 
             Region region = Game.RegionManager.GetRegion(TransferParams.DestRegionId);
-
-            // REMOVEME: quick hack until everything is working
-            foreach (Region regionIt in Game.RegionManager)
-            {
-                region = regionIt;
-                TransferParams.DestRegionId = region.Id;
-                TransferParams.DestRegionProtoRef = region.PrototypeDataRef;
-                break;
-            }
-
             if (region == null)
             {
                 Logger.Error($"EnterGame(): Region 0x{TransferParams.DestRegionId:X} not found");
-                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);  // Reset transfer target so that the player can recover on relog
                 Disconnect();
                 return;
             }
@@ -596,14 +584,16 @@ namespace MHServerEmu.Games.Network
             if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestRegionProtoRef)
                 return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestRegionProtoRef.GetName()}");
 
-            if (isRegionAvailable.IsAvailable == false)
+            // V52_HACK: Ignore availability for AvengersTowerHUBRegion 
+            if (isRegionAvailable.IsAvailable == false && TransferParams.DestRegionProtoRef != (PrototypeId)14599574127156009346)
             {
-                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestRegionProtoRef.GetName()} is not available, resetting start target");
-                TransferParams.SetTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
+                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestRegionProtoRef.GetName()} is not available, disconnecting");
+                Disconnect();
+                return false;
             }
 
             _waitingForRegionIsAvailableResponse = false;
-            Game.NetworkManager.SetPlayerConnectionPending(this);
+            Game.NetworkManager.SetPlayerReadyToLoad(this);
 
             return true;
         }

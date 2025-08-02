@@ -112,6 +112,45 @@ namespace MHServerEmu.Core.Network
             public readonly ulong GameId = gameId;
         }
 
+        public readonly struct GameInstanceChangeRegionRequest
+            : IGameServiceMessage
+        {
+            public readonly ChangeRegionRequestHeader Header;
+            public readonly NetStructRegionTarget DestTarget;
+            public readonly NetStructRegionLocation DestLocation;
+            public readonly ulong DestPlayerDbId;
+            public readonly NetStructCreateRegionParams CreateRegionParams;
+
+            public GameInstanceChangeRegionRequest(ChangeRegionRequestHeader header, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
+            {
+                Header = header;
+                DestTarget = destTarget;
+                CreateRegionParams = createRegionParams;
+            }
+
+            public GameInstanceChangeRegionRequest(ChangeRegionRequestHeader header, NetStructRegionLocation destLocation)
+            {
+                Header = header;
+                DestLocation = destLocation;
+            }
+
+            public GameInstanceChangeRegionRequest(ChangeRegionRequestHeader header, ulong destPlayerDbId)
+            {
+                Header = header;
+                DestPlayerDbId = destPlayerDbId;
+            }
+        }
+
+        public readonly struct GameAndRegionForPlayer(ulong gameId, ulong playerDbId, NetStructTransferParams transferParams)
+            : IGameServiceMessage
+        {
+            // Based on PlayerMgrToGameServer.proto from 1.53
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly NetStructTransferParams TransferParams = transferParams;
+            //public List<WorldViewEntry> WorldView;
+        }
+
         #endregion
 
         #region Grouping Manager

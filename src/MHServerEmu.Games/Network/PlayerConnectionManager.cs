@@ -128,12 +128,12 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        #region Pending Processing
+        #region Loading
 
         /// <summary>
-        /// Loads pending players.
+        /// Loads players who have received their transfer params.
         /// </summary>
-        public void ProcessPendingPlayerConnections()
+        public void ProcessReadyToLoadPlayers()
         {
             while (_pendingPlayerConnectionQueue.Count > 0)
             {
@@ -145,11 +145,8 @@ namespace MHServerEmu.Games.Network
         /// <summary>
         /// Requests a player to be loaded.
         /// </summary>
-        public void SetPlayerConnectionPending(PlayerConnection playerConnection)
+        public void SetPlayerReadyToLoad(PlayerConnection playerConnection)
         {
-            // NOTE: We flush messages when we set the connection as pending so that
-            // we can deliver the loading screen message to the client ASAP.
-            playerConnection.FlushMessages();
             _pendingPlayerConnectionQueue.Enqueue(playerConnection);
         }
 
@@ -245,9 +242,6 @@ namespace MHServerEmu.Games.Network
             if (RegisterNetClient(playerConnection) == false)
                 Logger.Error($"AcceptAndRegisterNewClient(): Failed to add client [{frontendClient}]");
 
-            // Notify the player manager
-            _game.GameManager.OnClientAdded(_game, frontendClient);
-
             // Send time sync straight away for the client to be able to initialize its EventScheduler (needed for loading screens).
             // This will also make the client start sending pings, so it needs to be done after we assign game id.
             SendMessageImmediate(playerConnection, NetMessageInitialTimeSync.CreateBuilder()
@@ -255,14 +249,15 @@ namespace MHServerEmu.Games.Network
                 .SetDateTimeServerSent(Clock.UnixTime.Ticks / 10)
                 .Build());
 
-            // Initializing a player connection sends the achievement database dump and a region availability query
+            // Initializing a player connection loads player data and sends the achievement database if needed
             if (playerConnection.Initialize() == false)
             {
                 playerConnection.Disconnect();
                 return false;
             }
 
-            // This connection will be set as pending when we receive region availability query response
+            // Notify the player manager. The player will be put into a region when we receive transfer params.
+            _game.GameManager.OnClientAdded(_game, frontendClient);
 
             Logger.Info($"Accepted and registered client [{frontendClient}] to game [{_game}]");
             return true;

@@ -9,12 +9,11 @@ using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Network
 {
+    /// <summary>
+    /// Contains data needed to put a player into a region.
+    /// </summary>
     public class TransferParams
     {
-        // This class determines where a player needs to be put after loading into a game.
-        // According to PlayerMgrToGameServer protocol from 1.53, it was sent as a NetStructTransferParams
-        // in a GameAndRegionForPlayer message from the player manager to the GIS when a player connects.
-
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         public PlayerConnection PlayerConnection { get; }
@@ -36,7 +35,7 @@ namespace MHServerEmu.Games.Network
             PlayerConnection = playerConnection;
         }
 
-        public void FromProtobuf(NetStructTransferParams transferParams)
+        public void SetFromProtobuf(NetStructTransferParams transferParams)
         {
             DestRegionId = transferParams.DestRegionId;
             DestRegionProtoRef = (PrototypeId)transferParams.DestRegionProtoId;
@@ -44,73 +43,6 @@ namespace MHServerEmu.Games.Network
             DestLocation = transferParams.HasDestLocation ? transferParams.DestLocation : null;
             DestTarget = transferParams.HasDestTarget ? transferParams.DestTarget : null;
             DestEntityDbId = transferParams.HasDestEntityDbId ? transferParams.DestEntityDbId : 0;
-        }
-
-        public NetStructTransferParams ToProtobuf()
-        {
-            NetStructTransferParams.Builder transferParams = NetStructTransferParams.CreateBuilder()
-                .SetTransferId(0)   // TODO
-                .SetDestRegionId(DestRegionId)
-                .SetDestRegionProtoId((ulong)DestRegionProtoRef);
-
-            if (DestLocation != null)
-                transferParams.SetDestLocation(DestLocation);
-
-            if (DestTarget != null)
-                transferParams.SetDestTarget(DestTarget);
-
-            if (DestEntityDbId != 0)
-                transferParams.SetDestEntityDbId(DestEntityDbId);
-
-            return transferParams.Build();
-        }
-
-        public bool SetLocation(NetStructRegionLocation destLocation)
-        {
-            DestLocation = destLocation;
-            DestTarget = null;
-            DestEntityDbId = 0;
-            return true;
-        }
-
-        public bool SetLocation(ulong regionId, Vector3 position)
-        {
-            NetStructRegionLocation destLocation = NetStructRegionLocation.CreateBuilder()
-                .SetRegionId(regionId)
-                .SetPosition(position.ToNetStructPoint3())
-                .Build();
-
-            return SetLocation(destLocation);
-        }
-
-        public bool SetTarget(NetStructRegionTarget destTarget)
-        {
-            DestRegionProtoRef = (PrototypeId)destTarget.RegionProtoId;
-
-            DestLocation = null;
-            DestTarget = destTarget;
-            DestEntityDbId = 0;
-            return true;
-        }
-
-        public bool SetTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
-        {
-            NetStructRegionTarget destTarget = NetStructRegionTarget.CreateBuilder()
-                .SetRegionProtoId((ulong)regionProtoRef)
-                .SetAreaProtoId((ulong)areaProtoRef)
-                .SetCellProtoId((ulong)cellProtoRef)
-                .SetEntityProtoId((ulong)entityProtoRef)
-                .Build();
-
-            return SetTarget(destTarget);
-        }
-
-        public bool SetTarget(PrototypeId targetProtoRef)
-        {
-            var targetProto = GameDatabase.GetPrototype<RegionConnectionTargetPrototype>(targetProtoRef);
-            if (targetProto == null) return Logger.WarnReturn(false, "SetTarget(): targetProto == null");
-
-            return SetTarget(targetProto.Region, targetProto.Area, GameDatabase.GetDataRefByAsset(targetProto.Cell), targetProto.Entity);
         }
         
         public bool FindStartLocation(out Vector3 position, out Orientation orientation)
@@ -143,9 +75,7 @@ namespace MHServerEmu.Games.Network
                 return true;
 
             // Fall back to the start target for the region
-            Logger.Debug($"FindStartLocation(): Falling back to {region.Prototype.StartTarget.GetName()}");
-            SetTarget(region.Prototype.StartTarget);
-            if (FindStartLocationFromTarget(region, ref position, ref orientation))
+            if (FindStartLocationFromRegionStartTarget(region, ref position, ref orientation))
                 return true;
 
             // Fall back to the center of the first cell in the start area if all else fails (this is very bad and should never really happen!)
@@ -224,6 +154,23 @@ namespace MHServerEmu.Games.Network
             // Check for collisions and try to adjust position so that avatars don't overlap in one point.
             Avatar.AdjustStartPositionIfNeeded(region, ref position, true);
             return true;
+        }
+
+        private bool FindStartLocationFromRegionStartTarget(Region region, ref Vector3 position, ref Orientation orientation)
+        {
+            Logger.Debug($"FindStartLocation(): Falling back to {region.Prototype.StartTarget.GetName()}");
+            var targetProto = region.Prototype.StartTarget.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null)
+                return false;
+
+            DestTarget = NetStructRegionTarget.CreateBuilder()
+                .SetRegionProtoId(DestTarget.RegionProtoId)     // Keep this within the same region, we are just falling back to a different position.
+                .SetAreaProtoId((ulong)targetProto.Area)
+                .SetCellProtoId((ulong)GameDatabase.GetDataRefByAsset(targetProto.Cell))
+                .SetEntityProtoId((ulong)targetProto.Entity)
+                .Build();
+
+            return FindStartLocationFromTarget(region, ref position, ref orientation);
         }
     }
 }
