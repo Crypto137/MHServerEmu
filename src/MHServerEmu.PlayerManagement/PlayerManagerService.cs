@@ -63,6 +63,7 @@ namespace MHServerEmu.PlayerManagement
                 LoginQueueManager.Update();
                 GameHandleManager.Update();
                 ClientManager.Update(true);
+                WorldManager.Update();
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
                 int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);
@@ -112,7 +113,11 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.GameInstanceOp gameInstanceOp:
                     GameHandleManager.ReceiveMessage(gameInstanceOp);
                     break;
-                
+
+                case ServiceMessage.GameInstanceCreateRegionResponse:
+                    WorldManager.ReceiveMessage(message);
+                    break;
+
                 // Client messages are handled in ticks by the ClientManager
                 case ServiceMessage.AddClient:
                 case ServiceMessage.RemoveClient:

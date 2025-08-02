@@ -21,14 +21,6 @@ namespace MHServerEmu.Core.Network
         ShutdownNotice,     // This is called a notice because game instances can shut down due to a crash.
     }
 
-    public enum GameInstanceRegionOpType
-    {
-        Create,
-        CreateResponse,
-        Shutdown,
-        ShutdownResponse,
-    }
-
     public enum GameInstanceClientOpType
     {
         Add,

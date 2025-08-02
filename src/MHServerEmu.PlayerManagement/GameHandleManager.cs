@@ -54,7 +54,7 @@ namespace MHServerEmu.PlayerManagement
         {
             ulong gameId = _idGenerator.Generate();
 
-            GameHandle game = new(gameId);
+            GameHandle game = new(_playerManager, gameId);
             _gameDict.Add(gameId, game);
 
             Logger.Info($"Created game handle [{game}]");
