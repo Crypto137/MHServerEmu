@@ -151,6 +151,13 @@ namespace MHServerEmu.Core.Network
             //public List<WorldViewEntry> WorldView;
         }
 
+        public readonly struct TransferFinished(ulong playerDbId, ulong transferId)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong TransferId = transferId;
+        }
+
         #endregion
 
         #region Grouping Manager

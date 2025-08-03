@@ -62,6 +62,10 @@ namespace MHServerEmu.PlayerManagement
                         OnGameInstanceClientOp(gameInstanceClientOp);
                         break;
 
+                    case ServiceMessage.TransferFinished transferFinished:
+                        OnTransferFinished(transferFinished);
+                        break;
+
                     default:
                         Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                         break;
@@ -84,6 +88,7 @@ namespace MHServerEmu.PlayerManagement
                     {
                         GameHandle game = _playerManager.GameHandleManager.GetAvailableGame();
                         game.AddPlayer(player);
+                        player.BeginTransfer();
                     }
                     else
                     {
@@ -224,6 +229,14 @@ namespace MHServerEmu.PlayerManagement
             }
 
             return true;
+        }
+
+        private bool OnTransferFinished(in ServiceMessage.TransferFinished transferFinished)
+        {
+            if (TryGetPlayerHandle(transferFinished.PlayerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnTransferFinished(): No handle found for playerDbId 0x{transferFinished.PlayerDbId}");
+
+            return player.FinishTransfer(transferFinished.TransferId);
         }
 
         #endregion

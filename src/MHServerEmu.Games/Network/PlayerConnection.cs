@@ -311,7 +311,12 @@ namespace MHServerEmu.Games.Network
 
             HasPendingRemoteTeleport = false;
 
+            // TODO: Sync WorldViewCache
+
             EnterGame();
+
+            ServiceMessage.TransferFinished message = new(PlayerDbId, transferParams.TransferId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void BeginRemoteTeleport(PrototypeId remoteRegionProtoRef)

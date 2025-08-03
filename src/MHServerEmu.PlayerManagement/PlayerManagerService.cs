@@ -126,6 +126,7 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.AddClient:
                 case ServiceMessage.RemoveClient:
                 case ServiceMessage.GameInstanceClientOp:
+                case ServiceMessage.TransferFinished:
                     ClientManager.ReceiveMessage(message);
                     break;
 

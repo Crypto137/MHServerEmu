@@ -28,8 +28,10 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private static ulong _nextHandleId = 1;
+        private static ulong _nextTransferId = 1;
 
         private bool _saveNeeded = false;   // Dirty flag for player data
+        private NetStructTransferParams _transferParams;
 
         public ulong HandleId { get; }
 
@@ -39,6 +41,8 @@ namespace MHServerEmu.PlayerManagement
 
         public PlayerHandleState State { get; private set; }
         public GameHandle Game { get; private set; }
+
+        public bool HasTransferParams { get => _transferParams != null; }
 
         public PlayerHandle(IFrontendClient client)
         {
@@ -55,7 +59,7 @@ namespace MHServerEmu.PlayerManagement
 
         public override string ToString()
         {
-            return $"HandleId={HandleId}, Client=[{Client}]";
+            return $"({HandleId}) {Client}";
         }
 
         public bool MigrateSession(IFrontendClient newClient)
@@ -165,21 +169,7 @@ namespace MHServerEmu.PlayerManagement
             // If this player has successfully gotten into a game, their data will need to be saved once they get out.
             _saveNeeded = true;
 
-            // HACK/REMOVEME: send transfer params
-            RegionHandle region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion((PrototypeId)9142075282174842340);
-            NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
-                .SetTransferId(0)
-                .SetDestRegionId(region.Id)
-                .SetDestRegionProtoId(9142075282174842340)
-                .SetDestTarget(NetStructRegionTarget.CreateBuilder()
-                    .SetRegionProtoId(9142075282174842340)
-                    .SetAreaProtoId(0)
-                    .SetCellProtoId(0)
-                    .SetEntityProtoId(0))
-                .Build();
-
-            ServiceMessage.GameAndRegionForPlayer message = new(gameId, PlayerDbId, transferParams);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            SendTransferParams();
 
             return true;
         }
@@ -229,6 +219,56 @@ namespace MHServerEmu.PlayerManagement
                 _saveNeeded = false;
             }
 
+            return true;
+        }
+
+        public void BeginTransfer()
+        {
+            if (_transferParams != null)
+            {
+                Logger.Warn($"BeginTransfer(): Existing transfer {_transferParams.TransferId} found");
+                _transferParams = null;
+            }
+
+            // HACK: Hardcoded transferparams
+            RegionHandle region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion((PrototypeId)9142075282174842340);
+            _transferParams = NetStructTransferParams.CreateBuilder()
+                .SetTransferId(_nextTransferId++)
+                .SetDestRegionId(region.Id)
+                .SetDestRegionProtoId(9142075282174842340)
+                .SetDestTarget(NetStructRegionTarget.CreateBuilder()
+                    .SetRegionProtoId(9142075282174842340)
+                    .SetAreaProtoId(0)
+                    .SetCellProtoId(0)
+                    .SetEntityProtoId(0))
+                .Build();
+
+            Logger.Info($"Player [{this}] beginning transfer {_transferParams.TransferId}");
+        }
+
+        public void SendTransferParams()
+        {
+            if (_transferParams == null)
+            {
+                Logger.Warn($"SendTransferParams(): No transfer params for player [{this}]");
+                Disconnect();
+                return;
+            }
+
+            ServiceMessage.GameAndRegionForPlayer message = new(Game.Id, PlayerDbId, _transferParams);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+        }
+
+        public bool FinishTransfer(ulong transferId)
+        {
+            if (_transferParams == null)
+                return Logger.WarnReturn(false, $"FinishTransfer(): Received confirmation for transfer {transferId}, but no transfer is pending for player [{this}]");
+
+            if (_transferParams.TransferId != transferId)
+                return Logger.WarnReturn(false, $"FinishTransfer(): Transfer id mismatch for player [{this}]: expected {_transferParams.TransferId}, got {transferId}");
+
+            _transferParams = null;
+            Logger.Info($"Player [{this}] finished transfer {transferId}");
             return true;
         }
     }
