@@ -112,7 +112,10 @@ namespace MHServerEmu.Core.Network
             public readonly ulong GameId = gameId;
         }
 
-        public readonly struct GameInstanceChangeRegionRequest
+        /// <summary>
+        /// [Game -> PlayerManager] Requests the player manager to transfer a player to another region.
+        /// </summary>
+        public readonly struct ChangeRegionRequest
             : IGameServiceMessage
         {
             public readonly ChangeRegionRequestHeader Header;
@@ -121,26 +124,41 @@ namespace MHServerEmu.Core.Network
             public readonly ulong DestPlayerDbId;
             public readonly NetStructCreateRegionParams CreateRegionParams;
 
-            public GameInstanceChangeRegionRequest(ChangeRegionRequestHeader header, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
+            public ChangeRegionRequest(ChangeRegionRequestHeader header, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
             {
                 Header = header;
                 DestTarget = destTarget;
                 CreateRegionParams = createRegionParams;
             }
 
-            public GameInstanceChangeRegionRequest(ChangeRegionRequestHeader header, NetStructRegionLocation destLocation)
+            public ChangeRegionRequest(ChangeRegionRequestHeader header, NetStructRegionLocation destLocation)
             {
                 Header = header;
                 DestLocation = destLocation;
             }
 
-            public GameInstanceChangeRegionRequest(ChangeRegionRequestHeader header, ulong destPlayerDbId)
+            public ChangeRegionRequest(ChangeRegionRequestHeader header, ulong destPlayerDbId)
             {
                 Header = header;
                 DestPlayerDbId = destPlayerDbId;
             }
         }
 
+        /// <summary>
+        /// [PlayerManager -> Game] Notification for a failed transfer to the player who requested it.
+        /// </summary>
+        public readonly struct UnableToChangeRegion(ulong gameId, ulong playerDbId, ChangeRegionFailed changeFailed)
+            : IGameServiceMessage
+        {
+            // Based on PlayerMgrToGameServer.proto from 1.53
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ChangeRegionFailed ChangeFailed = changeFailed;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Contains <see cref="NetStructTransferParams"/> with information needed to put a player into a region.
+        /// </summary>
         public readonly struct GameAndRegionForPlayer(ulong gameId, ulong playerDbId, NetStructTransferParams transferParams)
             : IGameServiceMessage
         {
@@ -151,6 +169,9 @@ namespace MHServerEmu.Core.Network
             //public List<WorldViewEntry> WorldView;
         }
 
+        /// <summary>
+        /// [Game -> PlayerManager] Confirms region transfer completion.
+        /// </summary>
         public readonly struct TransferFinished(ulong playerDbId, ulong transferId)
             : IGameServiceMessage
         {

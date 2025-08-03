@@ -53,6 +53,10 @@ namespace MHServerEmu.Games.Network
                     OnGameInstanceCreateRegion(gameInstanceCreateRegion);
                     break;
 
+                case ServiceMessage.UnableToChangeRegion unableToChangeRegion:
+                    OnUnableToChangeRegion(unableToChangeRegion);
+                    break;
+
                 case ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer:
                     OnGameAndRegionForPlayer(gameAndRegionForPlayer);
                     break;
@@ -83,6 +87,16 @@ namespace MHServerEmu.Games.Network
 
             ServiceMessage.GameInstanceCreateRegionResponse response = new(regionId, region != null);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
+        }
+
+        private bool OnUnableToChangeRegion(in ServiceMessage.UnableToChangeRegion unableToChangeRegion)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(unableToChangeRegion.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnUnableToChangeRegion(): player == null");
+
+            PlayerConnection playerConnection = player.PlayerConnection;
+            playerConnection.CancelRemoteTeleport(unableToChangeRegion.ChangeFailed);
+            return true;
         }
 
         private bool OnGameAndRegionForPlayer(in ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer)

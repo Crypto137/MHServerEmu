@@ -2518,13 +2518,6 @@ namespace MHServerEmu.Games.Entities
                 Properties.RemoveProperty(prop);
         }
 
-        public void SendRegionTransferFailure(RegionTransferFailure reason)
-        {
-            SendMessage(NetMessageUnableToChangeRegion.CreateBuilder()
-                .SetChangeFailed(ChangeRegionFailed.CreateBuilder().SetReason(reason))
-                .Build());
-        }
-
         public void OnCellLoaded(uint cellId, ulong regionId)
         {
             AOI.OnCellLoaded(cellId, regionId);

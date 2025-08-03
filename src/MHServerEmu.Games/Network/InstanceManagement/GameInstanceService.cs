@@ -63,6 +63,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     OnGameInstanceClientOp(gameInstanceClientOp);
                     break;
 
+                case ServiceMessage.UnableToChangeRegion unableToChangeRegion:
+                    OnUnableToChangeRegion(unableToChangeRegion);
+                    break;
+
                 case ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer:
                     OnGameAndRegionForPlayer(gameAndRegionForPlayer);
                     break;
@@ -146,6 +150,15 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
             }
+        }
+
+        private bool OnUnableToChangeRegion(in ServiceMessage.UnableToChangeRegion unableToChangeRegion)
+        {
+            if (GameManager.TryGetGameById(unableToChangeRegion.GameId, out Game game) == false)
+                return Logger.WarnReturn(false, $"OnUnableToChangeRegion(): Game 0x{unableToChangeRegion.GameId:X} not found");
+
+            game.ReceiveServiceMessage(unableToChangeRegion);
+            return true;
         }
 
         private bool OnGameAndRegionForPlayer(in ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer)

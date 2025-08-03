@@ -275,22 +275,10 @@ namespace MHServerEmu.Games.Network
             UpdateDBAccount(true);
 
             AOI.SetRegion(0, true);
-
-            Player?.Destroy();
-
-            // Destroy all private region instances in the world view since they are not persistent anyway
-            foreach ((_, ulong regionId) in WorldView)
+            if (Player != null)
             {
-                Region region = Game.RegionManager.GetRegion(regionId);
-                if (region == null) continue;
-
-                if (region.IsPublic)
-                {
-                    Logger.Warn($"OnDisconnect(): Found public region {region} in the world view for player connection {this}");
-                    continue;
-                }
-
-                region.RequestShutdown();
+                Player.QueueLoadingScreen(PrototypeId.Invalid);
+                Player.Destroy();
             }
 
             // Notify the player manager
@@ -343,6 +331,44 @@ namespace MHServerEmu.Games.Network
                 Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
 
             HasPendingRemoteTeleport = true;
+        }
+
+        public void CancelRemoteTeleport(ChangeRegionFailed changeFailed)
+        {
+            HasPendingRemoteTeleport = false;
+
+            if (changeFailed.Reason == RegionTransferFailure.eRTF_BodyslideRegionUnavailable)
+                Player.RemoveBodysliderProperties();
+
+            // Try to put the player back into the world
+            Region region = Player.GetRegion();
+            if (region != null)
+            {
+                Avatar avatar = Player.CurrentAvatar;
+                if (avatar != null && avatar.IsInWorld == false)
+                {
+                    RegionLocationSafe exitLocation = avatar.ExitWorldRegionLocation;
+                    ulong regionId = exitLocation.RegionId;
+                    Vector3 position = exitLocation.Position;
+                    Orientation orientation = exitLocation.Orientation;
+
+                    if (region.Id == regionId && avatar.EnterWorld(region, position, orientation))
+                    {
+                        Player.DequeueLoadingScreen();
+                    }
+                    else
+                    {
+                        Logger.Warn($"CancelRemoteTeleport(): Failed to put player [{this}] back into the game world");
+                        Disconnect();
+                        return;
+                    }
+                }
+            }
+
+            // Relay the notification to the client to display an error message.
+            SendMessage(NetMessageUnableToChangeRegion.CreateBuilder()
+                .SetChangeFailed(changeFailed)
+                .Build());
         }
 
         private void EnterGame()

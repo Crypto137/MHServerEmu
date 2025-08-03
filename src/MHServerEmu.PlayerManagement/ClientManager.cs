@@ -62,6 +62,10 @@ namespace MHServerEmu.PlayerManagement
                         OnGameInstanceClientOp(gameInstanceClientOp);
                         break;
 
+                    case ServiceMessage.ChangeRegionRequest changeRegionRequest:
+                        OnChangeRegionRequest(changeRegionRequest);
+                        break;
+
                     case ServiceMessage.TransferFinished transferFinished:
                         OnTransferFinished(transferFinished);
                         break;
@@ -227,6 +231,17 @@ namespace MHServerEmu.PlayerManagement
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
             }
+
+            return true;
+        }
+
+        private bool OnChangeRegionRequest(in ServiceMessage.ChangeRegionRequest changeRegionRequest)
+        {
+            // deny all requests for now
+
+            ServiceMessage.UnableToChangeRegion response = new(changeRegionRequest.Header.RequestingGameId, changeRegionRequest.Header.RequestingPlayerGuid,
+                ChangeRegionFailed.CreateBuilder().SetReason(RegionTransferFailure.eRTF_DestinationInaccessible).Build());
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
 
             return true;
         }
