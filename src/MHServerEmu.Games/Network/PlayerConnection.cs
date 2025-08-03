@@ -56,7 +56,7 @@ namespace MHServerEmu.Games.Network
 
         public Player Player { get; private set; }
 
-        public bool HasPendingRemoteTeleport { get; private set; }
+        public bool HasPendingRegionTransfer { get; private set; }
 
         public ulong PlayerDbId { get => (ulong)_dbAccount.Id; }
         public long GazillioniteBalance { get => _dbAccount.Player.GazillioniteBalance; set => _dbAccount.Player.GazillioniteBalance = value; }
@@ -289,25 +289,9 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        #region Transfers
+        #region Region Transfers
 
-        public void FinishTransfer(NetStructTransferParams transferParams)
-        {
-            TransferParams.SetFromProtobuf(transferParams);
-
-            // This is where we would previously send NetMessageQueryIsRegionAvailable.
-
-            HasPendingRemoteTeleport = false;
-
-            // TODO: Sync WorldViewCache
-
-            EnterGame();
-
-            ServiceMessage.TransferFinished message = new(PlayerDbId, transferParams.TransferId);
-            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
-        }
-
-        public void BeginRemoteTeleport(PrototypeId remoteRegionProtoRef)
+        public void BeginRegionTransfer(PrototypeId remoteRegionProtoRef)
         {
             var oldRegion = AOI.Region;
 
@@ -330,12 +314,12 @@ namespace MHServerEmu.Games.Network
             if (stopwatch.Elapsed > TimeSpan.FromMilliseconds(300))
                 Logger.Warn($"ExitGame() took {stopwatch.Elapsed.TotalMilliseconds} ms for {this}");
 
-            HasPendingRemoteTeleport = true;
+            HasPendingRegionTransfer = true;
         }
 
-        public void CancelRemoteTeleport(ChangeRegionFailed changeFailed)
+        public void CancelRegionTransfer(ChangeRegionFailed changeFailed)
         {
-            HasPendingRemoteTeleport = false;
+            HasPendingRegionTransfer = false;
 
             if (changeFailed.Reason == RegionTransferFailure.eRTF_BodyslideRegionUnavailable)
                 Player.RemoveBodysliderProperties();
@@ -369,6 +353,22 @@ namespace MHServerEmu.Games.Network
             SendMessage(NetMessageUnableToChangeRegion.CreateBuilder()
                 .SetChangeFailed(changeFailed)
                 .Build());
+        }
+
+        public void FinishRegionTransfer(NetStructTransferParams transferParams)
+        {
+            TransferParams.SetFromProtobuf(transferParams);
+
+            // This is where we would previously send NetMessageQueryIsRegionAvailable.
+
+            HasPendingRegionTransfer = false;
+
+            // TODO: Sync WorldViewCache
+
+            EnterGame();
+
+            ServiceMessage.RegionTransferFinished message = new(PlayerDbId, transferParams.TransferId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         private void EnterGame()

@@ -66,8 +66,8 @@ namespace MHServerEmu.PlayerManagement
                         OnChangeRegionRequest(changeRegionRequest);
                         break;
 
-                    case ServiceMessage.TransferFinished transferFinished:
-                        OnTransferFinished(transferFinished);
+                    case ServiceMessage.RegionTransferFinished regionTransferFinished:
+                        OnRegionTransferFinished(regionTransferFinished);
                         break;
 
                     default:
@@ -92,7 +92,7 @@ namespace MHServerEmu.PlayerManagement
                     {
                         GameHandle game = _playerManager.GameHandleManager.GetAvailableGame();
                         game.AddPlayer(player);
-                        player.BeginTransfer();
+                        player.BeginRegionTransfer();
                     }
                     else
                     {
@@ -246,12 +246,12 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        private bool OnTransferFinished(in ServiceMessage.TransferFinished transferFinished)
+        private bool OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)
         {
-            if (TryGetPlayerHandle(transferFinished.PlayerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"OnTransferFinished(): No handle found for playerDbId 0x{transferFinished.PlayerDbId}");
+            if (TryGetPlayerHandle(regionTransferFinished.PlayerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{regionTransferFinished.PlayerDbId}");
 
-            return player.FinishTransfer(transferFinished.TransferId);
+            return player.FinishRegionTransfer(regionTransferFinished.TransferId);
         }
 
         #endregion

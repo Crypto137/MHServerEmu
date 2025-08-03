@@ -172,7 +172,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> PlayerManager] Confirms region transfer completion.
         /// </summary>
-        public readonly struct TransferFinished(ulong playerDbId, ulong transferId)
+        public readonly struct RegionTransferFinished(ulong playerDbId, ulong transferId)
             : IGameServiceMessage
         {
             public readonly ulong PlayerDbId = playerDbId;

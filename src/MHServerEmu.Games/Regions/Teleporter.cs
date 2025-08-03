@@ -221,7 +221,7 @@ namespace MHServerEmu.Games.Regions
 
         public bool TeleportToRegionLocation(ulong regionId, Vector3 position)
         {
-            Player.PlayerConnection.BeginRemoteTeleport(PrototypeId.Invalid);
+            Player.PlayerConnection.BeginRegionTransfer(PrototypeId.Invalid);
 
             ChangeRegionRequestHeader header = BuildChangeRegionRequestHeader();
             NetStructRegionLocation destLocation = NetStructRegionLocation.CreateBuilder()
@@ -319,7 +319,7 @@ namespace MHServerEmu.Games.Regions
 
         private bool TeleportToRemoteTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            Player.PlayerConnection.BeginRemoteTeleport(regionProtoRef);
+            Player.PlayerConnection.BeginRegionTransfer(regionProtoRef);
 
             ChangeRegionRequestHeader header = BuildChangeRegionRequestHeader();
             NetStructRegionTarget destTarget = NetStructRegionTarget.CreateBuilder()
@@ -370,7 +370,7 @@ namespace MHServerEmu.Games.Regions
         {
             if (Player == null) return Logger.WarnReturn(false, "CanTeleport(): Player == null");
 
-            if (Player.PlayerConnection.HasPendingRemoteTeleport)
+            if (Player.PlayerConnection.HasPendingRegionTransfer)
                 return false;
 
             if (TransitionEntity != null)

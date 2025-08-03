@@ -169,7 +169,7 @@ namespace MHServerEmu.PlayerManagement
             // If this player has successfully gotten into a game, their data will need to be saved once they get out.
             _saveNeeded = true;
 
-            SendTransferParams();
+            SendRegionTransferParams();
 
             return true;
         }
@@ -222,11 +222,11 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public void BeginTransfer()
+        public void BeginRegionTransfer()
         {
             if (_transferParams != null)
             {
-                Logger.Warn($"BeginTransfer(): Existing transfer {_transferParams.TransferId} found");
+                Logger.Warn($"BeginRegionTransfer(): Existing transfer {_transferParams.TransferId} found");
                 _transferParams = null;
             }
 
@@ -243,14 +243,14 @@ namespace MHServerEmu.PlayerManagement
                     .SetEntityProtoId(0))
                 .Build();
 
-            Logger.Info($"Player [{this}] beginning transfer {_transferParams.TransferId}");
+            Logger.Info($"Player [{this}] beginning region transfer {_transferParams.TransferId}");
         }
 
-        public void SendTransferParams()
+        public void SendRegionTransferParams()
         {
             if (_transferParams == null)
             {
-                Logger.Warn($"SendTransferParams(): No transfer params for player [{this}]");
+                Logger.Warn($"SendRegionTransferParams(): No transfer params for player [{this}]");
                 Disconnect();
                 return;
             }
@@ -259,16 +259,16 @@ namespace MHServerEmu.PlayerManagement
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
-        public bool FinishTransfer(ulong transferId)
+        public bool FinishRegionTransfer(ulong transferId)
         {
             if (_transferParams == null)
-                return Logger.WarnReturn(false, $"FinishTransfer(): Received confirmation for transfer {transferId}, but no transfer is pending for player [{this}]");
+                return Logger.WarnReturn(false, $"FinishRegionTransfer(): Received confirmation for transfer {transferId}, but no transfer is pending for player [{this}]");
 
             if (_transferParams.TransferId != transferId)
-                return Logger.WarnReturn(false, $"FinishTransfer(): Transfer id mismatch for player [{this}]: expected {_transferParams.TransferId}, got {transferId}");
+                return Logger.WarnReturn(false, $"FinishRegionTransfer(): Transfer id mismatch for player [{this}]: expected {_transferParams.TransferId}, got {transferId}");
 
             _transferParams = null;
-            Logger.Info($"Player [{this}] finished transfer {transferId}");
+            Logger.Info($"Player [{this}] finished region transfer {transferId}");
             return true;
         }
     }

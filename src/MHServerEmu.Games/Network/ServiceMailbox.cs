@@ -95,7 +95,7 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnUnableToChangeRegion(): player == null");
 
             PlayerConnection playerConnection = player.PlayerConnection;
-            playerConnection.CancelRemoteTeleport(unableToChangeRegion.ChangeFailed);
+            playerConnection.CancelRegionTransfer(unableToChangeRegion.ChangeFailed);
             return true;
         }
 
@@ -105,7 +105,7 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnGameAndRegionForPlayer(): player == null");
 
             PlayerConnection playerConnection = player.PlayerConnection;
-            playerConnection.FinishTransfer(gameAndRegionForPlayer.TransferParams);
+            playerConnection.FinishRegionTransfer(gameAndRegionForPlayer.TransferParams);
             return true;
         }
 
