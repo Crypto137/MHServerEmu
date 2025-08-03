@@ -24,17 +24,14 @@ namespace MHServerEmu.PlayerManagement
         private readonly Dictionary<ulong, RegionHandle> _regions = new();
         private readonly HashSet<PlayerHandle> _players = new();
 
-        private readonly PlayerManagerService _playerManager;
-
         public ulong Id { get; }
         public GameHandleState State { get; private set; }
 
         public bool IsRunning { get => State == GameHandleState.Running; }
         public int PlayerCount { get => _players.Count; }
 
-        public GameHandle(PlayerManagerService playerManager, ulong id)
+        public GameHandle(ulong id)
         {
-            _playerManager = playerManager;
             Id = id;
             State = GameHandleState.HandleCreated;
         }
@@ -135,7 +132,7 @@ namespace MHServerEmu.PlayerManagement
             RegionHandle region = new(this, regionId, regionProtoRef, createRegionParams);
             _regions.Add(regionId, region);
 
-            _playerManager.WorldManager.AddRegion(region);
+            PlayerManagerService.Instance.WorldManager.AddRegion(region);
 
             // If this game is already running, request region instance creation immediately.
             // If it doesn't, this will be requested as soon as we receive the confirmation that it's running.
@@ -155,7 +152,7 @@ namespace MHServerEmu.PlayerManagement
         {
             // TODO: Cancel pending transfer requests for this region
 
-            _playerManager.WorldManager.RemoveRegion(regionId);
+            PlayerManagerService.Instance.WorldManager.RemoveRegion(regionId);
 
             if (_regions.Remove(regionId) == false)
                 return Logger.WarnReturn(false, $"FinishRegionShutdown(): Region 0x{regionId:X} not found");
