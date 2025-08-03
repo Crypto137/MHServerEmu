@@ -158,6 +158,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool TeleportToTarget(PrototypeId targetProtoRef)
         {
+            if (CanTeleport() == false)
+                return false;
+
             var targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
             if (targetProto == null) return Logger.WarnReturn(false, "TeleportToTarget(): targetProto == null");
 
@@ -182,6 +185,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool TeleportToTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
+            if (CanTeleport() == false)
+                return false;
+
             Region region = Player.GetRegion();
             if (region == null) return Logger.WarnReturn(false, "TeleportToTarget(): region == null");
 
@@ -231,6 +237,9 @@ namespace MHServerEmu.Games.Regions
 
         public bool TeleportToWaypoint(PrototypeId waypointProtoRef, PrototypeId regionOverrideProtoRef, PrototypeId difficultyProtoRef)
         {
+            if (CanTeleport() == false)
+                return false;
+
             WaypointPrototype waypointProto = waypointProtoRef.As<WaypointPrototype>();
             if (waypointProto == null) return Logger.WarnReturn(false, "TeleportToWaypoint(): waypointProto == null");
 
@@ -353,6 +362,25 @@ namespace MHServerEmu.Games.Regions
             // AccessPortal
             if (AccessPortal != null && currentRegion.Settings.OwnerPlayerDbId != AccessPortal.OwnerPlayerDbId)
                 return false;
+
+            return true;
+        }
+
+        private bool CanTeleport()
+        {
+            if (Player == null) return Logger.WarnReturn(false, "CanTeleport(): Player == null");
+
+            if (Player.PlayerConnection.HasPendingRemoteTeleport)
+                return false;
+
+            if (TransitionEntity != null)
+            {
+                Avatar avatar = Player.CurrentAvatar;
+                if (avatar == null) return Logger.WarnReturn(false, "CanTeleport(): avatar == null");
+
+                if (avatar.InInteractRange(TransitionEntity, Dialog.InteractionMethod.Use) == false)
+                    return false;
+            }
 
             return true;
         }
