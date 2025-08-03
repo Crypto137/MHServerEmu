@@ -91,7 +91,7 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnGameAndRegionForPlayer(): player == null");
 
             PlayerConnection playerConnection = player.PlayerConnection;
-            playerConnection.ReceiveTransferParams(gameAndRegionForPlayer.TransferParams);
+            playerConnection.FinishTransfer(gameAndRegionForPlayer.TransferParams);
             return true;
         }
 

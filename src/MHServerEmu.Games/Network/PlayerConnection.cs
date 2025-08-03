@@ -46,7 +46,6 @@ namespace MHServerEmu.Games.Network
         private readonly IFrontendClient _frontendClient;
         private readonly DBAccount _dbAccount;
 
-        private bool _waitingForRegionIsAvailableResponse = false;
         private bool _doNotUpdateDBAccount = false;
 
         public Game Game { get; }
@@ -302,19 +301,17 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        #region Loading and Exiting
+        #region Transfers
 
-        public void ReceiveTransferParams(NetStructTransferParams transferParams)
+        public void FinishTransfer(NetStructTransferParams transferParams)
         {
             TransferParams.SetFromProtobuf(transferParams);
 
-            // Query if our transfer region is available (has assets) on the client.
-            // Trying to load an unavailable region will get the client stuck in an infinite loading screen.
-            SendMessage(NetMessageQueryIsRegionAvailable.CreateBuilder()
-                .SetRegionPrototype((ulong)TransferParams.DestRegionProtoRef)
-                .Build());
+            // This is where we would previously send NetMessageQueryIsRegionAvailable.
 
-            _waitingForRegionIsAvailableResponse = true;
+            HasPendingRemoteTeleport = false;
+
+            EnterGame();
         }
 
         public void BeginRemoteTeleport(PrototypeId remoteRegionProtoRef)
@@ -343,14 +340,10 @@ namespace MHServerEmu.Games.Network
             HasPendingRemoteTeleport = true;
         }
 
-        public void EnterGame()
+        private void EnterGame()
         {
-            // NOTE: What's most likely supposed to be happening here is the player should load into a lobby region
-            // where their data is loaded from the database, and then we exit the lobby and teleport into our destination region.
-            HasPendingRemoteTeleport = false;
-
             if (Player.IsInGame == false)
-                Player.EnterGame();     // This makes the player entity and things owned by it (avatars and so on) enter our AOI
+                Player.EnterGame();     // This makes the player entity and things owned by it (avatars, items and so on) enter the client's AOI.
 
             if (_dbAccount.MigrationData.IsFirstLoad)
             {
@@ -578,23 +571,7 @@ namespace MHServerEmu.Games.Network
             var isRegionAvailable = message.As<NetMessageIsRegionAvailable>();
             if (isRegionAvailable == null) return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Failed to retrieve message");
 
-            if (_waitingForRegionIsAvailableResponse == false)
-                return Logger.WarnReturn(false, "OnIsRegionAvailable(): Received RegionIsAvailable when we are not waiting for a response");
-
-            if ((PrototypeId)isRegionAvailable.RegionPrototype != TransferParams.DestRegionProtoRef)
-                return Logger.WarnReturn(false, $"OnIsRegionAvailable(): Received RegionIsAvailable does not match our region {TransferParams.DestRegionProtoRef.GetName()}");
-
-            // V52_HACK: Ignore availability for AvengersTowerHUBRegion 
-            if (isRegionAvailable.IsAvailable == false && TransferParams.DestRegionProtoRef != (PrototypeId)14599574127156009346)
-            {
-                Logger.Warn($"OnIsRegionAvailable(): Region {TransferParams.DestRegionProtoRef.GetName()} is not available, disconnecting");
-                Disconnect();
-                return false;
-            }
-
-            _waitingForRegionIsAvailableResponse = false;
-            Game.NetworkManager.SetPlayerReadyToLoad(this);
-
+            // We don't really need this because we now load players into towns, and client streaming via BitRaider isn't a thing anymore.
             return true;
         }
 

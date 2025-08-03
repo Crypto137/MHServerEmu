@@ -128,30 +128,6 @@ namespace MHServerEmu.Games.Network
 
         #endregion
 
-        #region Loading
-
-        /// <summary>
-        /// Loads players who have received their transfer params.
-        /// </summary>
-        public void ProcessReadyToLoadPlayers()
-        {
-            while (_pendingPlayerConnectionQueue.Count > 0)
-            {
-                PlayerConnection playerConnection = _pendingPlayerConnectionQueue.Dequeue();
-                playerConnection.EnterGame();
-            }
-        }
-
-        /// <summary>
-        /// Requests a player to be loaded.
-        /// </summary>
-        public void SetPlayerReadyToLoad(PlayerConnection playerConnection)
-        {
-            _pendingPlayerConnectionQueue.Enqueue(playerConnection);
-        }
-
-        #endregion
-
         #region Message Sending
 
         /// <summary>
