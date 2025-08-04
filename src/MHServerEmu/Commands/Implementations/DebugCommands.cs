@@ -1,10 +1,9 @@
-﻿using System.Text;
+﻿using System.Runtime;
 using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games;
@@ -16,8 +15,6 @@ using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Navi;
 using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Populations;
-using MHServerEmu.Games.Powers.Conditions;
-using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -44,6 +41,15 @@ namespace MHServerEmu.Commands.Implementations
             GC.WaitForPendingFinalizers();
             
             return "Manual garbage collection successfully requested.";
+        }
+
+        [Command("compactloh")]
+        [CommandDescription("Requests the garbage collector to compact the large object heap (LOH) during the next full-blocking garbage collection.")]
+        [CommandUserLevel(AccountUserLevel.Admin)]
+        public string CompactLoh(string[] @params, NetClient client)
+        {
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            return "LOH compaction requested.";
         }
 
         [Command("cell")]
