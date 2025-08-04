@@ -8,8 +8,6 @@ namespace MHServerEmu.Games
         public bool CombineESStacks { get; private set; } = false;
         public bool AutoUnlockAvatars { get; private set; } = true;
         public bool AutoUnlockTeamUps { get; private set; } = true;
-        public int RegionCleanupIntervalMS { get; private set; } = 1000 * 60 * 5;       // 5 minutes
-        public int RegionUnvisitedThresholdMS { get; private set; } = 1000 * 60 * 5;    // 5 minutes
         public bool DisableMovementPowerChargeCost { get; private set; } = false;
         public bool AllowSameGroupTalents { get; private set; } = false;
         public bool DisableInstancedLoot { get; private set; } = false;
@@ -18,10 +16,5 @@ namespace MHServerEmu.Games
         public bool DisableAccountBinding { get; private set; } = false;
         public bool DisableCharacterBinding { get; private set; } = true;
         public bool UsePrestigeLootTable { get; private set; } = false;
-
-        [ConfigIgnore]
-        public TimeSpan RegionCleanupInterval { get => TimeSpan.FromMilliseconds(RegionCleanupIntervalMS); }
-        [ConfigIgnore]
-        public TimeSpan RegionUnvisitedThreshold { get => TimeSpan.FromMilliseconds(RegionUnvisitedThresholdMS); }
     }
 }
