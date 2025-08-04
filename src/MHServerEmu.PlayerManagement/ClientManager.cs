@@ -3,6 +3,7 @@ using Gazillion;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -86,17 +87,16 @@ namespace MHServerEmu.PlayerManagement
                     if (player.State != PlayerHandleState.Idle)
                         continue;
 
-                    IFrontendClient client = player.Client;
-
-                    if (client.IsConnected)
+                    if (player.IsConnected)
                     {
-                        GameHandle game = _playerManager.GameHandleManager.GetAvailableGame();
-                        game.AddPlayer(player);
-                        player.BeginRegionTransfer();
+                        if (player.HasTransferParams == false)
+                            player.BeginRegionTransferToStartingTarget();
+
+                        player.TryJoinGame();
                     }
                     else
                     {
-                        RemovePlayerHandle(client);
+                        RemovePlayerHandle(player.Client);
                     }
                 }
             }
@@ -237,13 +237,24 @@ namespace MHServerEmu.PlayerManagement
 
         private bool OnChangeRegionRequest(in ServiceMessage.ChangeRegionRequest changeRegionRequest)
         {
-            // deny all requests for now
+            ulong requestingGameId = changeRegionRequest.Header.RequestingGameId;
+            ulong playerDbId = changeRegionRequest.Header.RequestingPlayerGuid;
 
-            ServiceMessage.UnableToChangeRegion response = new(changeRegionRequest.Header.RequestingGameId, changeRegionRequest.Header.RequestingPlayerGuid,
-                ChangeRegionFailed.CreateBuilder().SetReason(RegionTransferFailure.eRTF_DestinationInaccessible).Build());
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
+            if (TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnChangeRegionRequest(): No player handle for dbid 0x{playerDbId:X}");
 
-            return true;
+            if (changeRegionRequest.DestTarget != null)
+                return player.BeginRegionTransferToTarget(requestingGameId, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
+
+            if (changeRegionRequest.DestLocation != null)
+                return player.BeginRegionTransferToLocation(requestingGameId, changeRegionRequest.DestLocation);
+
+            if (changeRegionRequest.DestPlayerDbId != 0)
+                return player.BeginRegionTransferToPlayer(requestingGameId, changeRegionRequest.DestPlayerDbId);
+
+            Logger.Warn($"BeginRegionTransfer(): ChangeRegionRequest for player [{this}] does not include transfer params");
+            player.CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+            return false;
         }
 
         private bool OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)

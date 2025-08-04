@@ -1,5 +1,4 @@
-﻿using Gazillion;
-using MHServerEmu.Core.Collections;
+﻿using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
@@ -40,14 +39,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void Initialize()
         {
-            // Just a single game instance for testing now
-            GameHandle game = CreateGame();
-
-            ulong regionId = _playerManager.WorldManager.NextRegionId;
-            ulong regionProtoRef = 9142075282174842340;
-            NetStructCreateRegionParams createParams = NetStructCreateRegionParams.CreateBuilder().SetLevel(0).SetDifficultyTierProtoId(18016845980090109785).Build();
-
-            game.CreateRegion(regionId, regionProtoRef, createParams);
+            // TODO: Precreate commonly used regions like towns or just remove this
         }
 
         public GameHandle CreateGame()
@@ -73,15 +65,6 @@ namespace MHServerEmu.PlayerManagement
         public bool TryGetGameById(ulong gameId, out GameHandle game)
         {
             return _gameDict.TryGetValue(gameId, out game);
-        }
-
-        /// <summary>
-        /// Returns a<see cref="GameHandle"/> for an available game instance.
-        /// </summary>
-        public GameHandle GetAvailableGame()
-        {
-            // REMOVEME
-            return _gameDict.Values.First();
         }
 
         #region Ticking

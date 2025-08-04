@@ -7,10 +7,8 @@ namespace MHServerEmu.PlayerManagement.Regions
 {
     public enum RegionHandleState
     {
-        HandleCreated,
-        PendingInstanceCreation,
+        Pending,
         Running,
-        PendingShutdown,
         Shutdown,
     }
 
@@ -21,18 +19,20 @@ namespace MHServerEmu.PlayerManagement.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private readonly HashSet<PlayerHandle> _transferringPlayers = new();
+
         public GameHandle Game { get; }
         public ulong Id { get; }
         public PrototypeId RegionProtoRef { get; }
         public NetStructCreateRegionParams CreateParams { get; }
 
-        public RegionHandleState State { get; private set; } = RegionHandleState.HandleCreated;
+        public RegionHandleState State { get; private set; } = RegionHandleState.Pending;
 
-        public RegionHandle(GameHandle game, ulong id, ulong regionProtoRef, NetStructCreateRegionParams createParams)
+        public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams)
         {
             Game = game;
             Id = id;
-            RegionProtoRef = (PrototypeId)regionProtoRef;
+            RegionProtoRef = regionProtoRef;
             CreateParams = createParams;
         }
 
@@ -43,10 +43,9 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool RequestInstanceCreation()
         {
-            if (State != RegionHandleState.HandleCreated)
+            if (State != RegionHandleState.Pending)
                 return Logger.WarnReturn(false, $"RequestInstanceCreation(): Invalid state {State} for region [{this}]");
 
-            State = RegionHandleState.PendingInstanceCreation;
             Logger.Info($"Requesting instance creation for region [{this}]");
             
             ServiceMessage.GameInstanceCreateRegion message = new(Game.Id, Id, (ulong)RegionProtoRef, CreateParams);
@@ -57,7 +56,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool OnInstanceCreateResponse(bool result)
         {
-            if (State != RegionHandleState.PendingInstanceCreation)
+            if (State != RegionHandleState.Pending)
                 return Logger.WarnReturn(false, $"OnInstanceCreateResponse(): Invalid state {State} for region [{this}]");
 
             if (result == false)
@@ -70,6 +69,21 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             State = RegionHandleState.Running;
             Logger.Info($"Received instance creation confirmation for region [{this}]");
+
+            foreach (PlayerHandle player in _transferringPlayers)
+                player.OnRegionReadyToTransfer();
+            _transferringPlayers.Clear();
+
+            return true;
+        }
+
+        public bool AddPlayer(PlayerHandle player)
+        {
+            // If this region is already running, let the player in immediately. Otherwise do this when we receive creation confirmation.
+            if (State == RegionHandleState.Running)
+                player.OnRegionReadyToTransfer();
+            else
+                _transferringPlayers.Add(player);
 
             return true;
         }

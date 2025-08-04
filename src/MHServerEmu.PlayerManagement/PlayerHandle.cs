@@ -5,6 +5,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement
@@ -27,15 +28,19 @@ namespace MHServerEmu.PlayerManagement
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private static ulong _nextHandleId = 1;
+        private static ulong _nextHandleId = 1;     // this is needed primarily for debugging, can potentially be removed later
         private static ulong _nextTransferId = 1;
 
         private bool _saveNeeded = false;   // Dirty flag for player data
+
+        private ulong _transferGameId;
         private NetStructTransferParams _transferParams;
+        private bool _transferRegionReady;
 
         public ulong HandleId { get; }
 
         public IFrontendClient Client { get; private set; }
+        public bool IsConnected { get => Client.IsConnected; }
         public ulong PlayerDbId { get => Client.DbId; }
         public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
 
@@ -78,6 +83,8 @@ namespace MHServerEmu.PlayerManagement
             ClientSession oldSession = (ClientSession)Client.Session;
             ClientSession newSession = (ClientSession)newClient.Session;
             newSession.Account = oldSession.Account;
+
+            _transferParams = null;
 
             // Reset migration data to prevent abuse.
             // At this stage the player is still in a game and will try to update MigrationDate on exit. We set the SkipNextUpdate flag here to avoid this.
@@ -169,7 +176,9 @@ namespace MHServerEmu.PlayerManagement
             // If this player has successfully gotten into a game, their data will need to be saved once they get out.
             _saveNeeded = true;
 
-            SendRegionTransferParams();
+            // Now put into the region
+            ServiceMessage.GameAndRegionForPlayer message = new(Game.Id, PlayerDbId, _transferParams);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
 
             return true;
         }
@@ -222,41 +231,121 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public void BeginRegionTransfer()
-        {
-            if (_transferParams != null)
-            {
-                Logger.Warn($"BeginRegionTransfer(): Existing transfer {_transferParams.TransferId} found");
-                _transferParams = null;
-            }
-
-            // HACK: Hardcoded transferparams
-            RegionHandle region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion((PrototypeId)9142075282174842340);
-            _transferParams = NetStructTransferParams.CreateBuilder()
-                .SetTransferId(_nextTransferId++)
-                .SetDestRegionId(region.Id)
-                .SetDestRegionProtoId(9142075282174842340)
-                .SetDestTarget(NetStructRegionTarget.CreateBuilder()
-                    .SetRegionProtoId(9142075282174842340)
-                    .SetAreaProtoId(0)
-                    .SetCellProtoId(0)
-                    .SetEntityProtoId(0))
-                .Build();
-
-            Logger.Info($"Player [{this}] beginning region transfer {_transferParams.TransferId}");
-        }
-
-        public void SendRegionTransferParams()
+        public void TryJoinGame()
         {
             if (_transferParams == null)
             {
-                Logger.Warn($"SendRegionTransferParams(): No transfer params for player [{this}]");
+                Logger.Warn($"TryJoinGame(): No transfer params for player [{this}]");
                 Disconnect();
                 return;
             }
 
-            ServiceMessage.GameAndRegionForPlayer message = new(Game.Id, PlayerDbId, _transferParams);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            if (_transferRegionReady == false)
+                return;
+
+            if (PlayerManagerService.Instance.GameHandleManager.TryGetGameById(_transferGameId, out GameHandle transferGame) == false)
+            {
+                Logger.Warn($"TryJoinGame(): No transfer params for player [{this}]");
+                Disconnect();
+                return;
+            }
+
+            transferGame.AddPlayer(this);
+        }
+
+        public bool BeginRegionTransferToStartingTarget()
+        {
+            PrototypeId targetProtoRef = (PrototypeId)Account.Player.StartTarget;
+            RegionConnectionTargetPrototype targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
+            if (targetProto == null)
+            {
+                targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
+                targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
+                Logger.Warn($"BeginRegionTransferToStartingTarget(): Invalid start target specified for player [{this}], falling back to default");
+            }
+
+            RegionPrototype regionProto = targetProto.Region.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "BeginRegionTransferToStartingTarget(): regionProto == null");
+
+            NetStructRegionTarget destTarget = NetStructRegionTarget.CreateBuilder()
+                .SetRegionProtoId((ulong)targetProto.Region)
+                .SetAreaProtoId((ulong)targetProto.Area)
+                .SetCellProtoId((ulong)GameDatabase.GetDataRefByAsset(targetProto.Cell))
+                .SetEntityProtoId((ulong)targetProto.Entity)
+                .Build();
+
+            NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
+                .SetLevel(0)
+                .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
+                .Build();
+
+            return BeginRegionTransferToTarget(0, destTarget, createRegionParams);
+        }
+
+        public bool BeginRegionTransferToTarget(ulong requestingGameId, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
+        {
+            // TODO: Prioritize WorldView regions
+
+            RegionPrototype regionProto = ((PrototypeId)destTarget.RegionProtoId).As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "BeginRegionTransferToTarget(): regionProto == null");
+
+            if (regionProto.IsPublic == false)
+            {
+                Logger.Debug("BeginRegionTransferToTarget(): private regions are not implemented");
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+                return false;
+            }
+
+            RegionHandle region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion((PrototypeId)destTarget.RegionProtoId, createRegionParams);
+            ulong destGameId = region.Game.Id;
+
+            NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
+                .SetTransferId(_nextTransferId++)
+                .SetDestRegionId(region.Id)
+                .SetDestRegionProtoId((ulong)region.RegionProtoRef)
+                .SetDestTarget(destTarget)
+                .Build();
+
+            SetTransferParams(region.Game.Id, transferParams);
+
+            if (Game != null && Game.Id != destGameId)
+                RemoveFromCurrentGame();
+
+            // This needs to be called after we set transfer params because the region may already be ready.
+            region.AddPlayer(this);
+            return true;
+        }
+
+        public bool BeginRegionTransferToLocation(ulong requestingGameId, NetStructRegionLocation destLocation)
+        {
+            // TODO
+            Logger.Debug("BeginRegionTransferToPlayer()");
+            CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_DestinationInaccessible);
+            return false;
+        }
+
+        public bool BeginRegionTransferToPlayer(ulong requestingGameId, ulong destPlayerDbId)
+        {
+            // TODO
+            Logger.Debug("BeginRegionTransferToPlayer()");
+            CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_DestinationInaccessible);
+            return false;
+        }
+
+        public void CancelRegionTransfer(ulong requestingGameId, RegionTransferFailure reason)
+        {
+            if (requestingGameId == 0)
+                return;
+
+            // TODO: Do we need regionProtoId / requiredItemProtoId fields here?
+            ChangeRegionFailed changeFailed = ChangeRegionFailed.CreateBuilder().SetReason(reason).Build();
+            ServiceMessage.UnableToChangeRegion response = new(requestingGameId, PlayerDbId, changeFailed);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
+        }
+
+        public void OnRegionReadyToTransfer()
+        {
+            _transferRegionReady = true;
         }
 
         public bool FinishRegionTransfer(ulong transferId)
@@ -270,6 +359,18 @@ namespace MHServerEmu.PlayerManagement
             _transferParams = null;
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
             return true;
+        }
+
+        private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
+        {
+            if (_transferParams != null)
+                Logger.Warn($"SetTransferParams(): Existing transfer {_transferParams.TransferId} found");
+
+            _transferGameId = gameId;
+            _transferParams = transferParams;
+            _transferRegionReady = false;
+
+            Logger.Info($"Player [{this}] beginning region transfer {_transferParams.TransferId}");
         }
     }
 }

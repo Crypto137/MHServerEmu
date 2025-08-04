@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Collections;
+﻿using Gazillion;
+using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
@@ -16,6 +17,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
 
         private readonly Dictionary<ulong, RegionHandle> _allRegions = new();
+        private readonly Dictionary<(PrototypeId, PrototypeId), RegionHandle> _publicRegions = new();
 
         private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
 
@@ -38,16 +40,18 @@ namespace MHServerEmu.PlayerManagement.Regions
             _messageQueue.Enqueue(message);
         }
 
-        public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef)
+        public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
         {
-            // temp hack just to get things rolling for now
-            foreach (RegionHandle region in _allRegions.Values)
+            // TODO: Multiple instances of public regions and load balancing
+            var key = (regionProtoRef, (PrototypeId)createRegionParams.DifficultyTierProtoId);
+            if (_publicRegions.TryGetValue(key, out RegionHandle region) == false)
             {
-                if (region.RegionProtoRef == regionProtoRef)
-                    return region;
+                GameHandle game = _playerManager.GameHandleManager.CreateGame();
+                region = CreateRegionInGame(game, regionProtoRef, createRegionParams);
+                _publicRegions[key] = region;
             }
 
-            return null;
+            return region;
         }
 
         public RegionHandle GetRegion(ulong regionId)
@@ -67,6 +71,14 @@ namespace MHServerEmu.PlayerManagement.Regions
         public bool RemoveRegion(ulong regionId)
         {
             return _allRegions.Remove(regionId);
+        }
+
+        private RegionHandle CreateRegionInGame(GameHandle game, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        {
+            if (game.CreateRegion(_idGenerator.Generate(), regionProtoRef, createRegionParams, out RegionHandle region) == false)
+                return null;
+
+            return region;
         }
 
         #region Ticking

@@ -155,6 +155,7 @@ namespace MHServerEmu.Core.Network
 
                 OnNetClientDisconnected(netClient);
                 netClient.OnDisconnect();
+                netClient.FlushMessages();
             }
         }
 

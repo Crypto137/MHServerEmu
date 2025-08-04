@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement
@@ -121,15 +122,17 @@ namespace MHServerEmu.PlayerManagement
 
         #region Region Management
 
-        public bool CreateRegion(ulong regionId, ulong regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        public bool CreateRegion(ulong regionId, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, out RegionHandle region)
         {
+            region = null;
+
             if (State == GameHandleState.PendingShutdown || State == GameHandleState.Shutdown)
                 return Logger.WarnReturn(false, $"CreateRegion(): Invalid state {State} for game [{this}]");
 
             if (createRegionParams == null)
                 return Logger.WarnReturn(false, $"CreateRegion(): No params to create region 0x{regionId:X}");
 
-            RegionHandle region = new(this, regionId, regionProtoRef, createRegionParams);
+            region = new(this, regionId, regionProtoRef, createRegionParams);
             _regions.Add(regionId, region);
 
             PlayerManagerService.Instance.WorldManager.AddRegion(region);
