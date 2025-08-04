@@ -41,7 +41,7 @@ namespace MHServerEmu.Core.Network
         public TNetClient GetNetClient(IFrontendClient frontendClient)
         {
             if (_netClientDict.TryGetValue(frontendClient, out TNetClient netClient) == false)
-                Logger.Warn($"GetNetClient(): IFrontendClient {frontendClient} is not bound to a NetClient");
+                return null;    // This is valid when transferring between games, so don't log this.
 
             return netClient;
         }

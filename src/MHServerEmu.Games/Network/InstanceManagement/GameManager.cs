@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Games.Network.InstanceManagement
@@ -139,7 +140,12 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         public bool RouteMessageBuffer(IFrontendClient client, in MessageBuffer messageBuffer)
         {
             if (TryGetGameForClient(client, out Game game) == false)
-                return Logger.WarnReturn(false, $"RouteMessageBuffer(): Client [{client}] is not in a game");
+            {
+                // The player may be transferring to another game instance, in which case this message is not going to be delivered.
+                Logger.Debug($"RouteMessageBuffer(): Cannot deliver {(ClientToGameServerMessage)messageBuffer.MessageId}, client [{client}] is not in a game");
+                messageBuffer.Destroy();
+                return false;
+            }
 
             game.ReceiveMessageBuffer(client, messageBuffer);
             return true;
