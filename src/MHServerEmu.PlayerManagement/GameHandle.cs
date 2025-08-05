@@ -25,6 +25,8 @@ namespace MHServerEmu.PlayerManagement
         private readonly Dictionary<ulong, RegionHandle> _regions = new();
         private readonly HashSet<PlayerHandle> _players = new();
 
+        private bool _instanceCreationCancelled = false;
+
         public ulong Id { get; }
         public GameHandleState State { get; private set; }
 
@@ -72,6 +74,13 @@ namespace MHServerEmu.PlayerManagement
             State = GameHandleState.Running;
             Logger.Info($"Received instance creation confirmation for game [{this}]");
 
+            // Handle the edge case when we shut down a game instance while it's being created. There is probably a better way of handling this.
+            if (_instanceCreationCancelled)
+            {
+                RequestInstanceShutdown();
+                return true;
+            }
+
             // Now that we are running we can create region instances.
             foreach (RegionHandle region in _regions.Values)
                 region.RequestInstanceCreation();
@@ -84,6 +93,14 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public bool RequestInstanceShutdown()
         {
+            // Handle the edge case when we shut down a game instance while it's being created. There is probably a better way of handling this.
+            if (State == GameHandleState.PendingInstanceCreation)
+            {
+                Logger.Warn($"RequestInstanceShutdown(): Requested to shut down game [{this}] while it is being created");
+                _instanceCreationCancelled = true;
+                return true;
+            }
+
             if (State != GameHandleState.Running)
                 return Logger.WarnReturn(false, $"RequestInstanceShutdown(): Invalid state {State} for game [{this}]");
 
