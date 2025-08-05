@@ -45,7 +45,7 @@ namespace MHServerEmu.PlayerManagement
         public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
 
         public PlayerHandleState State { get; private set; }
-        public GameHandle Game { get; private set; }
+        public GameHandle CurrentGame { get; private set; }
 
         public bool HasTransferParams { get => _transferParams != null; }
 
@@ -153,7 +153,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"BeginAddToGame(): Invalid state {State} for player [{this}]");
 
             State = PlayerHandleState.PendingAddToGame;
-            Game = game;
+            CurrentGame = game;
             Logger.Info($"Requesting to add player [{this}] to game [{game}]");
 
             ServiceMessage.GameInstanceClientOp gameInstanceOp = new(GameInstanceClientOpType.Add, Client, game.Id);
@@ -167,18 +167,17 @@ namespace MHServerEmu.PlayerManagement
             if (State != PlayerHandleState.PendingAddToGame)
                 return Logger.WarnReturn(false, $"FinishAddToGame(): Invalid state {State} for player [{this}]");
 
-            if (Game.Id != gameId)
-                Logger.Warn($"FinishAddToGame(): GameId mismatch (expected 0x{Game.Id:X}, got 0x{gameId:X})");
+            if (CurrentGame.Id != gameId)
+                Logger.Warn($"FinishAddToGame(): GameId mismatch (expected 0x{CurrentGame.Id:X}, got 0x{gameId:X})");
 
             State = PlayerHandleState.InGame;
-            Logger.Info($"Player [{this}] added to game [{Game}]");
+            Logger.Info($"Player [{this}] added to game [{CurrentGame}]");
 
             // If this player has successfully gotten into a game, their data will need to be saved once they get out.
             _saveNeeded = true;
 
-            // Now put into the region
-            ServiceMessage.GameAndRegionForPlayer message = new(Game.Id, PlayerDbId, _transferParams);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            // Now put the player into the region they are transferring into.
+            SendTransferParamsToGame();
 
             return true;
         }
@@ -188,16 +187,16 @@ namespace MHServerEmu.PlayerManagement
             if (State != PlayerHandleState.InGame)
                 return;
 
-            Game.RemovePlayer(this);
+            CurrentGame.RemovePlayer(this);
         }
 
         public bool BeginRemoveFromGame(GameHandle game)
         {
             if (State != PlayerHandleState.InGame)
-                return Logger.WarnReturn(false, $"BeginRemoveFromGame(): Invalid state {State} for handle [{this}]");
+                return Logger.WarnReturn(false, $"BeginRemoveFromGame(): Invalid state {State} for player [{this}]");
 
-            if (game != Game)
-                Logger.Warn($"BeginRemoveFromGame(): Game mismatch (expected [{Game}], got [{game}])");
+            if (game != CurrentGame)
+                Logger.Warn($"BeginRemoveFromGame(): Game mismatch (expected [{CurrentGame}], got [{game}])");
 
             State = PlayerHandleState.PendingRemoveFromGame;
             Logger.Info($"Requesting to remove player [{this}] from game {game}");
@@ -214,11 +213,11 @@ namespace MHServerEmu.PlayerManagement
             if (State != PlayerHandleState.PendingAddToGame && State != PlayerHandleState.PendingRemoveFromGame)
                 return Logger.WarnReturn(false, $"FinishRemoveFromGame(): Invalid state {State} for player [{this}]");
 
-            if (Game.Id != gameId)
-                Logger.Warn($"FinishRemoveFromGame(): GameId mismatch (expected 0x{Game.Id:X}, got 0x{gameId:X})");
+            if (CurrentGame.Id != gameId)
+                Logger.Warn($"FinishRemoveFromGame(): GameId mismatch (expected 0x{CurrentGame.Id:X}, got 0x{gameId:X})");
 
             State = PlayerHandleState.Idle;
-            Game = null;
+            CurrentGame = null;
 
             Logger.Info($"Player [{this}] removed from game 0x{gameId:X}");
 
@@ -253,7 +252,7 @@ namespace MHServerEmu.PlayerManagement
             transferGame.AddPlayer(this);
         }
 
-        public bool BeginRegionTransferToStartingTarget()
+        public bool BeginRegionTransferToStartTarget()
         {
             PrototypeId targetProtoRef = (PrototypeId)Account.Player.StartTarget;
             RegionConnectionTargetPrototype targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
@@ -261,11 +260,11 @@ namespace MHServerEmu.PlayerManagement
             {
                 targetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
                 targetProto = targetProtoRef.As<RegionConnectionTargetPrototype>();
-                Logger.Warn($"BeginRegionTransferToStartingTarget(): Invalid start target specified for player [{this}], falling back to default");
+                Logger.Warn($"BeginRegionTransferToStartTarget(): Invalid start target specified for player [{this}], falling back to default");
             }
 
             RegionPrototype regionProto = targetProto.Region.As<RegionPrototype>();
-            if (regionProto == null) return Logger.WarnReturn(false, "BeginRegionTransferToStartingTarget(): regionProto == null");
+            if (regionProto == null) return Logger.WarnReturn(false, "BeginRegionTransferToStartTarget(): regionProto == null");
 
             NetStructRegionTarget destTarget = NetStructRegionTarget.CreateBuilder()
                 .SetRegionProtoId((ulong)targetProto.Region)
@@ -308,7 +307,7 @@ namespace MHServerEmu.PlayerManagement
 
             SetTransferParams(region.Game.Id, transferParams);
 
-            if (Game != null && Game.Id != destGameId)
+            if (CurrentGame != null && CurrentGame.Id != destGameId)
                 RemoveFromCurrentGame();
 
             // This needs to be called after we set transfer params because the region may already be ready.
@@ -346,6 +345,11 @@ namespace MHServerEmu.PlayerManagement
         public void OnRegionReadyToTransfer()
         {
             _transferRegionReady = true;
+
+            // If this player is already in the game that hosts the region, finish the transfer right away.
+            // Otherwise this would be triggered when we receive the confirmation that this player is in the game.
+            if (State == PlayerHandleState.InGame)
+                SendTransferParamsToGame();
         }
 
         public bool FinishRegionTransfer(ulong transferId)
@@ -371,6 +375,34 @@ namespace MHServerEmu.PlayerManagement
             _transferRegionReady = false;
 
             Logger.Info($"Player [{this}] beginning region transfer {_transferParams.TransferId}");
+        }
+
+        /// <summary>
+        /// Puts this player into the region in the current game instance specified in the current transfer params.
+        /// </summary>
+        private void SendTransferParamsToGame()
+        {
+            if (CurrentGame == null)
+            {
+                Logger.Warn("SendTransferParamsToGame(): CurrentGame == null");
+                return;
+            }
+
+            if (State != PlayerHandleState.InGame)
+            {
+                Logger.Warn($"SendTransferParamsToGame(): Invalid state {State} for player [{this}]");
+                return;
+            }
+
+            if (CurrentGame.Id != _transferGameId)
+            {
+                Logger.Error($"OnRegionReadyToTransfer(): Game id mismatch for player [{this}] (expected 0x{_transferGameId:X}, got 0x{CurrentGame.Id:X})");
+                Disconnect();
+                return;
+            }
+
+            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
     }
 }

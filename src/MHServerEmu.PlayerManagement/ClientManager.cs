@@ -90,7 +90,7 @@ namespace MHServerEmu.PlayerManagement
                     if (player.IsConnected)
                     {
                         if (player.HasTransferParams == false)
-                            player.BeginRegionTransferToStartingTarget();
+                            player.BeginRegionTransferToStartTarget();
 
                         player.TryJoinGame();
                     }
