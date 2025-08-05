@@ -54,6 +54,20 @@ namespace MHServerEmu.PlayerManagement.Regions
             return region;
         }
 
+        public RegionHandle CreatePrivateRegion(PlayerHandle owner, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        {
+            GameHandle privateGame = owner.PrivateGame;
+
+            // The owner may not have a private game yet OR it may have crashed, in which case we need to create a new one.
+            if (privateGame == null || privateGame.State == GameHandleState.PendingShutdown || privateGame.State == GameHandleState.Shutdown)
+            {
+                privateGame = _playerManager.GameHandleManager.CreateGame();
+                owner.SetPrivateGame(privateGame);
+            }
+
+            return CreateRegionInGame(privateGame, regionProtoRef, createRegionParams);
+        }
+
         public RegionHandle GetRegion(ulong regionId)
         {
             if (_allRegions.TryGetValue(regionId, out RegionHandle region) == false)

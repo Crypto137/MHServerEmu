@@ -1,16 +1,57 @@
-﻿namespace MHServerEmu.PlayerManagement.Regions
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Games.GameData;
+
+namespace MHServerEmu.PlayerManagement.Regions
 {
+    /// <summary>
+    /// Represents a collection of region instances (both public and private) bound to a player.
+    /// </summary>
+    /// <remarks>
+    /// This is what allows a player to access their private instances, as well as consistently return to the same public instances. 
+    /// When in party, everyone should use the world view of the leader.
+    /// </remarks>
     public class WorldView
     {
-        // NOTE: This is based on the PlayerMgrToGameServer protocol extracted from 1.53 builds.
+        private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // WorldView is a class that represents a collection of region instances (both public and private)
-        // bound to a player. This is what allows a player to access their private instances, as well as
-        // consistently return to the same public instances. When in party, everyone should use the world view
-        // of the leader.
+        private readonly Dictionary<ulong, RegionHandle> _regions = new();
 
-        // TODO: Implement this on the PlayerManager side
+        public PlayerHandle Owner { get; }
 
-        // TODO: Implement some method of short-term persistence between sessions (e.g. so your world view doesn't reset when you relog).
+        public WorldView(PlayerHandle owner)
+        {
+            Owner = owner;
+        }
+
+        public bool AddRegion(RegionHandle region)
+        {
+            if (region == null) return Logger.WarnReturn(false, "AddRegion(): region == null");
+
+            return _regions.TryAdd(region.Id, region);
+        }
+
+        public bool RemoveRegion(RegionHandle region)
+        {
+            if (region == null) return Logger.WarnReturn(false, "RemoveRegion(): region == null");
+
+            return _regions.Remove(region.Id);
+        }
+
+        public RegionHandle GetMatchingRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        {
+            foreach (RegionHandle region in _regions.Values)
+            {
+                if (region.RegionProtoRef != regionProtoRef)
+                    continue;
+
+                if (createRegionParams != null && region.MatchesCreateParams(createRegionParams) == false)
+                    continue;
+
+                return region;
+            }
+
+            return null;
+        }
     }
 }

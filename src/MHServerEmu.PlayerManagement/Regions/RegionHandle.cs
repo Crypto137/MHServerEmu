@@ -77,6 +77,33 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
+        public bool MatchesCreateParams(NetStructCreateRegionParams otherParams)
+        {
+            if (CreateParams.DifficultyTierProtoId != otherParams.DifficultyTierProtoId)
+                return false;
+
+            // EndlessLevel > 0 indicates that this is an endless region, in which case the level needs to match.
+            if (CreateParams.EndlessLevel != 0 && CreateParams.EndlessLevel != otherParams.EndlessLevel)
+                return false;
+
+            // If the other params specify an explicit seed, this needs to match too.
+            if (otherParams.Seed != 0 && CreateParams.Seed != otherParams.Seed)
+                return false;
+
+            // Some regions (Cow/Doop levels, Danger Room) are created by and bound to specific transition entities.
+            // Interacting with the same transition entity should transfer the player to the same region instance.
+            if (CreateParams.HasAccessPortal)
+            {
+                if (otherParams.HasAccessPortal == false)
+                    return false;
+
+                if (CreateParams.AccessPortal.EntityDbId != otherParams.AccessPortal.EntityDbId)
+                    return false;
+            }
+
+            return true;
+        }
+
         public bool AddPlayer(PlayerHandle player)
         {
             // If this region is already running, let the player in immediately. Otherwise do this when we receive creation confirmation.

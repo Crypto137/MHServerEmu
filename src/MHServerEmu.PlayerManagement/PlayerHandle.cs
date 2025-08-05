@@ -39,6 +39,8 @@ namespace MHServerEmu.PlayerManagement
 
         public ulong HandleId { get; }
 
+        public WorldView WorldView { get; }
+
         public IFrontendClient Client { get; private set; }
         public bool IsConnected { get => Client.IsConnected; }
         public ulong PlayerDbId { get => Client.DbId; }
@@ -46,6 +48,7 @@ namespace MHServerEmu.PlayerManagement
 
         public PlayerHandleState State { get; private set; }
         public GameHandle CurrentGame { get; private set; }
+        public GameHandle PrivateGame { get; private set; }     // A game instance owned by this player that runs all of their private regions.
 
         public bool HasTransferParams { get => _transferParams != null; }
 
@@ -58,6 +61,7 @@ namespace MHServerEmu.PlayerManagement
                 throw new Exception("Client does not implement IDBAccountOwner.");
 
             HandleId = _nextHandleId++;
+            WorldView = new(this);
             Client = client;
             State = PlayerHandleState.Created;
         }
@@ -252,6 +256,16 @@ namespace MHServerEmu.PlayerManagement
             transferGame.AddPlayer(this);
         }
 
+        public bool SetPrivateGame(GameHandle privateGame)
+        {
+            if (PrivateGame != null && PrivateGame.IsRunning)
+                return Logger.WarnReturn(false, $"SetPrivateGame(): Cannot assign private game instance [{privateGame}] to player [{this}] because game instance [{PrivateGame}] is already assigned");
+
+            Logger.Info($"Private game instance [{privateGame}] assigned to player [{this}]");
+            PrivateGame = privateGame;
+            return true;
+        }
+
         public bool BeginRegionTransferToStartTarget()
         {
             PrototypeId targetProtoRef = (PrototypeId)Account.Player.StartTarget;
@@ -283,19 +297,24 @@ namespace MHServerEmu.PlayerManagement
 
         public bool BeginRegionTransferToTarget(ulong requestingGameId, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
         {
-            // TODO: Prioritize WorldView regions
-
+            PrototypeId regionProtoRef = (PrototypeId)destTarget.RegionProtoId;
             RegionPrototype regionProto = ((PrototypeId)destTarget.RegionProtoId).As<RegionPrototype>();
             if (regionProto == null) return Logger.WarnReturn(false, "BeginRegionTransferToTarget(): regionProto == null");
 
-            if (regionProto.IsPublic == false)
+            // Prioritize regions that are already in the WorldView.
+            RegionHandle region = WorldView.GetMatchingRegion(regionProtoRef, createRegionParams);
+
+            // Create a new region if needed
+            if (region == null)
             {
-                Logger.Debug("BeginRegionTransferToTarget(): private regions are not implemented");
-                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
-                return false;
+                if (regionProto.IsPublic)
+                    region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion(regionProtoRef, createRegionParams);
+                else
+                    region = PlayerManagerService.Instance.WorldManager.CreatePrivateRegion(this, regionProtoRef, createRegionParams);
+
+                WorldView.AddRegion(region);
             }
 
-            RegionHandle region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion((PrototypeId)destTarget.RegionProtoId, createRegionParams);
             ulong destGameId = region.Game.Id;
 
             NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
@@ -305,7 +324,7 @@ namespace MHServerEmu.PlayerManagement
                 .SetDestTarget(destTarget)
                 .Build();
 
-            SetTransferParams(region.Game.Id, transferParams);
+            SetTransferParams(destGameId, transferParams);
 
             if (CurrentGame != null && CurrentGame.Id != destGameId)
                 RemoveFromCurrentGame();

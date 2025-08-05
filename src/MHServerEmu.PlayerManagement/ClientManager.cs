@@ -158,6 +158,9 @@ namespace MHServerEmu.PlayerManagement
 
             Logger.Info($"Removed PlayerHandle [{player}]");
 
+            if (player.PrivateGame != null && player.PrivateGame.IsRunning)
+                player.PrivateGame.RequestInstanceShutdown();
+
             return true;
         }
 
