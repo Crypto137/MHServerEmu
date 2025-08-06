@@ -107,8 +107,12 @@ namespace MHServerEmu.PlayerManagement.Regions
 
                 switch (serviceMessage)
                 {
-                    case ServiceMessage.GameInstanceCreateRegionResponse createRegionResponse:
+                    case ServiceMessage.CreateRegionResult createRegionResponse:
                         OnCreateRegionResponse(createRegionResponse);
+                        break;
+
+                    case ServiceMessage.RequestRegionShutdown requestRegionShutdown:
+                        OnRequestRegionShutdown(requestRegionShutdown);
                         break;
 
                     default:
@@ -122,7 +126,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         #region Message Handling
 
-        private bool OnCreateRegionResponse(in ServiceMessage.GameInstanceCreateRegionResponse createRegionResponse)
+        private bool OnCreateRegionResponse(in ServiceMessage.CreateRegionResult createRegionResponse)
         {
             RegionHandle region = GetRegion(createRegionResponse.RegionId);
             if (region == null)
@@ -130,6 +134,12 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             region.OnInstanceCreateResponse(createRegionResponse.Success);
             return true;
+        }
+
+        private bool OnRequestRegionShutdown(in ServiceMessage.RequestRegionShutdown requestRegionShutdown)
+        {
+            Logger.Debug("OnRequestRegionShutdown");
+            return false;
         }
 
         #endregion

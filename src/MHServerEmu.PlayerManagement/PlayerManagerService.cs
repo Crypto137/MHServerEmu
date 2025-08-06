@@ -118,7 +118,8 @@ namespace MHServerEmu.PlayerManagement
                     GameHandleManager.ReceiveMessage(gameInstanceOp);
                     break;
 
-                case ServiceMessage.GameInstanceCreateRegionResponse:
+                case ServiceMessage.CreateRegionResult:
+                case ServiceMessage.RequestRegionShutdown:
                     WorldManager.ReceiveMessage(message);
                     break;
 

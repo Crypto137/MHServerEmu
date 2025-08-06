@@ -162,13 +162,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool BeginRegionShutdown(ulong regionId)
-        {
-            // TODO
-            return false;
-        }
-
-        public bool FinishRegionShutdown(ulong regionId)
+        public bool OnRegionShutdown(ulong regionId)
         {
             // TODO: Cancel pending transfer requests for this region
 

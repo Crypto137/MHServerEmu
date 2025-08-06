@@ -49,7 +49,7 @@ namespace MHServerEmu.Games.Network
         {
             switch (message)
             {
-                case ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion:
+                case ServiceMessage.CreateRegion gameInstanceCreateRegion:
                     OnGameInstanceCreateRegion(gameInstanceCreateRegion);
                     break;
 
@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Network
 
         #region Message Handling
 
-        private void OnGameInstanceCreateRegion(in ServiceMessage.GameInstanceCreateRegion gameInstanceCreateRegion)
+        private void OnGameInstanceCreateRegion(in ServiceMessage.CreateRegion gameInstanceCreateRegion)
         {
             ulong regionId = gameInstanceCreateRegion.RegionId;
             PrototypeId regionProtoRef = (PrototypeId)gameInstanceCreateRegion.RegionProtoRef;
@@ -85,7 +85,7 @@ namespace MHServerEmu.Games.Network
 
             Region region = Game.RegionManager.GenerateRegion(regionId, regionProtoRef, createParams);
 
-            ServiceMessage.GameInstanceCreateRegionResponse response = new(regionId, region != null);
+            ServiceMessage.CreateRegionResult response = new(regionId, region != null);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
         }
 

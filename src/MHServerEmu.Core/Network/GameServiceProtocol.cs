@@ -74,7 +74,18 @@ namespace MHServerEmu.Core.Network
             public readonly ulong GameId = gameId;
         }
 
-        public readonly struct GameInstanceCreateRegion(ulong gameId, ulong regionId, ulong regionProtoRef, NetStructCreateRegionParams createParams = null)
+        public readonly struct GameInstanceClientOp(GameInstanceClientOpType type, IFrontendClient client, ulong gameId)
+            : IGameServiceMessage
+        {
+            public readonly GameInstanceClientOpType Type = type;
+            public readonly IFrontendClient Client = client;
+            public readonly ulong GameId = gameId;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Instructs the game instance service to create a region with the specified params.
+        /// </summary>
+        public readonly struct CreateRegion(ulong gameId, ulong regionId, ulong regionProtoRef, NetStructCreateRegionParams createParams = null)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
@@ -83,33 +94,34 @@ namespace MHServerEmu.Core.Network
             public readonly NetStructCreateRegionParams CreateParams = createParams;
         }
 
-        public readonly struct GameInstanceCreateRegionResponse(ulong regionId, bool success)
+        /// <summary>
+        /// [Game -> PlayerManager] Notifies the player manager of the result of a region creation request (success or failure).
+        /// </summary>
+        public readonly struct CreateRegionResult(ulong regionId, bool success)
             : IGameServiceMessage
         {
             public readonly ulong RegionId = regionId;
             public readonly bool Success = success;
         }
 
-        public readonly struct GameInstanceShutdownRegion(ulong gameId, ulong regionId)
+        /// <summary>
+        /// [Game -> PlayerManager] Requests the player manager to shut down the specified region.
+        /// </summary>
+        public readonly struct RequestRegionShutdown(ulong gameId, ulong regionId)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
             public readonly ulong RegionId = regionId;
         }
 
-        public readonly struct GameInstanceShutdownRegionResponse(ulong gameId, ulong regionId)
+        /// <summary>
+        /// [PlayerManager -> Game] Instruct the game instance service to shut down the specified region.
+        /// </summary>
+        public readonly struct ShutdownRegion(ulong gameId, ulong regionId)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
             public readonly ulong RegionId = regionId;
-        }
-
-        public readonly struct GameInstanceClientOp(GameInstanceClientOpType type, IFrontendClient client, ulong gameId)
-            : IGameServiceMessage
-        {
-            public readonly GameInstanceClientOpType Type = type;
-            public readonly IFrontendClient Client = client;
-            public readonly ulong GameId = gameId;
         }
 
         /// <summary>

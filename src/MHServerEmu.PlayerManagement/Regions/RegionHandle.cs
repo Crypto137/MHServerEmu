@@ -48,7 +48,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             Logger.Info($"Requesting instance creation for region [{this}]");
             
-            ServiceMessage.GameInstanceCreateRegion message = new(Game.Id, Id, (ulong)RegionProtoRef, CreateParams);
+            ServiceMessage.CreateRegion message = new(Game.Id, Id, (ulong)RegionProtoRef, CreateParams);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             
             return true;
@@ -62,9 +62,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (result == false)
             {
                 Logger.Warn($"OnInstanceCreateResponse(): Region [{this}] failed to generate");
-                State = RegionHandleState.Shutdown;
-                Game.FinishRegionShutdown(Id);
-                return true;
+                return Shutdown();
             }
 
             State = RegionHandleState.Running;
@@ -74,6 +72,21 @@ namespace MHServerEmu.PlayerManagement.Regions
                 player.OnRegionReadyToTransfer();
             _transferringPlayers.Clear();
 
+            return true;
+        }
+
+        public bool Shutdown()
+        {
+            // Instruct the game instance service to shut down this region if it was successfully created.
+            // We don't differentiate between pending shutdown and shutdown here, so we don't need a confirmation.
+            if (State == RegionHandleState.Running)
+            {
+                ServiceMessage.ShutdownRegion shutdownMessage = new(Game.Id, Id);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, shutdownMessage);
+            }
+
+            State = RegionHandleState.Shutdown;
+            Game.OnRegionShutdown(Id);
             return true;
         }
 
