@@ -132,6 +132,9 @@ namespace MHServerEmu.PlayerManagement
             foreach (PlayerHandle player in _players)
                 player.Disconnect();
 
+            foreach (RegionHandle region in _regions.Values)
+                region.Shutdown(false);
+
             return true;
         }
 

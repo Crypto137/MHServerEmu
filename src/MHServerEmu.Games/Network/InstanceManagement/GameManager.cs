@@ -77,10 +77,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 return Logger.WarnReturn(false, $"ShutdownGame(): GameId 0x{gameId:X} not found");
 
             game.Shutdown(reason);
-
-            lock (_gameDict)
-                _gameDict.Remove(gameId);
-
             return true;
         }
 
@@ -175,6 +171,9 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public void OnGameShutdown(Game game)
         {
+            lock (_gameDict)
+                _gameDict.Remove(game.Id);
+
             ServiceMessage.GameInstanceOp message = new(GameInstanceOpType.ShutdownNotice, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }

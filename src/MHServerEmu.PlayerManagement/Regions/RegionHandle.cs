@@ -62,7 +62,17 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (result == false)
             {
                 Logger.Warn($"OnInstanceCreateResponse(): Region [{this}] failed to generate");
-                return Shutdown();
+                foreach (PlayerHandle player in _transferringPlayers)
+                {
+                    // Try to cancel the transfer and return players to regions they were in.
+                    // If this is not possible (the player is logging in and is not in a game/region yet), disconnect.
+                    if (player.CurrentGame != null)
+                        player.CancelRegionTransfer(player.CurrentGame.Id, RegionTransferFailure.eRTF_DestinationInaccessible);
+                    else
+                        player.Disconnect();
+                }
+
+                return Shutdown(false);
             }
 
             State = RegionHandleState.Running;
@@ -75,11 +85,11 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
-        public bool Shutdown()
+        public bool Shutdown(bool sendShutdownToGis)
         {
-            // Instruct the game instance service to shut down this region if it was successfully created.
+            // Instruct the game instance service to shut down this region if needed.
             // We don't differentiate between pending shutdown and shutdown here, so we don't need a confirmation.
-            if (State == RegionHandleState.Running)
+            if (sendShutdownToGis)
             {
                 ServiceMessage.ShutdownRegion shutdownMessage = new(Game.Id, Id);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, shutdownMessage);
@@ -117,7 +127,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
-        public bool AddPlayer(PlayerHandle player)
+        public bool AddTransferringPlayer(PlayerHandle player)
         {
             // If this region is already running, let the player in immediately. Otherwise do this when we receive creation confirmation.
             if (State == RegionHandleState.Running)

@@ -114,6 +114,7 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"OnShutdownNotice(): No handle found for gameId 0x{gameId:X}");
 
             game.OnInstanceShutdownNotice();
+            _gameDict.Remove(game.Id);
 
             return true;
         }

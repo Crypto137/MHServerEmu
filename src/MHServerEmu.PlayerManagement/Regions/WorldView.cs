@@ -42,6 +42,12 @@ namespace MHServerEmu.PlayerManagement.Regions
         {
             foreach (RegionHandle region in _regions.Values)
             {
+                if (region.State == RegionHandleState.Shutdown)
+                {
+                    _regions.Remove(region.Id);
+                    continue;
+                }
+
                 if (region.RegionProtoRef != regionProtoRef)
                     continue;
 

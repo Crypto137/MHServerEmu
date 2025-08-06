@@ -248,7 +248,7 @@ namespace MHServerEmu.PlayerManagement
 
             if (PlayerManagerService.Instance.GameHandleManager.TryGetGameById(_transferGameId, out GameHandle transferGame) == false)
             {
-                Logger.Warn($"TryJoinGame(): No transfer params for player [{this}]");
+                Logger.Warn($"TryJoinGame(): Failed to get game 0x{_transferGameId:X}");
                 Disconnect();
                 return;
             }
@@ -326,11 +326,8 @@ namespace MHServerEmu.PlayerManagement
 
             SetTransferParams(destGameId, transferParams);
 
-            if (CurrentGame != null && CurrentGame.Id != destGameId)
-                RemoveFromCurrentGame();
-
             // This needs to be called after we set transfer params because the region may already be ready.
-            region.AddPlayer(this);
+            region.AddTransferringPlayer(this);
             return true;
         }
 
@@ -355,6 +352,8 @@ namespace MHServerEmu.PlayerManagement
             if (requestingGameId == 0)
                 return;
 
+            SetTransferParams(0, null);
+
             // TODO: Do we need regionProtoId / requiredItemProtoId fields here?
             ChangeRegionFailed changeFailed = ChangeRegionFailed.CreateBuilder().SetReason(reason).Build();
             ServiceMessage.UnableToChangeRegion response = new(requestingGameId, PlayerDbId, changeFailed);
@@ -367,8 +366,18 @@ namespace MHServerEmu.PlayerManagement
 
             // If this player is already in the game that hosts the region, finish the transfer right away.
             // Otherwise this would be triggered when we receive the confirmation that this player is in the game.
-            if (State == PlayerHandleState.InGame)
-                SendTransferParamsToGame();
+            if (CurrentGame != null)
+            {
+                if (CurrentGame.Id == _transferGameId)
+                {
+                    if (State == PlayerHandleState.InGame)
+                        SendTransferParamsToGame();
+                }
+                else
+                {
+                    RemoveFromCurrentGame();
+                }
+            }
         }
 
         public bool FinishRegionTransfer(ulong transferId)
@@ -379,21 +388,22 @@ namespace MHServerEmu.PlayerManagement
             if (_transferParams.TransferId != transferId)
                 return Logger.WarnReturn(false, $"FinishRegionTransfer(): Transfer id mismatch for player [{this}]: expected {_transferParams.TransferId}, got {transferId}");
 
-            _transferParams = null;
+            SetTransferParams(0, null);
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
             return true;
         }
 
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
         {
-            if (_transferParams != null)
+            if (transferParams != null && _transferParams != null)
                 Logger.Warn($"SetTransferParams(): Existing transfer {_transferParams.TransferId} found");
 
             _transferGameId = gameId;
             _transferParams = transferParams;
             _transferRegionReady = false;
 
-            Logger.Info($"Player [{this}] beginning region transfer {_transferParams.TransferId}");
+            if (_transferParams != null)
+                Logger.Info($"Player [{this}] beginning region transfer {_transferParams.TransferId}");
         }
 
         /// <summary>
