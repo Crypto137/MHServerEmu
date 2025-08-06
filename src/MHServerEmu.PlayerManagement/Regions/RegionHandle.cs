@@ -137,5 +137,15 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             return true;
         }
+
+        public void OnPlayerEntered(PlayerHandle player)
+        {
+            Logger.Debug($"OnPlayerEntered(): [{this}] - [{player}]");
+        }
+
+        public void OnPlayerLeft(PlayerHandle player)
+        {
+            Logger.Debug($"OnPlayerLeft(): [{this}] - [{player}]");
+        }
     }
 }

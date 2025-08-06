@@ -319,8 +319,7 @@ namespace MHServerEmu.Games.Regions
 
         private bool TeleportToRemoteTarget(PrototypeId regionProtoRef, PrototypeId areaProtoRef, PrototypeId cellProtoRef, PrototypeId entityProtoRef)
         {
-            Player.PlayerConnection.BeginRegionTransfer(regionProtoRef);
-
+            // NOTE: CreateRegionParams need to be built before we call BeginRegionTransfer() so that we have access to avatar's location to use as a region origin.
             ChangeRegionRequestHeader header = BuildChangeRegionRequestHeader();
             NetStructRegionTarget destTarget = NetStructRegionTarget.CreateBuilder()
                 .SetRegionProtoId((ulong)regionProtoRef)
@@ -329,6 +328,8 @@ namespace MHServerEmu.Games.Regions
                 .SetEntityProtoId((ulong)entityProtoRef)
                 .Build();
             NetStructCreateRegionParams createRegionParams = BuildCreateRegionParams();
+
+            Player.PlayerConnection.BeginRegionTransfer(regionProtoRef);
 
             ServiceMessage.ChangeRegionRequest message = new(header, destTarget, createRegionParams);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);

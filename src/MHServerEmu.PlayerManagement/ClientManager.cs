@@ -158,9 +158,7 @@ namespace MHServerEmu.PlayerManagement
 
             Logger.Info($"Removed PlayerHandle [{player}]");
 
-            if (player.PrivateGame != null && player.PrivateGame.IsRunning)
-                player.PrivateGame.RequestInstanceShutdown();
-
+            player.OnRemoved();
             return true;
         }
 
@@ -250,7 +248,7 @@ namespace MHServerEmu.PlayerManagement
                 return player.BeginRegionTransferToTarget(requestingGameId, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
 
             if (changeRegionRequest.DestLocation != null)
-                return player.BeginRegionTransferToLocation(requestingGameId, changeRegionRequest.DestLocation);
+                return player.BeginRegionTransferToLocation(requestingGameId, changeRegionRequest.DestLocation, changeRegionRequest.Header.Type);
 
             if (changeRegionRequest.DestPlayerDbId != 0)
                 return player.BeginRegionTransferToPlayer(requestingGameId, changeRegionRequest.DestPlayerDbId);
