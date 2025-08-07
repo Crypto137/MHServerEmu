@@ -87,16 +87,6 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (result == false)
             {
                 Logger.Warn($"OnInstanceCreateResponse(): Region [{this}] failed to generate");
-                foreach (PlayerHandle player in _transferringPlayers)
-                {
-                    // Try to cancel the transfer and return players to regions they were in.
-                    // If this is not possible (the player is logging in and is not in a game/region yet), disconnect.
-                    if (player.CurrentGame != null)
-                        player.CancelRegionTransfer(player.CurrentGame.Id, RegionTransferFailure.eRTF_DestinationInaccessible);
-                    else
-                        player.Disconnect();
-                }
-
                 return Shutdown(false);
             }
 
@@ -130,6 +120,20 @@ namespace MHServerEmu.PlayerManagement.Regions
             }
 
             State = RegionHandleState.Shutdown;
+
+            // Try to cancel the transfer and return players to regions they were in.
+            // If this is not possible (the player is logging in and is not in a game/region yet), disconnect.
+            foreach (PlayerHandle player in _transferringPlayers)
+            {
+                if (player.CurrentGame != null)
+                    player.CancelRegionTransfer(player.CurrentGame.Id, RegionTransferFailure.eRTF_DestinationInaccessible);
+                else
+                    player.Disconnect();
+            }
+            _transferringPlayers.Clear();            
+
+            DestroyAccessPortalIfNeeded();
+
             Game.OnRegionShutdown(Id);
             return true;
         }
@@ -179,7 +183,11 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public void OnRemovedFromWorldView(WorldView worldView)
         {
-            _reservationCount--;
+            if (_reservationCount > 0)
+                _reservationCount--;
+            else
+                Logger.Warn("OnRemovedFromWorldView(): _reservationCount == 0");
+
             ShutdownIfVacant();
         }
 
@@ -214,6 +222,28 @@ namespace MHServerEmu.PlayerManagement.Regions
                 Shutdown(true);
                 return;
             }
+        }
+
+        private bool DestroyAccessPortalIfNeeded()
+        {
+            if (CreateParams.HasAccessPortal == false)
+                return false;
+
+            // Treasure rooms in some of the older regions also use access portals, don't destroy these.
+            if (CreateParams.AccessPortal.BoundToOwner == false)
+                return false;
+
+            RegionHandle portalRegion = PlayerManagerService.Instance.WorldManager.GetRegion(CreateParams.AccessPortal.Location.RegionId);
+            if (portalRegion == null)
+                return false;
+
+            if (portalRegion.State == RegionHandleState.Shutdown)
+                return false;
+
+            ServiceMessage.DestroyPortal message = new(portalRegion.Game.Id, CreateParams.AccessPortal);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+
+            return true;
         }
     }
 }

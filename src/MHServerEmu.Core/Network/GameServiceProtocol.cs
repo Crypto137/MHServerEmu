@@ -115,13 +115,23 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// [PlayerManager -> Game] Instruct the game instance service to shut down the specified region.
+        /// [PlayerManager -> Game] Instructs the game instance service to shut down the specified region.
         /// </summary>
         public readonly struct ShutdownRegion(ulong gameId, ulong regionId)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
             public readonly ulong RegionId = regionId;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Instructs the game instance service to destroy the specified region access portal entity.
+        /// </summary>
+        public readonly struct DestroyPortal(ulong gameId, NetStructPortalInstance portal)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly NetStructPortalInstance Portal = portal;
         }
 
         /// <summary>

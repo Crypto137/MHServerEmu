@@ -67,6 +67,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     RouteMessageToGame(shutdownRegion.GameId, shutdownRegion);
                     break;
 
+                case ServiceMessage.DestroyPortal destroyPortal:
+                    RouteMessageToGame(destroyPortal.GameId, destroyPortal);
+                    break;
+
                 case ServiceMessage.UnableToChangeRegion unableToChangeRegion:
                     RouteMessageToGame(unableToChangeRegion.GameId, unableToChangeRegion);
                     break;

@@ -57,6 +57,10 @@ namespace MHServerEmu.Games.Network
                     OnShutdownRegion(shutdownRegion);
                     break;
 
+                case ServiceMessage.DestroyPortal destroyPortal:
+                    OnDestroyPortal(destroyPortal);
+                    break;
+
                 case ServiceMessage.UnableToChangeRegion unableToChangeRegion:
                     OnUnableToChangeRegion(unableToChangeRegion);
                     break;
@@ -97,6 +101,13 @@ namespace MHServerEmu.Games.Network
         {
             Logger.Trace($"Received ShutdownRegion for region 0x{shutdownRegion.RegionId:X}");
             return Game.RegionManager.DestroyRegion(shutdownRegion.RegionId);
+        }
+
+        private void OnDestroyPortal(in ServiceMessage.DestroyPortal destroyPortal)
+        {
+            // This portal may already be destroyed if its region was shut down, which is fine.
+            Transition portal = Game.EntityManager.GetEntityByDbGuid<Transition>(destroyPortal.Portal.EntityDbId);
+            portal?.Destroy();
         }
 
         private bool OnUnableToChangeRegion(in ServiceMessage.UnableToChangeRegion unableToChangeRegion)
