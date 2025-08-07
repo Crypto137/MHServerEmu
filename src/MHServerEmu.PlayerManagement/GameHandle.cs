@@ -167,8 +167,6 @@ namespace MHServerEmu.PlayerManagement
 
         public bool OnRegionShutdown(ulong regionId)
         {
-            // TODO: Cancel pending transfer requests for this region
-
             PlayerManagerService.Instance.WorldManager.RemoveRegion(regionId);
 
             if (_regions.Remove(regionId) == false)

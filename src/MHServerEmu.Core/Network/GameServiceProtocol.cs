@@ -107,10 +107,9 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> PlayerManager] Requests the player manager to shut down the specified region.
         /// </summary>
-        public readonly struct RequestRegionShutdown(ulong gameId, ulong regionId)
+        public readonly struct RequestRegionShutdown(ulong regionId)
             : IGameServiceMessage
         {
-            public readonly ulong GameId = gameId;
             public readonly ulong RegionId = regionId;
         }
 
@@ -181,14 +180,14 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [PlayerManager -> Game] Contains <see cref="NetStructTransferParams"/> with information needed to put a player into a region.
         /// </summary>
-        public readonly struct GameAndRegionForPlayer(ulong gameId, ulong playerDbId, NetStructTransferParams transferParams)
+        public readonly struct GameAndRegionForPlayer(ulong gameId, ulong playerDbId, NetStructTransferParams transferParams, List<(ulong, ulong)> worldViewSyncData)
             : IGameServiceMessage
         {
             // Based on PlayerMgrToGameServer.proto from 1.53
             public readonly ulong GameId = gameId;
             public readonly ulong PlayerDbId = playerDbId;
             public readonly NetStructTransferParams TransferParams = transferParams;
-            //public List<WorldViewEntry> WorldView;
+            public readonly List<(ulong, ulong)> WorldViewSyncData = worldViewSyncData;
         }
 
         /// <summary>
@@ -199,6 +198,14 @@ namespace MHServerEmu.Core.Network
         {
             public readonly ulong PlayerDbId = playerDbId;
             public readonly ulong TransferId = transferId;
+        }
+
+        public readonly struct WorldViewSync(ulong gameId, ulong playerDbId, List<(ulong, ulong)> syncData)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly List<(ulong, ulong)> SyncData = syncData;
         }
 
         #endregion

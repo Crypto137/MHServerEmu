@@ -355,7 +355,7 @@ namespace MHServerEmu.Games.Network
                 .Build());
         }
 
-        public void FinishRegionTransfer(NetStructTransferParams transferParams)
+        public void FinishRegionTransfer(NetStructTransferParams transferParams, List<(ulong, ulong)> worldViewSyncData)
         {
             TransferParams.SetFromProtobuf(transferParams);
 
@@ -363,12 +363,13 @@ namespace MHServerEmu.Games.Network
 
             HasPendingRegionTransfer = false;
 
-            // TODO: Sync WorldViewCache
-
             EnterGame();
 
             ServiceMessage.RegionTransferFinished message = new(PlayerDbId, transferParams.TransferId);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            // Sync WorldViewCache
+            WorldView.Sync(worldViewSyncData);
         }
 
         private void EnterGame()

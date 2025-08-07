@@ -4,7 +4,6 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
-using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.PlayerManagement.Regions;
@@ -112,6 +111,8 @@ namespace MHServerEmu.PlayerManagement
         {
             // Do cleanup
             SetCurrentRegion(null);
+
+            WorldView.Clear();
 
             if (PrivateGame != null && PrivateGame.IsRunning)
                 PrivateGame.RequestInstanceShutdown();
@@ -448,6 +449,16 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
+        public void SyncWorldView()
+        {
+            if (CurrentGame == null || State != PlayerHandleState.InGame)
+                return;
+
+            List<(ulong, ulong)> worldView = WorldView.BuildWorldViewCache();
+            ServiceMessage.WorldViewSync message = new(CurrentGame.Id, PlayerDbId, worldView);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+        }
+
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
         {
             if (transferParams != null && _transferParams != null)
@@ -485,7 +496,7 @@ namespace MHServerEmu.PlayerManagement
                 return;
             }
 
-            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams);
+            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams, WorldView.BuildWorldViewCache());
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 

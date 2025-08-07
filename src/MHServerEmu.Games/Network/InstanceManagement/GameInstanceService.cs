@@ -79,6 +79,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     RouteMessageToGame(gameAndRegionForPlayer.GameId, gameAndRegionForPlayer);
                     break;
 
+                case ServiceMessage.WorldViewSync worldViewUpdate:
+                    RouteMessageToGame(worldViewUpdate.GameId, worldViewUpdate);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;

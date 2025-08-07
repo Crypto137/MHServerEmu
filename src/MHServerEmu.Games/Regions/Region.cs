@@ -528,7 +528,7 @@ namespace MHServerEmu.Games.Regions
             if (ShutdownRequested)
                 return;
 
-            ServiceMessage.RequestRegionShutdown message = new(Game.Id, Id);
+            ServiceMessage.RequestRegionShutdown message = new(Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
 
             ShutdownRequested = true;

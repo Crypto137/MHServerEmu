@@ -44,9 +44,18 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             region.OnRemovedFromWorldView(this);
 
-            // TODO: Send WorldView to the game to update cache
+            Owner.SyncWorldView();
 
             return true;
+        }
+
+        public void Clear()
+        {
+            foreach (RegionHandle region in _regions.Values)
+                RemoveRegion(region);
+
+            if (_regions.Count != 0)
+                Logger.Warn("Clear(): _regions.Count != 0");
         }
 
         public RegionHandle GetMatchingRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
@@ -69,6 +78,17 @@ namespace MHServerEmu.PlayerManagement.Regions
             }
 
             return null;
+        }
+
+        public List<(ulong, ulong)> BuildWorldViewCache()
+        {
+            // TODO: Consider pooling this if it causes too many List allocations.
+            List<(ulong, ulong)> list = new(_regions.Count);
+
+            foreach (RegionHandle region in _regions.Values)
+                list.Add((region.Id, (ulong)region.RegionProtoRef));
+
+            return list;
         }
     }
 }

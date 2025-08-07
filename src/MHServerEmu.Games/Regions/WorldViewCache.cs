@@ -41,6 +41,19 @@ namespace MHServerEmu.Games.Regions
             return _regionIdsByProto.GetEnumerator();
         }
 
+        public void Sync(List<(ulong, ulong)> syncData)
+        {
+            Logger.Debug($"Sync(): [{Owner}]");
+
+            Clear();
+
+            if (syncData != null)
+            {
+                foreach ((ulong regionId, ulong regionProtoRef) in syncData)
+                    AddRegion(regionId, (PrototypeId)regionProtoRef);
+            }
+        }
+
         /// <summary>
         /// Adds a region to this <see cref="WorldViewCache"/>. Returns <see langword="true"/> if successful.
         /// </summary>
@@ -54,6 +67,9 @@ namespace MHServerEmu.Games.Regions
 
             _regionIds.Add(regionId);
             _regionIdsByProto.SortedInsert((regionProtoRef, regionId));
+
+            Owner.Player?.ScheduleWorldViewUpdate();
+
             return true;
         }
 
@@ -75,51 +91,9 @@ namespace MHServerEmu.Games.Regions
                 }
             }
 
+            Owner.Player?.ScheduleWorldViewUpdate();
+
             return true;
-        }
-
-        /// <summary>
-        /// Returns <see langword="true"/> if this <see cref="WorldViewCache"/> contains the specified region.
-        /// </summary>
-        public bool ContainsRegionInstanceId(ulong regionId)
-        {
-            return _regionIds.Contains(regionId);
-        }
-
-        /// <summary>
-        /// Returns the instance ids of regions with the specified prototype in this <see cref="WorldViewCache"/>.
-        /// </summary>
-        public bool GetRegionInstanceIds(PrototypeId regionProtoRef, List<ulong> regionIds)
-        {
-            for (int i = 0; i < _regionIdsByProto.Count; i++)
-            {
-                (PrototypeId itRegionProtoRef, ulong itRegionId) = _regionIdsByProto[i];
-                if (itRegionProtoRef == regionProtoRef)
-                    regionIds.Add(itRegionId);
-
-                if (itRegionProtoRef > regionProtoRef)
-                    break;
-            }
-
-            return regionIds.Count > 0;
-        }
-
-        /// <summary>
-        /// Returns the first instance id with the specified prototype in this <see cref="WorldViewCache"/>. Returns 0 if not found.
-        /// </summary>
-        public ulong GetRegionInstanceId(PrototypeId regionProtoRef)
-        {
-            for (int i = 0; i < _regionIdsByProto.Count; i++)
-            {
-                (PrototypeId itRegionProtoRef, ulong itRegionId) = _regionIdsByProto[i];
-                if (itRegionProtoRef == regionProtoRef)
-                    return itRegionId;
-
-                if (itRegionProtoRef > regionProtoRef)
-                    break;
-            }
-
-            return 0;
         }
 
         /// <summary>
@@ -129,6 +103,16 @@ namespace MHServerEmu.Games.Regions
         {
             _regionIds.Clear();
             _regionIdsByProto.Clear();
+
+            Owner.Player?.ScheduleWorldViewUpdate();
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if this <see cref="WorldViewCache"/> contains the specified region.
+        /// </summary>
+        public bool ContainsRegion(ulong regionId)
+        {
+            return _regionIds.Contains(regionId);
         }
     }
 }

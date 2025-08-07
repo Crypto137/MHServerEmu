@@ -69,6 +69,10 @@ namespace MHServerEmu.Games.Network
                     OnGameAndRegionForPlayer(gameAndRegionForPlayer);
                     break;
 
+                case ServiceMessage.WorldViewSync worldViewSync:
+                    OnWorldViewSync(worldViewSync);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -126,7 +130,16 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnGameAndRegionForPlayer(): player == null");
 
             PlayerConnection playerConnection = player.PlayerConnection;
-            playerConnection.FinishRegionTransfer(gameAndRegionForPlayer.TransferParams);
+            playerConnection.FinishRegionTransfer(gameAndRegionForPlayer.TransferParams, gameAndRegionForPlayer.WorldViewSyncData);
+            return true;
+        }
+
+        private bool OnWorldViewSync(in ServiceMessage.WorldViewSync worldViewSync)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(worldViewSync.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnWorldViewUpdate(): player == null");
+
+            player.PlayerConnection.WorldView.Sync(worldViewSync.SyncData);
             return true;
         }
 
