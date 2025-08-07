@@ -49,8 +49,12 @@ namespace MHServerEmu.Games.Network
         {
             switch (message)
             {
-                case ServiceMessage.CreateRegion gameInstanceCreateRegion:
-                    OnGameInstanceCreateRegion(gameInstanceCreateRegion);
+                case ServiceMessage.CreateRegion createRegion:
+                    OnCreateRegion(createRegion);
+                    break;
+
+                case ServiceMessage.ShutdownRegion shutdownRegion:
+                    OnShutdownRegion(shutdownRegion);
                     break;
 
                 case ServiceMessage.UnableToChangeRegion unableToChangeRegion:
@@ -77,16 +81,22 @@ namespace MHServerEmu.Games.Network
 
         #region Message Handling
 
-        private void OnGameInstanceCreateRegion(in ServiceMessage.CreateRegion gameInstanceCreateRegion)
+        private void OnCreateRegion(in ServiceMessage.CreateRegion createRegion)
         {
-            ulong regionId = gameInstanceCreateRegion.RegionId;
-            PrototypeId regionProtoRef = (PrototypeId)gameInstanceCreateRegion.RegionProtoRef;
-            NetStructCreateRegionParams createParams = gameInstanceCreateRegion.CreateParams;
+            ulong regionId = createRegion.RegionId;
+            PrototypeId regionProtoRef = (PrototypeId)createRegion.RegionProtoRef;
+            NetStructCreateRegionParams createParams = createRegion.CreateParams;
 
             Region region = Game.RegionManager.GenerateRegion(regionId, regionProtoRef, createParams);
 
             ServiceMessage.CreateRegionResult response = new(regionId, region != null);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, response);
+        }
+
+        private bool OnShutdownRegion(in ServiceMessage.ShutdownRegion shutdownRegion)
+        {
+            Logger.Trace($"Received ShutdownRegion for region 0x{shutdownRegion.RegionId:X}");
+            return Game.RegionManager.DestroyRegion(shutdownRegion.RegionId);
         }
 
         private bool OnUnableToChangeRegion(in ServiceMessage.UnableToChangeRegion unableToChangeRegion)

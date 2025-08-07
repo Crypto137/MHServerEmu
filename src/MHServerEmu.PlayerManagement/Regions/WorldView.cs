@@ -28,14 +28,25 @@ namespace MHServerEmu.PlayerManagement.Regions
         {
             if (region == null) return Logger.WarnReturn(false, "AddRegion(): region == null");
 
-            return _regions.TryAdd(region.Id, region);
+            if (_regions.TryAdd(region.Id, region) == false)
+                return false;
+
+            region.OnAddedToWorldView(this);
+            return true;
         }
 
         public bool RemoveRegion(RegionHandle region)
         {
             if (region == null) return Logger.WarnReturn(false, "RemoveRegion(): region == null");
 
-            return _regions.Remove(region.Id);
+            if (_regions.Remove(region.Id) == false)
+                return false;
+
+            region.OnRemovedFromWorldView(this);
+
+            // TODO: Send WorldView to the game to update cache
+
+            return true;
         }
 
         public RegionHandle GetMatchingRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)

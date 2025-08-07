@@ -494,13 +494,19 @@ namespace MHServerEmu.PlayerManagement
             if (CurrentRegion == newRegion)
                 return;
 
-            CurrentRegion?.OnPlayerLeft(this);
+            RegionHandle prevRegion = CurrentRegion;
+
+            prevRegion?.OnPlayerLeft(this);
 
             CurrentRegion = newRegion;
 
             newRegion?.OnPlayerEntered(this);
 
             // todo: update communities
+
+            // Remove the previous region from the WorldView if it needs to be shut down.
+            if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))
+                WorldView.RemoveRegion(prevRegion);
         }
     }
 }

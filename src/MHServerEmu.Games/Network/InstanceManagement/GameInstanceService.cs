@@ -55,20 +55,24 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     OnGameInstanceOp(gameInstanceOp);
                     break;
 
-                case ServiceMessage.CreateRegion gameInstanceCreateRegion:
-                    OnGameInstanceCreateRegion(gameInstanceCreateRegion);
-                    break;
-
                 case ServiceMessage.GameInstanceClientOp gameInstanceClientOp:
                     OnGameInstanceClientOp(gameInstanceClientOp);
                     break;
 
+                case ServiceMessage.CreateRegion createRegion:
+                    RouteMessageToGame(createRegion.GameId, createRegion);
+                    break;
+
+                case ServiceMessage.ShutdownRegion shutdownRegion:
+                    RouteMessageToGame(shutdownRegion.GameId, shutdownRegion);
+                    break;
+
                 case ServiceMessage.UnableToChangeRegion unableToChangeRegion:
-                    OnUnableToChangeRegion(unableToChangeRegion);
+                    RouteMessageToGame(unableToChangeRegion.GameId, unableToChangeRegion);
                     break;
 
                 case ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer:
-                    OnGameAndRegionForPlayer(gameAndRegionForPlayer);
+                    RouteMessageToGame(gameAndRegionForPlayer.GameId, gameAndRegionForPlayer);
                     break;
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
@@ -92,6 +96,15 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         public string GetStatus()
         {
             return $"Games: {GameManager.GameCount} | Players: {GameManager.PlayerCount}";
+        }
+
+        private bool RouteMessageToGame<T>(ulong gameId, T message) where T: struct, IGameServiceMessage
+        {
+            if (GameManager.TryGetGameById(gameId, out Game game) == false)
+                return Logger.WarnReturn(false, $"RouteMessageToGame(): Game 0x{gameId:X} not found, {typeof(T).Name} will not be delivered");
+
+            game.ReceiveServiceMessage(message);
+            return true;
         }
 
         #endregion
@@ -118,15 +131,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             }
         }
 
-        private bool OnGameInstanceCreateRegion(in ServiceMessage.CreateRegion gameInstanceCreateRegion)
-        {
-            if (GameManager.TryGetGameById(gameInstanceCreateRegion.GameId, out Game game) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceRegionOp(): Game 0x{gameInstanceCreateRegion.GameId:X} not found");
-
-            game.ReceiveServiceMessage(gameInstanceCreateRegion);
-            return true;
-        }
-
         private bool OnGameInstanceClientOp(in ServiceMessage.GameInstanceClientOp gameInstanceClientOp)
         {
             IFrontendClient client = gameInstanceClientOp.Client;
@@ -150,24 +154,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 default:
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
             }
-        }
-
-        private bool OnUnableToChangeRegion(in ServiceMessage.UnableToChangeRegion unableToChangeRegion)
-        {
-            if (GameManager.TryGetGameById(unableToChangeRegion.GameId, out Game game) == false)
-                return Logger.WarnReturn(false, $"OnUnableToChangeRegion(): Game 0x{unableToChangeRegion.GameId:X} not found");
-
-            game.ReceiveServiceMessage(unableToChangeRegion);
-            return true;
-        }
-
-        private bool OnGameAndRegionForPlayer(in ServiceMessage.GameAndRegionForPlayer gameAndRegionForPlayer)
-        {
-            if (GameManager.TryGetGameById(gameAndRegionForPlayer.GameId, out Game game) == false)
-                return Logger.WarnReturn(false, $"OnGameInstanceRegionOp(): Game 0x{gameAndRegionForPlayer.GameId:X} not found");
-
-            game.ReceiveServiceMessage(gameAndRegionForPlayer);
-            return true;
         }
 
         private bool OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)

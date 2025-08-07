@@ -504,14 +504,6 @@ namespace MHServerEmu.Games.Regions
                 MetaGames.Remove(metaGameId);
             }
 
-            // Destroy entrance portal
-            // REMOVEME: This should be handled by the PlayerManager
-            if (Settings.PortalEntityDbId != 0)
-            {
-                var portal = entityManager.GetEntityByDbGuid<Entity>(Settings.PortalEntityDbId);
-                portal?.Destroy();
-            }
-
             while (Areas.Count > 0)
             {
                 var areaId = Areas.First().Key;

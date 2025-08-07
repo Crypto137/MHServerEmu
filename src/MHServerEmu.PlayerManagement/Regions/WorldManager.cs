@@ -44,8 +44,11 @@ namespace MHServerEmu.PlayerManagement.Regions
         {
             // TODO: Multiple instances of public regions and load balancing
             var key = (regionProtoRef, (PrototypeId)createRegionParams.DifficultyTierProtoId);
-            if (_publicRegions.TryGetValue(key, out RegionHandle region) == false)
+            if (_publicRegions.TryGetValue(key, out RegionHandle region) == false || region.State == RegionHandleState.Shutdown)
             {
+                if (region != null)
+                    _publicRegions.Remove(key);
+
                 GameHandle game = _playerManager.GameHandleManager.CreateGame();
                 region = CreateRegionInGame(game, regionProtoRef, createRegionParams);
                 _publicRegions[key] = region;
@@ -138,8 +141,12 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         private bool OnRequestRegionShutdown(in ServiceMessage.RequestRegionShutdown requestRegionShutdown)
         {
-            Logger.Debug("OnRequestRegionShutdown");
-            return false;
+            RegionHandle region = GetRegion(requestRegionShutdown.RegionId);
+            if (region == null)
+                return Logger.WarnReturn(false, $"OnRequestRegionShutdown(): Region 0x{requestRegionShutdown.RegionId:X} not found");
+
+            region.RequestShutdown();
+            return true;
         }
 
         #endregion

@@ -174,6 +174,13 @@ namespace MHServerEmu.PlayerManagement
             if (_regions.Remove(regionId) == false)
                 return Logger.WarnReturn(false, $"FinishRegionShutdown(): Region 0x{regionId:X} not found");
 
+            // Shut this game down if all of its regions were shut down
+            if (_regions.Count == 0 && State == GameHandleState.Running)
+            {
+                Logger.Trace($"Game [{this}] is no longer hosting any regions, shutting down...");
+                RequestInstanceShutdown();
+            }
+
             return true;
         }
 

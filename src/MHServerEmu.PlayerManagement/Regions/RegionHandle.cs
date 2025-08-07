@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 
 namespace MHServerEmu.PlayerManagement.Regions
 {
@@ -12,6 +13,14 @@ namespace MHServerEmu.PlayerManagement.Regions
         Shutdown,
     }
 
+    [Flags]
+    public enum RegionFlags
+    {
+        None                             = 0,
+        CloseWhenReservationsReachesZero = 1 << 0,
+        ShutdownWhenVacant               = 1 << 1,
+    }
+
     /// <summary>
     /// Represents a region in a game instance.
     /// </summary>
@@ -20,6 +29,10 @@ namespace MHServerEmu.PlayerManagement.Regions
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly HashSet<PlayerHandle> _transferringPlayers = new();
+        private readonly HashSet<PlayerHandle> _playersInRegion = new();
+
+        // When a region is added to a player's world view it gets "reserved", which prevents it from unexpectedly shutting down in some cases.
+        private int _reservationCount = 0;
 
         public GameHandle Game { get; }
         public ulong Id { get; }
@@ -27,6 +40,10 @@ namespace MHServerEmu.PlayerManagement.Regions
         public NetStructCreateRegionParams CreateParams { get; }
 
         public RegionHandleState State { get; private set; } = RegionHandleState.Pending;
+        public RegionFlags Flags { get; private set; }
+
+        public int TransferCount { get => _transferringPlayers.Count; }
+        public int PlayerCount { get => _playersInRegion.Count; }
 
         public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams)
         {
@@ -34,6 +51,14 @@ namespace MHServerEmu.PlayerManagement.Regions
             Id = id;
             RegionProtoRef = regionProtoRef;
             CreateParams = createParams;
+
+            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+
+            if (regionProto.CloseWhenReservationsReachesZero)
+                Flags |= RegionFlags.CloseWhenReservationsReachesZero;
+
+            if (regionProto.AlwaysShutdownWhenVacant)
+                Flags |= RegionFlags.ShutdownWhenVacant;
         }
 
         public override string ToString()
@@ -82,6 +107,15 @@ namespace MHServerEmu.PlayerManagement.Regions
                 player.OnRegionReadyToTransfer();
             _transferringPlayers.Clear();
 
+            return true;
+        }
+
+        public bool RequestShutdown()
+        {
+            Flags |= RegionFlags.CloseWhenReservationsReachesZero;
+            Flags |= RegionFlags.ShutdownWhenVacant;
+
+            ShutdownIfVacant();
             return true;
         }
 
@@ -138,14 +172,48 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
+        public void OnAddedToWorldView(WorldView worldView)
+        {
+            _reservationCount++;
+        }
+
+        public void OnRemovedFromWorldView(WorldView worldView)
+        {
+            _reservationCount--;
+            ShutdownIfVacant();
+        }
+
         public void OnPlayerEntered(PlayerHandle player)
         {
             Logger.Debug($"OnPlayerEntered(): [{this}] - [{player}]");
+            _playersInRegion.Add(player);
         }
 
         public void OnPlayerLeft(PlayerHandle player)
         {
             Logger.Debug($"OnPlayerLeft(): [{this}] - [{player}]");
+            _playersInRegion.Remove(player);
+            ShutdownIfVacant();
+        }
+
+        private void ShutdownIfVacant()
+        {
+            if (State == RegionHandleState.Shutdown)
+                return;
+
+            if (Flags.HasFlag(RegionFlags.CloseWhenReservationsReachesZero) && _reservationCount == 0)
+            {
+                Logger.Trace($"Region [{this}] is shutting down because its reservations reached zero");
+                Shutdown(true);
+                return;
+            }
+
+            if (Flags.HasFlag(RegionFlags.ShutdownWhenVacant) && PlayerCount == 0 && TransferCount == 0)
+            {
+                Logger.Trace($"Region [{this}] is shutting down because it became vacant");
+                Shutdown(true);
+                return;
+            }
         }
     }
 }
