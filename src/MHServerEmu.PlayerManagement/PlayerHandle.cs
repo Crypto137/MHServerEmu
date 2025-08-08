@@ -112,10 +112,8 @@ namespace MHServerEmu.PlayerManagement
             // Do cleanup
             SetCurrentRegion(null);
 
+            // Clearing the WorldView will remove all reservations and shut down the private game instance if none of its regions are reserved by other players.
             WorldView.Clear();
-
-            if (PrivateGame != null && PrivateGame.IsRunning)
-                PrivateGame.RequestInstanceShutdown();
         }
 
         public void SendMessage(IMessage message)

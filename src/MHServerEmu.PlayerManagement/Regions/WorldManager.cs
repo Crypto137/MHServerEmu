@@ -50,7 +50,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                     _publicRegions.Remove(key);
 
                 GameHandle game = _playerManager.GameHandleManager.CreateGame();
-                region = CreateRegionInGame(game, regionProtoRef, createRegionParams);
+                region = CreateRegionInGame(game, regionProtoRef, createRegionParams, RegionFlags.None);
                 _publicRegions[key] = region;
             }
 
@@ -68,7 +68,7 @@ namespace MHServerEmu.PlayerManagement.Regions
                 owner.SetPrivateGame(privateGame);
             }
 
-            return CreateRegionInGame(privateGame, regionProtoRef, createRegionParams);
+            return CreateRegionInGame(privateGame, regionProtoRef, createRegionParams, RegionFlags.CloseWhenReservationsReachesZero);
         }
 
         public RegionHandle GetRegion(ulong regionId)
@@ -90,9 +90,9 @@ namespace MHServerEmu.PlayerManagement.Regions
             return _allRegions.Remove(regionId);
         }
 
-        private RegionHandle CreateRegionInGame(GameHandle game, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
+        private RegionHandle CreateRegionInGame(GameHandle game, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, RegionFlags flags)
         {
-            if (game.CreateRegion(_idGenerator.Generate(), regionProtoRef, createRegionParams, out RegionHandle region) == false)
+            if (game.CreateRegion(_idGenerator.Generate(), regionProtoRef, createRegionParams, flags, out RegionHandle region) == false)
                 return null;
 
             return region;

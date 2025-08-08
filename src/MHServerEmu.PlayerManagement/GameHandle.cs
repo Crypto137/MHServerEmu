@@ -142,7 +142,7 @@ namespace MHServerEmu.PlayerManagement
 
         #region Region Management
 
-        public bool CreateRegion(ulong regionId, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, out RegionHandle region)
+        public bool CreateRegion(ulong regionId, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, RegionFlags flags, out RegionHandle region)
         {
             region = null;
 
@@ -152,7 +152,7 @@ namespace MHServerEmu.PlayerManagement
             if (createRegionParams == null)
                 return Logger.WarnReturn(false, $"CreateRegion(): No params to create region 0x{regionId:X}");
 
-            region = new(this, regionId, regionProtoRef, createRegionParams);
+            region = new(this, regionId, regionProtoRef, createRegionParams, flags);
             _regions.Add(regionId, region);
 
             PlayerManagerService.Instance.WorldManager.AddRegion(region);

@@ -45,7 +45,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public int TransferCount { get => _transferringPlayers.Count; }
         public int PlayerCount { get => _playersInRegion.Count; }
 
-        public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams)
+        public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams, RegionFlags flags)
         {
             Game = game;
             Id = id;
@@ -53,6 +53,8 @@ namespace MHServerEmu.PlayerManagement.Regions
             CreateParams = createParams;
 
             RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+
+            Flags = flags;
 
             if (regionProto.CloseWhenReservationsReachesZero)
                 Flags |= RegionFlags.CloseWhenReservationsReachesZero;
