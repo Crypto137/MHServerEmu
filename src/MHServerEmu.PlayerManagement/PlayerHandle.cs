@@ -148,7 +148,10 @@ namespace MHServerEmu.PlayerManagement
             if (State == PlayerHandleState.Created)
                 return Logger.WarnReturn(false, $"SavePlayerData(): Invalid state {State} for player [{this}]");
 
-            return true;
+            // Skip saving if persistence is disabled.
+            if (PlayerManagerService.Instance.Config.EnablePersistence == false)
+                return true;
+
             DBAccount account = Account;
 
             lock (account)
