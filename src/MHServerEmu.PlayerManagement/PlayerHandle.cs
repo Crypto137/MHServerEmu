@@ -148,6 +148,7 @@ namespace MHServerEmu.PlayerManagement
             if (State == PlayerHandleState.Created)
                 return Logger.WarnReturn(false, $"SavePlayerData(): Invalid state {State} for player [{this}]");
 
+            return true;
             DBAccount account = Account;
 
             lock (account)
@@ -302,14 +303,23 @@ namespace MHServerEmu.PlayerManagement
                 .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
                 .Build();
 
-            return BeginRegionTransferToTarget(0, destTarget, createRegionParams);
+            return BeginRegionTransferToTarget(0, TeleportContextEnum.TeleportContext_Transition, destTarget, createRegionParams);
         }
 
-        public bool BeginRegionTransferToTarget(ulong requestingGameId, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
+        public bool BeginRegionTransferToTarget(ulong requestingGameId, TeleportContextEnum context, NetStructRegionTarget destTarget, NetStructCreateRegionParams createRegionParams)
         {
             PrototypeId regionProtoRef = (PrototypeId)destTarget.RegionProtoId;
             RegionPrototype regionProto = ((PrototypeId)destTarget.RegionProtoId).As<RegionPrototype>();
-            if (regionProto == null) return Logger.WarnReturn(false, "BeginRegionTransferToTarget(): regionProto == null");
+            if (regionProto == null)
+            {
+                Logger.Warn("BeginRegionTransferToTarget(): regionProto == null");
+                CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_DestinationInaccessible);
+                return false;
+            }
+
+            // Reset WorldView if we are resetting mission progress (e.g. prestige)
+            if (context == TeleportContextEnum.TeleportContext_StoryWarp)
+                WorldView.Clear();
 
             // Prioritize regions that are already in the WorldView.
             RegionHandle region = WorldView.GetMatchingRegion(regionProtoRef, createRegionParams);
@@ -341,7 +351,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool BeginRegionTransferToLocation(ulong requestingGameId, NetStructRegionLocation destLocation, TeleportContextEnum context)
+        public bool BeginRegionTransferToLocation(ulong requestingGameId, TeleportContextEnum context, NetStructRegionLocation destLocation)
         {
             RegionHandle region = PlayerManagerService.Instance.WorldManager.GetRegion(destLocation.RegionId);
             if (region == null)

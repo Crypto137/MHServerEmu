@@ -240,15 +240,16 @@ namespace MHServerEmu.PlayerManagement
         {
             ulong requestingGameId = changeRegionRequest.Header.RequestingGameId;
             ulong playerDbId = changeRegionRequest.Header.RequestingPlayerGuid;
+            TeleportContextEnum context = changeRegionRequest.Header.Type;
 
             if (TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"OnChangeRegionRequest(): No player handle for dbid 0x{playerDbId:X}");
 
             if (changeRegionRequest.DestTarget != null)
-                return player.BeginRegionTransferToTarget(requestingGameId, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
+                return player.BeginRegionTransferToTarget(requestingGameId, context, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
 
             if (changeRegionRequest.DestLocation != null)
-                return player.BeginRegionTransferToLocation(requestingGameId, changeRegionRequest.DestLocation, changeRegionRequest.Header.Type);
+                return player.BeginRegionTransferToLocation(requestingGameId, context, changeRegionRequest.DestLocation);
 
             if (changeRegionRequest.DestPlayerDbId != 0)
                 return player.BeginRegionTransferToPlayer(requestingGameId, changeRegionRequest.DestPlayerDbId);
