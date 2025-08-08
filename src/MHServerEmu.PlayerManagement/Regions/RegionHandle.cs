@@ -37,7 +37,10 @@ namespace MHServerEmu.PlayerManagement.Regions
         public GameHandle Game { get; }
         public ulong Id { get; }
         public PrototypeId RegionProtoRef { get; }
+        public RegionPrototype Prototype { get; }
         public NetStructCreateRegionParams CreateParams { get; }
+
+        public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
 
         public RegionHandleState State { get; private set; } = RegionHandleState.Pending;
         public RegionFlags Flags { get; private set; }
@@ -50,16 +53,15 @@ namespace MHServerEmu.PlayerManagement.Regions
             Game = game;
             Id = id;
             RegionProtoRef = regionProtoRef;
+            Prototype = regionProtoRef.As<RegionPrototype>();
             CreateParams = createParams;
-
-            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
 
             Flags = flags;
 
-            if (regionProto.CloseWhenReservationsReachesZero)
+            if (Prototype.CloseWhenReservationsReachesZero)
                 Flags |= RegionFlags.CloseWhenReservationsReachesZero;
 
-            if (regionProto.AlwaysShutdownWhenVacant)
+            if (Prototype.AlwaysShutdownWhenVacant)
                 Flags |= RegionFlags.ShutdownWhenVacant;
         }
 

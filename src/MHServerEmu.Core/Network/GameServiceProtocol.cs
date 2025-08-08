@@ -200,12 +200,24 @@ namespace MHServerEmu.Core.Network
             public readonly ulong TransferId = transferId;
         }
 
+        /// <summary>
+        /// [PlayerManager -> Game] Synchronizes a WorldViewCache with the state of the authoritative WorldView in the player manager.
+        /// </summary>
         public readonly struct WorldViewSync(ulong gameId, ulong playerDbId, List<(ulong, ulong)> syncData)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
             public readonly ulong PlayerDbId = playerDbId;
             public readonly List<(ulong, ulong)> SyncData = syncData;
+        }
+
+        /// <summary>
+        /// [Game -> PlayerManager] Requests the player manager to remove all private story regions from the specified player's WorldView.
+        /// </summary>
+        public readonly struct ClearPrivateStoryRegions(ulong playerDbId)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
         }
 
         #endregion

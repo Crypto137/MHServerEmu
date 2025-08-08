@@ -1,9 +1,8 @@
-﻿using Google.ProtocolBuffers;
-using Gazillion;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Games.GameData;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -69,6 +68,10 @@ namespace MHServerEmu.PlayerManagement
 
                     case ServiceMessage.RegionTransferFinished regionTransferFinished:
                         OnRegionTransferFinished(regionTransferFinished);
+                        break;
+
+                    case ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions:
+                        OnClearPrivateStoryRegions(clearPrivateStoryRegions);
                         break;
 
                     default:
@@ -265,6 +268,15 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{regionTransferFinished.PlayerDbId}");
 
             return player.FinishRegionTransfer(regionTransferFinished.TransferId);
+        }
+
+        private bool OnClearPrivateStoryRegions(in ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions)
+        {
+            if (TryGetPlayerHandle(clearPrivateStoryRegions.PlayerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{clearPrivateStoryRegions.PlayerDbId}");
+
+            player.WorldView.ClearPrivateStoryRegions();
+            return true;
         }
 
         #endregion

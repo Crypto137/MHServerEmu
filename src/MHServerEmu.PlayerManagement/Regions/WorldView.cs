@@ -58,6 +58,17 @@ namespace MHServerEmu.PlayerManagement.Regions
                 Logger.Warn("Clear(): _regions.Count != 0");
         }
 
+        public void ClearPrivateStoryRegions()
+        {
+            foreach (RegionHandle region in _regions.Values)
+            {
+                if (region.IsPrivateStory == false)
+                    continue;
+
+                RemoveRegion(region);
+            }
+        }
+
         public RegionHandle GetMatchingRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
         {
             foreach (RegionHandle region in _regions.Values)

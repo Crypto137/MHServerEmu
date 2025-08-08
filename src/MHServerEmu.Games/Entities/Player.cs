@@ -7,6 +7,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Core.VectorMath;
@@ -1823,7 +1824,11 @@ namespace MHServerEmu.Games.Entities
 
             IsSwitchingAvatar = false;
 
-            // Remove bodyslider properties for regions that are supposed to be limited to individual avatars
+            // Unreserve private story regions so that the avatar we switched to can do the story without fiddling with region instances.
+            ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions = new(DatabaseUniqueId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, clearPrivateStoryRegions);
+
+            // Remove bodyslider properties if they are for a private story region, which should no longer be accessible.
             if (HasBodysliderProperties())
             {
                 PrototypeId bodysliderRegionProtoRef = Properties[PropertyEnum.BodySliderRegionRef];

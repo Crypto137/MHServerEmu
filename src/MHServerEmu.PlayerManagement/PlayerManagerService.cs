@@ -129,6 +129,7 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.GameInstanceClientOp:
                 case ServiceMessage.ChangeRegionRequest:
                 case ServiceMessage.RegionTransferFinished:
+                case ServiceMessage.ClearPrivateStoryRegions:
                     ClientManager.ReceiveMessage(message);
                     break;
 
