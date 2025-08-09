@@ -49,7 +49,9 @@ namespace MHServerEmu.PlayerManagement
         public PlayerHandleState State { get; private set; }
         public GameHandle CurrentGame { get; private set; }
         public GameHandle PrivateGame { get; private set; }     // A game instance owned by this player that runs all of their private regions.
-        public RegionHandle CurrentRegion { get; private set; }
+
+        public RegionHandle TargetRegion { get; private set; }      // The region this player needs to be in
+        public RegionHandle ActualRegion { get; private set; }      // The region this player is actually in
 
         public bool HasTransferParams { get => _transferParams != null; }
 
@@ -110,7 +112,8 @@ namespace MHServerEmu.PlayerManagement
         public void OnRemoved()
         {
             // Do cleanup
-            SetCurrentRegion(null);
+            SetTargetRegion(null);
+            SetActualRegion(null);
 
             // Clearing the WorldView will remove all reservations and shut down the private game instance if none of its regions are reserved by other players.
             WorldView.Clear();
@@ -350,7 +353,8 @@ namespace MHServerEmu.PlayerManagement
             SetTransferParams(destGameId, transferParams);
 
             // This needs to be called after we set transfer params because the region may already be ready.
-            region.AddTransferringPlayer(this);
+            SetTargetRegion(region);
+            region.RequestTransfer(this);
             return true;
         }
 
@@ -377,7 +381,8 @@ namespace MHServerEmu.PlayerManagement
             SetTransferParams(region.Game.Id, transferParams);
 
             // This needs to be called after we set transfer params because the region may already be ready.
-            region.AddTransferringPlayer(this);
+            SetTargetRegion(region);
+            region.RequestTransfer(this);
             return false;
         }
 
@@ -386,7 +391,7 @@ namespace MHServerEmu.PlayerManagement
             RegionHandle region = null;
 
             if (PlayerManagerService.Instance.ClientManager.TryGetPlayerHandle(destPlayerDbId, out PlayerHandle destPlayer))
-                region = destPlayer.CurrentRegion;
+                region = destPlayer.ActualRegion;
 
             if (region == null)
             {
@@ -404,7 +409,8 @@ namespace MHServerEmu.PlayerManagement
             SetTransferParams(region.Game.Id, transferParams);
 
             // This needs to be called after we set transfer params because the region may already be ready.
-            region.AddTransferringPlayer(this);
+            SetTargetRegion(region);
+            region.RequestTransfer(this);
             return true;
         }
 
@@ -453,7 +459,7 @@ namespace MHServerEmu.PlayerManagement
             if (newRegion == null)
                 return Logger.ErrorReturn(false, $"FinishRegionTransfer(): Failed to get region 0x{_transferParams.DestRegionId:X} for transfer {transferId} for player [{this}]");
 
-            SetCurrentRegion(newRegion);
+            SetActualRegion(newRegion);
             SetTransferParams(0, null);
 
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
@@ -511,18 +517,35 @@ namespace MHServerEmu.PlayerManagement
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
-        private void SetCurrentRegion(RegionHandle newRegion)
+        private void SetTargetRegion(RegionHandle newRegion)
         {
-            if (CurrentRegion == newRegion)
+            if (TargetRegion == newRegion)
                 return;
 
-            RegionHandle prevRegion = CurrentRegion;
+            RegionHandle prevRegion = TargetRegion;
 
-            prevRegion?.OnPlayerLeft(this);
+            prevRegion?.RemovePlayer(this);
 
-            CurrentRegion = newRegion;
+            TargetRegion = newRegion;
 
-            newRegion?.OnPlayerEntered(this);
+            // Adding the player here will make them accounted for in the load balancing logic.
+            newRegion?.AddPlayer(this);
+        }
+
+        private void SetActualRegion(RegionHandle newRegion)
+        {
+            if (ActualRegion == newRegion)
+                return;
+
+            RegionHandle prevRegion = ActualRegion;
+
+            prevRegion?.Unreserve(RegionReservationType.Presence);
+
+            ActualRegion = newRegion;
+
+            // This additional reservation will prevent the region from shutting down if there are still any players in it,
+            // even if the region is no longer in any world views for whatever reason.
+            newRegion?.Reserve(RegionReservationType.Presence);
 
             // todo: update communities
 

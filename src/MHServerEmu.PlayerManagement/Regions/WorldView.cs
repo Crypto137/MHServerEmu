@@ -31,7 +31,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (_regions.TryAdd(region.Id, region) == false)
                 return false;
 
-            region.OnAddedToWorldView(this);
+            region.Reserve(RegionReservationType.WorldView);
             return true;
         }
 
@@ -42,7 +42,7 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (_regions.Remove(region.Id) == false)
                 return false;
 
-            region.OnRemovedFromWorldView(this);
+            region.Unreserve(RegionReservationType.WorldView);
 
             Owner.SyncWorldView();
 

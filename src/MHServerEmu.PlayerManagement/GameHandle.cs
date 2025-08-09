@@ -169,12 +169,12 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        public bool OnRegionShutdown(ulong regionId)
+        public bool OnRegionShutdown(RegionHandle region)
         {
-            PlayerManagerService.Instance.WorldManager.RemoveRegion(regionId);
+            PlayerManagerService.Instance.WorldManager.RemoveRegion(region);
 
-            if (_regions.Remove(regionId) == false)
-                return Logger.WarnReturn(false, $"FinishRegionShutdown(): Region 0x{regionId:X} not found");
+            if (_regions.Remove(region.Id) == false)
+                return Logger.WarnReturn(false, $"FinishRegionShutdown(): Region 0x{region.Id:X} not found");
 
             // Shut this game down if all of its regions were shut down
             if (_regions.Count == 0 && State == GameHandleState.Running)

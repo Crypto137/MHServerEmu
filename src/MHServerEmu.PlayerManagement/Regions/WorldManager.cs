@@ -17,7 +17,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         private readonly IdGenerator _idGenerator = new(IdType.Region, 0);
 
         private readonly Dictionary<ulong, RegionHandle> _allRegions = new();
-        private readonly Dictionary<(PrototypeId, PrototypeId), RegionHandle> _publicRegions = new();
+        private readonly Dictionary<PrototypeId, RegionLoadBalancer> _publicRegions = new();
 
         private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
 
@@ -47,16 +47,17 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
         {
-            // TODO: Multiple instances of public regions and load balancing
-            var key = (regionProtoRef, (PrototypeId)createRegionParams.DifficultyTierProtoId);
-            if (_publicRegions.TryGetValue(key, out RegionHandle region) == false || region.State == RegionHandleState.Shutdown)
+            if (_publicRegions.TryGetValue(regionProtoRef, out RegionLoadBalancer regionLoadBalancer) == false)
             {
-                if (region != null)
-                    _publicRegions.Remove(key);
+                regionLoadBalancer = new(regionProtoRef);
+                _publicRegions.Add(regionProtoRef, regionLoadBalancer);
+            }
 
+            RegionHandle region = regionLoadBalancer.GetAvailableRegion((PrototypeId)createRegionParams.DifficultyTierProtoId);
+            if (region == null)
+            {
                 GameHandle game = _playerManager.GameHandleManager.CreateGame();
                 region = CreateRegionInGame(game, regionProtoRef, createRegionParams, RegionFlags.None);
-                _publicRegions[key] = region;
             }
 
             return region;
@@ -86,13 +87,40 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool AddRegion(RegionHandle region)
         {
-            _allRegions.Add(region.Id, region);
+            if (_allRegions.TryAdd(region.Id, region) == false)
+                return false;
+
+            if (region.IsPublic)
+                RegisterPublicRegion(region);
+
             return true;
         }
 
-        public bool RemoveRegion(ulong regionId)
+        public bool RemoveRegion(RegionHandle region)
         {
-            return _allRegions.Remove(regionId);
+            if (_allRegions.Remove(region.Id) == false)
+                return false;
+
+            if (region.IsPublic)
+                UnregisterPublicRegion(region);
+
+            return true;
+        }
+
+        public bool RegisterPublicRegion(RegionHandle region)
+        {
+            if (_publicRegions.TryGetValue(region.RegionProtoRef, out RegionLoadBalancer loadBalancer) == false)
+                return false;
+
+            return loadBalancer.AddRegion(region);
+        }
+
+        public bool UnregisterPublicRegion(RegionHandle region)
+        {
+            if (_publicRegions.TryGetValue(region.RegionProtoRef, out RegionLoadBalancer loadBalancer) == false)
+                return false;
+
+            return loadBalancer.RemoveRegion(region);
         }
 
         private RegionHandle CreateRegionInGame(GameHandle game, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, RegionFlags flags)

@@ -21,6 +21,12 @@ namespace MHServerEmu.PlayerManagement.Regions
         ShutdownWhenVacant               = 1 << 1,
     }
 
+    public enum RegionReservationType
+    {
+        WorldView,
+        Presence,
+    }
+
     /// <summary>
     /// Represents a region in a game instance.
     /// </summary>
@@ -28,25 +34,34 @@ namespace MHServerEmu.PlayerManagement.Regions
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly HashSet<PlayerHandle> _transferringPlayers = new();
-        private readonly HashSet<PlayerHandle> _playersInRegion = new();
+        private readonly HashSet<PlayerHandle> _pendingPlayers = new();
+        private readonly HashSet<PlayerHandle> _players = new();
 
-        // When a region is added to a player's world view it gets "reserved", which prevents it from unexpectedly shutting down in some cases.
-        private int _reservationCount = 0;
+        // Reservations are incremented when a region is added to a world view or we receive a confirmation that a player is in the region.
+        // This prevents regions from being unexpectedly shut down.
+        private int _worldViewReservationCount = 0;
+        private int _presenceReservationCount = 0;
 
         public GameHandle Game { get; }
         public ulong Id { get; }
         public PrototypeId RegionProtoRef { get; }
         public RegionPrototype Prototype { get; }
         public NetStructCreateRegionParams CreateParams { get; }
+        public PrototypeId DifficultyTierProtoRef { get => (PrototypeId)CreateParams.DifficultyTierProtoId; }
 
+        // We currently never reset towns and allow unlimited numbers of players in them to have a more social experience on smaller servers.
+
+        public bool IsPublic { get => Prototype.IsPublic; }
         public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
+        public bool CanExpire { get => Prototype.Behavior == RegionBehavior.PublicCombatZone || Prototype.Behavior == RegionBehavior.MatchPlay; }
 
         public RegionHandleState State { get; private set; } = RegionHandleState.Pending;
         public RegionFlags Flags { get; private set; }
+        public RegionPlayerAccessVar PlayerAccess { get; private set; } = RegionPlayerAccessVar.eRPA_Open;
 
-        public int TransferCount { get => _transferringPlayers.Count; }
-        public int PlayerCount { get => _playersInRegion.Count; }
+        public int PlayerCount { get => _players.Count; }
+        public int PlayerLimit { get => Prototype.PlayerLimit; }
+        public bool IsFull { get => Prototype.Behavior != RegionBehavior.Town && PlayerCount >= PlayerLimit; }
 
         public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams, RegionFlags flags)
         {
@@ -68,7 +83,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public override string ToString()
         {
             string regionName = RegionProtoRef.GetNameFormatted();
-            string difficultyName = ((PrototypeId)CreateParams.DifficultyTierProtoId).GetNameFormatted();
+            string difficultyName = DifficultyTierProtoRef.GetNameFormatted();
             return $"[0x{Id:X}] {regionName} ({difficultyName})";
         }
 
@@ -108,9 +123,9 @@ namespace MHServerEmu.PlayerManagement.Regions
             State = RegionHandleState.Running;
             Logger.Info($"Received instance creation confirmation for region [{this}]");
 
-            foreach (PlayerHandle player in _transferringPlayers)
+            foreach (PlayerHandle player in _pendingPlayers)
                 player.OnRegionReadyToTransfer();
-            _transferringPlayers.Clear();
+            _pendingPlayers.Clear();
 
             return true;
         }
@@ -138,18 +153,18 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             // Try to cancel the transfer and return players to regions they were in.
             // If this is not possible (the player is logging in and is not in a game/region yet), disconnect.
-            foreach (PlayerHandle player in _transferringPlayers)
+            foreach (PlayerHandle player in _pendingPlayers)
             {
                 if (player.CurrentGame != null)
                     player.CancelRegionTransfer(player.CurrentGame.Id, RegionTransferFailure.eRTF_DestinationInaccessible);
                 else
                     player.Disconnect();
             }
-            _transferringPlayers.Clear();            
+            _pendingPlayers.Clear();            
 
             DestroyAccessPortalIfNeeded();
 
-            Game.OnRegionShutdown(Id);
+            Game.OnRegionShutdown(this);
             return true;
         }
 
@@ -180,42 +195,84 @@ namespace MHServerEmu.PlayerManagement.Regions
             return true;
         }
 
-        public bool AddTransferringPlayer(PlayerHandle player)
+        public bool RequestTransfer(PlayerHandle player)
         {
             // If this region is already running, let the player in immediately. Otherwise do this when we receive creation confirmation.
             if (State == RegionHandleState.Running)
                 player.OnRegionReadyToTransfer();
             else
-                _transferringPlayers.Add(player);
+                _pendingPlayers.Add(player);
 
             return true;
         }
 
-        public void OnAddedToWorldView(WorldView worldView)
+        public void AddPlayer(PlayerHandle player)
         {
-            _reservationCount++;
+            Logger.Debug($"AddPlayer(): [{this}] - [{player}]");
+
+            if (IsPublic)
+                PlayerManagerService.Instance.WorldManager.UnregisterPublicRegion(this);
+
+            _players.Add(player);
+
+            if (IsPublic && State != RegionHandleState.Shutdown)
+                PlayerManagerService.Instance.WorldManager.RegisterPublicRegion(this);
         }
 
-        public void OnRemovedFromWorldView(WorldView worldView)
+        public void RemovePlayer(PlayerHandle player)
         {
-            if (_reservationCount > 0)
-                _reservationCount--;
-            else
-                Logger.Warn("OnRemovedFromWorldView(): _reservationCount == 0");
+            Logger.Debug($"RemovePlayer(): [{this}] - [{player}]");
 
-            ShutdownIfVacant();
+            if (IsPublic)
+                PlayerManagerService.Instance.WorldManager.UnregisterPublicRegion(this);
+
+            _players.Remove(player);
+
+            if (IsPublic && State != RegionHandleState.Shutdown)
+                PlayerManagerService.Instance.WorldManager.RegisterPublicRegion(this);
         }
 
-        public void OnPlayerEntered(PlayerHandle player)
+        public void Reserve(RegionReservationType reservationType)
         {
-            Logger.Debug($"OnPlayerEntered(): [{this}] - [{player}]");
-            _playersInRegion.Add(player);
+            switch (reservationType)
+            {
+                case RegionReservationType.WorldView:
+                    _worldViewReservationCount++;
+                    break;
+
+                case RegionReservationType.Presence:
+                    _presenceReservationCount++;
+                    break;
+
+                default:
+                    Logger.Warn($"Reserve(): Unknown reservation type {reservationType}");
+                    break;
+            }
         }
 
-        public void OnPlayerLeft(PlayerHandle player)
+        public void Unreserve(RegionReservationType reservationType)
         {
-            Logger.Debug($"OnPlayerLeft(): [{this}] - [{player}]");
-            _playersInRegion.Remove(player);
+            switch (reservationType)
+            {
+                case RegionReservationType.WorldView:
+                    if (_worldViewReservationCount > 0)
+                        _worldViewReservationCount--;
+                    else
+                        Logger.Warn("Unreserve(): _worldViewReservationCount == 0");
+                    break;
+
+                case RegionReservationType.Presence:
+                    if (_presenceReservationCount > 0)
+                        _presenceReservationCount--;
+                    else
+                        Logger.Warn("Unreserve(): _presenceReservationCount == 0");
+                    break;
+
+                default:
+                    Logger.Warn($"Unreserve(): Unknown reservation type {reservationType}");
+                    break;
+            }
+
             ShutdownIfVacant();
         }
 
@@ -224,14 +281,14 @@ namespace MHServerEmu.PlayerManagement.Regions
             if (State == RegionHandleState.Shutdown)
                 return;
 
-            if (Flags.HasFlag(RegionFlags.CloseWhenReservationsReachesZero) && _reservationCount == 0)
+            if (Flags.HasFlag(RegionFlags.CloseWhenReservationsReachesZero) && (_worldViewReservationCount + _presenceReservationCount) == 0)
             {
                 Logger.Trace($"Region [{this}] is shutting down because its reservations reached zero");
                 Shutdown(true);
                 return;
             }
 
-            if (Flags.HasFlag(RegionFlags.ShutdownWhenVacant) && PlayerCount == 0 && TransferCount == 0)
+            if (Flags.HasFlag(RegionFlags.ShutdownWhenVacant) && PlayerCount == 0 && _presenceReservationCount == 0)
             {
                 Logger.Trace($"Region [{this}] is shutting down because it became vacant");
                 Shutdown(true);
