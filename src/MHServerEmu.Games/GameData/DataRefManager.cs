@@ -13,6 +13,7 @@
     {
         private readonly Dictionary<T, string> _referenceDict = new();
         private readonly Dictionary<string, T> _reverseLookupDict;
+        private readonly Dictionary<T, string> _formattedNameDict = new();
 
         /// <summary>
         /// Creates a new <see cref="DataRefManager{T}"/> instance and sets up a reverse lookup dictionary if needed.
@@ -72,6 +73,22 @@
                 return string.Empty;
 
             return name;
+        }
+
+        public string GetFormattedReferenceName(T dataRef)
+        {
+            // Cache formatted names to avoid unnecessary string allocations.
+            lock (_formattedNameDict)
+            {
+                if (_formattedNameDict.TryGetValue(dataRef, out string formattedName) == false)
+                {
+                    string name = GetReferenceName(dataRef);
+                    formattedName = Path.GetFileNameWithoutExtension(name);
+                    _formattedNameDict.Add(dataRef, formattedName);
+                }
+
+                return formattedName;
+            }
         }
     }
 }

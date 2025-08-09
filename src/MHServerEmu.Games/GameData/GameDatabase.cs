@@ -172,7 +172,7 @@ namespace MHServerEmu.Games.GameData
         public static string GetCurveName(CurveId curveId) => CurveRefManager.GetReferenceName(curveId);
         public static string GetBlueprintName(BlueprintId blueprintId) => BlueprintRefManager.GetReferenceName(blueprintId);
         public static string GetPrototypeName(PrototypeId prototypeId) => PrototypeRefManager.GetReferenceName(prototypeId);
-        public static string GetFormattedPrototypeName(PrototypeId protoId) => Path.GetFileNameWithoutExtension(GetPrototypeName(protoId));
+        public static string GetFormattedPrototypeName(PrototypeId protoId) => PrototypeRefManager.GetFormattedReferenceName(protoId);
 
         public static string GetPrototypeNameByGuid(PrototypeGuid guid)
         {
