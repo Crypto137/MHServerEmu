@@ -30,6 +30,11 @@ namespace MHServerEmu.PlayerManagement.Regions
             _playerManager = playerManager;
         }
 
+        public Dictionary<ulong, RegionHandle>.ValueCollection.Enumerator GetEnumerator()
+        {
+            return _allRegions.Values.GetEnumerator();
+        }
+
         public void Update()
         {
             ProcessMessageQueue();

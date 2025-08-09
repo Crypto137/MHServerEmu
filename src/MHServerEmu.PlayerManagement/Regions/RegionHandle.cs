@@ -24,7 +24,7 @@ namespace MHServerEmu.PlayerManagement.Regions
     /// <summary>
     /// Represents a region in a game instance.
     /// </summary>
-    public class RegionHandle
+    public class RegionHandle : IComparable<RegionHandle>
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -67,7 +67,18 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public override string ToString()
         {
-            return $"{RegionProtoRef.GetNameFormatted()} (0x{Id:X})";
+            string regionName = RegionProtoRef.GetNameFormatted();
+            string difficultyName = ((PrototypeId)CreateParams.DifficultyTierProtoId).GetNameFormatted();
+            return $"[0x{Id:X}] {regionName} ({difficultyName})";
+        }
+
+        public int CompareTo(RegionHandle other)
+        {
+            int gameComparison = Game.Id.CompareTo(other.Game.Id);
+            if (gameComparison != 0)
+                return gameComparison;
+
+            return Id.CompareTo(other.Id);
         }
 
         public bool RequestInstanceCreation()

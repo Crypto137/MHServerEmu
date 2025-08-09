@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Regions;
 
@@ -29,6 +30,9 @@ namespace MHServerEmu.PlayerManagement
 
         public ulong Id { get; }
         public GameHandleState State { get; private set; }
+
+        public TimeSpan CreationTime { get; } = Clock.UnixTime;
+        public TimeSpan Uptime { get => Clock.UnixTime - CreationTime; }
 
         public bool IsRunning { get => State == GameHandleState.Running; }
         public int PlayerCount { get => _players.Count; }

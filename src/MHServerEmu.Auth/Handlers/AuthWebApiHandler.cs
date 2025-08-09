@@ -142,13 +142,24 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         private async Task<bool> OnServerStatus(HttpListenerResponse httpResponse, AuthWebApiOutputFormat outputFormat)
         {
-            string status = ServerManager.Instance.GetServerStatus(true);
+            StringBuilder sb = new(ServerManager.Instance.GetServerStatus(false));
 
-            // Fix line breaks for display in browsers
+            PlayerManagerService playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
+            if (playerManager != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("Games:");
+                playerManager.GetGameList(sb);
+            }
+
+            // Fix line breaks and tabs for display in browsers
             if (outputFormat == AuthWebApiOutputFormat.Html)
-                status = status.Replace("\n", "<br/>");
+            {
+                sb.Replace("\n", "<br/>");
+                sb.Replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+            }
 
-            await SendResponseAsync(new(true, "Server Status", status), httpResponse, outputFormat);
+            await SendResponseAsync(new(true, "Server Status", sb.ToString()), httpResponse, outputFormat);
             return true;
         }
 
