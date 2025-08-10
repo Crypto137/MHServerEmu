@@ -336,10 +336,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     }
 
                     transaction.Commit();
-
-                    TryCreateBackup();
-
-                    return true;
                 }
                 catch (Exception e)
                 {
@@ -347,20 +343,39 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     transaction.Rollback();
                     return false;
                 }
+
+                try
+                {
+                    TryCreateBackup(connection);
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn($"DoSavePlayerData(): SQLite error creating database backup: {e.Message}");
+                }
+
+                return true;
             }
         }
 
         /// <summary>
         /// Creates a backup of the database file if enough time has passed since the last one.
         /// </summary>
-        private void TryCreateBackup()
+        private void TryCreateBackup(SQLiteConnection connection)
         {
             if (_backupTimer.Check() == false)
                 return;
 
-            // TODO: Use SQLite backup functionality for this
-            if (FileHelper.CreateFileBackup(_dbFilePath, _maxBackupNumber))
-                Logger.Info("Created database file backup");
+            TimeSpan startTime = Clock.UnixTime;
+
+            if (FileHelper.PrepareFileBackup(_dbFilePath, _maxBackupNumber, out string backupFilePath) == false)
+                return;
+
+            using SQLiteConnection backupConnection = new($"Data Source={backupFilePath}");
+            backupConnection.Open();
+            connection.BackupDatabase(backupConnection, "main", "main", -1, null, -1);
+
+            TimeSpan elapsed = Clock.UnixTime - startTime;
+            Logger.Info($"Created database backup in {elapsed.TotalMilliseconds} ms");
         }
 
         /// <summary>
