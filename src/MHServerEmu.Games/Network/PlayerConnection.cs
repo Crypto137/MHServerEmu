@@ -239,8 +239,6 @@ namespace MHServerEmu.Games.Network
                     _dbAccount.Player.StartTarget = (long)GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
                 }
 
-                _dbAccount.Player.StartTargetRegionOverride = 0;    // this is deprecated, just zero it out until we remove the field from the database
-
                 _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
 
                 PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
