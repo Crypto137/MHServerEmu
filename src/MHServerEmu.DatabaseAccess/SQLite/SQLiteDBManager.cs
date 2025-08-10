@@ -36,7 +36,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             var config = ConfigManager.Instance.GetConfig<SQLiteDBManagerConfig>();
 
             _dbFilePath = Path.Combine(FileHelper.DataDirectory, config.FileName);
-            _connectionString = $"Data Source={_dbFilePath}";
+            _connectionString = $"Data Source={_dbFilePath};Synchronous=NORMAL;";
 
             if (File.Exists(_dbFilePath) == false)
             {
