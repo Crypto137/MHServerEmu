@@ -147,11 +147,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             // Load fresh data
             using SQLiteConnection connection = GetConnection();
 
-            var @params = new { DbGuid = account.Id };
-
-            var players = connection.Query<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", @params);
-            account.Player = players.FirstOrDefault();
-
+            account.Player = connection.QueryFirstOrDefault<DBPlayer>("SELECT * FROM Player WHERE DbGuid = @DbGuid", new { DbGuid = account.Id });
             if (account.Player == null)
             {
                 account.Player = new(account.Id);
@@ -403,8 +399,8 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         /// </summary>
         private static IEnumerable<DBEntity> LoadEntitiesFromTable(SQLiteConnection connection, string tableName, long containerDbGuid)
         {
-            var @params = new { ContainerDbGuid = containerDbGuid };
-            return connection.Query<DBEntity>($"SELECT * FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid", @params);
+            EntityQueryCache queries = EntityQueryCache.GetQueries(tableName);
+            return connection.Query<DBEntity>(queries.SelectAll, new { ContainerDbGuid = containerDbGuid });
         }
 
         /// <summary>
@@ -413,20 +409,50 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private static void UpdateEntityTable(SQLiteConnection connection, SQLiteTransaction transaction, string tableName,
             long containerDbGuid, DBEntityCollection dbEntityCollection)
         {
-            var @params = new { ContainerDbGuid = containerDbGuid };
+            // Retrieve cached queries for the specified table name
+            EntityQueryCache queries = EntityQueryCache.GetQueries(tableName);
 
             // Delete items that no longer belong to this account
-            var storedEntities = connection.Query<long>($"SELECT DbGuid FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid", @params);
+            var storedEntities = connection.Query<long>(queries.SelectIds, new { ContainerDbGuid = containerDbGuid });
             var entitiesToDelete = storedEntities.Except(dbEntityCollection.Guids);
-            connection.Execute($"DELETE FROM {tableName} WHERE DbGuid IN ({string.Join(',', entitiesToDelete)})");
+            connection.Execute(queries.Delete, new { EntitiesToDelete = entitiesToDelete });
 
             // Insert and update
             IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
+            connection.Execute(queries.Insert, entries, transaction);
+            connection.Execute(queries.Update, entries, transaction);
+        }
 
-            connection.Execute(@$"INSERT OR IGNORE INTO {tableName} (DbGuid) VALUES (@DbGuid)", entries, transaction);
-            connection.Execute(@$"UPDATE {tableName} SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
-                                Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid",
-                                entries, transaction);
+        private class EntityQueryCache
+        {
+            private static readonly Dictionary<string, EntityQueryCache> QueryDict = new();
+
+            public string SelectAll { get; }
+            public string SelectIds { get; }
+            public string Delete { get; }
+            public string Insert { get; }
+            public string Update { get; }
+
+            private EntityQueryCache(string tableName)
+            {
+                SelectAll = @$"SELECT * FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid";
+                SelectIds = @$"SELECT DbGuid FROM {tableName} WHERE ContainerDbGuid = @ContainerDbGuid";
+                Delete    = @$"DELETE FROM {tableName} WHERE DbGuid IN (@EntitiesToDelete)";
+                Insert    = @$"INSERT OR IGNORE INTO {tableName} (DbGuid) VALUES (@DbGuid)";
+                Update    = @$"UPDATE {tableName} SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
+                           Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid";
+            }
+
+            public static EntityQueryCache GetQueries(string tableName)
+            {
+                if (QueryDict.TryGetValue(tableName, out EntityQueryCache queries) == false)
+                {
+                    queries = new(tableName);
+                    QueryDict.Add(tableName, queries);
+                }
+
+                return queries;
+            }
         }
     }
 }
