@@ -43,8 +43,6 @@ namespace MHServerEmu.Games.Regions
 
         public void Sync(List<(ulong, ulong)> syncData)
         {
-            Logger.Debug($"Sync(): [{Owner}]");
-
             Clear();
 
             if (syncData != null)

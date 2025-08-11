@@ -213,7 +213,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public void AddPlayer(PlayerHandle player)
         {
-            Logger.Debug($"AddPlayer(): [{this}] - [{player}]");
+            Logger.Trace($"AddPlayer(): [{this}] - [{player}]");
 
             if (IsPublic)
                 PlayerManagerService.Instance.WorldManager.UnregisterPublicRegion(this);
@@ -226,7 +226,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public void RemovePlayer(PlayerHandle player)
         {
-            Logger.Debug($"RemovePlayer(): [{this}] - [{player}]");
+            Logger.Trace($"RemovePlayer(): [{this}] - [{player}]");
 
             if (IsPublic)
                 PlayerManagerService.Instance.WorldManager.UnregisterPublicRegion(this);
