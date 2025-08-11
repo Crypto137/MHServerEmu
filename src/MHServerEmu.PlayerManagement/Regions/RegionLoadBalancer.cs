@@ -1,4 +1,5 @@
 ﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 
@@ -9,7 +10,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly SortedSet<RegionHandle> _regions = new(RegionLoadComparer.Instance);
-        private TimeSpan _nextCleanupTime = Clock.UnixTime;
+        private CooldownTimer _cleanupTimer = new(TimeSpan.FromMinutes(5));
 
         public PrototypeId RegionProtoRef { get; }
 
@@ -34,6 +35,10 @@ namespace MHServerEmu.PlayerManagement.Regions
                 if (region.DifficultyTierProtoRef != difficultyProtoRef)
                     continue;
 
+                // TODO: eRPA_InviteOnly?
+                if (region.PlayerAccess != Gazillion.RegionPlayerAccessVar.eRPA_Open)
+                    continue;
+
                 return region;
             }
 
@@ -43,6 +48,9 @@ namespace MHServerEmu.PlayerManagement.Regions
         public bool AddRegion(RegionHandle region)
         {
             if (region == null) return Logger.WarnReturn(false, "AddRegion(): region == null");
+
+            if (region.IsPublic == false)
+                return false;
 
             if (region.State == RegionHandleState.Shutdown)
                 return Logger.WarnReturn(false, $"AddRegion(): Attempting to add region {region} that has already been shut down");
@@ -58,13 +66,35 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         private void TryCleanUpRegions()
         {
-            TimeSpan now = Clock.UnixTime;
-            if (now < _nextCleanupTime)
+            if (_cleanupTimer.Check() == false)
                 return;
 
-            // TODO
+            // SortedSet cannot be modified during iteration, so we need to store regions we want to remove in separate lists.
+            List<RegionHandle> shutdownRegions = ListPool<RegionHandle>.Instance.Get();
+            List<RegionHandle> expiredRegions = ListPool<RegionHandle>.Instance.Get();
 
-            _nextCleanupTime = now + TimeSpan.FromMinutes(5);
+            foreach (RegionHandle region in _regions)
+            {
+                if (region.State == RegionHandleState.Shutdown)
+                {
+                    Logger.Debug($"TryCleanUpRegions(): Found shut down region instance [{region}]");
+                    shutdownRegions.Add(region);
+                    continue;
+                }
+
+                if (region.CheckExpiration())
+                    expiredRegions.Add(region);
+            }
+
+            foreach (RegionHandle region in shutdownRegions)
+                _regions.Remove(region);
+
+            // This will shut down expired regions if they are already empty.
+            foreach (RegionHandle region in expiredRegions)
+                region.ShutdownIfVacant();
+
+            ListPool<RegionHandle>.Instance.Return(shutdownRegions);
+            ListPool<RegionHandle>.Instance.Return(expiredRegions);
         }
 
         private class RegionLoadComparer : IComparer<RegionHandle>

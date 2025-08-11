@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 
@@ -19,6 +20,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         None                             = 0,
         CloseWhenReservationsReachesZero = 1 << 0,
         ShutdownWhenVacant               = 1 << 1,
+        IsExpired                        = 1 << 2,
     }
 
     public enum RegionReservationType
@@ -48,6 +50,9 @@ namespace MHServerEmu.PlayerManagement.Regions
         public RegionPrototype Prototype { get; }
         public NetStructCreateRegionParams CreateParams { get; }
         public PrototypeId DifficultyTierProtoRef { get => (PrototypeId)CreateParams.DifficultyTierProtoId; }
+
+        public TimeSpan CreationTime { get; } = Clock.UnixTime;
+        public TimeSpan Uptime { get => Clock.UnixTime - CreationTime; }
 
         // We currently never reset towns and allow unlimited numbers of players in them to have a more social experience on smaller servers.
 
@@ -276,14 +281,42 @@ namespace MHServerEmu.PlayerManagement.Regions
             ShutdownIfVacant();
         }
 
-        private void ShutdownIfVacant()
+        public bool CheckExpiration()
+        {
+            if (CanExpire == false)
+                return false;
+
+            // No need to go through this if we have already flagged this region as expired.
+            if (Flags.HasFlag(RegionFlags.IsExpired))
+                return false;
+
+            TimeSpan uptime = Uptime;
+            if (uptime < Prototype.Lifetime)
+                return false;
+
+            Logger.Info($"Region [{this}] expired after {uptime:dd\\:hh\\:mm\\:ss}");
+            Flags |= RegionFlags.IsExpired;
+            PlayerAccess = RegionPlayerAccessVar.eRPA_InviteOnly;
+            return true;
+        }
+
+        public void ShutdownIfVacant()
         {
             if (State == RegionHandleState.Shutdown)
                 return;
 
-            if (Flags.HasFlag(RegionFlags.CloseWhenReservationsReachesZero) && (_worldViewReservationCount + _presenceReservationCount) == 0)
+            bool hasReservations = (_worldViewReservationCount + _presenceReservationCount) > 0;
+
+            if (Flags.HasFlag(RegionFlags.CloseWhenReservationsReachesZero) && hasReservations == false)
             {
                 Logger.Trace($"Region [{this}] is shutting down because its reservations reached zero");
+                Shutdown(true);
+                return;
+            }
+
+            if (Flags.HasFlag(RegionFlags.IsExpired) && hasReservations == false)
+            {
+                Logger.Trace($"Region [{this}] is shutting down because it has expired");
                 Shutdown(true);
                 return;
             }
