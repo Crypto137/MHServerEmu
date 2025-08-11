@@ -26,6 +26,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
 
         private int _maxBackupNumber;
         private CooldownTimer _backupTimer;
+        private volatile bool _backupInProgress;
 
         public static SQLiteDBManager Instance { get; } = new();
 
@@ -178,7 +179,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             for (int i = 0; i < NumPlayerDataWriteAttempts; i++)
             {
                 if (DoSavePlayerData(account))
-                    return Logger.InfoReturn(true, $"Successfully written player data for account [{account}]");
+                    return true;
 
                 // Maybe we should add a delay here
             }
@@ -340,13 +341,12 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     return false;
                 }
 
-                try
+                Logger.Info($"Successfully written player data for account [{account}]");
+
+                if (_backupInProgress == false && _backupTimer.Check())
                 {
-                    TryCreateBackup(connection);
-                }
-                catch (Exception e)
-                {
-                    Logger.Warn($"DoSavePlayerData(): SQLite error creating database backup: {e.Message}");
+                    _backupInProgress = true;
+                    Task.Run(CreateBackup);
                 }
 
                 return true;
@@ -354,24 +354,34 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         }
 
         /// <summary>
-        /// Creates a backup of the database file if enough time has passed since the last one.
+        /// Creates a backup of the database file using the SQLite backup API.
         /// </summary>
-        private void TryCreateBackup(SQLiteConnection connection)
+        private void CreateBackup()
         {
-            if (_backupTimer.Check() == false)
-                return;
+            try
+            {
+                Logger.Info("Starting database backup...");
+                TimeSpan startTime = Clock.UnixTime;
 
-            TimeSpan startTime = Clock.UnixTime;
+                if (FileHelper.PrepareFileBackup(_dbFilePath, _maxBackupNumber, out string backupFilePath) == false)
+                    return;
 
-            if (FileHelper.PrepareFileBackup(_dbFilePath, _maxBackupNumber, out string backupFilePath) == false)
-                return;
+                using SQLiteConnection sourceConnection = GetConnection();
+                using SQLiteConnection backupConnection = new($"Data Source={backupFilePath}");
+                backupConnection.Open();
+                sourceConnection.BackupDatabase(backupConnection, "main", "main", -1, null, -1);
 
-            using SQLiteConnection backupConnection = new($"Data Source={backupFilePath}");
-            backupConnection.Open();
-            connection.BackupDatabase(backupConnection, "main", "main", -1, null, -1);
-
-            TimeSpan elapsed = Clock.UnixTime - startTime;
-            Logger.Info($"Created database backup in {elapsed.TotalMilliseconds} ms");
+                TimeSpan elapsed = Clock.UnixTime - startTime;
+                Logger.Info($"Created database backup in {elapsed.TotalMilliseconds} ms");
+            }
+            catch (Exception e)
+            {
+                Logger.Warn($"CreateBackup(): SQLite error creating database backup: {e.Message}");
+            }
+            finally
+            {
+                _backupInProgress = false;
+            }
         }
 
         /// <summary>
