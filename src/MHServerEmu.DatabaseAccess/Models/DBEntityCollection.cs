@@ -2,6 +2,15 @@
 
 namespace MHServerEmu.DatabaseAccess.Models
 {
+    public enum DBEntityCategory
+    {
+        // Do not rename, these are used as database table names.
+        Avatar,
+        TeamUp,
+        Item,
+        ControlledEntity,
+    }
+
     /// <summary>
     /// Represents a collection of <see cref="DBEntity"/> instances in the database belonging to a specific <see cref="DBAccount"/>.
     /// </summary>
