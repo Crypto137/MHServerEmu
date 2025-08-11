@@ -447,7 +447,7 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             {
                 SelectAll = @$"SELECT * FROM {category} WHERE ContainerDbGuid = @ContainerDbGuid";
                 SelectIds = @$"SELECT DbGuid FROM {category} WHERE ContainerDbGuid = @ContainerDbGuid";
-                Delete    = @$"DELETE FROM {category} WHERE DbGuid IN (@EntitiesToDelete)";
+                Delete    = @$"DELETE FROM {category} WHERE DbGuid IN @EntitiesToDelete";
                 Insert    = @$"INSERT OR IGNORE INTO {category} (DbGuid) VALUES (@DbGuid)";
                 Update    = @$"UPDATE {category} SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
                                Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid";
