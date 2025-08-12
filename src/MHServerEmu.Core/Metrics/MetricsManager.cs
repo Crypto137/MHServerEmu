@@ -17,6 +17,7 @@ namespace MHServerEmu.Core.Metrics
         private readonly MemoryMetrics _memoryMetrics = new();
 
         private readonly ConcurrentQueue<(ulong, GamePerformanceMetricValue)> _gamePerformanceMetricQueue = new();
+        private readonly ConcurrentQueue<ulong> _gameInstancesToRemove = new();
         private readonly Dictionary<ulong, GamePerformanceMetrics> _gamePerformanceMetricsDict = new();
 
         private long _tick;
@@ -53,6 +54,10 @@ namespace MHServerEmu.Core.Metrics
 
                     gameMetrics.Update(metricValue);
                 }
+
+                // Remove game instances that were shut down
+                while (_gameInstancesToRemove.TryDequeue(out ulong gameId))
+                    _gamePerformanceMetricsDict.Remove(gameId);
             }
         }
 
@@ -64,6 +69,11 @@ namespace MHServerEmu.Core.Metrics
         public void RecordGamePerformanceMetric(ulong gameId, GamePerformanceMetricEnum metric, TimeSpan value)
         {
             _gamePerformanceMetricQueue.Enqueue((gameId, new(metric, value)));
+        }
+
+        public void RemoveGameInstance(ulong gameId)
+        {
+            _gameInstancesToRemove.Enqueue(gameId);
         }
 
         public string GeneratePerformanceReport(MetricsReportFormat format)

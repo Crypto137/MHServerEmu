@@ -25,11 +25,8 @@ namespace MHServerEmu.Core.System
         // 32 bits - unix timestamp in seconds
         // 16 bits - machine sequence number (to avoid collisions if multiple ids are generated in the same second)
 
-        private readonly object _lock = new();
-
-        private readonly IdType _type;
-        private readonly ushort _machineId;
-        private ushort _machineSequenceNumber = 0;
+        private readonly ulong _highBits;
+        private ulong _machineSequenceNumber = 0;
 
         /// <summary>
         /// Constructs a new <see cref="IdGenerator"/> instance. Machine Id must be < 4096.
@@ -39,8 +36,10 @@ namespace MHServerEmu.Core.System
             if (type >= IdType.Limit) throw new OverflowException("Type exceeds 4 bits.");
             if (machineId >= 1 << 12) throw new OverflowException("MachineId exceeds 12 bits.");
 
-            _type = type;
-            _machineId = machineId;
+            // The high bits are read-only, so we can precalculate them.
+            _highBits = 0;
+            _highBits |= (ulong)type << 60;
+            _highBits |= (ulong)machineId << 48;
         }
 
         /// <summary>
@@ -50,15 +49,10 @@ namespace MHServerEmu.Core.System
         {
             // NOTE: Generation needs to be thread-safe because it can be
             // called by multiple game instances running on the same server. 
-            lock (_lock)
-            {
-                ulong id = 0;
-                id |= (ulong)_type << 60;
-                id |= (ulong)_machineId << 48;
-                id |= (((ulong)Clock.UnixTime.TotalSeconds) & 0xFFFFFFFF) << 16;
-                id |= _machineSequenceNumber++;
-                return id;
-            }
+            ulong id = _highBits;
+            id |= (((ulong)Clock.UnixTime.TotalSeconds) & 0xFFFFFFFF) << 16;
+            id |= Interlocked.Increment(ref _machineSequenceNumber) & 0xFFFF;
+            return id;
         }
 
         /// <summary>

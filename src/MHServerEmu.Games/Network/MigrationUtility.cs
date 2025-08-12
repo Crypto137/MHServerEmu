@@ -9,16 +9,6 @@ namespace MHServerEmu.Games.Network
     {
         // We have everything in a self-contained server, so we can get away with just storing our migration data in a runtime object.
 
-        public static void StoreTransferParams(MigrationData migrationData, TransferParams transferParams)
-        {
-            migrationData.TransferParams = transferParams.ToProtobuf();
-        }
-
-        public static void RestoreTransferParams(MigrationData migrationData, TransferParams transferParams)
-        {
-            transferParams.FromProtobuf(migrationData.TransferParams);
-        }
-
         public static void StoreProperties(List<KeyValuePair<ulong, ulong>> migrationDataList, PropertyCollection properties)
         {
             migrationDataList.Clear();

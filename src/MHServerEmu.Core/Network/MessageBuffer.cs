@@ -71,8 +71,16 @@ namespace MHServerEmu.Core.Network
             }
             finally
             {
-                BufferPool.Return(_buffer);
+                Destroy();
             }
+        }
+
+        /// <summary>
+        /// Releases the memory allocated to this <see cref="MessageBuffer"/> to the pool.
+        /// </summary>
+        public void Destroy()
+        {
+            BufferPool.Return(_buffer);
         }
 
         /// <summary>
@@ -97,7 +105,7 @@ namespace MHServerEmu.Core.Network
             }
             finally
             {
-                BufferPool.Return(_buffer);
+                Destroy();
             }
         }
     }

@@ -144,7 +144,6 @@ namespace MHServerEmu.DatabaseAccess.Json
             writer.Write(dbPlayer.DbGuid);
             WriteByteArray(writer, dbPlayer.ArchiveData);
             writer.Write(dbPlayer.StartTarget);
-            writer.Write(dbPlayer.StartTargetRegionOverride);
             writer.Write(dbPlayer.AOIVolume);
         }
 
@@ -154,7 +153,6 @@ namespace MHServerEmu.DatabaseAccess.Json
             dbPlayer.DbGuid = reader.ReadInt64();
             dbPlayer.ArchiveData = ReadByteArray(reader);
             dbPlayer.StartTarget = reader.ReadInt64();
-            dbPlayer.StartTargetRegionOverride = reader.ReadInt64();
             dbPlayer.AOIVolume = reader.ReadInt32();
             return dbPlayer;
         }

@@ -67,6 +67,7 @@ namespace MHServerEmu.Commands.Implementations
         [CommandInvokerType(CommandInvokerType.Client)]
         public string GenerateAllSafe(string[] @params, NetClient client)
         {
+            /*
             PlayerConnection playerConnection = (PlayerConnection)client;
             Game game = playerConnection.Game;
             RegionContext regionContext = new();
@@ -83,6 +84,9 @@ namespace MHServerEmu.Commands.Implementations
 
             stopwatch.Stop();
             return $"Generated {numRegions} regions in {stopwatch.Elapsed.TotalSeconds} sec.";
+            */
+            // TODO: Fix or remove this command.
+            return "Command disabled";
         }
 
         [Command("properties")]

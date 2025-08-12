@@ -1,10 +1,13 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -19,9 +22,12 @@ namespace MHServerEmu.PlayerManagement
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 
+        internal static PlayerManagerService Instance { get; private set; }     // Naughty singleton-like access without being an actual singleton
+
         internal SessionManager SessionManager { get; }
         internal LoginQueueManager LoginQueueManager { get; }
         internal GameHandleManager GameHandleManager { get; }
+        internal WorldManager WorldManager { get; }
         internal ClientManager ClientManager { get; }
 
         public PlayerManagerConfig Config { get; }
@@ -35,7 +41,8 @@ namespace MHServerEmu.PlayerManagement
         {
             SessionManager = new(this);
             LoginQueueManager = new(this);
-            GameHandleManager = new();
+            GameHandleManager = new(this);
+            WorldManager = new(this);
             ClientManager = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
@@ -45,9 +52,11 @@ namespace MHServerEmu.PlayerManagement
 
         public void Run()
         {
+            Instance = this;
+
             State = GameServiceState.Starting;
 
-            GameHandleManager.Initialize(Config.GameInstanceCount, Config.PlayerCountDivisor);
+            GameHandleManager.Initialize();
 
             State = GameServiceState.Running;
 
@@ -60,6 +69,7 @@ namespace MHServerEmu.PlayerManagement
                 LoginQueueManager.Update();
                 GameHandleManager.Update();
                 ClientManager.Update(true);
+                WorldManager.Update();
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
                 int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);
@@ -97,23 +107,31 @@ namespace MHServerEmu.PlayerManagement
             switch (message)
             {
                 // Message buffers are routed asynchronously rather than in ticks to have the lowest latency possible.
-                case GameServiceProtocol.RouteMessageBuffer routeMessagePackage:
+                case ServiceMessage.RouteMessageBuffer routeMessagePackage:
                     OnRouteMessageBuffer(routeMessagePackage);
                     break;
 
-                case GameServiceProtocol.RouteMessage routeMessage:
+                case ServiceMessage.RouteMessage routeMessage:
                     OnRouteMessage(routeMessage);
                     break;
 
                 // Game instance operation messages are handled in ticks by the GameHandleManager
-                case GameServiceProtocol.GameInstanceOp gameInstanceOp:
+                case ServiceMessage.GameInstanceOp gameInstanceOp:
                     GameHandleManager.ReceiveMessage(gameInstanceOp);
                     break;
-                
+
+                case ServiceMessage.CreateRegionResult:
+                case ServiceMessage.RequestRegionShutdown:
+                    WorldManager.ReceiveMessage(message);
+                    break;
+
                 // Client messages are handled in ticks by the ClientManager
-                case GameServiceProtocol.AddClient:
-                case GameServiceProtocol.RemoveClient:
-                case GameServiceProtocol.GameInstanceClientOp:
+                case ServiceMessage.AddClient:
+                case ServiceMessage.RemoveClient:
+                case ServiceMessage.GameInstanceClientOp:
+                case ServiceMessage.ChangeRegionRequest:
+                case ServiceMessage.RegionTransferFinished:
+                case ServiceMessage.ClearPrivateStoryRegions:
                     ClientManager.ReceiveMessage(message);
                     break;
 
@@ -128,7 +146,7 @@ namespace MHServerEmu.PlayerManagement
             return $"Games: {GameHandleManager.GameCount} | Players: {ClientManager.PlayerCount} | Sessions: {SessionManager.ActiveSessionCount} [{SessionManager.PendingSessionCount}]";
         }
 
-        private void OnRouteMessageBuffer(in GameServiceProtocol.RouteMessageBuffer routeMessageBuffer)
+        private void OnRouteMessageBuffer(in ServiceMessage.RouteMessageBuffer routeMessageBuffer)
         {
             IFrontendClient client = routeMessageBuffer.Client;
             MessageBuffer messageBuffer = routeMessageBuffer.MessageBuffer;
@@ -145,7 +163,7 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        private void OnRouteMessage(in GameServiceProtocol.RouteMessage routeMessage)
+        private void OnRouteMessage(in ServiceMessage.RouteMessage routeMessage)
         {
             IFrontendClient client = routeMessage.Client;
             MailboxMessage message = routeMessage.Message;
@@ -176,6 +194,41 @@ namespace MHServerEmu.PlayerManagement
         public void BroadcastMessage(IMessage message)
         {
             ClientManager.BroadcastMessage(message);
+        }
+
+        #endregion
+
+        #region Metrics
+
+        public void GetGameList(StringBuilder sb)
+        {
+            List<RegionHandle> regionList = ListPool<RegionHandle>.Instance.Get();
+            foreach (RegionHandle region in WorldManager)
+            {
+                if (region.State == RegionHandleState.Shutdown)
+                    continue;
+
+                regionList.Add(region);
+            }
+
+            regionList.Sort();
+
+            ulong currentGameId = 0;
+            foreach (RegionHandle region in regionList)
+            {
+                GameHandle game = region.Game;
+
+                if (game.Id != currentGameId)
+                {
+                    TimeSpan uptime = game.Uptime;
+                    sb.AppendLine($"Game [{game}] - {uptime:dd\\:hh\\:mm\\:ss}");
+                    currentGameId = game.Id;
+                }
+
+                sb.AppendLine($"\t{region}");
+            }
+
+            ListPool<RegionHandle>.Instance.Return(regionList);
         }
 
         #endregion

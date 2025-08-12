@@ -107,23 +107,4 @@ namespace MHServerEmu.Games.Regions
                 DangerRoomScenarioRef = (PrototypeId)createRegionParams.DangerRoomScenarioR;
         }
     }
-
-    public class RegionContext
-    {
-        private static readonly NetStructCreateRegionParams DefaultCreateParams = NetStructCreateRegionParams.CreateBuilder().SetLevel(0).Build();
-
-        public PrototypeId RegionDataRef { get; set; }
-        public NetStructCreateRegionParams CreateRegionParams { get; set; } = DefaultCreateParams;
-
-        public PrototypeId DifficultyTierRef { get => CreateRegionParams.HasDifficultyTierProtoId ? (PrototypeId)CreateRegionParams.DifficultyTierProtoId : PrototypeId.Invalid; }
-        public int EndlessLevel { get => CreateRegionParams.HasEndlessLevel ? (int)CreateRegionParams.EndlessLevel : 0; }
-        public ulong PortalEntityDbId { get => CreateRegionParams.HasAccessPortal ? CreateRegionParams.AccessPortal.EntityDbId : 0; }
-
-        public RegionContext() { }
-
-        public override string ToString()
-        {
-            return $"{RegionDataRef.GetNameFormatted()}";
-        }
-    }
 }

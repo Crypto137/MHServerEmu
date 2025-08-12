@@ -424,7 +424,7 @@ namespace MHServerEmu.Games.Missions
         public bool RegionCheckpoint(Player player)
         {
             if (player == null) return false;
-            return _activeRegionId != 0 && player.ViewedRegion(_activeRegionId); 
+            return _activeRegionId != 0 && player.IsRegionInWorldView(_activeRegionId); 
         }
 
         private TimeSpan EvaluateTimeLimit(long timeLimitSeconds, EvalPrototype timeLimitSecondsEval)

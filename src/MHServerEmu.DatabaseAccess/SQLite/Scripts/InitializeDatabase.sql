@@ -1,6 +1,7 @@
 -- Initialize a new database file using the current schema version
 
-PRAGMA user_version = 3;
+PRAGMA user_version=4;
+PRAGMA journal_mode=WAL;
 
 CREATE TABLE "Account" (
 	"Id"	INTEGER NOT NULL UNIQUE,
@@ -17,7 +18,6 @@ CREATE TABLE "Player" (
 	"DbGuid"	INTEGER NOT NULL UNIQUE,
 	"ArchiveData"	BLOB,
 	"StartTarget"	INTEGER,
-	"StartTargetRegionOverride"	INTEGER,
 	"AOIVolume"	INTEGER,
 	"GazillioniteBalance"	INTEGER,
 	FOREIGN KEY("DbGuid") REFERENCES "Account"("Id") ON DELETE CASCADE,

@@ -12,6 +12,24 @@
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <InformationalVersion>$(AssemblyVersion)</InformationalVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="SQLite\Scripts\InitializeDatabase.sql" />
+    <None Remove="SQLite\Scripts\InitializeLeaderboardsDatabase.sql" />
+    <None Remove="SQLite\Scripts\Migrations\0.sql" />
+    <None Remove="SQLite\Scripts\Migrations\1.sql" />
+    <None Remove="SQLite\Scripts\Migrations\2.sql" />
+    <None Remove="SQLite\Scripts\Migrations\3.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="SQLite\Scripts\InitializeDatabase.sql" />
+    <EmbeddedResource Include="SQLite\Scripts\InitializeLeaderboardsDatabase.sql" />
+    <EmbeddedResource Include="SQLite\Scripts\Migrations\0.sql" />
+    <EmbeddedResource Include="SQLite\Scripts\Migrations\1.sql" />
+    <EmbeddedResource Include="SQLite\Scripts\Migrations\2.sql" />
+    <EmbeddedResource Include="SQLite\Scripts\Migrations\3.sql" />
+  </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\MHServerEmu.Core\MHServerEmu.Core.csproj" />
@@ -24,24 +42,6 @@
     <Reference Include="System.Data.SQLite">
       <HintPath>..\..\dep\System.Data.SQLite\System.Data.SQLite.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Data\SQLite\InitializeDatabase.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\SQLite\InitializeLeaderboardsDatabase.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\SQLite\Migrations\0.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\SQLite\Migrations\1.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\SQLite\Migrations\2.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">

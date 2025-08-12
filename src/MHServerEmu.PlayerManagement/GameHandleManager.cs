@@ -15,37 +15,31 @@ namespace MHServerEmu.PlayerManagement
         private readonly IdGenerator _idGenerator = new(IdType.Game, 0);
         private readonly Dictionary<ulong, GameHandle> _gameDict = new();
 
-        private readonly DoubleBufferQueue<GameServiceProtocol.GameInstanceOp> _messageQueue = new();
+        private readonly DoubleBufferQueue<ServiceMessage.GameInstanceOp> _messageQueue = new();
 
-        private int _targetGameInstanceCount = -1;
-        private int _playerCountDivisor = 1;
+        private readonly PlayerManagerService _playerManager;
 
         public int GameCount { get => _gameDict.Count; }
         public bool IsShuttingDown { get; set; }
 
-        public GameHandleManager() { }
+        public GameHandleManager(PlayerManagerService playerManager)
+        {
+            _playerManager = playerManager;
+        }
 
         public void Update()
         {
             ProcessMessageQueue();
-            RefreshGames();
         }
 
-        public void ReceiveMessage(in GameServiceProtocol.GameInstanceOp message)
+        public void ReceiveMessage(in ServiceMessage.GameInstanceOp message)
         {
             _messageQueue.Enqueue(message);
         }
 
-        public void Initialize(int gameInstanceCount, int playerCountDivisor)
+        public void Initialize()
         {
-            // Should always have at least 1 game instance
-            gameInstanceCount = Math.Max(gameInstanceCount, 1);
-
-            for (int i = 0; i < gameInstanceCount; i++)
-                CreateGame();
-
-            _targetGameInstanceCount = gameInstanceCount;
-            _playerCountDivisor = Math.Max(playerCountDivisor, 1);
+            // TODO: Precreate commonly used regions like towns or just remove this
         }
 
         public GameHandle CreateGame()
@@ -73,44 +67,6 @@ namespace MHServerEmu.PlayerManagement
             return _gameDict.TryGetValue(gameId, out game);
         }
 
-        /// <summary>
-        /// Returns a<see cref="GameHandle"/> for an available game instance.
-        /// </summary>
-        public GameHandle GetAvailableGame()
-        {
-            if (_gameDict.Count == 0)
-                return Logger.WarnReturn<GameHandle>(null, $"GetAvailableGame(): No games are available");
-
-            // If there is only one game instance, just return it
-            if (GameCount == 1)
-            {
-                foreach (GameHandle game in _gameDict.Values)
-                    return game;
-            }
-
-            // Do very basic load balancing based on player count
-            GameHandle resultGame = null;
-            int lowestPlayerCount = int.MaxValue;
-
-            foreach (GameHandle game in _gameDict.Values)
-            {
-                if (game.State != GameHandleState.Running)
-                    continue;
-
-                // Divide player count to make sure:
-                // - Instances are not underpopulated at lower player counts
-                // - Players logging in at the same time are more likely to be put into the same instance
-                int playerCount = game.PlayerCount / _playerCountDivisor;
-                if (playerCount < lowestPlayerCount)
-                {
-                    resultGame = game;
-                    lowestPlayerCount = playerCount;
-                }
-            }
-
-            return resultGame;
-        }
-
         #region Ticking
 
         private void ProcessMessageQueue()
@@ -119,16 +75,16 @@ namespace MHServerEmu.PlayerManagement
 
             while (_messageQueue.CurrentCount > 0)
             {
-                GameServiceProtocol.GameInstanceOp gameInstanceOp = _messageQueue.Dequeue();
+                ServiceMessage.GameInstanceOp gameInstanceOp = _messageQueue.Dequeue();
 
                 switch (gameInstanceOp.Type)
                 {
-                    case GameServiceProtocol.GameInstanceOp.OpType.CreateAck:
-                        OnCreateAck(gameInstanceOp.GameId);
+                    case GameInstanceOpType.CreateResponse:
+                        OnCreateResponse(gameInstanceOp.GameId);
                         break;
 
-                    case GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck:
-                        OnShutdownAck(gameInstanceOp.GameId);
+                    case GameInstanceOpType.ShutdownNotice:
+                        OnShutdownNotice(gameInstanceOp.GameId);
                         break;
 
                     default:
@@ -138,46 +94,27 @@ namespace MHServerEmu.PlayerManagement
             }
         }
 
-        private void RefreshGames()
-        {
-            // Remove handles for games that were shut down
-            foreach (var kvp in _gameDict)
-            {
-                if (kvp.Value.State == GameHandleState.Shutdown)
-                {
-                    Logger.Info($"Removing handle for shutdown game [{kvp.Value}]");
-                    _gameDict.Remove(kvp.Key);
-                }
-            }
-
-            // Create replacement game instances if needed
-            if (IsShuttingDown == false)
-            {
-                while (GameCount < _targetGameInstanceCount)
-                    CreateGame();
-            }
-        }
-
         #endregion
 
         #region Message Handling
 
-        private bool OnCreateAck(ulong gameId)
+        private bool OnCreateResponse(ulong gameId)
         {
             if (TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnCreateAck(): No handle found for gameId 0x{gameId:X}");
+                return Logger.WarnReturn(false, $"OnCreateResponse(): No handle found for gameId 0x{gameId:X}");
 
-            game.OnInstanceCreationAck();
+            game.OnInstanceCreateResponse();
 
             return true;
         }
 
-        private bool OnShutdownAck(ulong gameId)
+        private bool OnShutdownNotice(ulong gameId)
         {
             if (TryGetGameById(gameId, out GameHandle game) == false)
-                return Logger.WarnReturn(false, $"OnShutdownAck(): No handle found for gameId 0x{gameId:X}");
+                return Logger.WarnReturn(false, $"OnShutdownNotice(): No handle found for gameId 0x{gameId:X}");
 
-            game.OnInstanceShutdownAck();
+            game.OnInstanceShutdownNotice();
+            _gameDict.Remove(game.Id);
 
             return true;
         }

@@ -22,7 +22,7 @@ namespace MHServerEmu.Games.Leaderboards
         private readonly Dictionary<LeaderboardScoringRulePrototype, ulong> _ruleEntities = new();
         private readonly Dictionary<LeaderboardGuidKey, int> _ruleEvents = new();
 
-        private readonly List<GameServiceProtocol.LeaderboardRewardEntry[]> _pendingRewards = new();
+        private readonly List<ServiceMessage.LeaderboardRewardEntry[]> _pendingRewards = new();
 
         private readonly EventPointer<UpdateRuleEvent> _updateEvent = new();
         private readonly EventPointer<RewardsEvent> _rewardsEvent = new();
@@ -218,11 +218,11 @@ namespace MHServerEmu.Games.Leaderboards
 
         public void RequestRewards()
         {
-            GameServiceProtocol.LeaderboardRewardRequest rewardRequest = new(Owner.DatabaseUniqueId);
+            ServiceMessage.LeaderboardRewardRequest rewardRequest = new(Owner.DatabaseUniqueId);
             ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, rewardRequest);
         }
 
-        public void AddPendingRewards(GameServiceProtocol.LeaderboardRewardEntry[] rewards)
+        public void AddPendingRewards(ServiceMessage.LeaderboardRewardEntry[] rewards)
         {
             _pendingRewards.Add(rewards);
             ScheduleRewardsEvent();
@@ -231,7 +231,7 @@ namespace MHServerEmu.Games.Leaderboards
         private void FlushScoreUpdates()
         {
             int numUpdates = _ruleEvents.Count;
-            GameServiceProtocol.LeaderboardScoreUpdateBatch updateBatch = new(numUpdates);
+            ServiceMessage.LeaderboardScoreUpdateBatch updateBatch = new(numUpdates);
 
             int i = 0;
             foreach (var kvp in _ruleEvents)
@@ -250,11 +250,11 @@ namespace MHServerEmu.Games.Leaderboards
         {
             if (_pendingRewards.Count == 0) return;
 
-            foreach (GameServiceProtocol.LeaderboardRewardEntry[] rewardEntries in _pendingRewards)
+            foreach (ServiceMessage.LeaderboardRewardEntry[] rewardEntries in _pendingRewards)
             {
                 for (int i = 0; i < rewardEntries.Length; i++)
                 {
-                    ref GameServiceProtocol.LeaderboardRewardEntry entry = ref rewardEntries[i];
+                    ref ServiceMessage.LeaderboardRewardEntry entry = ref rewardEntries[i];
 
                     PrototypeGuid rewardGuid = (PrototypeGuid)entry.RewardId;
                     PrototypeId rewardDataRef = GameDatabase.GetDataRefByPrototypeGuid(rewardGuid);
@@ -279,7 +279,7 @@ namespace MHServerEmu.Games.Leaderboards
                         }
 
                         // Send reward confirmation to the leaderboard service
-                        GameServiceProtocol.LeaderboardRewardConfirmation confirmation = new(entry.LeaderboardId, entry.InstanceId, entry.ParticipantId);
+                        ServiceMessage.LeaderboardRewardConfirmation confirmation = new(entry.LeaderboardId, entry.InstanceId, entry.ParticipantId);
                         ServerManager.Instance.SendMessageToService(GameServiceType.Leaderboard, confirmation);
                     }
                 }

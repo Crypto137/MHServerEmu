@@ -1,4 +1,5 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Games.Network.InstanceManagement
@@ -62,7 +63,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
             _gis.GameThreadManager.EnqueueGameToUpdate(game);
 
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.CreateAck, game.Id);
+            ServiceMessage.GameInstanceOp message = new(GameInstanceOpType.CreateResponse, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
 
             return true;
@@ -76,10 +77,6 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                 return Logger.WarnReturn(false, $"ShutdownGame(): GameId 0x{gameId:X} not found");
 
             game.Shutdown(reason);
-
-            lock (_gameDict)
-                _gameDict.Remove(gameId);
-
             return true;
         }
 
@@ -139,7 +136,12 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         public bool RouteMessageBuffer(IFrontendClient client, in MessageBuffer messageBuffer)
         {
             if (TryGetGameForClient(client, out Game game) == false)
-                return Logger.WarnReturn(false, $"RouteMessageBuffer(): Client [{client}] is not in a game");
+            {
+                // The player may be transferring to another game instance, in which case this message is not going to be delivered.
+                //Logger.Debug($"RouteMessageBuffer(): Cannot deliver {(ClientToGameServerMessage)messageBuffer.MessageId}, client [{client}] is not in a game");
+                messageBuffer.Destroy();
+                return false;
+            }
 
             game.ReceiveMessageBuffer(client, messageBuffer);
             return true;
@@ -169,19 +171,22 @@ namespace MHServerEmu.Games.Network.InstanceManagement
 
         public void OnGameShutdown(Game game)
         {
-            GameServiceProtocol.GameInstanceOp message = new(GameServiceProtocol.GameInstanceOp.OpType.ShutdownAck, game.Id);
+            lock (_gameDict)
+                _gameDict.Remove(game.Id);
+
+            ServiceMessage.GameInstanceOp message = new(GameInstanceOpType.ShutdownNotice, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void OnClientAdded(Game game, IFrontendClient client)
         {
-            GameServiceProtocol.GameInstanceClientOp message = new(GameServiceProtocol.GameInstanceClientOp.OpType.AddAck, client, game.Id);
+            ServiceMessage.GameInstanceClientOp message = new(GameInstanceClientOpType.AddResponse, client, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public void OnClientRemoved(Game game, IFrontendClient client)
         {
-            GameServiceProtocol.GameInstanceClientOp message = new(GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck, client, game.Id);
+            ServiceMessage.GameInstanceClientOp message = new(GameInstanceClientOpType.RemoveResponse, client, game.Id);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 

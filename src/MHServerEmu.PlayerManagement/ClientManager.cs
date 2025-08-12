@@ -1,5 +1,5 @@
-﻿using Google.ProtocolBuffers;
-using Gazillion;
+﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -49,17 +49,29 @@ namespace MHServerEmu.PlayerManagement
 
                 switch (message)
                 {
-                    case GameServiceProtocol.AddClient addClient:
+                    case ServiceMessage.AddClient addClient:
                         if (OnAddClient(addClient, allowNewClients) == false)
                             addClient.Client.Disconnect();
                         break;
 
-                    case GameServiceProtocol.RemoveClient removeClient:
+                    case ServiceMessage.RemoveClient removeClient:
                         OnRemoveClient(removeClient);
                         break;
 
-                    case GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp:
+                    case ServiceMessage.GameInstanceClientOp gameInstanceClientOp:
                         OnGameInstanceClientOp(gameInstanceClientOp);
+                        break;
+
+                    case ServiceMessage.ChangeRegionRequest changeRegionRequest:
+                        OnChangeRegionRequest(changeRegionRequest);
+                        break;
+
+                    case ServiceMessage.RegionTransferFinished regionTransferFinished:
+                        OnRegionTransferFinished(regionTransferFinished);
+                        break;
+
+                    case ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions:
+                        OnClearPrivateStoryRegions(clearPrivateStoryRegions);
                         break;
 
                     default:
@@ -78,16 +90,16 @@ namespace MHServerEmu.PlayerManagement
                     if (player.State != PlayerHandleState.Idle)
                         continue;
 
-                    IFrontendClient client = player.Client;
-
-                    if (client.IsConnected)
+                    if (player.IsConnected)
                     {
-                        GameHandle game = _playerManager.GameHandleManager.GetAvailableGame();
-                        game.AddPlayer(player);
+                        if (player.HasTransferParams == false)
+                            player.BeginRegionTransferToStartTarget();
+
+                        player.TryJoinGame();
                     }
                     else
                     {
-                        RemovePlayerHandle(client);
+                        RemovePlayerHandle(player.Client);
                     }
                 }
             }
@@ -149,6 +161,7 @@ namespace MHServerEmu.PlayerManagement
 
             Logger.Info($"Removed PlayerHandle [{player}]");
 
+            player.OnRemoved();
             return true;
         }
 
@@ -156,7 +169,7 @@ namespace MHServerEmu.PlayerManagement
 
         #region Service Message Handling
 
-        private bool OnAddClient(in GameServiceProtocol.AddClient addClient, bool allowNewClients)
+        private bool OnAddClient(in ServiceMessage.AddClient addClient, bool allowNewClients)
         {
             IFrontendClient client = addClient.Client;
 
@@ -179,7 +192,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        private bool OnRemoveClient(in GameServiceProtocol.RemoveClient removeClient)
+        private bool OnRemoveClient(in ServiceMessage.RemoveClient removeClient)
         {
             IFrontendClient client = removeClient.Client;
 
@@ -201,7 +214,7 @@ namespace MHServerEmu.PlayerManagement
             return true;
         }
 
-        private bool OnGameInstanceClientOp(in GameServiceProtocol.GameInstanceClientOp gameInstanceClientOp)
+        private bool OnGameInstanceClientOp(in ServiceMessage.GameInstanceClientOp gameInstanceClientOp)
         {
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;
@@ -211,11 +224,11 @@ namespace MHServerEmu.PlayerManagement
 
             switch (gameInstanceClientOp.Type)
             {
-                case GameServiceProtocol.GameInstanceClientOp.OpType.AddAck:
+                case GameInstanceClientOpType.AddResponse:
                     player.FinishAddToGame(gameId);
                     break;
 
-                case GameServiceProtocol.GameInstanceClientOp.OpType.RemoveAck:
+                case GameInstanceClientOpType.RemoveResponse:
                     player.FinishRemoveFromGame(gameId);
                     break;
 
@@ -223,6 +236,46 @@ namespace MHServerEmu.PlayerManagement
                     return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): Unhandled operation type {gameInstanceClientOp.Type}");
             }
 
+            return true;
+        }
+
+        private bool OnChangeRegionRequest(in ServiceMessage.ChangeRegionRequest changeRegionRequest)
+        {
+            ulong requestingGameId = changeRegionRequest.Header.RequestingGameId;
+            ulong playerDbId = changeRegionRequest.Header.RequestingPlayerGuid;
+            TeleportContextEnum context = changeRegionRequest.Header.Type;
+
+            if (TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnChangeRegionRequest(): No player handle for dbid 0x{playerDbId:X}");
+
+            if (changeRegionRequest.DestTarget != null)
+                return player.BeginRegionTransferToTarget(requestingGameId, context, changeRegionRequest.DestTarget, changeRegionRequest.CreateRegionParams);
+
+            if (changeRegionRequest.DestLocation != null)
+                return player.BeginRegionTransferToLocation(requestingGameId, context, changeRegionRequest.DestLocation);
+
+            if (changeRegionRequest.DestPlayerDbId != 0)
+                return player.BeginRegionTransferToPlayer(requestingGameId, changeRegionRequest.DestPlayerDbId);
+
+            Logger.Warn($"BeginRegionTransfer(): ChangeRegionRequest for player [{this}] does not include transfer params");
+            player.CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_GenericError);
+            return false;
+        }
+
+        private bool OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)
+        {
+            if (TryGetPlayerHandle(regionTransferFinished.PlayerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{regionTransferFinished.PlayerDbId}");
+
+            return player.FinishRegionTransfer(regionTransferFinished.TransferId);
+        }
+
+        private bool OnClearPrivateStoryRegions(in ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions)
+        {
+            if (TryGetPlayerHandle(clearPrivateStoryRegions.PlayerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{clearPrivateStoryRegions.PlayerDbId}");
+
+            player.WorldView.ClearPrivateStoryRegions();
             return true;
         }
 

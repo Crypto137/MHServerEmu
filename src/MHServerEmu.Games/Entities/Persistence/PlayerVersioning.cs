@@ -1,9 +1,6 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Entities.Avatars;
-using MHServerEmu.Games.Entities.Inventories;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Network;
 using MHServerEmu.Games.Properties;
 
 namespace MHServerEmu.Games.Entities.Persistence
@@ -24,7 +21,6 @@ namespace MHServerEmu.Games.Entities.Persistence
                 {
                     case ArchiveVersion.Initial:
                         success |= V2_ClearProperties(player);
-                        success |= V2_MoveToTutorial(player);
                         break;
                 }
 
@@ -52,32 +48,6 @@ namespace MHServerEmu.Games.Entities.Persistence
                 avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpStartTime);
                 avatar.Properties.RemoveProperty(PropertyEnum.AvatarTeamUpDuration);
             }
-
-            return true;
-        }
-
-        private static bool V2_MoveToTutorial(Player player)
-        {
-            // Reset avatar to the default starting one
-            PrototypeId startingAvatarProtoRef = GameDatabase.GlobalsPrototype.DefaultStartingAvatarPrototype;
-            Avatar currentAvatar = player.CurrentAvatar;
-
-            if (currentAvatar == null || currentAvatar.PrototypeDataRef != startingAvatarProtoRef)
-            {
-                Inventory avatarInPlay = player.GetInventory(InventoryConvenienceLabel.AvatarInPlay);
-                if (avatarInPlay == null) return Logger.WarnReturn(false, "V2_MoveToTutorial(): avatarInPlay == null");
-
-                Avatar startingAvatar = player.GetAvatar(startingAvatarProtoRef);
-                if (startingAvatar == null) return Logger.WarnReturn(false, "V2_MoveToTutorial(): startingAvatar == null");
-
-                InventoryResult result = startingAvatar.ChangeInventoryLocation(avatarInPlay, 0);
-                if (result != InventoryResult.Success) return Logger.WarnReturn(false, $"V2_MoveToTutorial(): Failed to swap avatar to {startingAvatarProtoRef.GetName()}");
-            }
-
-            // Move to the default starting region
-            PrototypeId startingRegionTargetProtoRef = GameDatabase.GlobalsPrototype.DefaultStartTargetStartingRegion;
-            TransferParams transferParams = player.PlayerConnection.TransferParams;
-            transferParams.SetTarget(startingRegionTargetProtoRef);
 
             return true;
         }

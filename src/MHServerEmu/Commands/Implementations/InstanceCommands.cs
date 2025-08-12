@@ -1,108 +1,54 @@
 ﻿using MHServerEmu.Commands.Attributes;
-using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System.Time;
+using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Network;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Commands.Implementations
 {
     [CommandGroup("instance")]
-    [CommandGroupDescription("Commands for managing  region instances.")]
+    [CommandGroupDescription("Commands for managing region instances.")]
     public class InstanceCommands : CommandGroup
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         [Command("list")]
-        [CommandDescription("Lists private instances.")]
+        [CommandDescription("Lists instances in the player's WorldView.")]
         [CommandUsage("instance list")]
         [CommandInvokerType(CommandInvokerType.Client)]
         public string List(string[] @params, NetClient client)
         {
             PlayerConnection playerConnection = (PlayerConnection)client;
 
-            RegionManager regionManager = playerConnection.Game.RegionManager;
-
-            CommandHelper.SendMessage(client, "Active Private Instances:");
-
+            CommandHelper.SendMessage(client, "Reserved Instances:");
             foreach ((PrototypeId regionProtoRef, ulong regionId) in playerConnection.WorldView)
-            {
-                // The region tracked in the world view may have already expired
-                Region region = regionManager.GetRegion(regionId);
-                if (region == null) continue;
-
-                TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
-
-                CommandHelper.SendMessage(client, $"{regionProtoRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
-            }
-
-            return string.Empty;
-        }
-
-        [Command("listall")]
-        [CommandDescription("Lists all region instances in the current game.")]
-        [CommandUsage("instance listall")]
-        [CommandInvokerType(CommandInvokerType.Client)]
-        public string ListAll(string[] @params, NetClient client)
-        {
-            PlayerConnection playerConnection = (PlayerConnection)client;
-
-            RegionManager regionManager = playerConnection.Game.RegionManager;
-
-            CommandHelper.SendMessage(client, "Active Instances:");
-
-            foreach (Region region in regionManager)
-            {
-                TimeSpan lifetime = Clock.UnixTime - region.CreatedTime;
-                CommandHelper.SendMessage(client, $"{region.PrototypeDataRef.GetNameFormatted()} ({(int)lifetime.TotalMinutes:D2}:{lifetime:ss})", false);
-            }
+                CommandHelper.SendMessage(client, $"{regionProtoRef.GetNameFormatted()} (0x{regionId:X})", false);
 
             return string.Empty;
         }
 
         [Command("reset")]
-        [CommandDescription("Resets private instances.")]
+        [CommandDescription("Resets private instances in the player's WorldView.")]
         [CommandUsage("instance reset")]
         [CommandInvokerType(CommandInvokerType.Client)]
+        [CommandUserLevel(AccountUserLevel.Admin)]
         public string Reset(string[] @params, NetClient client)
         {
             PlayerConnection playerConnection = (PlayerConnection)client;
 
-            RegionManager regionManager = playerConnection.Game.RegionManager;
-
-            List<Region> regionsToShutDown = ListPool<Region>.Instance.Get();
-
-            foreach ((_, ulong regionId) in playerConnection.WorldView)
+            int numReset = 0;
+            foreach ((PrototypeId regionProtoRef, ulong regionId) in playerConnection.WorldView)
             {
-                Region region = regionManager.GetRegion(regionId);
-                if (region == null) continue;
-
-                // Do no reset the region the player is currently in
-                if (region == playerConnection.Player.GetRegion())
+                RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+                if (regionProto == null || regionProto.IsPublic)
                     continue;
 
-                // We should not be having public regions in the world view with our current implementation (this may change later)
-                if (region.IsPublic)
-                {
-                    Logger.Warn($"Reset(): Found public region {region} in the world view for player {playerConnection.Player}");
-                    continue;
-                }
+                ServiceMessage.RequestRegionShutdown requestShutdown = new(regionId);
+                ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, requestShutdown);
 
-                regionsToShutDown.Add(region);
+                numReset++;
             }
 
-            foreach (Region region in regionsToShutDown)
-            {
-                region.RequestShutdown();
-                playerConnection.WorldView.RemoveRegion(region.Id);
-            }
-
-            int numReset = regionsToShutDown.Count;
-            ListPool<Region>.Instance.Return(regionsToShutDown);
-
-            return $"Reset {numReset} private instance(s).";
+            return $"Requested {numReset} private instance(s) to be reset.";
         }
     }
 }

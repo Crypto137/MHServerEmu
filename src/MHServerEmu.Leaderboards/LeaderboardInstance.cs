@@ -91,9 +91,9 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Builds <see cref="GameServiceProtocol.LeaderboardStateChange"/> for this <see cref="LeaderboardInstance"/>.
+        /// Builds <see cref="ServiceMessage.LeaderboardStateChange"/> for this <see cref="LeaderboardInstance"/>.
         /// </summary>
-        public GameServiceProtocol.LeaderboardStateChange BuildLeaderboardStateChange(LeaderboardState? stateOverride = null)
+        public ServiceMessage.LeaderboardStateChange BuildLeaderboardStateChange(LeaderboardState? stateOverride = null)
         {
             return new((ulong)LeaderboardId,
                 InstanceId,
@@ -438,9 +438,9 @@ namespace MHServerEmu.Leaderboards
         }
 
         /// <summary>
-        /// Updates score using data from the provided <see cref="GameServiceProtocol.LeaderboardScoreUpdate"/>.
+        /// Updates score using data from the provided <see cref="ServiceMessage.LeaderboardScoreUpdate"/>.
         /// </summary>
-        public void OnScoreUpdate(ref GameServiceProtocol.LeaderboardScoreUpdate update)
+        public void OnScoreUpdate(ref ServiceMessage.LeaderboardScoreUpdate update)
         {
             lock (_lock)
             {
