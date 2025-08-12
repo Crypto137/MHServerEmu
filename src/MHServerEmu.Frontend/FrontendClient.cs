@@ -82,7 +82,10 @@ namespace MHServerEmu.Frontend
         {
             // Skip messages from clients that have already disconnected
             if (Connection.Connected == false)
+            {
+                messageBuffer.Destroy();
                 return Logger.WarnReturn(false, $"HandleIncomingMessageBuffer(): Client [{this}] has already disconnected");
+            }
 
             bool success;
 

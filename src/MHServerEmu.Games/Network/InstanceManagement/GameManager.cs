@@ -138,7 +138,7 @@ namespace MHServerEmu.Games.Network.InstanceManagement
             if (TryGetGameForClient(client, out Game game) == false)
             {
                 // The player may be transferring to another game instance, in which case this message is not going to be delivered.
-                Logger.Debug($"RouteMessageBuffer(): Cannot deliver {(ClientToGameServerMessage)messageBuffer.MessageId}, client [{client}] is not in a game");
+                //Logger.Debug($"RouteMessageBuffer(): Cannot deliver {(ClientToGameServerMessage)messageBuffer.MessageId}, client [{client}] is not in a game");
                 messageBuffer.Destroy();
                 return false;
             }
