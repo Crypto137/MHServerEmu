@@ -2,6 +2,7 @@
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Network
 {
@@ -39,6 +40,20 @@ namespace MHServerEmu.Games.Network
                 PropertyValue propertyValue = kvp.Value;
                 properties[propertyId] = propertyValue;
             }
+        }
+
+        public static void StoreWorldView(MigrationData migrationData, WorldViewCache worldView)
+        {
+            List<(ulong, ulong)> worldViewData = migrationData.WorldView;
+            worldViewData.Clear();
+
+            foreach ((PrototypeId regionProtoRef, ulong regionId) in worldView)
+                worldViewData.Add((regionId, (ulong)regionProtoRef));
+        }
+
+        public static void RestoreWorldView(MigrationData migrationData, WorldViewCache worldView)
+        {
+            worldView.Sync(migrationData.WorldView);
         }
     }
 }

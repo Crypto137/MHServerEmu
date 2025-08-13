@@ -156,8 +156,9 @@ namespace MHServerEmu.Games.Network
             if (Player == null)
                 throw new($"InitializeFromDBAccount(): Failed to create player entity for {_dbAccount}");
 
-            // Restore migrated properties
+            // Restore migrated data
             MigrationUtility.RestoreProperties(migrationData.PlayerProperties, Player.Properties);
+            MigrationUtility.RestoreWorldView(migrationData, WorldView);
 
             // Add all badges to admin accounts
             if (_dbAccount.UserLevel == AccountUserLevel.Admin)
@@ -251,6 +252,7 @@ namespace MHServerEmu.Games.Network
                     if (updateMigrationData)
                     {
                         MigrationUtility.StoreProperties(migrationData.PlayerProperties, Player.Properties);
+                        MigrationUtility.StoreWorldView(migrationData, WorldView);
                     }
                 }
                 else
