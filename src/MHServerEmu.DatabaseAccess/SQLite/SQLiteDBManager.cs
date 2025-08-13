@@ -156,19 +156,24 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             }
 
             // Load inventory entities
-            account.Avatars.AddRange(LoadEntitiesFromTable(connection, DBEntityCategory.Avatar, account.Id));
-            account.TeamUps.AddRange(LoadEntitiesFromTable(connection, DBEntityCategory.TeamUp, account.Id));
-            account.Items.AddRange(LoadEntitiesFromTable(connection, DBEntityCategory.Item, account.Id));
+            SQLiteEntityTable avatarTable = SQLiteEntityTable.GetTable(DBEntityCategory.Avatar);
+            SQLiteEntityTable teamUpTable = SQLiteEntityTable.GetTable(DBEntityCategory.TeamUp);
+            SQLiteEntityTable itemTable = SQLiteEntityTable.GetTable(DBEntityCategory.Item);
+            SQLiteEntityTable controlledEntityTable = SQLiteEntityTable.GetTable(DBEntityCategory.ControlledEntity);
+
+            avatarTable.LoadEntities(connection, account.Id, account.Avatars);
+            teamUpTable.LoadEntities(connection, account.Id, account.TeamUps);
+            itemTable.LoadEntities(connection, account.Id, account.Items);
 
             foreach (DBEntity avatar in account.Avatars)
             {
-                account.Items.AddRange(LoadEntitiesFromTable(connection, DBEntityCategory.Item, avatar.DbGuid));
-                account.ControlledEntities.AddRange(LoadEntitiesFromTable(connection, DBEntityCategory.ControlledEntity, avatar.DbGuid));
+                itemTable.LoadEntities(connection, avatar.DbGuid, account.Items);
+                controlledEntityTable.LoadEntities(connection, avatar.DbGuid, account.ControlledEntities);
             }
 
             foreach (DBEntity teamUp in account.TeamUps)
             {
-                account.Items.AddRange(LoadEntitiesFromTable(connection, DBEntityCategory.Item, teamUp.DbGuid));
+                itemTable.LoadEntities(connection, teamUp.DbGuid, account.Items);
             }
 
             return true;
@@ -317,19 +322,24 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                     }
 
                     // Update inventory entities
-                    UpdateEntityTable(connection, transaction, DBEntityCategory.Avatar, account.Id, account.Avatars);
-                    UpdateEntityTable(connection, transaction, DBEntityCategory.TeamUp, account.Id, account.TeamUps);
-                    UpdateEntityTable(connection, transaction, DBEntityCategory.Item, account.Id, account.Items);
+                    SQLiteEntityTable avatarTable = SQLiteEntityTable.GetTable(DBEntityCategory.Avatar);
+                    SQLiteEntityTable teamUpTable = SQLiteEntityTable.GetTable(DBEntityCategory.TeamUp);
+                    SQLiteEntityTable itemTable = SQLiteEntityTable.GetTable(DBEntityCategory.Item);
+                    SQLiteEntityTable controlledEntityTable = SQLiteEntityTable.GetTable(DBEntityCategory.ControlledEntity);
+
+                    avatarTable.UpdateEntities(connection, transaction, account.Id, account.Avatars);
+                    teamUpTable.UpdateEntities(connection, transaction, account.Id, account.TeamUps);
+                    itemTable.UpdateEntities(connection, transaction, account.Id, account.Items);
 
                     foreach (DBEntity avatar in account.Avatars)
                     {
-                        UpdateEntityTable(connection, transaction, DBEntityCategory.Item, avatar.DbGuid, account.Items);
-                        UpdateEntityTable(connection, transaction, DBEntityCategory.ControlledEntity, avatar.DbGuid, account.ControlledEntities);
+                        itemTable.UpdateEntities(connection, transaction, avatar.DbGuid, account.Items);
+                        controlledEntityTable.UpdateEntities(connection, transaction, avatar.DbGuid, account.ControlledEntities);
                     }
 
                     foreach (DBEntity teamUp in account.TeamUps)
                     {
-                        UpdateEntityTable(connection, transaction, DBEntityCategory.Item, teamUp.DbGuid, account.Items);
+                        itemTable.UpdateEntities(connection, transaction, teamUp.DbGuid, account.Items);
                     }
 
                     transaction.Commit();
@@ -402,67 +412,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         private static void SetSchemaVersion(SQLiteConnection connection, int version)
         {
             connection.Execute($"PRAGMA user_version = {version}");
-        }
-
-        /// <summary>
-        /// Loads <see cref="DBEntity"/> instances belonging to the specified container from the specified table.
-        /// </summary>
-        private static IEnumerable<DBEntity> LoadEntitiesFromTable(SQLiteConnection connection, DBEntityCategory category, long containerDbGuid)
-        {
-            EntityQueryCache queries = EntityQueryCache.GetQueries(category);
-            return connection.Query<DBEntity>(queries.SelectAll, new { ContainerDbGuid = containerDbGuid });
-        }
-
-        /// <summary>
-        /// Updates <see cref="DBEntity"/> instances belonging to the specified container in the specified table using the provided <see cref="DBEntityCollection"/>.
-        /// </summary>
-        private static void UpdateEntityTable(SQLiteConnection connection, SQLiteTransaction transaction, DBEntityCategory category,
-            long containerDbGuid, DBEntityCollection dbEntityCollection)
-        {
-            // Retrieve cached queries for the specified table
-            EntityQueryCache queries = EntityQueryCache.GetQueries(category);
-
-            // Delete items that no longer belong to this account
-            var storedEntities = connection.Query<long>(queries.SelectIds, new { ContainerDbGuid = containerDbGuid });
-            var entitiesToDelete = storedEntities.Except(dbEntityCollection.Guids);
-            connection.Execute(queries.Delete, new { EntitiesToDelete = entitiesToDelete });
-
-            // Insert and update
-            IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
-            connection.Execute(queries.Insert, entries, transaction);
-            connection.Execute(queries.Update, entries, transaction);
-        }
-
-        private class EntityQueryCache
-        {
-            private static readonly Dictionary<DBEntityCategory, EntityQueryCache> QueryDict = new();
-
-            public string SelectAll { get; }
-            public string SelectIds { get; }
-            public string Delete { get; }
-            public string Insert { get; }
-            public string Update { get; }
-
-            private EntityQueryCache(DBEntityCategory category)
-            {
-                SelectAll = @$"SELECT * FROM {category} WHERE ContainerDbGuid = @ContainerDbGuid";
-                SelectIds = @$"SELECT DbGuid FROM {category} WHERE ContainerDbGuid = @ContainerDbGuid";
-                Delete    = @$"DELETE FROM {category} WHERE DbGuid IN @EntitiesToDelete";
-                Insert    = @$"INSERT OR IGNORE INTO {category} (DbGuid) VALUES (@DbGuid)";
-                Update    = @$"UPDATE {category} SET ContainerDbGuid=@ContainerDbGuid, InventoryProtoGuid=@InventoryProtoGuid,
-                               Slot=@Slot, EntityProtoGuid=@EntityProtoGuid, ArchiveData=@ArchiveData WHERE DbGuid=@DbGuid";
-            }
-
-            public static EntityQueryCache GetQueries(DBEntityCategory category)
-            {
-                if (QueryDict.TryGetValue(category, out EntityQueryCache queries) == false)
-                {
-                    queries = new(category);
-                    QueryDict.Add(category, queries);
-                }
-
-                return queries;
-            }
         }
     }
 }

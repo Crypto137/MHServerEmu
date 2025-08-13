@@ -22,7 +22,6 @@ namespace MHServerEmu.DatabaseAccess.Models
         private readonly Dictionary<long, DBEntity> _allEntities = new();               // All DBEntity instances stored in this collection
         private readonly Dictionary<long, List<DBEntity>> _bucketedEntities = new();    // Stored DBEntity bucketed per container
 
-        public IEnumerable<long> Guids { get => _allEntities.Keys; }
         public IEnumerable<DBEntity> Entries { get => _allEntities.Values; }
         public int Count { get => _allEntities.Count; }
 
@@ -65,6 +64,11 @@ namespace MHServerEmu.DatabaseAccess.Models
 
             foreach (List<DBEntity> bucket in _bucketedEntities.Values)
                 bucket.Clear();
+        }
+
+        public bool Contains(long dbGuid)
+        {
+            return _allEntities.ContainsKey(dbGuid);
         }
 
         public IReadOnlyList<DBEntity> GetEntriesForContainer(long containerDbGuid)
