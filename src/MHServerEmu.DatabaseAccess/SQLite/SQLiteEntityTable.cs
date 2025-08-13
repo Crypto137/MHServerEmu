@@ -5,6 +5,9 @@ using System.Data.SQLite;
 
 namespace MHServerEmu.DatabaseAccess.SQLite
 {
+    /// <summary>
+    /// Represents an entity table in a SQLite database.
+    /// </summary>
     public class SQLiteEntityTable
     {
         private static readonly Dictionary<DBEntityCategory, SQLiteEntityTable> TableDict = new();
@@ -34,6 +37,9 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return Category.ToString();
         }
 
+        /// <summary>
+        /// Returns the <see cref="SQLiteEntityTable"/> instance for the specified <see cref="DBEntityCategory"/>.
+        /// </summary>
         public static SQLiteEntityTable GetTable(DBEntityCategory category)
         {
             if (TableDict.TryGetValue(category, out SQLiteEntityTable table) == false)
@@ -62,7 +68,30 @@ namespace MHServerEmu.DatabaseAccess.SQLite
         {
             // Delete items that no longer belong to this account
             List<long> entitiesToDelete = ListPool<long>.Instance.Get();
+            GetEntitiesToDelete(connection, containerDbGuid, dbEntityCollection, entitiesToDelete);
 
+            try
+            {
+                if (entitiesToDelete.Count > 0)
+                    connection.Execute(_deleteQuery, new { EntitiesToDelete = entitiesToDelete });
+            }
+            finally
+            {
+                // Make sure the list is returned to the pool even if the deletion query fails.
+                ListPool<long>.Instance.Return(entitiesToDelete);
+            }
+
+            // Insert and update
+            IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
+            connection.Execute(_insertQuery, entries, transaction);
+            connection.Execute(_updateQuery, entries, transaction);
+        }
+
+        /// <summary>
+        /// Queries ids of entities that no longer belong to the specified container and adds them to the provided <see cref="List{T}"/>.
+        /// </summary>
+        private void GetEntitiesToDelete(SQLiteConnection connection, long containerDbGuid, DBEntityCollection dbEntityCollection, List<long> entitiesToDelete)
+        {
             IEnumerable<long> storedDbGuids = connection.Query<long>(_selectIdsQuery, new { ContainerDbGuid = containerDbGuid });
             if (storedDbGuids is IReadOnlyList<long> list)
             {
@@ -84,22 +113,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                         entitiesToDelete.Add(storedDbGuid);
                 }
             }
-
-            try
-            {
-                if (entitiesToDelete.Count > 0)
-                    connection.Execute(_deleteQuery, new { EntitiesToDelete = entitiesToDelete });
-            }
-            finally
-            {
-                // Make sure the list is returned to the pool even if the deletion query fails.
-                ListPool<long>.Instance.Return(entitiesToDelete);
-            }
-
-            // Insert and update
-            IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
-            connection.Execute(_insertQuery, entries, transaction);
-            connection.Execute(_updateQuery, entries, transaction);
         }
     }
 }
