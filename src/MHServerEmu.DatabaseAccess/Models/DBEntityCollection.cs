@@ -52,8 +52,19 @@ namespace MHServerEmu.DatabaseAccess.Models
         {
             bool success = true;
 
-            foreach (DBEntity dbEntity in dbEntities)
-                success |= Add(dbEntity);
+            if (dbEntities is IReadOnlyList<DBEntity> list)
+            {
+                // Access elements by index in indexable collections to avoid allocating IEnumerator instances.
+                int count = list.Count;
+                for (int i = 0; i < count; i++)
+                    success |= Add(list[i]);
+            }
+            else
+            {
+                // Fall back to foreach for non-indexable collections.
+                foreach (DBEntity dbEntity in dbEntities)
+                    success |= Add(dbEntity);
+            }
 
             return success;
         }

@@ -63,16 +63,38 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             // Delete items that no longer belong to this account
             List<long> entitiesToDelete = ListPool<long>.Instance.Get();
 
-            foreach (long storedDbGuid in connection.Query<long>(_selectIdsQuery, new { ContainerDbGuid = containerDbGuid }))
+            IEnumerable<long> storedDbGuids = connection.Query<long>(_selectIdsQuery, new { ContainerDbGuid = containerDbGuid });
+            if (storedDbGuids is IReadOnlyList<long> list)
             {
-                if (dbEntityCollection.Contains(storedDbGuid) == false)
-                    entitiesToDelete.Add(storedDbGuid);
+                // Access elements by index in indexable collections to avoid allocating IEnumerator instances.
+                int count = list.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    long storedDbGuid = list[i];
+                    if (dbEntityCollection.Contains(storedDbGuid) == false)
+                        entitiesToDelete.Add(storedDbGuid);
+                }
+            }
+            else
+            {
+                // Fall back to foreach for non-indexable collections.
+                foreach (long storedDbGuid in storedDbGuids)
+                {
+                    if (dbEntityCollection.Contains(storedDbGuid) == false)
+                        entitiesToDelete.Add(storedDbGuid);
+                }
             }
 
-            if (entitiesToDelete.Count > 0)
-                connection.Execute(_deleteQuery, new { EntitiesToDelete = entitiesToDelete });
-
-            ListPool<long>.Instance.Return(entitiesToDelete);
+            try
+            {
+                if (entitiesToDelete.Count > 0)
+                    connection.Execute(_deleteQuery, new { EntitiesToDelete = entitiesToDelete });
+            }
+            finally
+            {
+                // Make sure the list is returned to the pool even if the deletion query fails.
+                ListPool<long>.Instance.Return(entitiesToDelete);
+            }
 
             // Insert and update
             IReadOnlyList<DBEntity> entries = dbEntityCollection.GetEntriesForContainer(containerDbGuid);
