@@ -138,6 +138,13 @@ namespace MHServerEmu.Games.Properties
             return removed;
         }
 
+        public void SyncProperty(PropertyId id, out PropertyValue value)
+        {
+            // TODO: Figure out a way to fix mana getting out of sync properly and remove this kludge.
+            value = this[id];
+            MarkPropertyChanged(id, value, SetPropertyFlags.None);
+        }
+
         protected override bool SetPropertyValue(PropertyId id, PropertyValue value, SetPropertyFlags flags = SetPropertyFlags.None)
         {
             bool changed = base.SetPropertyValue(id, value, flags);

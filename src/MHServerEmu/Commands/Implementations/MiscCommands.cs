@@ -193,5 +193,23 @@ namespace MHServerEmu.Commands.Implementations
 
             return $"Teleporting to {teleportPoint.ToStringNames()}.";
         }
+
+        [CommandGroup("syncmana")]
+        [CommandGroupDescription("Syncs the current mana value with the server.")]
+        [CommandGroupFlags(CommandGroupFlags.SingleCommand)]
+        public class SyncManaCommand : CommandGroup
+        {
+            [DefaultCommand]
+            [CommandInvokerType(CommandInvokerType.Client)]
+            public string SyncMana(string[] @params, NetClient client)
+            {
+                Avatar avatar = ((PlayerConnection)client).Player.CurrentAvatar;
+                if (avatar == null || avatar.IsInWorld == false)
+                    return "Avatar not found.";
+
+                avatar.Properties.SyncProperty(PropertyEnum.Endurance, out PropertyValue value);    // default to mana type 1
+                return $"Syncing mana (server value = {(float)value}).";
+            }
+        }
     }
 }
