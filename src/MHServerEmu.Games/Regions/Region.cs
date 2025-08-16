@@ -1829,13 +1829,43 @@ namespace MHServerEmu.Games.Regions
 
         public void OnRecordPlayerDeath(Player player, Avatar avatar, WorldEntity killer)
         {
-            if (player == null) return;
+            if (player == null)
+                return;
 
-            /*  TODO PvP
-                PropertyEnum.PvPDeathsDuringMatch
-                PropertyEnum.PvPKillsDuringMatch
-                PropertyEnum.PvPKills
-            */
+            // NOTE: Recording it here instead of Avatar.OnKilled() will make these count when cheat death procs activate. Is this how it's supposed to work?
+            if (ShouldRecordPlayerDeath() && avatar != null)
+            {
+                if (avatar.IsInPvPMatch)
+                {
+                    if (killer != null)
+                    {
+                        Avatar killerAvatar = null;
+
+                        ulong xpTransferToId = killer.Properties[PropertyEnum.XPTransferToID];
+                        if (xpTransferToId != Entity.InvalidId)
+                            killerAvatar = Game.EntityManager.GetEntity<Avatar>(xpTransferToId);
+
+                        killerAvatar ??= killer.GetMostResponsiblePowerUser<Avatar>();
+
+                        if (killerAvatar != null)
+                        {
+                            killerAvatar.Properties.AdjustProperty(1, PropertyEnum.PvPKills);
+
+                            int killerMatchIndex = killerAvatar.Properties[PropertyEnum.PvPLastMatchIndex];
+                            killerAvatar.Properties.AdjustProperty(1, new(PropertyEnum.PvPKillsDuringMatch, (PropertyParam)killerMatchIndex));
+
+                            int victimMatchIndex = avatar.Properties[PropertyEnum.PvPLastMatchIndex];
+                            avatar.Properties.AdjustProperty(1, new(PropertyEnum.PvPDeathsDuringMatch, (PropertyParam)victimMatchIndex));
+                        }
+                    }
+
+                    avatar.Properties.AdjustProperty(1, PropertyEnum.PvPDeaths);
+                }
+                else
+                {
+                    avatar.Properties.AdjustProperty(1, PropertyEnum.NumberOfDeaths);
+                }
+            }
 
             if (Properties.HasProperty(PropertyEnum.EndlessLevel))
                 player.Properties.AdjustProperty(1, PropertyEnum.EndlessLevelDeathCount);
@@ -1843,6 +1873,24 @@ namespace MHServerEmu.Games.Regions
             _playerDeaths++;
 
             PlayerDeathRecordedEvent.Invoke(new(player));
+        }
+
+        public bool ShouldRecordPlayerDeath()
+        {
+            // Record deaths unless this a PvP region that has death recording explicitly disabled.
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (ulong metaGameId in MetaGames)
+            {
+                PvP pvp = entityManager.GetEntity<PvP>(metaGameId);
+                if (pvp == null)
+                    continue;
+
+                if (pvp.PvPPrototype?.RecordPlayerDeaths == false)
+                    return false;
+            }
+
+            return true;
         }
 
         public PrototypeId GetStartTarget(Player player)
