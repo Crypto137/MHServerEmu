@@ -1,6 +1,6 @@
 # Server Commands
 
-This list was automatically generated on `2025.06.24 20:56:10 UTC` using server version `0.7.0`.
+This list was automatically generated on `2025.08.16 18:28:24 UTC` using server version `0.7.0`.
 
 To see an up to date list of all commands, type !commands in the server console or the in-game chat. When invoking a command from in-game your account has to meet the user level requirement for the command.
 
@@ -16,8 +16,10 @@ Account management commands.
 | !account password [email] [password]            | Changes password for the specified account.       | Any        | Any           |
 | !account playername [email] [playername]        | Changes player name for the specified account.    | Any        | Any           |
 | !account unban [email]                          | Unbans the specified account.                     | Moderator  | Any           |
+| !account unwhitelist [email]                    | Removes the specified account from the whitelist. | Admin      | Any           |
 | !account userlevel [email] [0/1/2]              | Changes user level for the specified account.     | Admin      | Any           |
 | !account verify [email] [password]              | Checks if an email/password combination is valid. | Admin      | Any           |
+| !account whitelist [email]                      | Whitelists the specified account.                 | Admin      | Any           |
 
 ## Achievement
 Commands related to the achievement system.
@@ -55,24 +57,25 @@ Commands for interacting with connected clients.
 ## Debug
 Debug commands for development.
 
-| Command                      | Description                                                                            | User Level | Invoker Type   |
-| ---------------------------- | -------------------------------------------------------------------------------------- | ---------- | -------------  |
-| !debug ai                    | No description available.                                                              | Admin      | Client         |
-| !debug area                  | Shows current area.                                                                    | Any        | Client         |
-| !debug cell                  | Shows current cell.                                                                    | Any        | Client         |
-| !debug crashgame             | Crashes the current game instance.                                                     | Admin      | Client         |
-| !debug crashserver           | Crashes the entire server.                                                             | Admin      | ServerConsole  |
-| !debug difficulty            | Shows information about the current difficulty level.                                  | Any        | Client         |
-| !debug forcegc               | Requests the garbage collector to perform a collection.                                | Admin      | Any            |
-| !debug getconditionlist      | Gets a list of all conditions tracked by the ConditionPool in the current game.        | Moderator  | Client         |
-| !debug geteventpoolreport    | Returns a report representing the state of the ScheduledEventPool in the current game. | Moderator  | Client         |
-| !debug metagame [on/off]     | No description available.                                                              | Admin      | Any            |
-| !debug navi2obj [PathFlags]  | Default PathFlags is Walk, can be [None/Fly/Power/Sight].                              | Admin      | Client         |
-| !debug region                | Shows current region.                                                                  | Any        | Client         |
-| !debug seed                  | Shows current seed.                                                                    | Any        | Client         |
-| !debug setmarker [MarkerRef] | No description available.                                                              | Admin      | Any            |
-| !debug spawn [on/off]        | No description available.                                                              | Admin      | Any            |
-| !debug test                  | Runs test code.                                                                        | Admin      | Any            |
+| Command                      | Description                                                                                                             | User Level | Invoker Type   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------- | -------------  |
+| !debug ai                    | No description available.                                                                                               | Admin      | Client         |
+| !debug area                  | Shows current area.                                                                                                     | Any        | Client         |
+| !debug cell                  | Shows current cell.                                                                                                     | Any        | Client         |
+| !debug compactloh            | Requests the garbage collector to compact the large object heap (LOH) during the next full-blocking garbage collection. | Admin      | Any            |
+| !debug crashgame             | Crashes the current game instance.                                                                                      | Admin      | Client         |
+| !debug crashserver           | Crashes the entire server.                                                                                              | Admin      | ServerConsole  |
+| !debug difficulty            | Shows information about the current difficulty level.                                                                   | Any        | Client         |
+| !debug forcegc               | Requests the garbage collector to perform a collection.                                                                 | Admin      | Any            |
+| !debug getconditionlist      | Gets a list of all conditions tracked by the ConditionPool in the current game.                                         | Moderator  | Client         |
+| !debug geteventpoolreport    | Returns a report representing the state of the ScheduledEventPool in the current game.                                  | Moderator  | Client         |
+| !debug metagame [on/off]     | No description available.                                                                                               | Admin      | Any            |
+| !debug navi2obj [PathFlags]  | Default PathFlags is Walk, can be [None/Fly/Power/Sight].                                                               | Admin      | Client         |
+| !debug region                | Shows current region.                                                                                                   | Any        | Client         |
+| !debug seed                  | Shows current seed.                                                                                                     | Any        | Client         |
+| !debug setmarker [MarkerRef] | No description available.                                                                                               | Admin      | Any            |
+| !debug spawn [on/off]        | No description available.                                                                                               | Admin      | Any            |
+| !debug test                  | Runs test code.                                                                                                         | Admin      | Any            |
 
 ## Entity
 Entity management commands.
@@ -89,13 +92,12 @@ Entity management commands.
 | !entity tp [pattern]                      | Teleports to the first entity present in the region which prototype name contains the string given (ignore the case). | Admin      | Client        |
 
 ## Instance
-Commands for managing  region instances.
+Commands for managing region instances.
 
-| Command           | Description                                     | User Level | Invoker Type  |
-| ----------------- | ----------------------------------------------- | ---------- | ------------  |
-| !instance list    | Lists private instances.                        | Any        | Client        |
-| !instance listall | Lists all region instances in the current game. | Any        | Client        |
-| !instance reset   | Resets private instances.                       | Any        | Client        |
+| Command         | Description                                         | User Level | Invoker Type  |
+| --------------- | --------------------------------------------------- | ---------- | ------------  |
+| !instance list  | Lists instances in the player's WorldView.          | Any        | Client        |
+| !instance reset | Resets private instances in the player's WorldView. | Admin      | Client        |
 
 ## Item
 Commands for managing items.
