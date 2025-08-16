@@ -1451,7 +1451,25 @@ namespace MHServerEmu.Games.Entities
 
         public TimeSpan GetAbilityCooldownStartTime(PowerPrototype powerProto)
         {
-            return Properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef];
+            // NOTE: The client doesn't check IsCooldownOnPlayer() and always returns the value of
+            // PowerCooldownStartTime saved on this entity, which is most likely a bug. I am fixing
+            // this to mirror GetAbilityCooldownDurationUsedForLastActivation().
+            TimeSpan cooldownStartTime = TimeSpan.Zero;
+
+            if (Power.IsCooldownOnPlayer(powerProto))
+            {
+                Player powerOwnerPlayer = GetOwnerOfType<Player>();
+                if (powerOwnerPlayer != null)
+                    cooldownStartTime = powerOwnerPlayer.Properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef];
+                else
+                    Logger.Warn("GetAbilityCooldownStartTime(): powerOwnerPlayer == null");
+            }
+            else
+            {
+                cooldownStartTime = Properties[PropertyEnum.PowerCooldownStartTime, powerProto.DataRef];
+            }
+
+            return cooldownStartTime;
         }
 
         public virtual TimeSpan GetAbilityCooldownTimeElapsed(PowerPrototype powerProto)
