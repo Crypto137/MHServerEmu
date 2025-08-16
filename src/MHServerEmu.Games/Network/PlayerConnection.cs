@@ -483,6 +483,8 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageAbilitySwapInAbilityBar:           OnAbilitySwapInAbilityBar(message); break;          // 48
                 case ClientToGameServerMessage.NetMessagePowerRecentlyUnlocked:             OnPowerRecentlyUnlocked(message); break;            // 51
                 case ClientToGameServerMessage.NetMessageRequestDeathRelease:               OnRequestDeathRelease(message); break;              // 52
+                case ClientToGameServerMessage.NetMessageRequestResurrectDecline:           OnRequestResurrectDecline(message); break;          // 53
+                case ClientToGameServerMessage.NetMessageRequestResurrectAvatar:            OnRequestResurrectAvatar(message); break;           // 54
                 case ClientToGameServerMessage.NetMessageReturnToHub:                       OnReturnToHub(message); break;                      // 55
                 case ClientToGameServerMessage.NetMessageRequestMissionRewards:             OnRequestMissionRewards(message); break;            // 57
                 case ClientToGameServerMessage.NetMessageRequestRemoveAndKillControlledAgent:   OnRequestRemoveAndKillControlledAgent(message); break;   // 58
@@ -1321,6 +1323,33 @@ namespace MHServerEmu.Games.Network
 
             // Do the death release (resurrect and move)
             return avatar.DoDeathRelease(requestType);
+        }
+
+        private bool OnRequestResurrectDecline(in MailboxMessage message)   // 53
+        {
+            var requestResurrectDecline = message.As<NetMessageRequestResurrectDecline>();
+            if (requestResurrectDecline == null) return Logger.WarnReturn(false, $"OnRequestResurrectDecline(): Failed to retrieve message");
+
+            Avatar avatar = Player?.GetActiveAvatarByIndex((int)requestResurrectDecline.AvatarIndex);
+            if (avatar == null) return Logger.WarnReturn(false, "OnRequestResurrectDecline(): avatar == null");
+
+            avatar.ResurrectDecline();
+            return true;
+        }
+
+        private bool OnRequestResurrectAvatar(in MailboxMessage message)   // 54
+        {
+            var requestResurrectAvatar = message.As<NetMessageRequestResurrectAvatar>();
+            if (requestResurrectAvatar == null) return Logger.WarnReturn(false, $"OnRequestResurrectAvatar(): Failed to retrieve message");
+
+            Avatar resurrectorAvatar = Player?.GetActiveAvatarByIndex((int)requestResurrectAvatar.AvatarIndex);
+            if (resurrectorAvatar == null) return Logger.WarnReturn(false, "OnRequestResurrectAvatar(): resurrectorAvatar == null");
+
+            Avatar targetAvatar = Game.EntityManager.GetEntity<Avatar>(requestResurrectAvatar.TargetId);
+            if (targetAvatar == null) return Logger.WarnReturn(false, "OnRequestResurrectAvatar(): targetAvatar == null");
+
+            resurrectorAvatar.ResurrectOtherAvatar(targetAvatar);
+            return true;
         }
 
         private bool OnReturnToHub(MailboxMessage message)  // 55

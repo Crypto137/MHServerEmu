@@ -55,6 +55,7 @@ namespace MHServerEmu.Games.Entities.Avatars
         private readonly EventPointer<BodyslideTeleportToTownEvent> _bodyslideTeleportToTownEvent = new();
         private readonly EventPointer<BodyslideTeleportFromTownEvent> _bodyslideTeleportFromTownEvent = new();
         private readonly EventPointer<PowerTeleportEvent> _powerTeleportEvent = new();
+        private readonly EventPointer<DeathDialogEvent> _deathDialogEvent = new();
 
         private readonly EventPointer<EnableEnduranceRegenEvent>[] _enableEnduranceRegenEvents = new EventPointer<EnableEnduranceRegenEvent>[(int)ManaType.NumTypes];
         private readonly EventPointer<UpdateEnduranceEvent>[] _updateEnduranceEvents = new EventPointer<UpdateEnduranceEvent>[(int)ManaType.NumTypes];
@@ -165,11 +166,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             OnLevelUp(level, level, false);
 
             return true;
-        }
-
-        protected override void ResurrectFromOther(WorldEntity ultimateOwner)
-        {
-            // TODO Ressurect for Avatar
         }
 
         protected override void BindReplicatedFields()
@@ -420,6 +416,17 @@ namespace MHServerEmu.Games.Entities.Avatars
             SecondaryResourceManaBehaviorPrototype secondaryManaBehaviorProto = GetSecondaryResourceManaBehavior();
             if (secondaryManaBehaviorProto != null && secondaryManaBehaviorProto.DepleteOnDeath)
                 Properties.RemoveProperty(PropertyEnum.SecondaryResource);
+
+            Properties.RemoveProperty(PropertyEnum.NumMissionAllies);
+
+            // Set up death release timeout
+            Game.GameEventScheduler.CancelEvent(_deathDialogEvent);
+
+            AvatarOnKilledInfoPrototype onKilledInfoProto = Region?.GetAvatarOnKilledInfo();
+            if (onKilledInfoProto != null)
+                ScheduleEntityEvent(_deathDialogEvent, TimeSpan.FromMilliseconds(onKilledInfoProto.DeathReleaseTimeoutMS));
+            else
+                Logger.Warn("OnKilled(): onKilledInfoProto == null");
         }
 
         public override bool Resurrect()
@@ -435,8 +442,35 @@ namespace MHServerEmu.Games.Entities.Avatars
                 Properties[PropertyEnum.Endurance, manaType] = endurance;
             }
 
+            Game.GameEventScheduler.CancelEvent(_deathDialogEvent);
+
             return success;
         }
+
+        public void ResurrectOtherAvatar(Avatar targetAvatar)
+        {
+            if (targetAvatar == null || targetAvatar.IsDead == false)
+                return;
+
+            if (IsInWorld == false)
+                return;
+
+            if (targetAvatar.Id == Properties[PropertyEnum.PendingResurrectEntityId])
+                return;
+
+            PrototypeId resurrectOtherEntityPower = AvatarPrototype.ResurrectOtherEntityPower;
+            if (resurrectOtherEntityPower == PrototypeId.Invalid)
+            {
+                Logger.Warn("ResurrectOtherAvatar(): resurrectOtherEntityPower == PrototypeId.Invalid");
+                return;
+            }
+
+            PowerActivationSettings settings = new(targetAvatar.Id, targetAvatar.RegionLocation.Position, RegionLocation.Position);
+            settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+
+            if (ActivatePower(resurrectOtherEntityPower, ref settings) == PowerUseResult.Success)
+                Properties[PropertyEnum.PendingResurrectEntityId] = targetAvatar.Id;
+;        }
 
         public bool DoDeathRelease(DeathReleaseRequestType requestType)
         {
@@ -454,10 +488,10 @@ namespace MHServerEmu.Games.Entities.Avatars
             switch (requestType)
             {
                 case DeathReleaseRequestType.Checkpoint:
-                    AvatarOnKilledInfoPrototype avatarOnKilledInfo = region.GetAvatarOnKilledInfo();
-                    if (avatarOnKilledInfo == null) return Logger.WarnReturn(false, "DoDeathRelease(): avatarOnKilledInfo == null");
+                    AvatarOnKilledInfoPrototype onKilledInfoProto = region.GetAvatarOnKilledInfo();
+                    if (onKilledInfoProto == null) return Logger.WarnReturn(false, "DoDeathRelease(): onKilledInfoProto == null");
 
-                    if (avatarOnKilledInfo.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
+                    if (onKilledInfoProto.DeathReleaseBehavior == DeathReleaseBehavior.ReturnToWaypoint)
                     {
                         // Find the target for our respawn teleport
                         PrototypeId deathReleaseTarget = FindDeathReleaseTarget(out PrototypeId regionProtoRefOverride);
@@ -480,11 +514,72 @@ namespace MHServerEmu.Games.Entities.Avatars
                     }
                     else 
                     {
-                        return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {avatarOnKilledInfo.DeathReleaseBehavior}");
+                        return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented behavior {onKilledInfoProto.DeathReleaseBehavior}");
                     }
+
+                case DeathReleaseRequestType.Corpse:
+                    // No need to move.
+                    return true;
 
                 default:
                     return Logger.WarnReturn(false, $"DoDeathRelease(): Unimplemented request type {requestType}");
+            }
+        }
+
+        public bool ResurrectRequest(ulong resurrectorId)
+        {
+            if (Properties[PropertyEnum.HasResurrectPending])
+                return true;
+
+            if (resurrectorId == InvalidId) return Logger.WarnReturn(false, "ResurrectRequest(): resurrectorId == InvalidId");
+
+            AvatarOnKilledInfoPrototype onKilledInfoProto = Region?.GetAvatarOnKilledInfo();
+            if (onKilledInfoProto == null) return Logger.WarnReturn(false, "ResurrectRequest(): onKilledInfoProto == null");
+
+            Game.GameEventScheduler.CancelEvent(_deathDialogEvent);
+            ScheduleEntityEvent(_deathDialogEvent, TimeSpan.FromMilliseconds(onKilledInfoProto.ResurrectionTimeoutMS));
+
+            Properties[PropertyEnum.HasResurrectPending] = true;
+
+            var resurrectRequestMessage = NetMessageOnResurrectRequest.CreateBuilder()
+                .SetTargetId(Id)
+                .SetResurrectorId(resurrectorId)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(resurrectRequestMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+
+            return true;
+        }
+
+        public void ResurrectDecline()
+        {
+            Properties[PropertyEnum.HasResurrectPending] = false;
+
+            var resurrectDeclineMessage = NetMessageOnResurrectDecline.CreateBuilder()
+                .SetTargetId(Id)
+                .Build();
+
+            Game.NetworkManager.SendMessageToInterested(resurrectDeclineMessage, this, AOINetworkPolicyValues.AOIChannelProximity);
+        }
+
+        protected override void ResurrectFromOther(WorldEntity ultimateOwner)
+        {
+            if (ultimateOwner == null)
+            {
+                Logger.Warn("ResurrectFromOther(): ultimateOwner == null");
+                return;
+            }
+
+            if (ultimateOwner is Avatar && ultimateOwner.Properties[PropertyEnum.PendingResurrectEntityId] == Id)
+            {
+                // Ask this player for confirmation if this is a resurrect from another player.
+                ultimateOwner.Properties.RemoveProperty(PropertyEnum.PendingResurrectEntityId);
+                ResurrectRequest(ultimateOwner.Id);
+            }
+            else
+            {
+                // Apply resurrection from other sources immediately.
+                Resurrect();
             }
         }
 
@@ -535,6 +630,11 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // Fall back to the region's start target as the last resort
             return region.Prototype.StartTarget;
+        }
+
+        private void DeathDialogCallback()
+        {
+            DoDeathRelease(DeathReleaseRequestType.Checkpoint);
         }
 
         public PrototypeId GetRespawHotspotOverrideTarget(Player player)
@@ -998,6 +1098,10 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         public override void ActivatePostPowerAction(Power power, EndPowerFlags flags)
         {
+            // Clean up the property used for resurrecting other avatars if needed.
+            if (power.PrototypeDataRef == AvatarPrototype.ResurrectOtherEntityPower)
+                Properties.RemoveProperty(PropertyEnum.PendingResurrectEntityId);
+
             // Try to activate pending action (see CAvatar::ActivatePostPowerAction() for reference)
             if (ActivePowerRef == PrototypeId.Invalid && power.IsProcEffect() == false && power.TriggersComboPowerOnEvent(PowerEventType.OnPowerEnd) == false)
             {
@@ -6385,6 +6489,7 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             UpdateTimePlayed(player);
 
+            Properties.RemoveProperty(PropertyEnum.NumMissionAllies);
             Properties.RemovePropertyRange(PropertyEnum.PowersRespecResult);
 
             // Store missions to Avatar
@@ -6395,6 +6500,7 @@ namespace MHServerEmu.Games.Entities.Avatars
             scheduler.CancelEvent(_refreshStatsPowerEvent);
             scheduler.CancelEvent(_transformModeExitPowerEvent);
             scheduler.CancelEvent(_transformModeChangeEvent);
+            scheduler.CancelEvent(_deathDialogEvent);
 
             // Remove summoner conditions
             foreach (var summon in new SummonedEntityIterator(this))
@@ -6570,6 +6676,11 @@ namespace MHServerEmu.Games.Entities.Avatars
         private class PowerTeleportEvent : CallMethodEventParam1<Entity, PrototypeId>
         {
             protected override CallbackDelegate GetCallback() => (t, p1) => ((Avatar)t).DoPowerTeleport(p1);
+        }
+
+        private class DeathDialogEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Avatar)t).DeathDialogCallback();
         }
 
         #endregion
