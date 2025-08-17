@@ -108,7 +108,7 @@ namespace MHServerEmu.Games
             GameManager = gameManager;
 
             // Small lags are fine, and logging all of them creates too much noise
-            _fixedTimeUpdateProcessTimeLogThreshold = FixedTimeBetweenUpdates * 2;
+            _fixedTimeUpdateProcessTimeLogThreshold = FixedTimeBetweenUpdates * 5;
 
             // Initialize game options
             var config = ConfigManager.Instance.GetConfig<GameOptionsConfig>();

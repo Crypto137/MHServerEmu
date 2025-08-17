@@ -520,7 +520,6 @@ namespace MHServerEmu.Games.Entities
 
             if (_entityDestroyListNodeStack.Count == 0)
             {
-                Logger.Trace($"GetDestroyListNode(): Allocating chunk {++_numDestroyListNodeChunks} for {_game}");
                 for (int i = 0; i < NodeChunkSize; i++)
                     _entityDestroyListNodeStack.Push(new(0));
             }
