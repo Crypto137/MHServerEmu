@@ -87,8 +87,12 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool AddRegion(RegionHandle region)
         {
-            if (_allRegions.TryAdd(region.Id, region) == false)
-                return false;
+            // Lock here because another thread may be reading all regions to generate a report.
+            lock (_allRegions)
+            {
+                if (_allRegions.TryAdd(region.Id, region) == false)
+                    return false;
+            }
 
             if (region.IsPublic)
                 RegisterPublicRegion(region);
@@ -98,8 +102,11 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool RemoveRegion(RegionHandle region)
         {
-            if (_allRegions.Remove(region.Id) == false)
-                return false;
+            lock (_allRegions)
+            {
+                if (_allRegions.Remove(region.Id) == false)
+                    return false;
+            }
 
             if (region.IsPublic)
                 UnregisterPublicRegion(region);
@@ -121,6 +128,13 @@ namespace MHServerEmu.PlayerManagement.Regions
                 return false;
 
             return loadBalancer.RemoveRegion(region);
+        }
+
+        public void GetRegionReportData(RegionReport report)
+        {
+            // TODO: Track regions in metrics instead of locking the original collection.
+            lock (_allRegions)
+                report.Initialize(this);
         }
 
         private RegionHandle CreateRegionInGame(GameHandle game, PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams, RegionFlags flags)

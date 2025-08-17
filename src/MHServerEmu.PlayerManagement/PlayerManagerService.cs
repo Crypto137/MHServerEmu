@@ -202,7 +202,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void GetRegionReportData(RegionReport report)
         {
-            report.Initialize(WorldManager);
+            WorldManager.GetRegionReportData(report);
         }
 
         #endregion
