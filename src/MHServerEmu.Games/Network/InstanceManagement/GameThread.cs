@@ -3,6 +3,7 @@ using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData.LiveTuning;
 using MHServerEmu.Games.Regions;
 
@@ -116,6 +117,8 @@ namespace MHServerEmu.Games.Network.InstanceManagement
         {
             CollectionPoolSettings.UseThreadLocalStorage = true;
             ObjectPoolManager.UseThreadLocalStorage = true;
+
+            EntityDestroyListNodePool.Instance = new(Id);
 
             InitializeLiveTuning();
         }

@@ -53,8 +53,6 @@ namespace MHServerEmu.Games.Entities
         private readonly HashSet<ulong> _entitiesPendingCondemnedPowerDeletion = new();
 
         private readonly LinkedList<ulong> _entitiesPendingDestruction = new();
-        private readonly Stack<LinkedListNode<ulong>> _entityDestroyListNodeStack = new();
-        private int _numDestroyListNodeChunks = 0;
 
         public Event<DestroyEntityEvent> DestroyEntityEvent = new();
 
@@ -514,27 +512,14 @@ namespace MHServerEmu.Games.Entities
             _entitiesPendingCondemnedPowerDeletion.Clear();
         }
 
-        private LinkedListNode<ulong> GetDestroyListNode(ulong entityId)
+        private static LinkedListNode<ulong> GetDestroyListNode(ulong entityId)
         {
-            const int NodeChunkSize = 256;
-
-            if (_entityDestroyListNodeStack.Count == 0)
-            {
-                for (int i = 0; i < NodeChunkSize; i++)
-                    _entityDestroyListNodeStack.Push(new(0));
-            }
-
-            LinkedListNode<ulong> destroyNode = _entityDestroyListNodeStack.Pop();
-            destroyNode.Value = entityId;
-            return destroyNode;
+            return EntityDestroyListNodePool.Instance.Get(entityId);
         }
 
-        private void ReturnDestroyListNode(LinkedListNode<ulong> destroyNode)
+        private static void ReturnDestroyListNode(LinkedListNode<ulong> destroyNode)
         {
-            if (destroyNode.List != null)
-                throw new Exception("Attempted to return a destroy list node that is currently in a list.");
-
-            _entityDestroyListNodeStack.Push(destroyNode);
+            EntityDestroyListNodePool.Instance.Return(destroyNode);
         }
 
         private bool ProcessDestroyed()
