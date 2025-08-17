@@ -200,35 +200,9 @@ namespace MHServerEmu.PlayerManagement
 
         #region Metrics
 
-        public void GetGameList(StringBuilder sb)
+        public void GetRegionReportData(RegionReport report)
         {
-            List<RegionHandle> regionList = ListPool<RegionHandle>.Instance.Get();
-            foreach (RegionHandle region in WorldManager)
-            {
-                if (region.State == RegionHandleState.Shutdown)
-                    continue;
-
-                regionList.Add(region);
-            }
-
-            regionList.Sort();
-
-            ulong currentGameId = 0;
-            foreach (RegionHandle region in regionList)
-            {
-                GameHandle game = region.Game;
-
-                if (game.Id != currentGameId)
-                {
-                    TimeSpan uptime = game.Uptime;
-                    sb.AppendLine($"Game [{game}] - {uptime:dd\\:hh\\:mm\\:ss}");
-                    currentGameId = game.Id;
-                }
-
-                sb.AppendLine($"\t{region}");
-            }
-
-            ListPool<RegionHandle>.Instance.Return(regionList);
+            report.Initialize(WorldManager);
         }
 
         #endregion

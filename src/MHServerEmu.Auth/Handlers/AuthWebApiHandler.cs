@@ -10,6 +10,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.Auth.Handlers
 {
@@ -66,6 +67,7 @@ namespace MHServerEmu.Auth.Handlers
             {
                 case "/AccountManagement/Create":   await OnAccountCreate(bodyQueryString, httpResponse, outputFormat); break;
                 case "/ServerStatus":               await OnServerStatus(httpResponse, outputFormat); break;
+                case "/RegionReport":               await OnRegionReport(httpResponse, outputFormat); break;
                 case "/Metrics/Performance":        await OnMetricsPerformance(httpResponse, outputFormat); break;
 
                 default:
@@ -142,24 +144,36 @@ namespace MHServerEmu.Auth.Handlers
         /// </summary>
         private async Task<bool> OnServerStatus(HttpListenerResponse httpResponse, AuthWebApiOutputFormat outputFormat)
         {
-            StringBuilder sb = new(ServerManager.Instance.GetServerStatus(false));
+            string serverStatus = ServerManager.Instance.GetServerStatus(false);
 
-            PlayerManagerService playerManager = ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) as PlayerManagerService;
-            if (playerManager != null)
-            {
-                sb.AppendLine();
-                sb.AppendLine("Games:");
-                playerManager.GetGameList(sb);
-            }
+            // Fix line breaks for display in browsers
+            if (outputFormat == AuthWebApiOutputFormat.Html)
+                serverStatus = serverStatus.Replace("\n", "<br/>");
 
-            // Fix line breaks and tabs for display in browsers
+            await SendResponseAsync(new(true, "Server Status", serverStatus), httpResponse, outputFormat);
+            return true;
+        }
+
+        private async Task<bool> OnRegionReport(HttpListenerResponse httpResponse, AuthWebApiOutputFormat outputFormat)
+        {
+            if (ServerManager.Instance.GetGameService(GameServiceType.PlayerManager) is not PlayerManagerService playerManager)
+                return false;
+
+            using RegionReport regionReport = new();
+            playerManager.GetRegionReportData(regionReport);
+
             if (outputFormat == AuthWebApiOutputFormat.Html)
             {
-                sb.Replace("\n", "<br/>");
-                sb.Replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+                StringBuilder sb = new();
+                HtmlBuilder.AppendDataStructure(sb, regionReport);
+                await SendResponseAsync(new(true, "Region Report", sb.ToString()), httpResponse, outputFormat);
+            }
+            else if (outputFormat == AuthWebApiOutputFormat.Json)
+            {
+                string json = JsonSerializer.Serialize(regionReport);
+                await HttpHelper.SendPlainTextAsync(httpResponse, json);
             }
 
-            await SendResponseAsync(new(true, "Server Status", sb.ToString()), httpResponse, outputFormat);
             return true;
         }
 
