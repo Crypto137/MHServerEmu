@@ -243,6 +243,28 @@ namespace MHServerEmu.Games.Social.Communities
             return SetBitForCircle(_systemCircles, circle, add);
         }
 
+        public bool CanBroadcast(CommunityBroadcastFlags filterFlags)
+        {
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+            {
+                if (circle.IsIgnored)
+                    return false;
+            }
+
+            CommunityBroadcastFlags flags = GetBroadcastFlags();
+            return (flags & filterFlags) != 0;
+        }
+
+        public CommunityBroadcastFlags GetBroadcastFlags()
+        {
+            CommunityBroadcastFlags flags = CommunityBroadcastFlags.None;
+
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+                flags |= circle.BroadcastFlags;
+
+            return flags;
+        }
+
         /// <summary>
         /// Updates the state of this <see cref="CommunityMember"/> with new data from a <see cref="CommunityMemberBroadcast"/> instance.
         /// Returns <see cref="CommunityMemberUpdateOptionBits"/> that specifies the fields that were updated.

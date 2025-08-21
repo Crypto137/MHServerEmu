@@ -220,6 +220,17 @@ namespace MHServerEmu.Core.Network
             public readonly ulong PlayerDbId = playerDbId;
         }
 
+        /// <summary>
+        /// [Game -> PlayerManager] Requests community status for the specified players from the player manager.
+        /// </summary>
+        public readonly struct CommunityStatusRequest(ulong gameId, ulong playerDbId, List<ulong> members)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly List<ulong> Members = members;
+        }
+
         #endregion
 
         #region Grouping Manager

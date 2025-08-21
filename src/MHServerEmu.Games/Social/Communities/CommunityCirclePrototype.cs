@@ -4,10 +4,11 @@
 
     public enum CommunityBroadcastFlags
     {
-        None    = 0,
-        Local   = 1 << 0,
-        Flag1   = 1 << 1,
-        Flag2   = 1 << 2
+        None            = 0,
+        Nearby          = 1 << 0,
+        FriendsAndParty = 1 << 1,
+        Guild           = 1 << 2,
+        All             = Nearby | FriendsAndParty | Guild,
     }
 
     /// <summary>
@@ -19,7 +20,7 @@
         public readonly bool IsPersistent;
         public readonly bool IsMigrated;
         public readonly bool Field3;
-        public readonly bool Field4;
+        public readonly bool IsIgnored;
         public readonly bool Field5;
         public readonly bool Field6;
         public readonly bool Field7;
@@ -28,14 +29,14 @@
         public readonly bool NotifyOnline;
         public readonly CommunityBroadcastFlags BroadcastFlags;
 
-        public CommunityCirclePrototype(CircleId id, bool isPersistent, bool isMigrated, bool field3, bool field4,
+        public CommunityCirclePrototype(CircleId id, bool isPersistent, bool isMigrated, bool field3, bool isIgnored,
             bool field5, bool field6, bool field7, bool restrictsIgnore, int maxMembers, bool notifyOnline, CommunityBroadcastFlags broadcastFlags)
         {
             Id = id;
             IsPersistent = isPersistent;
             IsMigrated = isMigrated;
             Field3 = field3;
-            Field4 = field4;
+            IsIgnored = isIgnored;
             Field5 = field5;
             Field6 = field6;
             Field7 = field7;

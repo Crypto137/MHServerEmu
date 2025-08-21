@@ -33,11 +33,11 @@ namespace MHServerEmu.Games.Social.Communities
         private static readonly CommunityCirclePrototype[] Prototypes = new CommunityCirclePrototype[]
         {
             new(CircleId.__None,    false,  false,  false,  false,  false,  false,  false,  false, 0,   false,  CommunityBroadcastFlags.None),
-            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityBroadcastFlags.Flag1),
+            new(CircleId.__Friends, true,   true,   false,  false,  false,  false,  false,  false, 96,  true,   CommunityBroadcastFlags.FriendsAndParty),
             new(CircleId.__Ignore,  true,   true,   false,  true,   true,   false,  false,  false, 128, false,  CommunityBroadcastFlags.None),
-            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityBroadcastFlags.Local),
-            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Flag1),
-            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Flag2),
+            new(CircleId.__Nearby,  false,  false,  false,  false,  true,   false,  false,  false, 0,   false,  CommunityBroadcastFlags.Nearby),
+            new(CircleId.__Party,   false,  true,   false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.FriendsAndParty),
+            new(CircleId.__Guild,   false,  false,  false,  false,  false,  false,  true,   false, 0,   false,  CommunityBroadcastFlags.Guild),
         };
 
         public Community Community { get; }
@@ -47,8 +47,10 @@ namespace MHServerEmu.Games.Social.Communities
 
         public bool IsPersistent { get => GetPrototype().IsPersistent; }
         public bool IsMigrated { get => GetPrototype().IsMigrated; }
+        public bool IsIgnored { get => GetPrototype().IsIgnored; }
         public bool RestrictsIgnore { get => GetPrototype().RestrictsIgnore; }
         public bool NotifyOnline { get => GetPrototype().NotifyOnline; }
+        public CommunityBroadcastFlags BroadcastFlags { get => GetPrototype().BroadcastFlags; }
 
         /// <summary>
         /// Constructs a new <see cref="CommunityCircle"/> instance.

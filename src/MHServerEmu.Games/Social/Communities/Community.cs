@@ -2,6 +2,7 @@
 using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -242,12 +243,29 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
-        public void PullCommunityStatus()
+        public void PullCommunityStatus(CommunityBroadcastFlags flags = CommunityBroadcastFlags.All)
         {
-            // TODO: Request remote broadcast from the player manager
+            List<ulong> remoteMembers = null;   // allocate on demand
 
             foreach (CommunityMember member in IterateMembers())
-                RequestLocalBroadcast(member);
+            {
+                if (member.CanBroadcast(flags) == false)
+                    continue;
+
+                if (RequestLocalBroadcast(member) == false)
+                {
+                    remoteMembers ??= new();
+                    remoteMembers.Add(member.DbId);
+                }
+            }
+
+            // Request status for remote members that are not in the current game from the player manager
+            if (remoteMembers != null)
+            {
+                Logger.Debug($"PullCommunityStatus(): Requesting status for {remoteMembers.Count} remote member(s)");
+                ServiceMessage.CommunityStatusRequest request = new(Owner.Game.Id, Owner.DatabaseUniqueId, remoteMembers);
+                ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, request);
+            }
         }
 
         public override string ToString()
