@@ -28,6 +28,14 @@ namespace MHServerEmu.DatabaseAccess
         public bool TryQueryAccountByEmail(string email, out DBAccount account);
 
         /// <summary>
+        /// Queries the id of the player with the specified name.
+        /// </summary>
+        /// <remarks>
+        /// This query is case-insensitive, the playerNameOut argument should have proper case as stored in the database.
+        /// </remarks>
+        public bool TryGetPlayerDbIdByName(string playerName, out ulong playerDbId, out string playerNameOut);
+
+        /// <summary>
         /// Queries the name of the player with the specified id. Returns <see langword="true"/> if successful.
         /// </summary>
         public bool TryGetPlayerName(ulong id, out string playerName);
@@ -36,11 +44,6 @@ namespace MHServerEmu.DatabaseAccess
         /// Queries the names of all registered players from the database and adds them to the provided <see cref="Dictionary{TKey, TValue}"/>.
         /// </summary>
         public bool GetPlayerNames(Dictionary<ulong, string> playerNames);
-
-        /// <summary>
-        /// Queries if the specified player name is already taken.
-        /// </summary>
-        public bool QueryIsPlayerNameTaken(string playerName);
 
         /// <summary>
         /// Inserts a new <see cref="DBAccount"/> with all of its data into the database.

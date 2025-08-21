@@ -101,7 +101,7 @@ namespace MHServerEmu.PlayerManagement
             if (DBManager.TryQueryAccountByEmail(email, out _))
                 return (false, $"Failed to create account: email {email} is already used by another account.");
 
-            if (DBManager.QueryIsPlayerNameTaken(playerName))
+            if (DBManager.TryGetPlayerDbIdByName(playerName, out _, out _))
                 return (false, $"Failed to create account: name {playerName} is already used by another account.");
 
             // Create a new account and insert it into the database
@@ -127,7 +127,7 @@ namespace MHServerEmu.PlayerManagement
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return (false, $"Failed to change player name: account {email} not found.");
 
-            if (DBManager.QueryIsPlayerNameTaken(playerName))
+            if (DBManager.TryGetPlayerDbIdByName(playerName, out _, out _))
                 return (false, $"Failed to change player name: name {playerName} is already used by another account.");
 
             // Write the new name to the database

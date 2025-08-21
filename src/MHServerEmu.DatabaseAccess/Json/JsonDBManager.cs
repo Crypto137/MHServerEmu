@@ -70,6 +70,13 @@ namespace MHServerEmu.DatabaseAccess.Json
             return true;
         }
 
+        public bool TryGetPlayerDbIdByName(string playerName, out ulong playerDbId, out string playerNameOut)
+        {
+            playerDbId = 0;
+            playerNameOut = playerName;
+            return Logger.WarnReturn(true, "TryGetPlayerDbIdByName(): Operation not supported");
+        }
+
         public bool TryGetPlayerName(ulong id, out string playerName)
         {
             playerName = $"Player{id}";
@@ -79,11 +86,6 @@ namespace MHServerEmu.DatabaseAccess.Json
         public bool GetPlayerNames(Dictionary<ulong, string> playerNames)
         {
             return false;
-        }
-
-        public bool QueryIsPlayerNameTaken(string playerName)
-        {
-            return Logger.WarnReturn(true, "QueryIsPlayerNameTaken(): Operation not supported");
         }
 
         public bool InsertAccount(DBAccount account)
