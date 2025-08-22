@@ -394,7 +394,7 @@ namespace MHServerEmu.Games.Entities
                 }
             }
 
-            bool hasCommunityData = /* archive.IsPersistent || */ archive.IsMigration ||    // REMOVEME/TODO: Persistent communities
+            bool hasCommunityData = archive.IsPersistent || archive.IsMigration ||
                 (archive.IsReplication && archive.HasReplicationPolicy(AOINetworkPolicyValues.AOIChannelOwner));
             success &= Serializer.Transfer(archive, ref hasCommunityData);
             if (hasCommunityData)

@@ -129,7 +129,7 @@ namespace MHServerEmu.Games.Social.Communities
                     if (circle.ShouldArchiveTo(archive) == false) continue;
 
                     int archiveCircleId = Community.CircleManager.GetArchiveCircleId(circle);
-                    if (archiveCircleId == 1)
+                    if (archiveCircleId == -1)
                         return Logger.ErrorReturn(false, $"Serialize(): Invalid archive circle id returned for circle in archive. circle={circle}");
 
                     success &= Serializer.Transfer(archive, ref archiveCircleId);
