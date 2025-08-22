@@ -3528,6 +3528,14 @@ namespace MHServerEmu.Games.Entities
                 .Build();
         }
 
+        public void OnCommunityCircleChanged(CircleId circleId)
+        {
+            if (circleId != CircleId.__Party)
+                return;
+
+            // TODO: Update parties
+        }
+
         private void DoCommunityBroadcast()
         {
             // TODO: Send a broadcast message to the player manager to update other game instances

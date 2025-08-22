@@ -29,6 +29,14 @@ namespace MHServerEmu.Core.Network
         RemoveResponse,
     }
 
+    public enum CommunitySubscriptionOpType
+    {
+        AddSubscription,
+        RemoveSubscription,
+        AddIgnore,
+        RemoveIgnore,
+    }
+
     #endregion
 
     public static class ServiceMessage
@@ -243,6 +251,14 @@ namespace MHServerEmu.Core.Network
             public readonly ulong RemoteJobId = remoteJobId;
             public readonly ulong ResultPlayerDbId = resultPlayerDbId;
             public readonly string ResultPlayerName = resultPlayerName;
+        }
+
+        public readonly struct CommunitySubscriptionOp(CommunitySubscriptionOpType type, ulong subscriberPlayerDbId, ulong targetPlayerDbId)
+            : IGameServiceMessage
+        {
+            public readonly CommunitySubscriptionOpType Type = type;
+            public readonly ulong SubscriberPlayerDbId = subscriberPlayerDbId;
+            public readonly ulong TargetPlayerDbId = targetPlayerDbId;
         }
 
         /// <summary>

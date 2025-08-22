@@ -243,7 +243,7 @@ namespace MHServerEmu.Games.Social.Communities
             return SetBitForCircle(_systemCircles, circle, add);
         }
 
-        public bool CanBroadcast(CommunityBroadcastFlags filterFlags)
+        public bool CanBroadcast(CommunityBroadcastFlags filterFlags = CommunityBroadcastFlags.All)
         {
             foreach (CommunityCircle circle in Community.IterateCircles(this))
             {
@@ -420,6 +420,12 @@ namespace MHServerEmu.Games.Social.Communities
                 SendUpdateToOwner(updateOptionBits);
 
             return updateOptionBits;
+        }
+
+        public CommunityMemberUpdateOptionBits ClearData(bool sendToClient)
+        {
+            // TODO
+            return CommunityMemberUpdateOptionBits.None;
         }
 
         /// <summary>

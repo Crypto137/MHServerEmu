@@ -1610,6 +1610,10 @@ namespace MHServerEmu.Games.Network
             string playerName = tryModifyCommunityMemberCircle.PlayerName;
             ModifyCircleOperation operation = tryModifyCommunityMemberCircle.Operation;
 
+            // Do not allow players to arbitrarily modify nearby / party / guild circles
+            if (circleId != CircleId.__Friends && circleId != CircleId.__Ignore)
+                return Logger.WarnReturn(false, $"OnTryModifyCommunityMemberCircle(): Player [{Player}] is attempting to modify circle {circleId}");
+
             return community.TryModifyCommunityMemberCircle(circleId, playerName, operation);
         }
 

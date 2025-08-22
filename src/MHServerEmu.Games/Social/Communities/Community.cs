@@ -163,6 +163,13 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null)
+                return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
+
+            if (circle.CanContainPlayer(playerName, playerDbId) == false)
+                return false;
+
             // Get an existing member to add to the circle
             bool isNewMember = false;
             CommunityMember member = GetMember(playerDbId);
@@ -178,10 +185,6 @@ namespace MHServerEmu.Games.Social.Communities
                 return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId 0x{playerDbId:X}");
 
             // Add to the circle
-            CommunityCircle circle = GetCircle(circleId);
-            if (circle == null)
-                return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
-
             bool wasAdded = circle.AddMember(member);
             if (wasAdded == false && isNewMember)
                 DestroyMember(member);
@@ -270,19 +273,32 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
-        public void PullCommunityStatus(CommunityBroadcastFlags flags = CommunityBroadcastFlags.All)
+        public void PullCommunityStatus(CommunityBroadcastFlags flags = CommunityBroadcastFlags.All, CommunityMember memberTarget = null)
         {
             List<ulong> remoteMembers = null;   // allocate on demand
 
-            foreach (CommunityMember member in IterateMembers())
+            if (memberTarget != null)
             {
-                if (member.CanBroadcast(flags) == false)
-                    continue;
+                // Check just the provided member instance if we have one
+                if (memberTarget.CanBroadcast(flags) == false)
+                    return;
 
-                if (RequestLocalBroadcast(member) == false)
+                if (RequestLocalBroadcast(memberTarget) == false)
+                    remoteMembers = [memberTarget.DbId];
+            }
+            else
+            {
+                // Check all members if we don't have a member instance provided
+                foreach (CommunityMember itMember in IterateMembers())
                 {
-                    remoteMembers ??= new();
-                    remoteMembers.Add(member.DbId);
+                    if (itMember.CanBroadcast(flags) == false)
+                        continue;
+
+                    if (RequestLocalBroadcast(itMember) == false)
+                    {
+                        remoteMembers ??= new();
+                        remoteMembers.Add(itMember.DbId);
+                    }
                 }
             }
 
@@ -293,6 +309,12 @@ namespace MHServerEmu.Games.Social.Communities
                 ServiceMessage.CommunityStatusRequest request = new(Owner.Game.Id, Owner.DatabaseUniqueId, remoteMembers);
                 ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, request);
             }
+        }
+
+        public void UpdateSubscription(ulong targetPlayerDbId, CommunitySubscriptionOpType operation)
+        {
+            ServiceMessage.CommunitySubscriptionOp message = new(operation, Owner.DatabaseUniqueId, targetPlayerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         public bool TryModifyCommunityMemberCircle(CircleId circleId, string playerName, ModifyCircleOperation operation)
