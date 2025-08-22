@@ -258,7 +258,17 @@ namespace MHServerEmu.Games.Social.Communities
             if (member == null)
                 return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): PlayerDbId {playerDbId} not found");
 
-            member.ReceiveBroadcast(broadcast);
+            if (member.CanBroadcast())
+            {
+                member.ReceiveBroadcast(broadcast);
+            }
+            else
+            {
+                CommunityMemberUpdateOptionBits updateOptions = member.ClearData();
+                if (updateOptions != 0)
+                    member.SendUpdateToOwner(updateOptions);
+            }
+
             return true;
         }
 

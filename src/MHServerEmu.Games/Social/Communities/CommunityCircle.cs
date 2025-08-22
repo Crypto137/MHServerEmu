@@ -110,7 +110,7 @@ namespace MHServerEmu.Games.Social.Communities
                 if (canBroadcastAfter)
                     pullCommunityStatus = true;             // Removed from Ignore, force data update
                 else
-                    updateOptions |= member.ClearData(false);   // Added to Ignore, clear existing data
+                    updateOptions |= member.ClearData();    // Added to Ignore, clear existing data
             }
 
             // Send update to the client

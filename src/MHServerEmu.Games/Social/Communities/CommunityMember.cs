@@ -422,10 +422,50 @@ namespace MHServerEmu.Games.Social.Communities
             return updateOptionBits;
         }
 
-        public CommunityMemberUpdateOptionBits ClearData(bool sendToClient)
+        public CommunityMemberUpdateOptionBits ClearData()
         {
-            // TODO
-            return CommunityMemberUpdateOptionBits.None;
+            CommunityMemberUpdateOptionBits updateOptions = CommunityMemberUpdateOptionBits.None;
+
+            if (RegionRef != PrototypeId.Invalid)
+            {
+                _regionRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptionBits.RegionRef;
+            }
+
+            if (DifficultyRef != PrototypeId.Invalid)
+            {
+                _difficultyRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptionBits.DifficultyRef;
+            }
+
+            foreach (AvatarSlotInfo slot in _slots)
+            {
+                if (slot.AvatarRef != PrototypeId.Invalid)
+                {
+                    slot.AvatarRef = PrototypeId.Invalid;
+                    updateOptions |= CommunityMemberUpdateOptionBits.AvatarRef;
+                }
+
+                if (slot.CostumeRef != PrototypeId.Invalid)
+                {
+                    slot.CostumeRef = PrototypeId.Invalid;
+                    updateOptions |= CommunityMemberUpdateOptionBits.CostumeRef;
+                }
+
+                if (slot.Level != 0)
+                {
+                    slot.Level = 0;
+                    updateOptions |= CommunityMemberUpdateOptionBits.Level;
+                }
+
+                if (slot.PrestigeLevel != 0)
+                {
+                    slot.PrestigeLevel = 0;
+                    updateOptions |= CommunityMemberUpdateOptionBits.PrestigeLevel;
+                }
+            }
+
+            return updateOptions;
         }
 
         /// <summary>
