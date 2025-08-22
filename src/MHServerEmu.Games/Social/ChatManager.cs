@@ -138,6 +138,11 @@ namespace MHServerEmu.Games.Social
             ListPool<PlayerConnection>.Instance.Return(clientList);
         }
 
+        public void SendServiceUnavailableMessage(Player player)
+        {
+            SendChatFromGameSystem((LocaleStringId)5066146868144571696, player);
+        }
+
         public bool SendChatFromGameSystem(LocaleStringId localeString, Player player, CircleId circleId)
         {
             if (player == null) return Logger.WarnReturn(false, "SendChatFromGameSystem(): player == null");

@@ -73,6 +73,10 @@ namespace MHServerEmu.Games.Network
                     OnWorldViewSync(worldViewSync);
                     break;
 
+                case ServiceMessage.PlayerLookupByNameResult playerLookupByNameResult:
+                    OnPlayerLookupByNameResult(playerLookupByNameResult);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -140,6 +144,19 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnWorldViewUpdate(): player == null");
 
             player.PlayerConnection.WorldView.Sync(worldViewSync.SyncData);
+            return true;
+        }
+
+        private bool OnPlayerLookupByNameResult(in ServiceMessage.PlayerLookupByNameResult playerLookupByNameResult)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerLookupByNameResult.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
+
+            ulong remoteJobId = playerLookupByNameResult.RemoteJobId;
+            ulong resultPlayerDbId = playerLookupByNameResult.ResultPlayerDbId;
+            string resultPlayerName = playerLookupByNameResult.ResultPlayerName;
+
+            player.Community.OnPlayerLookupByNameResult(remoteJobId, resultPlayerDbId, resultPlayerName);
             return true;
         }
 

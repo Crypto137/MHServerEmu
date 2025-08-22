@@ -74,6 +74,10 @@ namespace MHServerEmu.PlayerManagement
                         OnClearPrivateStoryRegions(clearPrivateStoryRegions);
                         break;
 
+                    case ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest:
+                        OnPlayerLookupByNameRequest(playerLookupByNameRequest);
+                        break;
+
                     default:
                         Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                         break;
@@ -276,6 +280,23 @@ namespace MHServerEmu.PlayerManagement
                 return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{clearPrivateStoryRegions.PlayerDbId}");
 
             player.WorldView.ClearPrivateStoryRegions();
+            return true;
+        }
+
+        private bool OnPlayerLookupByNameRequest(in ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest)
+        {
+            ulong gameId = playerLookupByNameRequest.GameId;
+            ulong playerDbId = playerLookupByNameRequest.PlayerDbId;
+            ulong remoteJobId = playerLookupByNameRequest.RemoteJobId;
+            string requestPlayerName = playerLookupByNameRequest.RequestPlayerName;
+            
+            // This is synchronous. Should be fine with the lower player counts we have.
+            // It's okay for this query to fail because it's based on client input.
+            AccountManager.DBManager.TryGetPlayerDbIdByName(requestPlayerName, out ulong resultPlayerDbId, out string resultPlayerName);
+
+            ServiceMessage.PlayerLookupByNameResult response = new(gameId, playerDbId, remoteJobId, resultPlayerDbId, resultPlayerName);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
+
             return true;
         }
 

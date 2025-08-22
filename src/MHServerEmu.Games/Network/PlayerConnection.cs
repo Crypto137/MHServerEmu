@@ -29,6 +29,7 @@ using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
 {
@@ -1602,9 +1603,14 @@ namespace MHServerEmu.Games.Network
             var tryModifyCommunityMemberCircle = message.As<NetMessageTryModifyCommunityMemberCircle>();
             if (tryModifyCommunityMemberCircle == null) return Logger.WarnReturn(false, $"OnTryModifyCommunityMemberCircle(): Failed to retrieve message");
 
-            // TODO, send a Service Unavailable message for now
-            Game.ChatManager.SendChatFromGameSystem((LocaleStringId)5066146868144571696, Player);
-            return true;
+            Community community = Player?.Community;
+            if (community == null) return Logger.WarnReturn(false, "OnTryModifyCommunityMemberCircle(): community == null");
+
+            CircleId circleId = (CircleId)tryModifyCommunityMemberCircle.CircleId;
+            string playerName = tryModifyCommunityMemberCircle.PlayerName;
+            ModifyCircleOperation operation = tryModifyCommunityMemberCircle.Operation;
+
+            return community.TryModifyCommunityMemberCircle(circleId, playerName, operation);
         }
 
         private bool OnPullCommunityStatus(MailboxMessage message)  // 107

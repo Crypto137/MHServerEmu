@@ -221,6 +221,31 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Requests player dbid and properly cased name from the player manager.
+        /// </summary>
+        public readonly struct PlayerLookupByNameRequest(ulong gameId, ulong playerDbId, ulong remoteJobId, string requestPlayerName)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong RemoteJobId = remoteJobId;
+            public readonly string RequestPlayerName = requestPlayerName;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Response for PlayerLookupByNameRequest.
+        /// </summary>
+        public readonly struct PlayerLookupByNameResult(ulong gameId, ulong playerDbId, ulong remoteJobId, ulong resultPlayerDbId, string resultPlayerName)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong RemoteJobId = remoteJobId;
+            public readonly ulong ResultPlayerDbId = resultPlayerDbId;
+            public readonly string ResultPlayerName = resultPlayerName;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Requests community status for the specified players from the player manager.
         /// </summary>
         public readonly struct CommunityStatusRequest(ulong gameId, ulong playerDbId, List<ulong> members)
