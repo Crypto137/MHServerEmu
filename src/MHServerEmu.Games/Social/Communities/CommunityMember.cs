@@ -219,6 +219,13 @@ namespace MHServerEmu.Games.Social.Communities
             return _systemCircles[circleId];
         }
 
+        public bool IsIgnored()
+        {
+            CommunityCircle ignoreCircle = Community.GetCircle(CircleId.__Ignore);
+            if (ignoreCircle == null) return Logger.WarnReturn(false, "IsIgnored(): ignoreCircle == null");
+            return IsInCircle(ignoreCircle);
+        }
+
         /// <summary>
         /// Returns the number of <see cref="CommunityCircle"/> instances this <see cref="CommunityMember"/> is in.
         /// </summary>
