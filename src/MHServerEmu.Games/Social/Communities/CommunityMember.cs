@@ -309,10 +309,10 @@ namespace MHServerEmu.Games.Social.Communities
 
             if (broadcast.HasIsOnline)
             {
-                CommunityMemberOnlineStatus oldIsOnline = IsOnline;
+                CommunityMemberOnlineStatus isOnlineBefore = _isOnline;
                 _isOnline = broadcast.IsOnline == 1 ? CommunityMemberOnlineStatus.Online : CommunityMemberOnlineStatus.Offline;
 
-                if (oldIsOnline != CommunityMemberOnlineStatus.Online && IsOnline == CommunityMemberOnlineStatus.Online)
+                if (isOnlineBefore != _isOnline)
                     updateOptions |= CommunityMemberUpdateOptions.IsOnline;
             }
 
