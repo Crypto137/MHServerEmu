@@ -5,6 +5,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
 {
@@ -75,6 +76,14 @@ namespace MHServerEmu.Games.Network
 
                 case ServiceMessage.PlayerLookupByNameResult playerLookupByNameResult:
                     OnPlayerLookupByNameResult(playerLookupByNameResult);
+                    break;
+
+                case ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch:
+                    OnCommunityBroadcastBatch(communityBroadcastBatch);
+                    break;
+
+                case ServiceMessage.CommunityBroadcastResults communityBroadcastResults:
+                    OnCommunityBroadcastResults(communityBroadcastResults);
                     break;
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
@@ -157,6 +166,34 @@ namespace MHServerEmu.Games.Network
             string resultPlayerName = playerLookupByNameResult.ResultPlayerName;
 
             player.Community.OnPlayerLookupByNameResult(remoteJobId, resultPlayerDbId, resultPlayerName);
+            return true;
+        }
+
+        private bool OnCommunityBroadcastBatch(in ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch)
+        {
+            ulong broadcastId = communityBroadcastBatch.BroadcastId;
+
+            foreach (Player player in new PlayerIterator(Game))
+            {
+                Community community = player.Community;
+                foreach (CommunityMemberBroadcast broadcast in communityBroadcastBatch.Broadcasts)
+                    community.ReceiveMemberBroadcast(broadcast, broadcastId);
+            }
+
+            return true;
+        }
+
+        private bool OnCommunityBroadcastResults(in ServiceMessage.CommunityBroadcastResults communityBroadcastResults)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(communityBroadcastResults.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
+
+            Community community = player.Community;
+            ulong broadcastId = communityBroadcastResults.BroadcastId;
+
+            foreach (CommunityMemberBroadcast broadcast in communityBroadcastResults.Broadcasts)
+                community.ReceiveMemberBroadcast(broadcast, broadcastId);
+
             return true;
         }
 

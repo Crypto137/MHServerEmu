@@ -76,11 +76,11 @@ namespace MHServerEmu.Games.Social.Communities
         public bool AddMember(CommunityMember member)
         {
             // Get initial update flags - this needs to be done before we add to the circle to detect if this is a newly created member
-            CommunityMemberUpdateOptionBits updateOptions = CommunityMemberUpdateOptionBits.Circle;
+            CommunityMemberUpdateOptions updateOptions = CommunityMemberUpdateOptions.Circle;
             if (member.NumCircles() == 0)
-                updateOptions |= CommunityMemberUpdateOptionBits.NewlyCreated;
+                updateOptions |= CommunityMemberUpdateOptions.NewlyCreated;
 
-            bool canBroadcastBefore = member.CanBroadcast();
+            bool canReceiveBroadcastBefore = member.CanReceiveBroadcast();
             CommunityBroadcastFlags broadcastFlagsBefore = member.GetBroadcastFlags();
 
             // Add to the circle
@@ -102,12 +102,12 @@ namespace MHServerEmu.Games.Social.Communities
                 Community.UpdateSubscription(member.DbId, CommunitySubscriptionOpType.AddIgnore);
             }
 
-            bool canBroadcastAfter = member.CanBroadcast();
-            bool pullCommunityStatus = canBroadcastAfter && member.NumCircles() == 1;
+            bool canReceiveBroadcastAfter = member.CanReceiveBroadcast();
+            bool pullCommunityStatus = canReceiveBroadcastAfter && member.NumCircles() == 1;
 
-            if (canBroadcastBefore != canBroadcastAfter)
+            if (canReceiveBroadcastBefore != canReceiveBroadcastAfter)
             {
-                if (canBroadcastAfter)
+                if (canReceiveBroadcastAfter)
                     pullCommunityStatus = true;             // Removed from Ignore, force data update
                 else
                     updateOptions |= member.ClearData();    // Added to Ignore, clear existing data
@@ -134,7 +134,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool RemoveMember(CommunityMember member)
         {
-            bool canBroadcastBefore = member.CanBroadcast();
+            bool canReceiveBroadcastBefore = member.CanReceiveBroadcast();
             CommunityBroadcastFlags broadcastFlagsBefore = member.GetBroadcastFlags();
 
             // Remove from the circle
@@ -149,14 +149,14 @@ namespace MHServerEmu.Games.Social.Communities
                 Community.UpdateSubscription(member.DbId, CommunitySubscriptionOpType.RemoveIgnore);
 
             // Send update to the client
-            member.SendUpdateToOwner(CommunityMemberUpdateOptionBits.Circle);
+            member.SendUpdateToOwner(CommunityMemberUpdateOptions.Circle);
 
             // Update subscription
             UpdateMemberSubscription(member, broadcastFlagsBefore);
 
             // Request broadcast if needed
-            bool canBroadcastAfter = member.CanBroadcast();
-            if (canBroadcastBefore != canBroadcastAfter && canBroadcastAfter && member.NumCircles() > 0)
+            bool canReceiveBroadcastAfter = member.CanReceiveBroadcast();
+            if (canReceiveBroadcastBefore != canReceiveBroadcastAfter && canReceiveBroadcastAfter && member.NumCircles() > 0)
                 Community.PullCommunityStatus(CommunityBroadcastFlags.All, member);
 
             // Notify the owner player
@@ -201,7 +201,7 @@ namespace MHServerEmu.Games.Social.Communities
                   (archive.IsMigration && IsMigrated);
         }
 
-        public void OnMemberReceivedBroadcast(CommunityMember member, CommunityMemberUpdateOptionBits updateOptionBits)
+        public void OnMemberReceivedBroadcast(CommunityMember member, CommunityMemberUpdateOptions updateOptionBits)
         {
             // update circle here
         }

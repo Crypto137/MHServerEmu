@@ -253,12 +253,24 @@ namespace MHServerEmu.Core.Network
             public readonly string ResultPlayerName = resultPlayerName;
         }
 
+        /// <summary>
+        /// [Game -> PlayerManager] Updates community status subscription for the specified player.
+        /// </summary>
         public readonly struct CommunitySubscriptionOp(CommunitySubscriptionOpType type, ulong subscriberPlayerDbId, ulong targetPlayerDbId)
             : IGameServiceMessage
         {
             public readonly CommunitySubscriptionOpType Type = type;
             public readonly ulong SubscriberPlayerDbId = subscriberPlayerDbId;
             public readonly ulong TargetPlayerDbId = targetPlayerDbId;
+        }
+
+        /// <summary>
+        /// [Game -> PlayerManager] Updates community status for a player.
+        /// </summary>
+        public readonly struct CommunityStatusUpdate(CommunityMemberBroadcast broadcast)
+            : IGameServiceMessage
+        {
+            public readonly CommunityMemberBroadcast Broadcast = broadcast;
         }
 
         /// <summary>
@@ -270,6 +282,28 @@ namespace MHServerEmu.Core.Network
             public readonly ulong GameId = gameId;
             public readonly ulong PlayerDbId = playerDbId;
             public readonly List<ulong> Members = members;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] A batch of <see cref="CommunityMemberBroadcast"/> instances to be delivered to all players on the server.
+        /// </summary>
+        public readonly struct CommunityBroadcastBatch(List<CommunityMemberBroadcast> broadcasts, ulong broadcastId)
+            : IGameServiceMessage
+        {
+            public readonly List<CommunityMemberBroadcast> Broadcasts = broadcasts;
+            public readonly ulong BroadcastId = broadcastId;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] A targeted batch of <see cref="CommunityMemberBroadcast"/> instances to be delivered to a specific player.
+        /// </summary>
+        public readonly struct CommunityBroadcastResults(ulong gameId, ulong playerDbId, List<CommunityMemberBroadcast> broadcasts, ulong broadcastId)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly List<CommunityMemberBroadcast> Broadcasts = broadcasts;
+            public readonly ulong BroadcastId = broadcastId;
         }
 
         #endregion

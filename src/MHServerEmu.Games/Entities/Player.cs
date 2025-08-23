@@ -3514,15 +3514,36 @@ namespace MHServerEmu.Games.Entities
             Region region = GetRegion();
             Avatar avatar = CurrentAvatar;
 
+            ulong currentRegionRefId = 0;
+            ulong currentDifficultyRefId = 0;
+            ulong avatarRefId = 0;
+            ulong costumeRefId = 0;
+            uint level = 0;
+            uint prestigeLevel = 0;
+
+            if (region != null)
+            {
+                currentRegionRefId = (ulong)region.PrototypeDataRef;
+                currentDifficultyRefId = (ulong)region.DifficultyTierRef;
+            }
+
+            if (avatar != null)
+            {
+                avatarRefId = (ulong)avatar.PrototypeDataRef;
+                costumeRefId = (ulong)avatar.EquippedCostumeRef;
+                level = (uint)avatar.CharacterLevel;
+                prestigeLevel = (uint)avatar.PrestigeLevel;
+            }
+
             return CommunityMemberBroadcast.CreateBuilder()
                 .SetMemberPlayerDbId(DatabaseUniqueId)
-                .SetCurrentRegionRefId(region != null ? (ulong)region.PrototypeDataRef : 0)
-                .SetCurrentDifficultyRefId(region != null ? (ulong)region.DifficultyTierRef : 0)
+                .SetCurrentRegionRefId(currentRegionRefId)
+                .SetCurrentDifficultyRefId(currentDifficultyRefId)
                 .AddSlots(CommunityMemberAvatarSlot.CreateBuilder()
-                    .SetAvatarRefId(avatar != null ? (ulong)avatar.PrototypeDataRef : 0)
-                    .SetCostumeRefId(avatar != null ? (ulong)avatar.EquippedCostumeRef : 0)
-                    .SetLevel(avatar != null ? (uint)avatar.CharacterLevel : 0)
-                    .SetPrestigeLevel(avatar != null ? (uint)avatar.PrestigeLevel : 0))
+                    .SetAvatarRefId(avatarRefId)
+                    .SetCostumeRefId(costumeRefId)
+                    .SetLevel(level)
+                    .SetPrestigeLevel(prestigeLevel))
                 .SetCurrentPlayerName(GetName())
                 .SetIsOnline(1)
                 .Build();
@@ -3538,7 +3559,10 @@ namespace MHServerEmu.Games.Entities
 
         private void DoCommunityBroadcast()
         {
-            // TODO: Send a broadcast message to the player manager to update other game instances
+            // Send a status update to the player manager. It will be relayed to subscribers in other game instances.
+            CommunityMemberBroadcast broadcast = BuildCommunityBroadcast();
+            ServiceMessage.CommunityStatusUpdate statusUpdate = new(broadcast);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, statusUpdate);
 
             // Update players in this game instance
             foreach (Player otherPlayer in new PlayerIterator(Game))
