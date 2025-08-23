@@ -127,6 +127,12 @@ namespace MHServerEmu.Core.System.Time
             return UnixEpoch.Add(timeSpan);
         }
 
+        public static long UnixTimeToFileTimeUtc(TimeSpan unixTime)
+        {
+            DateTime dateTime = UnixTimeToDateTime(unixTime);
+            return dateTime.ToFileTimeUtc();
+        }
+
         /// <summary>
         /// Converts the provided Timestamp value representing Unix time to <see cref="DateTime"/>.
         /// </summary>
