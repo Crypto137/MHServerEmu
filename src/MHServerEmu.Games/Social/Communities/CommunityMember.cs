@@ -77,40 +77,42 @@ namespace MHServerEmu.Games.Social.Communities
         {
             bool success = true;
 
-            // archive.IsPersistent == false
-            success &= Serializer.Transfer(archive, ref _regionRef);
-            success &= Serializer.Transfer(archive, ref _difficultyRef);
-
-            byte numSlots = 0;
-            if (archive.IsPacking)
+            if (archive.IsPersistent == false)
             {
-                if (_slots.Length >= byte.MaxValue)
-                    return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
-                numSlots = (byte)_slots.Length;
+                success &= Serializer.Transfer(archive, ref _regionRef);
+                success &= Serializer.Transfer(archive, ref _difficultyRef);
+
+                byte numSlots = 0;
+                if (archive.IsPacking)
+                {
+                    if (_slots.Length >= byte.MaxValue)
+                        return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
+                    numSlots = (byte)_slots.Length;
+                }
+
+                success &= Serializer.Transfer(archive, ref numSlots);
+
+                if (archive.IsUnpacking)
+                    Array.Resize(ref _slots, numSlots);
+
+                for (int i = 0; i < numSlots; i++)
+                {
+                    // Slight deviation from the client: we implemented ISerialize for AvatarSlotInfo to make this a bit cleaner
+                    if (_slots[i] == null)
+                        _slots[i] = new();
+
+                    success &= Serializer.Transfer(archive, ref _slots[i]);
+                }
+
+                int isOnline = (int)_isOnline;
+                success &= Serializer.Transfer(archive, ref isOnline);
+                _isOnline = (CommunityMemberOnlineStatus)isOnline;
+
+                success &= Serializer.Transfer(archive, ref _playerName);
+                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
             }
-
-            success &= Serializer.Transfer(archive, ref numSlots);
-
-            if (archive.IsUnpacking)
-                Array.Resize(ref _slots, numSlots);
-
-            for (int i = 0; i < numSlots; i++)
-            {
-                // Slight deviation from the client: we implemented ISerialize for AvatarSlotInfo to make this a bit cleaner
-                if (_slots[i] == null)
-                    _slots[i] = new();
-
-                success &= Serializer.Transfer(archive, ref _slots[i]);
-            }
-
-            int isOnline = (int)_isOnline;
-            success &= Serializer.Transfer(archive, ref isOnline);
-            _isOnline = (CommunityMemberOnlineStatus)isOnline;
-
-            success &= Serializer.Transfer(archive, ref _playerName);
-            success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
-            success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
-            success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
 
             int numCircles = 0;
             if (archive.IsPacking)
