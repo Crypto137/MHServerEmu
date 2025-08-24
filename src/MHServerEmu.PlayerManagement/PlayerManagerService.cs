@@ -22,6 +22,7 @@ namespace MHServerEmu.PlayerManagement
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+        private readonly PlayerManagerServiceMailbox _serviceMailbox;
 
         internal static PlayerManagerService Instance { get; private set; }     // Naughty singleton-like access without being an actual singleton
 
@@ -40,6 +41,8 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public PlayerManagerService()
         {
+            _serviceMailbox = new(this);
+
             SessionManager = new(this);
             LoginQueueManager = new(this);
             GameHandleManager = new(this);
@@ -55,22 +58,16 @@ namespace MHServerEmu.PlayerManagement
         {
             Instance = this;
 
-            State = GameServiceState.Starting;
-
-            GameHandleManager.Initialize();
-
             State = GameServiceState.Running;
-
-            // Normal ticks
             while (State == GameServiceState.Running)
             {
                 TimeSpan referenceTime = _stopwatch.Elapsed;
 
+                _serviceMailbox.ProcessMessages();
+
                 SessionManager.Update();
                 LoginQueueManager.Update();
-                GameHandleManager.Update();
-                ClientManager.Update(true);
-                WorldManager.Update();
+                ClientManager.Update();
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
                 int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);
@@ -81,17 +78,18 @@ namespace MHServerEmu.PlayerManagement
             // Shutdown
 
             // Shutting down the frontend will disconnect all clients, here we just wait for everything to be cleaned up and saved
+            ClientManager.AllowNewClients = false;
             while (ClientManager.PlayerCount > 0)
             {
-                ClientManager.Update(false);
+                _serviceMailbox.ProcessMessages();
+                ClientManager.Update();
                 Thread.Sleep(1);
             }
 
-            GameHandleManager.IsShuttingDown = true;
-            GameHandleManager.ShutDownAllGames();
+            GameHandleManager.Shutdown();
             while (GameHandleManager.GameCount > 0)
             {
-                GameHandleManager.Update();
+                _serviceMailbox.ProcessMessages();
                 Thread.Sleep(1);
             }
 
@@ -116,25 +114,21 @@ namespace MHServerEmu.PlayerManagement
                     OnRouteMessage(routeMessage);
                     break;
 
-                // Game instance operation messages are handled in ticks by the GameHandleManager
-                case ServiceMessage.GameInstanceOp gameInstanceOp:
-                    GameHandleManager.ReceiveMessage(gameInstanceOp);
-                    break;
-
-                case ServiceMessage.CreateRegionResult:
-                case ServiceMessage.RequestRegionShutdown:
-                    WorldManager.ReceiveMessage(message);
-                    break;
-
-                // Client messages are handled in ticks by the ClientManager
+                // Service messages are handled in ticks
                 case ServiceMessage.AddClient:
                 case ServiceMessage.RemoveClient:
+                case ServiceMessage.GameInstanceOp:
                 case ServiceMessage.GameInstanceClientOp:
+                case ServiceMessage.CreateRegionResult:
+                case ServiceMessage.RequestRegionShutdown:
                 case ServiceMessage.ChangeRegionRequest:
                 case ServiceMessage.RegionTransferFinished:
                 case ServiceMessage.ClearPrivateStoryRegions:
                 case ServiceMessage.PlayerLookupByNameRequest:
-                    ClientManager.ReceiveMessage(message);
+                case ServiceMessage.CommunitySubscriptionOp:
+                case ServiceMessage.CommunityStatusUpdate:
+                case ServiceMessage.CommunityStatusRequest:
+                    _serviceMailbox.PostMessage(message);
                     break;
 
                 default:
