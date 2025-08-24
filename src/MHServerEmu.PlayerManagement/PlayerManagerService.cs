@@ -1,12 +1,13 @@
 ﻿using System.Diagnostics;
-using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement

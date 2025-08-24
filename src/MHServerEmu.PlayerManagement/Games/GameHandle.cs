@@ -3,9 +3,10 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System.Time;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
 
-namespace MHServerEmu.PlayerManagement
+namespace MHServerEmu.PlayerManagement.Games
 {
     public enum GameHandleState
     {

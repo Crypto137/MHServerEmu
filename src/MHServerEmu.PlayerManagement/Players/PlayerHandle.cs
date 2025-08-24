@@ -6,9 +6,10 @@ using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Regions;
 
-namespace MHServerEmu.PlayerManagement
+namespace MHServerEmu.PlayerManagement.Players
 {
     public enum PlayerHandleState
     {

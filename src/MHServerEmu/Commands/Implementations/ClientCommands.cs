@@ -4,6 +4,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.Commands.Implementations
 {

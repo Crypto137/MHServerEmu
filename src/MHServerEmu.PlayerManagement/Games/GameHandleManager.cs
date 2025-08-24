@@ -3,7 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 
-namespace MHServerEmu.PlayerManagement
+namespace MHServerEmu.PlayerManagement.Games
 {
     /// <summary>
     /// Manages <see cref="GameHandle"/> instances.

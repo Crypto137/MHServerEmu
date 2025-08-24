@@ -7,7 +7,7 @@ using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 
-namespace MHServerEmu.PlayerManagement
+namespace MHServerEmu.PlayerManagement.Players
 {
     public class LoginQueueManager
     {
@@ -59,7 +59,7 @@ namespace MHServerEmu.PlayerManagement
 
             foreach (var kvp in _pendingClients)
             {
-                if ((now - kvp.Value) <= PendingClientTimeout)
+                if (now - kvp.Value <= PendingClientTimeout)
                     continue;
 
                 IFrontendClient client = kvp.Key;
