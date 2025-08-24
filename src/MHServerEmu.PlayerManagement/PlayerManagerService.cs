@@ -9,6 +9,7 @@ using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Network;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
+using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement
 {
@@ -31,6 +32,7 @@ namespace MHServerEmu.PlayerManagement
         internal GameHandleManager GameHandleManager { get; }
         internal WorldManager WorldManager { get; }
         internal ClientManager ClientManager { get; }
+        internal CommunityRegistry CommunityRegistry { get; }
 
         public PlayerManagerConfig Config { get; }
 
@@ -48,6 +50,7 @@ namespace MHServerEmu.PlayerManagement
             GameHandleManager = new(this);
             WorldManager = new(this);
             ClientManager = new(this);
+            CommunityRegistry = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
@@ -68,6 +71,7 @@ namespace MHServerEmu.PlayerManagement
                 SessionManager.Update();
                 LoginQueueManager.Update();
                 ClientManager.Update();
+                CommunityRegistry.Update();
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
                 int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);
@@ -125,8 +129,8 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.RegionTransferFinished:
                 case ServiceMessage.ClearPrivateStoryRegions:
                 case ServiceMessage.PlayerLookupByNameRequest:
-                case ServiceMessage.CommunitySubscriptionOp:
                 case ServiceMessage.CommunityStatusUpdate:
+                case ServiceMessage.CommunitySubscriptionOp:
                 case ServiceMessage.CommunityStatusRequest:
                     _serviceMailbox.PostMessage(message);
                     break;

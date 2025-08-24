@@ -254,6 +254,15 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Updates community status for a player.
+        /// </summary>
+        public readonly struct CommunityStatusUpdate(CommunityMemberBroadcast broadcast)
+            : IGameServiceMessage
+        {
+            public readonly CommunityMemberBroadcast Broadcast = broadcast;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Updates community status subscription for the specified player.
         /// </summary>
         public readonly struct CommunitySubscriptionOp(CommunitySubscriptionOpType type, ulong subscriberPlayerDbId, ulong targetPlayerDbId)
@@ -262,15 +271,6 @@ namespace MHServerEmu.Core.Network
             public readonly CommunitySubscriptionOpType Type = type;
             public readonly ulong SubscriberPlayerDbId = subscriberPlayerDbId;
             public readonly ulong TargetPlayerDbId = targetPlayerDbId;
-        }
-
-        /// <summary>
-        /// [Game -> PlayerManager] Updates community status for a player.
-        /// </summary>
-        public readonly struct CommunityStatusUpdate(CommunityMemberBroadcast broadcast)
-            : IGameServiceMessage
-        {
-            public readonly CommunityMemberBroadcast Broadcast = broadcast;
         }
 
         /// <summary>

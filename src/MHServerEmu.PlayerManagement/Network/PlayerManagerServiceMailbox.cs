@@ -61,6 +61,18 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPlayerLookupByNameRequest(playerLookupByNameRequest);
                     break;
 
+                case ServiceMessage.CommunityStatusUpdate communityStatusUpdate:
+                    OnCommunityStatusUpdate(communityStatusUpdate);
+                    break;
+
+                case ServiceMessage.CommunitySubscriptionOp communitySubscriptionOp:
+                    OnCommunitySubscriptionOp(communitySubscriptionOp);
+                    break;
+
+                case ServiceMessage.CommunityStatusRequest communityStatusRequest:
+                    OnCommunityStatusRequest(communityStatusRequest);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -203,6 +215,34 @@ namespace MHServerEmu.PlayerManagement.Network
             ServiceMessage.PlayerLookupByNameResult response = new(gameId, playerDbId, remoteJobId, resultPlayerDbId, resultPlayerName);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
 
+            return true;
+        }
+
+        private bool OnCommunityStatusUpdate(in ServiceMessage.CommunityStatusUpdate communityStatusUpdate)
+        {
+            CommunityMemberBroadcast broadcast = communityStatusUpdate.Broadcast;
+            
+            _playerManager.CommunityRegistry.ReceiveMemberBroadcast(broadcast);
+            return true;
+        }
+
+        private bool OnCommunitySubscriptionOp(in ServiceMessage.CommunitySubscriptionOp communitySubscriptionOp)
+        {
+            CommunitySubscriptionOpType operation = communitySubscriptionOp.Type;
+            ulong subscriberPlayerDbId = communitySubscriptionOp.SubscriberPlayerDbId;
+            ulong targetPlayerDbId = communitySubscriptionOp.TargetPlayerDbId;
+            
+            _playerManager.CommunityRegistry.UpdateSubscription(operation, subscriberPlayerDbId, targetPlayerDbId);
+            return true;
+        }
+
+        private bool OnCommunityStatusRequest(in ServiceMessage.CommunityStatusRequest communityStatusRequest)
+        {
+            ulong gameId = communityStatusRequest.GameId;
+            ulong playerDbId = communityStatusRequest.PlayerDbId;
+            List<ulong> members = communityStatusRequest.Members;
+
+            _playerManager.CommunityRegistry.RequestMemberBroadcast(gameId, playerDbId, members);
             return true;
         }
 
