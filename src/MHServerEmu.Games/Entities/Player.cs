@@ -3530,7 +3530,7 @@ namespace MHServerEmu.Games.Entities
             if (avatar != null)
             {
                 avatarRefId = (ulong)avatar.PrototypeDataRef;
-                costumeRefId = (ulong)avatar.EquippedCostumeRef;
+                costumeRefId = (ulong)avatar.GetCurrentCostumePrototypeRef();
                 level = (uint)avatar.CharacterLevel;
                 prestigeLevel = (uint)avatar.PrestigeLevel;
             }

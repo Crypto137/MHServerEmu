@@ -4587,6 +4587,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             return result;
         }
 
+        public PrototypeId GetCurrentCostumePrototypeRef()
+        {
+            PrototypeId equippedCostumeRef = EquippedCostumeRef;
+            if (equippedCostumeRef != PrototypeId.Invalid)
+                return equippedCostumeRef;
+
+            return AvatarPrototype.GetStartingCostumeForPlatform(Platforms.PC);
+        }
+
         public AssetId GetCurrentCostumeAssetRef()
         {
             // HACK: Return starting costume for Entity/Items/Costumes/Costume.defaults to avoid spam when forcing pre-VU costumes
