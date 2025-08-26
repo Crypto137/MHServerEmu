@@ -64,8 +64,6 @@ namespace MHServerEmu.Games.Social.Communities
         public PrototypeId DifficultyRef { get => _difficultyRef; }
         public CommunityMemberOnlineStatus IsOnline { get => _isOnline; }
 
-        public ulong CurrentBroadcastId { get; set; }
-
         public CommunityMember(Community community, ulong playerDbId, string playerName)
         {
             Community = community;

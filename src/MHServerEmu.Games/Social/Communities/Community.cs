@@ -248,7 +248,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// <summary>
         /// Routes the provided <see cref="CommunityMemberBroadcast"/> to the relevant <see cref="CommunityMember"/>.
         /// </summary>
-        public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast, ulong broadcastId)
+        public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
             ulong playerDbId = broadcast.MemberPlayerDbId;
             if (playerDbId == 0)
@@ -257,10 +257,6 @@ namespace MHServerEmu.Games.Social.Communities
             CommunityMember member = GetMember(playerDbId);
             if (member == null)
                 return false;   // Don't log because this is valid for untargeted broadcast batches.
-
-            // Ignore outdated broadcasts
-            if (member.CurrentBroadcastId > broadcastId)
-                return false;
 
             if (member.CanReceiveBroadcast())
             {
@@ -273,7 +269,6 @@ namespace MHServerEmu.Games.Social.Communities
                     member.SendUpdateToOwner(updateOptions);
             }
 
-            member.CurrentBroadcastId = broadcastId;
             return true;
         }
 
@@ -284,7 +279,7 @@ namespace MHServerEmu.Games.Social.Communities
                 return false;
 
             CommunityMemberBroadcast broadcast = player.BuildCommunityBroadcast();
-            ReceiveMemberBroadcast(broadcast, member.CurrentBroadcastId);
+            ReceiveMemberBroadcast(broadcast);
             return true;
         }
 

@@ -287,23 +287,60 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [PlayerManager -> Game] A batch of <see cref="CommunityMemberBroadcast"/> instances to be delivered to all players on the server.
         /// </summary>
-        public readonly struct CommunityBroadcastBatch(List<CommunityMemberBroadcast> broadcasts, ulong broadcastId)
-            : IGameServiceMessage
+        public readonly struct CommunityBroadcastBatch : IGameServiceMessage
         {
-            public readonly List<CommunityMemberBroadcast> Broadcasts = broadcasts;
-            public readonly ulong BroadcastId = broadcastId;
+            private readonly CommunityMemberBroadcast Instance;     // optimization to avoid allocating lists for individual broadcasts
+            private readonly List<CommunityMemberBroadcast> List;
+            // We don't actually need a broadcast id with out implementation
+
+            public CommunityMemberBroadcast this[int index] { get => Instance != null ? Instance : List[index]; }
+            public int Count { get => Instance != null ? 1 : List.Count; }
+
+            public CommunityBroadcastBatch(CommunityMemberBroadcast broadcast)
+            {
+                Instance = broadcast;
+                List = null;
+            }
+
+            public CommunityBroadcastBatch(List<CommunityMemberBroadcast> broadcasts)
+            {
+                Instance = null;
+                List = broadcasts;
+            }
         }
 
         /// <summary>
         /// [PlayerManager -> Game] A targeted batch of <see cref="CommunityMemberBroadcast"/> instances to be delivered to a specific player.
         /// </summary>
-        public readonly struct CommunityBroadcastResults(ulong gameId, ulong playerDbId, List<CommunityMemberBroadcast> broadcasts, ulong broadcastId)
-            : IGameServiceMessage
+        public readonly struct CommunityBroadcastResults : IGameServiceMessage
         {
-            public readonly ulong GameId = gameId;
-            public readonly ulong PlayerDbId = playerDbId;
-            public readonly List<CommunityMemberBroadcast> Broadcasts = broadcasts;
-            public readonly ulong BroadcastId = broadcastId;
+            private readonly CommunityMemberBroadcast Instance;     // optimization to avoid allocating lists for individual broadcasts
+            private readonly List<CommunityMemberBroadcast> List;
+
+            public readonly ulong GameId;
+            public readonly ulong PlayerDbId;
+            // We don't actually need a broadcast id with out implementation
+
+            public CommunityMemberBroadcast this[int index] { get => Instance != null ? Instance : List[index]; }
+            public int Count { get => Instance != null ? 1 : List.Count; }
+
+            public CommunityBroadcastResults(ulong gameId, ulong playerDbId, CommunityMemberBroadcast broadcast)
+            {
+                GameId = gameId;
+                PlayerDbId = playerDbId;
+
+                Instance = broadcast;
+                List = null;
+            }
+
+            public CommunityBroadcastResults(ulong gameId, ulong playerDbId, List<CommunityMemberBroadcast> broadcasts)
+            {
+                GameId = gameId;
+                PlayerDbId = playerDbId;
+
+                Instance = null;
+                List = broadcasts;
+            }
         }
 
         #endregion

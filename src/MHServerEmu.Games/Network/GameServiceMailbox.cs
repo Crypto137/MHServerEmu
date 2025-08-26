@@ -147,13 +147,15 @@ namespace MHServerEmu.Games.Network
 
         private bool OnCommunityBroadcastBatch(in ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch)
         {
-            ulong broadcastId = communityBroadcastBatch.BroadcastId;
-
             foreach (Player player in new PlayerIterator(Game))
             {
                 Community community = player.Community;
-                foreach (CommunityMemberBroadcast broadcast in communityBroadcastBatch.Broadcasts)
-                    community.ReceiveMemberBroadcast(broadcast, broadcastId);
+
+                for (int i = 0; i < communityBroadcastBatch.Count; i++)
+                {
+                    CommunityMemberBroadcast broadcast = communityBroadcastBatch[i];
+                    community.ReceiveMemberBroadcast(broadcast);
+                }
             }
 
             return true;
@@ -165,10 +167,12 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
 
             Community community = player.Community;
-            ulong broadcastId = communityBroadcastResults.BroadcastId;
 
-            foreach (CommunityMemberBroadcast broadcast in communityBroadcastResults.Broadcasts)
-                community.ReceiveMemberBroadcast(broadcast, broadcastId);
+            for (int i = 0; i < communityBroadcastResults.Count; i++)
+            {
+                CommunityMemberBroadcast broadcast = communityBroadcastResults[i];
+                community.ReceiveMemberBroadcast(broadcast);
+            }
 
             return true;
         }
