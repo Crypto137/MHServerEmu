@@ -138,6 +138,7 @@ namespace MHServerEmu.PlayerManagement.Players
                 Logger.Info($"Created new PlayerHandle: [{player}]");
 
                 player.LoadPlayerData();
+                _playerManager.CommunityRegistry.RefreshPlayerStatus(player);
             }
             else
             {
@@ -163,6 +164,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
             Logger.Info($"Removed PlayerHandle [{player}]");
 
+            _playerManager.CommunityRegistry.RefreshPlayerStatus(player);
             player.OnRemoved();
             return true;
         }

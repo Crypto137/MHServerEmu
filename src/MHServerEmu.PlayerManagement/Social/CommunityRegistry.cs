@@ -24,6 +24,11 @@ namespace MHServerEmu.PlayerManagement.Social
             // TODO: Send broadcasts
         }
 
+        public void RefreshPlayerStatus(PlayerHandle player)
+        {
+            Logger.Debug($"RefreshPlayerStatus(): {player} (connected={player.IsConnected})");
+        }
+
         public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
             ulong playerDbId = broadcast.MemberPlayerDbId;

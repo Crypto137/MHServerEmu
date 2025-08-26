@@ -112,7 +112,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public void OnRemoved()
         {
-            // Do cleanup
+            // Remove from region
             SetTargetRegion(null);
             SetActualRegion(null);
 
@@ -548,7 +548,7 @@ namespace MHServerEmu.PlayerManagement.Players
             // even if the region is no longer in any world views for whatever reason.
             newRegion?.Reserve(RegionReservationType.Presence);
 
-            // todo: update communities
+            // Community will be updated when we receive a broadcast from the game instance.
 
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))
