@@ -242,7 +242,6 @@ namespace MHServerEmu.Games.Network
                 }
 
                 _dbAccount.Player.AOIVolume = (int)AOI.AOIVolume;
-                _dbAccount.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
 
                 PersistenceHelper.StoreInventoryEntities(Player, _dbAccount);
 

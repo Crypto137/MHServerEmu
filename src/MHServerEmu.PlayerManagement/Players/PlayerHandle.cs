@@ -2,6 +2,7 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
@@ -46,6 +47,7 @@ namespace MHServerEmu.PlayerManagement.Players
         public bool IsConnected { get => Client.IsConnected; }
         public ulong PlayerDbId { get => Client.DbId; }
         public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
+        public TimeSpan LastLogoutTime { get => TimeSpan.FromMilliseconds(Account.Player.LastLogoutTime); }
 
         public PlayerHandleState State { get; private set; }
         public GameHandle CurrentGame { get; private set; }
@@ -160,6 +162,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
             lock (account)
             {
+                if (IsConnected == false)
+                    account.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
+
                 if (AccountManager.DBManager.SavePlayerData(account) == false)
                     return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
             }

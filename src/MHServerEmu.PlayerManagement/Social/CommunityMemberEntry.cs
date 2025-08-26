@@ -1,10 +1,12 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.System.Time;
 
 namespace MHServerEmu.PlayerManagement.Social
 {
     public class CommunityMemberEntry
     {
         private CommunityMemberBroadcast.Builder _broadcastBuilder = CommunityMemberBroadcast.CreateBuilder();
+        private CommunityMemberAvatarSlot.Builder _avatarSlotBuilder = CommunityMemberAvatarSlot.CreateBuilder();
 
         private bool _hasUpToDateBroadcast = false;
         private CommunityMemberBroadcast _cachedBroadcast = null;
@@ -20,6 +22,8 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             if (_hasUpToDateBroadcast == false)
             {
+                _broadcastBuilder.ClearSlots();
+                _broadcastBuilder.AddSlots(_avatarSlotBuilder);
                 _cachedBroadcast = _broadcastBuilder.Build();
                 _hasUpToDateBroadcast = true;
             }
@@ -27,12 +31,84 @@ namespace MHServerEmu.PlayerManagement.Social
             return _cachedBroadcast;
         }
 
-        public bool SetIsOnline(int isOnline)
+        public bool SetCurrentRegionRefId(ulong currentRegionRefId)
         {
-            if (isOnline == _broadcastBuilder.IsOnline)
+            if (_broadcastBuilder.CurrentRegionRefId == currentRegionRefId)
                 return false;
 
-            _broadcastBuilder.SetIsOnline(isOnline);
+            _broadcastBuilder.SetCurrentRegionRefId(currentRegionRefId);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetCurrentDifficultyRefId(ulong currentDifficultyRefId)
+        {
+            if (_broadcastBuilder.CurrentDifficultyRefId == currentDifficultyRefId)
+                return false;
+
+            _broadcastBuilder.SetCurrentDifficultyRefId(currentDifficultyRefId);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetAvatarRefId(ulong avatarRefId)
+        {
+            if (_avatarSlotBuilder.AvatarRefId == avatarRefId)
+                return false;
+
+            _avatarSlotBuilder.SetAvatarRefId(avatarRefId);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetCostumeRefId(ulong costumeRefId)
+        {
+            if (_avatarSlotBuilder.CostumeRefId == costumeRefId)
+                return false;
+
+            _avatarSlotBuilder.SetCostumeRefId(costumeRefId);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetLevel(uint level)
+        {
+            if (_avatarSlotBuilder.Level == level)
+                return false;
+
+            _avatarSlotBuilder.SetLevel(level);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetPrestigeLevel(uint prestigeLevel)
+        {
+            if (_avatarSlotBuilder.PrestigeLevel == prestigeLevel)
+                return false;
+
+            _avatarSlotBuilder.SetPrestigeLevel(prestigeLevel);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetIsOnline(bool isOnline)
+        {
+            int isOnlineValue = isOnline ? 1 : 0;
+            if (_broadcastBuilder.IsOnline == isOnlineValue)
+                return false;
+
+            _broadcastBuilder.SetIsOnline(isOnlineValue);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetLastLogoutTime(TimeSpan lastLogoutTime)
+        {
+            long lastLogoutTimeAsFileTimeUtc = Clock.UnixTimeToFileTimeUtc(lastLogoutTime);
+            if (_broadcastBuilder.LastLogoutTimeAsFileTimeUtc == lastLogoutTimeAsFileTimeUtc)
+                return false;
+
+            _broadcastBuilder.SetLastLogoutTimeAsFileTimeUtc(lastLogoutTimeAsFileTimeUtc);
             _hasUpToDateBroadcast = false;
             return true;
         }

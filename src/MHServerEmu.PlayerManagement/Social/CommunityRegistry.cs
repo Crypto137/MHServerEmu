@@ -11,7 +11,8 @@ namespace MHServerEmu.PlayerManagement.Social
     public class CommunityRegistry
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
-
+        
+        // NOTE: Member entries continue to exist for as long as the server is up to be available for lookups. This is by design and not a leak.
         private readonly Dictionary<ulong, CommunityMemberEntry> _members = new();
         private readonly HashSet<CommunityMemberEntry> _membersToBroadcast = new();
 
@@ -59,11 +60,21 @@ namespace MHServerEmu.PlayerManagement.Social
         {
             Logger.Debug($"RefreshPlayerStatus(): {player} (connected={player.IsConnected})");
 
-            CommunityMemberEntry member = GetOrCreateMemberEntry(player.PlayerDbId);
-
             bool sendBroadcast = false;
 
-            sendBroadcast |= member.SetIsOnline(player.IsConnected ? 1 : 0);
+            CommunityMemberEntry member = GetMemberEntry(player.PlayerDbId);
+            if (member == null)
+            {
+                member = AddMemberEntry(player.PlayerDbId);
+                member.SetIsOnline(player.IsConnected);
+                member.SetLastLogoutTime(player.LastLogoutTime);
+                sendBroadcast = true;
+            }
+            else
+            {
+                sendBroadcast |= member.SetIsOnline(player.IsConnected);
+                sendBroadcast |= member.SetLastLogoutTime(player.LastLogoutTime);
+            }
 
             if (sendBroadcast)
                 SendBroadcastOnNextUpdate(member);
@@ -71,13 +82,50 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
+            Logger.Debug($"ReceiveMemberBroadcast(): {broadcast}");
+
             ulong playerDbId = broadcast.MemberPlayerDbId;
 
             // We should be receiving broadcasts only from online players
             if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
                 return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): No player found for dbid 0x{playerDbId:X}");
 
-            Logger.Debug($"ReceiveMemberBroadcast(): {broadcast}");
+            // Member entry should be created when a player logs in
+            CommunityMemberEntry member = GetMemberEntry(playerDbId);
+            if (member == null)
+                return Logger.WarnReturn(false, "ReceiveMemberBroadcast(): member == null");
+
+            bool sendBroadcast = false;
+
+            if (broadcast.HasCurrentRegionRefId)
+                sendBroadcast |= member.SetCurrentRegionRefId(broadcast.CurrentRegionRefId);
+
+            if (broadcast.HasCurrentDifficultyRefId)
+                sendBroadcast |= member.SetCurrentDifficultyRefId(broadcast.CurrentDifficultyRefId);
+
+            if (broadcast.SlotsCount > 0)
+            {
+                // We don't care about the second slot on PC.
+                CommunityMemberAvatarSlot avatarSlot = broadcast.SlotsList[0];
+
+                if (avatarSlot.HasAvatarRefId)
+                    sendBroadcast |= member.SetAvatarRefId(avatarSlot.AvatarRefId);
+
+                if (avatarSlot.HasCostumeRefId)
+                    sendBroadcast |= member.SetCostumeRefId(avatarSlot.CostumeRefId);
+
+                if (avatarSlot.HasLevel)
+                    sendBroadcast |= member.SetLevel(avatarSlot.Level);
+
+                if (avatarSlot.HasPrestigeLevel)
+                    sendBroadcast |= member.SetPrestigeLevel(avatarSlot.PrestigeLevel);
+            }
+
+            sendBroadcast |= member.SetIsOnline(player.IsConnected);
+            sendBroadcast |= member.SetLastLogoutTime(player.LastLogoutTime);
+
+            if (sendBroadcast)
+                SendBroadcastOnNextUpdate(member);
 
             return true;
         }
@@ -94,7 +142,7 @@ namespace MHServerEmu.PlayerManagement.Social
             Logger.Debug($"RequestStatus(): gameId=0x{gameId:X}, playerDbId=0x{playerDbId:X}, members={members.Count}");
         }
 
-        private CommunityMemberEntry GetOrCreateMemberEntry(ulong playerDbId)
+        private CommunityMemberEntry AddMemberEntry(ulong playerDbId)
         {
             if (_members.TryGetValue(playerDbId, out CommunityMemberEntry member) == false)
             {
@@ -115,7 +163,9 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void SendBroadcastOnNextUpdate(CommunityMemberEntry member)
         {
-            _membersToBroadcast.Add(member);
+            if (_membersToBroadcast.Add(member))
+                Logger.Debug($"SendBroadcastOnNextUpdate(): 0x{member.PlayerDbId:X}");
+            
         }
     }
 }
