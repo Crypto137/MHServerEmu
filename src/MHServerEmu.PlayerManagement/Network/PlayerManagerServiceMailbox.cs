@@ -65,10 +65,6 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnCommunityStatusUpdate(communityStatusUpdate);
                     break;
 
-                case ServiceMessage.CommunitySubscriptionOp communitySubscriptionOp:
-                    OnCommunitySubscriptionOp(communitySubscriptionOp);
-                    break;
-
                 case ServiceMessage.CommunityStatusRequest communityStatusRequest:
                     OnCommunityStatusRequest(communityStatusRequest);
                     break;
@@ -223,16 +219,6 @@ namespace MHServerEmu.PlayerManagement.Network
             CommunityMemberBroadcast broadcast = communityStatusUpdate.Broadcast;
             
             _playerManager.CommunityRegistry.ReceiveMemberBroadcast(broadcast);
-            return true;
-        }
-
-        private bool OnCommunitySubscriptionOp(in ServiceMessage.CommunitySubscriptionOp communitySubscriptionOp)
-        {
-            CommunitySubscriptionOpType operation = communitySubscriptionOp.Type;
-            ulong subscriberPlayerDbId = communitySubscriptionOp.SubscriberPlayerDbId;
-            ulong targetPlayerDbId = communitySubscriptionOp.TargetPlayerDbId;
-            
-            _playerManager.CommunityRegistry.UpdateSubscription(operation, subscriberPlayerDbId, targetPlayerDbId);
             return true;
         }
 

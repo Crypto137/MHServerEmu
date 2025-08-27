@@ -88,11 +88,10 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     break;
 
                 case ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch:
-                    GameManager.BroadcastServiceMessageToGames(communityBroadcastBatch);
-                    break;
-
-                case ServiceMessage.CommunityBroadcastResults communityBroadcastResults:
-                    RouteMessageToGame(communityBroadcastResults.GameId, communityBroadcastResults);
+                    if (communityBroadcastBatch.GameId != 0)
+                        RouteMessageToGame(communityBroadcastBatch.GameId, communityBroadcastBatch);
+                    else
+                        GameManager.BroadcastServiceMessageToGames(communityBroadcastBatch);
                     break;
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:

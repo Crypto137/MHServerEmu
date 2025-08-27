@@ -58,10 +58,6 @@ namespace MHServerEmu.Games.Network
                     OnCommunityBroadcastBatch(communityBroadcastBatch);
                     break;
 
-                case ServiceMessage.CommunityBroadcastResults communityBroadcastResults:
-                    OnCommunityBroadcastResults(communityBroadcastResults);
-                    break;
-
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -147,8 +143,11 @@ namespace MHServerEmu.Games.Network
 
         private bool OnCommunityBroadcastBatch(in ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch)
         {
-            foreach (Player player in new PlayerIterator(Game))
+            if (communityBroadcastBatch.PlayerDbId != 0)
             {
+                Player player = Game.EntityManager.GetEntityByDbGuid<Player>(communityBroadcastBatch.PlayerDbId);
+                if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
+
                 Community community = player.Community;
 
                 for (int i = 0; i < communityBroadcastBatch.Count; i++)
@@ -157,21 +156,18 @@ namespace MHServerEmu.Games.Network
                     community.ReceiveMemberBroadcast(broadcast);
                 }
             }
-
-            return true;
-        }
-
-        private bool OnCommunityBroadcastResults(in ServiceMessage.CommunityBroadcastResults communityBroadcastResults)
-        {
-            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(communityBroadcastResults.PlayerDbId);
-            if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
-
-            Community community = player.Community;
-
-            for (int i = 0; i < communityBroadcastResults.Count; i++)
+            else
             {
-                CommunityMemberBroadcast broadcast = communityBroadcastResults[i];
-                community.ReceiveMemberBroadcast(broadcast);
+                foreach (Player player in new PlayerIterator(Game))
+                {
+                    Community community = player.Community;
+
+                    for (int i = 0; i < communityBroadcastBatch.Count; i++)
+                    {
+                        CommunityMemberBroadcast broadcast = communityBroadcastBatch[i];
+                        community.ReceiveMemberBroadcast(broadcast);
+                    }
+                }
             }
 
             return true;

@@ -98,8 +98,6 @@ namespace MHServerEmu.Games.Social.Communities
                     if (circle.CanContainIgnoredMembers == false)
                         Community.RemoveMember(member.DbId, circle.Id);
                 }
-
-                Community.UpdateSubscription(member.DbId, CommunitySubscriptionOpType.AddIgnore);
             }
 
             bool canReceiveBroadcastAfter = member.CanReceiveBroadcast();
@@ -115,9 +113,6 @@ namespace MHServerEmu.Games.Social.Communities
 
             // Send update to the client
             member.SendUpdateToOwner(updateOptions);
-
-            // Update subscription
-            UpdateMemberSubscription(member, broadcastFlagsBefore);
 
             // Request new member data if needed
             if (pullCommunityStatus)
@@ -144,15 +139,8 @@ namespace MHServerEmu.Games.Social.Communities
             if (member.AddRemoveFromCircle(false, this) == false)
                 return false;
 
-            // Remove from ignore
-            if (Id == CircleId.__Ignore)
-                Community.UpdateSubscription(member.DbId, CommunitySubscriptionOpType.RemoveIgnore);
-
             // Send update to the client
             member.SendUpdateToOwner(CommunityMemberUpdateOptions.Circle);
-
-            // Update subscription
-            UpdateMemberSubscription(member, broadcastFlagsBefore);
 
             // Request broadcast if needed
             bool canReceiveBroadcastAfter = member.CanReceiveBroadcast();
@@ -219,20 +207,6 @@ namespace MHServerEmu.Games.Social.Communities
 
             Logger.Warn($"GetPrototype(): Prototype for id {Id} not found");
             return Prototypes[0];
-        }
-
-        private void UpdateMemberSubscription(CommunityMember member, CommunityBroadcastFlags flagsBefore)
-        {
-            bool wasSubscribed = flagsBefore.HasFlag(CommunityBroadcastFlags.Subscription);
-            bool shouldBeSubscribed = member.GetBroadcastFlags().HasFlag(CommunityBroadcastFlags.Subscription);
-
-            if (wasSubscribed != shouldBeSubscribed)
-            {
-                CommunitySubscriptionOpType operation = shouldBeSubscribed
-                    ? CommunitySubscriptionOpType.AddSubscription
-                    : CommunitySubscriptionOpType.RemoveSubscription;
-                Community.UpdateSubscription(member.DbId, operation);
-            }
         }
     }
 }

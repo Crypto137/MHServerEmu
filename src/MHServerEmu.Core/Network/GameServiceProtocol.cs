@@ -29,14 +29,6 @@ namespace MHServerEmu.Core.Network
         RemoveResponse,
     }
 
-    public enum CommunitySubscriptionOpType
-    {
-        AddSubscription,
-        RemoveSubscription,
-        AddIgnore,
-        RemoveIgnore,
-    }
-
     #endregion
 
     public static class ServiceMessage
@@ -263,17 +255,6 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
-        /// [Game -> PlayerManager] Updates community status subscription for the specified player.
-        /// </summary>
-        public readonly struct CommunitySubscriptionOp(CommunitySubscriptionOpType type, ulong subscriberPlayerDbId, ulong targetPlayerDbId)
-            : IGameServiceMessage
-        {
-            public readonly CommunitySubscriptionOpType Type = type;
-            public readonly ulong SubscriberPlayerDbId = subscriberPlayerDbId;
-            public readonly ulong TargetPlayerDbId = targetPlayerDbId;
-        }
-
-        /// <summary>
         /// [Game -> PlayerManager] Requests community status for the specified players from the player manager.
         /// </summary>
         public readonly struct CommunityStatusRequest(ulong gameId, ulong playerDbId, List<ulong> members)
@@ -289,32 +270,9 @@ namespace MHServerEmu.Core.Network
         /// </summary>
         public readonly struct CommunityBroadcastBatch : IGameServiceMessage
         {
-            private readonly CommunityMemberBroadcast Instance;     // optimization to avoid allocating lists for individual broadcasts
-            private readonly List<CommunityMemberBroadcast> List;
-            // We don't actually need a broadcast id with out implementation
+            // This combines both CommunitiesReceiveBroadcastBatch and CommunityBroadcastResults from PlayerMgrToGameServer.proto.
 
-            public CommunityMemberBroadcast this[int index] { get => Instance != null ? Instance : List[index]; }
-            public int Count { get => Instance != null ? 1 : List.Count; }
-
-            public CommunityBroadcastBatch(CommunityMemberBroadcast broadcast)
-            {
-                Instance = broadcast;
-                List = null;
-            }
-
-            public CommunityBroadcastBatch(List<CommunityMemberBroadcast> broadcasts)
-            {
-                Instance = null;
-                List = broadcasts;
-            }
-        }
-
-        /// <summary>
-        /// [PlayerManager -> Game] A targeted batch of <see cref="CommunityMemberBroadcast"/> instances to be delivered to a specific player.
-        /// </summary>
-        public readonly struct CommunityBroadcastResults : IGameServiceMessage
-        {
-            private readonly CommunityMemberBroadcast Instance;     // optimization to avoid allocating lists for individual broadcasts
+            private readonly CommunityMemberBroadcast Instance;     // Optimization to avoid allocating lists for individual broadcasts
             private readonly List<CommunityMemberBroadcast> List;
 
             public readonly ulong GameId;
@@ -324,22 +282,22 @@ namespace MHServerEmu.Core.Network
             public CommunityMemberBroadcast this[int index] { get => Instance != null ? Instance : List[index]; }
             public int Count { get => Instance != null ? 1 : List.Count; }
 
-            public CommunityBroadcastResults(ulong gameId, ulong playerDbId, CommunityMemberBroadcast broadcast)
+            public CommunityBroadcastBatch(CommunityMemberBroadcast broadcast, ulong gameId = 0, ulong playerDbId = 0)
             {
-                GameId = gameId;
-                PlayerDbId = playerDbId;
-
                 Instance = broadcast;
                 List = null;
-            }
 
-            public CommunityBroadcastResults(ulong gameId, ulong playerDbId, List<CommunityMemberBroadcast> broadcasts)
-            {
                 GameId = gameId;
                 PlayerDbId = playerDbId;
+            }
 
+            public CommunityBroadcastBatch(List<CommunityMemberBroadcast> broadcasts, ulong gameId = 0, ulong playerDbId = 0)
+            {
                 Instance = null;
                 List = broadcasts;
+
+                GameId = gameId;
+                PlayerDbId = playerDbId;
             }
         }
 

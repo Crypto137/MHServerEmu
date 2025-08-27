@@ -321,30 +321,6 @@ namespace MHServerEmu.Games.Social.Communities
             }
         }
 
-        public void InitializeSubscriptions()
-        {
-            // TODO: Batch messages?
-
-            foreach (CommunityMember member in IterateMembers())
-            {
-                CommunitySubscriptionOpType? operation = null;
-
-                if (member.IsIgnored())
-                    operation = CommunitySubscriptionOpType.AddIgnore;
-                else if (member.GetBroadcastFlags().HasFlag(CommunityBroadcastFlags.Subscription))
-                    operation = CommunitySubscriptionOpType.AddSubscription;
-
-                if (operation != null)
-                    UpdateSubscription(member.DbId, operation.Value);
-            }
-        }
-
-        public void UpdateSubscription(ulong targetPlayerDbId, CommunitySubscriptionOpType operation)
-        {
-            ServiceMessage.CommunitySubscriptionOp message = new(operation, Owner.DatabaseUniqueId, targetPlayerDbId);
-            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
-        }
-
         public bool TryModifyCommunityMemberCircle(CircleId circleId, string playerName, ModifyCircleOperation operation)
         {
             Logger.Debug($"TryModifyCommunityMemberCircle(): operation={operation} playerName={playerName} circleId={circleId}");

@@ -130,12 +130,6 @@ namespace MHServerEmu.PlayerManagement.Social
             return true;
         }
 
-        public void UpdateSubscription(CommunitySubscriptionOpType operation, ulong subscriberPlayerDbId, ulong targetPlayerDbId)
-        {
-            // TODO
-            Logger.Debug($"UpdateSubscription(): operation={operation}, subscriber=0x{subscriberPlayerDbId:X}, target=0x{targetPlayerDbId:X}");
-        }
-
         public void RequestMemberBroadcast(ulong gameId, ulong playerDbId, List<ulong> members)
         {
             // TODO

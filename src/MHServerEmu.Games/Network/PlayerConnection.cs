@@ -380,8 +380,6 @@ namespace MHServerEmu.Games.Network
 
             if (_dbAccount.MigrationData.IsFirstLoad)
             {
-                Player.Community.InitializeSubscriptions();
-
                 // Recount and update achievements
                 Player.AchievementManager.RecountAchievements();
                 Player.AchievementManager.UpdateScore();
