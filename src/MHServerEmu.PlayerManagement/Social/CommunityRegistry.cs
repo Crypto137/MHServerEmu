@@ -72,6 +72,7 @@ namespace MHServerEmu.PlayerManagement.Social
             }
             else
             {
+                sendBroadcast |= member.SetPrestigeLevel(0);
                 sendBroadcast |= member.SetIsOnline(player.IsConnected);
                 sendBroadcast |= member.SetLastLogoutTime(player.LastLogoutTime);
             }
@@ -132,8 +133,47 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void RequestMemberBroadcast(ulong gameId, ulong playerDbId, List<ulong> members)
         {
-            // TODO
             Logger.Debug($"RequestStatus(): gameId=0x{gameId:X}, playerDbId=0x{playerDbId:X}, members={members.Count}");
+
+            CommunityMemberEntry requester = GetMemberEntry(playerDbId);
+            if (requester == null)
+                return;
+
+            ServiceMessage.CommunityBroadcastBatch broadcastBatch;
+
+            if (members.Count == 1)
+            {
+                // Optimization for the common case when a batch contains only a single member. Do not allocate a list for this.
+                CommunityMemberBroadcast broadcast = QueryMemberBroadcast(members[0]);
+                broadcastBatch = new(broadcast);
+            }
+            else
+            {
+                List<CommunityMemberBroadcast> broadcastList = new(members.Count);
+
+                foreach (ulong queryPlayerDbId in members)
+                {
+                    CommunityMemberBroadcast broadcast = QueryMemberBroadcast(queryPlayerDbId);
+                    broadcastList.Add(broadcast);
+                }
+
+                broadcastBatch = new(broadcastList);
+            }
+
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, broadcastBatch);
+        }
+
+        private CommunityMemberBroadcast QueryMemberBroadcast(ulong playerDbId)
+        {
+            CommunityMemberEntry queryMember = GetMemberEntry(playerDbId);
+            if (queryMember == null)
+            {
+                queryMember = AddMemberEntry(playerDbId);
+                queryMember.SetIsOnline(false);
+                // TODO: query last logout time from the database
+            }
+
+            return queryMember.GetBroadcast();
         }
 
         private CommunityMemberEntry AddMemberEntry(ulong playerDbId)
