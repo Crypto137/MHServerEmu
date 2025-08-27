@@ -15,7 +15,8 @@ namespace MHServerEmu.Grouping
 
         private readonly object _playerLock = new();
         private readonly Dictionary<ulong, IFrontendClient> _playerDbIdDict = new();
-        private readonly Dictionary<string, IFrontendClient> _playerNameDict = new();    // Store players in a name-client dictionary because tell messages are sent by player name
+        private readonly Dictionary<string, IFrontendClient> _playerNameDict = new(StringComparer.OrdinalIgnoreCase); 
+        // Store players in a name-client dictionary because tell messages are sent by player name
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
 
@@ -58,6 +59,10 @@ namespace MHServerEmu.Grouping
                     OnTell(tell.Client, tell.Tell);
                     break;
 
+                case ServiceMessage.PlayerNameChanged playerNameChanged:
+                    OnPlayerNameChanged(playerNameChanged);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {typeof(T).Name}");
                     break;
@@ -66,7 +71,7 @@ namespace MHServerEmu.Grouping
 
         public string GetStatus()
         {
-            return $"Players: {_playerNameDict.Count}";
+            return $"Players: {_playerDbIdDict.Count}";
         }
 
         private void OnAddClient(in ServiceMessage.AddClient addClient)
@@ -77,6 +82,11 @@ namespace MHServerEmu.Grouping
         private void OnRemoveClient(in ServiceMessage.RemoveClient removeClient)
         {
             RemoveClient(removeClient.Client);
+        }
+
+        private void OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
+        {
+            OnPlayerNameChanged(playerNameChanged.PlayerDbId, playerNameChanged.OldPlayerName, playerNameChanged.NewPlayerName);
         }
 
         private bool OnChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
@@ -123,7 +133,7 @@ namespace MHServerEmu.Grouping
             {
                 DBAccount account = ((IDBAccountOwner)client).Account;
                 ulong playerDbId = (ulong)account.Id;
-                string playerName = account.PlayerName.ToLower();
+                string playerName = account.PlayerName;
 
                 if (_playerDbIdDict.ContainsKey(playerDbId))
                     return Logger.WarnReturn(false, $"AddFrontendClient(): Account {account} is already added");
@@ -144,7 +154,7 @@ namespace MHServerEmu.Grouping
             {
                 DBAccount account = ((IDBAccountOwner)client).Account;
                 ulong playerDbId = (ulong)account.Id;
-                string playerName = account.PlayerName.ToLower();
+                string playerName = account.PlayerName;
 
                 if (_playerDbIdDict.Remove(playerDbId) == false)
                     return Logger.WarnReturn(false, $"RemoveFrontendClient(): Account {account} not found");
@@ -153,6 +163,23 @@ namespace MHServerEmu.Grouping
 
                 Logger.Info($"Removed client [{client}]");
                 return true;
+            }
+        }
+
+        private void OnPlayerNameChanged(ulong playerDbId, string oldPlayerName, string newPlayerName)
+        {
+            lock (_playerLock)
+            {
+                // Update the currently logged in player name lookup
+                if (_playerDbIdDict.TryGetValue(playerDbId, out IFrontendClient client) == false)
+                    return;
+
+                if (_playerNameDict.Remove(oldPlayerName) == false)
+                    Logger.Warn($"OnPlayerNameChanged(): Player 0x{playerDbId:X} is logged in, but doesn't have a name lookup");
+
+                _playerNameDict.Add(newPlayerName, client);
+
+                Logger.Info($"Update name for player 0x{playerDbId:X}: {oldPlayerName} => {newPlayerName}");
             }
         }
 

@@ -13,9 +13,10 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public ulong PlayerDbId { get => _broadcastBuilder.MemberPlayerDbId; }
 
-        public CommunityMemberEntry(ulong playerDbId)
+        public CommunityMemberEntry(ulong playerDbId, string currentPlayerName)
         {
             _broadcastBuilder.SetMemberPlayerDbId(playerDbId);
+            _broadcastBuilder.SetCurrentPlayerName(currentPlayerName);
         }
 
         public CommunityMemberBroadcast GetBroadcast()
@@ -87,6 +88,16 @@ namespace MHServerEmu.PlayerManagement.Social
                 return false;
 
             _avatarSlotBuilder.SetPrestigeLevel(prestigeLevel);
+            _hasUpToDateBroadcast = false;
+            return true;
+        }
+
+        public bool SetCurrentPlayerName(string currentPlayerName)
+        {
+            if (_broadcastBuilder.CurrentPlayerName.Equals(currentPlayerName, StringComparison.Ordinal))
+                return false;
+
+            _broadcastBuilder.SetCurrentPlayerName(currentPlayerName);
             _hasUpToDateBroadcast = false;
             return true;
         }

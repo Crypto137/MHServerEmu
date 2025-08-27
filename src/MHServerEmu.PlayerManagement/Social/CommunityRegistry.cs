@@ -65,7 +65,7 @@ namespace MHServerEmu.PlayerManagement.Social
             CommunityMemberEntry member = GetMemberEntry(player.PlayerDbId);
             if (member == null)
             {
-                member = AddMemberEntry(player.PlayerDbId);
+                member = AddMemberEntry(player.PlayerDbId, player.PlayerName);
                 member.SetIsOnline(player.IsConnected);
                 member.SetLastLogoutTime(player.LastLogoutTime);
                 sendBroadcast = true;
@@ -78,6 +78,16 @@ namespace MHServerEmu.PlayerManagement.Social
             }
 
             if (sendBroadcast)
+                SendBroadcastOnNextUpdate(member);
+        }
+
+        public void OnPlayerNameChanged(ulong playerDbId, string playerName)
+        {
+            CommunityMemberEntry member = GetMemberEntry(playerDbId);
+            if (member == null)
+                return;
+
+            if (member.SetCurrentPlayerName(playerName))
                 SendBroadcastOnNextUpdate(member);
         }
 
@@ -145,7 +155,7 @@ namespace MHServerEmu.PlayerManagement.Social
             {
                 // Optimization for the common case when a batch contains only a single member. Do not allocate a list for this.
                 CommunityMemberBroadcast broadcast = QueryMemberBroadcast(members[0]);
-                broadcastBatch = new(broadcast);
+                broadcastBatch = new(broadcast, gameId, playerDbId);
             }
             else
             {
@@ -157,7 +167,7 @@ namespace MHServerEmu.PlayerManagement.Social
                     broadcastList.Add(broadcast);
                 }
 
-                broadcastBatch = new(broadcastList);
+                broadcastBatch = new(broadcastList, gameId, playerDbId);
             }
 
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, broadcastBatch);
@@ -168,19 +178,22 @@ namespace MHServerEmu.PlayerManagement.Social
             CommunityMemberEntry queryMember = GetMemberEntry(playerDbId);
             if (queryMember == null)
             {
-                queryMember = AddMemberEntry(playerDbId);
+                if (PlayerNameCache.Instance.TryGetPlayerName(playerDbId, out string playerName) == false)
+                    playerName = "Unknown";
+
+                queryMember = AddMemberEntry(playerDbId, playerName);
                 queryMember.SetIsOnline(false);
-                // TODO: query last logout time from the database
+                // TODO: query last logout time from the database, we don't really need it until we implement guilds.
             }
 
             return queryMember.GetBroadcast();
         }
 
-        private CommunityMemberEntry AddMemberEntry(ulong playerDbId)
+        private CommunityMemberEntry AddMemberEntry(ulong playerDbId, string playerName)
         {
             if (_members.TryGetValue(playerDbId, out CommunityMemberEntry member) == false)
             {
-                member = new(playerDbId);
+                member = new(playerDbId, playerName);
                 _members.Add(playerDbId, member);
             }
 

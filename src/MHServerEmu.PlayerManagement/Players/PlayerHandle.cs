@@ -47,6 +47,7 @@ namespace MHServerEmu.PlayerManagement.Players
         public bool IsConnected { get => Client.IsConnected; }
         public ulong PlayerDbId { get => Client.DbId; }
         public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
+        public string PlayerName { get => Account.PlayerName; }
         public TimeSpan LastLogoutTime { get => TimeSpan.FromMilliseconds(Account.Player.LastLogoutTime); }
 
         public PlayerHandleState State { get; private set; }

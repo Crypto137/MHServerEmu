@@ -129,6 +129,7 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.RegionTransferFinished:
                 case ServiceMessage.ClearPrivateStoryRegions:
                 case ServiceMessage.PlayerLookupByNameRequest:
+                case ServiceMessage.PlayerNameChanged:
                 case ServiceMessage.CommunityStatusUpdate:
                 case ServiceMessage.CommunityStatusRequest:
                     _serviceMailbox.PostMessage(message);

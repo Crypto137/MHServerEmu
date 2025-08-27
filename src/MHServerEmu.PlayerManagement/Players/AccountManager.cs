@@ -4,6 +4,7 @@ using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.PlayerManagement.Network;
@@ -119,22 +120,28 @@ namespace MHServerEmu.PlayerManagement.Players
         /// <summary>
         /// Changes the player name of the <see cref="DBAccount"/> with the specified email. Returns <see langword="true"/> if successful.
         /// </summary>
-        public static (bool, string) ChangeAccountPlayerName(string email, string playerName)
+        public static (bool, string) ChangeAccountPlayerName(string email, string newPlayerName)
         {
             // Validate input before doing database queries
-            if (ValidatePlayerName(playerName) == false)
+            if (ValidatePlayerName(newPlayerName) == false)
                 return (false, "Failed to change player name: names may contain only up to 16 alphanumeric characters.");
 
             if (DBManager.TryQueryAccountByEmail(email, out DBAccount account) == false)
                 return (false, $"Failed to change player name: account {email} not found.");
 
-            if (DBManager.TryGetPlayerDbIdByName(playerName, out _, out _))
-                return (false, $"Failed to change player name: name {playerName} is already used by another account.");
+            if (DBManager.TryGetPlayerDbIdByName(newPlayerName, out _, out _))
+                return (false, $"Failed to change player name: name {newPlayerName} is already used by another account.");
 
             // Write the new name to the database
-            account.PlayerName = playerName;
+            string oldPlayerName = account.PlayerName;
+            account.PlayerName = newPlayerName;
             DBManager.UpdateAccount(account);
-            return (true, $"Successfully changed player name for account {email} to {playerName}.");
+
+            ServiceMessage.PlayerNameChanged playerNameChanged = new((ulong)account.Id, oldPlayerName, newPlayerName);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, playerNameChanged);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, playerNameChanged);
+
+            return (true, $"Successfully changed player name for account {email} to {newPlayerName}.");
         }
 
         /// <summary>

@@ -245,6 +245,14 @@ namespace MHServerEmu.Core.Network
             public readonly string ResultPlayerName = resultPlayerName;
         }
 
+        public readonly struct PlayerNameChanged(ulong playerDbId, string oldPlayerName, string newPlayerName)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly string OldPlayerName = oldPlayerName;
+            public readonly string NewPlayerName = newPlayerName;
+        }
+
         /// <summary>
         /// [Game -> PlayerManager] Updates community status for a player.
         /// </summary>

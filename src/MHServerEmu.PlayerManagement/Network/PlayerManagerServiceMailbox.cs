@@ -3,6 +3,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
+using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Network
 {
@@ -59,6 +60,10 @@ namespace MHServerEmu.PlayerManagement.Network
 
                 case ServiceMessage.PlayerLookupByNameRequest playerLookupByNameRequest:
                     OnPlayerLookupByNameRequest(playerLookupByNameRequest);
+                    break;
+
+                case ServiceMessage.PlayerNameChanged playerNameChanged:
+                    OnPlayerNameChanged(playerNameChanged);
                     break;
 
                 case ServiceMessage.CommunityStatusUpdate communityStatusUpdate:
@@ -204,12 +209,30 @@ namespace MHServerEmu.PlayerManagement.Network
             ulong remoteJobId = playerLookupByNameRequest.RemoteJobId;
             string requestPlayerName = playerLookupByNameRequest.RequestPlayerName;
 
-            // This is synchronous. Should be fine with the lower player counts we have.
             // It's okay for this query to fail because it's based on client input.
-            AccountManager.DBManager.TryGetPlayerDbIdByName(requestPlayerName, out ulong resultPlayerDbId, out string resultPlayerName);
+            PlayerNameCache.Instance.TryGetPlayerDbId(requestPlayerName, out ulong resultPlayerDbId, out string resultPlayerName);
 
             ServiceMessage.PlayerLookupByNameResult response = new(gameId, playerDbId, remoteJobId, resultPlayerDbId, resultPlayerName);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);
+
+            return true;
+        }
+
+        private bool OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
+        {
+            ulong playerDbId = playerNameChanged.PlayerDbId;
+            string newPlayerName = playerNameChanged.NewPlayerName;
+
+            PlayerNameCache.Instance.OnPlayerNameChanged(playerDbId);
+            _playerManager.CommunityRegistry.OnPlayerNameChanged(playerDbId, newPlayerName);
+
+            // Update the logged in player
+            if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player))
+            {
+                lock (player.Account)
+                    player.Account.PlayerName = newPlayerName;
+                // TODO: Send player name change to the player entity in a game instance
+            }
 
             return true;
         }
