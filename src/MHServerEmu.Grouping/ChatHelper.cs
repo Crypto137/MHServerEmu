@@ -24,12 +24,18 @@ namespace MHServerEmu.Grouping
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(config.MotdText))
                 .SetPrestigeLevel(config.MotdPrestigeLevel)
                 .Build();
+
+            NoSuchUserMessage = ChatErrorMessage.CreateBuilder()
+                .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
+                .Build();
         }
 
         /// <summary>
         /// Returns the <see cref="ChatBroadcastMessage"/> instance for the current message of the day.
         /// </summary>
         public static ChatBroadcastMessage Motd { get; }
+
+        public static ChatErrorMessage NoSuchUserMessage { get; }
 
         /// <summary>
         /// Sends the specified text as a metagame chat message to the provided <see cref="IFrontendClient"/>.

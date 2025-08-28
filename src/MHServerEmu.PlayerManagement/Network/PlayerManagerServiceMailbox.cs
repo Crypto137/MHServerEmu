@@ -7,7 +7,7 @@ using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Network
 {
-    public sealed class PlayerManagerServiceMailbox : ServiceMailbox
+    internal sealed class PlayerManagerServiceMailbox : ServiceMailbox
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
