@@ -330,6 +330,12 @@ namespace MHServerEmu.Core.Network
             public readonly int PrestigeLevel = prestigeLevel;
         }
 
+        public readonly struct GroupingManagerServerNotification(string notificationText)
+            : IGameServiceMessage
+        {
+            public readonly string NotificationText = notificationText;
+        }
+
         #endregion
 
         #region Leaderboards

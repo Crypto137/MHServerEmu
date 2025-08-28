@@ -35,6 +35,10 @@ namespace MHServerEmu.Grouping
                 case ServiceMessage.GroupingManagerTell groupingManagerTell:
                     OnGroupingManagerTell(groupingManagerTell);
                     break;
+
+                case ServiceMessage.GroupingManagerServerNotification groupingManagerServerNotification:
+                    OnGroupingManagerServerNotification(groupingManagerServerNotification);
+                    break;
             }
         }
 
@@ -84,6 +88,13 @@ namespace MHServerEmu.Grouping
             int prestigeLevel = groupingManagerTell.PrestigeLevel;
 
             _groupingManager.ChatManager.OnTell(client, tell, prestigeLevel);
+        }
+
+        private void OnGroupingManagerServerNotification(in ServiceMessage.GroupingManagerServerNotification groupingManagerServerNotification)
+        {
+            string notificationText = groupingManagerServerNotification.NotificationText;
+
+            _groupingManager.ChatManager.OnServerNotification(notificationText);
         }
 
         #endregion

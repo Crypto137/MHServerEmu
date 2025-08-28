@@ -16,7 +16,7 @@ namespace MHServerEmu.PlayerManagement
     /// <summary>
     /// An <see cref="IGameService"/> that manages connected players and routes messages to relevant <see cref="Game"/> instances.
     /// </summary>
-    public class PlayerManagerService : IGameService, IMessageBroadcaster
+    public class PlayerManagerService : IGameService
     {
         public const int TargetTickTimeMS = 150;
 
@@ -186,14 +186,6 @@ namespace MHServerEmu.PlayerManagement
         public bool TryGetSession(ulong sessionId, out ClientSession session)
         {
             return SessionManager.TryGetActiveSession(sessionId, out session);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> to all connected <see cref="IFrontendClient"/> instances.
-        /// </summary>
-        public void BroadcastMessage(IMessage message)
-        {
-            ClientManager.BroadcastMessage(message);
         }
 
         #endregion

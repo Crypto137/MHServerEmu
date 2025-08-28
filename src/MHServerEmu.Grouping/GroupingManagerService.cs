@@ -1,10 +1,9 @@
-﻿using Google.ProtocolBuffers;
-using MHServerEmu.Core.Logging;
+﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 
 namespace MHServerEmu.Grouping
 {
-    public class GroupingManagerService : IGameService, IMessageBroadcaster
+    public class GroupingManagerService : IGameService
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
@@ -52,6 +51,7 @@ namespace MHServerEmu.Grouping
                 case ServiceMessage.PlayerNameChanged:
                 case ServiceMessage.GroupingManagerChat:
                 case ServiceMessage.GroupingManagerTell:
+                case ServiceMessage.GroupingManagerServerNotification:
                     _serviceMailbox.PostMessage(message);
                     break;
 
@@ -67,10 +67,5 @@ namespace MHServerEmu.Grouping
         }
 
         #endregion
-
-        public void BroadcastMessage(IMessage message)
-        {
-            ClientManager.SendMessageToAll(message);
-        }
     }
 }

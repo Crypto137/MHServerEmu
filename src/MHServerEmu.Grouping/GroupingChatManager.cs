@@ -83,6 +83,17 @@ namespace MHServerEmu.Grouping
             SendMessage(message, targetClient);
         }
 
+        public void OnServerNotification(string notificationText)
+        {
+            Logger.Info($"Broadcasting server notification: \"{notificationText}\"", LogCategory.Chat);
+
+            ChatServerNotification message = ChatServerNotification.CreateBuilder()
+                .SetTheMessage(notificationText)
+                .Build();
+
+            SendMessageToAll(message);
+        }
+
         private void SendMessage(IMessage message, IFrontendClient client)
         {
             _groupingManager.ClientManager.SendMessage(message, client);
