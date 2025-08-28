@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess;
@@ -10,11 +11,34 @@ namespace MHServerEmu.Grouping
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static readonly ChatErrorMessage NoSuchUserErrorMessage = ChatErrorMessage.CreateBuilder()
+            .SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER)
+            .Build();
+
         private readonly GroupingManagerService _groupingManager;
+
+        private readonly ChatBroadcastMessage _motd;
+        private readonly bool _logTells;
 
         public GroupingChatManager(GroupingManagerService groupingManager)
         {
             _groupingManager = groupingManager;
+
+            GroupingManagerConfig config = ConfigManager.Instance.GetConfig<GroupingManagerConfig>();
+
+            _motd = ChatBroadcastMessage.CreateBuilder()
+                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
+                .SetFromPlayerName(config.ServerName)
+                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(config.MotdText))
+                .SetPrestigeLevel(config.ServerPrestigeLevel)
+                .Build();
+
+            _logTells = config.LogTells;
+        }
+
+        public void OnClientAdded(IFrontendClient client)
+        {
+            _groupingManager.ClientManager.SendMessage(_motd, client);
         }
 
         public void OnChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
@@ -39,10 +63,12 @@ namespace MHServerEmu.Grouping
 
         public void OnTell(IFrontendClient client, NetMessageTell tell)
         {
-            Logger.Trace($"Received tell for {tell.TargetPlayerName}");
+            DBAccount account = ((IDBAccountOwner)client).Account;
+
+            Logger.Info($"[Tell] [{account.PlayerName} => {tell.TargetPlayerName}]: {(_logTells ? tell.TheMessage.Body : "***")}", LogCategory.Chat);
 
             // Respond with an error for now
-            _groupingManager.ClientManager.SendMessage(ChatErrorMessage.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER).Build(), client);
+            _groupingManager.ClientManager.SendMessage(NoSuchUserErrorMessage, client);
         }
 
         /// <summary>

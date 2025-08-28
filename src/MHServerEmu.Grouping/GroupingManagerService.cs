@@ -48,7 +48,8 @@ namespace MHServerEmu.Grouping
 
                 // Handle client add/remove here asynchronously
                 case ServiceMessage.AddClient addClient:
-                    ClientManager.AddClient(addClient.Client);
+                    if (ClientManager.AddClient(addClient.Client))
+                        ChatManager.OnClientAdded(addClient.Client);
                     break;
 
                 case ServiceMessage.RemoveClient removeClient:

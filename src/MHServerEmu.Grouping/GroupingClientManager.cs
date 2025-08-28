@@ -37,9 +37,7 @@ namespace MHServerEmu.Grouping
                     return Logger.WarnReturn(false, $"AddClient(): Account {account} is already added");
 
                 _playerDbIdDict.Add(playerDbId, client);
-                _playerNameDict.Add(playerName, client);
-
-                SendMessage(ChatHelper.Motd, client);
+                _playerNameDict.Add(playerName, client); 
 
                 Logger.Info($"Added client [{client}]");
                 return true;
