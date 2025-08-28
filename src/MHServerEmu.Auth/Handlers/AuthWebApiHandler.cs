@@ -10,6 +10,7 @@ using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Metrics;
 using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement;
+using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.Auth.Handlers

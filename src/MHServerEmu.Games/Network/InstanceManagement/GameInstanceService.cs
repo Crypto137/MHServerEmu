@@ -83,6 +83,17 @@ namespace MHServerEmu.Games.Network.InstanceManagement
                     RouteMessageToGame(worldViewUpdate.GameId, worldViewUpdate);
                     break;
 
+                case ServiceMessage.PlayerLookupByNameResult playerLookupByNameResult:
+                    RouteMessageToGame(playerLookupByNameResult.GameId, playerLookupByNameResult);
+                    break;
+
+                case ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch:
+                    if (communityBroadcastBatch.GameId != 0)
+                        RouteMessageToGame(communityBroadcastBatch.GameId, communityBroadcastBatch);
+                    else
+                        GameManager.BroadcastServiceMessageToGames(communityBroadcastBatch);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;

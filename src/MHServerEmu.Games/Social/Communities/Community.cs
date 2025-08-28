@@ -2,6 +2,7 @@
 using System.Text;
 using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 using MHServerEmu.Games.Entities;
@@ -15,7 +16,10 @@ namespace MHServerEmu.Games.Social.Communities
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
+        private static ulong CurrentRemoteJobId = 0;    // Use a shared static counter for all Community instances for easier tracking in logs.
+
         private readonly Dictionary<ulong, CommunityMember> _communityMemberDict = new();   // key is DbId
+        private readonly Dictionary<ulong, (CircleId, string, ModifyCircleOperation)> _pendingCircleOperations = new();
 
         private int _numCircleIteratorsInScope = 0;
         private int _numMemberIteratorsInScope = 0;
@@ -33,6 +37,18 @@ namespace MHServerEmu.Games.Social.Communities
         {
             Owner = owner;
             CircleManager = new(this);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+
+            sb.AppendLine($"{nameof(CircleManager)}: {CircleManager}");
+
+            foreach (var kvp in _communityMemberDict)
+                sb.AppendLine($"Member[0x{kvp.Key:X}]: {kvp.Value}");
+
+            return sb.ToString();
         }
 
         /// <summary>
@@ -135,7 +151,7 @@ namespace MHServerEmu.Games.Social.Communities
         {
             foreach (CommunityMember member in IterateMembers())
             {
-                if (member.GetName() == playerName)
+                if (member.GetName().Equals(playerName, StringComparison.OrdinalIgnoreCase))
                     return member;
             }
 
@@ -147,6 +163,13 @@ namespace MHServerEmu.Games.Social.Communities
         /// </summary>
         public bool AddMember(ulong playerDbId, string playerName, CircleId circleId)
         {
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null)
+                return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
+
+            if (circle.CanContainPlayer(playerName, playerDbId) == false)
+                return false;
+
             // Get an existing member to add to the circle
             bool isNewMember = false;
             CommunityMember member = GetMember(playerDbId);
@@ -162,10 +185,6 @@ namespace MHServerEmu.Games.Social.Communities
                 return Logger.WarnReturn(false, $"AddMember(): Failed to get or create a member for dbId 0x{playerDbId:X}");
 
             // Add to the circle
-            CommunityCircle circle = GetCircle(circleId);
-            if (circle == null)
-                return Logger.WarnReturn(false, $"AddMember(): Failed to get circle for circleId {circleId}");
-
             bool wasAdded = circle.AddMember(member);
             if (wasAdded == false && isNewMember)
                 DestroyMember(member);
@@ -194,6 +213,16 @@ namespace MHServerEmu.Games.Social.Communities
                 DestroyMember(member);
 
             return wasRemoved;
+        }
+
+        public bool ModifyMember(ulong playerDbId, string playerName, CircleId circleId, ModifyCircleOperation operation)
+        {
+            return operation switch
+            {
+                ModifyCircleOperation.eMCO_Add    => AddMember(playerDbId, playerName, circleId),
+                ModifyCircleOperation.eMCO_Remove => RemoveMember(playerDbId, circleId),
+                _                                 => Logger.WarnReturn(false, $"ModifyMember(): Unknown operation {operation}"),
+            };
         }
 
         /// <summary>
@@ -225,9 +254,19 @@ namespace MHServerEmu.Games.Social.Communities
 
             CommunityMember member = GetMember(playerDbId);
             if (member == null)
-                return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): PlayerDbId {playerDbId} not found");
+                return false;   // Don't log because this is valid for untargeted broadcast batches.
 
-            member.ReceiveBroadcast(broadcast);
+            if (member.CanReceiveBroadcast())
+            {
+                member.ReceiveBroadcast(broadcast);
+            }
+            else
+            {
+                CommunityMemberUpdateOptions updateOptions = member.ClearData();
+                if (updateOptions != 0)
+                    member.SendUpdateToOwner(updateOptions);
+            }
+
             return true;
         }
 
@@ -242,24 +281,113 @@ namespace MHServerEmu.Games.Social.Communities
             return true;
         }
 
-        public void PullCommunityStatus()
+        public void PullCommunityStatus(CommunityBroadcastFlags flags = CommunityBroadcastFlags.All, CommunityMember memberTarget = null)
         {
-            // TODO: Request remote broadcast from the player manager
+            List<ulong> remoteMembers = null;   // allocate on demand
 
-            foreach (CommunityMember member in IterateMembers())
-                RequestLocalBroadcast(member);
+            if (memberTarget != null)
+            {
+                // Check just the provided member instance if we have one
+                if (memberTarget.CanReceiveBroadcast(flags) == false)
+                    return;
+
+                if (RequestLocalBroadcast(memberTarget) == false)
+                    remoteMembers = [memberTarget.DbId];
+            }
+            else
+            {
+                // Check all members if we don't have a member instance provided
+                foreach (CommunityMember itMember in IterateMembers())
+                {
+                    if (itMember.CanReceiveBroadcast(flags) == false)
+                        continue;
+
+                    if (RequestLocalBroadcast(itMember) == false)
+                    {
+                        remoteMembers ??= new();
+                        remoteMembers.Add(itMember.DbId);
+                    }
+                }
+            }
+
+            // Request status for remote members that are not in the current game from the player manager
+            if (remoteMembers != null)
+            {
+                ServiceMessage.CommunityStatusRequest request = new(Owner.Game.Id, Owner.DatabaseUniqueId, remoteMembers);
+                ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, request);
+            }
         }
 
-        public override string ToString()
+        public bool TryModifyCommunityMemberCircle(CircleId circleId, string playerName, ModifyCircleOperation operation)
         {
-            StringBuilder sb = new();
+            CommunityCircle circle = GetCircle(circleId);
+            if (circle == null) return Logger.WarnReturn(false, "TryModifyCommunityMemberCircle(): circle == null");
 
-            sb.AppendLine($"{nameof(CircleManager)}: {CircleManager}");
+            if (string.IsNullOrWhiteSpace(playerName))
+                return Logger.WarnReturn(false, $"TryModifyCommunityMemberCircle(): No player name is provided! owner=[{Owner}], circleId={circleId}, operation={operation}");
 
-            foreach (var kvp in _communityMemberDict)
-                sb.AppendLine($"Member[{kvp.Key}]: {kvp.Value}");                
+            ulong playerDbId = 0;
 
-            return sb.ToString();
+            // Try to resolve player dbid locally before asking the player manager
+            Player player = Owner.Game.EntityManager.GetPlayerByName(playerName);
+            if (player != null)
+            {
+                playerDbId = player.DatabaseUniqueId;
+                playerName = player.GetName();
+            }
+
+            if (playerDbId == 0)
+            {
+                CommunityMember member = GetMemberByName(playerName);
+                if (member != null)
+                {
+                    playerDbId = member.DbId;
+                    playerName = member.GetName();
+                }
+            }
+
+            if (playerDbId == 0)
+            {
+                if (operation == ModifyCircleOperation.eMCO_Add)
+                {
+                    // Save operation and request additional data from the player manager
+                    ulong remoteJobId = Interlocked.Increment(ref CurrentRemoteJobId);
+                    _pendingCircleOperations[remoteJobId] = (circleId, playerName, operation);
+
+                    ServiceMessage.PlayerLookupByNameRequest request = new(Owner.Game.Id, Owner.DatabaseUniqueId, remoteJobId, playerName);
+                    ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, request);
+                }
+
+                // For remove operations we should always be able to resolve the dbid locally.
+                // If it's not there, we must have already removed the member.
+                return true;
+            }
+
+            return ModifyMember(playerDbId, playerName, circleId, operation);
+        }
+
+        public bool OnPlayerLookupByNameResult(ulong remoteJobId, ulong playerDbId, string playerName)
+        {
+            if (_pendingCircleOperations.Remove(remoteJobId, out var jobData) == false)
+                return Logger.WarnReturn(false, $"OnPlayerLookupByNameResult(): RemoteJobId {remoteJobId} not found");
+
+            (CircleId circleId, string requestPlayerName, ModifyCircleOperation operation) = jobData;
+
+            if (playerDbId == 0)
+            {
+                // There is also CommunityModifyFailureCode.eCMFC_Timeout, not sure if we need it.
+                var failureMessage = NetMessageModifyCommunityMemberFailure.CreateBuilder()
+                    .SetMemberToModifyName(requestPlayerName)
+                    .SetFailureCode(CommunityModifyFailureCode.eCMFC_UnknownPlayer)
+                    .SetCircleId((ulong)circleId)
+                    .SetOperation(operation)
+                    .Build();
+
+                Owner.SendMessage(failureMessage);
+                return true;
+            }
+
+            return ModifyMember(playerDbId, playerName, circleId, operation);
         }
 
         /// <summary>

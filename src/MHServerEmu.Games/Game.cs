@@ -75,7 +75,7 @@ namespace MHServerEmu.Games
 
         public GRandom Random { get; } = new();
         public PlayerConnectionManager NetworkManager { get; }
-        public ServiceMailbox ServiceMailbox { get; }
+        public GameServiceMailbox ServiceMailbox { get; }
         public EventScheduler GameEventScheduler { get; private set; }
         public EntityManager EntityManager { get; }
         public RegionManager RegionManager { get; }

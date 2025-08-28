@@ -9,7 +9,12 @@ namespace MHServerEmu.Grouping
     /// </summary>
     public static class ChatHelper
     {
+        // NOTE: This is used primarily by the server command system to output messages to the client.
+
         private const ushort MuxChannel = 2;
+
+        private static readonly string ServerName;
+        private static readonly int ServerPrestigeLevel;
 
         /// <summary>
         /// Initializes <see cref="ChatHelper"/>.
@@ -17,19 +22,9 @@ namespace MHServerEmu.Grouping
         static ChatHelper()
         {
             var config = ConfigManager.Instance.GetConfig<GroupingManagerConfig>();
-
-            Motd = ChatBroadcastMessage.CreateBuilder()
-                .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_BROADCAST_ALL_SERVERS)
-                .SetFromPlayerName(config.MotdPlayerName)
-                .SetTheMessage(ChatMessage.CreateBuilder().SetBody(config.MotdText))
-                .SetPrestigeLevel(config.MotdPrestigeLevel)
-                .Build();
+            ServerName = config.ServerName;
+            ServerPrestigeLevel = config.ServerPrestigeLevel;
         }
-
-        /// <summary>
-        /// Returns the <see cref="ChatBroadcastMessage"/> instance for the current message of the day.
-        /// </summary>
-        public static ChatBroadcastMessage Motd { get; }
 
         /// <summary>
         /// Sends the specified text as a metagame chat message to the provided <see cref="IFrontendClient"/>.
@@ -42,9 +37,9 @@ namespace MHServerEmu.Grouping
         {
             client.SendMessage(MuxChannel, ChatNormalMessage.CreateBuilder()
                 .SetRoomType(ChatRoomTypes.CHAT_ROOM_TYPE_METAGAME)
-                .SetFromPlayerName(showSender ? Motd.FromPlayerName : string.Empty)
+                .SetFromPlayerName(showSender ? ServerName : string.Empty)
                 .SetTheMessage(ChatMessage.CreateBuilder().SetBody(text))
-                .SetPrestigeLevel(Motd.PrestigeLevel)
+                .SetPrestigeLevel(ServerPrestigeLevel)
                 .Build());
         }
 
@@ -66,15 +61,6 @@ namespace MHServerEmu.Grouping
         public static void SendMetagameMessageSplit(IFrontendClient client, string text, bool showSender = true)
         {
             SendMetagameMessages(client, text.Split("\r\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), showSender);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="string"/> name of the specified chat room type.
-        /// </summary>
-        public static string GetRoomName(ChatRoomTypes type)
-        {
-            // All room enums start with "CHAT_ROOM_TYPE_", which is 15 characters
-            return Enum.GetName(type).Substring(15);
         }
     }
 }

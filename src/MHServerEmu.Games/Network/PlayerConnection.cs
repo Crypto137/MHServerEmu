@@ -3,6 +3,7 @@ using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Extensions;
+using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
@@ -29,6 +30,7 @@ using MHServerEmu.Games.MTXStore;
 using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
 {
@@ -665,6 +667,11 @@ namespace MHServerEmu.Games.Network
 
             if (canMove || canRotate)
             {
+                const float PositionDesyncDistanceSqThreshold = 512f * 512f;
+                float desyncDistanceSq = Vector3.DistanceSquared2D(position, syncPosition);
+                if (desyncDistanceSq > PositionDesyncDistanceSqThreshold)
+                    Logger.Warn($"OnUpdateAvatarState(): Position desync for player [{Player}] - {MathHelper.SquareRoot(desyncDistanceSq)}");
+
                 position = syncPosition;
                 orientation = syncOrientation;
 
@@ -694,6 +701,10 @@ namespace MHServerEmu.Games.Network
                 {
                     if (LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags) == false)
                         return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer newSyncState");
+
+                    const float MoveSpeedDesyncThreshold = 3000f;
+                    if (newSyncState.BaseMoveSpeed > MoveSpeedDesyncThreshold)
+                        Logger.Warn($"OnUpdateAvatarState(): Movement speed desync for player [{Player}] - {newSyncState.BaseMoveSpeed}");
                 }
                 catch (Exception e)
                 {
@@ -1602,9 +1613,18 @@ namespace MHServerEmu.Games.Network
             var tryModifyCommunityMemberCircle = message.As<NetMessageTryModifyCommunityMemberCircle>();
             if (tryModifyCommunityMemberCircle == null) return Logger.WarnReturn(false, $"OnTryModifyCommunityMemberCircle(): Failed to retrieve message");
 
-            // TODO, send a Service Unavailable message for now
-            Game.ChatManager.SendChatFromGameSystem((LocaleStringId)5066146868144571696, Player);
-            return true;
+            Community community = Player?.Community;
+            if (community == null) return Logger.WarnReturn(false, "OnTryModifyCommunityMemberCircle(): community == null");
+
+            CircleId circleId = (CircleId)tryModifyCommunityMemberCircle.CircleId;
+            string playerName = tryModifyCommunityMemberCircle.PlayerName;
+            ModifyCircleOperation operation = tryModifyCommunityMemberCircle.Operation;
+
+            // Do not allow players to arbitrarily modify nearby / party / guild circles
+            if (circleId != CircleId.__Friends && circleId != CircleId.__Ignore)
+                return Logger.WarnReturn(false, $"OnTryModifyCommunityMemberCircle(): Player [{Player}] is attempting to modify circle {circleId}");
+
+            return community.TryModifyCommunityMemberCircle(circleId, playerName, operation);
         }
 
         private bool OnPullCommunityStatus(MailboxMessage message)  // 107

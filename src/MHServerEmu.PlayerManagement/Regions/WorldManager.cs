@@ -1,9 +1,9 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Regions
 {
@@ -19,8 +19,6 @@ namespace MHServerEmu.PlayerManagement.Regions
         private readonly Dictionary<ulong, RegionHandle> _allRegions = new();
         private readonly Dictionary<PrototypeId, RegionLoadBalancer> _publicRegions = new();
 
-        private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
-
         private readonly PlayerManagerService _playerManager;
 
         public ulong NextRegionId { get => _idGenerator.Generate(); }
@@ -33,16 +31,6 @@ namespace MHServerEmu.PlayerManagement.Regions
         public Dictionary<ulong, RegionHandle>.ValueCollection.Enumerator GetEnumerator()
         {
             return _allRegions.Values.GetEnumerator();
-        }
-
-        public void Update()
-        {
-            ProcessMessageQueue();
-        }
-
-        public void ReceiveMessage<T>(in T message) where T : struct, IGameServiceMessage
-        {
-            _messageQueue.Enqueue(message);
         }
 
         public RegionHandle GetOrCreatePublicRegion(PrototypeId regionProtoRef, NetStructCreateRegionParams createRegionParams)
@@ -144,58 +132,5 @@ namespace MHServerEmu.PlayerManagement.Regions
 
             return region;
         }
-
-        #region Ticking
-
-        private void ProcessMessageQueue()
-        {
-            _messageQueue.Swap();
-
-            while (_messageQueue.CurrentCount > 0)
-            {
-                IGameServiceMessage serviceMessage = _messageQueue.Dequeue();
-
-                switch (serviceMessage)
-                {
-                    case ServiceMessage.CreateRegionResult createRegionResponse:
-                        OnCreateRegionResponse(createRegionResponse);
-                        break;
-
-                    case ServiceMessage.RequestRegionShutdown requestRegionShutdown:
-                        OnRequestRegionShutdown(requestRegionShutdown);
-                        break;
-
-                    default:
-                        Logger.Warn($"ProcessMessageQueue(): Unhandled service message type {serviceMessage.GetType().Name}");
-                        break;
-                }
-            }
-        }
-
-        #endregion
-
-        #region Message Handling
-
-        private bool OnCreateRegionResponse(in ServiceMessage.CreateRegionResult createRegionResponse)
-        {
-            RegionHandle region = GetRegion(createRegionResponse.RegionId);
-            if (region == null)
-                return Logger.WarnReturn(false, $"OnCreateRegionResponse(): Region 0x{createRegionResponse.RegionId:X} not found");
-
-            region.OnInstanceCreateResponse(createRegionResponse.Success);
-            return true;
-        }
-
-        private bool OnRequestRegionShutdown(in ServiceMessage.RequestRegionShutdown requestRegionShutdown)
-        {
-            RegionHandle region = GetRegion(requestRegionShutdown.RegionId);
-            if (region == null)
-                return Logger.WarnReturn(false, $"OnRequestRegionShutdown(): Region 0x{requestRegionShutdown.RegionId:X} not found");
-
-            region.RequestShutdown();
-            return true;
-        }
-
-        #endregion
     }
 }

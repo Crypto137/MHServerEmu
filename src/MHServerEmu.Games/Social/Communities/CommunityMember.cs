@@ -20,7 +20,7 @@ namespace MHServerEmu.Games.Social.Communities
     /// Flags that are set when processing <see cref="CommunityMemberBroadcast"/>.
     /// </summary>
     [Flags]
-    public enum CommunityMemberUpdateOptionBits
+    public enum CommunityMemberUpdateOptions
     {
         None            = 0,
         NewlyCreated    = 1 << 0,
@@ -75,40 +75,42 @@ namespace MHServerEmu.Games.Social.Communities
         {
             bool success = true;
 
-            // archive.IsPersistent == false
-            success &= Serializer.Transfer(archive, ref _regionRef);
-            success &= Serializer.Transfer(archive, ref _difficultyRef);
-
-            byte numSlots = 0;
-            if (archive.IsPacking)
+            if (archive.IsPersistent == false)
             {
-                if (_slots.Length >= byte.MaxValue)
-                    return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
-                numSlots = (byte)_slots.Length;
+                success &= Serializer.Transfer(archive, ref _regionRef);
+                success &= Serializer.Transfer(archive, ref _difficultyRef);
+
+                byte numSlots = 0;
+                if (archive.IsPacking)
+                {
+                    if (_slots.Length >= byte.MaxValue)
+                        return Logger.ErrorReturn(false, $"Serialize(): numSlots overflow {_slots.Length}");
+                    numSlots = (byte)_slots.Length;
+                }
+
+                success &= Serializer.Transfer(archive, ref numSlots);
+
+                if (archive.IsUnpacking)
+                    Array.Resize(ref _slots, numSlots);
+
+                for (int i = 0; i < numSlots; i++)
+                {
+                    // Slight deviation from the client: we implemented ISerialize for AvatarSlotInfo to make this a bit cleaner
+                    if (_slots[i] == null)
+                        _slots[i] = new();
+
+                    success &= Serializer.Transfer(archive, ref _slots[i]);
+                }
+
+                int isOnline = (int)_isOnline;
+                success &= Serializer.Transfer(archive, ref isOnline);
+                _isOnline = (CommunityMemberOnlineStatus)isOnline;
+
+                success &= Serializer.Transfer(archive, ref _playerName);
+                success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
+                success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
             }
-
-            success &= Serializer.Transfer(archive, ref numSlots);
-
-            if (archive.IsUnpacking)
-                Array.Resize(ref _slots, numSlots);
-
-            for (int i = 0; i < numSlots; i++)
-            {
-                // Slight deviation from the client: we implemented ISerialize for AvatarSlotInfo to make this a bit cleaner
-                if (_slots[i] == null)
-                    _slots[i] = new();
-
-                success &= Serializer.Transfer(archive, ref _slots[i]);
-            }
-
-            int isOnline = (int)_isOnline;
-            success &= Serializer.Transfer(archive, ref isOnline);
-            _isOnline = (CommunityMemberOnlineStatus)isOnline;
-
-            success &= Serializer.Transfer(archive, ref _playerName);
-            success &= Serializer.Transfer(archive, ref _secondaryPlayerName);
-            success &= Serializer.Transfer(archive, ref _consoleAccountIds[0]);
-            success &= Serializer.Transfer(archive, ref _consoleAccountIds[1]);
 
             int numCircles = 0;
             if (archive.IsPacking)
@@ -129,7 +131,7 @@ namespace MHServerEmu.Games.Social.Communities
                     if (circle.ShouldArchiveTo(archive) == false) continue;
 
                     int archiveCircleId = Community.CircleManager.GetArchiveCircleId(circle);
-                    if (archiveCircleId == 1)
+                    if (archiveCircleId == -1)
                         return Logger.ErrorReturn(false, $"Serialize(): Invalid archive circle id returned for circle in archive. circle={circle}");
 
                     success &= Serializer.Transfer(archive, ref archiveCircleId);
@@ -219,6 +221,13 @@ namespace MHServerEmu.Games.Social.Communities
             return _systemCircles[circleId];
         }
 
+        public bool IsIgnored()
+        {
+            CommunityCircle ignoreCircle = Community.GetCircle(CircleId.__Ignore);
+            if (ignoreCircle == null) return Logger.WarnReturn(false, "IsIgnored(): ignoreCircle == null");
+            return IsInCircle(ignoreCircle);
+        }
+
         /// <summary>
         /// Returns the number of <see cref="CommunityCircle"/> instances this <see cref="CommunityMember"/> is in.
         /// </summary>
@@ -243,13 +252,35 @@ namespace MHServerEmu.Games.Social.Communities
             return SetBitForCircle(_systemCircles, circle, add);
         }
 
+        public bool CanReceiveBroadcast(CommunityBroadcastFlags filterFlags = CommunityBroadcastFlags.All)
+        {
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+            {
+                if (circle.IsIgnored)
+                    return false;
+            }
+
+            CommunityBroadcastFlags flags = GetBroadcastFlags();
+            return (flags & filterFlags) != 0;
+        }
+
+        public CommunityBroadcastFlags GetBroadcastFlags()
+        {
+            CommunityBroadcastFlags flags = CommunityBroadcastFlags.None;
+
+            foreach (CommunityCircle circle in Community.IterateCircles(this))
+                flags |= circle.BroadcastFlags;
+
+            return flags;
+        }
+
         /// <summary>
         /// Updates the state of this <see cref="CommunityMember"/> with new data from a <see cref="CommunityMemberBroadcast"/> instance.
-        /// Returns <see cref="CommunityMemberUpdateOptionBits"/> that specifies the fields that were updated.
+        /// Returns <see cref="CommunityMemberUpdateOptions"/> that specifies the fields that were updated.
         /// </summary>
-        public CommunityMemberUpdateOptionBits ReceiveBroadcast(CommunityMemberBroadcast broadcast)
+        public CommunityMemberUpdateOptions ReceiveBroadcast(CommunityMemberBroadcast broadcast)
         {
-            CommunityMemberUpdateOptionBits updateOptionBits = CommunityMemberUpdateOptionBits.None;
+            CommunityMemberUpdateOptions updateOptions = CommunityMemberUpdateOptions.None;
 
             if (broadcast.HasCurrentRegionRefId)
             {
@@ -259,7 +290,7 @@ namespace MHServerEmu.Games.Social.Communities
                 if (RegionRef != newRegionRef)
                 {
                     _regionRef = newRegionRef;
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.RegionRef;
+                    updateOptions |= CommunityMemberUpdateOptions.RegionRef;
                 }
                     
             }
@@ -272,17 +303,17 @@ namespace MHServerEmu.Games.Social.Communities
                 if (DifficultyRef != newDifficultyRef)
                 {
                     _difficultyRef = newDifficultyRef;
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.DifficultyRef;
+                    updateOptions |= CommunityMemberUpdateOptions.DifficultyRef;
                 }  
             }
 
             if (broadcast.HasIsOnline)
             {
-                CommunityMemberOnlineStatus oldIsOnline = IsOnline;
+                CommunityMemberOnlineStatus isOnlineBefore = _isOnline;
                 _isOnline = broadcast.IsOnline == 1 ? CommunityMemberOnlineStatus.Online : CommunityMemberOnlineStatus.Offline;
 
-                if (oldIsOnline != CommunityMemberOnlineStatus.Online && IsOnline == CommunityMemberOnlineStatus.Online)
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.IsOnline;
+                if (isOnlineBefore != _isOnline)
+                    updateOptions |= CommunityMemberUpdateOptions.IsOnline;
             }
 
             if (broadcast.HasLastLogoutTimeAsFileTimeUtc)
@@ -291,14 +322,14 @@ namespace MHServerEmu.Games.Social.Communities
                 _lastLogoutTimeAsFileTimeUtc = broadcast.LastLogoutTimeAsFileTimeUtc;
 
                 if (oldLastLogoutTime != _lastLogoutTimeAsFileTimeUtc)
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.LastLogoutTime;
+                    updateOptions |= CommunityMemberUpdateOptions.LastLogoutTime;
             }
 
             if (broadcast.SlotsCount > 0)
             {
                 // Number of avatars changed
                 while (_slots.Length > broadcast.SlotsCount)
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.AvatarRef;
+                    updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
 
                 Array.Resize(ref _slots, broadcast.SlotsCount);
 
@@ -319,7 +350,7 @@ namespace MHServerEmu.Games.Social.Communities
                         if (oldAvatarRef != newAvatarRef)
                         {
                             _slots[i].AvatarRef = newAvatarRef;
-                            updateOptionBits |= CommunityMemberUpdateOptionBits.AvatarRef;
+                            updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
                         }
                     }
 
@@ -331,7 +362,7 @@ namespace MHServerEmu.Games.Social.Communities
                         if (oldCostumeRef != newCostumeRef)
                         {
                             _slots[i].CostumeRef = newCostumeRef;
-                            updateOptionBits |= CommunityMemberUpdateOptionBits.CostumeRef;
+                            updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
                         }
                     }
 
@@ -340,7 +371,7 @@ namespace MHServerEmu.Games.Social.Communities
                         if (_slots[i].Level != slot.Level)
                         {
                             _slots[i].Level = (int)slot.Level;
-                            updateOptionBits |= CommunityMemberUpdateOptionBits.Level;
+                            updateOptions |= CommunityMemberUpdateOptions.Level;
                         }
                     }
 
@@ -349,7 +380,7 @@ namespace MHServerEmu.Games.Social.Communities
                         if (_slots[i].PrestigeLevel != slot.PrestigeLevel)
                         {
                             _slots[i].PrestigeLevel = (int)slot.PrestigeLevel;
-                            updateOptionBits |= CommunityMemberUpdateOptionBits.PrestigeLevel;
+                            updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
                         }
                     }
 
@@ -364,7 +395,7 @@ namespace MHServerEmu.Games.Social.Communities
                 if (_playerName != broadcast.CurrentPlayerName)
                 {
                     _playerName = broadcast.CurrentPlayerName;
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.Name;
+                    updateOptions |= CommunityMemberUpdateOptions.Name;
                 }
             }
 
@@ -373,7 +404,7 @@ namespace MHServerEmu.Games.Social.Communities
                 if (_secondaryPlayerName != broadcast.SecondaryPlayerName)
                 {
                     _secondaryPlayerName = broadcast.SecondaryPlayerName;
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.SecondaryPlayer;
+                    updateOptions |= CommunityMemberUpdateOptions.SecondaryPlayer;
                 }
             }
 
@@ -382,32 +413,78 @@ namespace MHServerEmu.Games.Social.Communities
                 if (GetConsoleAccountId(PlayerAvatarIndex.Secondary) != broadcast.ConsoleAccountId)
                 {
                     SetConsoleAccountId(broadcast.SecondaryConsoleAccountId, PlayerAvatarIndex.Secondary);
-                    updateOptionBits |= CommunityMemberUpdateOptionBits.SecondaryPlayer;
+                    updateOptions |= CommunityMemberUpdateOptions.SecondaryPlayer;
                 }
             }
 
             // Notify circles of member changes
-            if (updateOptionBits != CommunityMemberUpdateOptionBits.None)
+            if (updateOptions != CommunityMemberUpdateOptions.None)
             {
                 foreach (CommunityCircle circle in Community.IterateCircles(this))
-                    circle.OnMemberReceivedBroadcast(this, updateOptionBits);
+                    circle.OnMemberReceivedBroadcast(this, updateOptions);
             }
 
             // Relay this broadcast to the client
-            if (updateOptionBits != 0)
-                SendUpdateToOwner(updateOptionBits);
+            if (updateOptions != 0)
+                SendUpdateToOwner(updateOptions);
 
-            return updateOptionBits;
+            return updateOptions;
+        }
+
+        public CommunityMemberUpdateOptions ClearData()
+        {
+            CommunityMemberUpdateOptions updateOptions = CommunityMemberUpdateOptions.None;
+
+            if (RegionRef != PrototypeId.Invalid)
+            {
+                _regionRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptions.RegionRef;
+            }
+
+            if (DifficultyRef != PrototypeId.Invalid)
+            {
+                _difficultyRef = PrototypeId.Invalid;
+                updateOptions |= CommunityMemberUpdateOptions.DifficultyRef;
+            }
+
+            foreach (AvatarSlotInfo slot in _slots)
+            {
+                if (slot.AvatarRef != PrototypeId.Invalid)
+                {
+                    slot.AvatarRef = PrototypeId.Invalid;
+                    updateOptions |= CommunityMemberUpdateOptions.AvatarRef;
+                }
+
+                if (slot.CostumeRef != PrototypeId.Invalid)
+                {
+                    slot.CostumeRef = PrototypeId.Invalid;
+                    updateOptions |= CommunityMemberUpdateOptions.CostumeRef;
+                }
+
+                if (slot.Level != 0)
+                {
+                    slot.Level = 0;
+                    updateOptions |= CommunityMemberUpdateOptions.Level;
+                }
+
+                if (slot.PrestigeLevel != 0)
+                {
+                    slot.PrestigeLevel = 0;
+                    updateOptions |= CommunityMemberUpdateOptions.PrestigeLevel;
+                }
+            }
+
+            return updateOptions;
         }
 
         /// <summary>
         /// Sends a <see cref="NetMessageModifyCommunityMember"/> to the owner <see cref="Player"/> containing
-        /// data specified by provided <see cref="CommunityMemberUpdateOptionBits"/>.
+        /// data specified by provided <see cref="CommunityMemberUpdateOptions"/>.
         /// </summary>
-        public void SendUpdateToOwner(CommunityMemberUpdateOptionBits updateOptions)
+        public void SendUpdateToOwner(CommunityMemberUpdateOptions updateOptions)
         {
             // Early out if there is nothing to update
-            if (updateOptions == CommunityMemberUpdateOptionBits.None)
+            if (updateOptions == CommunityMemberUpdateOptions.None)
                 return;
 
             NetMessageModifyCommunityMember.Builder messageBuilder = NetMessageModifyCommunityMember.CreateBuilder();
@@ -416,41 +493,41 @@ namespace MHServerEmu.Games.Social.Communities
             CommunityMemberBroadcast.Builder broadcastBuilder = CommunityMemberBroadcast.CreateBuilder()
                 .SetMemberPlayerDbId(DbId);
 
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.RegionRef))
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.RegionRef))
                 broadcastBuilder.SetCurrentRegionRefId((ulong)RegionRef);
 
-            if ((updateOptions & CommunityMemberUpdateOptionBits.AvatarSlotBits) != 0)
+            if ((updateOptions & CommunityMemberUpdateOptions.AvatarSlotBits) != 0)
             {
                 foreach (AvatarSlotInfo avatarSlotInfo in _slots)
                 {
                     CommunityMemberAvatarSlot.Builder avatarSlotBuilder = CommunityMemberAvatarSlot.CreateBuilder();
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.AvatarRef))
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.AvatarRef))
                         avatarSlotBuilder.SetAvatarRefId((ulong)avatarSlotInfo.AvatarRef);
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.CostumeRef))
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.CostumeRef))
                         avatarSlotBuilder.SetCostumeRefId((ulong)avatarSlotInfo.CostumeRef);
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.Level))
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.Level))
                         avatarSlotBuilder.SetLevel((uint)avatarSlotInfo.Level);
 
-                    if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.PrestigeLevel))
+                    if (updateOptions.HasFlag(CommunityMemberUpdateOptions.PrestigeLevel))
                         avatarSlotBuilder.SetPrestigeLevel((uint)avatarSlotInfo.PrestigeLevel);
 
                     broadcastBuilder.AddSlots(avatarSlotBuilder.Build());
                 }
             }
 
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.IsOnline))
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.IsOnline))
                 broadcastBuilder.SetIsOnline((int)IsOnline);
 
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.Name))
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.Name))
                 broadcastBuilder.SetCurrentPlayerName(GetName());
 
-            if (IsOnline != CommunityMemberOnlineStatus.Online && updateOptions.HasFlag(CommunityMemberUpdateOptionBits.LastLogoutTime))
+            if (IsOnline != CommunityMemberOnlineStatus.Online && updateOptions.HasFlag(CommunityMemberUpdateOptions.LastLogoutTime))
                 broadcastBuilder.SetLastLogoutTimeAsFileTimeUtc(_lastLogoutTimeAsFileTimeUtc);
 
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.DifficultyRef))
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.DifficultyRef))
                 broadcastBuilder.SetCurrentDifficultyRefId((ulong)DifficultyRef);
 
             // We don't care about secondary players on PC
@@ -458,11 +535,11 @@ namespace MHServerEmu.Games.Social.Communities
             messageBuilder.SetBroadcast(broadcastBuilder.Build());
 
             // PlayerName
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.NewlyCreated))
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.NewlyCreated))
                 messageBuilder.SetPlayerName(GetName());
 
             // SystemCirclesBitSets
-            if (updateOptions.HasFlag(CommunityMemberUpdateOptionBits.Circle))
+            if (updateOptions.HasFlag(CommunityMemberUpdateOptions.Circle))
             {
                 // TODO: Switch to GBitArray and use underlying words directly?
                 ulong circleBits = 0;

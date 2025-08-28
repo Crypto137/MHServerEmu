@@ -2,13 +2,15 @@
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System.Time;
 using MHServerEmu.DatabaseAccess;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
+using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Regions;
 
-namespace MHServerEmu.PlayerManagement
+namespace MHServerEmu.PlayerManagement.Players
 {
     public enum PlayerHandleState
     {
@@ -45,6 +47,8 @@ namespace MHServerEmu.PlayerManagement
         public bool IsConnected { get => Client.IsConnected; }
         public ulong PlayerDbId { get => Client.DbId; }
         public DBAccount Account { get => ((IDBAccountOwner)Client).Account; }
+        public string PlayerName { get => Account.PlayerName; }
+        public TimeSpan LastLogoutTime { get => TimeSpan.FromMilliseconds(Account.Player.LastLogoutTime); }
 
         public PlayerHandleState State { get; private set; }
         public GameHandle CurrentGame { get; private set; }
@@ -111,7 +115,7 @@ namespace MHServerEmu.PlayerManagement
 
         public void OnRemoved()
         {
-            // Do cleanup
+            // Remove from region
             SetTargetRegion(null);
             SetActualRegion(null);
 
@@ -159,6 +163,9 @@ namespace MHServerEmu.PlayerManagement
 
             lock (account)
             {
+                if (IsConnected == false)
+                    account.Player.LastLogoutTime = (long)Clock.UnixTime.TotalMilliseconds;
+
                 if (AccountManager.DBManager.SavePlayerData(account) == false)
                     return Logger.WarnReturn(false, $"SavePlayerData(): Failed to save player data for account [{account}] to the database");
             }
@@ -547,7 +554,7 @@ namespace MHServerEmu.PlayerManagement
             // even if the region is no longer in any world views for whatever reason.
             newRegion?.Reserve(RegionReservationType.Presence);
 
-            // todo: update communities
+            // Community will be updated when we receive a broadcast from the game instance.
 
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))

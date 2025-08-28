@@ -20,6 +20,7 @@ using MHServerEmu.Games.Network.InstanceManagement;
 using MHServerEmu.Grouping;
 using MHServerEmu.Leaderboards;
 using MHServerEmu.PlayerManagement;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu
 {

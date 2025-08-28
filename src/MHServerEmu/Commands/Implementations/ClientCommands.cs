@@ -4,6 +4,7 @@ using MHServerEmu.Core.Network;
 using MHServerEmu.DatabaseAccess.Models;
 using MHServerEmu.Grouping;
 using MHServerEmu.PlayerManagement;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.Commands.Implementations
 {
@@ -45,7 +46,7 @@ namespace MHServerEmu.Commands.Implementations
             if (groupingManager == null)
                 return "Failed to connect to the grouping manager.";
 
-            if (groupingManager.TryGetClient(@params[0], out IFrontendClient target) == false)
+            if (groupingManager.ClientManager.TryGetClient(@params[0], out IFrontendClient target) == false)
                 return $"Player {@params[0]} not found.";
 
             target.Disconnect();

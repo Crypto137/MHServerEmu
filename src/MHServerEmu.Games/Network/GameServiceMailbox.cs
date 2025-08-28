@@ -1,51 +1,28 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Collections;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
 {
     /// <summary>
-    /// Allows <see cref="IGameService"/> implementations to send <see cref="IGameServiceMessage"/> instances to a <see cref="Game"/>. 
+    /// <see cref="ServiceMailbox"/> implementation used by individual game instances.
     /// </summary>
-    public class ServiceMailbox
+    public sealed class GameServiceMailbox : ServiceMailbox
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        // IGameServiceMessage are boxed anyway when doing pattern matching, so it should probably be fine.
-        // If we encounter performance issues here, replace this with a specialized data structure.
-        private readonly DoubleBufferQueue<IGameServiceMessage> _messageQueue = new();
-
         public Game Game { get; }
 
-        public ServiceMailbox(Game game)
+        public GameServiceMailbox(Game game)
         {
             Game = game;
         }
 
-        /// <summary>
-        /// Called from other threads to post an <see cref="IGameServiceMessage"/>
-        /// </summary>
-        public void PostMessage<T>(in T message) where T : struct, IGameServiceMessage
-        {
-            _messageQueue.Enqueue(message);
-        }
-
-        public void ProcessMessages()
-        {
-            _messageQueue.Swap();
-
-            while (_messageQueue.CurrentCount > 0)
-            {
-                IGameServiceMessage serviceMessage = _messageQueue.Dequeue();
-                HandleServiceMessage(serviceMessage);
-            }
-        }
-
-        private void HandleServiceMessage(IGameServiceMessage message)
+        protected override void HandleServiceMessage(IGameServiceMessage message)
         {
             switch (message)
             {
@@ -71,6 +48,14 @@ namespace MHServerEmu.Games.Network
 
                 case ServiceMessage.WorldViewSync worldViewSync:
                     OnWorldViewSync(worldViewSync);
+                    break;
+
+                case ServiceMessage.PlayerLookupByNameResult playerLookupByNameResult:
+                    OnPlayerLookupByNameResult(playerLookupByNameResult);
+                    break;
+
+                case ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch:
+                    OnCommunityBroadcastBatch(communityBroadcastBatch);
                     break;
 
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
@@ -140,6 +125,51 @@ namespace MHServerEmu.Games.Network
             if (player == null) return Logger.WarnReturn(false, "OnWorldViewUpdate(): player == null");
 
             player.PlayerConnection.WorldView.Sync(worldViewSync.SyncData);
+            return true;
+        }
+
+        private bool OnPlayerLookupByNameResult(in ServiceMessage.PlayerLookupByNameResult playerLookupByNameResult)
+        {
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerLookupByNameResult.PlayerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
+
+            ulong remoteJobId = playerLookupByNameResult.RemoteJobId;
+            ulong resultPlayerDbId = playerLookupByNameResult.ResultPlayerDbId;
+            string resultPlayerName = playerLookupByNameResult.ResultPlayerName;
+
+            player.Community.OnPlayerLookupByNameResult(remoteJobId, resultPlayerDbId, resultPlayerName);
+            return true;
+        }
+
+        private bool OnCommunityBroadcastBatch(in ServiceMessage.CommunityBroadcastBatch communityBroadcastBatch)
+        {
+            if (communityBroadcastBatch.PlayerDbId != 0)
+            {
+                Player player = Game.EntityManager.GetEntityByDbGuid<Player>(communityBroadcastBatch.PlayerDbId);
+                if (player == null) return Logger.WarnReturn(false, "OnPlayerLookupByNameResult(): player == null");
+
+                Community community = player.Community;
+
+                for (int i = 0; i < communityBroadcastBatch.Count; i++)
+                {
+                    CommunityMemberBroadcast broadcast = communityBroadcastBatch[i];
+                    community.ReceiveMemberBroadcast(broadcast);
+                }
+            }
+            else
+            {
+                foreach (Player player in new PlayerIterator(Game))
+                {
+                    Community community = player.Community;
+
+                    for (int i = 0; i < communityBroadcastBatch.Count; i++)
+                    {
+                        CommunityMemberBroadcast broadcast = communityBroadcastBatch[i];
+                        community.ReceiveMemberBroadcast(broadcast);
+                    }
+                }
+            }
+
             return true;
         }
 

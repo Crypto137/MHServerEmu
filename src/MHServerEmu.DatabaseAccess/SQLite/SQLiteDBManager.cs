@@ -69,6 +69,27 @@ namespace MHServerEmu.DatabaseAccess.SQLite
             return account != null;
         }
 
+        public bool TryGetPlayerDbIdByName(string playerName, out ulong playerDbId, out string playerNameOut)
+        {
+            using SQLiteConnection connection = GetConnection();
+
+            // This check is case insensitive (COLLATE NOCASE)
+            var account = connection.QueryFirstOrDefault<DBAccount>(
+                "SELECT Id, PlayerName FROM Account WHERE PlayerName = @PlayerName COLLATE NOCASE",
+                new { PlayerName = playerName });
+
+            if (account == null)
+            {
+                playerDbId = 0;
+                playerNameOut = null;
+                return false;
+            }
+
+            playerDbId = (ulong)account.Id;
+            playerNameOut = account.PlayerName;
+            return true;
+        }
+
         public bool TryGetPlayerName(ulong id, out string playerName)
         {
             using SQLiteConnection connection = GetConnection();
@@ -88,15 +109,6 @@ namespace MHServerEmu.DatabaseAccess.SQLite
                 playerNames[(ulong)account.Id] = account.PlayerName;
 
             return playerNames.Count > 0;
-        }
-
-        public bool QueryIsPlayerNameTaken(string playerName)
-        {
-            using SQLiteConnection connection = GetConnection();
-
-            // This check is case insensitive (COLLATE NOCASE)
-            var results = connection.Query<string>("SELECT PlayerName FROM Account WHERE PlayerName = @PlayerName COLLATE NOCASE", new { PlayerName = playerName });
-            return results.Any();
         }
 
         public bool InsertAccount(DBAccount account)

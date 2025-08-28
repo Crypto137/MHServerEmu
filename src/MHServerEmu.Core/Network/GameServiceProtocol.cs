@@ -220,6 +220,95 @@ namespace MHServerEmu.Core.Network
             public readonly ulong PlayerDbId = playerDbId;
         }
 
+        /// <summary>
+        /// [Game -> PlayerManager] Requests player dbid and properly cased name from the player manager.
+        /// </summary>
+        public readonly struct PlayerLookupByNameRequest(ulong gameId, ulong playerDbId, ulong remoteJobId, string requestPlayerName)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong RemoteJobId = remoteJobId;
+            public readonly string RequestPlayerName = requestPlayerName;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] Response for PlayerLookupByNameRequest.
+        /// </summary>
+        public readonly struct PlayerLookupByNameResult(ulong gameId, ulong playerDbId, ulong remoteJobId, ulong resultPlayerDbId, string resultPlayerName)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong RemoteJobId = remoteJobId;
+            public readonly ulong ResultPlayerDbId = resultPlayerDbId;
+            public readonly string ResultPlayerName = resultPlayerName;
+        }
+
+        public readonly struct PlayerNameChanged(ulong playerDbId, string oldPlayerName, string newPlayerName)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly string OldPlayerName = oldPlayerName;
+            public readonly string NewPlayerName = newPlayerName;
+        }
+
+        /// <summary>
+        /// [Game -> PlayerManager] Updates community status for a player.
+        /// </summary>
+        public readonly struct CommunityStatusUpdate(CommunityMemberBroadcast broadcast)
+            : IGameServiceMessage
+        {
+            public readonly CommunityMemberBroadcast Broadcast = broadcast;
+        }
+
+        /// <summary>
+        /// [Game -> PlayerManager] Requests community status for the specified players from the player manager.
+        /// </summary>
+        public readonly struct CommunityStatusRequest(ulong gameId, ulong playerDbId, List<ulong> members)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly List<ulong> Members = members;
+        }
+
+        /// <summary>
+        /// [PlayerManager -> Game] A batch of <see cref="CommunityMemberBroadcast"/> instances to be delivered to all players on the server.
+        /// </summary>
+        public readonly struct CommunityBroadcastBatch : IGameServiceMessage
+        {
+            // This combines both CommunitiesReceiveBroadcastBatch and CommunityBroadcastResults from PlayerMgrToGameServer.proto.
+
+            private readonly CommunityMemberBroadcast Instance;     // Optimization to avoid allocating lists for individual broadcasts
+            private readonly List<CommunityMemberBroadcast> List;
+
+            public readonly ulong GameId;
+            public readonly ulong PlayerDbId;
+            // We don't actually need a broadcast id with out implementation
+
+            public CommunityMemberBroadcast this[int index] { get => Instance != null ? Instance : List[index]; }
+            public int Count { get => Instance != null ? 1 : List.Count; }
+
+            public CommunityBroadcastBatch(CommunityMemberBroadcast broadcast, ulong gameId = 0, ulong playerDbId = 0)
+            {
+                Instance = broadcast;
+                List = null;
+
+                GameId = gameId;
+                PlayerDbId = playerDbId;
+            }
+
+            public CommunityBroadcastBatch(List<CommunityMemberBroadcast> broadcasts, ulong gameId = 0, ulong playerDbId = 0)
+            {
+                Instance = null;
+                List = broadcasts;
+
+                GameId = gameId;
+                PlayerDbId = playerDbId;
+            }
+        }
+
         #endregion
 
         #region Grouping Manager
@@ -233,11 +322,18 @@ namespace MHServerEmu.Core.Network
             public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
-        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell)
+        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell, int prestigeLevel)
             : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly NetMessageTell Tell = tell;
+            public readonly int PrestigeLevel = prestigeLevel;
+        }
+
+        public readonly struct GroupingManagerServerNotification(string notificationText)
+            : IGameServiceMessage
+        {
+            public readonly string NotificationText = notificationText;
         }
 
         #endregion

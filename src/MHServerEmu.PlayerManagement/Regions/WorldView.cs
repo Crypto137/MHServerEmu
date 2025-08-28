@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Regions
 {

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Gazillion;
 using MHServerEmu.Commands.Attributes;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -41,13 +40,10 @@ namespace MHServerEmu.Commands.Implementations
         [CommandParamCount(1)]
         public string Broadcast(string[] @params, NetClient client)
         {
-            var groupingManager = ServerManager.Instance.GetGameService(GameServiceType.GroupingManager) as IMessageBroadcaster;
-            if (groupingManager == null) return "Failed to connect to the grouping manager.";
+            string notificationText = string.Join(' ', @params);
 
-            string message = string.Join(' ', @params);
-
-            groupingManager.BroadcastMessage(ChatServerNotification.CreateBuilder().SetTheMessage(message).Build());
-            Logger.Trace($"Broadcasting server notification: \"{message}\"");
+            ServiceMessage.GroupingManagerServerNotification message = new(notificationText);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, message);
 
             return string.Empty;
         }

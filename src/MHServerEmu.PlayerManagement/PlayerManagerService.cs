@@ -1,26 +1,29 @@
 ﻿using System.Diagnostics;
-using System.Text;
 using Gazillion;
 using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games;
+using MHServerEmu.PlayerManagement.Games;
+using MHServerEmu.PlayerManagement.Network;
+using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
+using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement
 {
     /// <summary>
     /// An <see cref="IGameService"/> that manages connected players and routes messages to relevant <see cref="Game"/> instances.
     /// </summary>
-    public class PlayerManagerService : IGameService, IMessageBroadcaster
+    public class PlayerManagerService : IGameService
     {
         public const int TargetTickTimeMS = 150;
 
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+        private readonly PlayerManagerServiceMailbox _serviceMailbox;
 
         internal static PlayerManagerService Instance { get; private set; }     // Naughty singleton-like access without being an actual singleton
 
@@ -29,6 +32,7 @@ namespace MHServerEmu.PlayerManagement
         internal GameHandleManager GameHandleManager { get; }
         internal WorldManager WorldManager { get; }
         internal ClientManager ClientManager { get; }
+        internal CommunityRegistry CommunityRegistry { get; }
 
         public PlayerManagerConfig Config { get; }
 
@@ -39,11 +43,14 @@ namespace MHServerEmu.PlayerManagement
         /// </summary>
         public PlayerManagerService()
         {
+            _serviceMailbox = new(this);
+
             SessionManager = new(this);
             LoginQueueManager = new(this);
             GameHandleManager = new(this);
             WorldManager = new(this);
             ClientManager = new(this);
+            CommunityRegistry = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }
@@ -54,22 +61,17 @@ namespace MHServerEmu.PlayerManagement
         {
             Instance = this;
 
-            State = GameServiceState.Starting;
-
-            GameHandleManager.Initialize();
-
             State = GameServiceState.Running;
-
-            // Normal ticks
             while (State == GameServiceState.Running)
             {
                 TimeSpan referenceTime = _stopwatch.Elapsed;
 
+                _serviceMailbox.ProcessMessages();
+
                 SessionManager.Update();
                 LoginQueueManager.Update();
-                GameHandleManager.Update();
-                ClientManager.Update(true);
-                WorldManager.Update();
+                ClientManager.Update();
+                CommunityRegistry.Update();
 
                 double tickTimeMS = (_stopwatch.Elapsed - referenceTime).TotalMilliseconds;
                 int sleepTimeMS = (int)Math.Max(TargetTickTimeMS - tickTimeMS, 0);
@@ -80,17 +82,18 @@ namespace MHServerEmu.PlayerManagement
             // Shutdown
 
             // Shutting down the frontend will disconnect all clients, here we just wait for everything to be cleaned up and saved
+            ClientManager.AllowNewClients = false;
             while (ClientManager.PlayerCount > 0)
             {
-                ClientManager.Update(false);
+                _serviceMailbox.ProcessMessages();
+                ClientManager.Update();
                 Thread.Sleep(1);
             }
 
-            GameHandleManager.IsShuttingDown = true;
-            GameHandleManager.ShutDownAllGames();
+            GameHandleManager.Shutdown();
             while (GameHandleManager.GameCount > 0)
             {
-                GameHandleManager.Update();
+                _serviceMailbox.ProcessMessages();
                 Thread.Sleep(1);
             }
 
@@ -115,24 +118,21 @@ namespace MHServerEmu.PlayerManagement
                     OnRouteMessage(routeMessage);
                     break;
 
-                // Game instance operation messages are handled in ticks by the GameHandleManager
-                case ServiceMessage.GameInstanceOp gameInstanceOp:
-                    GameHandleManager.ReceiveMessage(gameInstanceOp);
-                    break;
-
-                case ServiceMessage.CreateRegionResult:
-                case ServiceMessage.RequestRegionShutdown:
-                    WorldManager.ReceiveMessage(message);
-                    break;
-
-                // Client messages are handled in ticks by the ClientManager
+                // Service messages are handled in ticks
                 case ServiceMessage.AddClient:
                 case ServiceMessage.RemoveClient:
+                case ServiceMessage.GameInstanceOp:
                 case ServiceMessage.GameInstanceClientOp:
+                case ServiceMessage.CreateRegionResult:
+                case ServiceMessage.RequestRegionShutdown:
                 case ServiceMessage.ChangeRegionRequest:
                 case ServiceMessage.RegionTransferFinished:
                 case ServiceMessage.ClearPrivateStoryRegions:
-                    ClientManager.ReceiveMessage(message);
+                case ServiceMessage.PlayerLookupByNameRequest:
+                case ServiceMessage.PlayerNameChanged:
+                case ServiceMessage.CommunityStatusUpdate:
+                case ServiceMessage.CommunityStatusRequest:
+                    _serviceMailbox.PostMessage(message);
                     break;
 
                 default:
@@ -186,14 +186,6 @@ namespace MHServerEmu.PlayerManagement
         public bool TryGetSession(ulong sessionId, out ClientSession session)
         {
             return SessionManager.TryGetActiveSession(sessionId, out session);
-        }
-
-        /// <summary>
-        /// Sends an <see cref="IMessage"/> to all connected <see cref="IFrontendClient"/> instances.
-        /// </summary>
-        public void BroadcastMessage(IMessage message)
-        {
-            ClientManager.BroadcastMessage(message);
         }
 
         #endregion
