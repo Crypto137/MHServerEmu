@@ -77,7 +77,7 @@ namespace MHServerEmu.Games.Social
                 case ChatRoomTypes.CHAT_ROOM_TYPE_FACTION:
                 case ChatRoomTypes.CHAT_ROOM_TYPE_GUILD_OFFICER:
                     // TODO, send a Service Unavailable message for now
-                    SendChatFromGameSystem((LocaleStringId)5066146868144571696, player);
+                    SendServiceUnavailableMessage(player);
                     break;
 
                 default:
@@ -89,7 +89,8 @@ namespace MHServerEmu.Games.Social
         public void HandleTell(Player player, NetMessageTell tell)
         {
             // Route to the grouping manager
-            ServiceMessage.GroupingManagerTell serviceMessage = new(player.PlayerConnection.FrontendClient, tell);
+            int prestigeLevel = player.CurrentAvatar != null ? player.CurrentAvatar.PrestigeLevel : 0;
+            ServiceMessage.GroupingManagerTell serviceMessage = new(player.PlayerConnection.FrontendClient, tell, prestigeLevel);
             ServerManager.Instance.SendMessageToService(GameServiceType.GroupingManager, serviceMessage);
         }
 

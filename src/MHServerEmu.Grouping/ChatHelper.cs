@@ -9,6 +9,8 @@ namespace MHServerEmu.Grouping
     /// </summary>
     public static class ChatHelper
     {
+        // NOTE: This is used primarily by the server command system to output messages to the client.
+
         private const ushort MuxChannel = 2;
 
         private static readonly string ServerName;

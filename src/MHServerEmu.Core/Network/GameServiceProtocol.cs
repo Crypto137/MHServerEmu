@@ -322,11 +322,12 @@ namespace MHServerEmu.Core.Network
             public readonly List<ulong> PlayerFilter = playerFilter;
         }
 
-        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell)
+        public readonly struct GroupingManagerTell(IFrontendClient client, NetMessageTell tell, int prestigeLevel)
             : IGameServiceMessage
         {
             public readonly IFrontendClient Client = client;
             public readonly NetMessageTell Tell = tell;
+            public readonly int PrestigeLevel = prestigeLevel;
         }
 
         #endregion

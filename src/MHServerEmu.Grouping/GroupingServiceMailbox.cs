@@ -81,8 +81,9 @@ namespace MHServerEmu.Grouping
         {
             IFrontendClient client = groupingManagerTell.Client;
             NetMessageTell tell = groupingManagerTell.Tell;
+            int prestigeLevel = groupingManagerTell.PrestigeLevel;
 
-            _groupingManager.ChatManager.OnTell(client, tell);
+            _groupingManager.ChatManager.OnTell(client, tell, prestigeLevel);
         }
 
         #endregion

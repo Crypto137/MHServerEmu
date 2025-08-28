@@ -1,4 +1,5 @@
 ﻿using Gazillion;
+using Google.ProtocolBuffers;
 using MHServerEmu.Core.Config;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
@@ -38,7 +39,7 @@ namespace MHServerEmu.Grouping
 
         public void OnClientAdded(IFrontendClient client)
         {
-            _groupingManager.ClientManager.SendMessage(_motd, client);
+            SendMessage(_motd, client);
         }
 
         public void OnChat(IFrontendClient client, NetMessageChat chat, int prestigeLevel, List<ulong> playerFilter)
@@ -56,25 +57,51 @@ namespace MHServerEmu.Grouping
                 .Build();
 
             if (playerFilter != null)
-                _groupingManager.ClientManager.SendMessageFiltered(message, playerFilter);
+                SendMessageFiltered(message, playerFilter);
             else
-                _groupingManager.ClientManager.SendMessageToAll(message);
+                SendMessageToAll(message);
         }
 
-        public void OnTell(IFrontendClient client, NetMessageTell tell)
+        public void OnTell(IFrontendClient senderClient, NetMessageTell tell, int prestigeLevel)
         {
-            DBAccount account = ((IDBAccountOwner)client).Account;
+            string fromPlayerName = ((IDBAccountOwner)senderClient).Account.PlayerName;
 
-            Logger.Info($"[Tell] [{account.PlayerName} => {tell.TargetPlayerName}]: {(_logTells ? tell.TheMessage.Body : "***")}", LogCategory.Chat);
+            if (_groupingManager.ClientManager.TryGetClient(tell.TargetPlayerName, out IFrontendClient targetClient) == false)
+            {
+                SendMessage(NoSuchUserErrorMessage, senderClient);
+                return;
+            }
 
-            // Respond with an error for now
-            _groupingManager.ClientManager.SendMessage(NoSuchUserErrorMessage, client);
+            Logger.Info($"[Tell] [{fromPlayerName} => {tell.TargetPlayerName}]: {(_logTells ? tell.TheMessage.Body : "***")}", LogCategory.Chat);
+
+            ChatTellMessage message = ChatTellMessage.CreateBuilder()
+                .SetFromPlayerName(fromPlayerName)
+                .SetTheMessage(tell.TheMessage)
+                .SetPrestigeLevel(prestigeLevel)
+                .Build();
+
+            SendMessage(message, targetClient);
+        }
+
+        private void SendMessage(IMessage message, IFrontendClient client)
+        {
+            _groupingManager.ClientManager.SendMessage(message, client);
+        }
+
+        private void SendMessageFiltered(IMessage message, List<ulong> playerFilter)
+        {
+            _groupingManager.ClientManager.SendMessageFiltered(message, playerFilter);
+        }
+
+        private void SendMessageToAll(IMessage message)
+        {
+            _groupingManager.ClientManager.SendMessageToAll(message);
         }
 
         /// <summary>
         /// Returns the <see cref="string"/> name of the specified chat room type.
         /// </summary>
-        public static string GetRoomName(ChatRoomTypes type)
+        private static string GetRoomName(ChatRoomTypes type)
         {
             return type switch
             {
