@@ -217,8 +217,6 @@ namespace MHServerEmu.Games.Social.Communities
 
         public bool ModifyMember(ulong playerDbId, string playerName, CircleId circleId, ModifyCircleOperation operation)
         {
-            Logger.Debug($"ModifyMember(): operation={operation} playerName={playerName} circleId={circleId}");
-
             return operation switch
             {
                 ModifyCircleOperation.eMCO_Add    => AddMember(playerDbId, playerName, circleId),
@@ -315,7 +313,6 @@ namespace MHServerEmu.Games.Social.Communities
             // Request status for remote members that are not in the current game from the player manager
             if (remoteMembers != null)
             {
-                Logger.Debug($"PullCommunityStatus(): Requesting status for {remoteMembers.Count} remote member(s)");
                 ServiceMessage.CommunityStatusRequest request = new(Owner.Game.Id, Owner.DatabaseUniqueId, remoteMembers);
                 ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, request);
             }
@@ -323,8 +320,6 @@ namespace MHServerEmu.Games.Social.Communities
 
         public bool TryModifyCommunityMemberCircle(CircleId circleId, string playerName, ModifyCircleOperation operation)
         {
-            Logger.Debug($"TryModifyCommunityMemberCircle(): operation={operation} playerName={playerName} circleId={circleId}");
-
             CommunityCircle circle = GetCircle(circleId);
             if (circle == null) return Logger.WarnReturn(false, "TryModifyCommunityMemberCircle(): circle == null");
 

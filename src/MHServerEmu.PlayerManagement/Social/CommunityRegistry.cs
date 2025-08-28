@@ -58,8 +58,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void RefreshPlayerStatus(PlayerHandle player)
         {
-            Logger.Debug($"RefreshPlayerStatus(): {player} (connected={player.IsConnected})");
-
             bool sendBroadcast = false;
 
             CommunityMemberEntry member = GetMemberEntry(player.PlayerDbId);
@@ -93,8 +91,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public bool ReceiveMemberBroadcast(CommunityMemberBroadcast broadcast)
         {
-            Logger.Debug($"ReceiveMemberBroadcast(): {broadcast}");
-
             ulong playerDbId = broadcast.MemberPlayerDbId;
 
             // We should be receiving broadcasts only from online players
@@ -143,8 +139,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void RequestMemberBroadcast(ulong gameId, ulong playerDbId, List<ulong> members)
         {
-            Logger.Debug($"RequestStatus(): gameId=0x{gameId:X}, playerDbId=0x{playerDbId:X}, members={members.Count}");
-
             CommunityMemberEntry requester = GetMemberEntry(playerDbId);
             if (requester == null)
                 return;
@@ -210,9 +204,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void SendBroadcastOnNextUpdate(CommunityMemberEntry member)
         {
-            if (_membersToBroadcast.Add(member))
-                Logger.Debug($"SendBroadcastOnNextUpdate(): 0x{member.PlayerDbId:X}");
-            
+            _membersToBroadcast.Add(member);
         }
     }
 }
