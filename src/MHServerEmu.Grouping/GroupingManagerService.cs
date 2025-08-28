@@ -46,17 +46,9 @@ namespace MHServerEmu.Grouping
                 // NOTE: We haven't really seen this, but there is a ClientToGroupingManager protocol
                 // that includes a single message - GetPlayerInfoByName. If we ever receive it, it should end up here.
 
-                // Handle client add/remove here asynchronously
-                case ServiceMessage.AddClient addClient:
-                    if (ClientManager.AddClient(addClient.Client))
-                        ChatManager.OnClientAdded(addClient.Client);
-                    break;
-
-                case ServiceMessage.RemoveClient removeClient:
-                    ClientManager.RemoveClient(removeClient.Client);
-                    break;
-
-                // Handle everything else in a dedicated worker thread
+                // Handle everything in a dedicated worker thread
+                case ServiceMessage.AddClient:
+                case ServiceMessage.RemoveClient:
                 case ServiceMessage.PlayerNameChanged:
                 case ServiceMessage.GroupingManagerChat:
                 case ServiceMessage.GroupingManagerTell:

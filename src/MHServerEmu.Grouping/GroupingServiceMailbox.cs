@@ -16,6 +16,14 @@ namespace MHServerEmu.Grouping
         {
             switch (message)
             {
+                case ServiceMessage.AddClient addClient:
+                    OnAddClient(addClient);
+                    break;
+
+                case ServiceMessage.RemoveClient removeClient:
+                    OnRemoveClient(removeClient);
+                    break;
+
                 case ServiceMessage.PlayerNameChanged playerNameChanged:
                     OnPlayerNameChanged(playerNameChanged);
                     break;
@@ -34,17 +42,32 @@ namespace MHServerEmu.Grouping
 
         // Try to keep these handlers free from logic and just route the requests to appropriate managers.
 
-        private bool OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
+        private void OnAddClient(in ServiceMessage.AddClient addClient)
+        {
+            IFrontendClient client = addClient.Client;
+
+            if (_groupingManager.ClientManager.AddClient(client) == false)
+                return;
+
+            _groupingManager.ChatManager.OnClientAdded(client);
+        }
+
+        private void OnRemoveClient(in ServiceMessage.RemoveClient removeClient)
+        {
+            IFrontendClient client = removeClient.Client;
+            _groupingManager.ClientManager.RemoveClient(client);
+        }
+
+        private void OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
         {
             ulong playerDbId = playerNameChanged.PlayerDbId;
             string oldPlayerName = playerNameChanged.OldPlayerName;
             string newPlayerName = playerNameChanged.NewPlayerName;
 
             _groupingManager.ClientManager.OnPlayerNameChanged(playerDbId, oldPlayerName, newPlayerName);
-            return true;
         }
 
-        private bool OnGroupingManagerChat(in ServiceMessage.GroupingManagerChat groupingManagerChat)
+        private void OnGroupingManagerChat(in ServiceMessage.GroupingManagerChat groupingManagerChat)
         {
             IFrontendClient client = groupingManagerChat.Client;
             NetMessageChat chat = groupingManagerChat.Chat;
@@ -52,16 +75,14 @@ namespace MHServerEmu.Grouping
             List<ulong> playerFilter = groupingManagerChat.PlayerFilter;
 
             _groupingManager.ChatManager.OnChat(client, chat, prestigeLevel, playerFilter);
-            return true;
         }
 
-        private bool OnGroupingManagerTell(in ServiceMessage.GroupingManagerTell groupingManagerTell)
+        private void OnGroupingManagerTell(in ServiceMessage.GroupingManagerTell groupingManagerTell)
         {
             IFrontendClient client = groupingManagerTell.Client;
             NetMessageTell tell = groupingManagerTell.Tell;
 
             _groupingManager.ChatManager.OnTell(client, tell);
-            return true;
         }
 
         #endregion
