@@ -1,15 +1,10 @@
 ﻿using Gazillion;
-using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
-using MHServerEmu.DatabaseAccess;
-using MHServerEmu.DatabaseAccess.Models;
 
 namespace MHServerEmu.Grouping
 {
     internal sealed class GroupingServiceMailbox : ServiceMailbox
     {
-        private static readonly Logger Logger = LogManager.CreateLogger();
-
         private readonly GroupingManagerService _groupingManager;
 
         public GroupingServiceMailbox(GroupingManagerService groupingManager)
@@ -37,6 +32,8 @@ namespace MHServerEmu.Grouping
 
         #region Handlers
 
+        // Try to keep these handlers free from logic and just route the requests to appropriate managers.
+
         private bool OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
         {
             ulong playerDbId = playerNameChanged.PlayerDbId;
@@ -49,26 +46,12 @@ namespace MHServerEmu.Grouping
 
         private bool OnGroupingManagerChat(in ServiceMessage.GroupingManagerChat groupingManagerChat)
         {
-            DBAccount account = ((IDBAccountOwner)groupingManagerChat.Client).Account;
+            IFrontendClient client = groupingManagerChat.Client;
             NetMessageChat chat = groupingManagerChat.Chat;
             int prestigeLevel = groupingManagerChat.PrestigeLevel;
             List<ulong> playerFilter = groupingManagerChat.PlayerFilter;
 
-            if (string.IsNullOrEmpty(chat.TheMessage.Body) == false)
-                Logger.Info($"[{ChatHelper.GetRoomName(chat.RoomType)}] [{account})]: {chat.TheMessage.Body}", LogCategory.Chat);
-
-            ChatNormalMessage message = ChatNormalMessage.CreateBuilder()
-                .SetRoomType(chat.RoomType)
-                .SetFromPlayerName(account.PlayerName)
-                .SetTheMessage(chat.TheMessage)
-                .SetPrestigeLevel(prestigeLevel)
-                .Build();
-
-            if (playerFilter != null)
-                _groupingManager.ClientManager.SendMessageFiltered(message, playerFilter);
-            else
-                _groupingManager.ClientManager.SendMessageToAll(message);
-
+            _groupingManager.ChatManager.OnChat(client, chat, prestigeLevel, playerFilter);
             return true;
         }
 
@@ -77,11 +60,7 @@ namespace MHServerEmu.Grouping
             IFrontendClient client = groupingManagerTell.Client;
             NetMessageTell tell = groupingManagerTell.Tell;
 
-            Logger.Trace($"Received tell for {tell.TargetPlayerName}");
-
-            // Respond with an error for now
-            _groupingManager.ClientManager.SendMessage(ChatErrorMessage.CreateBuilder().SetErrorMessage(ChatErrorMessages.CHAT_ERROR_NO_SUCH_USER).Build(), client);
-
+            _groupingManager.ChatManager.OnTell(client, tell);
             return true;
         }
 

@@ -73,14 +73,5 @@ namespace MHServerEmu.Grouping
         {
             SendMetagameMessages(client, text.Split("\r\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), showSender);
         }
-
-        /// <summary>
-        /// Returns the <see cref="string"/> name of the specified chat room type.
-        /// </summary>
-        public static string GetRoomName(ChatRoomTypes type)
-        {
-            // All room enums start with "CHAT_ROOM_TYPE_", which is 15 characters
-            return Enum.GetName(type).Substring(15);
-        }
     }
 }

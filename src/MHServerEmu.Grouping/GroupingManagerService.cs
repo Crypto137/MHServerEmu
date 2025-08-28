@@ -11,6 +11,7 @@ namespace MHServerEmu.Grouping
         private readonly GroupingServiceMailbox _serviceMailbox;
 
         public GroupingClientManager ClientManager { get; }
+        public GroupingChatManager ChatManager { get; }
 
         public GameServiceState State { get; private set; } = GameServiceState.Created;
 
@@ -18,6 +19,7 @@ namespace MHServerEmu.Grouping
         {
             _serviceMailbox = new(this);
             ClientManager = new();
+            ChatManager = new(this);
         }
 
         #region IGameService Implementation
