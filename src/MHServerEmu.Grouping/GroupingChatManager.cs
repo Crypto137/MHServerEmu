@@ -66,8 +66,9 @@ namespace MHServerEmu.Grouping
         {
             string fromPlayerName = ((IDBAccountOwner)senderClient).Account.PlayerName;
 
-            if (_groupingManager.ClientManager.TryGetClient(tell.TargetPlayerName, out IFrontendClient targetClient) == false)
+            if (_groupingManager.ClientManager.TryGetClient(tell.TargetPlayerName, out IFrontendClient targetClient) == false) 
             {
+                Logger.Trace($"OnTell(): Player [{senderClient}] tried to send a tell to a non-existent or offline player {tell.TargetPlayerName}");
                 SendMessage(NoSuchUserErrorMessage, senderClient);
                 return;
             }
