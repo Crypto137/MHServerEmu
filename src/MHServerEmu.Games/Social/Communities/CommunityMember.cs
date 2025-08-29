@@ -431,6 +431,11 @@ namespace MHServerEmu.Games.Social.Communities
             return updateOptions;
         }
 
+        public void RestoreIsOnline(int isOnline)
+        {
+            _isOnline = (CommunityMemberOnlineStatus)isOnline;
+        }
+
         public CommunityMemberUpdateOptions ClearData()
         {
             CommunityMemberUpdateOptions updateOptions = CommunityMemberUpdateOptions.None;

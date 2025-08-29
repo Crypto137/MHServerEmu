@@ -3,6 +3,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Network
 {
@@ -54,6 +55,30 @@ namespace MHServerEmu.Games.Network
         public static void RestoreWorldView(MigrationData migrationData, WorldViewCache worldView)
         {
             worldView.Sync(migrationData.WorldView);
+        }
+
+        public static void StoreCommunity(MigrationData migrationData, Community community)
+        {
+            migrationData.CommunityOnlineStatuses.Clear();
+            foreach (CommunityMember member in community.IterateMembers())
+            {
+                if (member.IsOnline != CommunityMemberOnlineStatus.Online)
+                    continue;
+
+                migrationData.CommunityOnlineStatuses[member.DbId] = 1;
+            }
+        }
+
+        public static void RestoreCommunity(MigrationData migrationData, Community community)
+        {
+            foreach (var kvp in migrationData.CommunityOnlineStatuses)
+            {
+                CommunityMember member = community.GetMember(kvp.Key);
+                if (member == null)
+                    continue;
+
+                member.RestoreIsOnline(kvp.Value);
+            }
         }
     }
 }
