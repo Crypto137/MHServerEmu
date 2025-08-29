@@ -665,13 +665,10 @@ namespace MHServerEmu.Games.Network
             Vector3 position = avatar.RegionLocation.Position;
             Orientation orientation = avatar.RegionLocation.Orientation;
 
+            float desyncDistanceSq = Vector3.DistanceSquared2D(position, syncPosition);
+
             if (canMove || canRotate)
             {
-                const float PositionDesyncDistanceSqThreshold = 512f * 512f;
-                float desyncDistanceSq = Vector3.DistanceSquared2D(position, syncPosition);
-                if (desyncDistanceSq > PositionDesyncDistanceSqThreshold)
-                    Logger.Warn($"OnUpdateAvatarState(): Position desync for player [{Player}] - {MathHelper.SquareRoot(desyncDistanceSq)}");
-
                 position = syncPosition;
                 orientation = syncOrientation;
 
@@ -701,10 +698,6 @@ namespace MHServerEmu.Games.Network
                 {
                     if (LocomotionState.SerializeFrom(archive, newSyncState, fieldFlags) == false)
                         return Logger.WarnReturn(false, "OnUpdateAvatarState(): Failed to transfer newSyncState");
-
-                    const float MoveSpeedDesyncThreshold = 3000f;
-                    if (newSyncState.BaseMoveSpeed > MoveSpeedDesyncThreshold)
-                        Logger.Warn($"OnUpdateAvatarState(): Movement speed desync for player [{Player}] - {newSyncState.BaseMoveSpeed}");
                 }
                 catch (Exception e)
                 {
@@ -713,6 +706,10 @@ namespace MHServerEmu.Games.Network
 
                 avatar.Locomotor.SetSyncState(newSyncState, position, orientation);
             }
+
+            const float PositionDesyncDistanceSqThreshold = 512f * 512f;
+            if (desyncDistanceSq > PositionDesyncDistanceSqThreshold)
+                Logger.Warn($"OnUpdateAvatarState(): Position desync for player [{Player}] - offset={MathHelper.SquareRoot(desyncDistanceSq)}, moveSpeed={avatar.Locomotor.LastSyncState.BaseMoveSpeed}, power={avatar.ActivePowerRef.GetName()}");
 
             return true;
         }
