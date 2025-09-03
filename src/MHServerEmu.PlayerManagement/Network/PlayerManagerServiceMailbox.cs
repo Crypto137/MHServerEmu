@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System;
 using MHServerEmu.PlayerManagement.Players;
 using MHServerEmu.PlayerManagement.Regions;
 using MHServerEmu.PlayerManagement.Social;
@@ -10,6 +11,8 @@ namespace MHServerEmu.PlayerManagement.Network
     internal sealed class PlayerManagerServiceMailbox : ServiceMailbox
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        private readonly TimeLeakyBucketCollection<ulong> _playerLookupByNameRateLimiter = new(TimeSpan.FromSeconds(60), 20);
 
         private readonly PlayerManagerService _playerManager;
 
@@ -209,8 +212,20 @@ namespace MHServerEmu.PlayerManagement.Network
             ulong remoteJobId = playerLookupByNameRequest.RemoteJobId;
             string requestPlayerName = playerLookupByNameRequest.RequestPlayerName;
 
-            // It's okay for this query to fail because it's based on client input.
-            PlayerNameCache.Instance.TryGetPlayerDbId(requestPlayerName, out ulong resultPlayerDbId, out string resultPlayerName);
+            ulong resultPlayerDbId;
+            string resultPlayerName;
+
+            // Rate limit this because it's based on client input, and we may be querying the database. It's okay for this query to fail.
+            if (_playerLookupByNameRateLimiter.AddTime(playerDbId))
+            {
+                PlayerNameCache.Instance.TryGetPlayerDbId(requestPlayerName, out resultPlayerDbId, out resultPlayerName);
+            }
+            else
+            {
+                Logger.Warn($"OnPlayerLookupByNameRequest(): Rate limit exceeded for player 0x{playerDbId:X}");
+                resultPlayerDbId = 0;
+                resultPlayerName = string.Empty;
+            }
 
             ServiceMessage.PlayerLookupByNameResult response = new(gameId, playerDbId, remoteJobId, resultPlayerDbId, resultPlayerName);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, response);

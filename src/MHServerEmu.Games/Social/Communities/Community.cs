@@ -376,7 +376,7 @@ namespace MHServerEmu.Games.Social.Communities
             if (playerDbId == 0)
             {
                 // There is also CommunityModifyFailureCode.eCMFC_Timeout, not sure if we need it.
-                Logger.Trace($"OnPlayerLookupByNameResult(): Player [{Owner}] tried to add non-existent player {requestPlayerName}");
+                Logger.Trace($"OnPlayerLookupByNameResult(): Player [{Owner}] failed to add player {requestPlayerName} (not found or rate limit exceeded)");
 
                 var failureMessage = NetMessageModifyCommunityMemberFailure.CreateBuilder()
                     .SetMemberToModifyName(requestPlayerName)
