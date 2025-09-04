@@ -17,7 +17,7 @@ using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
-using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Entities
 {

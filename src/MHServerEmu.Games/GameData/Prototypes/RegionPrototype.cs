@@ -9,8 +9,8 @@ using MHServerEmu.Games.Loot;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Regions.ObjectiveGraphs;
-using MHServerEmu.Games.Social;
 using MHServerEmu.Games.Social.Communities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.GameData.Prototypes
 {

@@ -118,8 +118,12 @@ namespace MHServerEmu.Games.Missions.Conditions
                 var party = player.Party;
                 if (party != null)
                 {
-                    foreach (Player member in party.GetMembers())
+                    foreach (var kvp in party)
                     {
+                        Player member = Game.Current.EntityManager.GetEntityByDbGuid<Player>(kvp.Key);
+                        if (member == null)
+                            continue;
+
                         isParticipant |= participants.Contains(member);
                         isContributor |= mission.GetContribution(member) > 0.0f;
                     }
