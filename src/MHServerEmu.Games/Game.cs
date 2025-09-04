@@ -23,6 +23,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Powers.Conditions;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social;
+using MHServerEmu.Games.Social.Parties;
 using MHServerEmu.Games.UI;
 
 namespace MHServerEmu.Games
@@ -83,6 +84,7 @@ namespace MHServerEmu.Games
         public LootManager LootManager { get; }
         public GameDialogManager GameDialogManager { get; }
         public ChatManager ChatManager { get; }
+        public PartyManager PartyManager { get; }
         public LiveTuningData LiveTuningData { get => LiveTuningData.Current; }
 
         public ConditionPool ConditionPool { get; } = new();
@@ -129,6 +131,7 @@ namespace MHServerEmu.Games
             LootManager = new(this);
             GameDialogManager = new(this);
             ChatManager = new(this);
+            PartyManager = new(this);
             Random = new();
 
             Initialize();

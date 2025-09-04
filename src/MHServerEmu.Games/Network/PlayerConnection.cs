@@ -550,6 +550,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageStashTabOptions:                   OnStashTabOptions(message); break;                  // 156
                 case ClientToGameServerMessage.NetMessageLeaderboardRequest:                OnLeaderboardRequest(message); break;               // 157
                 case ClientToGameServerMessage.NetMessageLeaderboardInitializeRequest:      OnLeaderboardInitializeRequest(message); break;     // 159
+                case ClientToGameServerMessage.NetMessagePartyOperationRequest:             OnPartyOperationRequest(message); break;            // 162
                 case ClientToGameServerMessage.NetMessageMissionTrackerFiltersUpdate:           OnMissionTrackerFiltersUpdate(message); break;              // 166
                 case ClientToGameServerMessage.NetMessageAchievementMissionTrackerFilterChange: OnAchievementMissionTrackerFilterChange(message); break;    // 167
 
@@ -2230,6 +2231,16 @@ namespace MHServerEmu.Games.Network
             // All the data with need to handle initialize requests is cached in games, so no need to use the leaderboard service here.
             var response = LeaderboardInfoCache.Instance.BuildInitializeRequestResponse(initializeRequest);
             SendMessage(response);
+
+            return true;
+        }
+
+        private bool OnPartyOperationRequest(in MailboxMessage message) // 162
+        {
+            var partyOperationRequest = message.As<NetMessagePartyOperationRequest>();
+            if (partyOperationRequest == null) return Logger.WarnReturn(false, $"OnPartyOperationRequest(): Failed to retrieve message");
+
+            Game.PartyManager.OnClientPartyOperationRequest(Player, partyOperationRequest.Payload);
 
             return true;
         }
