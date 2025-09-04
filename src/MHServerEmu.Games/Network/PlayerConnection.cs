@@ -2240,6 +2240,10 @@ namespace MHServerEmu.Games.Network
             var partyOperationRequest = message.As<NetMessagePartyOperationRequest>();
             if (partyOperationRequest == null) return Logger.WarnReturn(false, $"OnPartyOperationRequest(): Failed to retrieve message");
 
+            ulong requestingPlayerDbId = partyOperationRequest.Payload.RequestingPlayerDbId;
+            if (requestingPlayerDbId != Player.DatabaseUniqueId)
+                return Logger.WarnReturn(false, $"OnPartyOperationRequest(): requestingPlayerDbId != Player.DatabaseUniqueId");
+
             Game.PartyManager.OnClientPartyOperationRequest(Player, partyOperationRequest.Payload);
 
             return true;

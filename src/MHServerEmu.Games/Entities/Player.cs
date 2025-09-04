@@ -3580,6 +3580,18 @@ namespace MHServerEmu.Games.Entities
 
         #endregion
 
+        #region Parties
+
+        public bool CanFormParty()
+        {
+            Region region = GetRegion();
+            if (region == null) return Logger.WarnReturn(false, "CanFormParty(): region == null");
+
+            return region.AllowsPartyFormation;
+        }
+
+        #endregion
+
         #region Scheduled Events
 
         private class ScheduledHUDTutorialResetEvent : CallMethodEvent<Entity>
