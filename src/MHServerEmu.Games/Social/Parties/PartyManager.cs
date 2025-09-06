@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
 
 namespace MHServerEmu.Games.Social.Parties
@@ -17,11 +18,8 @@ namespace MHServerEmu.Games.Social.Parties
 
         public void OnClientPartyOperationRequest(Player player, PartyOperationPayload request)
         {
-            Logger.Debug($"OnClientPartyOperationRequest():\n{request}");
-
             switch (request.Operation)
             {
-                /*
                 case GroupingOperationType.eGOP_InvitePlayer:
                     if (player.CanFormParty() == false)
                     {
@@ -31,7 +29,32 @@ namespace MHServerEmu.Games.Social.Parties
 
                     SendOperationRequestToPlayerManager(request);
                     break;
-                */
+
+                case GroupingOperationType.eGOP_AcceptInvite:
+                case GroupingOperationType.eGOP_DeclineInvite:
+                case GroupingOperationType.eGOP_LeaveParty:
+                    // No extra validation required here.
+                    SendOperationRequestToPlayerManager(request);
+                    break;
+
+                case GroupingOperationType.eGOP_DisbandParty:
+                case GroupingOperationType.eGOP_KickPlayer:
+                case GroupingOperationType.eGOP_ChangeLeader:
+                case GroupingOperationType.eGOP_ConvertToRaid:
+                case GroupingOperationType.eGOP_ConvertToParty:
+                    // Need to be a party leader for these.
+                    if (player.IsPartyLeader() == false)
+                    {
+                        SendOperationResultToClient(player.DatabaseUniqueId, request, GroupingOperationResult.eGOPR_NotLeader);
+                        return;
+                    }
+
+                    SendOperationRequestToPlayerManager(request);
+                    break;
+
+                //case GroupingOperationType.eGOP_ConvertToRaidAccept:
+                //case GroupingOperationType.eGOP_ConvertToRaidDecline:
+                    // TODO
 
                 default:
                     Logger.Warn($"OnClientPartyOperationRequest(): Unhandled operation {request.Operation} from player {player}");
@@ -40,10 +63,10 @@ namespace MHServerEmu.Games.Social.Parties
             }
         }
 
-        private bool SendOperationRequestToPlayerManager(PartyOperationPayload request)
+        private void SendOperationRequestToPlayerManager(PartyOperationPayload request)
         {
-            // TODO
-            return true;
+            ServiceMessage.PartyOperationRequest message = new(request);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         private bool SendOperationResultToClient(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)

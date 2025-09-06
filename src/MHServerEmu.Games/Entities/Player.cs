@@ -41,6 +41,7 @@ using MHServerEmu.Games.Regions.Maps;
 using MHServerEmu.Games.Regions.MatchQueues;
 using MHServerEmu.Games.Social.Communities;
 using MHServerEmu.Games.Social.Guilds;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Entities
 {
@@ -3581,6 +3582,21 @@ namespace MHServerEmu.Games.Entities
         #endregion
 
         #region Parties
+
+        public Party GetParty()
+        {
+            // TODO
+            return null;
+        }
+
+        public bool IsPartyLeader()
+        {
+            Party party = GetParty();
+            if (party == null)
+                return false;
+
+            return party.LeaderId == DatabaseUniqueId;
+        }
 
         public bool CanFormParty()
         {

@@ -309,6 +309,41 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+        public readonly struct PartyOperationRequest(PartyOperationPayload request)
+            : IGameServiceMessage
+        {
+            public readonly PartyOperationPayload Request = request;
+        }
+
+        public readonly struct PartyOperationRequestServerResult(ulong gameId, ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly PartyOperationPayload Request = request;
+            public readonly GroupingOperationResult Result = result;
+        }
+
+        public readonly struct PartyInfoServerUpdate(ulong gameId, ulong playerDbId, ulong partyId, PartyInfo partyInfo)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong PartyId = partyId;
+            public readonly PartyInfo PartyInfo = partyInfo;
+        }
+
+        public readonly struct PartyMemberInfoServerUpdate(ulong gameId, ulong playerDbId, ulong partyId, ulong memberDbId, PartyMemberEvent memberEvent, PartyMemberInfo memberInfo)
+            : IGameServiceMessage
+        {
+            public readonly ulong GameId = gameId;
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong PartyId = partyId;
+            public readonly ulong MemberDbId = memberDbId;
+            public readonly PartyMemberEvent MemberEvent = memberEvent;
+            public readonly PartyMemberInfo MemberInfo = memberInfo;
+        }
+
         #endregion
 
         #region Grouping Manager
