@@ -33,6 +33,7 @@ namespace MHServerEmu.PlayerManagement
         internal WorldManager WorldManager { get; }
         internal ClientManager ClientManager { get; }
         internal CommunityRegistry CommunityRegistry { get; }
+        internal MasterPartyManager PartyManager { get; }
 
         public PlayerManagerConfig Config { get; }
 
@@ -51,6 +52,7 @@ namespace MHServerEmu.PlayerManagement
             WorldManager = new(this);
             ClientManager = new(this);
             CommunityRegistry = new(this);
+            PartyManager = new(this);
 
             Config = ConfigManager.Instance.GetConfig<PlayerManagerConfig>();
         }

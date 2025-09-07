@@ -276,17 +276,9 @@ namespace MHServerEmu.PlayerManagement.Network
 
         private bool OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
         {
-            // TODO: global (cross-game) party manager
-
             PartyOperationPayload request = partyOperationRequest.Request;
-            if (_playerManager.ClientManager.TryGetPlayerHandle(request.RequestingPlayerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"OnPartyOperationRequest(): Player 0x{request.RequestingPlayerDbId:X} not found");
 
-            ServiceMessage.PartyOperationRequestServerResult result = new(
-                player.CurrentGame.Id, player.PlayerDbId, request, GroupingOperationResult.eGOPR_SystemError);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, result);
-
-            Logger.Debug(partyOperationRequest.Request.ToString());
+            _playerManager.PartyManager.ReceivePartyOperationRequest(request);
             return true;
         }
 
