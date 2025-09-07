@@ -7,13 +7,26 @@ namespace MHServerEmu.Games.Social.Parties
 {
     public class PartyManager
     {
+        // NOTE: It seems client-side party management functions are merged with ClientGame.
+
         private static readonly Logger Logger = LogManager.CreateLogger();
+
+        // This is a local cache of the authoritative data from the PlayerManager. May be out of date.
+        private readonly Dictionary<ulong, Party> _localParties = new();
 
         public Game Game { get; }
 
         public PartyManager(Game game)
         {
             Game = game;
+        }
+
+        public Party GetParty(ulong partyId)
+        {
+            if (_localParties.TryGetValue(partyId, out Party party) == false)
+                return null;
+
+            return party;
         }
 
         public void OnClientPartyOperationRequest(Player player, PartyOperationPayload request)
@@ -72,11 +85,107 @@ namespace MHServerEmu.Games.Social.Parties
         public void OnPartyInfoServerUpdate(ulong playerDbId, ulong groupId, PartyInfo partyInfo)
         {
             Logger.Debug($"OnPartyInfoServerUpdate(): {partyInfo}");
+
+            if (partyInfo != null)
+                CreateOrUpdateParty(partyInfo);
+
+            // Relay update to the player
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player != null)
+            {
+                var clientUpdate = PartyInfoClientUpdate.CreateBuilder()
+                    .SetGroupId(groupId);
+
+                if (partyInfo != null)
+                    clientUpdate.SetPartyInfo(partyInfo);
+
+                player.SendMessage(clientUpdate.Build());
+            }
         }
 
-        public void OnPartyMemberInfoServerUpdate(ulong playerDbId, ulong groupId, ulong memberDbId, PartyMemberEvent memberEvent, Gazillion.PartyMemberInfo partyMemberInfo)
+        public void OnPartyMemberInfoServerUpdate(ulong playerDbId, ulong groupId, ulong memberDbId, PartyMemberEvent memberEvent, Gazillion.PartyMemberInfo memberInfo)
         {
-            Logger.Debug($"OnPartyMemberInfoServerUpdate(): {partyMemberInfo}");
+            Logger.Debug($"OnPartyMemberInfoServerUpdate(): {memberInfo}");
+
+            // Update local party
+            Party party = GetParty(groupId);
+            if (party != null)
+            {
+                switch (memberEvent)
+                {
+                    case PartyMemberEvent.ePME_Add:
+                        party.AddMember(memberInfo);
+                        break;
+
+                    case PartyMemberEvent.ePME_Remove:
+                        party.RemoveMember(memberDbId, GroupLeaveReason.GROUP_LEAVE_REASON_LEFT);
+                        break;
+
+                    case PartyMemberEvent.ePME_Update:
+                        party.UpdateMember(memberInfo);
+                        break;
+                }
+
+                TryCleanUpParty(groupId);
+            }
+
+            // Relay update to the player
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player != null)
+            {
+                var clientUpdate = PartyMemberInfoClientUpdate.CreateBuilder()
+                    .SetGroupId(groupId)
+                    .SetMemberDbGuid(memberDbId)
+                    .SetMemberEvent(memberEvent);
+
+                if (memberInfo != null)
+                    clientUpdate.SetMemberInfo(memberInfo);
+
+                player.SendMessage(clientUpdate.Build());
+            }
+        }
+
+        public void OnPlayerDestroyed(Player player)
+        {
+            ulong partyId = player.PartyId;
+            if (partyId != 0)
+                TryCleanUpParty(partyId);
+        }
+
+        private Party CreateOrUpdateParty(PartyInfo partyInfo)
+        {
+            ulong partyId = partyInfo.GroupId;
+
+            if (_localParties.TryGetValue(partyId, out Party localParty) == false)
+            {
+                localParty = new(partyId);
+                _localParties.Add(partyId, localParty);
+                Logger.Info($"Added party 0x{partyId:X} to game 0x{Game.Id:X}");
+            }
+
+            localParty.SetFromMessage(partyInfo);
+
+            return localParty;
+        }
+
+        private void TryCleanUpParty(ulong partyId)
+        {
+            if (_localParties.TryGetValue(partyId, out Party party) == false)
+                return;
+
+            // Do not remove if any of the players is still in this game instance.
+            EntityManager entityManager = Game.EntityManager;
+            foreach (var kvp in party)
+            {
+                ulong playerDbId = kvp.Value.PlayerDbId;
+                Player player = entityManager.GetEntityByDbGuid<Player>(playerDbId);
+                if (player != null)
+                    return;
+            }
+
+            _localParties.Remove(partyId);
+
+            Logger.Info($"Removed party 0x{partyId:X} from game 0x{Game.Id:X}");
         }
 
         private void SendOperationRequestToPlayerManager(PartyOperationPayload request)

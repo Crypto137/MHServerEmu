@@ -507,6 +507,8 @@ namespace MHServerEmu.Games.Entities
             LeaderboardManager.Destroy();
 
             base.Destroy();
+
+            Game.PartyManager.OnPlayerDestroyed(this);
         }
 
         public override void OnDeallocate()
