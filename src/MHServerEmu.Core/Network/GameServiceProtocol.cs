@@ -309,12 +309,20 @@ namespace MHServerEmu.Core.Network
             }
         }
 
+        /// <summary>
+        /// [Game -> PlayerManager] Forwards a party operation request received from a client to the player manager.
+        /// </summary>
         public readonly struct PartyOperationRequest(PartyOperationPayload request)
             : IGameServiceMessage
         {
             public readonly PartyOperationPayload Request = request;
         }
 
+        // NOTE: PlayerManager -> Game party messages are based on 1.53.
+
+        /// <summary>
+        /// [PlayerManager -> Game] Contains a response to a forwarded party operation request.
+        /// </summary>
         public readonly struct PartyOperationRequestServerResult(ulong gameId, ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
             : IGameServiceMessage
         {
@@ -324,21 +332,27 @@ namespace MHServerEmu.Core.Network
             public readonly GroupingOperationResult Result = result;
         }
 
-        public readonly struct PartyInfoServerUpdate(ulong gameId, ulong playerDbId, ulong partyId, PartyInfo partyInfo)
+        /// <summary>
+        /// [PlayerManager -> Game] Updates the state of a party in a game instance.
+        /// </summary>
+        public readonly struct PartyInfoServerUpdate(ulong gameId, ulong playerDbId, ulong groupId, PartyInfo partyInfo)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
             public readonly ulong PlayerDbId = playerDbId;
-            public readonly ulong PartyId = partyId;
+            public readonly ulong GroupId = groupId;
             public readonly PartyInfo PartyInfo = partyInfo;
         }
 
-        public readonly struct PartyMemberInfoServerUpdate(ulong gameId, ulong playerDbId, ulong partyId, ulong memberDbId, PartyMemberEvent memberEvent, PartyMemberInfo memberInfo)
+        /// <summary>
+        /// [PlayerManager -> Game] Update the state of a party member in a party in a game instance.
+        /// </summary>
+        public readonly struct PartyMemberInfoServerUpdate(ulong gameId, ulong playerDbId, ulong groupId, ulong memberDbId, PartyMemberEvent memberEvent, PartyMemberInfo memberInfo)
             : IGameServiceMessage
         {
             public readonly ulong GameId = gameId;
             public readonly ulong PlayerDbId = playerDbId;
-            public readonly ulong PartyId = partyId;
+            public readonly ulong GroupId = groupId;
             public readonly ulong MemberDbId = memberDbId;
             public readonly PartyMemberEvent MemberEvent = memberEvent;
             public readonly PartyMemberInfo MemberInfo = memberInfo;

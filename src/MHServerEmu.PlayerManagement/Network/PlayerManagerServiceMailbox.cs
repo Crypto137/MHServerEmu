@@ -77,6 +77,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnCommunityStatusRequest(communityStatusRequest);
                     break;
 
+                case ServiceMessage.PartyOperationRequest partyOperationRequest:
+                    OnPartyOperationRequest(partyOperationRequest);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -267,6 +271,22 @@ namespace MHServerEmu.PlayerManagement.Network
             List<ulong> members = communityStatusRequest.Members;
 
             _playerManager.CommunityRegistry.RequestMemberBroadcast(gameId, playerDbId, members);
+            return true;
+        }
+
+        private bool OnPartyOperationRequest(in ServiceMessage.PartyOperationRequest partyOperationRequest)
+        {
+            // TODO: global (cross-game) party manager
+
+            PartyOperationPayload request = partyOperationRequest.Request;
+            if (_playerManager.ClientManager.TryGetPlayerHandle(request.RequestingPlayerDbId, out PlayerHandle player) == false)
+                return Logger.WarnReturn(false, $"OnPartyOperationRequest(): Player 0x{request.RequestingPlayerDbId:X} not found");
+
+            ServiceMessage.PartyOperationRequestServerResult result = new(
+                player.CurrentGame.Id, player.PlayerDbId, request, GroupingOperationResult.eGOPR_SystemError);
+            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, result);
+
+            Logger.Debug(partyOperationRequest.Request.ToString());
             return true;
         }
 

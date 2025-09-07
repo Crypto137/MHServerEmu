@@ -63,6 +63,22 @@ namespace MHServerEmu.Games.Social.Parties
             }
         }
 
+        public void OnPartyOperationRequestServerResult(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
+        {
+            Logger.Debug($"OnPartyOperationRequestServerResult(): {request.Operation} {request.RequestingPlayerName} => {request.TargetPlayerName}: {result}");
+            SendOperationResultToClient(playerDbId, request, result);
+        }
+
+        public void OnPartyInfoServerUpdate(ulong playerDbId, ulong groupId, PartyInfo partyInfo)
+        {
+            Logger.Debug($"OnPartyInfoServerUpdate(): {partyInfo}");
+        }
+
+        public void OnPartyMemberInfoServerUpdate(ulong playerDbId, ulong groupId, ulong memberDbId, PartyMemberEvent memberEvent, Gazillion.PartyMemberInfo partyMemberInfo)
+        {
+            Logger.Debug($"OnPartyMemberInfoServerUpdate(): {partyMemberInfo}");
+        }
+
         private void SendOperationRequestToPlayerManager(PartyOperationPayload request)
         {
             ServiceMessage.PartyOperationRequest message = new(request);

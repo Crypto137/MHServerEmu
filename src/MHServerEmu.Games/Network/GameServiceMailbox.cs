@@ -58,6 +58,18 @@ namespace MHServerEmu.Games.Network
                     OnCommunityBroadcastBatch(communityBroadcastBatch);
                     break;
 
+                case ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult:
+                    OnPartyOperationRequestServerResult(partyOperationRequestServerResult);
+                    break;
+
+                case ServiceMessage.PartyInfoServerUpdate partyInfoServerUpdate:
+                    OnPartyInfoServerUpdate(partyInfoServerUpdate);
+                    break;
+
+                case ServiceMessage.PartyMemberInfoServerUpdate partyMemberInfoServerUpdate:
+                    OnPartyMemberInfoServerUpdate(partyMemberInfoServerUpdate);
+                    break;
+
                 case ServiceMessage.LeaderboardStateChange leaderboardStateChange:
                     OnLeaderboardStateChange(leaderboardStateChange);
                     break;
@@ -171,6 +183,35 @@ namespace MHServerEmu.Games.Network
             }
 
             return true;
+        }
+
+        private void OnPartyOperationRequestServerResult(in ServiceMessage.PartyOperationRequestServerResult partyOperationRequestServerResult)
+        {
+            ulong playerDbId = partyOperationRequestServerResult.PlayerDbId;
+            PartyOperationPayload request = partyOperationRequestServerResult.Request;
+            GroupingOperationResult result = partyOperationRequestServerResult.Result;
+
+            Game.PartyManager.OnPartyOperationRequestServerResult(playerDbId, request, result);
+        }
+
+        private void OnPartyInfoServerUpdate(in ServiceMessage.PartyInfoServerUpdate partyInfoServerUpdate)
+        {
+            ulong playerDbId = partyInfoServerUpdate.PlayerDbId;
+            ulong groupId = partyInfoServerUpdate.GroupId;
+            PartyInfo partyInfo = partyInfoServerUpdate.PartyInfo;
+
+            Game.PartyManager.OnPartyInfoServerUpdate(playerDbId, groupId, partyInfo);
+        }
+
+        private void OnPartyMemberInfoServerUpdate(in ServiceMessage.PartyMemberInfoServerUpdate partyMemberInfoServerUpdate)
+        {
+            ulong playerDbId = partyMemberInfoServerUpdate.PlayerDbId;
+            ulong groupId = partyMemberInfoServerUpdate.GroupId;
+            ulong memberDbId = partyMemberInfoServerUpdate.MemberDbId;
+            PartyMemberEvent memberEvent = partyMemberInfoServerUpdate.MemberEvent;
+            PartyMemberInfo memberInfo = partyMemberInfoServerUpdate.MemberInfo;
+
+            Game.PartyManager.OnPartyMemberInfoServerUpdate(playerDbId, groupId, memberDbId, memberEvent, memberInfo);
         }
 
         private void OnLeaderboardStateChange(in ServiceMessage.LeaderboardStateChange leaderboardStateChange)
