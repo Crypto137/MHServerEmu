@@ -1,6 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Core.System;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -16,23 +17,63 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private readonly PlayerManagerService _playerManager;
 
+        private ulong _currentPartyId = 0;
+
         public MasterPartyManager(PlayerManagerService playerManager)
         {
             _playerManager = playerManager;
         }
 
-        public bool ReceivePartyOperationRequest(PartyOperationPayload request)
+        public GroupingOperationResult DoPartyOperation(ref PartyOperationPayload request, HashSet<PlayerHandle> playersToNotify)
         {
-            if (_playerManager.ClientManager.TryGetPlayerHandle(request.RequestingPlayerDbId, out PlayerHandle player) == false)
-                return Logger.WarnReturn(false, $"OnPartyOperationRequest(): Player 0x{request.RequestingPlayerDbId:X} not found");
+            GroupingOperationResult result = GroupingOperationResult.eGOPR_SystemError;
 
-            ServiceMessage.PartyOperationRequestServerResult result = new(
-                player.CurrentGame.Id, player.PlayerDbId, request, GroupingOperationResult.eGOPR_SystemError);
-            ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, result);
+            // Get requesting player
+            ulong requestingPlayerDbId = request.RequestingPlayerDbId;
+            if (_playerManager.ClientManager.TryGetPlayerHandle(requestingPlayerDbId, out PlayerHandle requestingPlayer) == false)
+                return Logger.WarnReturn(result, $"OnPartyOperationRequest(): Player 0x{requestingPlayerDbId:X} not found");
 
-            Logger.Debug(request.ToString());
+            playersToNotify.Add(requestingPlayer);
 
-            return true;
+            // Get target player
+            ulong targetPlayerId = 0;
+            if (request.HasTargetPlayerDbId)
+            {
+                targetPlayerId = request.TargetPlayerDbId;
+            }
+            else
+            {
+                // TODO: Check online players only instead of using the database cache
+                if (PlayerNameCache.Instance.TryGetPlayerDbId(request.TargetPlayerName, out targetPlayerId, out string resultPlayerName))
+                {
+                    // Messages in protobuf-csharp-port are immutable, so we have to rebuild the request here to add a target id to it.
+                    request = PartyOperationPayload.CreateBuilder()
+                        .MergeFrom(request)
+                        .SetTargetPlayerDbId(targetPlayerId)
+                        .SetTargetPlayerName(resultPlayerName)
+                        .Build();
+                }
+            }
+
+            // The target player may not be online, in which case it's going to be null here.
+            _playerManager.ClientManager.TryGetPlayerHandle(targetPlayerId, out PlayerHandle targetPlayer);
+
+            switch (request.Operation)
+            {
+                case GroupingOperationType.eGOP_InvitePlayer:
+                    if (targetPlayer != null)
+                    {
+                        playersToNotify.Add(targetPlayer);
+                        result = GroupingOperationResult.eGOPR_Success;
+                    }
+                    break;
+
+                default:
+                    Logger.Warn($"DoPartyOperation(): Unhandled party operation {request.Operation}");
+                    break;
+            }
+
+            return result;
         }
     }
 }

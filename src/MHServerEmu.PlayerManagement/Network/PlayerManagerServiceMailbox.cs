@@ -1,5 +1,6 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Core.System;
 using MHServerEmu.PlayerManagement.Players;
@@ -278,7 +279,26 @@ namespace MHServerEmu.PlayerManagement.Network
         {
             PartyOperationPayload request = partyOperationRequest.Request;
 
-            _playerManager.PartyManager.ReceivePartyOperationRequest(request);
+            HashSet<PlayerHandle> playersToNotify = HashSetPool<PlayerHandle>.Instance.Get();
+
+            GroupingOperationResult result = _playerManager.PartyManager.DoPartyOperation(ref request, playersToNotify);
+
+            if (playersToNotify.Count == 0)
+                return Logger.WarnReturn(false, "OnPartyOperationRequest(): playersToNotify.Count == 0");
+
+            foreach (PlayerHandle player in playersToNotify)
+            {
+                if (player.CurrentGame == null)
+                    continue;
+
+                ulong gameId = player.CurrentGame.Id;
+                ulong playerDbId = player.PlayerDbId;
+
+                ServiceMessage.PartyOperationRequestServerResult message = new(gameId, playerDbId, request, result);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+
+            HashSetPool<PlayerHandle>.Instance.Return(playersToNotify);
             return true;
         }
 
