@@ -3587,8 +3587,11 @@ namespace MHServerEmu.Games.Entities
 
         public Party GetParty()
         {
-            // TODO
-            return null;
+            ulong partyId = PartyId;
+            if (partyId == 0)
+                return null;
+
+            return Game.PartyManager.GetParty(partyId);
         }
 
         public bool IsPartyLeader()
@@ -3606,6 +3609,62 @@ namespace MHServerEmu.Games.Entities
             if (region == null) return Logger.WarnReturn(false, "CanFormParty(): region == null");
 
             return region.AllowsPartyFormation;
+        }
+
+        public void OnAddedToParty(Party party)
+        {
+            Logger.Debug($"OnAddedToParty(): {party}");
+
+            if (PartyId != 0)
+            {
+                Logger.Warn($"OnAddedToParty(): Already in party 0x{PartyId:X}");
+                return;
+            }
+
+            _partyId.Set(party.PartyId);
+
+            // TODO: Party AOI
+
+            // we should receive a OnPartySizeChanged callback after this
+        }
+
+        public void OnRemovedFromParty(Party party, GroupLeaveReason reason)
+        {
+            Logger.Debug($"OnRemovedFromParty(): {party} - {reason}");
+
+            _partyId.Set(0);
+
+            // TODO: Party AOI
+
+            // TODO: Update party condition on the current avatar
+
+            // Need to do community cleanup here because we will no longer get OnPartySizeChanged callbacks.
+            Community.UpdateParty(null);
+
+            Region region = GetRegion();
+            if (region != null)
+            {
+                // TODO: PlayerLeavePartyGameEvent
+                region.PartySizeChangedEvent.Invoke(new(this, 1));
+            }
+
+            RegionPrototype bodyslideRegionProto = GameDatabase.GetPrototype<RegionPrototype>(Properties[PropertyEnum.BodySliderRegionRef]);
+            if (bodyslideRegionProto != null && bodyslideRegionProto.IsPrivate)
+                RemoveBodysliderProperties();
+        }
+
+        public void OnPartySizeChanged(Party party)
+        {
+            int partySize = party.NumMembers;
+
+            Logger.Debug($"OnPartySizeChanged(): {party} - {partySize}");
+
+            // TODO: Update party condition on the current avatar
+
+            Region region = GetRegion();
+            region?.PartySizeChangedEvent.Invoke(new(this, partySize));
+
+            Community.UpdateParty(party);
         }
 
         #endregion

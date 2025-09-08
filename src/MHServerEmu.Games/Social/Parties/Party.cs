@@ -62,6 +62,11 @@ namespace MHServerEmu.Games.Social.Parties
 
             UpdateBoostCounts();
 
+            Player player = Game.Current.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            player?.OnAddedToParty(this);
+
+            OnPartySizeChanged();
+
             return true;
         }
 
@@ -77,6 +82,11 @@ namespace MHServerEmu.Games.Social.Parties
             Logger.Info($"Removing party member. memberId=0x{memberId:X}, reason={reason}, party={this}");
 
             _members.Remove(memberId);
+
+            Player player = Game.Current.EntityManager.GetEntityByDbGuid<Player>(memberId);
+            player?.OnRemovedFromParty(this, reason);
+
+            OnPartySizeChanged();
 
             return true;
         }
@@ -137,6 +147,14 @@ namespace MHServerEmu.Games.Social.Parties
             return 0;
         }
 
+        public string GetMemberName(ulong memberId)
+        {
+            if (_members.TryGetValue(memberId, out PartyMemberInfo memberInfo) == false)
+                return string.Empty;
+
+            return memberInfo.PlayerName;
+        }
+
         public CommunityMember GetCommunityMemberForDbGuid(Player player, ulong memberId)
         {
             PartyMemberInfo memberInfo = GetMemberInfo(memberId);
@@ -161,6 +179,17 @@ namespace MHServerEmu.Games.Social.Parties
         private void UpdateBoostCounts()
         {
             // TODO
+        }
+
+        private void OnPartySizeChanged()
+        {
+            EntityManager entityManager = Game.Current.EntityManager;
+
+            foreach (var kvp in _members)
+            {
+                Player player = entityManager.GetEntityByDbGuid<Player>(kvp.Key);
+                player?.OnPartySizeChanged(this);
+            }
         }
     }
 }

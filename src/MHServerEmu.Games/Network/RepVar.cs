@@ -1,4 +1,6 @@
-﻿using MHServerEmu.Core.Logging;
+﻿using Gazillion;
+using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Games.Common;
 
@@ -10,6 +12,8 @@ namespace MHServerEmu.Games.Network
     // NOTE: This per-variable replication system was much more heavily used before version 1.25.
     // By version 1.52 only three types (int, ulong, string) are still in use,
     // although ReplicatedPropertyCollection is also part of the same overall system.
+
+    // TODO: Port the improved implementation of this from the 1.10 server.
 
     public class RepInt : IArchiveMessageHandler, ISerialize
     {
@@ -101,9 +105,22 @@ namespace MHServerEmu.Games.Network
             if (_value == value) return;
             _value = value;
 
-            // TODO: Send archive message
             if (_messageDispatcher?.CanSendArchiveMessages == true)
-                Logger.Trace($"Set(): {this}");
+            {
+                Logger.Debug($"Set(): {this}");
+                using Archive archive = new(ArchiveSerializeType.Replication, (ulong)_interestPolicies);
+                Serializer.Transfer(archive, this);
+
+                NetMessageReplicationArchive message = NetMessageReplicationArchive.CreateBuilder()
+                    .SetReplicationId(ReplicationId)
+                    .SetArchiveData(archive.ToByteString())
+                    .Build();
+
+                List<PlayerConnection> interestedPlayers = ListPool<PlayerConnection>.Instance.Get();
+                _messageDispatcher.GetInterestedClients(interestedPlayers, _interestPolicies);
+                _messageDispatcher.Game.NetworkManager.SendMessageToMultiple(interestedPlayers, message);
+                ListPool<PlayerConnection>.Instance.Return(interestedPlayers);
+            }
         }
 
         public override string ToString() => $"[{ReplicationId}] {_value}";
