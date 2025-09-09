@@ -397,8 +397,8 @@ namespace MHServerEmu.PlayerManagement.Players
         {
             RegionHandle region = null;
 
-            if (PlayerManagerService.Instance.ClientManager.TryGetPlayerHandle(destPlayerDbId, out PlayerHandle destPlayer))
-                region = destPlayer.ActualRegion;
+            PlayerHandle destPlayer = PlayerManagerService.Instance.ClientManager.GetPlayer(destPlayerDbId);
+            region = destPlayer?.ActualRegion;
 
             if (region == null)
             {

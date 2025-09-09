@@ -94,7 +94,8 @@ namespace MHServerEmu.PlayerManagement.Social
             ulong playerDbId = broadcast.MemberPlayerDbId;
 
             // We should be receiving broadcasts only from online players
-            if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"ReceiveMemberBroadcast(): No player found for dbid 0x{playerDbId:X}");
 
             // Member entry should be created when a player logs in

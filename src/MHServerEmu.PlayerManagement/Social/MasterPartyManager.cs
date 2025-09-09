@@ -30,33 +30,32 @@ namespace MHServerEmu.PlayerManagement.Social
 
             // Get requesting player
             ulong requestingPlayerDbId = request.RequestingPlayerDbId;
-            if (_playerManager.ClientManager.TryGetPlayerHandle(requestingPlayerDbId, out PlayerHandle requestingPlayer) == false)
+            PlayerHandle requestingPlayer = _playerManager.ClientManager.GetPlayer(requestingPlayerDbId);
+            if (requestingPlayer == null)
                 return Logger.WarnReturn(result, $"OnPartyOperationRequest(): Player 0x{requestingPlayerDbId:X} not found");
 
             playersToNotify.Add(requestingPlayer);
 
-            // Get target player
-            ulong targetPlayerId = 0;
+            // Get target player (may not be online, in which case it's going to be null here)
+            PlayerHandle targetPlayer;
             if (request.HasTargetPlayerDbId)
             {
-                targetPlayerId = request.TargetPlayerDbId;
+                ulong targetPlayerId = request.TargetPlayerDbId;
+                targetPlayer = _playerManager.ClientManager.GetPlayer(targetPlayerId);
             }
             else
             {
-                // TODO: Check online players only instead of using the database cache
-                if (PlayerNameCache.Instance.TryGetPlayerDbId(request.TargetPlayerName, out targetPlayerId, out string resultPlayerName))
+                targetPlayer = _playerManager.ClientManager.GetPlayer(request.TargetPlayerName);
+                if (targetPlayer != null)
                 {
                     // Messages in protobuf-csharp-port are immutable, so we have to rebuild the request here to add a target id to it.
                     request = PartyOperationPayload.CreateBuilder()
                         .MergeFrom(request)
-                        .SetTargetPlayerDbId(targetPlayerId)
-                        .SetTargetPlayerName(resultPlayerName)
+                        .SetTargetPlayerDbId(targetPlayer.PlayerDbId)
+                        .SetTargetPlayerName(targetPlayer.PlayerName)
                         .Build();
                 }
             }
-
-            // The target player may not be online, in which case it's going to be null here.
-            _playerManager.ClientManager.TryGetPlayerHandle(targetPlayerId, out PlayerHandle targetPlayer);
 
             switch (request.Operation)
             {

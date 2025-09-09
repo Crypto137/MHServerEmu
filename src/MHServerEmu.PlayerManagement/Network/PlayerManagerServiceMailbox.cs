@@ -130,7 +130,8 @@ namespace MHServerEmu.PlayerManagement.Network
             IFrontendClient client = gameInstanceClientOp.Client;
             ulong gameId = gameInstanceClientOp.GameId;
 
-            if (_playerManager.ClientManager.TryGetPlayerHandle(client.DbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(client.DbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnGameInstanceClientOp(): No handle found for client [{client}]");
 
             switch (gameInstanceClientOp.Type)
@@ -176,7 +177,8 @@ namespace MHServerEmu.PlayerManagement.Network
             ulong playerDbId = changeRegionRequest.Header.RequestingPlayerGuid;
             TeleportContextEnum context = changeRegionRequest.Header.Type;
 
-            if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnChangeRegionRequest(): No player handle for dbid 0x{playerDbId:X}");
 
             if (changeRegionRequest.DestTarget != null)
@@ -195,7 +197,8 @@ namespace MHServerEmu.PlayerManagement.Network
 
         private bool OnRegionTransferFinished(in ServiceMessage.RegionTransferFinished regionTransferFinished)
         {
-            if (_playerManager.ClientManager.TryGetPlayerHandle(regionTransferFinished.PlayerDbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(regionTransferFinished.PlayerDbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnRegionTransferFinished(): No handle found for playerDbId 0x{regionTransferFinished.PlayerDbId}");
 
             return player.FinishRegionTransfer(regionTransferFinished.TransferId);
@@ -203,7 +206,8 @@ namespace MHServerEmu.PlayerManagement.Network
 
         private bool OnClearPrivateStoryRegions(in ServiceMessage.ClearPrivateStoryRegions clearPrivateStoryRegions)
         {
-            if (_playerManager.ClientManager.TryGetPlayerHandle(clearPrivateStoryRegions.PlayerDbId, out PlayerHandle player) == false)
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(clearPrivateStoryRegions.PlayerDbId);
+            if (player == null)
                 return Logger.WarnReturn(false, $"OnClearPrivateStoryRegions(): No handle found for playerDbId 0x{clearPrivateStoryRegions.PlayerDbId}");
 
             player.WorldView.ClearPrivateStoryRegions();
@@ -241,18 +245,12 @@ namespace MHServerEmu.PlayerManagement.Network
         private bool OnPlayerNameChanged(in ServiceMessage.PlayerNameChanged playerNameChanged)
         {
             ulong playerDbId = playerNameChanged.PlayerDbId;
+            string oldPlayerName = playerNameChanged.OldPlayerName;
             string newPlayerName = playerNameChanged.NewPlayerName;
 
+            _playerManager.ClientManager.OnPlayerNameChanged(playerDbId, oldPlayerName, newPlayerName);
             PlayerNameCache.Instance.OnPlayerNameChanged(playerDbId);
             _playerManager.CommunityRegistry.OnPlayerNameChanged(playerDbId, newPlayerName);
-
-            // Update the logged in player
-            if (_playerManager.ClientManager.TryGetPlayerHandle(playerDbId, out PlayerHandle player))
-            {
-                lock (player.Account)
-                    player.Account.PlayerName = newPlayerName;
-                // TODO: Send player name change to the player entity in a game instance
-            }
 
             return true;
         }
