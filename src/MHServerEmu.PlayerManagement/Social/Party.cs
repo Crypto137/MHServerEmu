@@ -25,6 +25,9 @@ namespace MHServerEmu.PlayerManagement.Social
         public GroupType Type { get; private set; } = GroupType.GroupType_Party;
         public PlayerHandle Leader { get; private set; }
 
+        public int MemberCount { get => _members.Count; }
+        public bool HasEnoughMembersOrInvitations { get => _members.Count > 1 || _pendingMembers.Count > 0; }
+
         public Party(ulong id, PlayerHandle creator)
         {
             Id = id;
@@ -134,6 +137,15 @@ namespace MHServerEmu.PlayerManagement.Social
             return true;
         }
 
+        public PlayerHandle GetNextLeader()
+        {
+            // Leadership is passed in the order of joining the party, which is reflected in the member index.
+            if (_members.Count == 0)
+                return null;
+
+            return _members[0];
+        }
+
         public bool HasInvitation(PlayerHandle player)
         {
             return _pendingMembers.Contains(player);
@@ -145,10 +157,40 @@ namespace MHServerEmu.PlayerManagement.Social
             player.PendingParty = this;
         }
 
-        public void CancelInvitation(PlayerHandle player)
+        public void RemoveInvitation(PlayerHandle player)
         {
             _pendingMembers.Remove(player);
             player.PendingParty = null;
+        }
+
+        public void CancelAllInvitations()
+        {
+            foreach (PlayerHandle player in _pendingMembers)
+            {
+                if (player.PendingParty != null && player.PendingParty != this)
+                {
+                    Logger.Warn($"CancelAllInvitations(): Player pending party desync (expected [{this}], got [{player.PendingParty}])");
+                    continue;
+                }
+
+                player.PendingParty = null;
+
+                // Notify the player of cancellation if in-game
+                if (player.CurrentGame == null)
+                    continue;
+
+                var request = PartyOperationPayload.CreateBuilder()
+                    .SetRequestingPlayerDbId(player.PlayerDbId)
+                    .SetRequestingPlayerName(player.PlayerName)
+                    .SetOperation(GroupingOperationType.eGOP_ServerNotification)
+                    .Build();
+
+                ServiceMessage.PartyOperationRequestServerResult message = new(player.CurrentGame.Id, player.PlayerDbId,
+                    request, GroupingOperationResult.eGOPR_PendingPartyDisbanded);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+
+            _pendingMembers.Clear();
         }
 
         public void SyncPartyInfo(PlayerHandle player)

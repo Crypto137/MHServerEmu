@@ -1,5 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
+using MHServerEmu.Games.Social.Parties;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -24,10 +26,17 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public void OnPlayerRemoved(PlayerHandle player)
         {
-            player.PendingParty?.CancelInvitation(player);
+            Party pendingParty = player.PendingParty;
+            if (pendingParty != null)
+            {
+                pendingParty.RemoveInvitation(player);
+
+                if (pendingParty.HasEnoughMembersOrInvitations == false)
+                    DisbandParty(pendingParty);
+            }
 
             if (player.CurrentParty != null)
-                RemovePlayerFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
+                RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
         }
 
         public GroupingOperationResult DoPartyOperation(ref PartyOperationPayload request, HashSet<PlayerHandle> playersToNotify)
@@ -66,11 +75,24 @@ namespace MHServerEmu.PlayerManagement.Social
             switch (request.Operation)
             {
                 case GroupingOperationType.eGOP_InvitePlayer:
-                    result = DoPartyOperationInvitePlayer(requestingPlayer, targetPlayer, playersToNotify);
+                    if (targetPlayer != null)
+                        playersToNotify.Add(targetPlayer);
+                    result = DoPartyOperationInvitePlayer(requestingPlayer, targetPlayer);
                     break;
 
                 case GroupingOperationType.eGOP_AcceptInvite:
-                    result = DoPartyOperationAcceptInvite(requestingPlayer, playersToNotify);
+                    requestingPlayer.PendingParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationAcceptInvite(requestingPlayer);
+                    break;
+
+                case GroupingOperationType.eGOP_DeclineInvite:
+                    requestingPlayer.PendingParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationDeclineInvite(requestingPlayer);
+                    break;
+
+                case GroupingOperationType.eGOP_LeaveParty:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationLeaveParty(requestingPlayer);
                     break;
 
                 default:
@@ -83,7 +105,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         #region Operations
 
-        private GroupingOperationResult DoPartyOperationInvitePlayer(PlayerHandle requestingPlayer, PlayerHandle targetPlayer, HashSet<PlayerHandle> playersToNotify)
+        private GroupingOperationResult DoPartyOperationInvitePlayer(PlayerHandle requestingPlayer, PlayerHandle targetPlayer)
         {
             if (requestingPlayer == null)
                 return GroupingOperationResult.eGOPR_SystemError;
@@ -93,9 +115,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (targetPlayer == requestingPlayer)
                 return GroupingOperationResult.eGOPR_TargetedSelf;
-
-            // If this is an available distinct player, include them in the response.
-            playersToNotify.Add(targetPlayer);
 
             if (targetPlayer.CurrentParty != null)
             {
@@ -130,7 +149,7 @@ namespace MHServerEmu.PlayerManagement.Social
             return GroupingOperationResult.eGOPR_Success;
         }
 
-        private GroupingOperationResult DoPartyOperationAcceptInvite(PlayerHandle player, HashSet<PlayerHandle> playersToNotify)
+        private GroupingOperationResult DoPartyOperationAcceptInvite(PlayerHandle player)
         {
             if (player == null)
                 return GroupingOperationResult.eGOPR_SystemError;
@@ -152,8 +171,39 @@ namespace MHServerEmu.PlayerManagement.Social
                 return GroupingOperationResult.eGOPR_PartyFull;
 
             party.AddMember(player);
-            party.GetMembers(playersToNotify);  // notify all members
             
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationDeclineInvite(PlayerHandle player)
+        {
+            if (player == null)
+                return GroupingOperationResult.eGOPR_SystemError;
+
+            Party party = player.PendingParty;
+
+            if (party == null)
+                return GroupingOperationResult.eGOPR_NoPendingInvite;
+
+            party.RemoveInvitation(player);
+
+            // If this was the only invitation and there are no other members in the party, disband it.
+            if (party.HasEnoughMembersOrInvitations == false)
+                DisbandParty(party);            
+
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationLeaveParty(PlayerHandle player)
+        {
+            if (player == null)
+                return GroupingOperationResult.eGOPR_SystemError;
+
+            Party party = player.CurrentParty;
+            if (party == null)
+                return GroupingOperationResult.eGOPR_NotInParty;
+
+            RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_LEFT);
             return GroupingOperationResult.eGOPR_Success;
         }
 
@@ -169,18 +219,59 @@ namespace MHServerEmu.PlayerManagement.Social
             Party party = new(++_currentPartyId, player);
             _parties.Add(party.Id, party);
 
-            Logger.Info($"CreateParty(): Created party [{party}]");
+            Logger.Info($"CreateParty(): party=[{party}]");
 
             return party;
         }
 
-        private void RemovePlayerFromParty(PlayerHandle player, GroupLeaveReason reason)
+        private bool DisbandParty(Party party)
+        {
+            if (party == null) return Logger.WarnReturn(false, "DisbandParty(): party == null");
+
+            // Clean up remaining members
+            HashSet<PlayerHandle> members = HashSetPool<PlayerHandle>.Instance.Get();
+            party.GetMembers(members);
+
+            foreach (PlayerHandle member in members)
+                party.RemoveMember(member, GroupLeaveReason.GROUP_LEAVE_REASON_DISBANDED);
+
+            HashSetPool<PlayerHandle>.Instance.Return(members);
+
+            if (party.MemberCount != 0)
+                return Logger.WarnReturn(false, $"DisbandParty(): Failed to remove all players from party {party}");
+
+            // Cancel invitations
+            party.CancelAllInvitations();
+
+            // Remove from the manager
+            _parties.Remove(party.Id);
+
+            Logger.Info($"DisbandParty(): party=[{party}]");
+
+            return true;
+        }
+
+        private void RemoveMemberFromParty(PlayerHandle player, GroupLeaveReason reason)
         {
             Party party = player.CurrentParty;
             if (party == null)
                 return;
 
             party.RemoveMember(player, reason);
+
+            // If the leader is the only one remaining in the party and there are no pending invites, it's time to disband.
+            if (party.HasEnoughMembersOrInvitations == false)
+            {
+                DisbandParty(party);
+                return;
+            }
+
+            // Monarchy time: pass leadership to the next in line.
+            if (player == party.Leader)
+            {
+                PlayerHandle nextLeader = party.GetNextLeader();
+                party.SetLeader(nextLeader);
+            }
         }
 
         #endregion
