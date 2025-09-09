@@ -120,7 +120,7 @@ namespace MHServerEmu.PlayerManagement.Social
                     return GroupingOperationResult.eGOPR_NotLeader;
             }
 
-            if (party.IsFull)
+            if (party.IsFull())
                 return GroupingOperationResult.eGOPR_PartyFull;
 
             party.AddInvitation(targetPlayer);
@@ -148,7 +148,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return GroupingOperationResult.eGOPR_NoPendingInvite;
             }
 
-            if (party.IsFull)
+            if (party.IsFull())
                 return GroupingOperationResult.eGOPR_PartyFull;
 
             party.AddMember(player);
