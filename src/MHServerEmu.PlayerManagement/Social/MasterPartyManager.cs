@@ -1,7 +1,5 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Network;
-using MHServerEmu.Core.System;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -22,6 +20,14 @@ namespace MHServerEmu.PlayerManagement.Social
         public MasterPartyManager(PlayerManagerService playerManager)
         {
             _playerManager = playerManager;
+        }
+
+        public void OnPlayerRemoved(PlayerHandle player)
+        {
+            player.PendingParty?.CancelInvitation(player);
+
+            if (player.CurrentParty != null)
+                RemovePlayerFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
         }
 
         public GroupingOperationResult DoPartyOperation(ref PartyOperationPayload request, HashSet<PlayerHandle> playersToNotify)
@@ -60,11 +66,11 @@ namespace MHServerEmu.PlayerManagement.Social
             switch (request.Operation)
             {
                 case GroupingOperationType.eGOP_InvitePlayer:
-                    if (targetPlayer != null)
-                    {
-                        playersToNotify.Add(targetPlayer);
-                        result = GroupingOperationResult.eGOPR_Success;
-                    }
+                    result = DoPartyOperationInvitePlayer(requestingPlayer, targetPlayer, playersToNotify);
+                    break;
+
+                case GroupingOperationType.eGOP_AcceptInvite:
+                    result = DoPartyOperationAcceptInvite(requestingPlayer, playersToNotify);
                     break;
 
                 default:
@@ -74,5 +80,109 @@ namespace MHServerEmu.PlayerManagement.Social
 
             return result;
         }
+
+        #region Operations
+
+        private GroupingOperationResult DoPartyOperationInvitePlayer(PlayerHandle requestingPlayer, PlayerHandle targetPlayer, HashSet<PlayerHandle> playersToNotify)
+        {
+            if (requestingPlayer == null)
+                return GroupingOperationResult.eGOPR_SystemError;
+
+            if (targetPlayer == null)
+                return GroupingOperationResult.eGOPR_TargetPlayerNotFound;
+
+            if (targetPlayer == requestingPlayer)
+                return GroupingOperationResult.eGOPR_TargetedSelf;
+
+            // If this is an available distinct player, include them in the response.
+            playersToNotify.Add(targetPlayer);
+
+            if (targetPlayer.CurrentParty != null)
+            {
+                if (requestingPlayer.CurrentParty != null && requestingPlayer.CurrentParty == targetPlayer.CurrentParty)
+                    return GroupingOperationResult.eGOPR_NoChange;
+
+                return GroupingOperationResult.eGOPR_AlreadyInParty;
+            }
+
+            if (targetPlayer.PendingParty != null)
+                return GroupingOperationResult.eGOPR_AlreadyHasInvite;
+
+            Party party = requestingPlayer.CurrentParty;
+            if (party == null)
+            {
+                // The requesting player will be the leader of the new party by default.
+                party = CreateParty(requestingPlayer);
+            }
+            else
+            {
+                if (requestingPlayer != party.Leader)
+                    return GroupingOperationResult.eGOPR_NotLeader;
+            }
+
+            if (party.IsFull)
+                return GroupingOperationResult.eGOPR_PartyFull;
+
+            party.AddInvitation(targetPlayer);
+
+            Logger.Info($"DoPartyOperationInvitePlayer(): Success for [{requestingPlayer}] => [{targetPlayer}]");
+
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationAcceptInvite(PlayerHandle player, HashSet<PlayerHandle> playersToNotify)
+        {
+            if (player == null)
+                return GroupingOperationResult.eGOPR_SystemError;
+
+            if (player.PendingParty == null)
+                return GroupingOperationResult.eGOPR_PendingPartyDisbanded;
+
+            if (player.CurrentParty != null)
+                return GroupingOperationResult.eGOPR_AlreadyInParty;
+
+            Party party = player.PendingParty;
+            if (party.HasInvitation(player) == false)
+            {
+                player.PendingParty = null;
+                return GroupingOperationResult.eGOPR_NoPendingInvite;
+            }
+
+            if (party.IsFull)
+                return GroupingOperationResult.eGOPR_PartyFull;
+
+            party.AddMember(player);
+            party.GetMembers(playersToNotify);  // notify all members
+            
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        #endregion
+
+        #region Party Management
+
+        private Party CreateParty(PlayerHandle player)
+        {
+            if (player == null) return Logger.WarnReturn<Party>(null, "CreateParty(): player == null");
+            if (player.CurrentParty != null) return Logger.WarnReturn<Party>(null, "CreateParty(): player.CurrentParty != null");
+
+            Party party = new(++_currentPartyId, player);
+            _parties.Add(party.Id, party);
+
+            Logger.Info($"CreateParty(): Created party [{party}]");
+
+            return party;
+        }
+
+        private void RemovePlayerFromParty(PlayerHandle player, GroupLeaveReason reason)
+        {
+            Party party = player.CurrentParty;
+            if (party == null)
+                return;
+
+            party.RemoveMember(player, reason);
+        }
+
+        #endregion
     }
 }

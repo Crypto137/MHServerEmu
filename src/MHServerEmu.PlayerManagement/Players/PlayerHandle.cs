@@ -9,6 +9,7 @@ using MHServerEmu.Games.GameData;
 using MHServerEmu.Games.GameData.Prototypes;
 using MHServerEmu.PlayerManagement.Games;
 using MHServerEmu.PlayerManagement.Regions;
+using MHServerEmu.PlayerManagement.Social;
 
 namespace MHServerEmu.PlayerManagement.Players
 {
@@ -56,6 +57,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public RegionHandle TargetRegion { get; private set; }      // The region this player needs to be in
         public RegionHandle ActualRegion { get; private set; }      // The region this player is actually in
+
+        public Party PendingParty { get; internal set; }
+        public Party CurrentParty { get; internal set; }
 
         public bool HasTransferParams { get => _transferParams != null; }
 
@@ -115,6 +119,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public void OnRemoved()
         {
+            // Cancel pending party invitations or remove from the current party
+            PlayerManagerService.Instance.PartyManager.OnPlayerRemoved(this);
+
             // Remove from region
             SetTargetRegion(null);
             SetActualRegion(null);
