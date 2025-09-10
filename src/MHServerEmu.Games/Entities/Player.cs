@@ -504,6 +504,10 @@ namespace MHServerEmu.Games.Entities
             if (region != null)
                 MissionManager.Shutdown(region);
 
+            // We need to remove references to this player entity from other party members before we destroy it
+            // to avoid triggering validation. TODO: Find a better solution for this.
+            UpdatePartyAOI(GetParty());
+
             LeaderboardManager.Destroy();
 
             base.Destroy();
@@ -3707,7 +3711,11 @@ namespace MHServerEmu.Games.Entities
 
             foreach (var kvp in party)
             {
-                Player partyMember = entityManager.GetEntityByDbGuid<Player>(kvp.Value.PlayerDbId);
+                ulong memberId = kvp.Value.PlayerDbId;
+                if (memberId == DatabaseUniqueId)
+                    continue;
+
+                Player partyMember = entityManager.GetEntityByDbGuid<Player>(memberId);
                 if (partyMember == null)
                     continue;
 
