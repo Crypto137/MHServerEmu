@@ -476,17 +476,7 @@ namespace MHServerEmu.PlayerManagement.Players
             SetActualRegion(newRegion);
             SetTransferParams(0, null);
 
-            // Sync party info
-            if (CurrentParty != null)
-            {
-                CurrentParty.SyncPartyInfo(this);
-            }
-            else
-            {
-                // No party
-                ServiceMessage.PartyInfoServerUpdate message = new(CurrentGame.Id, PlayerDbId, 0, null);
-                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
-            }
+            PlayerManagerService.Instance.PartyManager.OnPlayerRegionTransferFinished(this);
 
             Logger.Info($"Player [{this}] finished region transfer {transferId}");
             return true;

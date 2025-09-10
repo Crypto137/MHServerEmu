@@ -146,30 +146,30 @@ namespace MHServerEmu.PlayerManagement.Social
             return _members[0];
         }
 
-        public bool HasInvitation(PlayerHandle player)
+        public bool HasInvite(PlayerHandle player)
         {
             return _pendingMembers.Contains(player);
         }
 
-        public void AddInvitation(PlayerHandle player)
+        public void AddInvite(PlayerHandle player)
         {
             _pendingMembers.Add(player);
             player.PendingParty = this;
         }
 
-        public void RemoveInvitation(PlayerHandle player)
+        public void RemoveInvite(PlayerHandle player)
         {
             _pendingMembers.Remove(player);
             player.PendingParty = null;
         }
 
-        public void CancelAllInvitations()
+        public void CancelAllInvites()
         {
             foreach (PlayerHandle player in _pendingMembers)
             {
                 if (player.PendingParty != null && player.PendingParty != this)
                 {
-                    Logger.Warn($"CancelAllInvitations(): Player pending party desync (expected [{this}], got [{player.PendingParty}])");
+                    Logger.Warn($"CancelAllInvites(): Player pending party desync (expected [{this}], got [{player.PendingParty}])");
                     continue;
                 }
 

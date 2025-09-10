@@ -1,7 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
-using MHServerEmu.Games.Social.Parties;
+using MHServerEmu.Core.Network;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -24,19 +24,29 @@ namespace MHServerEmu.PlayerManagement.Social
             _playerManager = playerManager;
         }
 
+        public void OnPlayerRegionTransferFinished(PlayerHandle player)
+        {
+            // The client "loses" pending party invites on region change, so just cancel it here as well.
+            // This won't do anything if there isn't an actual pending invite.
+            CancelPartyInvite(player);
+
+            // Sync party info
+            if (player.CurrentParty != null)
+            {
+                player.CurrentParty.SyncPartyInfo(player);
+            }
+            else
+            {
+                // No party (we are assuming CurrentGame is not null because this is a callback for a transfer confirmation)
+                ServiceMessage.PartyInfoServerUpdate message = new(player.CurrentGame.Id, player.PlayerDbId, 0, null);
+                ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+            }
+        }
+
         public void OnPlayerRemoved(PlayerHandle player)
         {
-            Party pendingParty = player.PendingParty;
-            if (pendingParty != null)
-            {
-                pendingParty.RemoveInvitation(player);
-
-                if (pendingParty.HasEnoughMembersOrInvitations == false)
-                    DisbandParty(pendingParty);
-            }
-
-            if (player.CurrentParty != null)
-                RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
+            CancelPartyInvite(player);
+            RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_DISCONNECTED);
         }
 
         public GroupingOperationResult DoPartyOperation(ref PartyOperationPayload request, HashSet<PlayerHandle> playersToNotify)
@@ -142,7 +152,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (party.IsFull())
                 return GroupingOperationResult.eGOPR_PartyFull;
 
-            party.AddInvitation(targetPlayer);
+            party.AddInvite(targetPlayer);
 
             Logger.Info($"DoPartyOperationInvitePlayer(): Success for [{requestingPlayer}] => [{targetPlayer}]");
 
@@ -161,7 +171,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return GroupingOperationResult.eGOPR_AlreadyInParty;
 
             Party party = player.PendingParty;
-            if (party.HasInvitation(player) == false)
+            if (party.HasInvite(player) == false)
             {
                 player.PendingParty = null;
                 return GroupingOperationResult.eGOPR_NoPendingInvite;
@@ -180,16 +190,14 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null)
                 return GroupingOperationResult.eGOPR_SystemError;
 
-            Party party = player.PendingParty;
+            if (player.PendingParty == null)
+                return GroupingOperationResult.eGOPR_PendingPartyDisbanded;
 
-            if (party == null)
+            Party party = player.PendingParty;
+            if (party.HasInvite(player) == false)
                 return GroupingOperationResult.eGOPR_NoPendingInvite;
 
-            party.RemoveInvitation(player);
-
-            // If this was the only invitation and there are no other members in the party, disband it.
-            if (party.HasEnoughMembersOrInvitations == false)
-                DisbandParty(party);            
+            CancelPartyInvite(player);
 
             return GroupingOperationResult.eGOPR_Success;
         }
@@ -241,7 +249,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return Logger.WarnReturn(false, $"DisbandParty(): Failed to remove all players from party {party}");
 
             // Cancel invitations
-            party.CancelAllInvitations();
+            party.CancelAllInvites();
 
             // Remove from the manager
             _parties.Remove(party.Id);
@@ -249,6 +257,18 @@ namespace MHServerEmu.PlayerManagement.Social
             Logger.Info($"DisbandParty(): party=[{party}]");
 
             return true;
+        }
+
+        private void CancelPartyInvite(PlayerHandle player)
+        {
+            Party pendingParty = player.PendingParty;
+            if (pendingParty == null)
+                return;
+
+            pendingParty.RemoveInvite(player);
+
+            if (pendingParty.HasEnoughMembersOrInvitations == false)
+                DisbandParty(pendingParty);
         }
 
         private void RemoveMemberFromParty(PlayerHandle player, GroupLeaveReason reason)
