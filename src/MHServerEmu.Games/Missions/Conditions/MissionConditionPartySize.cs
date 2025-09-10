@@ -27,7 +27,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 foreach (var player in participants)
                 {
                     int partySize = 1;
-                    var party = player.Party;
+                    var party = player.GetParty();
                     if (party != null) partySize = party.NumMembers;
                     if (partySize >= _proto.MinSize && partySize <= _proto.MaxSize)
                     {

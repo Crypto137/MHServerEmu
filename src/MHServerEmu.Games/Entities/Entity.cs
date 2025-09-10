@@ -128,7 +128,7 @@ namespace MHServerEmu.Games.Entities
 
         public ReplicatedPropertyCollection Properties { get; } = new();
 
-        public Party Party { get; internal set; }
+        public Party Party { get => GetSelfOrOwnerOfType<Player>()?.GetParty(); }
         public virtual ulong PartyId { get { var ownerPlayer = GetOwnerOfType<Player>(); return ownerPlayer != null ? ownerPlayer.PartyId : 0; } }
 
         public EntityPrototype Prototype { get; private set; }

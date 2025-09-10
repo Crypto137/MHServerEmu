@@ -159,7 +159,7 @@ namespace MHServerEmu.Games.Dialog
                 if (interactingRegion == null)
                     return Logger.WarnReturn(false, $"GroupChangeTypeOption only works on avatars actually in the world {interactor.PrototypeName}!");
 
-                Party party = interactingPlayer.Party;
+                Party party = interactingPlayer.GetParty();
                 if (party != null)
                 {
                     RegionPrototype regionProto = interactingRegion.Prototype;

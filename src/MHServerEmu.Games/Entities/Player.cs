@@ -3622,8 +3622,7 @@ namespace MHServerEmu.Games.Entities
             }
 
             _partyId.Set(party.PartyId);
-
-            // TODO: Party AOI
+            UpdatePartyAOI(party);
 
             // we should receive a OnPartySizeChanged callback after this
         }
@@ -3633,8 +3632,7 @@ namespace MHServerEmu.Games.Entities
             Logger.Debug($"OnRemovedFromParty(): {party} - {reason}");
 
             _partyId.Set(0);
-
-            // TODO: Party AOI
+            UpdatePartyAOI(party);
 
             // TODO: Update party condition on the current avatar
 
@@ -3665,6 +3663,27 @@ namespace MHServerEmu.Games.Entities
             region?.PartySizeChangedEvent.Invoke(new(this, partySize));
 
             Community.UpdateParty(party);
+        }
+
+        private void UpdatePartyAOI(Party party)
+        {
+            // NOTE: We need to pass the party instance as an argument because by the time
+            // we get here when we leave a party, we no longer have a reference to it.
+
+            if (party == null)
+                return;
+
+            EntityManager entityManager = Game.EntityManager;
+
+            foreach (var kvp in party)
+            {
+                Player partyMember = entityManager.GetEntityByDbGuid<Player>(kvp.Value.PlayerDbId);
+                if (partyMember == null)
+                    continue;
+
+                AOI.ConsiderEntity(partyMember);
+                partyMember.AOI.ConsiderEntity(this);
+            }
         }
 
         #endregion

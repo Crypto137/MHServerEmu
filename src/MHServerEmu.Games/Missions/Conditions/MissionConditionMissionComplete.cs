@@ -122,7 +122,7 @@ namespace MHServerEmu.Games.Missions.Conditions
                 List<Player> participants = ListPool<Player>.Instance.Get();
                 mission.GetParticipants(participants);
 
-                var party = player.Party;
+                var party = player.GetParty();
                 if (party != null)
                 {
                     foreach (var kvp in party)

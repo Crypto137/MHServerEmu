@@ -17,6 +17,7 @@ using MHServerEmu.Games.MetaGames;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Network
 {
@@ -1002,7 +1003,19 @@ namespace MHServerEmu.Games.Network
             if (entity.IsOwnedBy(player.Id) && (inventory == null || inventoryInterestPolicies.HasFlag(AOINetworkPolicyValues.AOIChannelOwner)))
                 newInterestPolicies |= AOINetworkPolicyValues.AOIChannelOwner;
 
-            // TODO: Party, Trade
+            // Consider other players in the region currently tracked by this AOI (skip players in other regions in the same game instance)
+            if (Region != null && entity is Player otherPlayer && otherPlayer.GetRegion() == Region)
+            {
+                Party party = player.GetParty();
+                if (party != null && otherPlayer.GetParty() == party)
+                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
+
+                // Players in the same match region are also considered to be in the same party for AOI visibility purposes.
+                if (Region.MatchNumber != 0)
+                    newInterestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
+
+                // TODO: Trade
+            }
 
             // Filter out results that don't match channels specified in the entity prototype
             if ((newInterestPolicies & entity.CompatibleReplicationChannels) == AOINetworkPolicyValues.AOIChannelNone)
@@ -1040,7 +1053,25 @@ namespace MHServerEmu.Games.Network
 
             if (inventoryPrototype.VisibleToTrader || inventoryPrototype.VisibleToParty)
             {
-                // TODO
+                if (container.GetRootOwner() is Player containerRootPlayer)
+                {
+                    if (inventoryPrototype.VisibleToParty)
+                    {
+                        Party party = player.GetParty();
+                        if (party != null && containerRootPlayer.GetParty() == party)
+                            interestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
+
+                        // Players in the same match region are also considered to be in the same party for AOI visibility purposes.
+                        Region region = player.GetRegion();
+                        if (region != null && region.MatchNumber != 0)
+                            interestPolicies |= AOINetworkPolicyValues.AOIChannelParty;
+                    }
+
+                    if (inventoryPrototype.VisibleToTrader)
+                    {
+                        // TODO: VisibleToTrader
+                    }
+                }
             }
 
             if (inventoryPrototype.VisibleToProximity)
