@@ -31,6 +31,7 @@ using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Properties.Evals;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Guilds;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Entities.Avatars
 {
@@ -6264,6 +6265,17 @@ namespace MHServerEmu.Games.Entities.Avatars
                             Properties[PropertyEnum.PowerCooldownStartTimePersistent, powerProtoRef] = newValue;
                     }
 
+                    break;
+
+                case PropertyEnum.DifficultyTierPreference:
+                    {
+                        Player player = GetOwnerOfType<Player>();
+                        if (player != null)
+                        {
+                            player.SendDifficultyTierPreferenceToPlayerManager();
+                            player.UpdatePartyDifficulty(newValue);
+                        }
+                    }
                     break;
             }
         }

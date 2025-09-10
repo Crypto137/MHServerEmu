@@ -221,6 +221,16 @@ namespace MHServerEmu.Core.Network
         }
 
         /// <summary>
+        /// [Game -> PlayerManager] Updates the difficulty tier preference of a player on the Player Manager.
+        /// </summary>
+        public readonly struct DifficultyTierUpdate(ulong playerDbId, ulong difficultyTierProtoId)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly ulong DifficultyTierProtoId = difficultyTierProtoId;
+        }
+
+        /// <summary>
         /// [Game -> PlayerManager] Requests player dbid and properly cased name from the player manager.
         /// </summary>
         public readonly struct PlayerLookupByNameRequest(ulong gameId, ulong playerDbId, ulong remoteJobId, string requestPlayerName)

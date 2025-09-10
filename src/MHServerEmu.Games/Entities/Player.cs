@@ -2408,7 +2408,9 @@ namespace MHServerEmu.Games.Entities
 
         public PrototypeId GetDifficultyTierPreference()
         {
-            // TODO: Party
+            Party party = GetParty();
+            if (party != null)
+                return party.DifficultyTierProtoRef;
 
             if (CurrentAvatar != null)
                 return CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference];
@@ -2429,6 +2431,34 @@ namespace MHServerEmu.Games.Entities
                 return difficultyTierProtoRef;
 
             return PrototypeId.Invalid;
+        }
+
+        public void SendDifficultyTierPreferenceToPlayerManager()
+        {
+            PrototypeId difficultyTierProtoRef = CurrentAvatar != null
+                ? CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference]
+                : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
+
+            ServiceMessage.DifficultyTierUpdate message = new(DatabaseUniqueId, (ulong)difficultyTierProtoRef);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+        }
+
+        public void UpdatePartyDifficulty(PrototypeId difficultyTierProtoRef)
+        {
+            Party party = GetParty();
+            if (party == null)
+                return;
+
+            // Only the leader can update difficulty.
+            if (party.IsLeader(this) == false)
+                return;
+
+            PartyOperationPayload request = PartyOperationPayload.CreateBuilder()
+                .SetRequestingPlayerDbId(DatabaseUniqueId)
+                .SetRequestingPlayerName(GetName())
+                .SetOperation(GroupingOperationType.eGOP_ChangeDifficulty)
+                .SetDifficultyTierProtoId((ulong)difficultyTierProtoRef)
+                .Build();
         }
 
         #endregion
