@@ -2443,7 +2443,7 @@ namespace MHServerEmu.Games.Entities
                 ? CurrentAvatar.Properties[PropertyEnum.DifficultyTierPreference]
                 : GameDatabase.GlobalsPrototype.DifficultyTierDefault;
 
-            ServiceMessage.DifficultyTierUpdate message = new(DatabaseUniqueId, (ulong)difficultyTierProtoRef);
+            ServiceMessage.SetDifficultyTierPreference message = new(DatabaseUniqueId, (ulong)difficultyTierProtoRef);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
@@ -2463,6 +2463,9 @@ namespace MHServerEmu.Games.Entities
                 .SetOperation(GroupingOperationType.eGOP_ChangeDifficulty)
                 .SetDifficultyTierProtoId((ulong)difficultyTierProtoRef)
                 .Build();
+
+            ServiceMessage.PartyOperationRequest message = new(request);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
         #endregion

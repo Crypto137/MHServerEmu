@@ -223,7 +223,7 @@ namespace MHServerEmu.Core.Network
         /// <summary>
         /// [Game -> PlayerManager] Updates the difficulty tier preference of a player on the Player Manager.
         /// </summary>
-        public readonly struct DifficultyTierUpdate(ulong playerDbId, ulong difficultyTierProtoId)
+        public readonly struct SetDifficultyTierPreference(ulong playerDbId, ulong difficultyTierProtoId)
             : IGameServiceMessage
         {
             public readonly ulong PlayerDbId = playerDbId;

@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
+using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
@@ -82,6 +83,8 @@ namespace MHServerEmu.PlayerManagement.Social
                 }
             }
 
+            PrototypeId difficultyTierProtoRef = request.HasDifficultyTierProtoId ? (PrototypeId)request.DifficultyTierProtoId : 0;
+
             switch (request.Operation)
             {
                 case GroupingOperationType.eGOP_InvitePlayer:
@@ -103,6 +106,11 @@ namespace MHServerEmu.PlayerManagement.Social
                 case GroupingOperationType.eGOP_LeaveParty:
                     requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
                     result = DoPartyOperationLeaveParty(requestingPlayer);
+                    break;
+
+                case GroupingOperationType.eGOP_ChangeDifficulty:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationChangeDifficulty(requestingPlayer, difficultyTierProtoRef);
                     break;
 
                 default:
@@ -215,6 +223,24 @@ namespace MHServerEmu.PlayerManagement.Social
             return GroupingOperationResult.eGOPR_Success;
         }
 
+        private GroupingOperationResult DoPartyOperationChangeDifficulty(PlayerHandle player, PrototypeId difficultyTierProtoRef)
+        {
+            Logger.Debug($"DoPartyOperationChangeDifficulty(): player=[{player}], difficultyTierProtoRef=[{difficultyTierProtoRef.GetNameFormatted()}]");
+
+            GroupingOperationResult result = ValidatePartyLeader(player);
+            if (result != GroupingOperationResult.eGOPR_Success)
+                return result;
+
+            if (difficultyTierProtoRef == PrototypeId.Invalid)
+                return Logger.WarnReturn(GroupingOperationResult.eGOPR_SystemError, "DoPartyOperationChangeDifficulty(): difficultyTierProtoRef == PrototypeId.Invalid");
+
+            // CurrentParty is null checked in ValidatePartyLeader()
+            if (player.CurrentParty.SetDifficultyTier(difficultyTierProtoRef) == false)
+                return GroupingOperationResult.eGOPR_NoChange;
+
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
         #endregion
 
         #region Party Management
@@ -295,5 +321,19 @@ namespace MHServerEmu.PlayerManagement.Social
         }
 
         #endregion
+
+        private static GroupingOperationResult ValidatePartyLeader(PlayerHandle player)
+        {
+            if (player == null)
+                return GroupingOperationResult.eGOPR_SystemError;
+
+            if (player.CurrentParty == null)
+                return GroupingOperationResult.eGOPR_NotInParty;
+
+            if (player.CurrentParty.Leader != player)
+                return GroupingOperationResult.eGOPR_NotLeader;
+
+            return GroupingOperationResult.eGOPR_Success;
+        }
     }
 }

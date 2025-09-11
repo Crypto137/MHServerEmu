@@ -23,6 +23,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         public ulong Id { get; }
         public GroupType Type { get; private set; } = GroupType.GroupType_Party;
+        public PrototypeId DifficultyTierProtoRef { get; private set; }
         public PlayerHandle Leader { get; private set; }
 
         public int MemberCount { get => _members.Count; }
@@ -31,6 +32,7 @@ namespace MHServerEmu.PlayerManagement.Social
         public Party(ulong id, PlayerHandle creator)
         {
             Id = id;
+            DifficultyTierProtoRef = creator.DifficultyTierPreference;
 
             AddMember(creator);
             SetLeader(creator);
@@ -146,6 +148,17 @@ namespace MHServerEmu.PlayerManagement.Social
             return _members[0];
         }
 
+        public bool SetDifficultyTier(PrototypeId difficultyTierProtoRef)
+        {
+            if (difficultyTierProtoRef == DifficultyTierProtoRef)
+                return false;
+
+            DifficultyTierProtoRef = difficultyTierProtoRef;
+            SendPartyInfo(false, _members);
+
+            return true;
+        }
+
         public bool HasInvite(PlayerHandle player)
         {
             return _pendingMembers.Contains(player);
@@ -213,7 +226,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 .SetGroupId(Id)
                 .SetType(Type)
                 .SetLeaderDbId(Leader != null ? Leader.PlayerDbId : 0)
-                .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault);  // TODO
+                .SetDifficultyTierProtoId((ulong)DifficultyTierProtoRef);
 
             if (includeMemberInfo)
             {

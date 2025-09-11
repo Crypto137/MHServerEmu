@@ -58,6 +58,8 @@ namespace MHServerEmu.PlayerManagement.Players
         public RegionHandle TargetRegion { get; private set; }      // The region this player needs to be in
         public RegionHandle ActualRegion { get; private set; }      // The region this player is actually in
 
+        public PrototypeId DifficultyTierPreference { get; private set; }
+
         public Party PendingParty { get; internal set; }
         public Party CurrentParty { get; internal set; }
 
@@ -75,6 +77,8 @@ namespace MHServerEmu.PlayerManagement.Players
             WorldView = new(this);
             Client = client;
             State = PlayerHandleState.Created;
+
+            DifficultyTierPreference = GameDatabase.GlobalsPrototype.DifficultyTierDefault;
         }
 
         public override string ToString()
@@ -320,7 +324,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
-                .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
+                .SetDifficultyTierProtoId((ulong)DifficultyTierPreference)
                 .Build();
 
             return BeginRegionTransferToTarget(0, TeleportContextEnum.TeleportContext_Transition, destTarget, createRegionParams);
@@ -490,6 +494,15 @@ namespace MHServerEmu.PlayerManagement.Players
             List<(ulong, ulong)> worldView = WorldView.BuildWorldViewCache();
             ServiceMessage.WorldViewSync message = new(CurrentGame.Id, PlayerDbId, worldView);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+        }
+
+        public void SetDifficultyTierPreference(PrototypeId difficultyTierProtoRef)
+        {
+            if (difficultyTierProtoRef == DifficultyTierPreference)
+                return;
+
+            DifficultyTierPreference = difficultyTierProtoRef;
+            Logger.Trace($"SetDifficultyTierPreference(): player=[{this}], difficulty=[{difficultyTierProtoRef.GetNameFormatted()}]");
         }
 
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)

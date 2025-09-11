@@ -130,6 +130,7 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.ChangeRegionRequest:
                 case ServiceMessage.RegionTransferFinished:
                 case ServiceMessage.ClearPrivateStoryRegions:
+                case ServiceMessage.SetDifficultyTierPreference:
                 case ServiceMessage.PlayerLookupByNameRequest:
                 case ServiceMessage.PlayerNameChanged:
                 case ServiceMessage.CommunityStatusUpdate:
