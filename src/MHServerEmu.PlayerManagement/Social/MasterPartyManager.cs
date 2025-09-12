@@ -108,6 +108,21 @@ namespace MHServerEmu.PlayerManagement.Social
                     result = DoPartyOperationLeaveParty(requestingPlayer);
                     break;
 
+                case GroupingOperationType.eGOP_DisbandParty:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationDisbandParty(requestingPlayer);
+                    break;
+
+                case GroupingOperationType.eGOP_KickPlayer:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationKickPlayer(requestingPlayer, targetPlayer);
+                    break;
+
+                case GroupingOperationType.eGOP_ChangeLeader:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationChangeLeader(requestingPlayer, targetPlayer);
+                    break;
+
                 case GroupingOperationType.eGOP_ChangeDifficulty:
                     requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
                     result = DoPartyOperationChangeDifficulty(requestingPlayer, difficultyTierProtoRef);
@@ -220,6 +235,42 @@ namespace MHServerEmu.PlayerManagement.Social
                 return GroupingOperationResult.eGOPR_NotInParty;
 
             RemoveMemberFromParty(player, GroupLeaveReason.GROUP_LEAVE_REASON_LEFT);
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationDisbandParty(PlayerHandle player)
+        {
+            GroupingOperationResult result = ValidatePartyLeader(player);
+            if (result != GroupingOperationResult.eGOPR_Success)
+                return result;
+
+            DisbandParty(player.CurrentParty);
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationKickPlayer(PlayerHandle requestingPlayer, PlayerHandle targetPlayer)
+        {
+            if (targetPlayer == null)
+                return GroupingOperationResult.eGOPR_TargetPlayerNotFound;
+
+            GroupingOperationResult result = ValidatePartyLeader(requestingPlayer);
+            if (result != GroupingOperationResult.eGOPR_Success)
+                return result;
+
+            RemoveMemberFromParty(targetPlayer, GroupLeaveReason.GROUP_LEAVE_REASON_BOOTED);
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationChangeLeader(PlayerHandle requestingPlayer, PlayerHandle targetPlayer)
+        {
+            if (targetPlayer == null)
+                return GroupingOperationResult.eGOPR_TargetPlayerNotFound;
+
+            GroupingOperationResult result = ValidatePartyLeader(requestingPlayer);
+            if (result != GroupingOperationResult.eGOPR_Success)
+                return result;
+
+            requestingPlayer.CurrentParty.SetLeader(targetPlayer);
             return GroupingOperationResult.eGOPR_Success;
         }
 
