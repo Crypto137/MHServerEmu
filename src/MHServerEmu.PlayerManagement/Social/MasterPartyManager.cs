@@ -123,6 +123,16 @@ namespace MHServerEmu.PlayerManagement.Social
                     result = DoPartyOperationChangeLeader(requestingPlayer, targetPlayer);
                     break;
 
+                case GroupingOperationType.eGOP_ConvertToRaid:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationConvertToRaid(requestingPlayer);
+                    break;
+
+                case GroupingOperationType.eGOP_ConvertToParty:
+                    requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
+                    result = DoPartyOperationConvertToParty(requestingPlayer);
+                    break;
+
                 case GroupingOperationType.eGOP_ChangeDifficulty:
                     requestingPlayer.CurrentParty?.GetMembers(playersToNotify);
                     result = DoPartyOperationChangeDifficulty(requestingPlayer, difficultyTierProtoRef);
@@ -271,6 +281,35 @@ namespace MHServerEmu.PlayerManagement.Social
                 return result;
 
             requestingPlayer.CurrentParty.SetLeader(targetPlayer);
+            return GroupingOperationResult.eGOPR_Success;
+        }
+
+        private GroupingOperationResult DoPartyOperationConvertToRaid(PlayerHandle player)
+        {
+            GroupingOperationResult result = ValidatePartyLeader(player);
+            if (result != GroupingOperationResult.eGOPR_Success)
+                return result;
+
+            if (player.CurrentParty.SetType(GroupType.GroupType_Raid) == false)
+                return GroupingOperationResult.eGOPR_NoChange;
+
+            return GroupingOperationResult.eGOPR_Success;           
+        }
+
+        private GroupingOperationResult DoPartyOperationConvertToParty(PlayerHandle player)
+        {
+            GroupingOperationResult result = ValidatePartyLeader(player);
+            if (result != GroupingOperationResult.eGOPR_Success)
+                return result;
+
+            MasterParty party = player.CurrentParty;
+
+            if (party.MemberCount > GameDatabase.GlobalsPrototype.PlayerPartyMaxSize)
+                return GroupingOperationResult.eGOPR_PartyFull;
+
+            if (party.SetType(GroupType.GroupType_Party) == false)
+                return GroupingOperationResult.eGOPR_NoChange;
+            
             return GroupingOperationResult.eGOPR_Success;
         }
 

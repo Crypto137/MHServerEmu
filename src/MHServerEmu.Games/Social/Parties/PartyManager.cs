@@ -1,7 +1,10 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
+using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Social.Parties
 {
@@ -31,6 +34,8 @@ namespace MHServerEmu.Games.Social.Parties
 
         public void OnClientPartyOperationRequest(Player player, PartyOperationPayload request)
         {
+            Party party = player.GetParty();
+
             switch (request.Operation)
             {
                 case GroupingOperationType.eGOP_InvitePlayer:
@@ -65,9 +70,18 @@ namespace MHServerEmu.Games.Social.Parties
                     SendOperationRequestToPlayerManager(request);
                     break;
 
-                //case GroupingOperationType.eGOP_ConvertToRaidAccept:
-                //case GroupingOperationType.eGOP_ConvertToRaidDecline:
-                    // TODO
+                case GroupingOperationType.eGOP_ConvertToRaidAccept:
+                    TeleportToPartyMember(player, party != null ? party.LeaderId : 0, true);
+                    break;
+
+                case GroupingOperationType.eGOP_ConvertToRaidDecline:
+                    // Boot this ungrateful player from the party for refusing to comply with the benevolent leader's demands.
+                    PartyOperationPayload leaveRequest = PartyOperationPayload.CreateBuilder()
+                        .MergeFrom(request)
+                        .SetOperation(GroupingOperationType.eGOP_LeaveParty)
+                        .Build();
+                    SendOperationRequestToPlayerManager(leaveRequest);
+                    break;
 
                 default:
                     Logger.Warn($"OnClientPartyOperationRequest(): Unhandled operation {request.Operation} from player {player}");
@@ -150,6 +164,15 @@ namespace MHServerEmu.Games.Social.Parties
             ulong partyId = player.PartyId;
             if (partyId != 0)
                 TryCleanUpParty(partyId);
+        }
+
+        public void TeleportToPartyMember(Player player, ulong targetPlayerDbId, bool forceTeleport)
+        {
+            Logger.Debug($"TeleportToPartyMember(): player=[{player}], target=[0x{targetPlayerDbId:X}], forceTeleport={forceTeleport}");
+            // TODO: TeleportToPartyMemberPower, PropertyEnum.PendingTeleportPartyMemberId
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Party);
+            teleporter.TeleportToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
         }
 
         private Party CreateOrUpdateParty(PartyInfo partyInfo)

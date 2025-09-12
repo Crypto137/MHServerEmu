@@ -146,6 +146,17 @@ namespace MHServerEmu.PlayerManagement.Social
             return _members[0];
         }
 
+        public bool SetType(GroupType type)
+        {
+            if (Type == type)
+                return false;
+
+            Type = type;
+            SendPartyInfo(false, _members);
+
+            return true;
+        }
+
         public bool SetDifficultyTier(PrototypeId difficultyTierProtoRef)
         {
             if (difficultyTierProtoRef == DifficultyTierProtoRef)
