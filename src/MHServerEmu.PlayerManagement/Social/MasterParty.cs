@@ -215,10 +215,7 @@ namespace MHServerEmu.PlayerManagement.Social
         private void SendPartyInfo(bool includeMemberInfo, List<PlayerHandle> recipients)
         {
             if (recipients.Count == 0)
-            {
-                Logger.Warn("SendPartyInfo(): recipients.Count == 0");
                 return;
-            }
 
             var partyInfoBuilder = PartyInfo.CreateBuilder()
                 .SetGroupId(Id)
@@ -250,11 +247,9 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void SendPartyMemberInfoUpdate(PlayerHandle member, PartyMemberEvent memberEvent, List<PlayerHandle> recipients)
         {
+            // This is valid (e.g. when adding the first member)
             if (recipients.Count == 0)
-            {
-                Logger.Warn("SendPartyMemberInfo(): recipients.Count == 0");
                 return;
-            }
 
             PartyMemberInfo memberInfo = null;
             if (memberEvent != PartyMemberEvent.ePME_Remove)
