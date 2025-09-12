@@ -60,8 +60,8 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public PrototypeId DifficultyTierPreference { get; private set; }
 
-        public Party PendingParty { get; internal set; }
-        public Party CurrentParty { get; internal set; }
+        public MasterParty PendingParty { get; internal set; }
+        public MasterParty CurrentParty { get; internal set; }
 
         public bool HasTransferParams { get => _transferParams != null; }
 

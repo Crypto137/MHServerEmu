@@ -10,10 +10,8 @@ namespace MHServerEmu.PlayerManagement.Social
     /// <summary>
     /// The authoritative representation of a party on the server (as apposed to local parties in game instances).
     /// </summary>
-    public class Party
+    public class MasterParty
     {
-        // This class has the same name as game-side local representations of parties.
-        // This is not ideal, but I'm not sure what else to call it without making it more confusing.
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         // We are not using a HashSet here because this is a small collection (<= 10 elements),
@@ -29,7 +27,7 @@ namespace MHServerEmu.PlayerManagement.Social
         public int MemberCount { get => _members.Count; }
         public bool HasEnoughMembersOrInvitations { get => _members.Count > 1 || _pendingMembers.Count > 0; }
 
-        public Party(ulong id, PlayerHandle creator)
+        public MasterParty(ulong id, PlayerHandle creator)
         {
             Id = id;
             DifficultyTierProtoRef = creator.DifficultyTierPreference;

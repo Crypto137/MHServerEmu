@@ -14,7 +14,7 @@ namespace MHServerEmu.PlayerManagement.Social
     {
         private static readonly Logger Logger = LogManager.CreateLogger();
 
-        private readonly Dictionary<ulong, Party> _parties = new();
+        private readonly Dictionary<ulong, MasterParty> _parties = new();
 
         private readonly PlayerManagerService _playerManager;
 
@@ -145,7 +145,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (targetPlayer.PendingParty != null)
                 return GroupingOperationResult.eGOPR_AlreadyHasInvite;
 
-            Party party = requestingPlayer.CurrentParty;
+            MasterParty party = requestingPlayer.CurrentParty;
             if (party == null)
             {
                 // The requesting player will be the leader of the new party by default.
@@ -178,7 +178,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player.CurrentParty != null)
                 return GroupingOperationResult.eGOPR_AlreadyInParty;
 
-            Party party = player.PendingParty;
+            MasterParty party = player.PendingParty;
             if (party.HasInvite(player) == false)
             {
                 player.PendingParty = null;
@@ -201,7 +201,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player.PendingParty == null)
                 return GroupingOperationResult.eGOPR_PendingPartyDisbanded;
 
-            Party party = player.PendingParty;
+            MasterParty party = player.PendingParty;
             if (party.HasInvite(player) == false)
                 return GroupingOperationResult.eGOPR_NoPendingInvite;
 
@@ -215,7 +215,7 @@ namespace MHServerEmu.PlayerManagement.Social
             if (player == null)
                 return GroupingOperationResult.eGOPR_SystemError;
 
-            Party party = player.CurrentParty;
+            MasterParty party = player.CurrentParty;
             if (party == null)
                 return GroupingOperationResult.eGOPR_NotInParty;
 
@@ -245,12 +245,12 @@ namespace MHServerEmu.PlayerManagement.Social
 
         #region Party Management
 
-        private Party CreateParty(PlayerHandle player)
+        private MasterParty CreateParty(PlayerHandle player)
         {
-            if (player == null) return Logger.WarnReturn<Party>(null, "CreateParty(): player == null");
-            if (player.CurrentParty != null) return Logger.WarnReturn<Party>(null, "CreateParty(): player.CurrentParty != null");
+            if (player == null) return Logger.WarnReturn<MasterParty>(null, "CreateParty(): player == null");
+            if (player.CurrentParty != null) return Logger.WarnReturn<MasterParty>(null, "CreateParty(): player.CurrentParty != null");
 
-            Party party = new(++_currentPartyId, player);
+            MasterParty party = new(++_currentPartyId, player);
             _parties.Add(party.Id, party);
 
             Logger.Info($"CreateParty(): party=[{party}]");
@@ -258,7 +258,7 @@ namespace MHServerEmu.PlayerManagement.Social
             return party;
         }
 
-        private bool DisbandParty(Party party)
+        private bool DisbandParty(MasterParty party)
         {
             if (party == null) return Logger.WarnReturn(false, "DisbandParty(): party == null");
 
@@ -287,7 +287,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void CancelPartyInvite(PlayerHandle player)
         {
-            Party pendingParty = player.PendingParty;
+            MasterParty pendingParty = player.PendingParty;
             if (pendingParty == null)
                 return;
 
@@ -299,7 +299,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private void RemoveMemberFromParty(PlayerHandle player, GroupLeaveReason reason)
         {
-            Party party = player.CurrentParty;
+            MasterParty party = player.CurrentParty;
             if (party == null)
                 return;
 
