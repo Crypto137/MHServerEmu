@@ -130,7 +130,6 @@ namespace MHServerEmu.Games.Entities
 
         public MissionManager MissionManager { get; private set; }
         public MatchQueueStatus MatchQueueStatus { get; private set; } = new();
-        public override ulong PartyId { get => _partyId.Get(); }
         public Community Community { get => _community; }
         public GameplayOptions GameplayOptions { get; private set; } = new();
         public AchievementState AchievementState { get; private set; } = new();
@@ -156,7 +155,6 @@ namespace MHServerEmu.Games.Entities
         public bool IsConsoleUI { get => false; }
         public bool IsUsingUnifiedStash { get => IsConsolePlayer || IsConsoleUI; }
 
-        public bool IsInParty { get; internal set; }
         public Avatar PrimaryAvatar { get => CurrentAvatar; } // Fix for PC
         public Avatar SecondaryAvatar { get; private set; }
         public int CurrentAvatarCharacterLevel { get => PrimaryAvatar?.CharacterLevel ?? 0; }
@@ -171,6 +169,9 @@ namespace MHServerEmu.Games.Entities
         public long GazillioniteBalance { get => PlayerConnection.GazillioniteBalance; set => PlayerConnection.GazillioniteBalance = value; }
         public int PowerSpecIndexUnlocked { get => Properties[PropertyEnum.PowerSpecIndexUnlocked]; }
         public ulong TeamUpSynergyConditionId { get; set; }
+
+        public override ulong PartyId { get => _partyId.Get(); }
+        public bool IsInParty { get => PartyId != 0; }
 
         public static bool IsPlayerTradeEnabled { get; internal set; }
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
@@ -3638,6 +3639,22 @@ namespace MHServerEmu.Games.Entities
                 return false;
 
             return party.LeaderId == DatabaseUniqueId;
+        }
+
+        public bool IsInPartyWith(ulong playerDbId)
+        {
+            if (playerDbId == 0)
+                return false;
+
+            // Players are always implicitly in party with themselves even if an explicit party instance does not exist.
+            if (playerDbId == DatabaseUniqueId)
+                return true;
+
+            Party party = GetParty();
+            if (party == null)
+                return false;
+
+            return party.IsMember(playerDbId);
         }
 
         public bool CanFormParty()

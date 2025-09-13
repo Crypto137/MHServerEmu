@@ -962,7 +962,11 @@ namespace MHServerEmu.Games.Network
             if (restrictedToPlayerGuid != 0 && restrictedToPlayerGuid != player.DatabaseUniqueId)
                 return AOINetworkPolicyValues.AOIChannelNone;
 
-            // Add more filters here
+            ulong RestrictedToPlayerGuidParty = entity.Properties[PropertyEnum.RestrictedToPlayerGuidParty];
+            if (RestrictedToPlayerGuidParty != 0 && player.IsInPartyWith(RestrictedToPlayerGuidParty) == false)
+                return AOINetworkPolicyValues.AOIChannelNone;
+
+            // Do world entity specific checks
             WorldEntity worldEntity = entity as WorldEntity;
             if (worldEntity != null && GameDatabase.InteractionManager.GetVisibilityStatus(player, worldEntity) == false)
                 return AOINetworkPolicyValues.AOIChannelNone;
