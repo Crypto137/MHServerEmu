@@ -3696,7 +3696,7 @@ namespace MHServerEmu.Games.Entities
             Region region = GetRegion();
             if (region != null)
             {
-                // TODO: PlayerLeavePartyGameEvent
+                region.PlayerLeavePartyEvent.Invoke(new(this));
                 region.PartySizeChangedEvent.Invoke(new(this, 1));
             }
 

@@ -192,6 +192,7 @@ namespace MHServerEmu.Games.Regions
         public Event<PlayerEnteredAreaGameEvent> PlayerEnteredAreaEvent = new();
         public Event<PlayerLeftAreaGameEvent> PlayerLeftAreaEvent = new();
         public Event<PartySizeChangedGameEvent> PartySizeChangedEvent = new();
+        public Event<PlayerLeavePartyGameEvent> PlayerLeavePartyEvent = new();
         public Event<PlayerSwitchedToAvatarGameEvent> PlayerSwitchedToAvatarEvent = new();
         public Event<PlayerFactionChangedGameEvent> PlayerFactionChangedEvent = new();
         public Event<PlayerCollectedItemGameEvent> PlayerCollectedItemEvent = new();
@@ -1926,16 +1927,6 @@ namespace MHServerEmu.Games.Regions
                 startTargetRef = pickLocation.Location.Target;
                 return true;
             }
-
-            return false;
-        }
-
-        public bool InOwnerParty(Player player)
-        {
-            ulong playerGuid = player.DatabaseUniqueId;
-            if (Settings.OwnerPlayerDbId == playerGuid) return true;    // FIXME: This doesn't look right
-
-            // TODO check owner is in party
 
             return false;
         }
