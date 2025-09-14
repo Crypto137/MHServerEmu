@@ -212,7 +212,7 @@ namespace MHServerEmu.Games.Regions
             }
             else
             {
-                if (ValidateTargetRegion(regionProtoRef) == false)
+                if (Player.CanEnterRegion(regionProtoRef, DifficultyTierRef, false) == false)
                     return false;
 
                 return TeleportToRemoteTarget(regionProtoRef, areaProtoRef, cellProtoRef, entityProtoRef);
@@ -381,31 +381,6 @@ namespace MHServerEmu.Games.Regions
 
                 if (avatar.InInteractRange(TransitionEntity, Dialog.InteractionMethod.Use) == false)
                     return false;
-            }
-
-            return true;
-        }
-
-        private bool ValidateTargetRegion(PrototypeId regionProtoRef)
-        {
-            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
-            if (regionProto == null) return Logger.WarnReturn(false, "ValidateTargetRegion(): regionProto == null");
-
-            Avatar avatar = Player.CurrentAvatar;
-            if (avatar == null) return Logger.WarnReturn(false, "ValidateTargetRegion(): avatar == null");
-
-            // TODO: Add more checks
-
-            if (LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRTV_Enabled) == 0f)
-            {
-                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail.As<BannerMessagePrototype>());
-                return false;
-            }
-
-            if (regionProto.RunEvalAccessRestriction(Player, avatar, DifficultyTierRef) == false)
-            {
-                Player.SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
-                return false;
             }
 
             return true;

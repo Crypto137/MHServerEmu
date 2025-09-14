@@ -588,6 +588,66 @@ namespace MHServerEmu.Games.Entities
             return AOI.Region;
         }
 
+        public bool CanEnterRegion(PrototypeId regionProtoRef, PrototypeId difficultyTierProtoRef, bool isPartyTeleport)
+        {
+            RegionPrototype regionProto = regionProtoRef.As<RegionPrototype>();
+            if (regionProto == null) return Logger.WarnReturn(false, "CanEnterRegion(): regionProto == null");
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "CanEnterRegion(): avatar == null");
+
+            if (regionProto.HasPvPMetaGame)
+            {
+                // Do not allow teleports to PvP regions when PvP is disabled
+                if (LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PVPEnabled) == 0f)
+                {
+                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePvPDisabledPortalFail.As<BannerMessagePrototype>());
+                    return false;
+                }
+
+                // Do not allow party teleports to PvP regions
+                if (isPartyTeleport)
+                {
+                    SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePartyPvPPortalFail.As<BannerMessagePrototype>());
+                    return false;
+                }
+            }
+
+            if (regionProto.RunEvalAccessRestriction(this, avatar, difficultyTierProtoRef) == false)
+            {
+                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionRestricted.As<BannerMessagePrototype>());
+                return false;
+            }
+
+            Party party = GetParty();
+            if (party != null && party.Type == GroupType.GroupType_Raid)
+            {
+                switch (regionProto.Behavior)
+                {
+                    case RegionBehavior.PrivateStory:
+                    case RegionBehavior.PrivateNonStory:
+                        SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessagePrivateDisallowedInRaid.As<BannerMessagePrototype>());
+                        return false;
+
+                    case RegionBehavior.MatchPlay:
+                        if (regionProto.AllowRaids() == false)
+                        {
+                            SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageQueueNotAvailableInRaid.As<BannerMessagePrototype>());
+                            return false;
+                        }
+                        break;
+                }
+            }
+
+            if (LiveTuningManager.GetLiveRegionTuningVar(regionProto, RegionTuningVar.eRTV_Enabled) == 0f)
+            {
+                SendBannerMessage(GameDatabase.UIGlobalsPrototype.MessageRegionDisabledPortalFail.As<BannerMessagePrototype>());
+                return false;
+            }
+
+            return true;
+        }
+
         public void UpdateSpawnMap(Vector3 position)
         {
             var region = GetRegion();
