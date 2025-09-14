@@ -3754,6 +3754,9 @@ namespace MHServerEmu.Games.Entities
                     continue;
                 }
 
+                avatars.Add(avatarProto);
+                costumes.Add(costumeProto);
+
                 if (member.DbId == playerDbId)
                     playerIndex = i;
 
