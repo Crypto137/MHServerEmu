@@ -290,6 +290,19 @@ namespace MHServerEmu.Games.Regions
             return result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport;
         }
 
+        public bool TeleportToPlayer(ulong playerDbId)
+        {
+            if (playerDbId == 0) return Logger.WarnReturn(false, "TeleportToPlayer(): playerDbId == 0");
+
+            Player.PlayerConnection.BeginRegionTransfer(PrototypeId.Invalid);
+
+            ChangeRegionRequestHeader header = BuildChangeRegionRequestHeader();
+            ServiceMessage.ChangeRegionRequest message = new(header, playerDbId);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
+        }
+
         public static void DebugTeleportToTarget(Player player, PrototypeId targetProtoRef)
         {
             using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();

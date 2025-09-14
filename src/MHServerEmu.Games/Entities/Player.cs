@@ -3838,9 +3838,51 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
-        private void TeleportToPartyMember(ulong targetPlayerDbId)
+        private bool TeleportToPartyMember(ulong targetPlayerDbId)
         {
-            Logger.Debug($"DoTeleportToPartyMember(): 0x{targetPlayerDbId:X}");
+            if (PlayerConnection.HasPendingRegionTransfer)
+                return false;
+
+            if (targetPlayerDbId == 0 || targetPlayerDbId == DatabaseUniqueId)
+                return false;
+
+            // Check avatar
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "TeleportToPartyMember(): avatar == null");
+
+            if (avatar.IsInWorld == false)
+                return false;
+
+            if (avatar.IsDead)
+                return false;
+
+            // Check party
+            Party party = GetParty();
+            if (party == null)
+                return false;
+
+            if (party.IsMember(targetPlayerDbId) == false)
+                return false;
+
+            // Check destination region, use community data for this
+            CommunityMember member = Community.GetMember(targetPlayerDbId);
+            if (member != null)
+            {
+                PrototypeId regionProtoRef = member.RegionRef;
+                PrototypeId difficultyProtoRef = member.DifficultyRef;
+                if (regionProtoRef != PrototypeId.Invalid && difficultyProtoRef != PrototypeId.Invalid)
+                {
+                    if (CanEnterRegion(regionProtoRef, difficultyProtoRef, true) == false)
+                        return false;
+                }
+            }
+
+            // TODO: Additional validation for match regions?
+
+            // Teleport
+            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
+            teleporter.Initialize(this, TeleportContextEnum.TeleportContext_Party);
+            return teleporter.TeleportToPlayer(targetPlayerDbId);
         }
 
         #endregion
