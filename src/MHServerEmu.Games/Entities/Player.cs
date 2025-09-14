@@ -88,6 +88,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<CheckHoursPlayedEvent> _checkHoursPlayedEvent = new();
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
         private readonly EventPointer<CommunityBroadcastEvent> _communityBroadcastEvent = new();
+        private readonly EventPointer<CommunityPartyCircleChangedEvent> _communityPartyCircleChangedEvent = new();
         private readonly EventPointer<WorldViewUpdateEvent> _worldViewUpdateEvent = new();
         private readonly EventPointer<TeleportToPartyMemberEvent> _teleportToPartyMemberEvent = new();
         private readonly EventGroup _pendingEvents = new();
@@ -173,6 +174,7 @@ namespace MHServerEmu.Games.Entities
 
         public override ulong PartyId { get => _partyId.Get(); }
         public bool IsInParty { get => PartyId != 0; }
+        public List<PrototypeId> PartyFilters { get; } = new();
 
         public static bool IsPlayerTradeEnabled { get; internal set; }
         public PlayerTradeStatusCode PlayerTradeStatusCode { get; private set; } = PlayerTradeStatusCode.ePTSC_None;
@@ -3318,6 +3320,42 @@ namespace MHServerEmu.Games.Entities
             LeaderboardManager.OnUpdateEventContext();
         }
 
+        private void UpdatePartyFilters(List<AvatarPrototype> avatars, List<CostumePrototype> costumes, int playerIndex)
+        {
+            bool updateContext = false;
+
+            Party party = GetParty();
+            if (party != null && party.Type == GroupType.GroupType_Party && avatars.Count > 0)
+            {
+                List<PrototypeId> newFilters = ListPool<PrototypeId>.Instance.Get();
+
+                foreach (PrototypeId partyFilterProtoRef in DataDirectory.Instance.IteratePrototypesInHierarchy<PartyFilterPrototype>(PrototypeIterateFlags.NoAbstractApprovedOnly))
+                {
+                    PartyFilterPrototype partyFilterProto = partyFilterProtoRef.As<PartyFilterPrototype>();
+                    if (partyFilterProto.Evaluate(avatars, costumes, playerIndex))
+                        newFilters.Add(partyFilterProtoRef);
+                }
+
+                newFilters.Sort();
+
+                if (PartyFilters.SequenceEqual(newFilters) == false)
+                {
+                    PartyFilters.Set(newFilters);
+                    updateContext = true;
+                }
+
+                ListPool<PrototypeId>.Instance.Return(newFilters);
+            }
+            else if (PartyFilters.Count > 0)
+            {
+                PartyFilters.Clear();
+                updateContext = true;
+            }
+
+            if (updateContext)
+                UpdateScoringEventContext();
+        }
+
         #endregion
 
         #region Time Played
@@ -3656,7 +3694,11 @@ namespace MHServerEmu.Games.Entities
             if (circleId != CircleId.__Party)
                 return;
 
-            // TODO: Update parties
+            if (_communityPartyCircleChangedEvent.IsValid)
+                return;
+
+            Game.GameEventScheduler.ScheduleEvent(_communityPartyCircleChangedEvent, TimeSpan.FromMilliseconds(1000), _pendingEvents);
+            _communityPartyCircleChangedEvent.Get()?.Initialize(this);
         }
 
         private void DoCommunityBroadcast()
@@ -3678,6 +3720,52 @@ namespace MHServerEmu.Games.Entities
 
                 community.RequestLocalBroadcast(member);
             }
+        }
+
+        private bool OnPartyCircleChanged()
+        {
+            CommunityCircle partyCircle = Community?.GetCircle(CircleId.__Party);
+            if (partyCircle == null) return Logger.WarnReturn(false, "OnPartyCircleChanged(): partyCircle == null");
+
+            List<AvatarPrototype> avatars = ListPool<AvatarPrototype>.Instance.Get();
+            List<CostumePrototype> costumes = ListPool<CostumePrototype>.Instance.Get();
+
+            ulong playerDbId = DatabaseUniqueId;
+            int playerIndex = -1;
+
+            int i = 0;
+            foreach (CommunityMember member in Community.IterateMembers(partyCircle))
+            {
+                AvatarSlotInfo slot = member.GetAvatarSlotInfo();
+                if (slot == null || slot.AvatarRef == PrototypeId.Invalid || slot.CostumeRef == PrototypeId.Invalid)
+                    continue;
+
+                AvatarPrototype avatarProto = slot.AvatarRef.As<AvatarPrototype>();
+                if (avatarProto == null)
+                {
+                    Logger.Warn("OnPartyCircleChanged(): avatarProto == null");
+                    continue;
+                }
+
+                CostumePrototype costumeProto = slot.CostumeRef.As<CostumePrototype>();
+                if (costumeProto == null)
+                {
+                    Logger.Warn("OnPartyCircleChanged(): costumeProto == null");
+                    continue;
+                }
+
+                if (member.DbId == playerDbId)
+                    playerIndex = i;
+
+                i++;
+            }
+
+            UpdatePartyFilters(avatars, costumes, playerIndex);
+
+            ListPool<AvatarPrototype>.Instance.Return(avatars);
+            ListPool<CostumePrototype>.Instance.Return(costumes);
+
+            return true;
         }
 
         #endregion
@@ -3907,6 +3995,11 @@ namespace MHServerEmu.Games.Entities
         private class CommunityBroadcastEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).DoCommunityBroadcast();
+        }
+
+        private class CommunityPartyCircleChangedEvent : CallMethodEvent<Entity>
+        {
+            protected override CallbackDelegate GetCallback() => (t) => ((Player)t).OnPartyCircleChanged();
         }
 
         private class WorldViewUpdateEvent : CallMethodEvent<Entity>
