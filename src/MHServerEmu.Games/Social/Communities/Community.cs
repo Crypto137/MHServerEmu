@@ -260,7 +260,7 @@ namespace MHServerEmu.Games.Social.Communities
 
             if (member.CanReceiveBroadcast())
             {
-                member.ReceiveBroadcast(broadcast);
+                member.ReceiveBroadcast(broadcast, true);
             }
             else
             {

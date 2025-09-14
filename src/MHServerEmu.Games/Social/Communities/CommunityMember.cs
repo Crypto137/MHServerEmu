@@ -278,7 +278,7 @@ namespace MHServerEmu.Games.Social.Communities
         /// Updates the state of this <see cref="CommunityMember"/> with new data from a <see cref="CommunityMemberBroadcast"/> instance.
         /// Returns <see cref="CommunityMemberUpdateOptions"/> that specifies the fields that were updated.
         /// </summary>
-        public CommunityMemberUpdateOptions ReceiveBroadcast(CommunityMemberBroadcast broadcast)
+        public CommunityMemberUpdateOptions ReceiveBroadcast(CommunityMemberBroadcast broadcast, bool sendUpdate)
         {
             CommunityMemberUpdateOptions updateOptions = CommunityMemberUpdateOptions.None;
 
@@ -425,15 +425,10 @@ namespace MHServerEmu.Games.Social.Communities
             }
 
             // Relay this broadcast to the client
-            if (updateOptions != 0)
+            if (sendUpdate && updateOptions != 0)
                 SendUpdateToOwner(updateOptions);
 
             return updateOptions;
-        }
-
-        public void RestoreIsOnline(int isOnline)
-        {
-            _isOnline = (CommunityMemberOnlineStatus)isOnline;
         }
 
         public CommunityMemberUpdateOptions ClearData()

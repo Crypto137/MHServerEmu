@@ -31,5 +31,13 @@
         public DesignWorkflowState DesignState { get; protected set; }
         public int NumberRequired { get; protected set; }
         public PartyFilterRulePrototype[] Rules { get; protected set; }
+
+        //---
+
+        public bool Evaluate(List<AvatarPrototype> avatars, List<CostumePrototype> costumes, int playerIndex)
+        {
+            // TODO
+            return false;
+        }
     }
 }

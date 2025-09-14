@@ -1164,9 +1164,14 @@ namespace MHServerEmu.Games.Powers
         }
 
         // 20
-        private void DoPowerEventActionTeleportToPartyMember()
+        private bool DoPowerEventActionTeleportToPartyMember()
         {
-            Logger.Warn($"DoPowerEventActionTeleportToPartyMember(): Not implemented");
+            Player player = Owner?.GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "DoPowerEventActionTeleportToPartyMember(): player == null");
+
+            // This power should have been activated by the player, so the player entity should already have the id of the target player.
+            player.ScheduleTeleportToPartyMember();
+            return true;
         }
 
         // 21
