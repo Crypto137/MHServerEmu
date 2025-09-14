@@ -1,10 +1,7 @@
 ﻿using Gazillion;
 using MHServerEmu.Core.Logging;
-using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
-using MHServerEmu.Games.GameData;
-using MHServerEmu.Games.Regions;
 
 namespace MHServerEmu.Games.Social.Parties
 {
@@ -71,7 +68,8 @@ namespace MHServerEmu.Games.Social.Parties
                     break;
 
                 case GroupingOperationType.eGOP_ConvertToRaidAccept:
-                    TeleportToPartyMember(player, party != null ? party.LeaderId : 0, true);
+                    if (party != null)
+                        player.BeginTeleportToPartyMember(party.LeaderId);
                     break;
 
                 case GroupingOperationType.eGOP_ConvertToRaidDecline:
@@ -164,15 +162,6 @@ namespace MHServerEmu.Games.Social.Parties
             ulong partyId = player.PartyId;
             if (partyId != 0)
                 TryCleanUpParty(partyId);
-        }
-
-        public void TeleportToPartyMember(Player player, ulong targetPlayerDbId, bool forceTeleport)
-        {
-            Logger.Debug($"TeleportToPartyMember(): player=[{player}], target=[0x{targetPlayerDbId:X}], forceTeleport={forceTeleport}");
-            // TODO: TeleportToPartyMemberPower, PropertyEnum.PendingTeleportPartyMemberId
-            using Teleporter teleporter = ObjectPoolManager.Instance.Get<Teleporter>();
-            teleporter.Initialize(player, TeleportContextEnum.TeleportContext_Party);
-            teleporter.TeleportToTarget(GameDatabase.GlobalsPrototype.DefaultStartTargetFallbackRegion);
         }
 
         private Party CreateOrUpdateParty(PartyInfo partyInfo)

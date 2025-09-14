@@ -89,6 +89,7 @@ namespace MHServerEmu.Games.Entities
         private readonly EventPointer<ScheduledHUDTutorialResetEvent> _hudTutorialResetEvent = new();
         private readonly EventPointer<CommunityBroadcastEvent> _communityBroadcastEvent = new();
         private readonly EventPointer<WorldViewUpdateEvent> _worldViewUpdateEvent = new();
+        private readonly EventPointer<TeleportToPartyMemberEvent> _teleportToPartyMemberEvent = new();
         private readonly EventGroup _pendingEvents = new();
 
         private ReplicatedPropertyCollection _avatarProperties = new();
@@ -3665,6 +3666,39 @@ namespace MHServerEmu.Games.Entities
             return region.AllowsPartyFormation;
         }
 
+        public void BeginTeleportToPartyMember(ulong targetPlayerDbId)
+        {
+            if (targetPlayerDbId == 0)
+                return;
+
+            Avatar avatar = CurrentAvatar;
+            if (avatar == null)
+                return;
+
+            PrototypeId teleportToPartyMemberPower = GameDatabase.GlobalsPrototype.TeleportToPartyMemberPower;
+
+            PowerActivationSettings settings = new(avatar.Id, Vector3.Zero, avatar.RegionLocation.Position);
+            settings.Flags |= PowerActivationSettingsFlags.NotifyOwner;
+            if (avatar.ActivatePower(teleportToPartyMemberPower, ref settings) != PowerUseResult.Success)
+                return;
+
+            Properties[PropertyEnum.PendingTeleportPartyMemberId] = targetPlayerDbId;
+        }
+
+        public void ScheduleTeleportToPartyMember()
+        {
+            ulong pendingTeleportPartyMemberId = Properties[PropertyEnum.PendingTeleportPartyMemberId];
+            if (pendingTeleportPartyMemberId == 0)
+            {
+                Logger.Warn("ScheduleTeleportToPartyMember(): pendingTeleportPartyMemberId == 0");
+                return;
+            }
+
+            ScheduleEntityEvent(_teleportToPartyMemberEvent, TimeSpan.Zero, pendingTeleportPartyMemberId);
+
+            Properties.RemoveProperty(PropertyEnum.PendingTeleportPartyMemberId);
+        }
+
         public void OnAddedToParty(Party party)
         {
             Logger.Debug($"OnAddedToParty(): {party}");
@@ -3744,6 +3778,11 @@ namespace MHServerEmu.Games.Entities
             }
         }
 
+        private void TeleportToPartyMember(ulong targetPlayerDbId)
+        {
+            Logger.Debug($"DoTeleportToPartyMember(): 0x{targetPlayerDbId:X}");
+        }
+
         #endregion
 
         #region Scheduled Events
@@ -3771,6 +3810,11 @@ namespace MHServerEmu.Games.Entities
         private class WorldViewUpdateEvent : CallMethodEvent<Entity>
         {
             protected override CallbackDelegate GetCallback() => (t) => ((Player)t).OnWorldViewUpdate();
+        }
+
+        private class TeleportToPartyMemberEvent : CallMethodEventParam1<Entity, ulong>
+        {
+            protected override CallbackDelegate GetCallback() => (t, p1) => ((Player)t).TeleportToPartyMember(p1);
         }
 
         #endregion

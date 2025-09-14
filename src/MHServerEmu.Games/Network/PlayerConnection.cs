@@ -31,6 +31,7 @@ using MHServerEmu.Games.Powers;
 using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Regions;
 using MHServerEmu.Games.Social.Communities;
+using MHServerEmu.Games.Social.Parties;
 
 namespace MHServerEmu.Games.Network
 {
@@ -522,6 +523,7 @@ namespace MHServerEmu.Games.Network
                 case ClientToGameServerMessage.NetMessageHUDTutorialDismissed:              OnHUDTutorialDismissed(message); break;             // 111
                 case ClientToGameServerMessage.NetMessageTryMoveInventoryContentsToGeneral: OnTryMoveInventoryContentsToGeneral(message); break;// 112
                 case ClientToGameServerMessage.NetMessageSetPlayerGameplayOptions:          OnSetPlayerGameplayOptions(message); break;         // 113
+                case ClientToGameServerMessage.NetMessageTeleportToPartyMember:             OnTeleportToPartyMember(message); break;            // 114
                 case ClientToGameServerMessage.NetMessageSelectAvatarSynergies:             OnSelectAvatarSynergies(message); break;            // 116
                 case ClientToGameServerMessage.NetMessageRequestLegendaryMissionReroll:     OnRequestLegendaryMissionReroll(message); break;    // 117
                 case ClientToGameServerMessage.NetMessageRequestInterestInInventory:        OnRequestInterestInInventory(message); break;       // 121
@@ -1738,6 +1740,24 @@ namespace MHServerEmu.Games.Network
             if (setPlayerGameplayOptions == null) return Logger.WarnReturn(false, $"OnSetPlayerGameplayOptions(): Failed to retrieve message");
 
             Player.SetGameplayOptions(setPlayerGameplayOptions);
+            return true;
+        }
+
+        private bool OnTeleportToPartyMember(in MailboxMessage message) // 114
+        {
+            var teleportToPartyMember = message.As<NetMessageTeleportToPartyMember>();
+            if (teleportToPartyMember == null) return Logger.WarnReturn(false, $"OnTeleportToPartyMember(): Failed to retrieve message");
+
+            Party party = Player.GetParty();
+            if (party == null) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): party == null");
+
+            Avatar avatar = Player.CurrentAvatar;
+            if (avatar == null) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): avatar == null");
+
+            ulong memberId = party.GetMemberIdByName(teleportToPartyMember.PlayerName);
+            if (memberId == 0) return Logger.WarnReturn(false, "OnTeleportToPartyMember(): memberId == 0");
+
+            Player.BeginTeleportToPartyMember(memberId);
             return true;
         }
 
