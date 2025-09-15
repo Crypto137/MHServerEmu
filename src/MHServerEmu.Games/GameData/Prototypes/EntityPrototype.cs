@@ -381,6 +381,11 @@ namespace MHServerEmu.Games.GameData.Prototypes
             return keywordProto != null && KeywordPrototype.TestKeywordBit(_keywordsMask, keywordProto);
         }
 
+        public bool HasKeyword(PrototypeId keyword)
+        {
+            return HasKeyword(GameDatabase.GetPrototype<KeywordPrototype>(keyword));
+        }
+
         public bool GetCurrency(out PrototypeId currencyRef, out int amount)
         {
             currencyRef = PrototypeId.Invalid;
