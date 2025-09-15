@@ -4079,6 +4079,9 @@ namespace MHServerEmu.Games.Entities.Avatars
 
                 // Apply unconditional tuning table multiplier
                 xpMult *= tuningProto.PctXPMultiplier;
+
+                // Party
+                xpMult *= GetPartyXPMultiplier(tuningProto);
             }
 
             // Live tuning
@@ -4713,6 +4716,21 @@ namespace MHServerEmu.Games.Entities.Avatars
             multiplier += GetStackingExperienceBonusPct(Properties);
 
             return MathF.Max(-1f, multiplier);
+        }
+
+        public float GetPartyXPMultiplier(TuningPrototype tuningProto)
+        {
+            Party party = Party;
+            if (party == null)
+                return 1f;
+
+            CurveId curveRef = party.Type == GroupType.GroupType_Raid ? tuningProto.PctXPFromRaid : tuningProto.PctXPFromParty;
+            Curve curve = curveRef.AsCurve();
+            if (curve == null) return Logger.WarnReturn(1f, "GetPartyXPMultiplier(): curve == null");
+
+            float multiplier = 1f + curve.GetAt(CharacterLevel);
+            multiplier += Math.Max(LiveTuningManager.GetLiveGlobalTuningVar(GlobalTuningVar.eGTV_PartyXPBonusPct) - 1f, 0f);
+            return MathF.Max(multiplier, 0f);
         }
 
         public float GetLiveTuningXPMultiplier()
