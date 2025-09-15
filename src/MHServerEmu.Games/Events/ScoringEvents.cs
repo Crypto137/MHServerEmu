@@ -272,7 +272,7 @@ namespace MHServerEmu.Games.Events
 
         private bool FilterParty(List<PrototypeId> partyFilters)
         {
-            if (Party == null) return true;
+            if (Party == null || partyFilters == null) return true;
             return partyFilters.Contains(Party.DataRef);
         }
 
