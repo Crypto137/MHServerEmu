@@ -3863,6 +3863,15 @@ namespace MHServerEmu.Games.Entities
             _partyId.Set(party.PartyId);
             UpdatePartyAOI(party);
 
+            Avatar avatar = CurrentAvatar;
+            if (avatar != null && avatar.IsInWorld)
+            {
+                avatar.AssignPartyBonusPower();
+                avatar.SyncPartyBoostConditions();
+            }
+
+            // TODO: sync discovery data
+
             // we should receive a OnPartySizeChanged callback after this
         }
 
@@ -3873,7 +3882,14 @@ namespace MHServerEmu.Games.Entities
             _partyId.Set(0);
             UpdatePartyAOI(party);
 
-            // TODO: Update party condition on the current avatar
+            Avatar avatar = CurrentAvatar;
+            if (avatar != null && avatar.IsInWorld)
+            {
+                AOI.Update(avatar.RegionLocation.Position, true);
+                avatar.UnassignPartyBonusPower();
+                avatar.SetPartySize(1);
+                avatar.ResetPartyBoostConditionCount();
+            }
 
             // Need to do community cleanup here because we will no longer get OnPartySizeChanged callbacks.
             Community.UpdateParty(null);

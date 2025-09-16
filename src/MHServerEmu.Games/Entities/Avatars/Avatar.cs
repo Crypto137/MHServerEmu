@@ -4043,9 +4043,6 @@ namespace MHServerEmu.Games.Entities.Avatars
             if (IsInWorld == false)
                 return 0;
 
-            // TODO: Prestige multiplier
-            // TODO: Party bonus
-
             // Flat per kill bonus (optionally capped by a percentage)
             if (applyKillBonus)
             {
@@ -6455,6 +6452,15 @@ namespace MHServerEmu.Games.Entities.Avatars
             AreaOfInterest aoi = player.AOI;
             aoi.Update(RegionLocation.Position, true);
 
+            // Update party
+            Party party = Party;
+            if (party != null)
+            {
+                AssignPartyBonusPower();
+                SetPartySize(party.NumMembers);
+                SyncPartyBoostConditions();
+            }
+
             // Assign region passive powers (e.g. min health tutorial power)
             AssignRegionPowers();
 
@@ -6511,6 +6517,12 @@ namespace MHServerEmu.Games.Entities.Avatars
 
             // despawn teamups / controlled entities
             DespawnPersistentAgents();
+
+            if (PartyId != 0)
+            {
+                UnassignPartyBonusPower();
+                SetPartySize(1);
+            }
 
             CancelEnduranceEvents();
 
@@ -6577,6 +6589,79 @@ namespace MHServerEmu.Games.Entities.Avatars
             // AvatarLastActiveCalendarTime is used by the client to choose the voice line to play when the client logs in
             Properties[PropertyEnum.AvatarLastActiveTime] = Game.CurrentTime;
             Properties[PropertyEnum.AvatarLastActiveCalendarTime] = (long)Clock.UnixTime.TotalMilliseconds;
+        }
+
+        #endregion
+
+        #region Party
+
+        // PartyBoost is a power assigned to players in party. This is used in 1.10 and maybe other versions too.
+
+        public void AssignPartyBonusPower()
+        {
+            if (IsInWorld == false)
+                return;
+
+            PrototypeId partyBonusPower = AvatarPrototype.PartyBonusPower;
+            if (partyBonusPower == PrototypeId.Invalid)
+                return;
+
+            if (GetPower(partyBonusPower) != null)
+                return;
+
+            PowerIndexProperties indexProps = new(0, CharacterLevel, CombatLevel);
+            AssignPower(partyBonusPower, indexProps);
+        }
+
+        public void UnassignPartyBonusPower()
+        {
+            if (IsInWorld == false)
+                return;
+
+            PrototypeId partyBonusPower = AvatarPrototype.PartyBonusPower;
+            if (partyBonusPower == PrototypeId.Invalid)
+                return;
+
+            UnassignPower(partyBonusPower);
+        }
+
+        public void SetPartySize(int partySize)
+        {
+            Properties[PropertyEnum.PartySize] = partySize;
+
+            // Potentially move this to OnPropertyChange?
+            foreach (Condition condition in ConditionCollection)
+            {
+                if (condition.Properties.HasProperty(PropertyEnum.PartySize))
+                    condition.Properties[PropertyEnum.PartySize] = partySize;
+            }
+
+            // This eval doesn't seem to be used in any data for version 1.52, but it may have been used in older versions.
+            EvalPrototype evalOnPartySizeChange = AvatarPrototype.OnPartySizeChange;
+            if (evalOnPartySizeChange != null)
+                Logger.Debug("SetPartySize(): evalOnPartySizeChange != null");
+        }
+
+        // PartyBoostCondition is a condition that scales with the number of party members that have this condition (e.g. Avengers Assemble boosts).
+
+        public void OnPartyBoostConditionAdded()
+        {
+            // TODO
+        }
+
+        public void OnPartyBoostConditionRemoved()
+        {
+            // TODO
+        }
+
+        public void ResetPartyBoostConditionCount()
+        {
+            // TODO
+        }
+
+        public void SyncPartyBoostConditions()
+        {
+            // TODO
         }
 
         #endregion
