@@ -47,16 +47,27 @@ namespace MHServerEmu.Games.Achievements
             if (File.Exists(achievementInfoMapPath) == false)
                 return Logger.WarnReturn(false, $"Initialize(): Achievement info map not found at {achievementInfoMapPath}");
 
-            string achievementInfoMapJson = File.ReadAllText(achievementInfoMapPath);
+            // Get all AchievementInfoMap*.json files
+            var achievementInfoMapFiles = Directory.GetFiles(AchievementsDirectory, "AchievementInfoMap*.json")
+                .OrderBy(file => file).ToList(); // Sort alphabetically                
+
+            // Ensure main file is loaded first
+            achievementInfoMapFiles.Remove(achievementInfoMapPath); 
+            achievementInfoMapFiles.Insert(0, achievementInfoMapPath); // Main file first       
 
             try
             {
                 JsonSerializerOptions options = new();
                 options.Converters.Add(new TimeSpanJsonConverter());
-                var infos = JsonSerializer.Deserialize<IEnumerable<AchievementInfo>>(achievementInfoMapJson, options);
 
-                foreach (AchievementInfo info in infos)
-                    _achievementInfoMap.Add(info.Id, info);
+                foreach (string filePath in achievementInfoMapFiles)
+                {
+                    string achievementInfoMapJson = File.ReadAllText(filePath);
+                    var infos = JsonSerializer.Deserialize<IEnumerable<AchievementInfo>>(achievementInfoMapJson, options);
+
+                    foreach (AchievementInfo info in infos)
+                        _achievementInfoMap[info.Id] = info;
+                }
             }
             catch (Exception e)
             {
