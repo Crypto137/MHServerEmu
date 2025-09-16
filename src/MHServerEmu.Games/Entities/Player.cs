@@ -3888,7 +3888,7 @@ namespace MHServerEmu.Games.Entities
                 AOI.Update(avatar.RegionLocation.Position, true);
                 avatar.UnassignPartyBonusPower();
                 avatar.SetPartySize(1);
-                avatar.ResetPartyBoostConditionCount();
+                avatar.ResetPartyBoostConditions();
             }
 
             // Need to do community cleanup here because we will no longer get OnPartySizeChanged callbacks.

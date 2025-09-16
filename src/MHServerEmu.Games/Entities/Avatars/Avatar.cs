@@ -6644,24 +6644,58 @@ namespace MHServerEmu.Games.Entities.Avatars
 
         // PartyBoostCondition is a condition that scales with the number of party members that have this condition (e.g. Avengers Assemble boosts).
 
-        public void OnPartyBoostConditionAdded()
+        public void OnPartyBoostConditionAdded(Condition condition)
         {
-            // TODO
+            if (condition.IsPartyBoost() == false)
+                return;
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null && player.IsSwitchingAvatar)
+                return;
+
+            if (player != null && player.PartyId != 0)
+            {
+                SyncPartyBoostConditions();
+            }
+            else
+            {
+                condition.Properties[PropertyEnum.PartyBoostCount] = 1;
+                condition.RunEvalPartyBoost();
+            }
         }
 
-        public void OnPartyBoostConditionRemoved()
+        public void OnPartyBoostConditionRemoved(Condition condition)
         {
-            // TODO
+            if (condition.IsPartyBoost() == false)
+                return;
+
+            Player player = GetOwnerOfType<Player>();
+            if (player == null && player.IsSwitchingAvatar)
+                return;
+
+            if (player != null && player.PartyId != 0)
+                SyncPartyBoostConditions();
         }
 
-        public void ResetPartyBoostConditionCount()
+        public void ResetPartyBoostConditions()
         {
-            // TODO
+            foreach (Condition condition in ConditionCollection)
+            {
+                if (condition.IsPartyBoost() == false)
+                    continue;
+
+                if (condition.Properties[PropertyEnum.PartyBoostCount] <= 1)
+                    continue;
+
+                condition.Properties[PropertyEnum.PartyBoostCount] = 1;
+                condition.RunEvalPartyBoost();
+            }
         }
 
         public void SyncPartyBoostConditions()
         {
-            // TODO
+            // TODO: Send party boosts to player manager
+            Logger.Debug("SyncPartyBoostConditions()");
         }
 
         #endregion
