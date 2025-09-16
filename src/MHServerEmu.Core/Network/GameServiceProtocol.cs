@@ -328,6 +328,13 @@ namespace MHServerEmu.Core.Network
             public readonly PartyOperationPayload Request = request;
         }
 
+        public readonly struct PartyBoostUpdate(ulong playerDbId, List<ulong> boosts)
+            : IGameServiceMessage
+        {
+            public readonly ulong PlayerDbId = playerDbId;
+            public readonly List<ulong> Boosts = boosts;
+        }
+
         // NOTE: PlayerManager -> Game party messages are based on 1.53.
 
         /// <summary>

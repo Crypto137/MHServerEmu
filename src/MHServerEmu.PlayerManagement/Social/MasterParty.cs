@@ -238,9 +238,8 @@ namespace MHServerEmu.PlayerManagement.Social
             {
                 foreach (PlayerHandle player in _members)
                 {
-                    partyInfoBuilder.AddMembers(PartyMemberInfo.CreateBuilder()
-                        .SetPlayerDbId(player.PlayerDbId)
-                        .SetPlayerName(player.PlayerName));
+                    PartyMemberInfo memberInfo = BuildPartyMemberInfo(player);
+                    partyInfoBuilder.AddMembers(memberInfo);
                 }
             }
 
@@ -264,12 +263,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             PartyMemberInfo memberInfo = null;
             if (memberEvent != PartyMemberEvent.ePME_Remove)
-            {
-                memberInfo = PartyMemberInfo.CreateBuilder()
-                    .SetPlayerDbId(member.PlayerDbId)
-                    .SetPlayerName(member.PlayerName)
-                    .Build();
-            }
+                memberInfo = BuildPartyMemberInfo(member);
 
             foreach (PlayerHandle player in recipients)
             {
@@ -280,6 +274,17 @@ namespace MHServerEmu.PlayerManagement.Social
                     Id, member.PlayerDbId, memberEvent, memberInfo);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
+        }
+
+        private static PartyMemberInfo BuildPartyMemberInfo(PlayerHandle member)
+        {
+            var builder = PartyMemberInfo.CreateBuilder()
+                .SetPlayerDbId(member.PlayerDbId)
+                .SetPlayerName(member.PlayerName);
+
+            member.GetPartyBoosts(builder);
+
+            return builder.Build();
         }
     }
 }

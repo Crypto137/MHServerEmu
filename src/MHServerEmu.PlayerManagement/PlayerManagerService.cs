@@ -136,6 +136,7 @@ namespace MHServerEmu.PlayerManagement
                 case ServiceMessage.CommunityStatusUpdate:
                 case ServiceMessage.CommunityStatusRequest:
                 case ServiceMessage.PartyOperationRequest:
+                case ServiceMessage.PartyBoostUpdate:
                     _serviceMailbox.PostMessage(message);
                     break;
 

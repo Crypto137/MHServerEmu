@@ -34,6 +34,8 @@ namespace MHServerEmu.PlayerManagement.Players
         private static ulong _nextHandleId = 1;     // this is needed primarily for debugging, can potentially be removed later
         private static ulong _nextTransferId = 1;
 
+        private readonly HashSet<PrototypeGuid> _partyBoosts = new();
+
         private bool _saveNeeded = false;   // Dirty flag for player data
 
         private ulong _transferGameId;
@@ -503,6 +505,34 @@ namespace MHServerEmu.PlayerManagement.Players
 
             DifficultyTierPreference = difficultyTierProtoRef;
             Logger.Trace($"SetDifficultyTierPreference(): player=[{this}], difficulty=[{difficultyTierProtoRef.GetNameFormatted()}]");
+        }
+
+        public void GetPartyBoosts(PartyMemberInfo.Builder infoBuilder)
+        {
+            if (_partyBoosts.Count == 0)
+                return;
+
+            foreach (PrototypeGuid partyBoost in _partyBoosts)
+                infoBuilder.AddBoosts((ulong)partyBoost);
+        }
+
+        public void SetPartyBoosts(List<ulong> boosts)
+        {
+            _partyBoosts.Clear();
+
+            if (boosts == null)
+                return;
+
+            foreach (ulong boost in boosts)
+            {
+                if (boost == 0)
+                {
+                    Logger.Warn("SetPartyBoosts(): boost == 0");
+                    continue;
+                }
+
+                _partyBoosts.Add((PrototypeGuid)boost);
+            }
         }
 
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)

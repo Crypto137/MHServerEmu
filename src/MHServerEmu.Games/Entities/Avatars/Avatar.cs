@@ -4,6 +4,7 @@ using MHServerEmu.Core.Extensions;
 using MHServerEmu.Core.Helpers;
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Memory;
+using MHServerEmu.Core.Network;
 using MHServerEmu.Core.Serialization;
 using MHServerEmu.Core.System.Random;
 using MHServerEmu.Core.System.Time;
@@ -6692,10 +6693,34 @@ namespace MHServerEmu.Games.Entities.Avatars
             }
         }
 
-        public void SyncPartyBoostConditions()
+        public bool SyncPartyBoostConditions()
         {
-            // TODO: Send party boosts to player manager
-            Logger.Debug("SyncPartyBoostConditions()");
+            Player player = GetOwnerOfType<Player>();
+            if (player == null) return Logger.WarnReturn(false, "SyncPartyBoostConditions(): player == null");
+
+            List<ulong> boosts = null;  // allocate on demand
+
+            foreach (Condition condition in ConditionCollection)
+            {
+                if (condition.IsPartyBoost() == false)
+                    continue;
+
+                if (condition.ConditionPrototypeRef == PrototypeId.Invalid)
+                {
+                    Logger.Warn($"SyncPartyBoostConditions(): Non-standalone [{condition}] is flagged as a party boost, which is not supported");
+                    continue;
+                }
+
+                boosts ??= new();
+                PrototypeGuid conditionGuid = GameDatabase.GetPrototypeGuid(condition.ConditionPrototypeRef);
+                boosts.Add((ulong)conditionGuid);
+            }
+
+            // Even if there are no party boosts currently, notify anyway to clear the conditions that may have previously been applied.
+            ServiceMessage.PartyBoostUpdate message = new(player.DatabaseUniqueId, boosts);
+            ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
+
+            return true;
         }
 
         #endregion
