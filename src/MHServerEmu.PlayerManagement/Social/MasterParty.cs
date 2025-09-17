@@ -41,6 +41,11 @@ namespace MHServerEmu.PlayerManagement.Social
             return $"id={Id}";
         }
 
+        public List<PlayerHandle>.Enumerator GetEnumerator()
+        {
+            return _members.GetEnumerator();
+        }
+
         public void GetMembers(HashSet<PlayerHandle> members)
         {
             foreach (PlayerHandle member in _members)

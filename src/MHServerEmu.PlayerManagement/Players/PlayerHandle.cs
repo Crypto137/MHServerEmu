@@ -498,6 +498,23 @@ namespace MHServerEmu.PlayerManagement.Players
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
+        /// <summary>
+        /// Removes this player from the current region if it's no longer available for the current WorldView.
+        /// </summary>
+        public void CheckWorldViewRegionAvailability()
+        {
+            // TODO: Party worldview
+            if (CurrentParty != null)
+                return;
+
+            // Do not remove from the current region if it's a match or we have it in our world view (TODO: override this player's world view with party)
+            if (TargetRegion == null || TargetRegion.IsMatch || WorldView.ContainsRegion(TargetRegion.Id))
+                return;
+
+            // Return to start target if this region is no longer available.
+            BeginRegionTransferToStartTarget();
+        }
+
         public void SetDifficultyTierPreference(PrototypeId difficultyTierProtoRef)
         {
             if (difficultyTierProtoRef == DifficultyTierPreference)

@@ -290,8 +290,13 @@ namespace MHServerEmu.PlayerManagement.Social
             if (result != GroupingOperationResult.eGOPR_Success)
                 return result;
 
-            if (player.CurrentParty.SetType(GroupType.GroupType_Raid) == false)
+            MasterParty party = player.CurrentParty;
+
+            if (party.SetType(GroupType.GroupType_Raid) == false)
                 return GroupingOperationResult.eGOPR_NoChange;
+
+            foreach (PlayerHandle member in party)
+                member.CheckWorldViewRegionAvailability();
 
             return GroupingOperationResult.eGOPR_Success;           
         }
@@ -309,7 +314,10 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (party.SetType(GroupType.GroupType_Party) == false)
                 return GroupingOperationResult.eGOPR_NoChange;
-            
+
+            foreach (PlayerHandle member in party)
+                member.CheckWorldViewRegionAvailability();
+
             return GroupingOperationResult.eGOPR_Success;
         }
 
@@ -359,19 +367,25 @@ namespace MHServerEmu.PlayerManagement.Social
             foreach (PlayerHandle member in members)
                 party.RemoveMember(member, GroupLeaveReason.GROUP_LEAVE_REASON_DISBANDED);
 
+            if (party.MemberCount == 0)
+            {
+                // Cancel invitations
+                party.CancelAllInvites();
+
+                // Remove from the manager
+                _parties.Remove(party.Id);
+
+                Logger.Info($"DisbandParty(): party=[{party}]");
+            }
+            else
+            {
+                Logger.Warn($"DisbandParty(): Failed to remove all players from party {party}");
+            }
+
+            foreach (PlayerHandle member in members)
+                member.CheckWorldViewRegionAvailability();
+
             HashSetPool<PlayerHandle>.Instance.Return(members);
-
-            if (party.MemberCount != 0)
-                return Logger.WarnReturn(false, $"DisbandParty(): Failed to remove all players from party {party}");
-
-            // Cancel invitations
-            party.CancelAllInvites();
-
-            // Remove from the manager
-            _parties.Remove(party.Id);
-
-            Logger.Info($"DisbandParty(): party=[{party}]");
-
             return true;
         }
 
@@ -394,6 +408,7 @@ namespace MHServerEmu.PlayerManagement.Social
                 return;
 
             party.RemoveMember(player, reason);
+            player.CheckWorldViewRegionAvailability();
 
             // If the leader is the only one remaining in the party and there are no pending invites, it's time to disband.
             if (party.HasEnoughMembersOrInvitations == false)
@@ -408,6 +423,9 @@ namespace MHServerEmu.PlayerManagement.Social
                 PlayerHandle nextLeader = party.GetNextLeader();
                 party.SetLeader(nextLeader);
             }
+
+            foreach (PlayerHandle member in party)
+                member.CheckWorldViewRegionAvailability();
         }
 
         #endregion

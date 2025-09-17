@@ -92,6 +92,11 @@ namespace MHServerEmu.PlayerManagement.Regions
             return null;
         }
 
+        public bool ContainsRegion(ulong regionId)
+        {
+            return _regions.ContainsKey(regionId);
+        }
+
         public List<(ulong, ulong)> BuildWorldViewCache()
         {
             // TODO: Consider pooling this if it causes too many List allocations.
