@@ -34,6 +34,8 @@ namespace MHServerEmu.PlayerManagement.Players
         private static ulong _nextHandleId = 1;     // this is needed primarily for debugging, can potentially be removed later
         private static ulong _nextTransferId = 1;
 
+        private readonly HashSet<PrototypeGuid> _partyBoosts = new();
+
         private bool _saveNeeded = false;   // Dirty flag for player data
 
         private ulong _transferGameId;
@@ -324,7 +326,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
-                .SetDifficultyTierProtoId((ulong)DifficultyTierPreference)
+                .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
                 .Build();
 
             return BeginRegionTransferToTarget(0, TeleportContextEnum.TeleportContext_Transition, destTarget, createRegionParams);
@@ -345,18 +347,22 @@ namespace MHServerEmu.PlayerManagement.Players
             if (context == TeleportContextEnum.TeleportContext_StoryWarp)
                 WorldView.Clear();
 
+            // Get the WorldView to use (this player's or party's)
+            WorldView worldView = GetCurrentWorldView();
+
             // Prioritize regions that are already in the WorldView.
-            RegionHandle region = WorldView.GetMatchingRegion(regionProtoRef, createRegionParams);
+            RegionHandle region = worldView.GetMatchingRegion(regionProtoRef, createRegionParams);
 
             // Create a new region if needed
             if (region == null)
             {
-                if (regionProto.IsPublic)
+                // We treat match regions as private since there is currently no matchmaking.
+                if (regionProto.IsPublic && regionProto.Behavior != RegionBehavior.MatchPlay)
                     region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion(regionProtoRef, createRegionParams);
                 else
                     region = PlayerManagerService.Instance.WorldManager.CreatePrivateRegion(this, regionProtoRef, createRegionParams);
 
-                WorldView.AddRegion(region);
+                worldView.AddRegion(region);
             }
 
             ulong destGameId = region.Game.Id;
@@ -491,9 +497,54 @@ namespace MHServerEmu.PlayerManagement.Players
             if (CurrentGame == null || State != PlayerHandleState.InGame)
                 return;
 
-            List<(ulong, ulong)> worldView = WorldView.BuildWorldViewCache();
+            List<(ulong, ulong)> worldView = new();
+            GetCurrentWorldView().BuildWorldViewCache(worldView);
             ServiceMessage.WorldViewSync message = new(CurrentGame.Id, PlayerDbId, worldView);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
+        }
+
+        /// <summary>
+        /// Removes this player from the current region if it's no longer available for the current WorldView.
+        /// </summary>
+        public void CheckWorldViewRegionAvailability()
+        {
+            SyncWorldView();
+
+            // Do not remove from the current region we have it in any accessible WorldView or it's a match
+            if (TargetRegion == null || TargetRegion.IsMatch || HasRegionInAnyWorldView(TargetRegion.Id))
+                return;
+
+            // Return to start target if this region is no longer available.
+            BeginRegionTransferToStartTarget();
+        }
+
+        public bool HasRegionInAnyWorldView(ulong regionId)
+        {
+            if (CurrentParty != null)
+            {
+                if (CurrentParty.WorldView.ContainsRegion(regionId))
+                    return true;
+
+                // If any party member has access to this region, it's okay for this player to be there as well.
+                foreach (PlayerHandle partyMember in CurrentParty)
+                {
+                    if (partyMember.WorldView.ContainsRegion(regionId))
+                        return true;
+                }
+            }
+
+            if (WorldView.ContainsRegion(regionId))
+                return true;
+
+            return false;
+        }
+
+        private WorldView GetCurrentWorldView()
+        {
+            if (CurrentParty != null)
+                return CurrentParty.WorldView;
+
+            return WorldView;
         }
 
         public void SetDifficultyTierPreference(PrototypeId difficultyTierProtoRef)
@@ -503,6 +554,34 @@ namespace MHServerEmu.PlayerManagement.Players
 
             DifficultyTierPreference = difficultyTierProtoRef;
             Logger.Trace($"SetDifficultyTierPreference(): player=[{this}], difficulty=[{difficultyTierProtoRef.GetNameFormatted()}]");
+        }
+
+        public void GetPartyBoosts(PartyMemberInfo.Builder infoBuilder)
+        {
+            if (_partyBoosts.Count == 0)
+                return;
+
+            foreach (PrototypeGuid partyBoost in _partyBoosts)
+                infoBuilder.AddBoosts((ulong)partyBoost);
+        }
+
+        public void SetPartyBoosts(List<ulong> boosts)
+        {
+            _partyBoosts.Clear();
+
+            if (boosts == null)
+                return;
+
+            foreach (ulong boost in boosts)
+            {
+                if (boost == 0)
+                {
+                    Logger.Warn("SetPartyBoosts(): boost == 0");
+                    continue;
+                }
+
+                _partyBoosts.Add((PrototypeGuid)boost);
+            }
         }
 
         private void SetTransferParams(ulong gameId, NetStructTransferParams transferParams)
@@ -542,7 +621,9 @@ namespace MHServerEmu.PlayerManagement.Players
                 return;
             }
 
-            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams, WorldView.BuildWorldViewCache());
+            List<(ulong, ulong)> worldViewCache = new();
+            GetCurrentWorldView().BuildWorldViewCache(worldViewCache);
+            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams, worldViewCache);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 

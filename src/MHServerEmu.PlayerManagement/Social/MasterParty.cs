@@ -4,6 +4,7 @@ using MHServerEmu.Core.Memory;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.GameData;
 using MHServerEmu.PlayerManagement.Players;
+using MHServerEmu.PlayerManagement.Regions;
 
 namespace MHServerEmu.PlayerManagement.Social
 {
@@ -24,6 +25,8 @@ namespace MHServerEmu.PlayerManagement.Social
         public PrototypeId DifficultyTierProtoRef { get; private set; }
         public PlayerHandle Leader { get; private set; }
 
+        public WorldView WorldView { get; } = new();
+
         public int MemberCount { get => _members.Count; }
         public bool HasEnoughMembersOrInvitations { get => _members.Count > 1 || _pendingMembers.Count > 0; }
 
@@ -32,6 +35,8 @@ namespace MHServerEmu.PlayerManagement.Social
             Id = id;
             DifficultyTierProtoRef = creator.DifficultyTierPreference;
 
+            WorldView.AddRegionsFrom(creator.WorldView);
+
             AddMember(creator);
             SetLeader(creator);
         }
@@ -39,6 +44,11 @@ namespace MHServerEmu.PlayerManagement.Social
         public override string ToString()
         {
             return $"id={Id}";
+        }
+
+        public List<PlayerHandle>.Enumerator GetEnumerator()
+        {
+            return _members.GetEnumerator();
         }
 
         public void GetMembers(HashSet<PlayerHandle> members)
@@ -86,6 +96,8 @@ namespace MHServerEmu.PlayerManagement.Social
                 _members.Add(player);
                 player.CurrentParty = this;
 
+                WorldView.AddOwner(player);
+
                 Logger.Info($"AddMember(): party=[{this}], player=[{player}]");
 
                 added = true;
@@ -107,6 +119,36 @@ namespace MHServerEmu.PlayerManagement.Social
                 return false;
 
             player.CurrentParty = null;
+
+            WorldView.RemoveOwner(player);
+
+            // Remove access to private regions of this party from the leaving member
+            foreach (RegionHandle region in WorldView)
+            {
+                if (region.IsPrivate)
+                    player.WorldView.RemoveRegion(region);
+            }
+
+            // TODO: Grace period
+            // - Set up a timer in the player manager.
+            // - Relay timer information to the game instance to send NetMessagePartyKickGracePeriod to the player.
+            // - Kick the player from the region when the timer expires.
+
+            // Grant ownership of the current region to the last remaining party member.
+            if (_members.Count == 0)
+            {
+                RegionHandle lastMemberRegion = player.TargetRegion;
+                WorldView lastMemberWorldView = player.WorldView;
+
+                if (lastMemberRegion != null && WorldView.ContainsRegion(lastMemberRegion.Id))
+                {
+                    RegionHandle existingRegion = lastMemberWorldView.GetMatchingRegion(lastMemberRegion.RegionProtoRef, lastMemberRegion.CreateParams);
+                    if (existingRegion != null && existingRegion != lastMemberRegion)
+                        lastMemberWorldView.RemoveRegion(existingRegion);
+
+                    lastMemberWorldView.AddRegion(lastMemberRegion);
+                }
+            }
 
             Logger.Info($"RemoveMember(): party=[{this}], player=[{player}]");
 
@@ -238,9 +280,8 @@ namespace MHServerEmu.PlayerManagement.Social
             {
                 foreach (PlayerHandle player in _members)
                 {
-                    partyInfoBuilder.AddMembers(PartyMemberInfo.CreateBuilder()
-                        .SetPlayerDbId(player.PlayerDbId)
-                        .SetPlayerName(player.PlayerName));
+                    PartyMemberInfo memberInfo = BuildPartyMemberInfo(player);
+                    partyInfoBuilder.AddMembers(memberInfo);
                 }
             }
 
@@ -264,12 +305,7 @@ namespace MHServerEmu.PlayerManagement.Social
 
             PartyMemberInfo memberInfo = null;
             if (memberEvent != PartyMemberEvent.ePME_Remove)
-            {
-                memberInfo = PartyMemberInfo.CreateBuilder()
-                    .SetPlayerDbId(member.PlayerDbId)
-                    .SetPlayerName(member.PlayerName)
-                    .Build();
-            }
+                memberInfo = BuildPartyMemberInfo(member);
 
             foreach (PlayerHandle player in recipients)
             {
@@ -280,6 +316,17 @@ namespace MHServerEmu.PlayerManagement.Social
                     Id, member.PlayerDbId, memberEvent, memberInfo);
                 ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
             }
+        }
+
+        private static PartyMemberInfo BuildPartyMemberInfo(PlayerHandle member)
+        {
+            var builder = PartyMemberInfo.CreateBuilder()
+                .SetPlayerDbId(member.PlayerDbId)
+                .SetPlayerName(member.PlayerName);
+
+            member.GetPartyBoosts(builder);
+
+            return builder.Build();
         }
     }
 }

@@ -294,6 +294,20 @@ namespace MHServerEmu.Games.Regions
         {
             if (playerDbId == 0) return Logger.WarnReturn(false, "TeleportToPlayer(): playerDbId == 0");
 
+            // See if we can do a local teleport
+            Avatar otherAvatar = Player.Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId)?.CurrentAvatar;
+            if (otherAvatar != null && otherAvatar.IsInWorld && otherAvatar.Region == Player.GetRegion())
+            {
+                Vector3 position = otherAvatar.RegionLocation.Position;
+                if (Avatar.AdjustStartPositionIfNeeded(otherAvatar.Region, ref position))
+                {
+                    ChangePositionResult result = Player.CurrentAvatar.ChangeRegionPosition(position, null, ChangePositionFlags.Teleport);
+                    if (result == ChangePositionResult.PositionChanged || result == ChangePositionResult.Teleport)
+                        return true;
+                }
+            }
+
+            // Do a remote teleport
             Player.PlayerConnection.BeginRegionTransfer(PrototypeId.Invalid);
 
             ChangeRegionRequestHeader header = BuildChangeRegionRequestHeader();

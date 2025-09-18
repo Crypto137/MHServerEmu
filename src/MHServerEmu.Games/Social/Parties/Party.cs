@@ -1,6 +1,9 @@
 ﻿using MHServerEmu.Core.Logging;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Entities.Avatars;
 using MHServerEmu.Games.GameData;
+using MHServerEmu.Games.Powers.Conditions;
+using MHServerEmu.Games.Properties;
 using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Social.Parties
@@ -10,6 +13,7 @@ namespace MHServerEmu.Games.Social.Parties
         private static readonly Logger Logger = LogManager.CreateLogger();
 
         private readonly Dictionary<ulong, PartyMemberInfo> _members = new();
+        private readonly Dictionary<PrototypeId, int> _boostCounts = new();
 
         public ulong PartyId { get; }
         public Gazillion.GroupType Type { get; private set; }
@@ -183,7 +187,39 @@ namespace MHServerEmu.Games.Social.Parties
 
         private void UpdateBoostCounts()
         {
-            // TODO
+            _boostCounts.Clear();
+
+            foreach (PartyMemberInfo member in _members.Values)
+            {
+                foreach (PrototypeId boostProtoRef in member.Boosts)
+                {
+                    _boostCounts.TryGetValue(boostProtoRef, out int value);
+                    _boostCounts[boostProtoRef] = ++value;
+                }
+            }
+
+            // Update party boost conditions on members in this game instance.
+            EntityManager entityManager = Game.Current.EntityManager;
+            foreach (var kvp in _boostCounts)
+            {
+                foreach (PartyMemberInfo member in _members.Values)
+                {
+                    Player player = entityManager.GetEntityByDbGuid<Player>(member.PlayerDbId);
+                    if (player == null)
+                        continue;
+
+                    Avatar avatar = player.CurrentAvatar;
+                    if (avatar == null || avatar.IsInWorld == false)
+                        continue;
+
+                    Condition condition = avatar.ConditionCollection.GetConditionByRef(kvp.Key);
+                    if (condition == null)
+                        continue;
+
+                    condition.Properties[PropertyEnum.PartyBoostCount] = kvp.Value;
+                    condition.RunEvalPartyBoost();
+                }
+            }
         }
 
         private void OnPartySizeChanged()

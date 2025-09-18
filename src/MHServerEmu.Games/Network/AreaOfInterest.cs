@@ -935,6 +935,7 @@ namespace MHServerEmu.Games.Network
             if (entity == null) return Logger.WarnReturn(AOINetworkPolicyValues.AOIChannelNone, "GetNewInterestPolicies(): entity == null");
 
             Player player = _playerConnection.Player;
+            AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
 
             // Destroyed and not in game entities cannot have interest
             if (entity.IsDestroyed || entity.IsInGame == false)
@@ -967,14 +968,14 @@ namespace MHServerEmu.Games.Network
                 return AOINetworkPolicyValues.AOIChannelNone;
 
             // Do world entity specific checks
-            WorldEntity worldEntity = entity as WorldEntity;
-            if (worldEntity != null && GameDatabase.InteractionManager.GetVisibilityStatus(player, worldEntity) == false)
-                return AOINetworkPolicyValues.AOIChannelNone;
-
-            AOINetworkPolicyValues newInterestPolicies = AOINetworkPolicyValues.AOIChannelNone;
-
-            if (worldEntity != null)
+            if (entity is WorldEntity worldEntity)
             {
+                if (worldEntity.IsCloneParent)
+                    return AOINetworkPolicyValues.AOIChannelNone;
+
+                if (GameDatabase.InteractionManager.GetVisibilityStatus(player, worldEntity) == false)
+                    return AOINetworkPolicyValues.AOIChannelNone;
+
                 // Make sure this world entity is in the same region as our interest
                 bool isInRegion = worldEntity.IsInWorld && worldEntity.TestStatus(EntityStatus.ExitingWorld) == false && worldEntity.Region == Region;
 

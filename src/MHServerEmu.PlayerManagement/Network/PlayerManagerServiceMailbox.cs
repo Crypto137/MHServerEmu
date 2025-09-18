@@ -87,6 +87,10 @@ namespace MHServerEmu.PlayerManagement.Network
                     OnPartyOperationRequest(partyOperationRequest);
                     break;
 
+                case ServiceMessage.PartyBoostUpdate partyBoostUpdate:
+                    OnPartyBoostUpdate(partyBoostUpdate);
+                    break;
+
                 default:
                     Logger.Warn($"ReceiveServiceMessage(): Unhandled service message type {message.GetType().Name}");
                     break;
@@ -320,6 +324,21 @@ namespace MHServerEmu.PlayerManagement.Network
             }
 
             HashSetPool<PlayerHandle>.Instance.Return(playersToNotify);
+            return true;
+        }
+
+        private bool OnPartyBoostUpdate(in ServiceMessage.PartyBoostUpdate partyBoostUpdate)
+        {
+            ulong playerDbId = partyBoostUpdate.PlayerDbId;
+            List<ulong> boosts = partyBoostUpdate.Boosts;
+
+            PlayerHandle player = _playerManager.ClientManager.GetPlayer(playerDbId);
+            if (player == null)
+                return Logger.WarnReturn(false, $"OnPartyBoostUpdate(): No handle found for playerDbId 0x{playerDbId:X}");
+
+            player.SetPartyBoosts(boosts);
+            player.CurrentParty?.UpdateMember(player);
+
             return true;
         }
 
