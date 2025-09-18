@@ -59,6 +59,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
         public RegionHandle TargetRegion { get; private set; }      // The region this player needs to be in
         public RegionHandle ActualRegion { get; private set; }      // The region this player is actually in
+        public bool HasVisitedTown { get; private set; }            // This is used to disable party for players who haven't finished the tutorial.
 
         public PrototypeId DifficultyTierPreference { get; private set; }
 
@@ -485,6 +486,9 @@ namespace MHServerEmu.PlayerManagement.Players
 
             SetActualRegion(newRegion);
             SetTransferParams(0, null);
+
+            if (newRegion.IsTown)
+                HasVisitedTown = true;
 
             PlayerManagerService.Instance.PartyManager.OnPlayerRegionTransferFinished(this);
 

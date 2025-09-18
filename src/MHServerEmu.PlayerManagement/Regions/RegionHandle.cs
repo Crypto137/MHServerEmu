@@ -60,6 +60,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public bool IsPublic { get => Prototype.IsPublic; }
         public bool IsPrivate { get => Prototype.IsPrivate; }
+        public bool IsTown { get => Prototype.Behavior == RegionBehavior.Town; }
         public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
         public bool IsMatch { get => Prototype.Behavior == RegionBehavior.MatchPlay; }
         public bool CanExpire { get => Prototype.Behavior == RegionBehavior.PublicCombatZone || Prototype.Behavior == RegionBehavior.MatchPlay; }
@@ -70,7 +71,7 @@ namespace MHServerEmu.PlayerManagement.Regions
 
         public int PlayerCount { get => _players.Count; }
         public int PlayerLimit { get => Prototype.PlayerLimit; }
-        public bool IsFull { get => Prototype.Behavior != RegionBehavior.Town && PlayerCount >= PlayerLimit; }
+        public bool IsFull { get => IsTown == false && PlayerCount >= PlayerLimit; }
 
         public RegionHandle(GameHandle game, ulong id, PrototypeId regionProtoRef, NetStructCreateRegionParams createParams, RegionFlags flags)
         {

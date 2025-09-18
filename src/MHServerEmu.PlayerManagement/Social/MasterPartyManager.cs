@@ -159,6 +159,9 @@ namespace MHServerEmu.PlayerManagement.Social
             if (targetPlayer == requestingPlayer)
                 return GroupingOperationResult.eGOPR_TargetedSelf;
 
+            if (targetPlayer.HasVisitedTown == false)
+                return GroupingOperationResult.eGOPR_HasNoCheckpoint;
+
             if (targetPlayer.CurrentParty != null)
             {
                 if (requestingPlayer.CurrentParty != null && requestingPlayer.CurrentParty == targetPlayer.CurrentParty)
