@@ -356,7 +356,8 @@ namespace MHServerEmu.PlayerManagement.Players
             // Create a new region if needed
             if (region == null)
             {
-                if (regionProto.IsPublic)
+                // We treat match regions as private since there is currently no matchmaking.
+                if (regionProto.IsPublic && regionProto.Behavior != RegionBehavior.MatchPlay)
                     region = PlayerManagerService.Instance.WorldManager.GetOrCreatePublicRegion(regionProtoRef, createRegionParams);
                 else
                     region = PlayerManagerService.Instance.WorldManager.CreatePrivateRegion(this, regionProtoRef, createRegionParams);
