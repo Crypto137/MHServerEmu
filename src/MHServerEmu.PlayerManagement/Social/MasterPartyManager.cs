@@ -369,6 +369,9 @@ namespace MHServerEmu.PlayerManagement.Social
 
             if (party.MemberCount == 0)
             {
+                // Clear world view and cancel reservations
+                party.WorldView.Clear();
+
                 // Cancel invitations
                 party.CancelAllInvites();
 

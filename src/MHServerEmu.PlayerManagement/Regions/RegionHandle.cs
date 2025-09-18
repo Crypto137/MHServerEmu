@@ -59,6 +59,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         // We currently never reset towns and allow unlimited numbers of players in them to have a more social experience on smaller servers.
 
         public bool IsPublic { get => Prototype.IsPublic; }
+        public bool IsPrivate { get => Prototype.IsPrivate; }
         public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
         public bool IsMatch { get => Prototype.Behavior == RegionBehavior.MatchPlay; }
         public bool CanExpire { get => Prototype.Behavior == RegionBehavior.PublicCombatZone || Prototype.Behavior == RegionBehavior.MatchPlay; }

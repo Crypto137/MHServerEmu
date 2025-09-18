@@ -326,7 +326,7 @@ namespace MHServerEmu.PlayerManagement.Players
 
             NetStructCreateRegionParams createRegionParams = NetStructCreateRegionParams.CreateBuilder()
                 .SetLevel(0)
-                .SetDifficultyTierProtoId((ulong)DifficultyTierPreference)
+                .SetDifficultyTierProtoId((ulong)GameDatabase.GlobalsPrototype.DifficultyTierDefault)
                 .Build();
 
             return BeginRegionTransferToTarget(0, TeleportContextEnum.TeleportContext_Transition, destTarget, createRegionParams);
@@ -347,8 +347,11 @@ namespace MHServerEmu.PlayerManagement.Players
             if (context == TeleportContextEnum.TeleportContext_StoryWarp)
                 WorldView.Clear();
 
+            // Get the WorldView to use (this player's or party's)
+            WorldView worldView = GetCurrentWorldView();
+
             // Prioritize regions that are already in the WorldView.
-            RegionHandle region = WorldView.GetMatchingRegion(regionProtoRef, createRegionParams);
+            RegionHandle region = worldView.GetMatchingRegion(regionProtoRef, createRegionParams);
 
             // Create a new region if needed
             if (region == null)
@@ -358,7 +361,7 @@ namespace MHServerEmu.PlayerManagement.Players
                 else
                     region = PlayerManagerService.Instance.WorldManager.CreatePrivateRegion(this, regionProtoRef, createRegionParams);
 
-                WorldView.AddRegion(region);
+                worldView.AddRegion(region);
             }
 
             ulong destGameId = region.Game.Id;
@@ -493,7 +496,8 @@ namespace MHServerEmu.PlayerManagement.Players
             if (CurrentGame == null || State != PlayerHandleState.InGame)
                 return;
 
-            List<(ulong, ulong)> worldView = WorldView.BuildWorldViewCache();
+            List<(ulong, ulong)> worldView = new();
+            GetCurrentWorldView().BuildWorldViewCache(worldView);
             ServiceMessage.WorldViewSync message = new(CurrentGame.Id, PlayerDbId, worldView);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
@@ -503,16 +507,43 @@ namespace MHServerEmu.PlayerManagement.Players
         /// </summary>
         public void CheckWorldViewRegionAvailability()
         {
-            // TODO: Party worldview
-            if (CurrentParty != null)
-                return;
+            SyncWorldView();
 
-            // Do not remove from the current region if it's a match or we have it in our world view (TODO: override this player's world view with party)
-            if (TargetRegion == null || TargetRegion.IsMatch || WorldView.ContainsRegion(TargetRegion.Id))
+            // Do not remove from the current region we have it in any accessible WorldView or it's a match
+            if (TargetRegion == null || TargetRegion.IsMatch || HasRegionInAnyWorldView(TargetRegion.Id))
                 return;
 
             // Return to start target if this region is no longer available.
             BeginRegionTransferToStartTarget();
+        }
+
+        public bool HasRegionInAnyWorldView(ulong regionId)
+        {
+            if (CurrentParty != null)
+            {
+                if (CurrentParty.WorldView.ContainsRegion(regionId))
+                    return true;
+
+                // If any party member has access to this region, it's okay for this player to be there as well.
+                foreach (PlayerHandle partyMember in CurrentParty)
+                {
+                    if (partyMember.WorldView.ContainsRegion(regionId))
+                        return true;
+                }
+            }
+
+            if (WorldView.ContainsRegion(regionId))
+                return true;
+
+            return false;
+        }
+
+        private WorldView GetCurrentWorldView()
+        {
+            if (CurrentParty != null)
+                return CurrentParty.WorldView;
+
+            return WorldView;
         }
 
         public void SetDifficultyTierPreference(PrototypeId difficultyTierProtoRef)
@@ -589,7 +620,9 @@ namespace MHServerEmu.PlayerManagement.Players
                 return;
             }
 
-            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams, WorldView.BuildWorldViewCache());
+            List<(ulong, ulong)> worldViewCache = new();
+            GetCurrentWorldView().BuildWorldViewCache(worldViewCache);
+            ServiceMessage.GameAndRegionForPlayer message = new(_transferGameId, PlayerDbId, _transferParams, worldViewCache);
             ServerManager.Instance.SendMessageToService(GameServiceType.GameInstance, message);
         }
 
