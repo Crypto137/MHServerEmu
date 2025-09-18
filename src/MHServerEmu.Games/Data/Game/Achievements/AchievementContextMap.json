@@ -51484,7 +51484,12 @@
     "Id": 867,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -6035110790222445062,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51538,7 +51543,12 @@
     "Id": 1413,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": 2347752088463150158,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51556,7 +51566,12 @@
     "Id": 1450,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -2856283315296857308,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51574,7 +51589,12 @@
     "Id": 1488,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -6035110790222445062,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51592,7 +51612,12 @@
     "Id": 1499,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -6035110790222445062,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51610,7 +51635,12 @@
     "Id": 1529,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": 8679269458142066417,
+        "IncludeChildren": false
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51628,7 +51658,12 @@
     "Id": 1603,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -6035110790222445062,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51646,7 +51681,12 @@
     "Id": 1956,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -3812440551207225765,
+        "IncludeChildren": false
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51664,7 +51704,12 @@
     "Id": 2337,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -6035110790222445062,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51682,7 +51727,12 @@
     "Id": 2595,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": -6035110790222445062,
+        "IncludeChildren": true
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
@@ -51700,7 +51750,12 @@
     "Id": 2988,
     "RewardPrototype": 0,
     "EventType": 9,
-    "EventData": [],
+    "EventData": [
+      {
+        "Prototype": 6594632057625519433,
+        "IncludeChildren": false
+      }
+    ],
     "EventContext": [
       {
         "ContextType": 0,
