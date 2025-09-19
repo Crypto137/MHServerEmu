@@ -28,7 +28,7 @@ namespace MHServerEmu.PlayerManagement.Social
         public WorldView WorldView { get; } = new();
 
         public int MemberCount { get => _members.Count; }
-        public bool HasEnoughMembersOrInvitations { get => _members.Count > 1 || _pendingMembers.Count > 0; }
+        public bool HasEnoughMembersOrInvitations { get => _members.Count > 1 || (_members.Count == 1 && _pendingMembers.Count > 0); }
 
         public MasterParty(ulong id, PlayerHandle creator)
         {
