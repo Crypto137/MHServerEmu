@@ -157,6 +157,18 @@ namespace MHServerEmu.Games.Social.Parties
             }
         }
 
+        public void OnPlayerEnteredRegion(Player player)
+        {
+            foreach (Party party in _localParties.Values)
+            {
+                if (party.IsMember(player))
+                {
+                    player.RefreshPartyOnRegionEnter(party);
+                    return;
+                }
+            }
+        }
+
         public void OnPlayerDestroyed(Player player)
         {
             ulong partyId = player.PartyId;

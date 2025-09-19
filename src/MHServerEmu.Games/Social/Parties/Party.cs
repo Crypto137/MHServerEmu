@@ -106,11 +106,6 @@ namespace MHServerEmu.Games.Social.Parties
 
             UpdateBoostCounts();
 
-            // Fix state for players who return to the region where they were before.
-            Player player = Game.Current.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
-            if (player != null && player.PartyId == 0)
-                player.OnAddedToParty(this);
-
             return true;
         }
 

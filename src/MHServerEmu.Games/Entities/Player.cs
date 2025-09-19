@@ -3920,6 +3920,13 @@ namespace MHServerEmu.Games.Entities
             Community.UpdateParty(party);
         }
 
+        public void RefreshPartyOnRegionEnter(Party party)
+        {
+            _partyId.Set(party.PartyId);
+            UpdatePartyAOI(party);
+            Community.UpdateParty(party);
+        }
+
         private void UpdatePartyAOI(Party party)
         {
             // NOTE: We need to pass the party instance as an argument because by the time
