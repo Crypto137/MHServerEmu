@@ -62,6 +62,7 @@ namespace MHServerEmu.PlayerManagement.Regions
         public bool IsPrivate { get => Prototype.IsPrivate; }
         public bool IsTown { get => Prototype.Behavior == RegionBehavior.Town; }
         public bool IsPrivateStory { get => Prototype.Behavior == RegionBehavior.PrivateStory; }
+        public bool IsPrivateNonStory { get => Prototype.Behavior == RegionBehavior.PrivateNonStory; }
         public bool IsMatch { get => Prototype.Behavior == RegionBehavior.MatchPlay; }
         public bool CanExpire { get => Prototype.Behavior == RegionBehavior.PublicCombatZone || Prototype.Behavior == RegionBehavior.MatchPlay; }
 

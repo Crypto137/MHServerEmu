@@ -365,6 +365,15 @@ namespace MHServerEmu.PlayerManagement.Players
 
                 worldView.AddRegion(region);
             }
+            else
+            {
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+                {
+                    CancelRegionTransfer(requestingGameId, canEnterRegion);
+                    return false;
+                }
+            }
 
             ulong destGameId = region.Game.Id;
 
@@ -395,6 +404,15 @@ namespace MHServerEmu.PlayerManagement.Players
                 CancelRegionTransfer(requestingGameId, failureReason);
                 return false;
             }
+            else
+            {
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+                {
+                    CancelRegionTransfer(requestingGameId, canEnterRegion);
+                    return false;
+                }
+            }
 
             NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
                 .SetTransferId(_nextTransferId++)
@@ -422,6 +440,15 @@ namespace MHServerEmu.PlayerManagement.Players
             {
                 CancelRegionTransfer(requestingGameId, RegionTransferFailure.eRTF_TargetPlayerUnavailable);
                 return false;
+            }
+            else
+            {
+                RegionTransferFailure canEnterRegion = CanEnterRegion(region);
+                if (canEnterRegion != RegionTransferFailure.eRTF_NoError)
+                {
+                    CancelRegionTransfer(requestingGameId, canEnterRegion);
+                    return false;
+                }
             }
 
             NetStructTransferParams transferParams = NetStructTransferParams.CreateBuilder()
@@ -666,6 +693,24 @@ namespace MHServerEmu.PlayerManagement.Players
             // Remove the previous region from the WorldView if it needs to be shut down.
             if (prevRegion != null && prevRegion.Flags.HasFlag(RegionFlags.ShutdownWhenVacant))
                 WorldView.RemoveRegion(prevRegion);
+        }
+
+        private RegionTransferFailure CanEnterRegion(RegionHandle region)
+        {
+            if (region == null)
+                return RegionTransferFailure.eRTF_GenericError;
+
+            // TODO: Reevaluate if we need region.IsMatch int the check after we implement matchmaking.
+            if ((region.IsPrivate || region.IsMatch) && region != TargetRegion && region.IsFull)
+                return RegionTransferFailure.eRTF_Full;
+
+            if (CurrentParty != null && CurrentParty.Type == GroupType.GroupType_Raid)
+            {
+                if (region.IsPrivateStory || region.IsPrivateNonStory)
+                    return RegionTransferFailure.eRTF_RaidsNotAllowed;
+            }
+
+            return RegionTransferFailure.eRTF_NoError;
         }
     }
 }
