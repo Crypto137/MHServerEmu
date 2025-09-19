@@ -1,9 +1,12 @@
-﻿using MHServerEmu.PlayerManagement.Players;
+﻿using MHServerEmu.Core.Logging;
+using MHServerEmu.PlayerManagement.Players;
 
 namespace MHServerEmu.PlayerManagement.Social
 {
     public class PlayerNameCache
     {
+        private static readonly Logger Logger = LogManager.CreateLogger();
+
         private readonly Dictionary<ulong, string> _playerNames = new();
         private readonly Dictionary<string, ulong> _playerDbIds = new(StringComparer.OrdinalIgnoreCase);
 
@@ -65,16 +68,24 @@ namespace MHServerEmu.PlayerManagement.Social
             RemoveLookup(playerDbId);
         }
 
-        private void AddLookup(ulong playerDbId, string playerName)
+        private bool AddLookup(ulong playerDbId, string playerName)
         {
-            _playerNames.Add(playerDbId, playerName);
-            _playerDbIds.Add(playerName, playerDbId);
+            if (_playerNames.TryAdd(playerDbId, playerName) == false)
+                return Logger.WarnReturn(false, $"AddLookup(): Lookup for 0x{playerDbId:X} => {playerName} already exists");
+
+            if (_playerDbIds.TryAdd(playerName, playerDbId) == false)
+                return Logger.WarnReturn(false, $"AddLookup(): Lookup for {playerName} => 0x{playerDbId:X} already exists");
+
+            return true;
         }
 
-        private void RemoveLookup(ulong playerDbId)
+        private bool RemoveLookup(ulong playerDbId)
         {
-            if (_playerNames.Remove(playerDbId, out string playerName))
-                _playerDbIds.Remove(playerName);
+            if (_playerNames.Remove(playerDbId, out string playerName) == false)
+                return false;
+            
+            _playerDbIds.Remove(playerName);
+            return true;
         }
     }
 }
