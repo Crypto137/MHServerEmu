@@ -2886,14 +2886,15 @@ namespace MHServerEmu.Games.Entities
         {
             if (Properties[PropertyEnum.AIMasterAvatarDbGuid] != avatar.DatabaseUniqueId) return;
 
-            SetDormant(false);
-
             Properties[PropertyEnum.NoLootDrop] = true;
             Properties[PropertyEnum.NoExpOnDeath] = true;
             Properties[PropertyEnum.AIIgnoreNoTgtOverrideProfile] = true;
             Properties[PropertyEnum.DramaticEntrancePlayedOnce] = true;
             Properties[PropertyEnum.PetHealthPctBonus] = avatar.Properties[PropertyEnum.HealthPctBonus];
             Properties[PropertyEnum.PetDamagePctBonus] = avatar.Properties[PropertyEnum.DamagePctBonus];
+
+            // IMPORTANT: Dormant needs to be turned off after setting DramaticEntrancePlayedOnce.
+            SetDormant(false);
 
             AIController?.Blackboard.PropertyCollection.RemoveProperty(PropertyEnum.AIFullOverride);
             Properties.RemoveProperty(PropertyEnum.MissionPrototype);
