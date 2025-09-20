@@ -2,6 +2,7 @@
 using MHServerEmu.Core.Logging;
 using MHServerEmu.Core.Network;
 using MHServerEmu.Games.Entities;
+using MHServerEmu.Games.Social.Communities;
 
 namespace MHServerEmu.Games.Social.Parties
 {
@@ -38,7 +39,7 @@ namespace MHServerEmu.Games.Social.Parties
                 case GroupingOperationType.eGOP_InvitePlayer:
                     if (player.CanFormParty() == false)
                     {
-                        SendOperationResultToClient(player.DatabaseUniqueId, request, GroupingOperationResult.eGOPR_SystemError);
+                        SendOperationResultToClient(player, request, GroupingOperationResult.eGOPR_SystemError);
                         return;
                     }
 
@@ -60,7 +61,7 @@ namespace MHServerEmu.Games.Social.Parties
                     // Need to be a party leader for these.
                     if (player.IsPartyLeader() == false)
                     {
-                        SendOperationResultToClient(player.DatabaseUniqueId, request, GroupingOperationResult.eGOPR_NotLeader);
+                        SendOperationResultToClient(player, request, GroupingOperationResult.eGOPR_NotLeader);
                         return;
                     }
 
@@ -83,15 +84,47 @@ namespace MHServerEmu.Games.Social.Parties
 
                 default:
                     Logger.Warn($"OnClientPartyOperationRequest(): Unhandled operation {request.Operation} from player {player}");
-                    SendOperationResultToClient(player.DatabaseUniqueId, request, GroupingOperationResult.eGOPR_SystemError);
+                    SendOperationResultToClient(player, request, GroupingOperationResult.eGOPR_SystemError);
                     break;
             }
         }
 
-        public void OnPartyOperationRequestServerResult(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
+        public bool OnPartyOperationRequestServerResult(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
         {
             Logger.Debug($"OnPartyOperationRequestServerResult(): {request.Operation} {request.RequestingPlayerName} => {request.TargetPlayerName}: {result}");
-            SendOperationResultToClient(playerDbId, request, result);
+
+            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
+            if (player == null) return Logger.WarnReturn(false, "OnPartyOperationRequestServerResult(): player == null");
+
+            switch (request.Operation)
+            {
+                case GroupingOperationType.eGOP_InvitePlayer:
+                    // Automatically decline invites from ignored players.
+                    CommunityMember member = player.Community.GetMember(request.RequestingPlayerDbId);
+                    if (member != null && member.IsIgnored())
+                    {
+                        PartyOperationPayload declineRequest = PartyOperationPayload.CreateBuilder()
+                            .SetRequestingPlayerDbId(playerDbId)
+                            .SetRequestingPlayerName(player.GetName())
+                            .SetOperation(GroupingOperationType.eGOP_DeclineInvite)
+                            .SetDifficultyTierProtoId(request.DifficultyTierProtoId)
+                            .Build();
+
+                        SendOperationRequestToPlayerManager(declineRequest);
+                        return true;
+                    }
+                    break;
+
+                case GroupingOperationType.eGOP_DeclineInvite:
+                    // The client interprets decline requests as if they are coming from the target player,
+                    // so don't forward this back to the declining player.
+                    if (request.RequestingPlayerDbId == player.DatabaseUniqueId)
+                        return true;
+                    break;
+            }
+
+            SendOperationResultToClient(player, request, result);
+            return true;
         }
 
         public void OnPartyInfoServerUpdate(ulong playerDbId, ulong groupId, PartyInfo partyInfo)
@@ -212,15 +245,14 @@ namespace MHServerEmu.Games.Social.Parties
             Logger.Info($"Removed party 0x{partyId:X} from game 0x{Game.Id:X}");
         }
 
-        private void SendOperationRequestToPlayerManager(PartyOperationPayload request)
+        private static void SendOperationRequestToPlayerManager(PartyOperationPayload request)
         {
             ServiceMessage.PartyOperationRequest message = new(request);
             ServerManager.Instance.SendMessageToService(GameServiceType.PlayerManager, message);
         }
 
-        private bool SendOperationResultToClient(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
+        private static bool SendOperationResultToClient(Player player, PartyOperationPayload request, GroupingOperationResult result)
         {
-            Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
             if (player == null) return Logger.WarnReturn(false, "SendOperationResultToClient(): player == null");
 
             PartyOperationRequestClientResult message = PartyOperationRequestClientResult.CreateBuilder()
