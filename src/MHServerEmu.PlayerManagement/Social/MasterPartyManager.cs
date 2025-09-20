@@ -326,8 +326,6 @@ namespace MHServerEmu.PlayerManagement.Social
 
         private GroupingOperationResult DoPartyOperationChangeDifficulty(PlayerHandle player, PrototypeId difficultyTierProtoRef)
         {
-            Logger.Debug($"DoPartyOperationChangeDifficulty(): player=[{player}], difficultyTierProtoRef=[{difficultyTierProtoRef.GetNameFormatted()}]");
-
             GroupingOperationResult result = ValidatePartyLeader(player);
             if (result != GroupingOperationResult.eGOPR_Success)
                 return result;

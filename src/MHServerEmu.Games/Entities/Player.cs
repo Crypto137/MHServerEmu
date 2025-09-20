@@ -3853,8 +3853,6 @@ namespace MHServerEmu.Games.Entities
 
         public void OnAddedToParty(Party party)
         {
-            Logger.Debug($"OnAddedToParty(): {party}");
-
             if (PartyId != 0)
             {
                 Logger.Warn($"OnAddedToParty(): Already in party 0x{PartyId:X}");
@@ -3878,8 +3876,6 @@ namespace MHServerEmu.Games.Entities
 
         public void OnRemovedFromParty(Party party, GroupLeaveReason reason)
         {
-            Logger.Debug($"OnRemovedFromParty(): {party} - {reason}");
-
             _partyId.Set(0);
             UpdatePartyAOI(party);
 
@@ -3910,8 +3906,6 @@ namespace MHServerEmu.Games.Entities
         public void OnPartySizeChanged(Party party)
         {
             int partySize = party.NumMembers;
-
-            Logger.Debug($"OnPartySizeChanged(): {party} - {partySize}");
 
             // TODO: Update party condition on the current avatar
 

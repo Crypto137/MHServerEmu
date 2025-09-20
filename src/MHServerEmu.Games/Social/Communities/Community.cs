@@ -404,8 +404,6 @@ namespace MHServerEmu.Games.Social.Communities
 
         public void UpdateParty(Party party)
         {
-            Logger.Debug($"UpdateFromParty(): [{party}]");
-
             CommunityCircle partyCircle = GetCircle(CircleId.__Party);
             if (partyCircle == null)
             {

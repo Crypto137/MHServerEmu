@@ -107,7 +107,6 @@ namespace MHServerEmu.Games.Network
 
             if (_messageDispatcher?.CanSendArchiveMessages == true)
             {
-                Logger.Debug($"Set(): {this}");
                 using Archive archive = new(ArchiveSerializeType.Replication, (ulong)_interestPolicies);
                 Serializer.Transfer(archive, this);
 

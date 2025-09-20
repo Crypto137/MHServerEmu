@@ -91,8 +91,6 @@ namespace MHServerEmu.Games.Social.Parties
 
         public bool OnPartyOperationRequestServerResult(ulong playerDbId, PartyOperationPayload request, GroupingOperationResult result)
         {
-            Logger.Debug($"OnPartyOperationRequestServerResult(): {request.Operation} {request.RequestingPlayerName} => {request.TargetPlayerName}: {result}");
-
             Player player = Game.EntityManager.GetEntityByDbGuid<Player>(playerDbId);
             if (player == null) return Logger.WarnReturn(false, "OnPartyOperationRequestServerResult(): player == null");
 
@@ -129,8 +127,6 @@ namespace MHServerEmu.Games.Social.Parties
 
         public void OnPartyInfoServerUpdate(ulong playerDbId, ulong groupId, PartyInfo partyInfo)
         {
-            Logger.Debug($"OnPartyInfoServerUpdate(): {partyInfo}");
-
             if (partyInfo != null)
                 CreateOrUpdateParty(partyInfo);
 
@@ -150,8 +146,6 @@ namespace MHServerEmu.Games.Social.Parties
 
         public void OnPartyMemberInfoServerUpdate(ulong playerDbId, ulong groupId, ulong memberDbId, PartyMemberEvent memberEvent, Gazillion.PartyMemberInfo memberInfo)
         {
-            Logger.Debug($"OnPartyMemberInfoServerUpdate(): {memberInfo}");
-
             // Update local party
             Party party = GetParty(groupId);
             if (party != null)
